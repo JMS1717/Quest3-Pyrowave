@@ -10,6 +10,10 @@ This is a **beta research release**, not a product. It supports the Galaxy XR on
 below comes from one PC (RTX 3090), one headset and one Wi-Fi network. Results marked *Home* were
 measured on static SteamVR Home with the headset unworn and say nothing about gameplay.
 
+**Status:** experimental and provided as-is, with no support or maintenance promise. Report bugs
+through this repository's Issues, and security problems privately through **Security > Report a
+vulnerability**.
+
 ## Results
 
 | | **PyroWave 4:4:4 (Recommended)** | **ALVR H.264 (tuned)** |
