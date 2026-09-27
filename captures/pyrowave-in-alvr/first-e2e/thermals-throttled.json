@@ -1,0 +1,52 @@
+{
+  "before": {
+    "tag": "before",
+    "status": 4,
+    "zones": {
+      "cpu_max_c": 88.9,
+      "gpu_max_c": 88.6,
+      "video_c": 84.2,
+      "ddr_c": 85.9,
+      "nsp_max_c": 82.5,
+      "camera_max_c": 80.8,
+      "sys_max_c": 84.578,
+      "aoss_max_c": 86.9,
+      "hottest_group": "cpu",
+      "hottest_c": 88.9
+    },
+    "battery": {
+      "level": 46,
+      "status": 2,
+      "charging": true,
+      "ac_powered": true,
+      "usb_powered": false,
+      "temperature_c": 33.0
+    },
+    "time": 1790110757.8124714
+  },
+  "after": {
+    "tag": "after",
+    "status": 4,
+    "zones": {
+      "cpu_max_c": 88.3,
+      "gpu_max_c": 86.9,
+      "video_c": 83.2,
+      "ddr_c": 85.2,
+      "nsp_max_c": 82.1,
+      "camera_max_c": 80.1,
+      "sys_max_c": 84.287,
+      "aoss_max_c": 85.9,
+      "hottest_group": "cpu",
+      "hottest_c": 88.3
+    },
+    "battery": {
+      "level": 46,
+      "status": 2,
+      "charging": true,
+      "ac_powered": true,
+      "usb_powered": false,
+      "temperature_c": 33.0
+    },
+    "time": 1790110773.7034097
+  }
+}

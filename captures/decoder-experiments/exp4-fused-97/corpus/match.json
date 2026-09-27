@@ -1,0 +1,53 @@
+[
+ {
+  "class": "steamvr_home",
+  "clip": "CP-HOME-20260923-182402",
+  "frame": 45,
+  "bytes97": 416592,
+  "psnr_y97": 41.77,
+  "bytes_haar": 455596,
+  "psnr_y_haar": 41.77,
+  "extra_pct": 9.362637784691016,
+  "reached": true,
+  "psnr_hvs97": 48.260209,
+  "psnr_hvs_haar": 47.597727,
+  "ssim97": 0.986401,
+  "ssim_haar": 0.983942,
+  "vmaf97": 96.543044,
+  "vmaf_haar": 96.586962
+ },
+ {
+  "class": "synthetic_panel",
+  "clip": "CP-PANEL-20260923-181930",
+  "frame": 45,
+  "bytes97": 416632,
+  "psnr_y97": 55.99,
+  "bytes_haar": 563532,
+  "psnr_y_haar": 56.0,
+  "extra_pct": 35.2589335432708,
+  "reached": true,
+  "psnr_hvs97": 53.065895,
+  "psnr_hvs_haar": 52.92762,
+  "ssim97": 0.997057,
+  "ssim_haar": 0.997039,
+  "vmaf97": 97.123355,
+  "vmaf_haar": 97.003252
+ },
+ {
+  "class": "textures_photo",
+  "clip": "CP-PHOTO-20260923-182144",
+  "frame": 45,
+  "bytes97": 416648,
+  "psnr_y97": 55.98,
+  "bytes_haar": 566592,
+  "psnr_y_haar": 55.98,
+  "extra_pct": 35.9881722701177,
+  "reached": true,
+  "psnr_hvs97": 53.053013,
+  "psnr_hvs_haar": 52.913171,
+  "ssim97": 0.997064,
+  "ssim_haar": 0.997003,
+  "vmaf97": 97.158575,
+  "vmaf_haar": 96.961339
+ }
+]

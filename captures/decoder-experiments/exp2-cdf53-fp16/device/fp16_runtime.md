@@ -1,0 +1,1 @@
+standalone C run printed `wavelet: CDF 5/3, PYROWAVE_PRECISION=0` and D `CDF 9/7, PYROWAVE_PRECISION=0`; live P53 cells' pyroclient lines are quoted in items 9 and 12.

@@ -1,0 +1,30 @@
+{
+ "Y": {
+  "max_abs": 0,
+  "mse": 0.0,
+  "psnr": Infinity,
+  "differing": 0,
+  "count": 4898816
+ },
+ "Cb": {
+  "max_abs": 0,
+  "mse": 0.0,
+  "psnr": Infinity,
+  "differing": 0,
+  "count": 4898816
+ },
+ "Cr": {
+  "max_abs": 0,
+  "mse": 0.0,
+  "psnr": Infinity,
+  "differing": 0,
+  "count": 4898816
+ },
+ "all": {
+  "max_abs": 0,
+  "mse": 0.0,
+  "psnr": Infinity,
+  "differing": 0,
+  "count": 14696448
+ }
+}

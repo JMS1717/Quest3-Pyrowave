@@ -1,0 +1,19 @@
+# The controls the beta dashboard shows, as documented in README.md ("What you can change").
+# Mirrors the visible-settings tests in the ALVR patch (alvr/session/src/beta_tests.rs);
+# tools/tests/test_readme_toggles.py keeps the README tables and this list in step.
+# group	control
+experiment	Streaming profile
+experiment	Render scale
+experiment	Refresh rate
+experiment	Codec
+experiment	Bitrate
+experiment	Foveated encoding
+experiment	Follow gaze
+experiment	Transport
+experiment	Wavelet
+experiment	Headset decode path
+advanced	Maximum buffering
+advanced	Buffering history weight
+advanced	Server frame pacing
+advanced	NVENC preset, entropy coding, rate control
+advanced	GPU adapter index

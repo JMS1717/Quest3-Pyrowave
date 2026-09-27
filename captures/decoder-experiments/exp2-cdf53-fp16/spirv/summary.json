@@ -1,0 +1,35 @@
+{
+ "fp16_v0": {
+  "variant": "idwt PRECISION=0 FP16=1 (spirv_bank+32584, 21,212 B)",
+  "f16_arith": 37,
+  "f32_arith": 12,
+  "fconvert": 14,
+  "opTypeFloat16": 1,
+  "capability_Float16": true,
+  "f32_note": "texture-coordinate arithmetic (OpConvertSToF of integer texel coordinates and OpFMul by the push-constant inverse resolution, vec2 float32) feeding the sampled loads, not lifting arithmetic; the 14 OpFConvert are the float32 texel fetch results narrowed to float16 on load and the outputs widened for the R8 store"
+ },
+ "fp16_v1": {
+  "variant": "idwt PRECISION=1 FP16=1 (spirv_bank+37887, 21,564 B)",
+  "f16_arith": 0,
+  "f32_arith": 49,
+  "fconvert": 37,
+  "opTypeFloat16": 1,
+  "note": "FP32 lifting with an f16vec2 shared tile: every shared store/load converts"
+ },
+ "fp32_v0": {
+  "variant": "idwt PRECISION=0 FP16=0 (falls back to PRECISION 1 in dwt_common.h; spirv_bank+21894)",
+  "f16_arith": 0,
+  "f32_arith": 49,
+  "fconvert": 0,
+  "opTypeFloat16": 0
+ },
+ "fp32_v2": {
+  "variant": "idwt PRECISION=2 (spirv_bank+27350)",
+  "f16_arith": 0,
+  "f32_arith": 49,
+  "fconvert": 0,
+  "opTypeFloat16": 0
+ },
+ "spec_constants": "SpecId 0 (existing) and SpecId 1 = LEGALL53 (OpSpecConstantFalse default) in every variant; workgroup 64x1x1; 49 lifting-class float ops per variant",
+ "tool": "spirv-dis from NDK 27.2.12479018 on the regenerated shaders/slangmosh.hpp (slangmosh built from Granite on the PC)"
+}

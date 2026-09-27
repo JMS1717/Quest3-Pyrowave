@@ -1,0 +1,563 @@
+diff --git a/src/tests/hello_xr/AndroidManifest.xml b/src/tests/hello_xr/AndroidManifest.xml
+index 801d90adb72d68d16b3ee4057f452c503660e488..97976ee2e198b7366abbcd7648f7201d055f560f 100644
+--- a/src/tests/hello_xr/AndroidManifest.xml
++++ b/src/tests/hello_xr/AndroidManifest.xml
+@@ -18,9 +18,15 @@
+     android:name="android.hardware.vr.headtracking"
+     android:required="false"
+     android:version="1" />
++  <uses-feature
++    android:name="android.software.xr.api.openxr"
++    android:required="true"
++    android:version="0x00010001" />
+ 
+   <!-- Recommended for haptic feedback -->
+   <uses-permission android:name="android.permission.VIBRATE" />
++  <!-- Required for the localhost TCP socket reached through adb forward. -->
++  <uses-permission android:name="android.permission.INTERNET" />
+ 
+   <!-- If building externally with the OpenXR loader AAR, this would be merged in automatically. -->
+   <uses-permission android:name="org.khronos.openxr.permission.OPENXR" />
+@@ -42,11 +48,22 @@
+ 
+   <application
+     android:allowBackup="true"
+-    android:hasCode="false"
++    android:hasCode="true"
+     android:icon="@mipmap/ic_helloxr_launcher"
+     android:label="@string/app_name"
+     android:roundIcon="@mipmap/ic_helloxr_launcher">
+ 
++    <!-- OpenXR owns and renders the immersive scene; never launch as a Home Space panel. -->
++    <property
++      android:name="android.window.PROPERTY_XR_ACTIVITY_START_MODE"
++      android:value="XR_ACTIVITY_START_MODE_FULL_SPACE_UNMANAGED" />
++
++    <!-- Android XR exposes its compositor runtime as an optional system native
++         library. Declaring it places libopenxr.google.so in this app's linker namespace. -->
++    <uses-native-library
++      android:name="libopenxr.google.so"
++      android:required="false" />
++
+     <!-- The activity is the built-in NativeActivity framework class. -->
+     <!-- launchMode is set to singleTask because there should never be multiple copies of the app running. -->
+     <!-- Theme.Black.NoTitleBar.Fullscreen gives solid black instead of a (bad stereoscopic) gradient on app transition. -->
+diff --git a/src/tests/hello_xr/CMakeLists.txt b/src/tests/hello_xr/CMakeLists.txt
+index 2782b1161e592d100aa3b48c9ad7d4b809d06235..99fd9b156b34561e774d762b055fc59e6b4b361a 100644
+--- a/src/tests/hello_xr/CMakeLists.txt
++++ b/src/tests/hello_xr/CMakeLists.txt
+@@ -51,6 +51,7 @@ set(LOCAL_SOURCE
+     platformplugin_posix.cpp
+     platformplugin_win32.cpp
+     swapchain_image_data.cpp
++    stereo_decoder_bridge.h
+ )
+ set(VULKAN_SHADERS vulkan_shaders/frag.glsl vulkan_shaders/vert.glsl)
+ 
+diff --git a/src/tests/hello_xr/build.gradle b/src/tests/hello_xr/build.gradle
+index fb2efcefd710717ea5e7828545d98a7f38fb656a..97c2c83bae1bfceb71a2f9e1b140937ce1caa881 100644
+--- a/src/tests/hello_xr/build.gradle
++++ b/src/tests/hello_xr/build.gradle
+@@ -6,7 +6,7 @@
+ // to build the "hello_xr" sample application
+ 
+ plugins {
+-    id 'com.android.application' version '8.1.4'
++    id 'com.android.application' version '8.7.3'
+ }
+ 
+ 
+@@ -15,16 +15,17 @@ project.ext.repoRoot = file('../../../')
+ apply from: file('../../version.gradle')
+ 
+ android {
+-    compileSdk 34
+-    ndkVersion "23.2.8568313"
++    compileSdk 35
++    ndkVersion "27.0.12077973"
+     buildToolsVersion = "34.0.0"
+     namespace 'org.khronos.openxr.hello_xr'
+ 
+     defaultConfig {
+-        applicationId "org.khronos.openxr.hello_xr"
++        applicationId "com.xrwired.distortiongrid"
+         // for Vulkan, need at least 24
+-        minSdkVersion 24
+-        targetSdkVersion 34
++        minSdkVersion 28
++        targetSdkVersion 35
++        ndk { abiFilters 'arm64-v8a' }
+ 
+         versionName = project.versionOpenXR.toString() + project.versionQualifier
+         versionCode = project.versionOpenXR.getVersionCode()
+@@ -73,7 +74,7 @@ android {
+             applicationIdSuffix '.opengles'
+             externalNativeBuild.cmake.arguments += '-DHELLOXR_DEFAULT_GRAPHICS_PLUGIN=OpenGLES'
+ 
+-            resValue "string", "app_name", "Hello XR (OpenGL ES)"
++            resValue "string", "app_name", "XR Distortion Grid"
+         }
+         Vulkan {
+             dimension 'api'
+@@ -105,4 +106,3 @@ if (keystorePropertiesFilename) {
+         android.buildTypes.release.signingConfig android.signingConfigs.release
+     }
+ }
+-
+diff --git a/src/tests/hello_xr/geometry.h b/src/tests/hello_xr/geometry.h
+index d46f2f3de08b4a0fca323f450a8f01e53c9a4573..6be6c33c889dfdc08e31d857e56409d50030e111 100644
+--- a/src/tests/hello_xr/geometry.h
++++ b/src/tests/hello_xr/geometry.h
+@@ -15,7 +15,7 @@ constexpr XrVector3f Red{1, 0, 0};
+ constexpr XrVector3f DarkRed{0.25f, 0, 0};
+ constexpr XrVector3f Green{0, 1, 0};
+ constexpr XrVector3f DarkGreen{0, 0.25f, 0};
+-constexpr XrVector3f Blue{0, 0, 1};
++constexpr XrVector3f Blue{1, 1, 1};
+ constexpr XrVector3f DarkBlue{0, 0, 0.25f};
+ 
+ // Vertices for a 1x1x1 meter cube. (Left/Right, Top/Bottom, Front/Back)
+diff --git a/src/tests/hello_xr/graphicsplugin_opengles.cpp b/src/tests/hello_xr/graphicsplugin_opengles.cpp
+index 0c1ef559cd8aa6a4ad39502a1855f9dedb894a8d..43b750f36e46919955d470d174ab440c015bc3e2 100644
+--- a/src/tests/hello_xr/graphicsplugin_opengles.cpp
++++ b/src/tests/hello_xr/graphicsplugin_opengles.cpp
+@@ -7,11 +7,31 @@
+ #include "geometry.h"
+ #include "graphicsplugin.h"
+ #include "graphics_plugin_impl_helpers.h"
++#include "stereo_decoder_bridge.h"
+ 
+ #ifdef XR_USE_GRAPHICS_API_OPENGL_ES
+ 
+ #include "common/gfxwrapper_opengl.h"
+ #include <common/xr_linear.h>
++#if defined(XR_USE_PLATFORM_ANDROID)
++#include <android/surface_texture.h>
++#include <android/surface_texture_jni.h>
++#include <jni.h>
++#endif
++
++#if defined(XR_USE_PLATFORM_ANDROID)
++static JavaVM* g_stereoVm = nullptr;
++static jobject g_stereoActivity = nullptr;
++
++void SetStereoDecoderAndroidContext(void* applicationVM, void* applicationActivity) {
++    g_stereoVm = reinterpret_cast<JavaVM*>(applicationVM);
++    JNIEnv* env = nullptr;
++    if (g_stereoVm != nullptr && g_stereoVm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) == JNI_OK) {
++        if (g_stereoActivity != nullptr) env->DeleteGlobalRef(g_stereoActivity);
++        g_stereoActivity = env->NewGlobalRef(reinterpret_cast<jobject>(applicationActivity));
++    }
++}
++#endif
+ 
+ #define GL(glcmd)                                                                                                    \
+     {                                                                                                                \
+@@ -55,6 +75,32 @@ static const char* FragmentShaderGlsl = R"_(#version 320 es
+     }
+     )_";
+ 
++static const char* VideoVertexShaderGlsl = R"_(#version 320 es
++    layout(location = 0) in vec3 Position;
++    layout(location = 1) in vec2 TexCoord;
++    uniform mat4 ModelViewProjection;
++    out vec2 VideoTexCoord;
++    void main() {
++        gl_Position = ModelViewProjection * vec4(Position, 1.0);
++        VideoTexCoord = TexCoord;
++    }
++    )_";
++
++static const char* VideoFragmentShaderGlsl = R"_(#version 320 es
++    #extension GL_OES_EGL_image_external_essl3 : require
++    precision mediump float;
++    in vec2 VideoTexCoord;
++    layout(location = 0) out vec4 FragColor;
++    uniform samplerExternalOES StereoFrame;
++    uniform mat4 TextureTransform;
++    uniform float EyeIndex;
++    void main() {
++        vec2 sideBySide = vec2(VideoTexCoord.x * 0.5 + EyeIndex * 0.5, VideoTexCoord.y);
++        vec2 mapped = (TextureTransform * vec4(sideBySide, 0.0, 1.0)).xy;
++        FragColor = texture(StereoFrame, mapped);
++    }
++    )_";
++
+ struct OpenGLESGraphicsPlugin : public IGraphicsPlugin {
+     OpenGLESGraphicsPlugin() {}
+ 
+@@ -64,6 +110,17 @@ struct OpenGLESGraphicsPlugin : public IGraphicsPlugin {
+     OpenGLESGraphicsPlugin& operator=(OpenGLESGraphicsPlugin&&) = delete;
+ 
+     ~OpenGLESGraphicsPlugin() override {
++#if defined(XR_USE_PLATFORM_ANDROID)
++        if (m_surfaceTexture != nullptr) ASurfaceTexture_release(m_surfaceTexture);
++        if (g_stereoVm != nullptr && m_decoder != nullptr) {
++            JNIEnv* env = nullptr;
++            if (g_stereoVm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) == JNI_OK) env->DeleteGlobalRef(m_decoder);
++        }
++#endif
++        if (m_videoTexture != 0) glDeleteTextures(1, &m_videoTexture);
++        if (m_videoProgram != 0) glDeleteProgram(m_videoProgram);
++        if (m_videoVao != 0) glDeleteVertexArrays(1, &m_videoVao);
++        if (m_videoVertexBuffer != 0) glDeleteBuffers(1, &m_videoVertexBuffer);
+         if (m_swapchainFramebuffer != 0) {
+             glDeleteFramebuffers(1, &m_swapchainFramebuffer);
+         }
+@@ -187,6 +244,79 @@ struct OpenGLESGraphicsPlugin : public IGraphicsPlugin {
+         glVertexAttribPointer(m_vertexAttribCoords, 3, GL_FLOAT, GL_FALSE, sizeof(Geometry::Vertex), nullptr);
+         glVertexAttribPointer(m_vertexAttribColor, 3, GL_FLOAT, GL_FALSE, sizeof(Geometry::Vertex),
+                               reinterpret_cast<const void*>(sizeof(XrVector3f)));
++
++        InitializeStereoVideo();
++    }
++
++    GLuint CompileShader(GLenum type, const char* source) {
++        GLuint shader = glCreateShader(type);
++        glShaderSource(shader, 1, &source, nullptr);
++        glCompileShader(shader);
++        CheckShader(shader);
++        return shader;
++    }
++
++    void InitializeStereoVideo() {
++        GLuint vertex = CompileShader(GL_VERTEX_SHADER, VideoVertexShaderGlsl);
++        GLuint fragment = CompileShader(GL_FRAGMENT_SHADER, VideoFragmentShaderGlsl);
++        m_videoProgram = glCreateProgram();
++        glAttachShader(m_videoProgram, vertex);
++        glAttachShader(m_videoProgram, fragment);
++        glLinkProgram(m_videoProgram);
++        CheckProgram(m_videoProgram);
++        glDeleteShader(vertex);
++        glDeleteShader(fragment);
++        m_videoEyeUniform = glGetUniformLocation(m_videoProgram, "EyeIndex");
++        m_videoTransformUniform = glGetUniformLocation(m_videoProgram, "TextureTransform");
++        m_videoSamplerUniform = glGetUniformLocation(m_videoProgram, "StereoFrame");
++        m_videoMvpUniform = glGetUniformLocation(m_videoProgram, "ModelViewProjection");
++
++        // A world-locked 16:9 screen 2.5 m away, about 59 degrees wide.
++        const float quad[] = {
++            -1.4f, -0.7875f, -2.5f, 0.0f, 0.0f,
++             1.4f, -0.7875f, -2.5f, 1.0f, 0.0f,
++            -1.4f,  0.7875f, -2.5f, 0.0f, 1.0f,
++             1.4f,  0.7875f, -2.5f, 1.0f, 1.0f,
++        };
++        glGenVertexArrays(1, &m_videoVao);
++        glBindVertexArray(m_videoVao);
++        glGenBuffers(1, &m_videoVertexBuffer);
++        glBindBuffer(GL_ARRAY_BUFFER, m_videoVertexBuffer);
++        glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
++        glEnableVertexAttribArray(0);
++        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
++        glEnableVertexAttribArray(1);
++        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
++        glBindVertexArray(0);
++
++#if defined(XR_USE_PLATFORM_ANDROID)
++        glGenTextures(1, &m_videoTexture);
++        glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_videoTexture);
++        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
++        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
++        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
++        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
++        JNIEnv* env = nullptr;
++        if (g_stereoVm == nullptr || g_stereoActivity == nullptr ||
++            g_stereoVm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) return;
++        jclass activityClass = env->GetObjectClass(g_stereoActivity);
++        jmethodID getLoader = env->GetMethodID(activityClass, "getClassLoader", "()Ljava/lang/ClassLoader;");
++        jobject loader = env->CallObjectMethod(g_stereoActivity, getLoader);
++        jclass loaderClass = env->FindClass("java/lang/ClassLoader");
++        jmethodID loadClass = env->GetMethodID(loaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
++        jstring className = env->NewStringUTF("com.xrwired.distortiongrid.StereoDecoder");
++        jclass decoderClass = reinterpret_cast<jclass>(env->CallObjectMethod(loader, loadClass, className));
++        env->DeleteLocalRef(className);
++        if (decoderClass == nullptr || env->ExceptionCheck()) { env->ExceptionDescribe(); env->ExceptionClear(); return; }
++        jmethodID constructor = env->GetMethodID(decoderClass, "<init>", "(Landroid/app/Activity;I)V");
++        jobject decoder = env->NewObject(decoderClass, constructor, g_stereoActivity, static_cast<jint>(m_videoTexture));
++        jmethodID getter = env->GetMethodID(decoderClass, "getSurfaceTexture", "()Landroid/graphics/SurfaceTexture;");
++        jobject surfaceTexture = env->CallObjectMethod(decoder, getter);
++        m_decoder = env->NewGlobalRef(decoder);
++        m_surfaceTexture = ASurfaceTexture_fromSurfaceTexture(env, surfaceTexture);
++        env->DeleteLocalRef(surfaceTexture);
++        env->DeleteLocalRef(decoder);
++#endif
+     }
+ 
+     void CheckShader(GLuint shader) {
+@@ -365,9 +495,6 @@ struct OpenGLESGraphicsPlugin : public IGraphicsPlugin {
+         glClearDepthf(1.0f);
+         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+ 
+-        // Set shaders and uniform variables.
+-        glUseProgram(m_program);
+-
+         const auto& pose = layerView.pose;
+         XrMatrix4x4f proj;
+         XrMatrix4x4f_CreateProjectionFov(&proj, GRAPHICS_OPENGL_ES, layerView.fov, 0.05f, 100.0f);
+@@ -378,6 +505,32 @@ struct OpenGLESGraphicsPlugin : public IGraphicsPlugin {
+         XrMatrix4x4f vp;
+         XrMatrix4x4f_Multiply(&vp, &proj, &view);
+ 
++#if defined(XR_USE_PLATFORM_ANDROID)
++        if (m_surfaceTexture != nullptr && ASurfaceTexture_updateTexImage(m_surfaceTexture) == 0 &&
++            ASurfaceTexture_getTimestamp(m_surfaceTexture) > 0) {
++            float textureTransform[16];
++            ASurfaceTexture_getTransformMatrix(m_surfaceTexture, textureTransform);
++            glDisable(GL_CULL_FACE);
++            glDisable(GL_DEPTH_TEST);
++            glUseProgram(m_videoProgram);
++            glActiveTexture(GL_TEXTURE0);
++            glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_videoTexture);
++            glUniform1i(m_videoSamplerUniform, 0);
++            glUniform1f(m_videoEyeUniform, layerView.pose.position.x < 0.0f ? 0.0f : 1.0f);
++            glUniformMatrix4fv(m_videoTransformUniform, 1, GL_FALSE, textureTransform);
++            glUniformMatrix4fv(m_videoMvpUniform, 1, GL_FALSE, reinterpret_cast<const GLfloat*>(&vp));
++            glBindVertexArray(m_videoVao);
++            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
++            glBindVertexArray(0);
++            glUseProgram(0);
++            glBindFramebuffer(GL_FRAMEBUFFER, 0);
++            return;
++        }
++#endif
++
++        // Set shaders and uniform variables.
++        glUseProgram(m_program);
++
+         // Set cube primitive data.
+         glBindVertexArray(m_vao);
+ 
+@@ -417,6 +570,18 @@ struct OpenGLESGraphicsPlugin : public IGraphicsPlugin {
+     GLuint m_vao{0};
+     GLuint m_cubeVertexBuffer{0};
+     GLuint m_cubeIndexBuffer{0};
++    GLuint m_videoTexture{0};
++    GLuint m_videoProgram{0};
++    GLuint m_videoVao{0};
++    GLuint m_videoVertexBuffer{0};
++    GLint m_videoEyeUniform{-1};
++    GLint m_videoTransformUniform{-1};
++    GLint m_videoSamplerUniform{-1};
++    GLint m_videoMvpUniform{-1};
++#if defined(XR_USE_PLATFORM_ANDROID)
++    jobject m_decoder{nullptr};
++    ASurfaceTexture* m_surfaceTexture{nullptr};
++#endif
+     GLint m_contextApiMajorVersion{0};
+     std::array<float, 4> m_clearColor;
+ };
+diff --git a/src/tests/hello_xr/main.cpp b/src/tests/hello_xr/main.cpp
+index 40d513ae72f780d4ae3b909ceb92f40aa01182c3..25f6bee22da543d7b03e27b4881e6972c5e0f558 100644
+--- a/src/tests/hello_xr/main.cpp
++++ b/src/tests/hello_xr/main.cpp
+@@ -6,6 +6,7 @@
+ #include "common.h"
+ #include "options.h"
+ #include "platformdata.h"
++#include "stereo_decoder_bridge.h"
+ #include "platformplugin.h"
+ #include "graphicsplugin.h"
+ #include "openxr_program.h"
+@@ -211,6 +212,7 @@ void android_main(struct android_app* app) {
+         std::shared_ptr<PlatformData> data = std::make_shared<PlatformData>();
+         data->applicationVM = app->activity->vm;
+         data->applicationActivity = app->activity->clazz;
++        SetStereoDecoderAndroidContext(data->applicationVM, data->applicationActivity);
+ 
+         bool requestRestart = false;
+         bool exitRenderLoop = false;
+@@ -252,7 +254,7 @@ void android_main(struct android_app* app) {
+                 // If the timeout is negative, waits indefinitely until an event appears.
+                 const int timeoutMilliseconds =
+                     (!appState.Resumed && !program->IsSessionRunning() && app->destroyRequested == 0) ? -1 : 0;
+-                if (ALooper_pollAll(timeoutMilliseconds, nullptr, &events, (void**)&source) < 0) {
++                if (ALooper_pollOnce(timeoutMilliseconds, nullptr, &events, (void**)&source) < 0) {
+                     break;
+                 }
+ 
+diff --git a/src/tests/hello_xr/openxr_program.cpp b/src/tests/hello_xr/openxr_program.cpp
+index 554a1664e095236373f981832444022b67f14a8c..0ccb34282ff7d18c9b8f248e6c15b184495583bb 100644
+--- a/src/tests/hello_xr/openxr_program.cpp
++++ b/src/tests/hello_xr/openxr_program.cpp
+@@ -343,8 +343,11 @@ struct OpenXrProgram : IOpenXrProgram {
+                 }
+                 m_blendMode = ebm;
+             } else {
+-                // Runtimes return blend modes in preference order
+-                m_blendMode = blendModes[0];
++                // This client presents a virtual video screen over the real room.
++                // Prefer alpha blend so transparent pixels expose camera passthrough.
++                const auto alphaBlend = std::find(blendModes.begin(), blendModes.end(),
++                                                  XR_ENVIRONMENT_BLEND_MODE_ALPHA_BLEND);
++                m_blendMode = alphaBlend != blendModes.end() ? *alphaBlend : blendModes[0];
+             }
+         }
+     }
+@@ -941,9 +944,10 @@ struct OpenXrProgram : IOpenXrProgram {
+         XrActionStateGetInfo getInfo{XR_TYPE_ACTION_STATE_GET_INFO, nullptr, m_input.quitAction, XR_NULL_PATH};
+         XrActionStateBoolean quitValue{XR_TYPE_ACTION_STATE_BOOLEAN};
+         CHECK_XRCMD(xrGetActionStateBoolean(m_session, &getInfo, &quitValue));
+-        if ((quitValue.isActive == XR_TRUE) && (quitValue.changedSinceLastSync == XR_TRUE) && (quitValue.currentState == XR_TRUE)) {
+-            CHECK_XRCMD(xrRequestExitSession(m_session));
+-        }
++        // This calibration build is deliberately controller-free. Android XR can
++        // map hand gestures onto the sample's generic menu binding, so ignore the
++        // stock quit action and let the system UI own app dismissal.
++        (void)quitValue;
+     }
+ 
+     void RenderFrame() override {
+@@ -1006,6 +1010,25 @@ struct OpenXrProgram : IOpenXrProgram {
+         // For each locatable space that we want to visualize, render a 25cm cube.
+         std::vector<Cube> cubes;
+ 
++        // Controller-free optical calibration target: a world-locked grid two metres
++        // in front of the initial OpenXR origin. Straight lines should remain straight
++        // through the lenses and remain stable during small head movements.
++        const XrQuaternionf identity{0.0f, 0.0f, 0.0f, 1.0f};
++        constexpr int gridHalfCount = 10;
++        constexpr float spacing = 0.15f;
++        constexpr float lineThickness = 0.006f;
++        constexpr float targetZ = -2.0f;
++        for (int i = -gridHalfCount; i <= gridHalfCount; ++i) {
++            const float p = static_cast<float>(i) * spacing;
++            const float thickness = i == 0 ? lineThickness * 3.0f : lineThickness;
++            cubes.push_back(Cube{{identity, {p, 0.0f, targetZ}}, {thickness, 3.0f, lineThickness}});
++            cubes.push_back(Cube{{identity, {0.0f, p, targetZ}}, {3.0f, thickness, lineThickness}});
++        }
++
++        // Depth references make incorrect projection scale or eye alignment obvious.
++        cubes.push_back(Cube{{identity, {-0.75f, -0.75f, -1.5f}}, {0.08f, 0.08f, 0.08f}});
++        cubes.push_back(Cube{{identity, {0.75f, -0.75f, -2.5f}}, {0.08f, 0.08f, 0.08f}});
++
+         for (XrSpace visualizedSpace : m_visualizedSpaces) {
+             XrSpaceLocation spaceLocation{XR_TYPE_SPACE_LOCATION};
+             res = xrLocateSpace(visualizedSpace, m_appSpace, predictedDisplayTime, &spaceLocation);
+diff --git a/src/tests/hello_xr/src/main/java/com/xrwired/distortiongrid/StereoDecoder.java b/src/tests/hello_xr/src/main/java/com/xrwired/distortiongrid/StereoDecoder.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..bce9285f5e273b849c294c286111f2909cc96d6b
+--- /dev/null
++++ b/src/tests/hello_xr/src/main/java/com/xrwired/distortiongrid/StereoDecoder.java
+@@ -0,0 +1,111 @@
++package com.xrwired.distortiongrid;
++
++import android.app.Activity;
++import android.graphics.SurfaceTexture;
++import android.media.MediaCodec;
++import android.media.MediaFormat;
++import android.util.Log;
++import android.view.Surface;
++
++import java.io.BufferedInputStream;
++import java.io.DataInputStream;
++import java.io.EOFException;
++import java.net.ServerSocket;
++import java.net.Socket;
++import java.nio.ByteBuffer;
++
++public final class StereoDecoder {
++    private static final String TAG = "XRWiredStereo";
++    private static final int PORT = 45101;
++    private static final int MAX_AU = 16 * 1024 * 1024;
++    private final SurfaceTexture texture;
++    private final Surface surface;
++    private volatile boolean running = true;
++
++    public StereoDecoder(Activity activity, int textureName) {
++        texture = new SurfaceTexture(textureName);
++        surface = new Surface(texture);
++        Thread thread = new Thread(this::serve, "xr-stereo-decoder");
++        thread.start();
++        Log.i(TAG, "Stereo decoder listening on " + PORT);
++    }
++
++    public SurfaceTexture getSurfaceTexture() { return texture; }
++
++    private void serve() {
++        while (running) {
++            try (ServerSocket server = new ServerSocket(PORT); Socket socket = server.accept()) {
++                socket.setTcpNoDelay(true);
++                decode(socket);
++            } catch (Exception error) {
++                if (running) {
++                    Log.e(TAG, "Stereo stream failed", error);
++                    try { Thread.sleep(500); } catch (InterruptedException ignored) { }
++                }
++            }
++        }
++    }
++
++    private void decode(Socket socket) throws Exception {
++        DataInputStream input = new DataInputStream(new BufferedInputStream(socket.getInputStream(), 1024 * 1024));
++        byte[] magic = new byte[4];
++        input.readFully(magic);
++        boolean hevc = magic[0] == 'X' && magic[1] == 'R' && magic[2] == 'H' && magic[3] == '1';
++        boolean avc = magic[0] == 'X' && magic[1] == 'R' && magic[2] == 'S' && magic[3] == '1';
++        if (!hevc && !avc)
++            throw new IllegalArgumentException("Bad stereo stream magic");
++        int width = input.readInt();
++        int height = input.readInt();
++        int fps = input.readInt();
++        texture.setDefaultBufferSize(width, height);
++
++        MediaCodec codec;
++        String mime = hevc ? MediaFormat.MIMETYPE_VIDEO_HEVC : MediaFormat.MIMETYPE_VIDEO_AVC;
++        try { codec = MediaCodec.createByCodecName(hevc ? "c2.qti.hevc.decoder.low_latency" : "c2.qti.avc.decoder.low_latency"); }
++        catch (Exception unavailable) { codec = MediaCodec.createDecoderByType(mime); }
++        MediaFormat format = MediaFormat.createVideoFormat(mime, width, height);
++        format.setInteger(MediaFormat.KEY_LOW_LATENCY, 1);
++        format.setInteger(MediaFormat.KEY_PRIORITY, 0);
++        format.setInteger(MediaFormat.KEY_OPERATING_RATE, fps);
++        format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, MAX_AU);
++        codec.configure(format, surface, null, 0);
++        codec.start();
++        Log.i(TAG, "Decoding " + width + "x" + height + "@" + fps + " " + (hevc ? "HEVC" : "H264") + " with " + codec.getName());
++        MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
++        long frames = 0;
++        try {
++            while (running) {
++                int size;
++                try { size = input.readInt(); } catch (EOFException done) { break; }
++                long ptsUs = input.readLong();
++                if (size <= 0 || size > MAX_AU) throw new IllegalArgumentException("Bad AU size " + size);
++                byte[] au = new byte[size];
++                input.readFully(au);
++                int index;
++                do {
++                    drain(codec, info);
++                    index = codec.dequeueInputBuffer(10_000);
++                } while (index < 0 && running);
++                if (index < 0) break;
++                ByteBuffer buffer = codec.getInputBuffer(index);
++                if (buffer == null || buffer.capacity() < size) throw new IllegalStateException("Input buffer too small");
++                buffer.clear();
++                buffer.put(au);
++                codec.queueInputBuffer(index, 0, size, ptsUs, 0);
++                drain(codec, info);
++                if (++frames % 60 == 0) Log.i(TAG, "Decoded stereo AUs: " + frames);
++            }
++        } finally {
++            try { codec.stop(); } catch (Exception ignored) { }
++            codec.release();
++        }
++    }
++
++    private static void drain(MediaCodec codec, MediaCodec.BufferInfo info) {
++        while (true) {
++            int output = codec.dequeueOutputBuffer(info, 0);
++            if (output >= 0) codec.releaseOutputBuffer(output, true);
++            else if (output != MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) break;
++        }
++    }
++}
+diff --git a/src/tests/hello_xr/stereo_decoder_bridge.h b/src/tests/hello_xr/stereo_decoder_bridge.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..cd55c249fd6578b1a8be9fea99ffd71576e20880
+--- /dev/null
++++ b/src/tests/hello_xr/stereo_decoder_bridge.h
+@@ -0,0 +1,5 @@
++#pragma once
++
++#if defined(XR_USE_PLATFORM_ANDROID)
++void SetStereoDecoderAndroidContext(void* applicationVM, void* applicationActivity);
++#endif

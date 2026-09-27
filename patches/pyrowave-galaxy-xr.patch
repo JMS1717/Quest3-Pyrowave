@@ -1,0 +1,115 @@
+diff --git a/decode.cpp b/decode.cpp
+index 8f4b5e2..ec4abca 100644
+--- a/decode.cpp
++++ b/decode.cpp
+@@ -14,6 +14,11 @@
+ using namespace Granite;
+ using namespace Vulkan;
+ 
++// XRW: the fragment decode path writes planes as colour attachments, not storage images, so
++// usage and layouts differ. device_prefers_fragment_path() selects it for Qualcomm.
++static bool g_fragment_path = false;
++
++
+ struct DecodedBuffer
+ {
+ 	BufferHandle planes[3];
+@@ -44,10 +49,17 @@ static DecodedBuffer run_decoder_frame(CommandBufferHandle &cmd,
+ 
+ 	for (auto &plane : outputs.planes)
+ 	{
+-		cmd->image_barrier(plane->get_image(),
+-		                   VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+-		                   VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
+-		                   VK_PIPELINE_STAGE_2_COPY_BIT, VK_ACCESS_2_TRANSFER_READ_BIT);
++		if (g_fragment_path)
++			cmd->image_barrier(plane->get_image(),
++			                   VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
++			                   VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
++			                   VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
++			                   VK_PIPELINE_STAGE_2_COPY_BIT, VK_ACCESS_2_TRANSFER_READ_BIT);
++		else
++			cmd->image_barrier(plane->get_image(),
++			                   VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
++			                   VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
++			                   VK_PIPELINE_STAGE_2_COPY_BIT, VK_ACCESS_2_TRANSFER_READ_BIT);
+ 	}
+ 
+ 	for (int i = 0; i < 3; i++)
+@@ -79,7 +91,8 @@ static YCbCrImages create_ycbcr_images(Device &device, int width, int height, Vk
+ 	YCbCrImages images;
+ 	auto info = ImageCreateInfo::immutable_2d_image(width, height, fmt);
+ 	info.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+-	             VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
++	             VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
++	             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+ 	info.initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+ 
+ 	images.images[0] = device.create_image(info);
+@@ -197,7 +210,15 @@ static void run_decoder(Device &device, const char *out_path, const char *in_pat
+ 	int frame_rate_num = u32_params[5];
+ 	int frame_rate_den = u32_params[6];
+ 	// Unused chroma siting. YUV4MPEG doesn't seem to have proper support for that.
+-	if (!dec.init(&device, width, height, chroma))
++	// XRW: match bench.cpp and honour the device's preferred path. The default is compute,
++	// but device_prefers_fragment_path() selects fragment for Qualcomm, and the compute path
++	// blanks rows 512-1024 on Adreno 740.
++	bool frag = PyroWave::Decoder::device_prefers_fragment_path(device);
++	if (getenv("PYROWAVE_FORCE_COMPUTE")) frag = false;
++	if (getenv("PYROWAVE_FORCE_FRAGMENT")) frag = true;
++	g_fragment_path = frag;
++	LOGI("XRW: decode path = %s\n", frag ? "fragment" : "compute");
++	if (!dec.init(&device, width, height, chroma, frag))
+ 		return;
+ 
+ 	YUV4MPEGFile output;
+@@ -239,9 +260,15 @@ static void run_decoder(Device &device, const char *out_path, const char *in_pat
+ 
+ 		for (auto &img : outputs.images)
+ 		{
+-			cmd->image_barrier(*img, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL,
+-			                   VK_PIPELINE_STAGE_2_COPY_BIT, 0,
+-			                   VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT);
++			if (g_fragment_path)
++				cmd->image_barrier(*img, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
++				                   VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0,
++				                   VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
++				                   VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
++			else
++				cmd->image_barrier(*img, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL,
++				                   VK_PIPELINE_STAGE_2_COPY_BIT, 0,
++				                   VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT);
+ 		}
+ 
+ 		queue[frame_index & 1] = run_decoder_frame(cmd, dec, outputs.views, frame_index);
+diff --git a/pyrowave_common.cpp b/pyrowave_common.cpp
+index 5b0e79d..18388ec 100644
+--- a/pyrowave_common.cpp
++++ b/pyrowave_common.cpp
+@@ -276,6 +276,10 @@ bool WaveletBuffers::init(Device *device_, int width_, int height_, ChromaSubsam
+ 		}
+ 	}
+ 
++	// XRW: PYROWAVE_FORCE_SSBO=1 overrides the vendor allowlist, which excludes Adreno.
++	if (getenv("PYROWAVE_FORCE_SSBO"))
++		use_readonly_texel_buffer = false;
++
+ 	if (use_readonly_texel_buffer)
+ 		LOGI("Using texel buffers instead of SSBO.\n");
+ 
+diff --git a/pyrowave_decoder.cpp b/pyrowave_decoder.cpp
+index f300dc2..9595ccc 100644
+--- a/pyrowave_decoder.cpp
++++ b/pyrowave_decoder.cpp
+@@ -931,6 +931,11 @@ bool Decoder::device_prefers_fragment_path(Vulkan::Device &device)
+ 
+ void Decoder::Impl::check_linear_texture_support()
+ {
++	// XRW: PYROWAVE_NO_LINEAR_TEX=1 skips the linear-texture payload path, whose images are
++	// created with a hardcoded height of 1024. Suspect for a blanked band on Adreno.
++	if (getenv("PYROWAVE_NO_LINEAR_TEX"))
++		return;
++
+ 	if (!use_readonly_texel_buffer)
+ 		return;
+ 

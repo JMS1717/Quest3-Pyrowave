@@ -1,0 +1,194 @@
+diff --git a/alvr/client_core/src/video_decoder/android.rs b/alvr/client_core/src/video_decoder/android.rs
+index a8e70c2..f69a73b 100644
+--- a/alvr/client_core/src/video_decoder/android.rs
++++ b/alvr/client_core/src/video_decoder/android.rs
+@@ -153,13 +153,20 @@ fn mime_for_codec(codec: CodecType) -> &'static str {
+ }
+ 
+ // Attempts to create a MediaCodec, and then configure and start it.
++// Option key (in mediacodec_extra_options) that selects a hardware decoder by name instead of by
++// MIME type, e.g. "c2.qti.avc.decoder.low_latency" on Galaxy XR. Never passed to MediaFormat.
++const DECODER_NAME_OPTION: &str = "xrw.decoder_name";
++
+ fn decoder_attempt_setup(
+     codec_type: CodecType,
+     is_software: bool,
++    decoder_name: Option<&str>,
+     format: &MediaFormat,
+     image_reader: &ImageReader,
+ ) -> Result<MediaCodec> {
+-    let decoder = if is_software {
++    let decoder = if let (false, Some(name)) = (is_software, decoder_name) {
++        MediaCodec::from_codec_name(name).ok_or(anyhow!("no such codec: {name}"))?
++    } else if is_software {
+         let sw_codec_name = match codec_type {
+             CodecType::H264 => "OMX.google.h264.decoder",
+             CodecType::Hevc => "OMX.google.hevc.decoder",
+@@ -254,7 +261,16 @@ fn decoder_lifecycle(
+     format.set_i32("height", 1024);
+     format.set_buffer("csd-0", &csd_0);
+ 
++    let decoder_name = config
++        .options
++        .iter()
++        .find(|(key, _)| key == DECODER_NAME_OPTION)
++        .map(|(_, prop)| prop.value.clone());
++
+     for (key, prop) in &config.options {
++        if key == DECODER_NAME_OPTION {
++            continue;
++        }
+         let maybe_error = match prop.ty {
+             MediacodecPropType::Float => prop
+                 .value
+@@ -282,17 +298,29 @@ fn decoder_lifecycle(
+     info!("Using AMediaCodec format:{} ", format);
+ 
+     let decoder = if config.force_software_decoder {
+-        decoder_attempt_setup(config.codec, true, &format, &image_reader)?
++        decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
+     } else {
+-        // Hardware decoders sometimes fail at the CSD-0.
+-        // May as well fall back if this occurs.
+-        match decoder_attempt_setup(config.codec, false, &format, &image_reader) {
+-            Ok(d) => d,
+-            Err(e) => {
+-                // would be "warn!" but this is a severe caveat and a pretty major error.
+-                error!("Attempting software fallback due to error in default decoder: {e:#}");
+-
+-                decoder_attempt_setup(config.codec, true, &format, &image_reader)?
++        let named = decoder_name.as_deref().map(|name| {
++            decoder_attempt_setup(config.codec, false, Some(name), &format, &image_reader)
++                .inspect_err(|e| error!("Named decoder {name} failed, using default: {e:#}"))
++        });
++        match named {
++            Some(Ok(d)) => {
++                info!("Using named decoder {}", decoder_name.as_deref().unwrap_or_default());
++                d
++            }
++            _ => {
++                // Hardware decoders sometimes fail at the CSD-0.
++                // May as well fall back if this occurs.
++                match decoder_attempt_setup(config.codec, false, None, &format, &image_reader) {
++                    Ok(d) => d,
++                    Err(e) => {
++                        // would be "warn!" but this is a severe caveat and a pretty major error.
++                        error!("Attempting software fallback due to error in default decoder: {e:#}");
++
++                        decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
++                    }
++                }
+             }
+         }
+     };
+diff --git a/alvr/client_openxr/Cargo.toml b/alvr/client_openxr/Cargo.toml
+index 152e38d..5546a2e 100644
+--- a/alvr/client_openxr/Cargo.toml
++++ b/alvr/client_openxr/Cargo.toml
+@@ -26,7 +26,7 @@ libc = "0.2"
+ ndk-context = "0.1"
+ 
+ [package.metadata.android]
+-package = "alvr.client.stable"             # Changed for Meta Store
++package = "alvr.client.stabletest"         # Isolated Galaxy XR version-comparison app
+ install_location = "auto"
+ build_targets = ["aarch64-linux-android"]
+ runtime_libs = "../../deps/android_openxr"
+@@ -42,7 +42,7 @@ keystore_password = "alvrclient"
+ 
+ [package.metadata.android.sdk]
+ min_sdk_version = 26
+-target_sdk_version = 32
++target_sdk_version = 35
+ 
+ [[package.metadata.android.uses_feature]]
+ name = "android.hardware.microphone"
+@@ -82,7 +82,7 @@ authorities = "org.khronos.openxr.runtime_broker;org.khronos.openxr.system_runti
+ debuggable = false
+ theme = "@android:style/Theme.Black.NoTitleBar.Fullscreen"
+ icon = "@mipmap/ic_launcher"
+-label = "ALVR"
++label = "ALVR Stable Test"
+ 
+ [package.metadata.android.application.activity]
+ config_changes = "density|keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|uiMode"
+@@ -201,6 +201,18 @@ name = "com.yvr.intent.category.VR"
+ value = "vr_only"
+ 
+ # Lynx entries
++[[package.metadata.android.application.uses_native_library]]
++name = "libopenxr.google.so"
++required = false
++
++[[package.metadata.android.application.property]]
++name = "android.window.PROPERTY_XR_ACTIVITY_START_MODE"
++value = "XR_ACTIVITY_START_MODE_FULL_SPACE_UNMANAGED"
++
++[[package.metadata.android.uses_feature]]
++name = "android.software.xr.api.openxr"
++required = true
++
+ [[package.metadata.android.queries.package]]
+ name = "com.ultraleap.tracking.service"
+ [[package.metadata.android.queries.package]]
+diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
+index 3e35add..ecad12e 100644
+--- a/alvr/client_openxr/src/lib.rs
++++ b/alvr/client_openxr/src/lib.rs
+@@ -137,6 +137,10 @@ pub fn entry_point() {
+     alvr_client_core::init_logging();
+ 
+     let platform = alvr_system_info::platform();
++    #[cfg(target_os = "android")]
++    let galaxy_xr = alvr_system_info::model_name() == "SM-I610";
++    #[cfg(not(target_os = "android"))]
++    let galaxy_xr = false;
+ 
+     let loader_suffix = match platform {
+         Platform::Quest1 => "_quest1",
+@@ -251,6 +255,8 @@ pub fn entry_point() {
+ 
+         let refresh_rates = if exts.fb_display_refresh_rate {
+             xr_session.enumerate_display_refresh_rates().unwrap()
++        } else if galaxy_xr {
++            vec![72.0, 90.0]
+         } else {
+             vec![90.0]
+         };
+@@ -266,7 +272,7 @@ pub fn entry_point() {
+             refresh_rates,
+             foveated_encoding: platform != Platform::Unknown,
+             encoder_high_profile: platform != Platform::Unknown,
+-            encoder_10_bits: platform != Platform::Unknown,
++            encoder_10_bits: galaxy_xr || platform != Platform::Unknown,
+             encoder_av1: matches!(
+                 platform,
+                 Platform::Quest3 | Platform::Quest3S | Platform::Pico4Ultra
+@@ -290,7 +296,7 @@ pub fn entry_point() {
+             Rc::clone(&graphics_context),
+             Arc::clone(&interaction_context),
+             platform,
+-            default_view_resolution,
++            if galaxy_xr { UVec2::new(1440, 1440) } else { default_view_resolution },
+             &last_lobby_message,
+         );
+         let lobby_body_tracking_config = BodyTrackingSourcesConfig {
+@@ -314,6 +320,7 @@ pub fn entry_point() {
+         let mut passthrough_layer = None;
+ 
+         let mut event_storage = xr::EventDataBuffer::new();
++        let mut last_display_period = 0;
+         'render_loop: loop {
+             while let Some(event) = xr_instance.poll_event(&mut event_storage).unwrap() {
+                 match event {
+@@ -465,6 +472,10 @@ pub fn entry_point() {
+             };
+             let frame_interval =
+                 Duration::from_nanos(frame_state.predicted_display_period.as_nanos() as _);
++            if galaxy_xr && last_display_period != frame_interval.as_nanos() {
++                last_display_period = frame_interval.as_nanos();
++                info!("Galaxy XR runtime display period: {} ns", last_display_period);
++            }
+             let vsync_time =
+                 Duration::from_nanos(frame_state.predicted_display_time.as_nanos() as _);
+ 

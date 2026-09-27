@@ -1,0 +1,6 @@
+wavelet: CDF 9/7, PYROWAVE_PRECISION=1
+decode_is_ready(complete) = yes
+T2 decode      : best 7.033 ms, mean 7.066 ms
+T3-T2 convert  : best 1.466 ms, mean 1.466 ms   (the GLES bridge)
+over 200 iteration(s)
+wrote A97_p1.y4m

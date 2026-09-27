@@ -1,0 +1,1275 @@
+diff --git a/alvr/client_core/src/connection.rs b/alvr/client_core/src/connection.rs
+index 2fde777..57d54c7 100644
+--- a/alvr/client_core/src/connection.rs
++++ b/alvr/client_core/src/connection.rs
+@@ -330,6 +330,8 @@ fn connection_pipeline(
+                     stats.report_video_packet_received(header.timestamp);
+                 }
+ 
++                crate::push_foveation_center(header.timestamp, header.foveation_center);
++
+                 if header.is_idr {
+                     stream_corrupted = false;
+                 } else if data.had_packet_loss() {
+diff --git a/alvr/client_core/src/lib.rs b/alvr/client_core/src/lib.rs
+index d36cb4f..c7fa841 100644
+--- a/alvr/client_core/src/lib.rs
++++ b/alvr/client_core/src/lib.rs
+@@ -20,6 +20,7 @@ pub mod video_decoder;
+ use alvr_common::{
+     dbg_client_core, error,
+     glam::{UVec2, Vec2, Vec3},
++    once_cell::sync::Lazy,
+     parking_lot::{Mutex, RwLock},
+     warn, ConnectionState, DeviceMotion, LifecycleState, Pose, HAND_LEFT_ID, HAND_RIGHT_ID,
+     HEAD_ID,
+@@ -73,6 +74,23 @@ pub struct ClientCapabilities {
+     pub prefer_hdr: bool,
+ }
+ 
++/// Recent `(target_timestamp, foveation_center)` pairs from video packet headers.
++///
++/// Bounded and tiny: the consumer asks for the frame it is about to draw, which is always within
++/// a few frames of arrival, so anything older is dead weight.
++static FOVEATION_CENTER_HISTORY: Lazy<Mutex<VecDeque<(Duration, [[f32; 2]; 2])>>> =
++    Lazy::new(|| Mutex::new(VecDeque::new()));
++
++const FOVEATION_CENTER_HISTORY_SIZE: usize = 16;
++
++pub(crate) fn push_foveation_center(timestamp: Duration, center: [[f32; 2]; 2]) {
++    let mut history = FOVEATION_CENTER_HISTORY.lock();
++    history.push_back((timestamp, center));
++    while history.len() > FOVEATION_CENTER_HISTORY_SIZE {
++        history.pop_front();
++    }
++}
++
+ pub struct ClientCoreContext {
+     lifecycle_state: Arc<RwLock<LifecycleState>>,
+     event_queue: Arc<Mutex<VecDeque<ClientCoreEvent>>>,
+@@ -352,6 +370,24 @@ impl ClientCoreContext {
+         *self.connection_context.state.write() = ConnectionState::Disconnecting;
+     }
+ 
++    /// The foveation centre the server applied to the frame with this timestamp, if known.
++    ///
++    /// Looked up rather than recomputed: the server quantises the shift to encoder-block
++    /// alignment and picks whichever gaze it had at render time, and `face_data` does not respect
++    /// `target_timestamp`, so the client has no way to reproduce the value. An inverse warp built
++    /// on a different centre than the forward warp smears the image.
++    ///
++    /// Returns `None` for a frame whose header never arrived -- a repeat of the last good frame,
++    /// for instance -- and the caller should then leave the centre where it is.
++    pub fn get_foveation_center(&self, timestamp: Duration) -> Option<[[f32; 2]; 2]> {
++        FOVEATION_CENTER_HISTORY
++            .lock()
++            .iter()
++            .rev()
++            .find(|(ts, _)| *ts == timestamp)
++            .map(|(_, center)| *center)
++    }
++
+     pub fn report_compositor_start(&self, timestamp: Duration) -> [ViewParams; 2] {
+         dbg_client_core!("report_compositor_start");
+ 
+diff --git a/alvr/client_core/src/video_decoder/android.rs b/alvr/client_core/src/video_decoder/android.rs
+index a8e70c2..f69a73b 100644
+--- a/alvr/client_core/src/video_decoder/android.rs
++++ b/alvr/client_core/src/video_decoder/android.rs
+@@ -153,13 +153,20 @@ fn mime_for_codec(codec: CodecType) -> &'static str {
+ }
+ 
+ // Attempts to create a MediaCodec, and then configure and start it.
++// Option key (in mediacodec_extra_options) that selects a hardware decoder by name instead of by
++// MIME type, e.g. "c2.qti.avc.decoder.low_latency" on Galaxy XR. Never passed to MediaFormat.
++const DECODER_NAME_OPTION: &str = "xrw.decoder_name";
++
+ fn decoder_attempt_setup(
+     codec_type: CodecType,
+     is_software: bool,
++    decoder_name: Option<&str>,
+     format: &MediaFormat,
+     image_reader: &ImageReader,
+ ) -> Result<MediaCodec> {
+-    let decoder = if is_software {
++    let decoder = if let (false, Some(name)) = (is_software, decoder_name) {
++        MediaCodec::from_codec_name(name).ok_or(anyhow!("no such codec: {name}"))?
++    } else if is_software {
+         let sw_codec_name = match codec_type {
+             CodecType::H264 => "OMX.google.h264.decoder",
+             CodecType::Hevc => "OMX.google.hevc.decoder",
+@@ -254,7 +261,16 @@ fn decoder_lifecycle(
+     format.set_i32("height", 1024);
+     format.set_buffer("csd-0", &csd_0);
+ 
++    let decoder_name = config
++        .options
++        .iter()
++        .find(|(key, _)| key == DECODER_NAME_OPTION)
++        .map(|(_, prop)| prop.value.clone());
++
+     for (key, prop) in &config.options {
++        if key == DECODER_NAME_OPTION {
++            continue;
++        }
+         let maybe_error = match prop.ty {
+             MediacodecPropType::Float => prop
+                 .value
+@@ -282,17 +298,29 @@ fn decoder_lifecycle(
+     info!("Using AMediaCodec format:{} ", format);
+ 
+     let decoder = if config.force_software_decoder {
+-        decoder_attempt_setup(config.codec, true, &format, &image_reader)?
++        decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
+     } else {
+-        // Hardware decoders sometimes fail at the CSD-0.
+-        // May as well fall back if this occurs.
+-        match decoder_attempt_setup(config.codec, false, &format, &image_reader) {
+-            Ok(d) => d,
+-            Err(e) => {
+-                // would be "warn!" but this is a severe caveat and a pretty major error.
+-                error!("Attempting software fallback due to error in default decoder: {e:#}");
+-
+-                decoder_attempt_setup(config.codec, true, &format, &image_reader)?
++        let named = decoder_name.as_deref().map(|name| {
++            decoder_attempt_setup(config.codec, false, Some(name), &format, &image_reader)
++                .inspect_err(|e| error!("Named decoder {name} failed, using default: {e:#}"))
++        });
++        match named {
++            Some(Ok(d)) => {
++                info!("Using named decoder {}", decoder_name.as_deref().unwrap_or_default());
++                d
++            }
++            _ => {
++                // Hardware decoders sometimes fail at the CSD-0.
++                // May as well fall back if this occurs.
++                match decoder_attempt_setup(config.codec, false, None, &format, &image_reader) {
++                    Ok(d) => d,
++                    Err(e) => {
++                        // would be "warn!" but this is a severe caveat and a pretty major error.
++                        error!("Attempting software fallback due to error in default decoder: {e:#}");
++
++                        decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
++                    }
++                }
+             }
+         }
+     };
+diff --git a/alvr/client_openxr/Cargo.toml b/alvr/client_openxr/Cargo.toml
+index 152e38d..4120103 100644
+--- a/alvr/client_openxr/Cargo.toml
++++ b/alvr/client_openxr/Cargo.toml
+@@ -26,7 +26,7 @@ libc = "0.2"
+ ndk-context = "0.1"
+ 
+ [package.metadata.android]
+-package = "alvr.client.stable"             # Changed for Meta Store
++package = "alvr.client.galaxy2013"          # Galaxy XR 20.13 test app
+ install_location = "auto"
+ build_targets = ["aarch64-linux-android"]
+ runtime_libs = "../../deps/android_openxr"
+@@ -42,7 +42,7 @@ keystore_password = "alvrclient"
+ 
+ [package.metadata.android.sdk]
+ min_sdk_version = 26
+-target_sdk_version = 32
++target_sdk_version = 35
+ 
+ [[package.metadata.android.uses_feature]]
+ name = "android.hardware.microphone"
+@@ -71,6 +71,10 @@ name = "android.permission.WAKE_LOCK"
+ name = "org.khronos.openxr.permission.OPENXR"
+ [[package.metadata.android.uses_permission]]
+ name = "org.khronos.openxr.permission.OPENXR_SYSTEM"
++# Android XR gates gaze behind a dangerous permission in the XR_EYE_SENSITIVE group. Declaring it
++# is necessary but not sufficient -- it must also be requested at runtime, see interaction.rs.
++[[package.metadata.android.uses_permission]]
++name = "android.permission.EYE_TRACKING_FINE"
+ 
+ [[package.metadata.android.queries.intent]]
+ actions = ["org.khronos.openxr.OpenXRRuntimeService"]
+@@ -82,7 +86,7 @@ authorities = "org.khronos.openxr.runtime_broker;org.khronos.openxr.system_runti
+ debuggable = false
+ theme = "@android:style/Theme.Black.NoTitleBar.Fullscreen"
+ icon = "@mipmap/ic_launcher"
+-label = "ALVR"
++label = "ALVR 20.13 Galaxy"
+ 
+ [package.metadata.android.application.activity]
+ config_changes = "density|keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|uiMode"
+@@ -201,6 +205,18 @@ name = "com.yvr.intent.category.VR"
+ value = "vr_only"
+ 
+ # Lynx entries
++[[package.metadata.android.application.uses_native_library]]
++name = "libopenxr.google.so"
++required = false
++
++[[package.metadata.android.application.property]]
++name = "android.window.PROPERTY_XR_ACTIVITY_START_MODE"
++value = "XR_ACTIVITY_START_MODE_FULL_SPACE_UNMANAGED"
++
++[[package.metadata.android.uses_feature]]
++name = "android.software.xr.api.openxr"
++required = true
++
+ [[package.metadata.android.queries.package]]
+ name = "com.ultraleap.tracking.service"
+ [[package.metadata.android.queries.package]]
+diff --git a/alvr/client_openxr/src/extra_extensions/eye_tracking_android.rs b/alvr/client_openxr/src/extra_extensions/eye_tracking_android.rs
+new file mode 100644
+index 0000000..e24cdba
+--- /dev/null
++++ b/alvr/client_openxr/src/extra_extensions/eye_tracking_android.rs
+@@ -0,0 +1,176 @@
++//! `XR_ANDROID_eye_tracking` — Google's eye tracking for the Android XR runtime.
++//!
++//! ALVR's existing gaze path is `XR_EXT_eye_gaze_interaction`, which is an *action*: the runtime
++//! binds `/interaction_profiles/ext/eye_gaze_interaction` and the app reads a pose from an action
++//! space. On Galaxy XR that action never becomes active, with the extension enabled, the binding
++//! suggested without error, the permission granted, calibration done and eyes in the headset
++//! (measured 2026-09-20). The same mechanism failed elsewhere too, see CheekyFoveatedDLSS#31.
++//!
++//! This extension has no actions, no interaction profile and no binding: create a tracker, then
++//! query poses per frame. That removes the entire layer that is failing, and it is the runtime
++//! vendor's own API.
++//!
++//! The `openxr` crate has no bindings for it, so the structures and entry points are declared
++//! here. The XrStructureType values follow the registry rule
++//! `1000000000 + 1000*(extension_number - 1) + offset` with extension number 457; the rule was
++//! checked against `XR_FB_eye_tracking_social`, whose values the crate does define.
++
++use openxr::{self as xr, sys};
++use std::{ffi::CString, mem, ptr};
++
++pub const ANDROID_EYE_TRACKING_EXTENSION_NAME: &str = "XR_ANDROID_eye_tracking";
++
++const TYPE_EYES: i32 = 1_000_456_000;
++const TYPE_EYE_TRACKER_CREATE_INFO: i32 = 1_000_456_001;
++const TYPE_EYES_GET_INFO: i32 = 1_000_456_002;
++const TYPE_SYSTEM_EYE_TRACKING_PROPERTIES: i32 = 1_000_456_004;
++
++const EYE_MAX: usize = 2;
++const EYE_STATE_GAZING: i32 = 1;
++
++#[repr(C)]
++struct EyeTrackerCreateInfo {
++    ty: sys::StructureType,
++    next: *const std::ffi::c_void,
++}
++
++#[repr(C)]
++struct EyesGetInfo {
++    ty: sys::StructureType,
++    next: *const std::ffi::c_void,
++    time: sys::Time,
++    base_space: sys::Space,
++}
++
++#[repr(C)]
++#[derive(Clone, Copy)]
++struct Eye {
++    eye_state: i32,
++    eye_pose: sys::Posef,
++}
++
++#[repr(C)]
++struct Eyes {
++    ty: sys::StructureType,
++    next: *mut std::ffi::c_void,
++    eyes: [Eye; EYE_MAX],
++    mode: i32,
++}
++
++#[repr(C)]
++struct SystemEyeTrackingProperties {
++    ty: sys::StructureType,
++    next: *mut std::ffi::c_void,
++    supports_eye_tracking: sys::Bool32,
++}
++
++type EyeTrackerHandle = u64;
++
++type CreateEyeTracker = unsafe extern "system" fn(
++    sys::Session,
++    *const EyeTrackerCreateInfo,
++    *mut EyeTrackerHandle,
++) -> sys::Result;
++type DestroyEyeTracker = unsafe extern "system" fn(EyeTrackerHandle) -> sys::Result;
++type GetEyesInfo = unsafe extern "system" fn(
++    EyeTrackerHandle,
++    *const EyesGetInfo,
++    *mut Eyes,
++) -> sys::Result;
++
++unsafe fn proc_addr(instance: &xr::Instance, name: &str) -> Option<sys::pfn::VoidFunction> {
++    let cname = CString::new(name).ok()?;
++    let mut f = None;
++    let get = instance.fp().get_instance_proc_addr;
++    if get(instance.as_raw(), cname.as_ptr(), &mut f).into_raw() < 0 {
++        return None;
++    }
++    f
++}
++
++pub struct EyeTrackerAndroid {
++    handle: EyeTrackerHandle,
++    get_fine: GetEyesInfo,
++    destroy: DestroyEyeTracker,
++}
++
++impl EyeTrackerAndroid {
++    /// None when the runtime does not advertise eye tracking, the entry points are missing, or
++    /// tracker creation fails — most often because EYE_TRACKING_FINE has not been granted.
++    pub fn new<G>(session: &xr::Session<G>, system: xr::SystemId) -> Option<Self> {
++        let instance = session.instance();
++
++        let mut props = SystemEyeTrackingProperties {
++            ty: sys::StructureType::from_raw(TYPE_SYSTEM_EYE_TRACKING_PROPERTIES),
++            next: ptr::null_mut(),
++            supports_eye_tracking: sys::FALSE,
++        };
++        let mut system_props =
++            sys::SystemProperties::out((&mut props as *mut SystemEyeTrackingProperties).cast());
++        let supported = unsafe {
++            (instance.fp().get_system_properties)(
++                instance.as_raw(),
++                system,
++                system_props.as_mut_ptr(),
++            )
++            .into_raw()
++                >= 0
++                && props.supports_eye_tracking.into()
++        };
++        if !supported {
++            return None;
++        }
++
++        let create: CreateEyeTracker =
++            unsafe { mem::transmute(proc_addr(instance, "xrCreateEyeTrackerANDROID")?) };
++        let get_fine: GetEyesInfo =
++            unsafe { mem::transmute(proc_addr(instance, "xrGetFineTrackingEyesInfoANDROID")?) };
++        let destroy: DestroyEyeTracker =
++            unsafe { mem::transmute(proc_addr(instance, "xrDestroyEyeTrackerANDROID")?) };
++
++        let info = EyeTrackerCreateInfo {
++            ty: sys::StructureType::from_raw(TYPE_EYE_TRACKER_CREATE_INFO),
++            next: ptr::null(),
++        };
++        let mut handle: EyeTrackerHandle = 0;
++        if unsafe { create(session.as_raw(), &info, &mut handle).into_raw() } < 0 {
++            return None;
++        }
++
++        Some(Self {
++            handle,
++            get_fine,
++            destroy,
++        })
++    }
++
++    /// Per-eye pupil poses, None per eye when that eye is not gazing (shut, or not tracked).
++    pub fn get_eye_poses(&self, base: &xr::Space, time: xr::Time) -> [Option<xr::Posef>; 2] {
++        let info = EyesGetInfo {
++            ty: sys::StructureType::from_raw(TYPE_EYES_GET_INFO),
++            next: ptr::null(),
++            time,
++            base_space: base.as_raw(),
++        };
++        let mut eyes = Eyes {
++            ty: sys::StructureType::from_raw(TYPE_EYES),
++            next: ptr::null_mut(),
++            eyes: [Eye {
++                eye_state: 0,
++                eye_pose: sys::Posef::IDENTITY,
++            }; EYE_MAX],
++            mode: 0,
++        };
++        if unsafe { (self.get_fine)(self.handle, &info, &mut eyes).into_raw() } < 0 {
++            return [None, None];
++        }
++        let pick = |e: &Eye| (e.eye_state == EYE_STATE_GAZING).then_some(e.eye_pose);
++        [pick(&eyes.eyes[0]), pick(&eyes.eyes[1])]
++    }
++}
++
++impl Drop for EyeTrackerAndroid {
++    fn drop(&mut self) {
++        unsafe { (self.destroy)(self.handle) };
++    }
++}
+diff --git a/alvr/client_openxr/src/extra_extensions/mod.rs b/alvr/client_openxr/src/extra_extensions/mod.rs
+index 3496c61..4349573 100644
+--- a/alvr/client_openxr/src/extra_extensions/mod.rs
++++ b/alvr/client_openxr/src/extra_extensions/mod.rs
+@@ -1,6 +1,7 @@
+ mod body_tracking_bd;
+ mod body_tracking_fb;
+ mod eye_gaze_interaction;
++mod eye_tracking_android;
+ mod eye_tracking_social;
+ mod face_tracking2_fb;
+ mod face_tracking_pico;
+@@ -13,6 +14,7 @@ mod passthrough_htc;
+ pub use body_tracking_bd::*;
+ pub use body_tracking_fb::*;
+ pub use eye_gaze_interaction::*;
++pub use eye_tracking_android::*;
+ pub use eye_tracking_social::*;
+ pub use face_tracking2_fb::*;
+ pub use face_tracking_pico::*;
+diff --git a/alvr/client_openxr/src/interaction.rs b/alvr/client_openxr/src/interaction.rs
+index a917777..b28fdde 100644
+--- a/alvr/client_openxr/src/interaction.rs
++++ b/alvr/client_openxr/src/interaction.rs
+@@ -62,6 +62,9 @@ pub struct HandInteraction {
+ }
+ 
+ pub struct FaceSources {
++    /// Preferred over `combined_eyes_source` where present: a direct query with no action,
++    /// interaction profile or binding, which is the layer that fails on Galaxy XR.
++    pub eye_tracker_android: Option<extra_extensions::EyeTrackerAndroid>,
+     pub combined_eyes_source: Option<(xr::Action<xr::Posef>, xr::Space)>,
+     pub eye_tracker_fb: Option<EyeTrackerSocial>,
+     pub face_tracker_fb: Option<FaceTracker2FB>,
+@@ -294,7 +297,7 @@ impl InteractionContext {
+         // extensions function pointers are available even if the feature is not supported by the
+         // hardware. The full checks are done in supports_eye_gaze_interaction. This is required
+         // to avoid a crash when requesting the EYE_TRACKING permission.
+-        let combined_eyes_source = if !platform.is_quest()
++        let combined_eyes_action = if !platform.is_quest()
+             && !platform.is_vive()
+             && extra_extensions::supports_eye_gaze_interaction(&xr_session, xr_system)
+         {
+@@ -307,6 +310,16 @@ impl InteractionContext {
+                 alvr_system_info::try_get_permission("com.picovr.permission.EYE_TRACKING")
+             }
+ 
++            // Galaxy XR runs Android XR, which gates gaze behind its own dangerous permission.
++            // 20.13.0 has no Platform variant for it -- upstream only added SamsungGalaxyXR after
++            // v20.14.1 -- so match the model the way the rest of this patch does. Approval is
++            // asynchronous: the first run raises the prompt and gaze stays inactive until the
++            // client is reopened.
++            #[cfg(target_os = "android")]
++            if alvr_system_info::model_name() == "SM-I610" {
++                alvr_system_info::try_get_permission("android.permission.EYE_TRACKING_FINE")
++            }
++
+             let action = action_set
+                 .create_action("combined_eye_gaze", "Combined eye gaze", &[])
+                 .unwrap();
+@@ -321,17 +334,32 @@ impl InteractionContext {
+                 warn!("Failed to register combined eye gaze input: {res:?}");
+             }
+ 
+-            let space = action
+-                .create_space(xr_session.clone(), xr::Path::NULL, xr::Posef::IDENTITY)
+-                .unwrap();
+-
+-            Some((action, space))
++            Some(action)
+         } else {
+             None
+         };
+ 
+         xr_session.attach_action_sets(&[&action_set]).unwrap();
+ 
++        // Built before xr_session is moved into the returned struct below.
++        let eye_tracker_android =
++            extra_extensions::EyeTrackerAndroid::new(&xr_session, xr_system);
++
++        // The gaze action space is created *after* attach, like the grip spaces below.
++        //
++        // Stock 20.13.0 creates it before, and this runtime rejects it: on Galaxy XR the gaze
++        // action then reports inactive forever, with the extension present, the permission
++        // granted and eyes in the headset (measured 2026-09-20). The same ordering broke
++        // CheekyFoveatedDLSS#31 on Virtual Desktop, so it is not specific to Android XR.
++        // Nothing else in this function created a space before attaching, which is what made
++        // the gaze one look out of place to begin with.
++        let combined_eyes_source = combined_eyes_action.map(|action| {
++            let space = action
++                .create_space(xr_session.clone(), xr::Path::NULL, xr::Posef::IDENTITY)
++                .unwrap();
++            (action, space)
++        });
++
+         let left_grip_space = left_grip_action
+             .create_space(xr_session.clone(), xr::Path::NULL, xr::Posef::IDENTITY)
+             .unwrap();
+@@ -400,6 +428,7 @@ impl InteractionContext {
+             multimodal_handle,
+             multimodal_hands_enabled: false,
+             face_sources: FaceSources {
++                eye_tracker_android,
+                 combined_eyes_source,
+                 eye_tracker_fb: None,
+                 face_tracker_fb: None,
+@@ -844,6 +873,20 @@ pub fn get_eye_gazes(
+ ) -> [Option<Pose>; 2] {
+     let xr_time = crate::to_xr_time(time);
+ 
++    if let Some(tracker) = &sources.eye_tracker_android {
++        let poses = tracker.get_eye_poses(reference_space, xr_time);
++        if poses[0].is_some() || poses[1].is_some() {
++            gaze_diag("gaze tracked via XR_ANDROID_eye_tracking");
++            return [
++                poses[0].map(crate::from_xr_pose),
++                poses[1].map(crate::from_xr_pose),
++            ];
++        }
++        // Falls through rather than returning: eyes shut or momentarily untracked should not
++        // stop the action path from being tried, and the diagnostics below say which is which.
++        gaze_diag("android eye tracker present but neither eye is gazing");
++    }
++
+     'fb_eyes: {
+         let Some(tracker) = &sources.eye_tracker_fb else {
+             break 'fb_eyes;
+@@ -858,28 +901,58 @@ pub fn get_eye_gazes(
+     };
+ 
+     let Some((eyes_action, eyes_space)) = &sources.combined_eyes_source else {
++        gaze_diag("no combined eye gaze source (extension missing or platform blocked)");
+         return [None, None];
+     };
+     if !eyes_action
+         .is_active(xr_session, xr::Path::NULL)
+         .unwrap_or(false)
+     {
++        // The usual causes are an ungranted EYE_TRACKING permission and an action space created
++        // before xrAttachSessionActionSets. Both look identical from here, hence the log.
++        gaze_diag("gaze action inactive (permission not granted, or action space rejected)");
+         return [None, None];
+     }
+ 
+     if let Ok(location) = eyes_space.locate(reference_space, xr_time) {
+-        [
+-            location
+-                .location_flags
+-                .contains(xr::SpaceLocationFlags::ORIENTATION_TRACKED)
+-                .then(|| crate::from_xr_pose(location.pose)),
+-            None,
+-        ]
++        if location
++            .location_flags
++            .contains(xr::SpaceLocationFlags::ORIENTATION_TRACKED)
++        {
++            let o = location.pose.orientation;
++            gaze_diag(&format!(
++                "gaze tracked: quat {:.3} {:.3} {:.3} {:.3}",
++                o.x, o.y, o.z, o.w
++            ));
++            return [Some(crate::from_xr_pose(location.pose)), None];
++        }
++        gaze_diag("gaze located but orientation not tracked");
++        [None, None]
+     } else {
++        gaze_diag("gaze space locate failed");
+         [None, None]
+     }
+ }
+ 
++/// One line a second about why gaze is or is not arriving.
++///
++/// Every failure here -- missing extension, ungranted permission, an action space the runtime
++/// rejected, a pose that is present but untracked -- otherwise collapses into the same silent
++/// `[None, None]`, and the whole foveation feature downstream just quietly does nothing.
++fn gaze_diag(message: &str) {
++    use std::sync::atomic::{AtomicU64, Ordering};
++    static TICK: AtomicU64 = AtomicU64::new(0);
++    let tick = TICK.fetch_add(1, Ordering::Relaxed);
++    if tick % 72 == 0 {
++        // error!, not info!. Once the client connects, `logging_backend::send_log` drops anything
++        // below the server's client log level from logcat *and* the event stream -- and this
++        // function only ever runs while connected, so an info-level line is invisible exactly when
++        // it is needed. Including the frame number also keeps each line unique, so the 1 s
++        // repeated-message collapse in the same module cannot swallow a steady-state diagnostic.
++        alvr_common::error!("[GAZE] frame {tick}: {message}");
++    }
++}
++
+ pub fn get_fb_face_expression(context: &FaceSources, time: Duration) -> Option<Vec<f32>> {
+     let xr_time = crate::to_xr_time(time);
+ 
+diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
+index 8fe7309..3aaa2cd 100644
+--- a/alvr/client_openxr/src/lib.rs
++++ b/alvr/client_openxr/src/lib.rs
+@@ -137,6 +137,10 @@ pub fn entry_point() {
+     alvr_client_core::init_logging();
+ 
+     let platform = alvr_system_info::platform();
++    #[cfg(target_os = "android")]
++    let galaxy_xr = alvr_system_info::model_name() == "SM-I610";
++    #[cfg(not(target_os = "android"))]
++    let galaxy_xr = false;
+ 
+     let loader_suffix = match platform {
+         Platform::Quest1 => "_quest1",
+@@ -158,6 +162,20 @@ pub fn entry_point() {
+ 
+     let available_extensions = xr_entry.enumerate_extensions().unwrap();
+     alvr_common::info!("OpenXR available extensions: {available_extensions:#?}");
++    // Kept as its own Vec because `available_extensions` is consumed further down, and the
++    // [REPROJ] probe that needs these names runs after that point.
++    let advertised_extension_names: Vec<String> = available_extensions.other.clone();
++
++    // Does this runtime offer a Vulkan graphics binding? The [REPROJ] probe below cannot answer
++    // it: that logs available_extensions.other, which holds only extensions the openxr crate does
++    // not know, and the KHR vulkan enables are known fields. Logged at error! so it survives the
++    // event-stream filter into logcat.
++    alvr_common::error!(
++        "[VKPROBE] khr_vulkan_enable={} khr_vulkan_enable2={} khr_opengl_es_enable={}",
++        available_extensions.khr_vulkan_enable,
++        available_extensions.khr_vulkan_enable2,
++        available_extensions.khr_opengl_es_enable,
++    );
+ 
+     // todo: switch to vulkan
+     assert!(available_extensions.khr_opengl_es_enable);
+@@ -165,6 +183,16 @@ pub fn entry_point() {
+     let mut exts = xr::ExtensionSet::default();
+     exts.bd_controller_interaction = available_extensions.bd_controller_interaction;
+     exts.ext_eye_gaze_interaction = available_extensions.ext_eye_gaze_interaction;
++    // The openxr crate has no bindings for XR_ANDROID_eye_tracking, so it is enabled by name.
++    // Galaxy XR's gaze action never activates; this extension queries poses directly instead.
++    if available_extensions
++        .other
++        .iter()
++        .any(|e| e == extra_extensions::ANDROID_EYE_TRACKING_EXTENSION_NAME)
++    {
++        exts.other
++            .push(extra_extensions::ANDROID_EYE_TRACKING_EXTENSION_NAME.into());
++    }
+     exts.ext_hand_tracking = available_extensions.ext_hand_tracking;
+     exts.ext_local_floor = available_extensions.ext_local_floor;
+     exts.fb_body_tracking = available_extensions.fb_body_tracking;
+@@ -243,6 +271,25 @@ pub fn entry_point() {
+             .unwrap();
+         assert_eq!(views_config.len(), 2);
+ 
++        // error! so it reaches logcat even once connected -- see gaze_diag in interaction.rs.
++        // ALVR hardcodes EnvironmentBlendMode::OPAQUE and gets passthrough from a separate
++        // XR_FB_passthrough layer, which this runtime does not advertise (fb_passthrough: false).
++        // If ALPHA_BLEND is supported, passthrough needs no extension at all: the existing blend /
++        // chroma-key shader already makes pixels transparent, and the runtime composites
++        // passthrough behind. That is the "one giant screen, rest passthrough" case.
++        // ALVR gets passthrough from an XR_FB_passthrough / XR_HTC_passthrough layer composited
++        // underneath, and PassthroughLayer::new bails when neither is present -- which is the
++        // Galaxy XR (fb_passthrough: false, htc_passthrough: false), so passthrough silently never
++        // happened. This runtime does support core OpenXR's ALPHA_BLEND, which needs no extension
++        // at all: the stream shader already makes pixels transparent for the blend and chroma-key
++        // modes, and the compositor puts passthrough behind them. Measured here:
++        // [BLEND] environment blend modes: Ok([OPAQUE, ALPHA_BLEND])
++        let blend_modes = xr_instance
++            .enumerate_environment_blend_modes(xr_system, xr::ViewConfigurationType::PRIMARY_STEREO)
++            .unwrap_or_default();
++        let alpha_blend_supported = blend_modes.contains(&xr::EnvironmentBlendMode::ALPHA_BLEND);
++        alvr_common::error!("[BLEND] environment blend modes: {blend_modes:?}");
++
+         let default_view_resolution = UVec2::new(
+             views_config[0].recommended_image_rect_width,
+             views_config[0].recommended_image_rect_height,
+@@ -250,9 +297,47 @@ pub fn entry_point() {
+ 
+         let refresh_rates = if exts.fb_display_refresh_rate {
+             xr_session.enumerate_display_refresh_rates().unwrap()
++        } else if galaxy_xr {
++            vec![72.0, 90.0]
+         } else {
+             vec![90.0]
+         };
++        // error! so it reaches logcat even once connected -- see gaze_diag in interaction.rs.
++        // The server picks the *closest* of these to preferred_fps and only warns
++        // (server_core/src/connection.rs), so asking for a rate that is not here silently runs at
++        // a different one, which would quietly invalidate any budget derived from the frame period.
++        alvr_common::error!("[RATES] enumerated={refresh_rates:?} from_runtime={}",
++                            exts.fb_display_refresh_rate);
++
++        // Whether anything is correcting for the ~26 ms the runtime predicts ahead. If the
++        // compositor does not timewarp and ALVR does not either -- 20.13.0 hardcodes
++        // `reprojection_rotation` to Quat::IDENTITY in client_openxr/src/stream.rs -- then that
++        // prediction lead is felt in full rather than corrected, which would make it the largest
++        // *perceptible* latency term we have. A CloudXR report on this same headset measured a
++        // displayed:received frame ratio of exactly 1.00 against a Quest 3's 1.97, which is what
++        // no reprojection looks like. This logs what the runtime actually offers, rather than
++        // assuming either way.
++        let reprojection_exts: Vec<&String> = advertised_extension_names
++            .iter()
++            .filter(|e| {
++                let e = e.to_ascii_lowercase();
++                e.contains("space_warp")
++                    || e.contains("spacewarp")
++                    || e.contains("timewarp")
++                    || e.contains("reprojection")
++                    || e.contains("frame_synthesis")
++                    || e.contains("motion_vector")
++            })
++            .collect();
++        alvr_common::error!(
++            "[REPROJ] reprojection-related extensions: {reprojection_exts:?} \
++             (fb_swapchain_update_state {}, fb_foveation {}, total advertised {})",
++            exts.fb_swapchain_update_state,
++            exts.fb_foveation,
++            advertised_extension_names.len(),
++        );
++        alvr_common::error!("[REPROJ] all advertised extensions: {:?}",
++                            advertised_extension_names);
+ 
+         if exts.fb_color_space {
+             xr_session
+@@ -263,9 +348,9 @@ pub fn entry_point() {
+         let capabilities = ClientCapabilities {
+             default_view_resolution,
+             refresh_rates,
+-            foveated_encoding: platform != Platform::Unknown,
+-            encoder_high_profile: platform != Platform::Unknown,
+-            encoder_10_bits: platform != Platform::Unknown,
++            foveated_encoding: galaxy_xr || platform != Platform::Unknown,
++            encoder_high_profile: galaxy_xr || platform != Platform::Unknown,
++            encoder_10_bits: galaxy_xr || platform != Platform::Unknown,
+             encoder_av1: matches!(
+                 platform,
+                 Platform::Quest3 | Platform::Quest3S | Platform::Pico4Ultra
+@@ -289,7 +374,7 @@ pub fn entry_point() {
+             Rc::clone(&graphics_context),
+             Arc::clone(&interaction_context),
+             platform,
+-            default_view_resolution,
++            if galaxy_xr { UVec2::new(1440, 1440) } else { default_view_resolution },
+             &last_lobby_message,
+         );
+         let lobby_body_tracking_config = BodyTrackingSourcesConfig {
+@@ -313,6 +398,7 @@ pub fn entry_point() {
+         let mut passthrough_layer = None;
+ 
+         let mut event_storage = xr::EventDataBuffer::new();
++        let mut last_display_period = 0;
+         'render_loop: loop {
+             while let Some(event) = xr_instance.poll_event(&mut event_storage).unwrap() {
+                 match event {
+@@ -465,6 +551,51 @@ pub fn entry_point() {
+             };
+             let frame_interval =
+                 Duration::from_nanos(frame_state.predicted_display_period.as_nanos() as _);
++            if galaxy_xr && last_display_period != frame_interval.as_nanos() {
++                last_display_period = frame_interval.as_nanos();
++                info!("Galaxy XR runtime display period: {} ns", last_display_period);
++            }
++
++            // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
++            // and before the client has done any work at all.
++            //
++            // ALVR's `vsync_queue` is `predicted_display_time - now` sampled at *submit*, and
++            // measured 24.5-27.4 ms on this headset across 60/72/90 Hz -- nearly flat, where a
++            // queue counted in vsyncs would have scaled with the frame period. Submit happens
++            // after this point, so whatever is logged here is an upper bound on how much of that
++            // is the runtime's own prediction lead rather than time the client spent. If `lead`
++            // is already ~26 ms then the client's speed is irrelevant to it and the delay is the
++            // runtime's, which is not something any ALVR setting can reach.
++            //
++            // error! so it survives the log filtering once connected, like the other probes.
++            // Off unless ALVR_REPROJ_PROBE is set. This used to call xr_runtime_now() every
++            // frame, with only the logging throttled -- a per-frame runtime call in the render
++            // loop, which is free until the frame budget is tight and then is not. It cost
++            // panel-native streaming entirely: 3552x3840/eye failed with "session says Streaming
++            // but no frame statistics" while lighter configurations were unaffected, so it read
++            // as a server or network fault rather than as the client burning its own budget.
++            // A measurement build should carry no diagnostics that can change what is measured.
++            if reproj_probe_enabled() {
++                if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
++                use std::sync::atomic::{AtomicU64, Ordering};
++                static TICK: AtomicU64 = AtomicU64::new(0);
++                let tick = TICK.fetch_add(1, Ordering::Relaxed);
++                if tick % 72 == 0 {
++                    let lead_ns = frame_state
++                        .predicted_display_time
++                        .as_nanos()
++                        .saturating_sub(now.as_nanos());
++                    alvr_common::error!(
++                        "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
++                         ({:.2} periods ahead), should_render {}",
++                        lead_ns as f64 / 1e6,
++                        frame_interval.as_secs_f64() * 1e3,
++                        lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
++                        frame_state.should_render,
++                    );
++                }
++                }
++            }
+             let vsync_time =
+                 Duration::from_nanos(frame_state.predicted_display_time.as_nanos() as _);
+ 
+@@ -482,6 +613,19 @@ pub fn entry_point() {
+                 continue;
+             }
+ 
++            // Borrowed before the mutable borrow below. Only relevant when no passthrough layer
++            // exists: with one, the layer already supplies passthrough and OPAQUE is correct.
++            let wants_alpha_blend = alpha_blend_supported
++                && passthrough_layer.is_none()
++                && stream_context
++                    .as_ref()
++                    .is_some_and(|context| context.uses_passthrough());
++            let blend_mode = if wants_alpha_blend {
++                xr::EnvironmentBlendMode::ALPHA_BLEND
++            } else {
++                xr::EnvironmentBlendMode::OPAQUE
++            };
++
+             // todo: allow rendering lobby and stream layers at the same time and add cross fade
+             let (layer, display_time) = if let Some(stream) = &mut stream_context {
+                 stream.render(frame_interval, vsync_time)
+@@ -497,11 +641,7 @@ pub fn entry_point() {
+                 };
+ 
+             graphics_context.make_current();
+-            let res = xr_frame_stream.end(
+-                to_xr_time(display_time),
+-                xr::EnvironmentBlendMode::OPAQUE,
+-                layers,
+-            );
++            let res = xr_frame_stream.end(to_xr_time(display_time), blend_mode, layers);
+ 
+             if let Err(e) = res {
+                 let time = to_xr_time(display_time);
+@@ -524,6 +664,16 @@ pub fn entry_point() {
+ }
+ 
+ #[allow(unused)]
++/// Whether the per-frame reprojection probe runs. Read once; it sits in the render loop, so it
++/// must cost nothing when off.
++fn reproj_probe_enabled() -> bool {
++    use std::sync::OnceLock;
++    static ENABLED: OnceLock<bool> = OnceLock::new();
++    *ENABLED.get_or_init(|| {
++        std::env::var("ALVR_REPROJ_PROBE").map(|v| v != "0" && !v.is_empty()).unwrap_or(false)
++    })
++}
++
+ fn xr_runtime_now(xr_instance: &xr::Instance) -> Option<xr::Time> {
+     xr_instance
+         .now()
+diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
+index 6746408..0c97644 100644
+--- a/alvr/client_openxr/src/stream.rs
++++ b/alvr/client_openxr/src/stream.rs
+@@ -356,6 +356,16 @@ impl StreamContext {
+                 (vsync_time, self.last_good_view_params, ptr::null_mut())
+             };
+ 
++        // Match the inverse warp to the centre the server actually foveated this frame with.
++        // Skipped when the frame is a repeat (no header, hence no centre), which leaves the warp
++        // where it is -- correct, because the pixels on screen are still that older frame's.
++        if let Some([left, right]) = self.core_context.get_foveation_center(timestamp) {
++            self.renderer.set_foveation_center([
++                alvr_common::glam::vec2(left[0], left[1]),
++                alvr_common::glam::vec2(right[0], right[1]),
++            ]);
++        }
++
+         let left_swapchain_idx = self.swapchains[0].acquire_image().unwrap();
+         let right_swapchain_idx = self.swapchains[1].acquire_image().unwrap();
+ 
+diff --git a/alvr/graphics/resources/stream.wgsl b/alvr/graphics/resources/stream.wgsl
+index 1125887..c602c2f 100644
+--- a/alvr/graphics/resources/stream.wgsl
++++ b/alvr/graphics/resources/stream.wgsl
+@@ -19,26 +19,10 @@ override VIEW_HEIGHT_RATIO: f32 = 0.0;
+ override EDGE_X_RATIO: f32 = 0.0;
+ override EDGE_Y_RATIO: f32 = 0.0;
+ 
+-override C1_X: f32 = 0.0;
+-override C1_Y: f32 = 0.0;
+ override C2_X: f32 = 0.0;
+ override C2_Y: f32 = 0.0;
+-override LO_BOUND_X: f32 = 0.0;
+-override LO_BOUND_Y: f32 = 0.0;
+-override HI_BOUND_X: f32 = 0.0;
+-override HI_BOUND_Y: f32 = 0.0;
+-
+-override A_LEFT_X: f32 = 0.0;
+-override A_LEFT_Y: f32 = 0.0;
+-override B_LEFT_X: f32 = 0.0;
+-override B_LEFT_Y: f32 = 0.0;
+-
+-override A_RIGHT_X: f32 = 0.0;
+-override A_RIGHT_Y: f32 = 0.0;
+-override B_RIGHT_X: f32 = 0.0;
+-override B_RIGHT_Y: f32 = 0.0;
+-override C_RIGHT_X: f32 = 0.0;
+-override C_RIGHT_Y: f32 = 0.0;
++
++
+ 
+ struct PushConstant {
+     reprojection_transform: mat4x4f,
+@@ -52,6 +36,21 @@ struct PushConstant {
+ }
+ var<push_constant> pc: PushConstant;
+ 
++// Foveation terms that depend on center_shift, which is now per-frame (gaze-driven) rather than
++// fixed at pipeline creation. Everything here is derived on the CPU by the same code that always
++// derived it, so the maths has exactly one home; only its delivery changed from pipeline-override
++// constants to a uniform. Packed as vec4s to keep uniform-buffer alignment unambiguous.
++struct FfeParams {
++    // Four vec4s per eye: [0..3] left, [4..7] right. Per eye because the horizontal frusta are
++    // asymmetric and mirrored, so one shared shift is only correct looking straight ahead.
++    //   +0: c1.xy,       lo_bound.xy
++    //   +1: hi_bound.xy, a_left.xy
++    //   +2: b_left.xy,   a_right.xy
++    //   +3: b_right.xy,  c_right.xy
++    p: array<vec4f, 8>,
++}
++@group(0) @binding(2) var<uniform> ffe: FfeParams;
++
+ @group(0) @binding(0) var stream_texture: texture_2d<f32>;
+ @group(0) @binding(1) var stream_sampler: sampler;
+ 
+@@ -79,17 +78,19 @@ fn fragment_main(@location(0) uv: vec2f) -> @location(0) vec4f {
+         let view_size_ratio = vec2f(VIEW_WIDTH_RATIO, VIEW_HEIGHT_RATIO);
+         let edge_ratio = vec2f(EDGE_X_RATIO, EDGE_Y_RATIO);
+ 
+-        let c1 = vec2f(C1_X, C1_Y);
++        let eye = select(0u, 4u, pc.view_idx == 1u);
++
++        let c1 = ffe.p[eye].xy;
+         let c2 = vec2f(C2_X, C2_Y);
+-        let lo_bound = vec2f(LO_BOUND_X, LO_BOUND_Y);
+-        let hi_bound = vec2f(HI_BOUND_X, HI_BOUND_Y);
++        let lo_bound = ffe.p[eye].zw;
++        let hi_bound = ffe.p[eye + 1u].xy;
+ 
+-        let a_left = vec2f(A_LEFT_X, A_LEFT_Y);
+-        let b_left = vec2f(B_LEFT_X, B_LEFT_Y);
++        let a_left = ffe.p[eye + 1u].zw;
++        let b_left = ffe.p[eye + 2u].xy;
+ 
+-        let a_right = vec2f(A_RIGHT_X, A_RIGHT_Y);
+-        let b_right = vec2f(B_RIGHT_X, B_RIGHT_Y);
+-        let c_right = vec2f(C_RIGHT_X, C_RIGHT_Y);
++        let a_right = ffe.p[eye + 2u].zw;
++        let b_right = ffe.p[eye + 3u].xy;
++        let c_right = ffe.p[eye + 3u].zw;
+ 
+         if pc.view_idx == 1 {
+             corrected_uv.x = 1.0 - corrected_uv.x;
+@@ -157,7 +158,13 @@ fn fragment_main(@location(0) uv: vec2f) -> @location(0) vec4f {
+ 
+         // Note: because of this calculation, we require premultiplied alpha option in the XR layer
+         color = max(color * mask, vec3f(0.0));
+-        alpha = mask;
++
++        // blend_alpha is the surround dimmer here. The compositor does
++        // `result = premultiplied_colour + passthrough * (1 - alpha)`, and the keyed-out area has
++        // colour 0, so its alpha alone decides how much passthrough survives: 0 is the cameras at
++        // full brightness, 1 is solid black. A floor rather than a replacement, so kept pixels
++        // (mask 1) stay fully opaque whatever the dimmer is set to.
++        alpha = max(mask, pc.blend_alpha);
+     }
+ 
+     return vec4f(color, alpha);
+diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
+index d3464d7..737b7d0 100644
+--- a/alvr/graphics/src/stream.rs
++++ b/alvr/graphics/src/stream.rs
+@@ -8,7 +8,8 @@ use std::{collections::HashMap, ffi::c_void, iter, mem, rc::Rc};
+ use wgpu::{
+     hal::{api, gles},
+     include_wgsl, BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayoutDescriptor,
+-    BindGroupLayoutEntry, BindingResource, BindingType, Color, ColorTargetState, ColorWrites,
++    BindGroupLayoutEntry, BindingResource, BindingType, Buffer, BufferBindingType,
++    BufferDescriptor, BufferUsages, Color, ColorTargetState, ColorWrites,
+     FragmentState, LoadOp, PipelineCompilationOptions, PipelineLayoutDescriptor, PrimitiveState,
+     PrimitiveTopology, PushConstantRange, RenderPass, RenderPassColorAttachment,
+     RenderPassDescriptor, RenderPipeline, RenderPipelineDescriptor, SamplerBindingType,
+@@ -30,6 +31,22 @@ const CK_CHANNEL1_CONST_OFFSET: u32 = CK_CHANNEL0_CONST_OFFSET + VEC4_SIZE;
+ const CK_CHANNEL2_CONST_OFFSET: u32 = CK_CHANNEL1_CONST_OFFSET + VEC4_SIZE;
+ const PUSH_CONSTANTS_SIZE: u32 = CK_CHANNEL2_CONST_OFFSET + VEC4_SIZE;
+ 
++/// 32 floats -- 16 per eye: see `FfeParams` in stream.wgsl. Push constants are already at the
++/// 128-byte maximum, so these cannot ride along with them.
++const FFE_PARAMS_SIZE: u64 = 32 * mem::size_of::<f32>() as u64;
++
++/// Little-endian bytes for the FFE uniform. Hand-rolled rather than pulling in bytemuck for one
++/// 64-byte buffer; WGSL uniforms are little-endian and these are plain f32s, so there is no
++/// padding to get wrong.
++fn ffe_params_bytes(per_eye: [[f32; 16]; 2]) -> [u8; FFE_PARAMS_SIZE as usize] {
++    let mut bytes = [0u8; FFE_PARAMS_SIZE as usize];
++    let flat = per_eye.concat();
++    for (chunk, value) in bytes.chunks_exact_mut(4).zip(flat) {
++        chunk.copy_from_slice(&value.to_le_bytes());
++    }
++    bytes
++}
++
+ const _: () = assert!(
+     PUSH_CONSTANTS_SIZE <= MAX_PUSH_CONSTANTS_SIZE,
+     "Push constants size exceeds the maximum size"
+@@ -52,6 +69,9 @@ pub struct StreamRenderer {
+     staging_renderer: StagingRenderer,
+     pipeline: RenderPipeline,
+     views_objects: [ViewObjects; 2],
++    ffe_params_buffer: Buffer,
++    /// `None` when foveated encoding is off, in which case there is nothing to steer.
++    foveated_encoding: Option<(UVec2, FoveatedEncodingConfig)>,
+ }
+ 
+ impl StreamRenderer {
+@@ -91,9 +111,28 @@ impl StreamRenderer {
+                     ty: BindingType::Sampler(SamplerBindingType::Filtering),
+                     count: None,
+                 },
++                // Always declared, even with foveation off: the shader unconditionally declares
++                // the binding, so the layout must match or pipeline creation fails.
++                BindGroupLayoutEntry {
++                    binding: 2,
++                    visibility: ShaderStages::FRAGMENT,
++                    ty: BindingType::Buffer {
++                        ty: BufferBindingType::Uniform,
++                        has_dynamic_offset: false,
++                        min_binding_size: None,
++                    },
++                    count: None,
++                },
+             ],
+         });
+ 
++        let ffe_params_buffer = device.create_buffer(&BufferDescriptor {
++            label: Some("ffe_params"),
++            size: FFE_PARAMS_SIZE,
++            usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
++            mapped_at_creation: false,
++        });
++
+         let shader_module = device.create_shader_module(include_wgsl!("../resources/stream.wgsl"));
+ 
+         let mut constants = HashMap::new();
+@@ -106,11 +145,24 @@ impl StreamRenderer {
+             ("ENCODING_GAMMA".into(), encoding_gamma.into()),
+         ]);
+ 
+-        let staging_resolution = if let Some(foveated_encoding) = foveated_encoding {
++        let staging_resolution = if let Some(foveated_encoding) = foveated_encoding.clone() {
+             let (staging_resolution, ffe_constants) =
+-                foveated_encoding_shader_constants(base_view_resolution, foveated_encoding);
++                foveated_encoding_shader_constants(base_view_resolution, foveated_encoding.clone());
+             constants.extend(ffe_constants);
+ 
++            context.queue.write_buffer(
++                &ffe_params_buffer,
++                0,
++                &ffe_params_bytes([foveated_encoding_dynamic_params(
++                    base_view_resolution,
++                    foveated_encoding.clone(),
++                    glam::vec2(
++                        foveated_encoding.center_shift_x,
++                        foveated_encoding.center_shift_y,
++                    ),
++                ); 2]),
++            );
++
+             staging_resolution
+         } else {
+             base_view_resolution
+@@ -211,6 +263,10 @@ impl StreamRenderer {
+                         binding: 1,
+                         resource: BindingResource::Sampler(&sampler),
+                     },
++                    BindGroupEntry {
++                        binding: 2,
++                        resource: ffe_params_buffer.as_entire_binding(),
++                    },
+                 ],
+             });
+ 
+@@ -240,9 +296,35 @@ impl StreamRenderer {
+             staging_renderer,
+             pipeline,
+             views_objects: view_objects.try_into().unwrap(),
++            ffe_params_buffer,
++            foveated_encoding: foveated_encoding.map(|c| (base_view_resolution, c)),
+         }
+     }
+ 
++    /// Move the full-resolution centre to match the server's, for the frame about to be drawn.
++    ///
++    /// Per eye: the horizontal frusta are asymmetric and mirrored, so one shared shift is only
++    /// correct for a gaze looking straight ahead.
++    ///
++    /// The shift is whatever the server reported applying to this frame, not a locally derived
++    /// value: face data does not respect `target_timestamp` (see the note on `Tracking` in
++    /// alvr/packets/src/lib.rs), so the client cannot reconstruct which gaze the server used.
++    /// Re-deriving it here would silently drift out of step and smear the image.
++    pub fn set_foveation_center(&self, center_shift: [glam::Vec2; 2]) {
++        let Some((resolution, config)) = &self.foveated_encoding else {
++            return;
++        };
++
++        self.context.queue.write_buffer(
++            &self.ffe_params_buffer,
++            0,
++            &ffe_params_bytes([
++                foveated_encoding_dynamic_params(*resolution, config.clone(), center_shift[0]),
++                foveated_encoding_dynamic_params(*resolution, config.clone(), center_shift[1]),
++            ]),
++        );
++    }
++
+     /// # Safety
+     /// `hardware_buffer` must be a valid pointer to a ANativeWindowBuffer.
+     pub unsafe fn render(
+@@ -366,6 +448,7 @@ fn set_passthrough_push_constants(render_pass: &mut RenderPass, config: Option<&
+         }
+         Some(PassthroughMode::RgbChromaKey(config)) => {
+             set_u32(render_pass, PASSTHROUGH_MODE_OFFSET, 1);
++            set_float(render_pass, ALPHA_CONST_OFFSET, config.dim_surround.clamp(0., 1.));
+ 
+             let norm = |v| v as f32 / 255.;
+ 
+@@ -386,6 +469,7 @@ fn set_passthrough_push_constants(render_pass: &mut RenderPass, config: Option<&
+             set_vec4(render_pass, CK_CHANNEL2_CONST_OFFSET, blue + range_vec);
+         }
+         Some(PassthroughMode::HsvChromaKey(config)) => {
++            set_float(render_pass, ALPHA_CONST_OFFSET, config.dim_surround.clamp(0., 1.));
+             set_u32(render_pass, PASSTHROUGH_MODE_OFFSET, 2);
+ 
+             set_vec4(
+@@ -478,32 +562,73 @@ pub fn foveated_encoding_shader_constants(
+         ("VIEW_HEIGHT_RATIO", view_ratio_aligned.y),
+         ("EDGE_X_RATIO", edge_ratio.x),
+         ("EDGE_Y_RATIO", edge_ratio.y),
+-        ("C1_X", c1.x),
+-        ("C1_Y", c1.y),
+         ("C2_X", c2.x),
+         ("C2_Y", c2.y),
+-        ("LO_BOUND_X", lo_bound.x),
+-        ("LO_BOUND_Y", lo_bound.y),
+-        ("HI_BOUND_X", hi_bound.x),
+-        ("HI_BOUND_Y", hi_bound.y),
+-        ("A_LEFT_X", a_left.x),
+-        ("A_LEFT_Y", a_left.y),
+-        ("B_LEFT_X", b_left.x),
+-        ("B_LEFT_Y", b_left.y),
+-        ("A_RIGHT_X", a_right.x),
+-        ("A_RIGHT_Y", a_right.y),
+-        ("B_RIGHT_X", b_right.x),
+-        ("B_RIGHT_Y", b_right.y),
+-        ("C_RIGHT_X", c_right.x),
+-        ("C_RIGHT_Y", c_right.y),
+     ]
+     .iter()
+     .map(|(k, v)| (k.to_string(), *v as f64))
+     .collect();
+ 
++    // c1 and the bounds/edge coefficients all depend on center_shift, which is now per frame, so
++    // they travel in a uniform (see FfeParams in stream.wgsl) instead of being baked in here.
++    let _ = (c1, lo_bound, hi_bound, a_left, b_left, a_right, b_right, c_right);
++
+     (optimized_view_resolution_aligned.as_uvec2(), constants)
+ }
+ 
++/// The `center_shift`-dependent half of the foveation maths, as the 16 floats `FfeParams` wants.
++///
++/// Deliberately a second pass over the same derivation rather than a refactor of it: keeping
++/// `foveated_encoding_shader_constants` intact means the static path is provably unchanged, and
++/// this function is the only thing the per-frame gaze update touches. The duplicated prologue is
++/// a few multiplies once per frame.
++pub fn foveated_encoding_dynamic_params(
++    expanded_view_resolution: UVec2,
++    config: FoveatedEncodingConfig,
++    center_shift: glam::Vec2,
++) -> [f32; 16] {
++    let view_resolution = expanded_view_resolution.as_vec2();
++
++    let center_size = glam::vec2(config.center_size_x, config.center_size_y);
++    let edge_ratio = glam::vec2(config.edge_ratio_x, config.edge_ratio_y);
++
++    let edge_size = view_resolution - center_size * view_resolution;
++    let center_size_aligned =
++        1. - (edge_size / (edge_ratio * 2.)).ceil() * (edge_ratio * 2.) / view_resolution;
++
++    let edge_size_aligned = view_resolution - center_size_aligned * view_resolution;
++    let center_shift_aligned = (center_shift * edge_size_aligned / (edge_ratio * 2.)).ceil()
++        * (edge_ratio * 2.)
++        / edge_size_aligned;
++
++    let c0 = (1. - center_size_aligned) * 0.5;
++    let c1 = (edge_ratio - 1.) * c0 * (center_shift_aligned + 1.) / edge_ratio;
++    let c2 = (edge_ratio - 1.) * center_size_aligned + 1.;
++
++    let lo_bound = c0 * (center_shift_aligned + 1.);
++    let hi_bound = c0 * (center_shift_aligned - 1.) + 1.;
++    let lo_bound_c = c0 * (center_shift_aligned + 1.) / c2;
++    let hi_bound_c = c0 * (center_shift_aligned - 1.) / c2 + 1.;
++
++    let a_left = c2 * (1. - edge_ratio) / (edge_ratio * lo_bound_c);
++    let b_left = (c1 + c2 * lo_bound_c) / lo_bound_c;
++
++    let a_right = c2 * (edge_ratio - 1.) / (edge_ratio * (1. - hi_bound_c));
++    let b_right = (c2 - edge_ratio * c1 - 2. * edge_ratio * c2
++        + c2 * edge_ratio * (1. - hi_bound_c)
++        + edge_ratio)
++        / (edge_ratio * (1. - hi_bound_c));
++    let c_right = (c2 * edge_ratio - c2) * (c1 - hi_bound_c + c2 * hi_bound_c)
++        / (edge_ratio * (1. - hi_bound_c) * (1. - hi_bound_c));
++
++    [
++        c1.x, c1.y, lo_bound.x, lo_bound.y,
++        hi_bound.x, hi_bound.y, a_left.x, a_left.y,
++        b_left.x, b_left.y, a_right.x, a_right.y,
++        b_right.x, b_right.y, c_right.x, c_right.y,
++    ]
++}
++
+ pub fn compute_target_view_resolution(
+     resolution: UVec2,
+     upscaling: &Option<UpscalingConfig>,
+diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
+index 5b63a78..fca3e0c 100644
+--- a/alvr/session/src/settings.rs
++++ b/alvr/session/src/settings.rs
+@@ -578,6 +578,13 @@ pub struct RgbChromaKeyConfig {
+     #[schema(flag = "real-time")]
+     #[schema(gui(slider(min = 0.01, max = 1.0, step = 0.01)))]
+     pub feathering: f32,
++    #[schema(strings(
++        display_name = "Dim surround",
++        help = "How dark the keyed-out area is. 0 shows the passthrough cameras at full brightness; 1 is solid black with no passthrough. Values between dim the passthrough, so a single slider runs from a see-through room to a dark theatre around the screen."
++    ))]
++    #[schema(flag = "real-time")]
++    #[schema(gui(slider(min = 0.0, max = 1.0, step = 0.01)))]
++    pub dim_surround: f32,
+ }
+ 
+ #[derive(SettingsSchema, Serialize, Deserialize, Clone, PartialEq, Debug)]
+@@ -633,6 +640,13 @@ pub struct HsvChromaKeyConfig {
+     #[schema(flag = "real-time")]
+     #[schema(gui(slider(min = -0.5, max = 1.5, step = 0.01)))]
+     pub value_end_max: f32,
++    #[schema(strings(
++        display_name = "Dim surround",
++        help = "How dark the keyed-out area is. 0 shows the passthrough cameras at full brightness; 1 is solid black with no passthrough. Values between dim the passthrough, so a single slider runs from a see-through room to a dark theatre around the screen."
++    ))]
++    #[schema(flag = "real-time")]
++    #[schema(gui(slider(min = 0.0, max = 1.0, step = 0.01)))]
++    pub dim_surround: f32,
+ }
+ 
+ #[derive(SettingsSchema, Serialize, Deserialize, Clone, PartialEq, Debug)]
+@@ -1574,6 +1588,7 @@ pub fn session_settings_default() -> SettingsDefault {
+                         blue: 0,
+                         distance_threshold: 85,
+                         feathering: 0.05,
++                        dim_surround: 0.0,
+                     },
+                     HsvChromaKey: HsvChromaKeyConfigDefault {
+                         hue_start_max_deg: 70.0,
+@@ -1588,6 +1603,7 @@ pub fn session_settings_default() -> SettingsDefault {
+                         value_start_min: 0.1,
+                         value_end_min: 1.0,
+                         value_end_max: 1.1,
++                        dim_surround: 0.0,
+                     },
+                 },
+             },

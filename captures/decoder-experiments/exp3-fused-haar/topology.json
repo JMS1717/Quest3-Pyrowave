@@ -1,0 +1,384 @@
+{
+ "reference": {
+  "name": "9/7 compute (reference)",
+  "dispatches": 15,
+  "global_barriers": 6,
+  "workgroup_barriers": 15,
+  "temp_global_buffers": 4,
+  "total_bytes": 35497728,
+  "bytes_per_pixel": 19.96875,
+  "bytes_per_second": 3194795520.0,
+  "full_frame_equivalent_passes": 2.265625,
+  "max_shared_bytes": 3280
+ },
+ "topologies": {
+  "H0": {
+   "name": "H0",
+   "levels_per_stage": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "stages": [
+    {
+     "stage": 1,
+     "level_in": 5,
+     "level_out": 4,
+     "levels_fused": 1,
+     "tile_in": 16,
+     "tile_out": 32,
+     "global_read_bytes": 41664,
+     "global_write_bytes": 41664,
+     "shared_bytes": 3280,
+     "registers_per_lane_est": 16,
+     "lane_utilisation_per_level": [
+      1.0
+     ],
+     "workgroup_barriers": 3,
+     "redundant_load_factor": 1.0
+    },
+    {
+     "stage": 2,
+     "level_in": 4,
+     "level_out": 3,
+     "levels_fused": 1,
+     "tile_in": 16,
+     "tile_out": 32,
+     "global_read_bytes": 166656,
+     "global_write_bytes": 166656,
+     "shared_bytes": 3280,
+     "registers_per_lane_est": 16,
+     "lane_utilisation_per_level": [
+      1.0
+     ],
+     "workgroup_barriers": 3,
+     "redundant_load_factor": 1.0
+    },
+    {
+     "stage": 3,
+     "level_in": 3,
+     "level_out": 2,
+     "levels_fused": 1,
+     "tile_in": 16,
+     "tile_out": 32,
+     "global_read_bytes": 666624,
+     "global_write_bytes": 666624,
+     "shared_bytes": 3280,
+     "registers_per_lane_est": 16,
+     "lane_utilisation_per_level": [
+      1.0
+     ],
+     "workgroup_barriers": 3,
+     "redundant_load_factor": 1.0
+    },
+    {
+     "stage": 4,
+     "level_in": 2,
+     "level_out": 1,
+     "levels_fused": 1,
+     "tile_in": 16,
+     "tile_out": 32,
+     "global_read_bytes": 2666496,
+     "global_write_bytes": 2666496,
+     "shared_bytes": 3280,
+     "registers_per_lane_est": 16,
+     "lane_utilisation_per_level": [
+      1.0
+     ],
+     "workgroup_barriers": 3,
+     "redundant_load_factor": 1.0
+    },
+    {
+     "stage": 5,
+     "level_in": 1,
+     "level_out": 0,
+     "levels_fused": 1,
+     "tile_in": 16,
+     "tile_out": 32,
+     "global_read_bytes": 10665984,
+     "global_write_bytes": 5332992,
+     "shared_bytes": 3280,
+     "registers_per_lane_est": 16,
+     "lane_utilisation_per_level": [
+      1.0
+     ],
+     "workgroup_barriers": 3,
+     "redundant_load_factor": 1.0
+    }
+   ],
+   "dispatches": 15,
+   "global_barriers": 6,
+   "workgroup_barriers": 15,
+   "temp_global_buffers": 4,
+   "dequant_write_bytes": 10665984,
+   "coefficient_read_bytes": 14207424,
+   "ll_write_bytes": 3541440,
+   "ll_reread_bytes": 3541440,
+   "output_write_bytes": 5332992,
+   "total_bytes": 33747840,
+   "bytes_per_pixel": 18.984375,
+   "bytes_per_second": 3037305600.0,
+   "full_frame_equivalent_passes": 2.1640625,
+   "max_shared_bytes": 3280,
+   "max_registers_per_lane_est": 16,
+   "min_lane_utilisation": 1.0,
+   "precision": 0,
+   "width": 1984,
+   "height": 896,
+   "chroma444": true
+  },
+  "H1": {
+   "name": "H1",
+   "levels_per_stage": [
+    2,
+    2,
+    1
+   ],
+   "stages": [
+    {
+     "stage": 1,
+     "level_in": 5,
+     "level_out": 3,
+     "levels_fused": 2,
+     "tile_in": 8,
+     "tile_out": 32,
+     "global_read_bytes": 166656,
+     "global_write_bytes": 166656,
+     "shared_bytes": 2048,
+     "registers_per_lane_est": 16,
+     "lane_utilisation_per_level": [
+      1.0,
+      1.0
+     ],
+     "workgroup_barriers": 5,
+     "redundant_load_factor": 1.0
+    },
+    {
+     "stage": 2,
+     "level_in": 3,
+     "level_out": 1,
+     "levels_fused": 2,
+     "tile_in": 8,
+     "tile_out": 32,
+     "global_read_bytes": 2666496,
+     "global_write_bytes": 2666496,
+     "shared_bytes": 2048,
+     "registers_per_lane_est": 16,
+     "lane_utilisation_per_level": [
+      1.0,
+      1.0
+     ],
+     "workgroup_barriers": 5,
+     "redundant_load_factor": 1.0
+    },
+    {
+     "stage": 3,
+     "level_in": 1,
+     "level_out": 0,
+     "levels_fused": 1,
+     "tile_in": 16,
+     "tile_out": 32,
+     "global_read_bytes": 10665984,
+     "global_write_bytes": 5332992,
+     "shared_bytes": 3280,
+     "registers_per_lane_est": 16,
+     "lane_utilisation_per_level": [
+      1.0
+     ],
+     "workgroup_barriers": 3,
+     "redundant_load_factor": 1.0
+    }
+   ],
+   "dispatches": 9,
+   "global_barriers": 4,
+   "workgroup_barriers": 13,
+   "temp_global_buffers": 2,
+   "dequant_write_bytes": 10665984,
+   "coefficient_read_bytes": 13499136,
+   "ll_write_bytes": 2833152,
+   "ll_reread_bytes": 2833152,
+   "output_write_bytes": 5332992,
+   "total_bytes": 32331264,
+   "bytes_per_pixel": 18.1875,
+   "bytes_per_second": 2909813760.0,
+   "full_frame_equivalent_passes": 2.03125,
+   "max_shared_bytes": 3280,
+   "max_registers_per_lane_est": 16,
+   "min_lane_utilisation": 1.0,
+   "precision": 0,
+   "width": 1984,
+   "height": 896,
+   "chroma444": true
+  },
+  "H2": {
+   "name": "H2",
+   "levels_per_stage": [
+    3,
+    2
+   ],
+   "stages": [
+    {
+     "stage": 1,
+     "level_in": 5,
+     "level_out": 2,
+     "levels_fused": 3,
+     "tile_in": 4,
+     "tile_out": 32,
+     "global_read_bytes": 666624,
+     "global_write_bytes": 666624,
+     "shared_bytes": 2048,
+     "registers_per_lane_est": 16,
+     "lane_utilisation_per_level": [
+      0.25,
+      1.0,
+      1.0
+     ],
+     "workgroup_barriers": 7,
+     "redundant_load_factor": 1.0
+    },
+    {
+     "stage": 2,
+     "level_in": 2,
+     "level_out": 0,
+     "levels_fused": 2,
+     "tile_in": 8,
+     "tile_out": 32,
+     "global_read_bytes": 10665984,
+     "global_write_bytes": 5332992,
+     "shared_bytes": 2048,
+     "registers_per_lane_est": 16,
+     "lane_utilisation_per_level": [
+      1.0,
+      1.0
+     ],
+     "workgroup_barriers": 5,
+     "redundant_load_factor": 1.0
+    }
+   ],
+   "dispatches": 6,
+   "global_barriers": 3,
+   "workgroup_barriers": 12,
+   "temp_global_buffers": 1,
+   "dequant_write_bytes": 10665984,
+   "coefficient_read_bytes": 11332608,
+   "ll_write_bytes": 666624,
+   "ll_reread_bytes": 666624,
+   "output_write_bytes": 5332992,
+   "total_bytes": 27998208,
+   "bytes_per_pixel": 15.75,
+   "bytes_per_second": 2519838720.0,
+   "full_frame_equivalent_passes": 1.625,
+   "max_shared_bytes": 2048,
+   "max_registers_per_lane_est": 16,
+   "min_lane_utilisation": 0.25,
+   "precision": 0,
+   "width": 1984,
+   "height": 896,
+   "chroma444": true
+  },
+  "H3": {
+   "name": "H3",
+   "levels_per_stage": [
+    5
+   ],
+   "stages": [
+    {
+     "stage": 1,
+     "level_in": 5,
+     "level_out": 0,
+     "levels_fused": 5,
+     "tile_in": 1,
+     "tile_out": 32,
+     "global_read_bytes": 10665984,
+     "global_write_bytes": 5332992,
+     "shared_bytes": 2048,
+     "registers_per_lane_est": 16,
+     "lane_utilisation_per_level": [
+      0.015625,
+      0.0625,
+      0.25,
+      1.0,
+      1.0
+     ],
+     "workgroup_barriers": 11,
+     "redundant_load_factor": 1.0
+    }
+   ],
+   "dispatches": 3,
+   "global_barriers": 2,
+   "workgroup_barriers": 11,
+   "temp_global_buffers": 0,
+   "dequant_write_bytes": 10665984,
+   "coefficient_read_bytes": 10665984,
+   "ll_write_bytes": 0,
+   "ll_reread_bytes": 0,
+   "output_write_bytes": 5332992,
+   "total_bytes": 26664960,
+   "bytes_per_pixel": 15.0,
+   "bytes_per_second": 2399846400.0,
+   "full_frame_equivalent_passes": 1.5,
+   "max_shared_bytes": 2048,
+   "max_registers_per_lane_est": 16,
+   "min_lane_utilisation": 0.015625,
+   "precision": 0,
+   "width": 1984,
+   "height": 896,
+   "chroma444": true
+  }
+ },
+ "verdicts": {
+  "H0": {
+   "feasible": true,
+   "reasons": [],
+   "material": false,
+   "byte_ratio": 0.9507042253521126,
+   "bytes_ok": false,
+   "structure_ok": false,
+   "byte_cut_pct": 4.929577464788737,
+   "barrier_cut_pct": 0.0,
+   "pass_cut_pct": 4.482758620689653,
+   "verdict": "NOT STRONG ENOUGH"
+  },
+  "H1": {
+   "feasible": true,
+   "reasons": [],
+   "material": false,
+   "byte_ratio": 0.9107981220657277,
+   "bytes_ok": false,
+   "structure_ok": false,
+   "byte_cut_pct": 8.920187793427225,
+   "barrier_cut_pct": 33.333333333333336,
+   "pass_cut_pct": 10.344827586206895,
+   "verdict": "NOT STRONG ENOUGH"
+  },
+  "H2": {
+   "feasible": true,
+   "reasons": [],
+   "material": false,
+   "byte_ratio": 0.7887323943661971,
+   "bytes_ok": false,
+   "structure_ok": false,
+   "byte_cut_pct": 21.126760563380287,
+   "barrier_cut_pct": 50.0,
+   "pass_cut_pct": 28.27586206896552,
+   "verdict": "NOT STRONG ENOUGH"
+  },
+  "H3": {
+   "feasible": true,
+   "reasons": [],
+   "material": true,
+   "byte_ratio": 0.7511737089201878,
+   "bytes_ok": false,
+   "structure_ok": true,
+   "byte_cut_pct": 24.882629107981224,
+   "barrier_cut_pct": 66.66666666666667,
+   "pass_cut_pct": 33.793103448275865,
+   "verdict": "PROCEED"
+  }
+ },
+ "proceed": [
+  "H3"
+ ]
+}

@@ -1,0 +1,21 @@
+input 3328x1472 4:4:4 full range, 416664 byte frame
+gpu: Adreno (TM) 740 (API 1.3.295)
+features: shaderInt16=1 storageBuffer8Bit=1 subgroupSizeControl=1
+pyrowave device created (borrowed VkDevice)
+decode path: compute
+decode target: plain R8_UNORM
+plane[0]: 3328x1472 plain R8, 4898816 bytes
+plane[1]: 3328x1472 plain R8, 4898816 bytes
+plane[2]: 3328x1472 plain R8, 4898816 bytes
+queue type: COMPUTE
+wavelet: CDF 9/7, PYROWAVE_PRECISION=1
+decode_is_ready(complete) = yes
+fused CDF 9/7: 3 stage(s), maxComputeSharedMemorySize 32768, swap_xy 0 swap_bands 0 mirror 1/0
+T2 decode      : best 17.553 ms, mean 17.607 ms
+T3-T2 convert  : best 1.466 ms, mean 1.466 ms   (the GLES bridge)
+submit->idle wall: best 19.444 ms, mean 19.550 ms   (CPU-observed completion of decode+convert)
+fused stage 1 (levels 5->3): mean 1.787 ms   (includes dequant)
+fused stage 2 (levels 3->1): mean 4.147 ms
+fused stage 3 (levels 1->0): mean 11.673 ms
+over 100 iteration(s)
+wrote /dev/null

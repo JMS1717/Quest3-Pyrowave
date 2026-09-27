@@ -1,0 +1,970 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 7b6aef9..28fe416 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -230,6 +230,7 @@ dependencies = [
+  "android_logger",
+  "app_dirs2",
+  "env_logger",
++ "jni 0.22.4",
+  "mdns-sd",
+  "ndk",
+  "ndk-context",
+diff --git a/alvr/client_core/Cargo.toml b/alvr/client_core/Cargo.toml
+index cc6ab8b..9b18c98 100644
+--- a/alvr/client_core/Cargo.toml
++++ b/alvr/client_core/Cargo.toml
+@@ -30,6 +30,7 @@ serde_json = "1"
+ 
+ [target.'cfg(target_os = "android")'.dependencies]
+ android_logger = "0.15"
++jni = "0.22"
+ ndk = { version = "0.9", features = ["api-level-28", "audio", "media"] }
+ ndk-context = "0.1"
+ 
+diff --git a/alvr/client_core/src/c_api.rs b/alvr/client_core/src/c_api.rs
+index 8700ec3..36837e5 100644
+--- a/alvr/client_core/src/c_api.rs
++++ b/alvr/client_core/src/c_api.rs
+@@ -851,6 +851,8 @@ pub extern "C" fn alvr_create_decoder(config: AlvrDecoderConfig) {
+             AlvrCodecType::Hevc => CodecType::Hevc,
+             AlvrCodecType::AV1 => CodecType::AV1,
+         },
++        frame_size: [0, 0],
++        surface_texture_id: 0,
+         force_software_decoder: config.force_software_decoder,
+         max_buffering_frames: config.max_buffering_frames,
+         buffering_history_weight: config.buffering_history_weight,
+diff --git a/alvr/client_core/src/video_decoder/android.rs b/alvr/client_core/src/video_decoder/android.rs
+index d7cac38..0cf4310 100644
+--- a/alvr/client_core/src/video_decoder/android.rs
++++ b/alvr/client_core/src/video_decoder/android.rs
+@@ -9,6 +9,7 @@ use alvr_common::{
+ use alvr_session::{CodecType, MediacodecPropType};
+ use ndk::{
+     hardware_buffer::HardwareBufferUsage,
++    native_window::NativeWindow,
+     media::{
+         image_reader::{AcquireResult, Image, ImageFormat, ImageReader},
+         media_codec::{
+@@ -17,6 +18,7 @@ use ndk::{
+         },
+     },
+ };
++use jni::{JavaVM, jni_sig, jni_str, objects::{Global, JObject, JValue}};
+ use std::{
+     collections::VecDeque,
+     ffi::c_void,
+@@ -85,11 +87,40 @@ struct QueuedImage {
+ }
+ unsafe impl Send for QueuedImage {}
+ 
++struct SurfaceTextureOutput {
++    native: std::ptr::NonNull<c_void>,
++    _java_ref: Global<JObject<'static>>,
++}
++unsafe impl Send for SurfaceTextureOutput {}
++unsafe impl Sync for SurfaceTextureOutput {}
++
++unsafe extern "C" {
++    fn ASurfaceTexture_fromSurfaceTexture(env: *mut c_void, surface_texture: *mut c_void) -> *mut c_void;
++    fn ASurfaceTexture_acquireANativeWindow(surface_texture: *mut c_void) -> *mut c_void;
++    fn ASurfaceTexture_release(surface_texture: *mut c_void);
++}
++
++impl Drop for SurfaceTextureOutput {
++    fn drop(&mut self) {
++        unsafe { ASurfaceTexture_release(self.native.as_ptr()) };
++    }
++}
++
++impl SurfaceTextureOutput {
++    fn acquire_native_window(&self) -> Option<NativeWindow> {
++        let ptr = unsafe { ASurfaceTexture_acquireANativeWindow(self.native.as_ptr()) };
++        std::ptr::NonNull::new(ptr)
++            .map(|ptr| unsafe { NativeWindow::from_ptr(ptr.cast()) })
++    }
++}
++
+ // Access the image queue synchronously.
+ pub struct VideoDecoderSource {
+     running: Arc<RelaxedAtomic>,
+     dequeue_thread: Option<JoinHandle<()>>,
+     image_queue: Arc<Mutex<VecDeque<QueuedImage>>>,
++    surface_output: Option<Arc<SurfaceTextureOutput>>,
++    surface_timestamps: Arc<Mutex<VecDeque<Duration>>>,
+     config: VideoDecoderConfig,
+     buffering_running_average: f32,
+ }
+@@ -99,6 +130,13 @@ unsafe impl Send for VideoDecoderSource {}
+ impl VideoDecoderSource {
+     // The application MUST finish using the returned buffer before calling this function again
+     pub fn dequeue_frame(&mut self) -> Option<(Duration, *mut c_void)> {
++        if let Some(output) = &self.surface_output {
++            return self.surface_timestamps.lock().pop_front().map(|timestamp| {
++                let ptr = output.native.as_ptr() as usize;
++                (timestamp, (ptr | 1) as *mut c_void)
++            });
++        }
++
+         let mut image_queue_lock = self.image_queue.lock();
+ 
+         if let Some(queued_image) = image_queue_lock.front()
+@@ -158,7 +196,7 @@ fn decoder_setup(
+     codec_type: CodecType,
+     is_software: bool,
+     format: &MediaFormat,
+-    image_reader: &ImageReader,
++    output_window: &NativeWindow,
+ ) -> Result<MediaCodec> {
+     let decoder = if is_software {
+         let sw_codec_name = match codec_type {
+@@ -176,7 +214,7 @@ fn decoder_setup(
+     decoder
+         .configure(
+             &format,
+-            Some(&image_reader.window()?),
++            Some(output_window),
+             MediaCodecDirection::Decoder,
+         )
+         .with_context(|| format!("failed to configure decoder"))?;
+@@ -198,11 +236,15 @@ fn decoder_lifecycle(
+     decoder_sink: Arc<Mutex<Option<SharedMediaCodec>>>,
+     decoder_ready_notifier: Arc<Condvar>,
+     image_queue: Arc<Mutex<VecDeque<QueuedImage>>>,
+-    image_reader: &mut ImageReader,
++    surface_timestamps: Arc<Mutex<VecDeque<Duration>>>,
++    image_reader: Option<&mut ImageReader>,
++    output_window: &NativeWindow,
+ ) -> Result<()> {
+     // 2x: keep the target buffering in the middle of the max amount of queuable frames
+     let available_buffering_frames = (2. * config.max_buffering_frames).ceil() as usize;
+ 
++    if let Some(image_reader) = image_reader {
++    let image_callback = frame_result_callback.clone();
+     image_reader.set_image_listener(Box::new({
+         let image_queue = Arc::clone(&image_queue);
+         move |image_reader| {
+@@ -217,7 +259,7 @@ fn decoder_lifecycle(
+                 Ok(AcquireResult::Image(image)) => {
+                     let timestamp = Duration::from_nanos(image.timestamp().unwrap() as u64);
+ 
+-                    if let Some(callback) = frame_result_callback.upgrade() {
++                    if let Some(callback) = image_callback.upgrade() {
+                         callback(Ok(timestamp));
+                     }
+ 
+@@ -244,15 +286,19 @@ fn decoder_lifecycle(
+     // Documentation says that this call is necessary to properly dispose acquired buffers.
+     // todo: find out how to use it and avoid leaking the ImageReader
+     image_reader.set_buffer_removed_listener(Box::new(|_, _| ()))?;
++    }
+ 
+     let mime = mime_for_codec(config.codec);
+ 
+     let mut format = MediaFormat::new();
+     format.set_str("mime", mime);
+-    // Given https://github.com/alvr-org/ALVR/pull/1933#discussion_r1431902906 - change at own risk.
+-    // It might be harmless, it might not be, but it's definitely a risk.
+-    format.set_i32("width", 512);
+-    format.set_i32("height", 1024);
++    // Some Android codecs infer the coded size from CSD, but Galaxy XR's Qualcomm path requires
++    // the configured output surface and MediaFormat to agree with the actual stereo frame.
++    let [frame_width, frame_height] = config.frame_size;
++    let frame_width = if frame_width == 0 { 512 } else { frame_width };
++    let frame_height = if frame_height == 0 { 1024 } else { frame_height };
++    format.set_i32("width", frame_width as i32);
++    format.set_i32("height", frame_height as i32);
+     format.set_buffer("csd-0", &csd_0);
+ 
+     for (key, prop) in &config.options {
+@@ -283,17 +329,17 @@ fn decoder_lifecycle(
+     info!("Using AMediaCodec format:{} ", format);
+ 
+     let decoder = if config.force_software_decoder {
+-        decoder_setup(config.codec, true, &format, &image_reader)?
++        decoder_setup(config.codec, true, &format, output_window)?
+     } else {
+         // Hardware decoders sometimes fail at the CSD-0.
+         // May as well fall back if this occurs.
+-        match decoder_setup(config.codec, false, &format, &image_reader) {
++        match decoder_setup(config.codec, false, &format, output_window) {
+             Ok(d) => d,
+             Err(e) => {
+                 // would be "warn!" but this is a severe caveat and a pretty major error.
+                 error!("Attempting software fallback due to error in default decoder: {e:#}");
+ 
+-                decoder_setup(config.codec, true, &format, &image_reader)?
++                decoder_setup(config.codec, true, &format, output_window)?
+             }
+         }
+     };
+@@ -319,6 +365,13 @@ fn decoder_lifecycle(
+                 {
+                     error!("Decoder dequeue error: {e}");
+                 }
++                if config.surface_texture_id != 0 {
++                    let timestamp = Duration::from_nanos(presentation_time_ns as u64);
++                    surface_timestamps.lock().push_back(timestamp);
++                    if let Some(callback) = frame_result_callback.upgrade() {
++                        callback(Ok(timestamp));
++                    }
++                }
+             }
+             Ok(DequeuedOutputBufferInfoResult::TryAgainLater) => continue,
+             Ok(i) => info!("Decoder dequeue event: {i:?}"),
+@@ -358,6 +411,37 @@ pub fn video_decoder_split(
+     let decoder_sink = Arc::new(Mutex::new(None::<SharedMediaCodec>));
+     let decoder_ready_notifier = Arc::new(Condvar::new());
+     let image_queue = Arc::new(Mutex::new(VecDeque::<QueuedImage>::new()));
++    let surface_timestamps = Arc::new(Mutex::new(VecDeque::<Duration>::new()));
++
++    let surface_output = if config.surface_texture_id != 0 {
++        let context = ndk_context::android_context();
++        let vm = unsafe { JavaVM::from_raw(context.vm().cast()) };
++        Some(Arc::new(
++            vm.attach_current_thread(|env| {
++                let java_object = env.new_object(
++                    jni_str!("android/graphics/SurfaceTexture"),
++                    jni_sig!("(I)V"),
++                    &[JValue::Int(config.surface_texture_id as i32)],
++                )?;
++                let java_ref = env.new_global_ref(&java_object)?;
++                let native = unsafe {
++                    ASurfaceTexture_fromSurfaceTexture(
++                        env.get_raw().cast(),
++                        java_object.as_raw().cast(),
++                    )
++                };
++                let native = std::ptr::NonNull::new(native)
++                    .ok_or_else(|| jni::errors::Error::NullPtr("ASurfaceTexture"))?;
++                jni::errors::Result::Ok(SurfaceTextureOutput {
++                    native,
++                    _java_ref: java_ref,
++                })
++            })
++            .map_err(|e| anyhow!("failed to create SurfaceTexture: {e}"))?,
++        ))
++    } else {
++        None
++    };
+ 
+     let dequeue_thread = thread::spawn({
+         let config = config.clone();
+@@ -365,11 +449,19 @@ pub fn video_decoder_split(
+         let decoder_sink = Arc::clone(&decoder_sink);
+         let decoder_ready_notifier = Arc::clone(&decoder_ready_notifier);
+         let image_queue = Arc::clone(&image_queue);
++        let surface_timestamps = Arc::clone(&surface_timestamps);
++        let surface_output = surface_output.clone();
+         move || {
+             const MAX_BUFFERING_FRAMES: usize = 10;
+-            let mut image_reader = match ImageReader::new_with_usage(
+-                1,
+-                1,
++            let [frame_width, frame_height] = config.frame_size;
++            let (frame_width, frame_height) = if frame_width == 0 || frame_height == 0 {
++                (1, 1)
++            } else {
++                (frame_width, frame_height)
++            };
++            let mut image_reader = if surface_output.is_none() { Some(match ImageReader::new_with_usage(
++                frame_width as i32,
++                frame_height as i32,
+                 ImageFormat::PRIVATE,
+                 HardwareBufferUsage::GPU_SAMPLED_IMAGE,
+                 MAX_BUFFERING_FRAMES as i32,
+@@ -379,6 +471,16 @@ pub fn video_decoder_split(
+                     frame_result_callback(Err(anyhow!("{e}")));
+                     return;
+                 }
++            }) } else { None };
++
++            let output_window = if let Some(output) = &surface_output {
++                output.acquire_native_window()
++            } else {
++                image_reader.as_ref().and_then(|reader| reader.window().ok())
++            };
++            let Some(output_window) = output_window else {
++                frame_result_callback(Err(anyhow!("failed to create decoder output window")));
++                return;
+             };
+ 
+             let frame_result_callback = Arc::new(frame_result_callback);
+@@ -391,7 +493,9 @@ pub fn video_decoder_split(
+                 decoder_sink,
+                 decoder_ready_notifier,
+                 Arc::clone(&image_queue),
+-                &mut image_reader,
++                surface_timestamps,
++                image_reader.as_mut(),
++                &output_window,
+             ) {
+                 frame_result_callback(Err(e));
+             }
+@@ -418,6 +522,8 @@ pub fn video_decoder_split(
+         running,
+         dequeue_thread: Some(dequeue_thread),
+         image_queue,
++        surface_output,
++        surface_timestamps,
+         config,
+         buffering_running_average: 0.0,
+     };
+diff --git a/alvr/client_core/src/video_decoder/mod.rs b/alvr/client_core/src/video_decoder/mod.rs
+index 3a1555c..630f4e4 100644
+--- a/alvr/client_core/src/video_decoder/mod.rs
++++ b/alvr/client_core/src/video_decoder/mod.rs
+@@ -8,6 +8,12 @@ use std::time::Duration;
+ #[derive(Clone, Default, PartialEq)]
+ pub struct VideoDecoderConfig {
+     pub codec: CodecType,
++    /// Full decoded frame size. ALVR packs the two eye images side by side.
++    /// Zero preserves the legacy Android decoder fallback for C API users.
++    pub frame_size: [u32; 2],
++    /// Existing GL_TEXTURE_EXTERNAL_OES name used by Galaxy XR's SurfaceTexture decoder path.
++    /// Zero selects the normal ImageReader/AHardwareBuffer path.
++    pub surface_texture_id: u32,
+     pub force_software_decoder: bool,
+     pub max_buffering_frames: f32,
+     pub buffering_history_weight: f32,
+diff --git a/alvr/client_openxr/Cargo.toml b/alvr/client_openxr/Cargo.toml
+index fa14b07..52cce90 100644
+--- a/alvr/client_openxr/Cargo.toml
++++ b/alvr/client_openxr/Cargo.toml
+@@ -44,7 +44,7 @@ keystore_password = "alvrclient"
+ 
+ [package.metadata.android.sdk]
+ min_sdk_version = 28
+-target_sdk_version = 32
++target_sdk_version = 35
+ 
+ [[package.metadata.android.uses_feature]]
+ name = "android.hardware.microphone"
+@@ -67,6 +67,8 @@ name = "android.permission.CHANGE_WIFI_MULTICAST_STATE"
+ name = "android.permission.INTERNET"
+ [[package.metadata.android.uses_permission]]
+ name = "android.permission.RECORD_AUDIO"
++[[package.metadata.android.uses_permission]]
++name = "android.permission.HAND_TRACKING"
+ # WAKE_LOCK is needed for proper wifi locking
+ # https://developer.android.com/reference/android/net/wifi/WifiManager.WifiLock
+ [[package.metadata.android.uses_permission]]
+diff --git a/alvr/client_openxr/src/interaction.rs b/alvr/client_openxr/src/interaction.rs
+index 8927c14..a5c2f5f 100644
+--- a/alvr/client_openxr/src/interaction.rs
++++ b/alvr/client_openxr/src/interaction.rs
+@@ -382,6 +382,12 @@ impl InteractionContext {
+                 .unwrap()
+         });
+ 
++        if platform == Platform::SamsungGalaxyXR {
++            // Android XR requires its own runtime permission for skeletal hand data.
++            // Permission approval is asynchronous; reopen the client after granting it.
++            alvr_system_info::try_get_permission("android.permission.HAND_TRACKING");
++        }
++
+         let left_hand_tracker = check_ext_object(
+             "HandTracker (left)",
+             xr_session.create_hand_tracker(xr::Hand::LEFT),
+diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
+index 4bf5cd2..4ad92db 100644
+--- a/alvr/client_openxr/src/lib.rs
++++ b/alvr/client_openxr/src/lib.rs
+@@ -349,12 +349,21 @@ pub fn entry_point() {
+             platform,
+         )));
+ 
++        // Android XR currently mis-composites the oversized lobby swapchains on Galaxy XR. Keep
++        // the lobby at the runtime-recommended per-eye size; streamed content still negotiates
++        // its resolution independently when a server connects.
++        let lobby_view_resolution = if platform == Platform::SamsungGalaxyXR {
++            default_view_resolution
++        } else {
++            UVec2::min(default_view_resolution * 2, max_view_resolution)
++        };
++
+         let mut lobby = Lobby::new(
+             xr_session.clone(),
+             Rc::clone(&graphics_context),
+             Arc::clone(&interaction_context),
+             platform,
+-            UVec2::min(default_view_resolution * 2, max_view_resolution),
++            lobby_view_resolution,
+             &last_lobby_message,
+         );
+ 
+diff --git a/alvr/client_openxr/src/lobby.rs b/alvr/client_openxr/src/lobby.rs
+index b507f5e..d1a4671 100644
+--- a/alvr/client_openxr/src/lobby.rs
++++ b/alvr/client_openxr/src/lobby.rs
+@@ -18,6 +18,7 @@ pub struct Lobby {
+     view_resolution: UVec2,
+     reference_space_type: xr::ReferenceSpaceType,
+     renderer: LobbyRenderer,
++    logged_view_geometry: bool,
+ }
+ 
+ impl Lobby {
+@@ -73,6 +74,7 @@ impl Lobby {
+             view_resolution,
+             reference_space_type,
+             renderer,
++            logged_view_geometry: false,
+         }
+     }
+ 
+@@ -103,6 +105,17 @@ impl Lobby {
+             vec![crate::default_view(), crate::default_view()]
+         };
+ 
++        if !self.logged_view_geometry {
++            alvr_common::info!(
++                "Galaxy XR lobby views: left pose={:?} fov={:?}; right pose={:?} fov={:?}",
++                views[0].pose,
++                views[0].fov,
++                views[1].pose,
++                views[1].fov,
++            );
++            self.logged_view_geometry = true;
++        }
++
+         self.xr_session
+             .sync_actions(&[(&self.interaction_ctx.read().action_set).into()])
+             .ok();
+diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
+index d16a74c..165a966 100644
+--- a/alvr/client_openxr/src/stream.rs
++++ b/alvr/client_openxr/src/stream.rs
+@@ -297,8 +297,19 @@ impl StreamContext {
+     }
+ 
+     pub fn maybe_initialize_decoder(&mut self, codec: CodecType, config_nal: Vec<u8>) {
++        let encoded_view_resolution = self
++            .config
++            .foveated_encoding_config
++            .map(|config| UVec2::from_array(config.encoded_view_resolution))
++            .unwrap_or(self.config.view_resolution);
+         let new_config = VideoDecoderConfig {
+             codec,
++            frame_size: [encoded_view_resolution.x * 2, encoded_view_resolution.y],
++            surface_texture_id: if self.core_context.platform() == Platform::SamsungGalaxyXR {
++                self.renderer.external_texture_id()
++            } else {
++                0
++            },
+             force_software_decoder: self.config.force_software_decoder,
+             max_buffering_frames: self.config.max_buffering_frames,
+             buffering_history_weight: self.config.buffering_history_weight,
+diff --git a/alvr/graphics/src/staging.rs b/alvr/graphics/src/staging.rs
+index c39f69c..4eebfdf 100644
+--- a/alvr/graphics/src/staging.rs
++++ b/alvr/graphics/src/staging.rs
+@@ -4,6 +4,11 @@ use alvr_common::glam::{IVec2, UVec2};
+ use glow::{self as gl, HasContext};
+ use std::{ffi::c_void, rc::Rc};
+ 
++#[cfg(target_os = "android")]
++unsafe extern "C" {
++    fn ASurfaceTexture_updateTexImage(surface_texture: *mut c_void) -> i32;
++}
++
+ fn create_program(
+     gl: &gl::Context,
+     vertex_shader_source: &str,
+@@ -58,6 +63,10 @@ pub struct StagingRenderer {
+ }
+ 
+ impl StagingRenderer {
++    pub fn external_texture_id(&self) -> u32 {
++        self.surface_texture.0.get()
++    }
++
+     pub fn new(
+         context: Rc<GraphicsContext>,
+         staging_textures: [gl::Texture; 2],
+@@ -85,6 +94,27 @@ impl StagingRenderer {
+         unsafe {
+             // This is an external surface and storage should not be initialized
+             let surface_texture = ck!(gl.create_texture().unwrap());
++            ck!(gl.bind_texture(GL_TEXTURE_EXTERNAL_OES, Some(surface_texture)));
++            ck!(gl.tex_parameter_i32(
++                GL_TEXTURE_EXTERNAL_OES,
++                gl::TEXTURE_MIN_FILTER,
++                gl::LINEAR as i32,
++            ));
++            ck!(gl.tex_parameter_i32(
++                GL_TEXTURE_EXTERNAL_OES,
++                gl::TEXTURE_MAG_FILTER,
++                gl::LINEAR as i32,
++            ));
++            ck!(gl.tex_parameter_i32(
++                GL_TEXTURE_EXTERNAL_OES,
++                gl::TEXTURE_WRAP_S,
++                gl::CLAMP_TO_EDGE as i32,
++            ));
++            ck!(gl.tex_parameter_i32(
++                GL_TEXTURE_EXTERNAL_OES,
++                gl::TEXTURE_WRAP_T,
++                gl::CLAMP_TO_EDGE as i32,
++            ));
+ 
+             let mut framebuffers = vec![];
+             for tex in staging_textures {
+@@ -145,6 +175,34 @@ impl StagingRenderer {
+             )
+         };
+     }
++
++    /// Render a frame supplied by Android SurfaceTexture instead of importing an AHardwareBuffer.
++    #[cfg(target_os = "android")]
++    pub fn render_surface_texture(&self, surface_texture: *mut c_void) {
++        if surface_texture.is_null() {
++            return;
++        }
++
++        let gl = &self.context.gl_context;
++        self.context.make_current();
++        unsafe {
++            if ASurfaceTexture_updateTexImage(surface_texture) != 0 {
++                return;
++            }
++            ck!(gl.use_program(Some(self.program)));
++            ck!(gl.viewport(0, 0, self.viewport_size.x, self.viewport_size.y));
++            ck!(gl.disable(gl::SCISSOR_TEST));
++            ck!(gl.disable(gl::STENCIL_TEST));
++            for (i, framebuffer) in self.framebuffers.iter().enumerate() {
++                ck!(gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, Some(*framebuffer)));
++                ck!(gl.active_texture(gl::TEXTURE0));
++                ck!(gl.bind_texture(GL_TEXTURE_EXTERNAL_OES, Some(self.surface_texture)));
++                ck!(gl.bind_sampler(0, None));
++                ck!(gl.uniform_1_i32(Some(&self.view_idx_uloc), i as i32));
++                ck!(gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4));
++            }
++        }
++    }
+ }
+ 
+ impl Drop for StagingRenderer {
+diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
+index 7cc3694..ee90828 100644
+--- a/alvr/graphics/src/stream.rs
++++ b/alvr/graphics/src/stream.rs
+@@ -61,6 +61,10 @@ pub struct StreamRenderer {
+ }
+ 
+ impl StreamRenderer {
++    pub fn external_texture_id(&self) -> u32 {
++        self.staging_renderer.external_texture_id()
++    }
++
+     #[expect(clippy::too_many_arguments)]
+     #[cfg_attr(any(target_os = "macos", target_os = "ios"), expect(unused))]
+     pub fn new(
+@@ -299,7 +303,15 @@ impl StreamRenderer {
+     ) {
+         // if hardware_buffer is available copy stream to staging texture
+         if !hardware_buffer.is_null() {
+-            self.staging_renderer.render(hardware_buffer);
++            // SurfaceTexture pointers are tagged in their low bit by the Android decoder.
++            let raw = hardware_buffer as usize;
++            if raw & 1 == 1 {
++                #[cfg(target_os = "android")]
++                self.staging_renderer
++                    .render_surface_texture((raw & !1) as *mut c_void);
++            } else {
++                self.staging_renderer.render(hardware_buffer);
++            }
+         }
+ 
+         if let Some(config) = &self.foveated_encoding
+diff --git a/alvr/server_openvr/build.rs b/alvr/server_openvr/build.rs
+index 99ae124..23cf042 100644
+--- a/alvr/server_openvr/build.rs
++++ b/alvr/server_openvr/build.rs
+@@ -60,7 +60,8 @@ fn main() {
+         .collect::<Vec<_>>();
+ 
+     let source_files_paths = cpp_paths.iter().filter(|path| {
+-        path.extension()
++        path.file_name().and_then(|name| name.to_str()) != Some("VideoEncoderVPL.cpp")
++            && path.extension()
+             .filter(|ext| {
+                 let ext_str = ext.to_string_lossy();
+                 ext_str == "c" || ext_str == "cpp"
+@@ -83,7 +84,8 @@ fn main() {
+             .define("NOMINMAX", None)
+             .define("_WINSOCKAPI_", None)
+             .define("_MBCS", None)
+-            .define("_MT", None);
++            .define("_MT", None)
++            .define("ALVR_NVENC_ONLY", None);
+     } else if platform_name == "macos" {
+         build.define("__APPLE__", None);
+     }
+@@ -118,21 +120,6 @@ fn main() {
+     #[cfg(feature = "gpl")]
+     build.define("ALVR_GPL", None);
+ 
+-    if platform_name == "windows" {
+-        let vpl_path = alvr_filesystem::deps_dir().join("windows/libvpl/alvr_build");
+-        let vpl_include_path = vpl_path.join("include");
+-        let vpl_lib_path = vpl_path.join("lib");
+-
+-        println!(
+-            "cargo:rustc-link-search=native={}",
+-            vpl_lib_path.to_string_lossy()
+-        );
+-
+-        build.define("ONEVPL_EXPERIMENTAL", None);
+-        build.include(vpl_include_path);
+-        println!("cargo:rustc-link-lib=vpl");
+-    }
+-
+     build.compile("bindings");
+ 
+     if platform_name == "linux" {
+diff --git a/alvr/server_openvr/cpp/alvr_server/NalParsing.cpp b/alvr/server_openvr/cpp/alvr_server/NalParsing.cpp
+index c94e9a8..62192a1 100644
+--- a/alvr/server_openvr/cpp/alvr_server/NalParsing.cpp
++++ b/alvr/server_openvr/cpp/alvr_server/NalParsing.cpp
+@@ -99,6 +99,19 @@ void ParseFrameNals(
+     int codec, unsigned char* buf, int len, unsigned long long targetTimestampNs, bool isIdr
+ ) {
+     static bool av1GotFrame = false;
++    static uint64_t parsedCount = 0;
++    const uint64_t parsedIndex = ++parsedCount;
++
++    if (parsedIndex == 1 || parsedIndex % 120 == 0) {
++        Info(
++            "[XRWIRED] ParseFrameNals #%llu: codec=%d inputBytes=%d target=%llu idr=%d\n",
++            parsedIndex,
++            codec,
++            len,
++            targetTimestampNs,
++            isIdr
++        );
++    }
+ 
+     if ((unsigned)len < sizeof(NAL_PREFIX_4B)) {
+         return;
+@@ -113,5 +126,8 @@ void ParseFrameNals(
+         SetVideoConfigNals(0, 0, codec);
+     }
+ 
++    if (parsedIndex == 1 || parsedIndex % 120 == 0 || len <= 0) {
++        Info("[XRWIRED] VideoSend #%llu: payloadBytes=%d\n", parsedIndex, len);
++    }
+     VideoSend(targetTimestampNs, buf, len, isIdr);
+ }
+diff --git a/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp b/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp
+index 2c712e3..92c30ab 100644
+--- a/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp
++++ b/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp
+@@ -19,7 +19,9 @@ void CEncoder::Initialize(std::shared_ptr<CD3DRender> d3dRender) {
+     uint32_t encoderWidth, encoderHeight;
+     m_FrameRender->GetEncodingResolution(&encoderWidth, &encoderHeight);
+ 
++#ifndef ALVR_NVENC_ONLY
+     Exception vplException;
++#endif
+     Exception vceException;
+     Exception nvencException;
+ #ifdef ALVR_GPL
+@@ -55,6 +57,7 @@ void CEncoder::Initialize(std::shared_ptr<CD3DRender> d3dRender) {
+     } catch (Exception e) {
+         nvencException = e;
+     }
++#ifndef ALVR_NVENC_ONLY
+     try {
+         Debug("Try to use VideoEncoderVPL.\n");
+         m_videoEncoder = std::make_shared<VideoEncoderVPL>(d3dRender, encoderWidth, encoderHeight);
+@@ -63,6 +66,7 @@ void CEncoder::Initialize(std::shared_ptr<CD3DRender> d3dRender) {
+     } catch (Exception e) {
+         vplException = e;
+     }
++#endif
+ #ifdef ALVR_GPL
+     try {
+         Debug("Try to use VideoEncoderSW.\n");
+@@ -73,18 +77,16 @@ void CEncoder::Initialize(std::shared_ptr<CD3DRender> d3dRender) {
+         swException = e;
+     }
+     throw MakeException(
+-        "All VideoEncoder are not available. VCE: %s, NVENC: %s, VPL: %s, SW: %s",
++        "All VideoEncoder are not available. VCE: %s, NVENC: %s, SW: %s",
+         vceException.what(),
+         nvencException.what(),
+-        vplException.what(),
+         swException.what()
+     );
+ #else
+     throw MakeException(
+-        "All VideoEncoder are not available. VCE: %s, NVENC: %s, VPL: %s",
++        "All VideoEncoder are not available. VCE: %s, NVENC: %s",
+         vceException.what(),
+-        nvencException.what(),
+-        vplException.what()
++        nvencException.what()
+     );
+ #endif
+ }
+@@ -120,21 +122,36 @@ bool CEncoder::CopyToStaging(
+ }
+ 
+ void CEncoder::Run() {
+-    Debug("CEncoder: Start thread. Id=%d\n", GetCurrentThreadId());
++    Info("[XRWIRED] CEncoder thread started. Id=%d\n", GetCurrentThreadId());
+     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_MOST_URGENT);
+ 
++    uint64_t wakeCount = 0;
++
+     while (!m_bExiting) {
+         m_newFrameReady.Wait();
+         if (m_bExiting)
+             break;
+ 
++        const uint64_t wakeIndex = ++wakeCount;
++
+         if (m_FrameRender->GetTexture()) {
++            if (wakeIndex == 1 || wakeIndex % 120 == 0) {
++                Info(
++                    "[XRWIRED] Encoder wake #%llu: texture=%p pts=%llu target=%llu\n",
++                    wakeIndex,
++                    m_FrameRender->GetTexture().Get(),
++                    m_presentationTime,
++                    m_targetTimestampNs
++                );
++            }
+             m_videoEncoder->Transmit(
+                 m_FrameRender->GetTexture().Get(),
+                 m_presentationTime,
+                 m_targetTimestampNs,
+                 m_scheduler.CheckIDRInsertion()
+             );
++        } else {
++            Warn("[XRWIRED] Encoder wake #%llu: staging texture is NULL\n", wakeIndex);
+         }
+ 
+         m_encodeFinished.Set();
+@@ -149,6 +166,11 @@ void CEncoder::Stop() {
+ }
+ 
+ void CEncoder::NewFrameReady() {
++    static uint64_t readyCount = 0;
++    const uint64_t readyIndex = ++readyCount;
++    if (readyIndex == 1 || readyIndex % 120 == 0) {
++        Info("[XRWIRED] NewFrameReady #%llu\n", readyIndex);
++    }
+     m_encodeFinished.Reset();
+     m_newFrameReady.Set();
+ }
+diff --git a/alvr/server_openvr/cpp/platform/win32/CEncoder.h b/alvr/server_openvr/cpp/platform/win32/CEncoder.h
+index 4770fd3..51436d7 100644
+--- a/alvr/server_openvr/cpp/platform/win32/CEncoder.h
++++ b/alvr/server_openvr/cpp/platform/win32/CEncoder.h
+@@ -7,7 +7,9 @@
+ #include "VideoEncoder.h"
+ #include "VideoEncoderAMF.h"
+ #include "VideoEncoderNVENC.h"
++#ifndef ALVR_NVENC_ONLY
+ #include "VideoEncoderVPL.h"
++#endif
+ #include "alvr_server/Utils.h"
+ #include <d3d11.h>
+ #include <d3d11_1.h>
+diff --git a/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp b/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
+index afaaa46..0c97f5b 100644
+--- a/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
++++ b/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
+@@ -4,6 +4,7 @@
+ #include "alvr_server/bindings.h"
+ 
+ extern uint64_t g_DriverTestMode;
++void ProbeTexture(CD3DRender& render, ID3D11Texture2D* texture, const char* label);
+ 
+ using namespace d3d_render_utils;
+ 
+@@ -562,6 +563,14 @@ bool FrameRender::RenderFrame(
+     const std::string& debugText
+ ) {
+     // Set render target
++    static uint64_t sourceFrameCount = 0;
++    if (layerCount > 0 && pTexture[0][0] && pTexture[0][1]) {
++        ++sourceFrameCount;
++        if (sourceFrameCount == 1 || sourceFrameCount == 120) {
++            ProbeTexture(*m_pD3DRender, pTexture[0][0], "steamvr-left");
++            ProbeTexture(*m_pD3DRender, pTexture[0][1], "steamvr-right");
++        }
++    }
+     m_pD3DRender->GetContext()->OMSetRenderTargets(1, m_pRenderTargetView.GetAddressOf(), NULL);
+ 
+     m_pD3DRender->GetContext()->OMSetDepthStencilState(m_depthStencilState.Get(), 0);
+diff --git a/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.cpp b/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.cpp
+index b6bea74..3b8ce54 100644
+--- a/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.cpp
++++ b/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.cpp
+@@ -212,6 +212,9 @@ void OvrDirectModeComponent::SubmitLayer(const SubmitLayerPerEye_t (&perEye)[2])
+ void OvrDirectModeComponent::Present(vr::SharedTextureHandle_t syncTexture) {
+     Debug("OvrDirectModeComponent::Present");
+ 
++    static uint64_t presentCount = 0;
++    const uint64_t presentIndex = ++presentCount;
++
+     m_presentMutex.lock();
+ 
+     ReportPresent(m_targetTimestampNs, 0);
+@@ -223,6 +226,17 @@ void OvrDirectModeComponent::Present(vr::SharedTextureHandle_t syncTexture) {
+     uint32_t layerCount = m_submitLayer;
+     m_submitLayer = 0;
+ 
++    if (presentIndex == 1 || presentIndex % 120 == 0) {
++        Info(
++            "[XRWIRED] Present #%llu: layers=%u sync=%p target=%llu encoder=%p\n",
++            presentIndex,
++            layerCount,
++            (void*)syncTexture,
++            m_targetTimestampNs,
++            m_pEncoder.get()
++        );
++    }
++
+     if (m_prevTargetTimestampNs == m_targetTimestampNs) {
+         Debug("Discard duplicated frame. FrameIndex=%llu (Ignoring)", m_targetTimestampNs);
+         // return;
+@@ -230,7 +244,7 @@ void OvrDirectModeComponent::Present(vr::SharedTextureHandle_t syncTexture) {
+ 
+     ID3D11Texture2D* pSyncTexture = m_pD3DRender->GetSharedTexture((HANDLE)syncTexture);
+     if (!pSyncTexture) {
+-        Warn("[VDispDvr] SyncTexture is NULL!");
++        Warn("[XRWIRED] Present #%llu: SyncTexture is NULL!\n", presentIndex);
+         m_presentMutex.unlock();
+         return;
+     }
+@@ -244,8 +258,12 @@ void OvrDirectModeComponent::Present(vr::SharedTextureHandle_t syncTexture) {
+             // TODO: Reasonable timeout and timeout handling
+             HRESULT hr = pKeyedMutex->AcquireSync(0, 10);
+             if (hr != S_OK) {
+-                Debug(
+-                    "[VDispDvr] ACQUIRESYNC FAILED!!! hr=%d %p %ls", hr, hr, GetErrorStr(hr).c_str()
++                Warn(
++                    "[XRWIRED] Present #%llu: AcquireSync failed hr=%d %p %ls\n",
++                    presentIndex,
++                    hr,
++                    hr,
++                    GetErrorStr(hr).c_str()
+                 );
+                 pKeyedMutex->Release();
+                 m_presentMutex.unlock();
+@@ -256,6 +274,10 @@ void OvrDirectModeComponent::Present(vr::SharedTextureHandle_t syncTexture) {
+ 
+     CopyTexture(layerCount);
+ 
++    if (presentIndex == 1 || presentIndex % 120 == 0) {
++        Info("[XRWIRED] Present #%llu: CopyTexture complete\n", presentIndex);
++    }
++
+     if (useMutex) {
+         if (pKeyedMutex) {
+             pKeyedMutex->ReleaseSync(0);
+@@ -267,6 +289,8 @@ void OvrDirectModeComponent::Present(vr::SharedTextureHandle_t syncTexture) {
+ 
+     if (m_pEncoder) {
+         m_pEncoder->NewFrameReady();
++    } else {
++        Warn("[XRWIRED] Present #%llu: encoder is NULL\n", presentIndex);
+     }
+ 
+     m_presentMutex.unlock();
+diff --git a/alvr/server_openvr/cpp/platform/win32/VideoEncoderNVENC.cpp b/alvr/server_openvr/cpp/platform/win32/VideoEncoderNVENC.cpp
+index cd0b7bc..61512e5 100644
+--- a/alvr/server_openvr/cpp/platform/win32/VideoEncoderNVENC.cpp
++++ b/alvr/server_openvr/cpp/platform/win32/VideoEncoderNVENC.cpp
+@@ -1,10 +1,38 @@
+ #include "VideoEncoderNVENC.h"
+ #include "NvCodecUtils.h"
++#include <wrl/client.h>
+ 
+ #include "alvr_server/Logger.h"
+ #include "alvr_server/Utils.h"
+ #include "alvr_server/bindings.h"
+ 
++// One-frame diagnostic: read back actual pixels instead of inferring capture health from packets.
++void ProbeTexture(CD3DRender& render, ID3D11Texture2D* texture, const char* label) {
++    D3D11_TEXTURE2D_DESC desc = {};
++    texture->GetDesc(&desc);
++    Info("[XRWIRED] PixelProbe %s: size=%ux%u format=%u\n", label, desc.Width, desc.Height, desc.Format);
++    if (desc.Format != DXGI_FORMAT_R8G8B8A8_UNORM && desc.Format != DXGI_FORMAT_R8G8B8A8_UNORM_SRGB
++        && desc.Format != DXGI_FORMAT_B8G8R8A8_UNORM && desc.Format != DXGI_FORMAT_B8G8R8A8_UNORM_SRGB) {
++        return;
++    }
++    desc.Usage = D3D11_USAGE_STAGING;
++    desc.BindFlags = 0;
++    desc.MiscFlags = 0;
++    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
++    Microsoft::WRL::ComPtr<ID3D11Texture2D> staging;
++    HRESULT hr = render.GetDevice()->CreateTexture2D(&desc, nullptr, &staging);
++    if (FAILED(hr)) { Info("[XRWIRED] PixelProbe %s: create failed=%ld\n", label, hr); return; }
++    render.GetContext()->CopyResource(staging.Get(), texture);
++    D3D11_MAPPED_SUBRESOURCE mapped = {};
++    hr = render.GetContext()->Map(staging.Get(), 0, D3D11_MAP_READ, 0, &mapped);
++    if (FAILED(hr)) { Info("[XRWIRED] PixelProbe %s: map failed=%ld\n", label, hr); return; }
++    for (unsigned x : { desc.Width / 4, desc.Width / 2, desc.Width * 3 / 4 }) {
++        const auto* pixel = static_cast<const unsigned char*>(mapped.pData) + (desc.Height / 2) * mapped.RowPitch + x * 4;
++        Info("[XRWIRED] PixelProbe %s x=%u: RGBA=%u,%u,%u,%u\n", label, x, pixel[0], pixel[1], pixel[2], pixel[3]);
++    }
++    render.GetContext()->Unmap(staging.Get(), 0);
++}
++
+ VideoEncoderNVENC::VideoEncoderNVENC(std::shared_ptr<CD3DRender> pD3DRender, int width, int height)
+     : m_pD3DRender(pD3DRender)
+     , m_codec(Settings_Instance()->m_codec)
+@@ -95,6 +123,17 @@ void VideoEncoderNVENC::Shutdown() {
+ void VideoEncoderNVENC::Transmit(
+     ID3D11Texture2D* pTexture, uint64_t presentationTime, uint64_t targetTimestampNs, bool insertIDR
+ ) {
++    static uint64_t transmitCount = 0;
++    const uint64_t transmitIndex = ++transmitCount;
++    if (transmitIndex == 1 || transmitIndex % 120 == 0) {
++        Info(
++            "[XRWIRED] NVENC Transmit #%llu: texture=%p target=%llu idr=%d\n",
++            transmitIndex,
++            pTexture,
++            targetTimestampNs,
++            insertIDR
++        );
++    }
+     auto params = GetDynamicEncoderParams();
+     if (params.updated) {
+         m_bitrateInMBits = params.bitrate_bps / 1'000'000;
+@@ -120,6 +159,10 @@ void VideoEncoderNVENC::Transmit(
+     ID3D11Texture2D* pInputTexture
+         = reinterpret_cast<ID3D11Texture2D*>(encoderInputFrame->inputPtr);
+     m_pD3DRender->GetContext()->CopyResource(pInputTexture, pTexture);
++    if (transmitIndex == 1) {
++        ProbeTexture(*m_pD3DRender, pTexture, "rendered");
++        ProbeTexture(*m_pD3DRender, pInputTexture, "encoder-input");
++    }
+ 
+     NV_ENC_PIC_PARAMS picParams = {};
+     if (insertIDR) {
+@@ -128,6 +171,19 @@ void VideoEncoderNVENC::Transmit(
+     }
+     m_NvNecoder->EncodeFrame(vPacket, &picParams);
+ 
++    size_t encodedBytes = 0;
++    for (const auto& packet : vPacket) {
++        encodedBytes += packet.size();
++    }
++    if (transmitIndex == 1 || transmitIndex % 120 == 0 || vPacket.empty()) {
++        Info(
++            "[XRWIRED] NVENC result #%llu: packets=%zu bytes=%zu\n",
++            transmitIndex,
++            vPacket.size(),
++            encodedBytes
++        );
++    }
++
+     for (std::vector<uint8_t>& packet : vPacket) {
+         uint8_t* buf = packet.data();
+         int len = (int)packet.size();

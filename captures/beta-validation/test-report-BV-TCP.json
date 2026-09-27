@@ -1,0 +1,114 @@
+{
+ "bitrate_mbps_achieved": 401.59,
+ "encoded_size": [
+  1984,
+  896
+ ],
+ "fps": {
+  "mean": 90.0,
+  "median": 90.0,
+  "p1_low": 89.59
+ },
+ "frame_counts": {
+  "complete": 2399,
+  "decode_failures": 0,
+  "dropped": 0,
+  "late_packets": 0,
+  "partial": 0,
+  "skipped": 0,
+  "superseded": 0
+ },
+ "headset_end": {
+  "battery_level": 0.32,
+  "battery_temperature_c": 25.0,
+  "thermal_status": 2
+ },
+ "headset_start": {
+  "battery_level": 0.32,
+  "battery_temperature_c": 25.0,
+  "thermal_status": 2
+ },
+ "kind": "PyroWave beta test report",
+ "motion_to_photon_ms": {
+  "mean": 56.8,
+  "p50": 56.85,
+  "p95": 60.48,
+  "p99": 60.56
+ },
+ "packets_lost": 0,
+ "pyrowave_fence_ms": {
+  "mean": 5.5,
+  "p50": 5.42,
+  "p95": 6.42,
+  "p99": 6.87
+ },
+ "pyrowave_gpu_decode_ms": {
+  "mean": 3.57,
+  "p50": 3.61,
+  "p95": 4.24,
+  "p99": 4.35
+ },
+ "report_id": "recorded",
+ "schema_version": 1,
+ "settings": {
+  "advanced_changes": [],
+  "bitrate_mbps": 400,
+  "chroma": "4:4:4",
+  "codec": "PyroWave 4:4:4",
+  "foveated_encoding": {
+   "center_size": [
+    0.2,
+    0.178
+   ],
+   "edge_ratio": [
+    3.0,
+    4.0
+   ],
+   "enabled": true,
+   "follow_gaze": true
+  },
+  "profile": "custom",
+  "pyrowave": {
+   "decode_path": "compute",
+   "transport": "TCP",
+   "wavelet": "CDF 9/7"
+  },
+  "refresh_hz": 90.0,
+  "render_per_eye": [
+   2131,
+   2304
+  ],
+  "render_scale_percent": 60.0
+ },
+ "stage_means_ms": {
+  "client_compositor": 1.35,
+  "decoder": 5.86,
+  "decoder_queue": 5.56,
+  "encoder": 1.54,
+  "game": 15.42,
+  "network": 7.71,
+  "server_compositor": 0.23,
+  "vsync_queue": 19.13
+ },
+ "subjective": {
+  "band": "",
+  "chroma_444_difference": "not compared",
+  "link": "",
+  "notes": "",
+  "router_model": "",
+  "sharpness_1_to_5": null,
+  "smoothness_1_to_5": null
+ },
+ "system": {
+  "cpu": "11th Gen Intel(R) Core(TM) i7-11700K @ 3.60GHz",
+  "gpu": "Virtual Desktop Monitor; NVIDIA GeForce RTX 3090",
+  "gpu_driver": "13.50.53.699; 32.0.15.9571",
+  "headset_model": "SM-I610",
+  "os": "Windows 11 Pro",
+  "streamer_version": "20.13.0-pyro.1"
+ },
+ "window": {
+  "frames": 2522,
+  "seconds": 60
+ }
+}

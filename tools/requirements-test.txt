@@ -1,0 +1,6 @@
+# What tools/tests needs, at the versions the development PC runs (CI installs these).
+# The live-rendering tools (xrbench.scene_app) also use glfw, openvr and PyOpenGL, imported lazily.
+numpy==2.3.5
+opencv-python-headless==4.13.0.90
+matplotlib==3.10.8
+pytest==9.1.1

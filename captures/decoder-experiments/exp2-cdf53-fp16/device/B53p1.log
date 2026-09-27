@@ -1,0 +1,12 @@
+decode path: compute
+decode target: plain R8_UNORM
+plane[0]: 3328x1472 plain R8, 4898816 bytes
+plane[1]: 3328x1472 plain R8, 4898816 bytes
+plane[2]: 3328x1472 plain R8, 4898816 bytes
+queue type: COMPUTE
+wavelet: CDF 5/3, PYROWAVE_PRECISION=1
+decode_is_ready(complete) = yes
+T2 decode      : best 6.840 ms, mean 6.879 ms
+T3-T2 convert  : best 1.466 ms, mean 1.466 ms   (the GLES bridge)
+over 200 iteration(s)
+wrote B53p1.y4m

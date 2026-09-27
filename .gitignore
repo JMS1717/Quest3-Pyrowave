@@ -1,0 +1,36 @@
+# build outputs
+**/build/
+**/.gradle/
+.gradle-home
+**/.cxx/
+*.apk
+local.properties
+
+# native build junk
+*.obj
+*.exe
+*.dll
+*.ilk
+*.pdb
+
+# encoded clips / probe artifacts
+*.mvhevc
+*.h264
+*.h265
+tap.*
+dump.*
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# runtime build outputs
+runtime/build/
+runtime/*.dll
+runtime/*.lib
+runtime/*.exp
+runtime/*.log
+
+# local list for tools/tests/test_privacy.py; never commit
+tools/tests/.banned_strings

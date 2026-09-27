@@ -1,0 +1,207 @@
+#version 450
+// Experiment 4: partially fused CDF 9/7 reconstruction. One 64-lane workgroup owns one 32x32
+// output tile and reconstructs `levels` 9/7 levels inside shared memory. Unlike Haar, 9/7 needs
+// PyroWave's apron (4 output samples per side per level, `dwt_common.h`), so every fused level
+// works on a haloed tile: a level producing V valid samples per axis loads V/2 + 4 coefficients
+// per band (rounded up to even), exactly as `idwt.comp` loads 16 + 4 for its 32 outputs. The
+// halo is recomputed per tile (redundant loads) instead of round-tripping the LL through global
+// memory. Transform arithmetic, K scaling, lifting order and precision (FP32 math, f16 tiles)
+// follow idwt.comp; only topology changes. Correct, simple, instrumentable: no tuning.
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+#extension GL_EXT_shader_16bit_storage : require
+
+layout(local_size_x = 64) in;
+
+layout(binding = 0) uniform sampler2DArray uLL;          // the stage's LL input (layer ll_layer)
+layout(binding = 1) uniform sampler2DArray uDetail[5];   // per fused level, coarsest first: layers 1 = x-high, 2 = y-high, 3 = HH
+layout(binding = 2, r16f) writeonly uniform image2D uOutput;
+
+layout(push_constant) uniform Push
+{
+    int levels;       // levels fused in this stage (1..5)
+    int ll_layer;
+    int final_r8;     // 1: add the DC shift and write the R8 plane; 0: write the f16 LL
+    int nominal_in;   // 32 >> levels: nominal LL coefficient tile at the stage input
+    int mirror_even;  // boundary convention for the low band (0/1), see mirror()
+    int mirror_odd;   // boundary convention for the high bands (0/1)
+    int far_even;     // far-edge rule for low bands: 0 half-sample (n -> n-1), 1 whole-sample (n -> n-2)
+    int far_odd;      // far-edge rule for high bands
+} push;
+
+const int MAXT = 48;                 // largest haloed tile: 2 * 24 coefficients
+shared float16_t s[2][MAXT][MAXT + 1];
+
+const float ALPHA = -1.586134342059924;
+const float BETA = -0.052980118572961;
+const float GAMMA = 0.882911075530934;
+const float DELTA = 0.443506852043971;
+const float K = 1.230174104914001;
+const float inv_K = 1.0 / 1.230174104914001;
+
+int mirror(int i, int n, int even_band)
+{
+    // PyroWave's generate_mirror_uv + MIRRORED_REPEAT gather, resolved to texel indices: low
+    // (even) bands are whole-sample symmetric at the near edge (-1 -> 1) and half-sample at the
+    // far edge (n -> n-1); high (odd) bands the reverse (-1 -> 0, n -> n-2). Derived from
+    // idwt.comp:28-36 (coord -1 for even bands below 0, +1 for odd bands at or past the end).
+    if (i < 0) i = even_band != 0 ? -i : -i - 1;
+    int far = even_band != 0 ? push.far_even : push.far_odd;
+    if (i >= n) i = far != 0 ? 2 * n - 2 - i : 2 * n - 1 - i;
+    return clamp(i, 0, n - 1);
+}
+
+// Coefficient tile widths per level of this stage, coarsest first, plus each level's valid output
+// width, from the finest level backwards: the finest must yield 32 valid samples.
+void plan(out int m[5], out int valid[5])
+{
+    int need = 32;
+    for (int j = push.levels - 1; j >= 0; j--)
+    {
+        int mm = need / 2 + 4;
+        if ((mm & 1) != 0) mm++;
+        m[j] = mm;
+        valid[j] = 2 * mm - 8;
+        need = mm;
+    }
+}
+
+// idwt.comp's 8x2 scheme: a lane lifts a 16-sample register segment (8 outputs + 4 apron each
+// side) with fixed loop bounds, so nothing is dynamically indexed and nothing spills; the segments
+// tile a row and only the central 8 are kept.
+void lift16(inout float v[16])
+{
+    for (int i = 2; i < 15; i += 2) v[i] -= DELTA * (v[i - 1] + v[i + 1]);
+    for (int i = 3; i < 14; i += 2) v[i] -= GAMMA * (v[i - 1] + v[i + 1]);
+    for (int i = 4; i < 13; i += 2) v[i] -= BETA * (v[i - 1] + v[i + 1]);
+    for (int i = 5; i < 12; i += 2) v[i] -= ALPHA * (v[i - 1] + v[i + 1]);
+}
+
+void main()
+{
+    const uint lid = gl_LocalInvocationIndex;
+    const ivec2 wg = ivec2(gl_WorkGroupID.xy);
+    int m[5], valid[5];
+    plan(m, valid);
+
+    // The LL input tile for level 0 of the stage: m[0] x m[0] coefficients around the nominal tile.
+    int nominal = push.nominal_in;
+    int h0 = (m[0] - nominal) / 2;
+    ivec2 base = wg * nominal - h0;
+    int src = 0;
+    for (uint idx = lid; idx < uint(m[0] * m[0]); idx += 64u)
+    {
+        int x = int(idx) % m[0], y = int(idx) / m[0];
+        ivec2 llSize = textureSize(uLL, 0).xy;
+        ivec2 c = ivec2(mirror(base.x + x, llSize.x, push.mirror_even), mirror(base.y + y, llSize.y, push.mirror_even));
+        s[src][y][x] = float16_t(texelFetch(uLL, ivec3(c, push.ll_layer), 0).x);
+    }
+    barrier();
+
+    int cur_w = m[0];            // current LL tile width held in s[src] (coefficients)
+    int cur_origin = base.x;     // its origin in band coordinates (x); y uses the same arithmetic
+    int cur_origin_y = base.y;
+    for (int j = 0; j < push.levels; j++)
+    {
+        int dst = src ^ 1;
+        int mj = m[j];
+        int nominal_j = nominal << j;
+        int hj = (mj - nominal_j) / 2;
+        ivec2 b = wg * nominal_j - hj;              // this level's band-coordinate origin
+        // Where the needed mj x mj LL sits inside the current tile (centred; equal when j == 0).
+        int off = (cur_w - mj) / 2;
+        ivec2 bandSize = textureSize(uDetail[j], 0).xy;
+        // Interleave: T[2y + py][2x + px] = band(px, py) with K scaling applied per axis
+        // (even samples * K, odd samples * inv_K, both axes, as the two passes of idwt.comp do).
+        for (uint idx = lid; idx < uint(mj * mj); idx += 64u)
+        {
+            int x = int(idx) % mj, y = int(idx) / mj;
+            float ll = float(s[src][y + off][x + off]);
+            ivec2 ce = ivec2(mirror(b.x + x, bandSize.x, push.mirror_even), mirror(b.y + y, bandSize.y, push.mirror_even));
+            ivec2 co = ivec2(mirror(b.x + x, bandSize.x, push.mirror_odd), mirror(b.y + y, bandSize.y, push.mirror_odd));
+            float xh = texelFetch(uDetail[j], ivec3(co.x, ce.y, 1), 0).x;   // x-high, y-low
+            float yh = texelFetch(uDetail[j], ivec3(ce.x, co.y, 2), 0).x;   // x-low, y-high
+            float hh = texelFetch(uDetail[j], ivec3(co.x, co.y, 3), 0).x;
+            s[dst][2 * y + 0][2 * x + 0] = float16_t(ll * K * K);
+            s[dst][2 * y + 0][2 * x + 1] = float16_t(xh * inv_K * K);
+            s[dst][2 * y + 1][2 * x + 0] = float16_t(yh * K * inv_K);
+            s[dst][2 * y + 1][2 * x + 1] = float16_t(hh * inv_K * inv_K);
+        }
+        barrier();
+        int len = 2 * mj;
+        // Segments start at 0, 8, 16, ... exactly as idwt.comp's 8x2 lanes do: a segment [b0, b0+16)
+        // yields outputs [b0+4, b0+12), so the valid region [4, len-4) is covered with every
+        // input inside the row (a segment starting 4 earlier would read past the far end).
+        int segs = (len - 8 + 7) / 8;
+        // Row pass (lift along x): s[dst] -> s[src]; one (row, segment) item per lane-round.
+        for (uint it = lid; it < uint(len * segs); it += 64u)
+        {
+            int r = int(it) / segs, sg = int(it) % segs;
+            int b0 = 8 * sg;
+            float v[16];
+            for (int t = 0; t < 16; t++) v[t] = float(s[dst][r][clamp(b0 + t, 0, len - 1)]);
+            lift16(v);
+            for (int u = 0; u < 8; u++)
+                if (b0 + 4 + u < len) s[src][r][b0 + 4 + u] = float16_t(v[4 + u]);
+        }
+        barrier();
+        // Column pass (lift along y): s[src] -> s[dst].
+        for (uint it = lid; it < uint(len * segs); it += 64u)
+        {
+            int c = int(it) / segs, sg = int(it) % segs;
+            int b0 = 8 * sg;
+            float v[16];
+            for (int t = 0; t < 16; t++) v[t] = float(s[src][clamp(b0 + t, 0, len - 1)][c]);
+            lift16(v);
+            for (int u = 0; u < 8; u++)
+                if (b0 + 4 + u < len) s[dst][b0 + 4 + u][c] = float16_t(v[4 + u]);
+        }
+        barrier();
+        // The valid region is [4, len - 4) on both axes: move it to the origin of the other tile
+        // so the next level (or the store) sees a plain tile of width valid[j].
+        int vw = valid[j];
+        for (uint idx = lid; idx < uint(vw * vw); idx += 64u)
+        {
+            int x = int(idx) % vw, y = int(idx) / vw;
+            s[src][y][x] = s[dst][y + 4][x + 4];
+        }
+        barrier();
+        // Match the library's boundary between levels: it reads the next level's LL through the
+        // half-sample far-edge mirror of the *stored* image (g -> 2 res - 1 - g), whereas the lifted
+        // extension of a symmetric coefficient set is whole-sample about the last sample. Overwrite
+        // the part of this tile that lies past the image extent at this level with that mirror
+        // (the near edge, g -> -g, is already consistent but is applied the same way).
+        {
+            ivec2 res = (j + 1 < push.levels) ? textureSize(uDetail[j + 1], 0).xy : imageSize(uOutput);
+            ivec2 g0 = 2 * b + 4;                      // global coordinate of local (0, 0) at this level
+            for (uint idx = lid; idx < uint(vw * vw); idx += 64u)
+            {
+                int x = int(idx) % vw, y = int(idx) / vw;
+                ivec2 g = g0 + ivec2(x, y);
+                if (g.x >= 0 && g.x < res.x && g.y >= 0 && g.y < res.y)
+                    continue;
+                ivec2 gm = g;
+                if (gm.x < 0) gm.x = -gm.x;
+                if (gm.x >= res.x) gm.x = 2 * res.x - 1 - gm.x;
+                if (gm.y < 0) gm.y = -gm.y;
+                if (gm.y >= res.y) gm.y = 2 * res.y - 1 - gm.y;
+                ivec2 l = gm - g0;
+                if (l.x >= 0 && l.x < vw && l.y >= 0 && l.y < vw)
+                    s[src][y][x] = s[src][l.y][l.x];
+            }
+            barrier();
+        }
+        cur_w = vw;
+        // (src keeps holding the current tile; dst is free for the next interleave)
+    }
+
+    // Store the central 32x32 of the current tile.
+    int off = (cur_w - 32) / 2;
+    for (uint idx = lid; idx < 32u * 32u; idx += 64u)
+    {
+        int x = int(idx) % 32, y = int(idx) / 32;
+        float v = float(s[src][y + off][x + off]);
+        if (push.final_r8 != 0)
+            v += 0.5;
+        imageStore(uOutput, wg * 32 + ivec2(x, y), vec4(v));
+    }
+}

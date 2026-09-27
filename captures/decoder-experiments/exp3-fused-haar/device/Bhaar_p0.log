@@ -1,0 +1,6 @@
+wavelet: Haar, PYROWAVE_PRECISION=0
+decode_is_ready(complete) = yes
+T2 decode      : best 6.903 ms, mean 6.936 ms
+T3-T2 convert  : best 1.466 ms, mean 1.466 ms   (the GLES bridge)
+over 200 iteration(s)
+wrote Bhaar_p0.y4m

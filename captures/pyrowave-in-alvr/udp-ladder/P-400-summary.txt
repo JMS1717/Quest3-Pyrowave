@@ -1,0 +1,14 @@
+metric                     mean      p50      p95      p99      min      max
+total_ms                 539.37   535.46   595.64   618.71   452.04   632.68
+game_time_ms              12.32    16.72    21.26    22.68     0.76    53.68
+server_compositor_ms       0.44     0.18     0.97     9.00     0.10    14.13
+encoder_ms                 9.70     8.50    14.10    15.87     7.31    77.47
+network_ms               459.81   458.66   516.92   536.30   378.98   550.64
+decoder_ms                16.51    15.33    22.09    22.72     9.62    25.40
+decoder_queue_ms           0.54     0.54     1.95     3.31     0.00     6.87
+vsync_queue_ms            39.47    40.26    44.86    45.92    29.99    46.99
+client_compositor_ms       0.57     0.77     1.55     2.05     0.00     3.06
+client_fps                64.81    72.00    72.01    72.04    35.99    72.33
+server_fps                71.73    72.04    74.41    75.30    15.68    77.06
+bitrate_mbps             398.46   400.22   413.34   418.30    87.12   428.09
+packets_lost 0  frames 1682  summaries 56

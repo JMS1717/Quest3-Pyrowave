@@ -1,0 +1,89 @@
+{
+ "bitrate_mbps_achieved": 593.46,
+ "encoded_size": null,
+ "fps": {
+  "mean": 71.93,
+  "median": 72.0,
+  "p1_low": 64.67
+ },
+ "frame_counts": null,
+ "headset_end": {
+  "battery_level": 0.33,
+  "battery_temperature_c": 25.0,
+  "thermal_status": 2
+ },
+ "headset_start": {
+  "battery_level": 0.33,
+  "battery_temperature_c": 25.0,
+  "thermal_status": 1
+ },
+ "kind": "PyroWave beta test report",
+ "motion_to_photon_ms": {
+  "mean": 85.36,
+  "p50": 85.24,
+  "p95": 89.59,
+  "p99": 90.01
+ },
+ "packets_lost": 0,
+ "pyrowave_fence_ms": null,
+ "pyrowave_gpu_decode_ms": null,
+ "report_id": "recorded",
+ "schema_version": 1,
+ "settings": {
+  "advanced_changes": [],
+  "bitrate_mbps": 600,
+  "chroma": "4:2:0",
+  "codec": "H.264",
+  "foveated_encoding": {
+   "center_size": [
+    0.2,
+    0.178
+   ],
+   "edge_ratio": [
+    3.0,
+    4.0
+   ],
+   "enabled": true,
+   "follow_gaze": true
+  },
+  "profile": "ALVR H.264 (tuned)",
+  "pyrowave": null,
+  "refresh_hz": 72.0,
+  "render_per_eye": [
+   3552,
+   3840
+  ],
+  "render_scale_percent": 100.0
+ },
+ "stage_means_ms": {
+  "client_compositor": 1.32,
+  "decoder": 17.19,
+  "decoder_queue": 11.65,
+  "encoder": 12.88,
+  "game": 6.72,
+  "network": 11.54,
+  "server_compositor": 0.28,
+  "vsync_queue": 23.8
+ },
+ "subjective": {
+  "band": "",
+  "chroma_444_difference": "not compared",
+  "link": "",
+  "notes": "",
+  "router_model": "",
+  "sharpness_1_to_5": null,
+  "smoothness_1_to_5": null
+ },
+ "system": {
+  "cpu": "11th Gen Intel(R) Core(TM) i7-11700K @ 3.60GHz",
+  "gpu": "Virtual Desktop Monitor; NVIDIA GeForce RTX 3090",
+  "gpu_driver": "13.50.53.699; 32.0.15.9571",
+  "headset_model": "SM-I610",
+  "os": "Windows 11 Pro",
+  "streamer_version": "20.13.0-pyro.1"
+ },
+ "window": {
+  "frames": 2013,
+  "seconds": 60
+ }
+}

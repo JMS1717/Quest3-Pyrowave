@@ -1,0 +1,85 @@
+#version 450
+// Experiment 3, Arm C: fused multi-level Haar reconstruction. One 64-lane workgroup owns one
+// 32x32 output tile and reconstructs `levels` Haar levels from a (32 >> levels)^2 LL tile plus
+// the matching detail bands, keeping every intermediate level in shared memory. No apron (Haar
+// is 2-tap), so tiles never touch their neighbours. Correct, simple, instrumentable: no tuning.
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+#extension GL_EXT_shader_16bit_storage : require
+
+layout(local_size_x = 64) in;
+
+layout(binding = 0) uniform sampler2DArray uLL;          // the stage's LL input (layer ll_layer)
+layout(binding = 1) uniform sampler2DArray uDetail[5];   // per fused level, coarsest first: layers 1..3 = LH, HL, HH
+layout(binding = 2, r16f) writeonly uniform image2D uOutput;   // r8 plane (final) or f16 LL (intermediate)
+
+layout(push_constant) uniform Push
+{
+    int levels;       // levels fused in this stage (1..5)
+    int ll_layer;     // layer of uLL holding the LL input (0 for PyroWave's views and the temp image)
+    int swap_xy;      // 1 if the band images are stored transposed relative to the picture
+    int swap_bands;   // 1 to exchange the LH/HL roles
+    int final_r8;     // 1: add the DC shift and write the R8 plane; 0: write the f16 LL
+    int tile_in;      // 32 >> levels
+    int wide;         // 1: at levels with fewer quads than lanes, 4 lanes per quad (Experiment 4 lane test)
+} push;
+
+shared float16_t s[2][32][33];
+
+ivec2 bc(ivec2 c) { return push.swap_xy != 0 ? c.yx : c; }
+
+void main()
+{
+    const uint lid = gl_LocalInvocationIndex;
+    const ivec2 wg = ivec2(gl_WorkGroupID.xy);
+    int n = push.tile_in;
+
+    // Load the LL input tile.
+    for (uint idx = lid; idx < uint(n * n); idx += 64u)
+    {
+        int x = int(idx) % n, y = int(idx) / n;
+        ivec2 c = bc(wg * n + ivec2(x, y));
+        s[0][y][x] = float16_t(texelFetch(uLL, ivec3(c, push.ll_layer), 0).x);
+    }
+    barrier();
+
+    int src = 0;
+    for (int j = 0; j < push.levels; j++)
+    {
+        int dst = src ^ 1;
+        bool wide = push.wide != 0 && n * n < 64;
+        uint items = wide ? uint(n * n * 4) : uint(n * n);
+        for (uint idx = lid; idx < items; idx += 64u)
+        {
+            uint q = wide ? idx >> 2u : idx;
+            uint sub = wide ? (idx & 3u) : 4u;      // 4 = this lane writes all four outputs
+            int x = int(q) % n, y = int(q) / n;
+            ivec2 c = bc(wg * n + ivec2(x, y));
+            float16_t a  = s[src][y][x];
+            float16_t lh = float16_t(texelFetch(uDetail[j], ivec3(c, push.swap_bands != 0 ? 2 : 1), 0).x);
+            float16_t hl = float16_t(texelFetch(uDetail[j], ivec3(c, push.swap_bands != 0 ? 1 : 2), 0).x);
+            float16_t hh = float16_t(texelFetch(uDetail[j], ivec3(c, 3), 0).x);
+            // Inverse lifting along y on the two column pairs, then along x on the two row pairs.
+            float16_t top = a - float16_t(0.5) * hl;      float16_t bottom = top + hl;
+            float16_t topB = lh - float16_t(0.5) * hh;    float16_t bottomB = topB + hh;
+            float16_t p00 = top - float16_t(0.5) * topB;  float16_t p01 = p00 + topB;
+            float16_t p10 = bottom - float16_t(0.5) * bottomB; float16_t p11 = p10 + bottomB;
+            if (sub == 4u || sub == 0u) s[dst][2 * y + 0][2 * x + 0] = p00;
+            if (sub == 4u || sub == 1u) s[dst][2 * y + 0][2 * x + 1] = p01;
+            if (sub == 4u || sub == 2u) s[dst][2 * y + 1][2 * x + 0] = p10;
+            if (sub == 4u || sub == 3u) s[dst][2 * y + 1][2 * x + 1] = p11;
+        }
+        barrier();
+        src = dst;
+        n *= 2;
+    }
+
+    // Store the n x n result (n == 32 when tile_in == 32 >> levels).
+    for (uint idx = lid; idx < uint(n * n); idx += 64u)
+    {
+        int x = int(idx) % n, y = int(idx) / n;
+        float v = float(s[src][y][x]);
+        if (push.final_r8 != 0)
+            v += 0.5;
+        imageStore(uOutput, wg * n + ivec2(x, y), vec4(v));
+    }
+}

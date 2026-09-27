@@ -1,0 +1,19 @@
+Galaxy XR ALVR Research
+
+The original work in this repository is under the MIT License (LICENSE). Some files modify or
+include third-party code, which stays under its own license:
+
+- patches/alvr-*.patch modify ALVR (https://github.com/alvr-org/ALVR), MIT License,
+  Copyright (c) 2018-2019 polygraphene, Copyright (c) 2020-2024 alvr-org.
+- patches/pyrowave-*.patch modify PyroWave (https://github.com/Themaister/pyrowave), MIT License,
+  Copyright (c) Hans-Kristian Arntzen. Builds also use Granite
+  (https://github.com/Themaister/Granite), MIT License, Copyright (c) Hans-Kristian Arntzen.
+- patches/openxr-sdk-2b99fec-hello_xr.patch modifies the hello_xr sample of the OpenXR SDK
+  (https://github.com/KhronosGroup/OpenXR-SDK-Source), Apache License 2.0, Copyright (c) The
+  Khronos Group Inc. The patch changes the sample into a distortion-grid and stereo decoder test
+  app; the modified files carry the Apache-2.0 license, as does the patch.
+- receiver-xr/ includes OpenXR headers and the OpenXR loader for Android, and
+  runtime/third_party/openxr/ includes OpenXR headers, from the same SDK: Apache License 2.0,
+  Copyright (c) The Khronos Group Inc., unmodified.
+
+The Apache License 2.0 text is at https://www.apache.org/licenses/LICENSE-2.0.

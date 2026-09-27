@@ -1,0 +1,15 @@
+{
+ "geometry": "3328x1472 4:4:4 full range, 416,6xx B frames (w97.wave 416,708 B; w53.wave 416,636 B) from the same encoder_input.y4m",
+ "iterations": 200,
+ "A_ms": 7.057,
+ "A_best_ms": 7.026,
+ "B_ms": 6.879,
+ "B_best_ms": 6.84,
+ "C_ms": 6.815,
+ "C_best_ms": 6.781,
+ "D_ms": 6.995,
+ "D_best_ms": 6.973,
+ "convert_ms": 1.466,
+ "hottest_start_mc": 66785,
+ "hottest_end_mc": 66798
+}

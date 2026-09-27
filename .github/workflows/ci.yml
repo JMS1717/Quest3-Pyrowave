@@ -1,0 +1,178 @@
+# Tests on every push; the beta streamer and headset APK are built from the pinned upstream
+# sources plus patches/ when build inputs change, on v* tags, and on demand. Nothing is published:
+# builds are kept as workflow artifacts for 90 days.
+name: CI
+
+on:
+  push:
+    branches: [pyro, main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  RUST_TOOLCHAIN: "1.97.1"
+  ALVR_BASE: 7eda092dbf0002281410a4222683ec228700cffb       # alvr-org/ALVR v20.13.0
+  PYROWAVE_BASE: d2997ac172bdc00e29c58e3f2938acb7e94580bf   # Themaister/pyrowave
+  GRANITE_COMMIT: 842d9d5686ba8c799a7d34a78a68f98d6aeb5a68  # a newer Granite spiked encoder p99
+  CARGO_APK_REV: 0fd3126dad5aa1c5f0f26cdae3410f2e5af62c60   # zarik5/cargo-apk, as upstream ALVR
+  NDK_VERSION: 27.2.12479018
+  CARGO_TERM_COLOR: always
+
+jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      build: ${{ steps.decide.outputs.build }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: decide
+        shell: bash
+        env:
+          BEFORE: ${{ github.event.before }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* || "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            echo "build=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          # everything this push (or pull request) changes, not just its last commit
+          if [[ -n "$BASE_REF" ]]; then range="origin/$BASE_REF...HEAD"
+          elif [[ -n "$BEFORE" && "$BEFORE" != 0000000000000000000000000000000000000000 ]]; then range="$BEFORE..HEAD"
+          else echo "build=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          if git diff --name-only "$range" \
+              | grep -qE '^(patches/|tools/pyroclient/|tools/windows/|tools/lib/|tools/build_|tools/ci/|\.github/workflows/)'; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  tests:
+    runs-on: windows-2022
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - run: python -m pip install -r tools/requirements-test.txt
+      - name: pytest
+        working-directory: tools
+        env:
+          XRWIRED_BANNED_STRINGS: ${{ secrets.XRWIRED_BANNED_STRINGS }}
+        run: python -m pytest -q -p no:cacheprovider
+
+  decode-path:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: headset decode-path choice (host test)
+        working-directory: tools/pyroclient
+        run: g++ -std=c++17 -Wall -Werror decode_path_test.cpp -o decode_path_test && ./decode_path_test
+
+  streamer:
+    needs: [changes, tests]
+    if: needs.changes.outputs.build == 'true'
+    runs-on: windows-2022
+    env:
+      XRWIRED_INPUTS: ${{ github.workspace }}\ws
+      LIBCLANG_PATH: C:\Program Files\LLVM\bin
+    steps:
+      - run: |
+          git config --global core.autocrlf false
+          git config --global core.longpaths true
+      - uses: actions/checkout@v7
+      - name: Upstream sources plus patches
+        shell: bash
+        run: tools/ci/fetch_sources.sh "$GITHUB_WORKSPACE/ws/research"
+      - name: Rust ${{ env.RUST_TOOLCHAIN }}
+        run: rustup toolchain install $env:RUST_TOOLCHAIN --profile minimal
+      - name: PyroWave for the PC
+        shell: cmd
+        run: tools\windows\build_pyrowave_pc.cmd interop
+      - name: Streamer (driver, dashboard, PyroWave DLL)
+        shell: cmd
+        run: tools\windows\build_streamer.cmd
+      - name: Package
+        shell: pwsh
+        run: |
+          $out = "$env:GITHUB_WORKSPACE\out"; New-Item -ItemType Directory $out | Out-Null
+          $zip = "$out\pyrowave-beta-streamer-windows.zip"
+          Compress-Archive "$env:XRWIRED_INPUTS\research\ALVR-20.13.0\build\alvr_streamer_windows\*" $zip
+          (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower() + "  pyrowave-beta-streamer-windows.zip" |
+            Set-Content "$zip.sha256"
+          Get-Content "$zip.sha256"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: pyrowave-beta-streamer-windows
+          path: out/
+          retention-days: 90
+
+  client:
+    needs: [changes, tests]
+    if: needs.changes.outputs.build == 'true'
+    runs-on: ubuntu-24.04
+    env:
+      XRWIRED_INPUTS: ${{ github.workspace }}/ws
+    steps:
+      - uses: actions/checkout@v7
+      - name: Upstream sources plus patches
+        run: tools/ci/fetch_sources.sh "$GITHUB_WORKSPACE/ws/research"
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Android NDK ${{ env.NDK_VERSION }}
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" "platforms;android-35" "build-tools;35.0.0" >/dev/null
+          echo "XRWIRED_ANDROID_SDK=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "XRWIRED_NDK=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+      - name: Rust ${{ env.RUST_TOOLCHAIN }} and Android tools
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --target aarch64-linux-android
+          cargo +"$RUST_TOOLCHAIN" install --locked cargo-ndk@4.1.2 cbindgen@0.29.4
+          cargo +"$RUST_TOOLCHAIN" install --locked --git https://github.com/zarik5/cargo-apk --rev "$CARGO_APK_REV" cargo-apk
+      - name: OpenXR loader (Khronos; the Galaxy XR runtime needs only this one)
+        run: |
+          dest="$XRWIRED_INPUTS/research/ALVR-20.13.0/deps/android_openxr/arm64-v8a"
+          mkdir -p "$dest" /tmp/openxr
+          curl -fsSL -o /tmp/openxr/loader.aar \
+            https://github.com/KhronosGroup/OpenXR-SDK-Source/releases/download/release-1.0.34/openxr_loader_for_android-1.0.34.aar
+          unzip -q -o /tmp/openxr/loader.aar -d /tmp/openxr
+          cp /tmp/openxr/prefab/modules/openxr_loader/libs/android.arm64-v8a/libopenxr_loader.so "$dest/"
+      - name: Release signing key (tags and manual runs only)
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        env:
+          KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+        run: |
+          [ -n "$KEYSTORE_B64" ] || { echo "RELEASE_KEYSTORE_B64 secret missing"; exit 1; }
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.p12"
+          echo "CARGO_APK_RELEASE_KEYSTORE=$RUNNER_TEMP/release.p12" >> "$GITHUB_ENV"
+          echo "CARGO_APK_RELEASE_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+      - name: PyroWave for Android, libpyroclient and the APK
+        run: |
+          sh tools/build_pyrowave_android.sh
+          sh tools/build_alvr_2013.sh
+      - name: Check the signature and package
+        run: |
+          apk="$XRWIRED_INPUTS/research/ALVR-20.13.0/build/alvr_client_android/alvr_client_android.apk"
+          mkdir -p out
+          apksigner="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          cert=$("$apksigner" verify --print-certs "$apk" | sed -n 's/.*SHA-256 digest: //p' | head -1)
+          echo "certificate SHA-256: $cert"
+          if [ -n "${CARGO_APK_RELEASE_KEYSTORE:-}" ]; then
+            expected=$(tr -d ' \r\n' < tools/beta/release-cert.sha256)
+            [ "$cert" = "$expected" ] || { echo "signed with an unexpected key"; exit 1; }
+            name=pyrowave-beta-client-galaxy-xr.apk
+          else
+            name=pyrowave-beta-client-galaxy-xr-unsigned-debug.apk
+          fi
+          cp "$apk" "out/$name"
+          (cd out && sha256sum "$name" > "$name.sha256" && cat "$name.sha256")
+      - uses: actions/upload-artifact@v7
+        with:
+          name: pyrowave-beta-client-galaxy-xr
+          path: out/
+          retention-days: 90

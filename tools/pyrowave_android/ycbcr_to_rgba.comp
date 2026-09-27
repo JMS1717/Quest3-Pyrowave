@@ -1,0 +1,39 @@
+#version 450
+
+// YCbCr -> RGBA8, BT.709 full range.
+//
+// This is the pass ALVR's GLES client needs and a Vulkan-native client would not: PyroWave
+// decodes into three single-component planes, but GLES can only import an RGBA8
+// AHardwareBuffer on this device, so the planes have to be combined before the handoff.
+// Measuring it is measuring the price of the GLES bridge.
+//
+// Chroma is read through a sampler rather than by integer index, so 4:2:0 upsamples for free and
+// 4:4:4 costs the same code path.
+
+layout(local_size_x = 8, local_size_y = 8) in;
+
+layout(set = 0, binding = 0) uniform sampler2D planeY;
+layout(set = 0, binding = 1) uniform sampler2D planeCb;
+layout(set = 0, binding = 2) uniform sampler2D planeCr;
+layout(set = 0, binding = 3, rgba8) uniform writeonly image2D outImage;
+
+void main() {
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 size = imageSize(outImage);
+    if (coord.x >= size.x || coord.y >= size.y) {
+        return;
+    }
+
+    vec2 uv = (vec2(coord) + 0.5) / vec2(size);
+
+    float Y = texture(planeY, uv).r;
+    float Cb = texture(planeCb, uv).r - 0.5;
+    float Cr = texture(planeCr, uv).r - 0.5;
+
+    // Full range, so no 16/235 rescale; matches the server's BT.709 full-range coefficients.
+    vec3 rgb = vec3(Y + 1.5748 * Cr,
+                    Y - 0.1873 * Cb - 0.4681 * Cr,
+                    Y + 1.8556 * Cb);
+
+    imageStore(outImage, coord, vec4(clamp(rgb, 0.0, 1.0), 1.0));
+}

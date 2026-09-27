@@ -1,0 +1,37 @@
+#!/bin/sh
+# Checks out the upstream sources the beta is built from and applies our patches, into <dest>:
+#   <dest>/ALVR-20.13.0  alvr-org/ALVR at ALVR_BASE + patches/alvr-20.13.0-server-instrumentation.patch
+#   <dest>/pyrowave      Themaister/pyrowave at PYROWAVE_BASE + patches/pyrowave-cdf53-haar-experiments2-3.patch,
+#                        with Granite (and its submodules) at GRANITE_COMMIT
+# Both patches are cumulative: base + one patch reproduces the measured clone exactly.
+# Usage: tools/ci/fetch_sources.sh <dest>
+set -eu
+: "${ALVR_BASE:=7eda092dbf0002281410a4222683ec228700cffb}"
+: "${PYROWAVE_BASE:=d2997ac172bdc00e29c58e3f2938acb7e94580bf}"
+: "${GRANITE_COMMIT:=842d9d5686ba8c799a7d34a78a68f98d6aeb5a68}"
+repo=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+dest=${1:?usage: fetch_sources.sh <dest>}
+mkdir -p "$dest"
+
+checkout() {  # <url> <dir> <commit>
+    git init -q "$2"
+    git -C "$2" config core.autocrlf false
+    git -C "$2" config core.longpaths true   # Granite's SPIRV-Cross test files pass 260 chars
+    git -C "$2" fetch -q --depth 1 "$1" "$3"
+    git -C "$2" checkout -q FETCH_HEAD
+}
+
+checkout https://github.com/alvr-org/ALVR "$dest/ALVR-20.13.0" "$ALVR_BASE"
+git -C "$dest/ALVR-20.13.0" submodule update -q --init --recursive --depth 1   # openvr headers
+git -C "$dest/ALVR-20.13.0" apply --binary "$repo/patches/alvr-20.13.0-server-instrumentation.patch"
+
+checkout https://github.com/Themaister/pyrowave "$dest/pyrowave" "$PYROWAVE_BASE"
+# pyrowave's checkout_granite.sh pins a newer Granite (9d44761), which spiked encoder p99 to 14 ms;
+# the measurements used 842d9d5, cloned here with all of its submodules.
+checkout https://github.com/Themaister/Granite "$dest/pyrowave/Granite" "$GRANITE_COMMIT"
+git -C "$dest/pyrowave/Granite" submodule update -q --init --recursive --depth 1
+[ "$(git -C "$dest/pyrowave/Granite" rev-parse HEAD)" = "$GRANITE_COMMIT" ] \
+    || { echo "Granite is not at $GRANITE_COMMIT"; exit 1; }
+git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-cdf53-haar-experiments2-3.patch"
+
+echo "sources ready in $dest: ALVR ${ALVR_BASE%${ALVR_BASE#???????}}, pyrowave ${PYROWAVE_BASE%${PYROWAVE_BASE#???????}}, Granite ${GRANITE_COMMIT%${GRANITE_COMMIT#???????}}"

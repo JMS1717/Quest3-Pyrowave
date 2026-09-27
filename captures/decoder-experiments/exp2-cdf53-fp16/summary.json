@@ -1,0 +1,1199 @@
+{
+ "phase0": {
+  "standalone": {
+   "geometry": "3328x1472 4:4:4 full range, 416,6xx B frames (w97.wave 416,708 B; w53.wave 416,636 B) from the same encoder_input.y4m",
+   "iterations": 200,
+   "A_ms": 7.057,
+   "A_best_ms": 7.026,
+   "B_ms": 6.879,
+   "B_best_ms": 6.84,
+   "C_ms": 6.815,
+   "C_best_ms": 6.781,
+   "D_ms": 6.995,
+   "D_best_ms": 6.973,
+   "convert_ms": 1.466,
+   "hottest_start_mc": 66785,
+   "hottest_end_mc": 66798
+  },
+  "equal_bytes": {
+   "at_416667": [
+    {
+     "source": "kodak_kodim04",
+     "cap_bytes": 416667,
+     "bytes97": 416544,
+     "bytes53": 416656,
+     "psnr_y97": 30.55,
+     "psnr_y53": 30.25,
+     "d_psnr_y": -0.3000000000000007,
+     "psnr_hvs97": 30.2479,
+     "psnr_hvs53": 29.6422,
+     "ssim97": 0.8924,
+     "ssim53": 0.89,
+     "vmaf97": 76.1636,
+     "vmaf53": 71.0295
+    },
+    {
+     "source": "kodak_kodim07",
+     "cap_bytes": 416667,
+     "bytes97": 416612,
+     "bytes53": 416656,
+     "psnr_y97": 29.3,
+     "psnr_y53": 28.76,
+     "d_psnr_y": -0.5399999999999991,
+     "psnr_hvs97": 28.3631,
+     "psnr_hvs53": 27.4557,
+     "ssim97": 0.9052,
+     "ssim53": 0.9037,
+     "vmaf97": 72.1004,
+     "vmaf53": 67.8009
+    },
+    {
+     "source": "kodak_kodim08",
+     "cap_bytes": 416667,
+     "bytes97": 416600,
+     "bytes53": 416644,
+     "psnr_y97": 21.42,
+     "psnr_y53": 21.14,
+     "d_psnr_y": -0.28000000000000114,
+     "psnr_hvs97": 21.5788,
+     "psnr_hvs53": 20.9824,
+     "ssim97": 0.8049,
+     "ssim53": 0.8043,
+     "vmaf97": 56.3354,
+     "vmaf53": 52.3726
+    },
+    {
+     "source": "kodak_kodim19",
+     "cap_bytes": 416667,
+     "bytes97": 416596,
+     "bytes53": 416652,
+     "psnr_y97": 26.9,
+     "psnr_y53": 26.57,
+     "d_psnr_y": -0.3299999999999983,
+     "psnr_hvs97": 28.5421,
+     "psnr_hvs53": 27.6501,
+     "ssim97": 0.8913,
+     "ssim53": 0.8891,
+     "vmaf97": 71.759,
+     "vmaf53": 67.7077
+    },
+    {
+     "source": "synthetic_panel",
+     "cap_bytes": 416667,
+     "bytes97": 416588,
+     "bytes53": 416636,
+     "psnr_y97": 51.75,
+     "psnr_y53": 49.39,
+     "d_psnr_y": -2.3599999999999994,
+     "psnr_hvs97": 57.4878,
+     "psnr_hvs53": 56.406,
+     "ssim97": 0.9989,
+     "ssim53": 0.9987,
+     "vmaf97": 96.9661,
+     "vmaf53": 96.7863
+    }
+   ],
+   "cells": 325,
+   "mean_d_psnr_y": -0.6840923076923074,
+   "kodak_d_psnr_y": -0.36711538461538457,
+   "panel_d_psnr_y": -1.9520000000000002,
+   "min_d_psnr_y": -6.210000000000001,
+   "max_d_psnr_y": 0.6000000000000014
+  },
+  "gains": [
+   {
+    "source": "kodak_kodim08",
+    "gains": "CDF 9/7, 9/7 (own)",
+    "bytes": 416600,
+    "psnr_y": 21.42,
+    "psnr_hvs": 21.578829,
+    "ssim": 0.804866,
+    "vmaf": 56.335421
+   },
+   {
+    "source": "kodak_kodim08",
+    "gains": "CDF 5/3, native 5/3",
+    "bytes": 416644,
+    "psnr_y": 21.14,
+    "psnr_hvs": 20.982392,
+    "ssim": 0.804348,
+    "vmaf": 52.372614
+   },
+   {
+    "source": "kodak_kodim08",
+    "gains": "CDF 5/3, 9/7 table",
+    "bytes": 416628,
+    "psnr_y": 20.95,
+    "psnr_hvs": 20.632859,
+    "ssim": 0.801821,
+    "vmaf": 54.206607
+   },
+   {
+    "source": "kodak_kodim04",
+    "gains": "CDF 9/7, 9/7 (own)",
+    "bytes": 416544,
+    "psnr_y": 30.55,
+    "psnr_hvs": 30.247851,
+    "ssim": 0.892402,
+    "vmaf": 76.16359
+   },
+   {
+    "source": "kodak_kodim04",
+    "gains": "CDF 5/3, native 5/3",
+    "bytes": 416656,
+    "psnr_y": 30.25,
+    "psnr_hvs": 29.642213,
+    "ssim": 0.889954,
+    "vmaf": 71.029526
+   },
+   {
+    "source": "kodak_kodim04",
+    "gains": "CDF 5/3, 9/7 table",
+    "bytes": 416636,
+    "psnr_y": 30.03,
+    "psnr_hvs": 29.509893,
+    "ssim": 0.894857,
+    "vmaf": 70.645462
+   },
+   {
+    "source": "synthetic_panel",
+    "gains": "CDF 9/7, 9/7 (own)",
+    "bytes": 416588,
+    "psnr_y": 51.75,
+    "psnr_hvs": 57.487805,
+    "ssim": 0.998936,
+    "vmaf": 96.966125
+   },
+   {
+    "source": "synthetic_panel",
+    "gains": "CDF 5/3, native 5/3",
+    "bytes": 416636,
+    "psnr_y": 49.39,
+    "psnr_hvs": 56.405984,
+    "ssim": 0.998731,
+    "vmaf": 96.786334
+   },
+   {
+    "source": "synthetic_panel",
+    "gains": "CDF 5/3, 9/7 table",
+    "bytes": 416664,
+    "psnr_y": 46.86,
+    "psnr_hvs": 55.595726,
+    "ssim": 0.998589,
+    "vmaf": 96.691967
+   }
+  ],
+  "match": [
+   {
+    "source": "kodak_kodim04",
+    "bytes97": 416544,
+    "psnr_y97": 30.55,
+    "cap53": 505208,
+    "bytes53": 505120,
+    "psnr_y53": 30.55,
+    "extra_pct": 21.264500268879157,
+    "reached": true,
+    "psnr_hvs97": 30.247851,
+    "psnr_hvs53": 30.509228,
+    "ssim97": 0.892402,
+    "ssim53": 0.901179,
+    "vmaf97": 76.16359,
+    "vmaf53": 75.304778,
+    "evaluations": [
+     [
+      700000,
+      31.56
+     ],
+     [
+      416667,
+      30.25
+     ],
+     [
+      558333,
+      30.89
+     ],
+     [
+      487500,
+      30.52
+     ],
+     [
+      522916,
+      30.68
+     ],
+     [
+      505208,
+      30.55
+     ]
+    ]
+   },
+   {
+    "source": "kodak_kodim07",
+    "bytes97": 416612,
+    "psnr_y97": 29.3,
+    "cap53": 474218,
+    "bytes53": 474156,
+    "psnr_y53": 29.32,
+    "extra_pct": 13.81237218323044,
+    "reached": true,
+    "psnr_hvs97": 28.363115,
+    "psnr_hvs53": 28.49784,
+    "ssim97": 0.905249,
+    "ssim53": 0.910756,
+    "vmaf97": 72.100434,
+    "vmaf53": 70.945212,
+    "evaluations": [
+     [
+      700000,
+      30.6
+     ],
+     [
+      416667,
+      28.76
+     ],
+     [
+      558333,
+      29.93
+     ],
+     [
+      487500,
+      29.4
+     ],
+     [
+      452083,
+      29.11
+     ],
+     [
+      469791,
+      29.29
+     ],
+     [
+      478645,
+      29.35
+     ],
+     [
+      474218,
+      29.32
+     ]
+    ]
+   },
+   {
+    "source": "kodak_kodim08",
+    "bytes97": 416600,
+    "psnr_y97": 21.42,
+    "cap53": 458723,
+    "bytes53": 458648,
+    "psnr_y53": 21.43,
+    "extra_pct": 10.093134901584254,
+    "reached": true,
+    "psnr_hvs97": 21.578829,
+    "psnr_hvs53": 21.583635,
+    "ssim97": 0.804866,
+    "ssim53": 0.809647,
+    "vmaf97": 56.335421,
+    "vmaf53": 55.28915,
+    "evaluations": [
+     [
+      700000,
+      22.39
+     ],
+     [
+      416667,
+      21.14
+     ],
+     [
+      558333,
+      21.99
+     ],
+     [
+      487500,
+      21.67
+     ],
+     [
+      452083,
+      21.37
+     ],
+     [
+      469791,
+      21.53
+     ],
+     [
+      460937,
+      21.45
+     ],
+     [
+      456510,
+      21.41
+     ],
+     [
+      458723,
+      21.43
+     ]
+    ]
+   },
+   {
+    "source": "kodak_kodim19",
+    "bytes97": 416596,
+    "psnr_y97": 26.9,
+    "cap53": 549478,
+    "bytes53": 549444,
+    "psnr_y53": 26.9,
+    "extra_pct": 31.888928362250233,
+    "reached": true,
+    "psnr_hvs97": 28.542057,
+    "psnr_hvs53": 28.672849,
+    "ssim97": 0.891279,
+    "ssim53": 0.899811,
+    "vmaf97": 71.758976,
+    "vmaf53": 71.158001,
+    "evaluations": [
+     [
+      700000,
+      27.34
+     ],
+     [
+      416667,
+      26.57
+     ],
+     [
+      558333,
+      26.92
+     ],
+     [
+      487500,
+      26.76
+     ],
+     [
+      522916,
+      26.85
+     ],
+     [
+      540624,
+      26.89
+     ],
+     [
+      549478,
+      26.9
+     ]
+    ]
+   },
+   {
+    "source": "synthetic_panel",
+    "bytes97": 416588,
+    "psnr_y97": 51.75,
+    "cap53": 467507,
+    "bytes53": 467460,
+    "psnr_y53": 51.83,
+    "extra_pct": 12.21158554735134,
+    "reached": true,
+    "psnr_hvs97": 57.487805,
+    "psnr_hvs53": 57.959426,
+    "ssim97": 0.998936,
+    "ssim53": 0.99929,
+    "vmaf97": 96.966125,
+    "vmaf53": 97.001946,
+    "evaluations": [
+     [
+      700000,
+      63.99
+     ],
+     [
+      416667,
+      49.39
+     ],
+     [
+      558333,
+      55.46
+     ],
+     [
+      487500,
+      52.8
+     ],
+     [
+      452083,
+      50.83
+     ],
+     [
+      469791,
+      51.95
+     ],
+     [
+      460937,
+      50.84
+     ],
+     [
+      465364,
+      50.84
+     ],
+     [
+      467577,
+      51.83
+     ],
+     [
+      466470,
+      51.27
+     ],
+     [
+      467023,
+      51.63
+     ],
+     [
+      467300,
+      51.74
+     ],
+     [
+      467438,
+      51.74
+     ],
+     [
+      467507,
+      51.83
+     ]
+    ]
+   }
+  ],
+  "spirv": {
+   "fp16_v0": {
+    "variant": "idwt PRECISION=0 FP16=1 (spirv_bank+32584, 21,212 B)",
+    "f16_arith": 37,
+    "f32_arith": 12,
+    "fconvert": 14,
+    "opTypeFloat16": 1,
+    "capability_Float16": true,
+    "f32_note": "texture-coordinate arithmetic (OpConvertSToF of integer texel coordinates and OpFMul by the push-constant inverse resolution, vec2 float32) feeding the sampled loads, not lifting arithmetic; the 14 OpFConvert are the float32 texel fetch results narrowed to float16 on load and the outputs widened for the R8 store"
+   },
+   "fp16_v1": {
+    "variant": "idwt PRECISION=1 FP16=1 (spirv_bank+37887, 21,564 B)",
+    "f16_arith": 0,
+    "f32_arith": 49,
+    "fconvert": 37,
+    "opTypeFloat16": 1,
+    "note": "FP32 lifting with an f16vec2 shared tile: every shared store/load converts"
+   },
+   "fp32_v0": {
+    "variant": "idwt PRECISION=0 FP16=0 (falls back to PRECISION 1 in dwt_common.h; spirv_bank+21894)",
+    "f16_arith": 0,
+    "f32_arith": 49,
+    "fconvert": 0,
+    "opTypeFloat16": 0
+   },
+   "fp32_v2": {
+    "variant": "idwt PRECISION=2 (spirv_bank+27350)",
+    "f16_arith": 0,
+    "f32_arith": 49,
+    "fconvert": 0,
+    "opTypeFloat16": 0
+   },
+   "spec_constants": "SpecId 0 (existing) and SpecId 1 = LEGALL53 (OpSpecConstantFalse default) in every variant; workgroup 64x1x1; 49 lifting-class float ops per variant",
+   "tool": "spirv-dis from NDK 27.2.12479018 on the regenerated shaders/slangmosh.hpp (slangmosh built from Granite on the PC)"
+  },
+  "negatives": "PC (`pyrowave-decode`): 9/7 stream + 5/3 decoder -> `[ERROR]: Wavelet mismatch: stream is CDF 9/7, decoder is CDF 5/3.`, 68-byte (header-only) output; 5/3 stream + 9/7 decoder -> `Wavelet mismatch: stream is CDF 5/3, decoder is CDF 9/7.`; matched pairs decode (48.12 / 47.34 dB PSNR-Y vs source). Device (`pyrowave_android`): NEG1 5/3 stream + 9/7 decoder -> `pyrowave_decoder_push_packet -> -2` (INVALID_ARGUMENT), exit 1, no output file; NEG2 9/7 stream + 5/3 decoder -> same rejection; NEG3 5/3 with the fragment path forced -> `pyrowave_decoder_create -> -2`, exit 1; POS 5/3 stream + 5/3 decoder -> decoded, `wrote POS.y4m`. All as designed: REJECT / REJECT / REJECT / PASS.",
+  "fp16_runtime": "standalone C run printed `wavelet: CDF 5/3, PYROWAVE_PRECISION=0` and D `CDF 9/7, PYROWAVE_PRECISION=0`; live P53 cells' pyroclient lines are quoted in items 9 and 12.",
+  "encoded": [
+   1984,
+   896
+  ]
+ },
+ "device": {
+  "A_vs_pc97": {
+   "Y": {
+    "max_abs": 1,
+    "mse": 0.02864283941262542,
+    "psnr": 63.5606429275893,
+    "differing": 140316,
+    "count": 4898816
+   },
+   "Cb": {
+    "max_abs": 1,
+    "mse": 0.023911083821070236,
+    "psnr": 64.34481098978722,
+    "differing": 117136,
+    "count": 4898816
+   },
+   "Cr": {
+    "max_abs": 1,
+    "mse": 0.019697412599289296,
+    "psnr": 65.18671178749497,
+    "differing": 96494,
+    "count": 4898816
+   },
+   "all": {
+    "max_abs": 1,
+    "mse": 0.024083778610994984,
+    "psnr": 64.313557345461,
+    "differing": 353946,
+    "count": 14696448
+   }
+  },
+  "C_vs_B_fp16gate": {
+   "Y": {
+    "max_abs": 1,
+    "mse": 0.01768876397888796,
+    "psnr": 65.65382873684737,
+    "differing": 86654,
+    "count": 4898816
+   },
+   "Cb": {
+    "max_abs": 1,
+    "mse": 0.024577571396843644,
+    "psnr": 64.22541394484224,
+    "differing": 120401,
+    "count": 4898816
+   },
+   "Cr": {
+    "max_abs": 1,
+    "mse": 0.01819215091973244,
+    "psnr": 65.53196310658423,
+    "differing": 89120,
+    "count": 4898816
+   },
+   "all": {
+    "max_abs": 1,
+    "mse": 0.020152828765154684,
+    "psnr": 65.08744346079494,
+    "differing": 296175,
+    "count": 14696448
+   }
+  },
+  "standalone": {
+   "geometry": "3328x1472 4:4:4 full range, 416,6xx B frames (w97.wave 416,708 B; w53.wave 416,636 B) from the same encoder_input.y4m",
+   "iterations": 200,
+   "A_ms": 7.057,
+   "A_best_ms": 7.026,
+   "B_ms": 6.879,
+   "B_best_ms": 6.84,
+   "C_ms": 6.815,
+   "C_best_ms": 6.781,
+   "D_ms": 6.995,
+   "D_best_ms": 6.973,
+   "convert_ms": 1.466,
+   "hottest_start_mc": 66785,
+   "hottest_end_mc": 66798
+  },
+  "A_vs_B_transform": {
+   "Y": {
+    "max_abs": 54,
+    "mse": 0.565565434586643,
+    "psnr": 50.60597501852413,
+    "differing": 751661,
+    "count": 4898816
+   },
+   "Cb": {
+    "max_abs": 39,
+    "mse": 0.1717204728652801,
+    "psnr": 55.782582851456525,
+    "differing": 453251,
+    "count": 4898816
+   },
+   "Cr": {
+    "max_abs": 39,
+    "mse": 0.142930659163357,
+    "psnr": 56.579549642862226,
+    "differing": 469139,
+    "count": 4898816
+   },
+   "all": {
+    "max_abs": 54,
+    "mse": 0.29340552220509336,
+    "psnr": 53.45612077398033,
+    "differing": 1674051,
+    "count": 14696448
+   }
+  },
+  "C_vs_pc53": {
+   "Y": {
+    "max_abs": 1,
+    "mse": 0.023729611399979096,
+    "psnr": 64.37789734670235,
+    "differing": 116247,
+    "count": 4898816
+   },
+   "Cb": {
+    "max_abs": 1,
+    "mse": 0.005966339621655518,
+    "psnr": 70.37372389814897,
+    "differing": 29228,
+    "count": 4898816
+   },
+   "Cr": {
+    "max_abs": 1,
+    "mse": 0.014983008139109532,
+    "psnr": 66.37481345430866,
+    "differing": 73399,
+    "count": 4898816
+   },
+   "all": {
+    "max_abs": 1,
+    "mse": 0.014892986386914716,
+    "psnr": 66.40098568333137,
+    "differing": 218874,
+    "count": 14696448
+   }
+  },
+  "D_vs_A_97fp16": {
+   "Y": {
+    "max_abs": 3,
+    "mse": 0.6336998572716346,
+    "psnr": 50.111967515589065,
+    "differing": 2790773,
+    "count": 4898816
+   },
+   "Cb": {
+    "max_abs": 2,
+    "mse": 0.039434018342391304,
+    "psnr": 62.17209326756684,
+    "differing": 193033,
+    "count": 4898816
+   },
+   "Cr": {
+    "max_abs": 1,
+    "mse": 0.032022635673599496,
+    "psnr": 63.07623286520339,
+    "differing": 156873,
+    "count": 4898816
+   },
+   "all": {
+    "max_abs": 3,
+    "mse": 0.23505217042920848,
+    "psnr": 54.41916095128465,
+    "differing": 3140679,
+    "count": 14696448
+   }
+  },
+  "B_vs_pc53": {
+   "Y": {
+    "max_abs": 1,
+    "mse": 0.0160600030701296,
+    "psnr": 66.07334736902818,
+    "differing": 78675,
+    "count": 4898816
+   },
+   "Cb": {
+    "max_abs": 1,
+    "mse": 0.023735327066785116,
+    "psnr": 64.37685140304522,
+    "differing": 116275,
+    "count": 4898816
+   },
+   "Cr": {
+    "max_abs": 1,
+    "mse": 0.020596201204535952,
+    "psnr": 64.99293235064,
+    "differing": 100897,
+    "count": 4898816
+   },
+   "all": {
+    "max_abs": 1,
+    "mse": 0.020130510447150224,
+    "psnr": 65.09225573481987,
+    "differing": 295847,
+    "count": 14696448
+   }
+  },
+  "pc97_vs_pc53": {
+   "Y": {
+    "max_abs": 54,
+    "mse": 0.5670513038252508,
+    "psnr": 50.594580075124924,
+    "differing": 760173,
+    "count": 4898816
+   },
+   "Cb": {
+    "max_abs": 39,
+    "mse": 0.172607421875,
+    "psnr": 55.76020895038785,
+    "differing": 456859,
+    "count": 4898816
+   },
+   "Cr": {
+    "max_abs": 39,
+    "mse": 0.14163218214360368,
+    "psnr": 56.61918414439544,
+    "differing": 463755,
+    "count": 4898816
+   },
+   "all": {
+    "max_abs": 54,
+    "mse": 0.2937636359479515,
+    "psnr": 53.45082325998315,
+    "differing": 1680787,
+    "count": 14696448
+   }
+  },
+  "D_vs_pc97": {
+   "Y": {
+    "max_abs": 3,
+    "mse": 0.6545175405649039,
+    "psnr": 49.97159071068269,
+    "differing": 2850482,
+    "count": 4898816
+   },
+   "Cb": {
+    "max_abs": 2,
+    "mse": 0.020645805027173912,
+    "psnr": 64.98248539191552,
+    "differing": 100972,
+    "count": 4898816
+   },
+   "Cr": {
+    "max_abs": 1,
+    "mse": 0.024363233891617892,
+    "psnr": 64.2634542632953,
+    "differing": 119351,
+    "count": 4898816
+   },
+   "all": {
+    "max_abs": 3,
+    "mse": 0.23317552649456522,
+    "psnr": 54.4539739482435,
+    "differing": 3070805,
+    "count": 14696448
+   }
+  }
+ },
+ "cells": {
+  "P97-1": {
+   "stats": {
+    "gpu decode": {
+     "min": 2.77,
+     "mean": 3.2433333333333327,
+     "p50": 2.955,
+     "p95": 4.28,
+     "p99": 4.32,
+     "max": 7.72,
+     "reports": 6
+    },
+    "convert": {
+     "min": 0.53,
+     "mean": 0.5750000000000001,
+     "p50": 0.54,
+     "p95": 1.17,
+     "p99": 1.22,
+     "max": 1.46,
+     "reports": 6
+    },
+    "submit->fence": {
+     "min": 4.04,
+     "mean": 4.946666666666667,
+     "p50": 4.865,
+     "p95": 5.91,
+     "p99": 6.5,
+     "max": 298.07,
+     "reports": 6
+    }
+   },
+   "summary": {
+    "complete": 4198,
+    "partial": 39,
+    "skipped": 25,
+    "dropped": 58,
+    "superseded": 22,
+    "stale_packets": 8579,
+    "foreign": 0,
+    "decode_fail": 0
+   },
+   "hottest": {
+    "start_c": 69.9,
+    "status_start": 1,
+    "end_c": 82.8,
+    "status_end": 3
+   },
+   "clock": {
+    "samples": 33,
+    "mean_mhz": 720.7272727272727,
+    "min_mhz": 421.0,
+    "max_mhz": 788.0,
+    "share_at_max_pct": 66.66666666666667,
+    "mean_busy_pct": 44.36363636363637
+   },
+   "wavelet": "9/7",
+   "precision": "1"
+  },
+  "P53-1": {
+   "stats": {
+    "gpu decode": {
+     "min": 2.76,
+     "mean": 3.226,
+     "p50": 3.41,
+     "p95": 4.05,
+     "p99": 4.11,
+     "max": 4.75,
+     "reports": 5
+    },
+    "convert": {
+     "min": 0.53,
+     "mean": 0.6940000000000001,
+     "p50": 0.54,
+     "p95": 1.79,
+     "p99": 1.82,
+     "max": 1.89,
+     "reports": 5
+    },
+    "submit->fence": {
+     "min": 4.02,
+     "mean": 5.036,
+     "p50": 4.91,
+     "p95": 6.13,
+     "p99": 6.48,
+     "max": 240.74,
+     "reports": 5
+    }
+   },
+   "summary": {
+    "complete": 3530,
+    "partial": 21,
+    "skipped": 26,
+    "dropped": 23,
+    "superseded": 13,
+    "stale_packets": 2894,
+    "foreign": 0,
+    "decode_fail": 0
+   },
+   "hottest": {
+    "start_c": 69.6,
+    "status_start": 1,
+    "end_c": 83.5,
+    "status_end": 3
+   },
+   "clock": {
+    "samples": 33,
+    "mean_mhz": 723.0909090909091,
+    "min_mhz": 421.0,
+    "max_mhz": 788.0,
+    "share_at_max_pct": 69.6969696969697,
+    "mean_busy_pct": 43.90909090909091
+   },
+   "wavelet": "5/3",
+   "precision": "0"
+  },
+  "P97-2": {
+   "stats": {
+    "gpu decode": {
+     "min": 2.62,
+     "mean": 3.338,
+     "p50": 3.55,
+     "p95": 4.12,
+     "p99": 4.25,
+     "max": 4.78,
+     "reports": 5
+    },
+    "convert": {
+     "min": 0.53,
+     "mean": 0.652,
+     "p50": 0.54,
+     "p95": 1.22,
+     "p99": 1.78,
+     "max": 1.86,
+     "reports": 5
+    },
+    "submit->fence": {
+     "min": 3.83,
+     "mean": 5.032000000000001,
+     "p50": 5.01,
+     "p95": 6.05,
+     "p99": 6.52,
+     "max": 270.0,
+     "reports": 5
+    }
+   },
+   "summary": {
+    "complete": 3464,
+    "partial": 57,
+    "skipped": 25,
+    "dropped": 54,
+    "superseded": 31,
+    "stale_packets": 12813,
+    "foreign": 0,
+    "decode_fail": 0
+   },
+   "hottest": {
+    "start_c": 71.3,
+    "status_start": 1,
+    "end_c": 83.5,
+    "status_end": 3
+   },
+   "clock": {
+    "samples": 32,
+    "mean_mhz": 721.6875,
+    "min_mhz": 421.0,
+    "max_mhz": 788.0,
+    "share_at_max_pct": 68.75,
+    "mean_busy_pct": 43.875
+   },
+   "wavelet": "9/7",
+   "precision": "1"
+  },
+  "P53-2": {
+   "stats": {
+    "gpu decode": {
+     "min": 2.51,
+     "mean": 3.226,
+     "p50": 3.43,
+     "p95": 4.02,
+     "p99": 4.12,
+     "max": 4.73,
+     "reports": 5
+    },
+    "convert": {
+     "min": 0.53,
+     "mean": 0.6439999999999999,
+     "p50": 0.54,
+     "p95": 1.77,
+     "p99": 1.8,
+     "max": 1.83,
+     "reports": 5
+    },
+    "submit->fence": {
+     "min": 3.75,
+     "mean": 4.936,
+     "p50": 4.88,
+     "p95": 6.05,
+     "p99": 6.24,
+     "max": 238.1,
+     "reports": 5
+    }
+   },
+   "summary": {
+    "complete": 3363,
+    "partial": 87,
+    "skipped": 40,
+    "dropped": 110,
+    "superseded": 49,
+    "stale_packets": 25507,
+    "foreign": 0,
+    "decode_fail": 0
+   },
+   "hottest": {
+    "start_c": 70.6,
+    "status_start": 1,
+    "end_c": 82.1,
+    "status_end": 3
+   },
+   "clock": {
+    "samples": 33,
+    "mean_mhz": 724.5151515151515,
+    "min_mhz": 421.0,
+    "max_mhz": 788.0,
+    "share_at_max_pct": 69.6969696969697,
+    "mean_busy_pct": 41.96969696969697
+   },
+   "wavelet": "5/3",
+   "precision": "0"
+  },
+  "S97": {
+   "stats": {
+    "gpu decode": {
+     "min": 2.63,
+     "mean": 3.298205128205128,
+     "p50": 3.18,
+     "p95": 4.27,
+     "p99": 4.31,
+     "max": 7.46,
+     "reports": 39
+    },
+    "convert": {
+     "min": 0.53,
+     "mean": 0.5802564102564103,
+     "p50": 0.54,
+     "p95": 1.41,
+     "p99": 1.5,
+     "max": 1.82,
+     "reports": 39
+    },
+    "submit->fence": {
+     "min": 3.99,
+     "mean": 4.914358974358974,
+     "p50": 4.83,
+     "p95": 6.1,
+     "p99": 6.79,
+     "max": 277.52,
+     "reports": 39
+    }
+   },
+   "summary": {
+    "complete": 27723,
+    "partial": 129,
+    "skipped": 63,
+    "dropped": 165,
+    "superseded": 99,
+    "stale_packets": 26011,
+    "foreign": 0,
+    "decode_fail": 0
+   },
+   "hottest": {
+    "start_c": 67.2,
+    "status_start": 1,
+    "end_c": 82.8,
+    "status_end": 3
+   },
+   "clock": {
+    "samples": 149,
+    "mean_mhz": 770.1073825503356,
+    "min_mhz": 690.0,
+    "max_mhz": 788.0,
+    "share_at_max_pct": 61.74496644295302,
+    "mean_busy_pct": 55.624161073825505
+   },
+   "wavelet": "9/7",
+   "precision": "1"
+  },
+  "S53": {
+   "stats": {
+    "gpu decode": {
+     "min": 2.65,
+     "mean": 3.33076923076923,
+     "p50": 3.43,
+     "p95": 4.13,
+     "p99": 4.21,
+     "max": 4.82,
+     "reports": 39
+    },
+    "convert": {
+     "min": 0.53,
+     "mean": 0.6264102564102564,
+     "p50": 0.54,
+     "p95": 1.81,
+     "p99": 1.85,
+     "max": 1.92,
+     "reports": 39
+    },
+    "submit->fence": {
+     "min": 3.92,
+     "mean": 5.099743589743588,
+     "p50": 5.0,
+     "p95": 6.23,
+     "p99": 6.71,
+     "max": 244.11,
+     "reports": 39
+    }
+   },
+   "summary": {
+    "complete": 27801,
+    "partial": 96,
+    "skipped": 59,
+    "dropped": 124,
+    "superseded": 72,
+    "stale_packets": 18643,
+    "foreign": 0,
+    "decode_fail": 0
+   },
+   "hottest": {
+    "start_c": 69.6,
+    "status_start": 1,
+    "end_c": 82.1,
+    "status_end": 3
+   },
+   "clock": {
+    "samples": 162,
+    "mean_mhz": 760.4135802469136,
+    "min_mhz": 421.0,
+    "max_mhz": 788.0,
+    "share_at_max_pct": 75.92592592592592,
+    "mean_busy_pct": 51.75925925925926
+   },
+   "wavelet": "5/3",
+   "precision": "0"
+  }
+ },
+ "pairs": {
+  "pair1": {
+   "gpu decode": {
+    "mean": -0.5344295991777829,
+    "p50": 15.397631133671744,
+    "p95": -5.373831775700944,
+    "p99": -4.86111111111111
+   },
+   "convert": {
+    "mean": 20.69565217391304,
+    "p50": 0.0,
+    "p95": 52.991452991453,
+    "p99": 49.18032786885247
+   },
+   "submit->fence": {
+    "mean": 1.805929919137447,
+    "p50": 0.9249743062692687,
+    "p95": 3.722504230118439,
+    "p99": -0.30769230769230116
+   }
+  },
+  "pair2": {
+   "gpu decode": {
+    "mean": -3.3553025763930524,
+    "p50": -3.3802816901408357,
+    "p95": -2.42718446601943,
+    "p99": -3.0588235294117623
+   },
+   "convert": {
+    "mean": -1.2269938650306929,
+    "p50": 0.0,
+    "p95": 45.08196721311476,
+    "p99": 1.1235955056179785
+   },
+   "submit->fence": {
+    "mean": -1.9077901430842796,
+    "p50": -2.594810379241515,
+    "p95": 0.0,
+    "p99": -4.294478527607352
+   }
+  }
+ },
+ "sustained_deltas": {
+  "gpu decode": {
+   "mean": 0.9873279950244692,
+   "p50": 7.861635220125786,
+   "p95": -3.2786885245901565,
+   "p99": -2.32018561484918
+  },
+  "convert": {
+   "mean": 7.954043305346875,
+   "p50": 0.0,
+   "p95": 28.368794326241147,
+   "p99": 23.33333333333334
+  },
+  "submit->fence": {
+   "mean": 3.7723051236564547,
+   "p50": 3.5196687370600404,
+   "p95": 2.1311475409836196,
+   "p99": -1.178203240058911
+  }
+ },
+ "latency_vs_clock": {
+  "gpu_ms": {
+   "n97": 11,
+   "n53": 10,
+   "fit97": [
+    0.32714016118908695,
+    2.318849487804298,
+    0.059773553675782076
+   ],
+   "fit53": null,
+   "fit_pooled": [
+    -0.6605135457252453,
+    3.078435421116636,
+    0.05593042329423503
+   ],
+   "resid53_on_97_ms": -0.043842556879820596,
+   "resid53_on_97_pct": -1.3408155321599475,
+   "scatter97_ms": 0.12049207279271822,
+   "within_scatter": true
+  },
+  "fence_ms": {
+   "n97": 11,
+   "n53": 10,
+   "fit97": [
+    7.486028234483063,
+    -1.9594512096382515,
+    0.014780705836806907
+   ],
+   "fit53": null,
+   "fit_pooled": [
+    7.183824179710099,
+    -1.7270317417736862,
+    0.0064706378158218
+   ],
+   "resid53_on_97_ms": -0.013415024282236575,
+   "resid53_on_97_pct": -0.26833187917145496,
+   "scatter97_ms": 0.2095933712887307,
+   "within_scatter": true
+  }
+ }
+}

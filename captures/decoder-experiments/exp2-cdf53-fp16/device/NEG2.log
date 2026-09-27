@@ -1,0 +1,14 @@
+FAILED pyrowave_decoder_push_packet(decoder, wave.frame.data(), wave.frame.size()) -> -2 (line 403)
+input 3328x1472 4:4:4 full range, 416664 byte frame
+gpu: Adreno (TM) 740 (API 1.3.295)
+features: shaderInt16=1 storageBuffer8Bit=1 subgroupSizeControl=1
+pyrowave device created (borrowed VkDevice)
+decode path: compute
+decode target: plain R8_UNORM
+plane[0]: 3328x1472 plain R8, 4898816 bytes
+plane[1]: 3328x1472 plain R8, 4898816 bytes
+plane[2]: 3328x1472 plain R8, 4898816 bytes
+queue type: COMPUTE
+wavelet: CDF 5/3, PYROWAVE_PRECISION=(default 1)
+exit=1
+ls: NEG2.y4m: No such file or directory
