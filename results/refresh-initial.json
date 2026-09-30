@@ -1,0 +1,59 @@
+{
+  "date": "2026-09-30",
+  "build": "1eabc53",
+  "horizon_os_build": "52433670048800520",
+  "enumerated_hz": [
+    72,
+    80,
+    90,
+    120
+  ],
+  "confirmed_by_request_runtime_and_period_hz": [
+    90,
+    120,
+    144,
+    207
+  ],
+  "240_hz": "request rejected with display scaling disabled",
+  "display_scaling_changed": false,
+  "streaming_fps_at_extended_rates_measured": false,
+  "capabilities": {
+    "model": "Quest3",
+    "rates_hz": [
+      72.0,
+      80.0,
+      90.0,
+      120.0,
+      144.0,
+      207.0
+    ],
+    "refresh_extension": true,
+    "source": "request_and_frame_period",
+    "probe_results": [
+      {
+        "requested_hz": 90.0,
+        "confirmed": true
+      },
+      {
+        "requested_hz": 120.0,
+        "confirmed": true
+      },
+      {
+        "requested_hz": 144.0,
+        "confirmed": true
+      },
+      {
+        "requested_hz": 207.0,
+        "confirmed": true
+      },
+      {
+        "requested_hz": 240.0,
+        "confirmed": false
+      },
+      {
+        "requested_hz": 72.0,
+        "confirmed": true
+      }
+    ]
+  }
+}

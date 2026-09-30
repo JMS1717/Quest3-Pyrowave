@@ -92,6 +92,9 @@ Rollback: stop SteamVR, unregister this driver in the dashboard, then re-registe
 driver. Uninstall only `io.github.jms1717.quest3pyrowave` if desired. No OS refresh properties,
 network adapter settings, root access, or persistent GPU clock changes are part of setup.
 
+For explicitly requested development sessions, `tools.quest3.awake` can temporarily bypass
+proximity sleep with a timed rollback. It is not enabled by the APK or the normal installation.
+
 ## Validation
 
 ```powershell
@@ -100,5 +103,5 @@ cd C:\q3pw\research\ALVR-20.13.0
 cargo +1.97.1 test -p alvr_session --lib
 ```
 
-CI also builds and runs the host decode-path selection test. On-device correctness and timing
+Main-branch CI builds artifacts only. Pull requests run tool regression checks; tests can also be run manually. On-device correctness and timing
 are separate gates: see [`BENCHMARKING.md`](BENCHMARKING.md).

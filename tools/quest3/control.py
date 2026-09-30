@@ -43,7 +43,9 @@ def apply(codec, mbps, hz, path, caps):
             'session_settings.video.bitrate.mode.variant':'ConstantMbps',
             'session_settings.video.bitrate.mode.ConstantMbps':mbps,
             'session_settings.video.enforce_server_frame_pacing':True,
-            'session_settings.video.foveated_encoding.content.follow_gaze':False}
+            'session_settings.video.foveated_encoding.content.follow_gaze':False,
+            'session_settings.video.foveated_encoding.enabled':False,
+            'session_settings.video.clientside_foveation.enabled':False}
     if codec=='PyroWave':
         if path not in ('Auto','Compute','Fragment'): raise ValueError('Invalid decode path')
         values.update({'session_settings.video.pyrowave.transport.variant':'Udp',

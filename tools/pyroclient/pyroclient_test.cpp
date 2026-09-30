@@ -29,11 +29,13 @@ static bool load(const char *path, Wave &w) {
 }
 
 int main(int argc, char **argv) {
-    if (argc < 3) { fprintf(stderr, "usage: %s <in.wave> <out.rgba> [iterations] [auto|compute|fragment]\n", argv[0]); return 1; }
+    if (argc < 3) { fprintf(stderr, "usage: %s <in.wave> <out.rgba> [iterations] [auto|compute|fragment] [warmup_frames]\n", argv[0]); return 1; }
     Wave w;
     if (!load(argv[1], w)) return 1;
     const int iters = argc > 3 ? atoi(argv[3]) : 1;
     if (iters < 1 || iters > 100000) return 2;
+    const int warmup = argc > 5 ? atoi(argv[5]) : (iters > 1 ? 20 : 0);
+    if (warmup < 0 || warmup > 10000) return 2;
     int hint = 0;
     if (argc > 4) {
         if (!strcmp(argv[4], "compute")) hint = 2;
@@ -46,15 +48,18 @@ int main(int argc, char **argv) {
     AHardwareBuffer *ahb = nullptr;
     pyroclient_frame_info info{};
     double bestDec = 1e9, bestConv = 1e9, bestTot = 1e9, sumTot = 0;
-    std::vector<double> totals;
+    std::vector<double> totals, decodes, converts;
+    double warmupMax = 0;
     int completes = 0;
-    for (int i = 0; i < iters; i++) {
+    for (int i = 0; i < iters + warmup; i++) {
         // Re-pushing the same frame reads as an old sequence number and is dropped; a decode
         // would then run on nothing. Clear first, as the harness does.
         if (i > 0) pyroclient_clear(c);
         int r = pyroclient_push_packet(c, w.frame.data(), w.frame.size());
         if (r < 0) { fprintf(stderr, "push failed %d\n", r); return 1; }
         if (pyroclient_decode(c, &ahb, &info) != 0) { fprintf(stderr, "decode failed\n"); return 1; }
+        if (i < warmup) { warmupMax = std::max(warmupMax, info.total_ms); continue; }
+        decodes.push_back(info.decode_ms); converts.push_back(info.convert_ms);
         if (info.decode_ms < bestDec) bestDec = info.decode_ms;
         if (info.convert_ms < bestConv) bestConv = info.convert_ms;
         if (info.total_ms < bestTot) bestTot = info.total_ms;
@@ -63,10 +68,11 @@ int main(int argc, char **argv) {
         completes += info.complete;
     }
     std::sort(totals.begin(), totals.end());
+    std::sort(decodes.begin(), decodes.end()); std::sort(converts.begin(), converts.end());
     printf("complete %d/%d  decode best %.3f ms  convert best %.3f ms  submit->fence best %.3f p50 %.3f max %.3f ms\n",
            completes, iters, bestDec, bestConv, bestTot, totals[totals.size() / 2], totals.back());
-    printf("{\"requested_decode_path\":\"%s\",\"iterations\":%d,\"complete\":%d,\"decode_best_ms\":%.6f,\"convert_best_ms\":%.6f,\"fence_p50_ms\":%.6f,\"fence_p99_ms\":%.6f,\"fence_mean_ms\":%.6f,\"fence_max_ms\":%.6f}\n",
-        argc > 4 ? argv[4] : "auto", iters, completes, bestDec, bestConv, totals[totals.size()/2], totals[(totals.size()-1)*99/100],sumTot/iters,totals.back());
+    printf("{\"requested_decode_path\":\"%s\",\"iterations\":%d,\"complete\":%d,\"decode_best_ms\":%.6f,\"convert_best_ms\":%.6f,\"fence_p50_ms\":%.6f,\"fence_p99_ms\":%.6f,\"fence_mean_ms\":%.6f,\"fence_max_ms\":%.6f,\"warmup_frames\":%d,\"warmup_max_fence_ms\":%.6f,\"gpu_decode_p50_ms\":%.6f,\"gpu_decode_p99_ms\":%.6f,\"convert_p50_ms\":%.6f}\n",
+        argc > 4 ? argv[4] : "auto", iters, completes, bestDec, bestConv, totals[totals.size()/2], totals[(totals.size()-1)*99/100],sumTot/iters,totals.back(),warmup,warmupMax,decodes[decodes.size()/2],decodes[(decodes.size()-1)*99/100],converts[converts.size()/2]);
 
     AHardwareBuffer_Desc d = {};
     AHardwareBuffer_describe(ahb, &d);

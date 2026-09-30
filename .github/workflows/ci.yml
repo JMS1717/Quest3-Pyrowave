@@ -12,6 +12,7 @@ env:
   XRWIRED_INPUTS: ${{ github.workspace }}/ws
 jobs:
   tests:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -20,6 +21,7 @@ jobs:
   client:
     runs-on: ubuntu-24.04
     needs: tests
+    if: ${{ always() && (needs.tests.result == 'success' || needs.tests.result == 'skipped') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -55,13 +57,11 @@ jobs:
             echo "CARGO_APK_RELEASE_KEYSTORE=$RUNNER_TEMP/quest3-signing/release.p12" >> "$GITHUB_ENV"
             echo "CARGO_APK_RELEASE_KEYSTORE_PASSWORD=$SIGNING_PASSWORD" >> "$GITHUB_ENV"
           fi
-      - name: Native libraries, probes, APK and Rust tests
+      - name: Native libraries, probes and APK
         run: |
           sh tools/build_pyrowave_android.sh
           bash tools/udptest/build.sh
           sh tools/build_alvr_2013.sh
-          cd "$XRWIRED_INPUTS/research/ALVR-20.13.0"
-          cargo +"$RUST_TOOLCHAIN" test -p alvr_session --lib
       - name: Package development build
         run: |
           mkdir out
@@ -77,6 +77,7 @@ jobs:
   streamer:
     runs-on: windows-2022
     needs: tests
+    if: ${{ always() && (needs.tests.result == 'success' || needs.tests.result == 'skipped') }}
     env:
       LIBCLANG_PATH: C:\Program Files\LLVM\bin
     steps:

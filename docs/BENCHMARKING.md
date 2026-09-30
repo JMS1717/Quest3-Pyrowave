@@ -37,10 +37,10 @@ carry their error, never an invented value. Thermal-service and battery snapshot
 ALVR Android PowerManager telemetry. PC GPU encode time is measured by ALVR; vendor-specific PC
 clock/load sensors require an external tool (e.g. GPU-Z logging), joined by capture time.
 
-Use **the same resolution, scene, encoder range, foveation and refresh** across codecs. PyroWave
-preserves full chroma at the encoded resolution; foveation still reduces peripheral spatial detail.
-Run CDF 9/7 Compute and Fragment at equal settings. Keep Auto as the startup path until measured
-correctness and sustained latency favor one. CDF 5/3 forces Compute and is a separate experiment.
+Use **the same resolution, scene, encoder range and refresh** across codecs. PyroWave
+preserves full chroma at the encoded resolution; foveation is disabled in the current build.
+Run CDF 9/7 Compute and Fragment at equal settings. Quest 3 Auto uses Compute based on the initial reference/readback check; both paths remain
+available for manual comparison. CDF 5/3 forces Compute and is a separate experiment.
 Hardware H.264/HEVC/AV1 at 200 Mbps are comparison starting points, not equal-quality claims.
 
 Use a static text/color-grid scene for correctness, then an actual game with motion, particles,

@@ -56,7 +56,7 @@ def plan(caps, repeats=3, seed=1717, seconds=60):
                     'status': 'planned', 'decode_path': None})
     random.Random(seed).shuffle(cells)
     return {'schema_version': 1, 'capabilities': caps, 'seed': seed, 'cells': cells, 'skipped': skipped,
-            'method': 'Interleaved repetitions; same scene, resolution and foveation; cool between cells.'}
+            'method': 'Interleaved repetitions; same scene and resolution; cool between cells.'}
 
 def distribution(values):
     v = sorted(float(x) for x in values if x is not None and math.isfinite(float(x)))
@@ -187,7 +187,7 @@ def main():
     c=sub.add_parser('summarise');c.add_argument('events');c.add_argument('--out',required=True)
     a=p.parse_args()
     if a.command=='capture': return capture(a)
-    if a.command=='capabilities': data=parse_capabilities(adb_run(a.adb,'logcat','-d','-s','[ALVR NATIVE-RUST]:E'))
+    if a.command=='capabilities': data=parse_capabilities(adb_run(a.adb,'shell','logcat -d -t 20000'))
     elif a.command=='plan': data=plan(json.loads(Path(a.capabilities).read_text()),a.repeats,seconds=a.seconds)
     else: data=summarise([json.loads(line) for line in Path(a.events).read_text().splitlines()])
     Path(a.out).write_text(json.dumps(data,indent=2),encoding='utf-8');print(a.out);return 0

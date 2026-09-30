@@ -22,15 +22,19 @@ from conversion, and wall timing records the decode-to-fence wait.
 | Renderer/compositor | Runtime rates and actual intervals | Keep request, effective refresh and delivery FPS distinct |
 | Thermal budget | GPU clocks, PowerManager thermal status, battery temperature | Interleaved replicates, cooling gate and long runs |
 
-Auto currently honors PyroWave's Qualcomm preference. Choosing Compute by default merely because
-it won on Galaxy XR would be unjustified; both paths must pass Quest correctness and timing tests.
-The CDF 5/3 experimental path forces Compute. FP32 is the build baseline; FP16 experiments must
-check Vulkan feature support and image quality instead of assuming faster arithmetic is safe.
+Quest 3 Auto uses Compute. The initial 1536×768 RGBA comparison against PC reference decoding
+had maximum per-channel errors of 3/2/3 for Compute, versus 45/16/85 for Fragment. These are
+same-bitstream reconstruction differences, not source-image PSNR or proof for every scene.
+Fragment remains an explicit manual experiment. CDF 5/3 forces Compute.
+
+Foveated encoding and client foveation are disabled in server/client logic, defaults and presets.
+The first full-frame configuration requests 1032×1104 per eye, aligned to 1024×1088 by ALVR,
+with 600 Mbps/90 Hz/CDF 9/7/Compute. Raise uniform resolution manually if desired.
 
 ## Ordered next changes
 
 1. Measure an end-to-end 90 Hz baseline, then 120 Hz, at the smallest useful render size. Record
-   actual encoded dimensions after alignment and foveation.
+   actual encoded dimensions after alignment.
 2. Measure receive packet pressure separately from decode. Android's existing `recvmmsg` path is
    retained; increasing datagram size beyond MTU would trade packet cost for IP fragmentation loss.
 3. Prototype a bounded receive ring: receive continuously while the decoder owns the GPU. Preserve
@@ -44,4 +48,4 @@ check Vulkan feature support and image quality instead of assuming faster arithm
 
 The above redesigns are **proposals**, not implemented optimizations or performance claims. High
 refresh fundamentally needs the entire application and runtime to meet 8.33/6.94/4.83/4.17 ms budgets.
-Rates absent from runtime enumeration cannot be unlocked by this codec.
+HorizonOS v2.7 can accept rates absent from enumeration; this client verifies requests and frame periods.

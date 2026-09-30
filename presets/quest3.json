@@ -24,24 +24,16 @@
       "Auto"
     ],
     "requested_eye_resolution": [
-      1651,
-      1766
+      1032,
+      1104
     ],
-    "fixed_foveation": {
-      "center_size": [
-        0.2,
-        0.178
-      ],
-      "edge_ratio": [
-        3,
-        4
-      ],
-      "follow_gaze": false
-    },
     "chroma": "444",
     "range": "full",
     "transport": "Udp",
-    "requires_confirmed_runtime_rate": true
+    "requires_confirmed_runtime_rate": true,
+    "foveated_encoding": false,
+    "clientside_foveation": false,
+    "quest3_auto_decode_path": "Compute"
   },
   "comparisons": {
     "codecs": [
@@ -50,7 +42,7 @@
       "AV1"
     ],
     "target_mbps": 200,
-    "matched_resolution_and_foveation": true
+    "matched_resolution": true
   },
   "experimental_240_hz": {
     "requires_developer_display_scaling": true,

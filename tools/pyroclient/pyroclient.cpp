@@ -214,8 +214,12 @@ bool pyroclient::create_device() {
     {
         char prop[PROP_VALUE_MAX] = {0};
         const bool has_prop = __system_property_get("debug.xrwired.decode_path", prop) > 0;
+        char model[PROP_VALUE_MAX] = {0};
+        __system_property_get("ro.product.model", model);
+        const bool quest3 = !strcmp(model, "Quest 3");
+        // Quest 3 reference/readback test favors Compute correctness. Keep explicit A/B choices.
         DecodePathChoice choice = choose_decode_path(
-            pyrowave_decoder_device_prefers_fragment_path(pyro), decode_path_hint,
+            quest3 ? false : pyrowave_decoder_device_prefers_fragment_path(pyro), decode_path_hint,
             has_prop ? prop : nullptr, legall53);
         fragment_path = choice.fragment;
         forced = choice.reason;
