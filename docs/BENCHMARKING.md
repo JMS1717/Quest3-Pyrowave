@@ -61,7 +61,7 @@ logcat/session dumps. Original Galaxy XR data in `captures/` is upstream evidenc
 
 ```powershell
 python -m tools.quest3.control apply --codec PyroWave --mbps 600 --hz 90 --decode-path Compute --capabilities capabilities.json
-python -m tools.quest3.control restart
+python -m tools.quest3.control restart --steamvr "C:\Program Files (x86)\Steam\steamapps\common\SteamVR" --streamer C:\q3pw\research\ALVR-20.13.0\build\alvr_streamer_windows
 ```
 
 Refresh, resolution, codec and decode-path changes need a SteamVR restart/reconnection. Wait for

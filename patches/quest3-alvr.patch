@@ -345,7 +345,7 @@ index 7765bb4..08fb2e4 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..7dbf354 100644
+index a0fd36f..1a709c6 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -4,6 +4,7 @@ mod graphics;
@@ -388,7 +388,7 @@ index a0fd36f..7dbf354 100644
              foveated_encoding: galaxy_xr || platform != Platform::Unknown,
              encoder_high_profile: galaxy_xr || platform != Platform::Unknown,
              encoder_10_bits: galaxy_xr || platform != Platform::Unknown,
-@@ -412,6 +420,9 @@ pub fn entry_point() {
+@@ -412,11 +420,16 @@ pub fn entry_point() {
              .select_sources(&lobby_interaction_sources);
  
          let mut session_running = false;
@@ -398,7 +398,14 @@ index a0fd36f..7dbf354 100644
          let mut stream_context = None::<StreamContext>;
          let mut passthrough_layer = None;
  
-@@ -432,7 +443,12 @@ pub fn entry_point() {
+         let mut event_storage = xr::EventDataBuffer::new();
+         let mut last_display_period = 0;
++        let mut last_cap_log = std::time::Instant::now();
++        let mut last_rate_log = std::time::Instant::now();
+         // Budget for the pre-xrWaitFrame poll: the previous frame's period, 72 Hz until known.
+         let mut poll_interval = Duration::from_micros(13_889);
+         'render_loop: loop {
+@@ -432,7 +445,12 @@ pub fn entry_point() {
                                  .begin(xr::ViewConfigurationType::PRIMARY_STEREO)
                                  .unwrap();
  
@@ -412,7 +419,7 @@ index a0fd36f..7dbf354 100644
  
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
  
-@@ -440,6 +456,7 @@ pub fn entry_point() {
+@@ -440,6 +458,7 @@ pub fn entry_point() {
                          }
                          xr::SessionState::STOPPING => {
                              session_running = false;
@@ -420,7 +427,7 @@ index a0fd36f..7dbf354 100644
  
                              passthrough_layer = None;
  
-@@ -495,6 +512,20 @@ pub fn entry_point() {
+@@ -495,6 +514,20 @@ pub fn entry_point() {
                      }
                      ClientCoreEvent::StreamingStarted(config) => {
                          let config = ParsedStreamConfig::new(&config);
@@ -441,7 +448,7 @@ index a0fd36f..7dbf354 100644
  
                          let context = StreamContext::new(
                              Arc::clone(&core_context),
-@@ -512,6 +543,7 @@ pub fn entry_point() {
+@@ -512,6 +545,7 @@ pub fn entry_point() {
                          stream_context = Some(context);
                      }
                      ClientCoreEvent::StreamingStopped => {
@@ -449,7 +456,7 @@ index a0fd36f..7dbf354 100644
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -569,6 +601,8 @@ pub fn entry_point() {
+@@ -569,6 +603,8 @@ pub fn entry_point() {
                  }
              }
  
@@ -458,20 +465,23 @@ index a0fd36f..7dbf354 100644
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -579,6 +613,21 @@ pub fn entry_point() {
+@@ -579,11 +615,34 @@ pub fn entry_point() {
              let frame_interval =
                  Duration::from_nanos(frame_state.predicted_display_period.as_nanos() as _);
              poll_interval = frame_interval;
 +            if let Some(probe) = &mut refresh_probe {
 +                if let Some(rates) = probe.observe(&xr_session, frame_state.predicted_display_period.as_nanos()) {
 +                    error!("[Q3PW_CAPS] model=Quest3 rates={rates:?} runtime=true source=probe");
++                    refresh_rates = rates.clone();
 +                    core_context.set_refresh_rates(rates);
 +                    refresh_probe = None;
 +                    refresh_probed = true;
 +                    core_context.resume();
 +                }
 +            }
-+            if platform == Platform::Quest3 && last_display_period != frame_interval.as_nanos() {
++            if platform == Platform::Quest3 && (last_display_period != frame_interval.as_nanos()
++                || last_rate_log.elapsed().as_secs() >= 1) {
++                last_rate_log = std::time::Instant::now();
 +                last_display_period = frame_interval.as_nanos();
 +                error!("[Q3PW_EFFECTIVE] requested={requested_refresh_rate:?} runtime_hz={:?} period_ns={last_display_period}",
 +                    xr_session.get_display_refresh_rate());
@@ -480,6 +490,16 @@ index a0fd36f..7dbf354 100644
              if galaxy_xr && last_display_period != frame_interval.as_nanos() {
                  last_display_period = frame_interval.as_nanos();
                  info!("Galaxy XR runtime display period: {} ns", last_display_period);
+             }
+ 
++            if platform == Platform::Quest3 && refresh_probed && last_cap_log.elapsed().as_secs() >= 30 {
++                last_cap_log = std::time::Instant::now();
++                error!("[Q3PW_CAPS] model=Quest3 rates={refresh_rates:?} runtime=true source=probe");
++            }
++
+             // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
+             // and before the client has done any work at all.
+             //
 diff --git a/alvr/client_openxr/src/refresh_probe.rs b/alvr/client_openxr/src/refresh_probe.rs
 new file mode 100644
 index 0000000..ea61e78
@@ -718,6 +738,19 @@ index fc176da..48386bd 100644
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
+diff --git a/alvr/server_core/src/tracking/mod.rs b/alvr/server_core/src/tracking/mod.rs
+index 64f93a6..d38c74e 100644
+--- a/alvr/server_core/src/tracking/mod.rs
++++ b/alvr/server_core/src/tracking/mod.rs
+@@ -302,7 +302,7 @@ impl TrackingManager {
+             face_data.eye_gazes[1].map(|e| self.last_head_pose.inverse() * self.recenter_pose(e)),
+         ];
+ 
+-        gaze_arrival_diag(&face_data.eye_gazes);
++        if face_data.eye_gazes.iter().any(Option::is_some) { gaze_arrival_diag(&face_data.eye_gazes); }
+ 
+         self.last_face_data = face_data;
+     }
 diff --git a/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp b/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp
 index 5aae602..2f68f66 100644
 --- a/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp

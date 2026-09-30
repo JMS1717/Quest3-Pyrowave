@@ -137,7 +137,12 @@ def capture(args):
     import websocket
     root=Path(args.out);root.mkdir(parents=True,exist_ok=False)
     start=snapshot(args.adb);events=[];samples=[];error=None;ws=None
-    settings_start=active_settings();stop=threading.Event();begin=time.monotonic()
+    try:settings_start=active_settings()
+    except Exception as exc:
+        report={'status':'server_unavailable','frames':0,'error':str(exc),'state_start':start}
+        (root/'report.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
+        print(json.dumps({'status':report['status'],'out':str(root)}));return 1
+    stop=threading.Event();begin=time.monotonic()
     def sample_device():
         while not stop.is_set():
             samples.append({'elapsed_s':time.monotonic()-begin,'state':snapshot(args.adb)})
@@ -157,7 +162,9 @@ def capture(args):
     finally:
         stop.set();sampler.join(timeout=25)
         if ws:ws.close()
-    report=summarise(events,args.hz);settings_end=active_settings()
+    report=summarise(events,args.hz)
+    try:settings_end=active_settings()
+    except Exception as exc:settings_end=None;error=str(exc)
     report.update({'duration_requested_s':args.seconds,'elapsed_s':time.monotonic()-begin,
         'error':error,'state_start':start,'state_end':snapshot(args.adb),'device_samples':samples,
         'settings_start':settings_start,'settings_end':settings_end,'runtime_evidence':runtime_evidence(args.adb)})
@@ -180,7 +187,7 @@ def main():
     c=sub.add_parser('summarise');c.add_argument('events');c.add_argument('--out',required=True)
     a=p.parse_args()
     if a.command=='capture': return capture(a)
-    if a.command=='capabilities': data=parse_capabilities(adb_run(a.adb,'logcat','-d','-t','4000'))
+    if a.command=='capabilities': data=parse_capabilities(adb_run(a.adb,'logcat','-d','-s','[ALVR NATIVE-RUST]:E'))
     elif a.command=='plan': data=plan(json.loads(Path(a.capabilities).read_text()),a.repeats,seconds=a.seconds)
     else: data=summarise([json.loads(line) for line in Path(a.events).read_text().splitlines()])
     Path(a.out).write_text(json.dumps(data,indent=2),encoding='utf-8');print(a.out);return 0

@@ -64,7 +64,15 @@ Quest 3 uses ALVR's generic Khronos loader path, rather than the Quest 1 compati
 Despite its inherited script name, this builds the **patched Quest 3 APK**. The output is
 `research\ALVR-20.13.0\build\alvr_client_android\alvr_client_android.apk` under the inputs root.
 `cargo-apk` reads `CARGO_APK_RELEASE_KEYSTORE` and `CARGO_APK_RELEASE_KEYSTORE_PASSWORD` for your
-own persistent release key. Keep both outside the repo. CI currently builds development APKs.
+own persistent release key. Keep both outside the repo. Main-branch CI builds use a stable repository signing key supplied by
+`QUEST3_SIGNING_KEYSTORE_BASE64` and `QUEST3_SIGNING_KEYSTORE_PASSWORD` GitHub Actions secrets.
+Forks can generate their own key and secrets; pull requests build with a temporary development
+key and cannot access release signing secrets. APK certificate fingerprints accompany artifacts.
+
+The first unsigned-development CI snapshots used disposable keys. Updating from one of those
+to the stable signed build requires uninstalling **this app only** once; that removes its app
+configuration, so trust the newly discovered client again. Subsequent main builds can install
+with `adb install -r`. Never commit a keystore, signing password or raw device logs.
 
 ## Install and rollback
 
