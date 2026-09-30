@@ -17,6 +17,8 @@
 
 #include "pyrowave.h"
 #include "ycbcr_to_rgba_spv.h"
+#include "convert_vert_spv.h"
+#include "convert_frag_spv.h"
 
 #define TAG "pyroclient"
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
@@ -57,6 +59,7 @@ struct Slot {
     VkDeviceMemory memory = VK_NULL_HANDLE;
     VkImageView view = VK_NULL_HANDLE;
     VkDescriptorSet set = VK_NULL_HANDLE;
+    VkFramebuffer framebuffer = VK_NULL_HANDLE;
     bool first_use = true;
 };
 
@@ -110,6 +113,9 @@ struct pyroclient {
     VkDescriptorSetLayout set_layout = VK_NULL_HANDLE;
     VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
     VkPipeline pipeline = VK_NULL_HANDLE;
+    VkPipeline fragment_pipeline = VK_NULL_HANDLE;
+    VkRenderPass convert_render_pass = VK_NULL_HANDLE;
+    bool fragment_convert = false;
     VkDescriptorPool desc_pool = VK_NULL_HANDLE;
     bool storage_on_ahb = false;   // convert writes the AHB image directly
     Plane scratch;                 // else convert writes here and a copy follows
@@ -127,6 +133,7 @@ struct pyroclient {
     bool create_device();
     bool create_planes();
     bool create_convert();
+    bool create_fragment_convert();
     bool create_slot(Slot &s);
     bool record_and_submit(Slot &s, pyroclient_frame_info *info);
     void destroy();
@@ -307,14 +314,14 @@ bool pyroclient::create_convert() {
     VkDescriptorSetLayoutBinding b[4] = {};
     for (int i = 0; i < 3; i++) {
         b[i].binding = i; b[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        b[i].descriptorCount = 1; b[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+        b[i].descriptorCount = 1; b[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     }
     b[3].binding = 3; b[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     b[3].descriptorCount = 1; b[3].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
     VkDescriptorSetLayoutCreateInfo li = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
     li.bindingCount = 4; li.pBindings = b;
     VK_TRY(vkCreateDescriptorSetLayout(device, &li, nullptr, &set_layout));
-    VkPushConstantRange pc = { VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(int32_t) };
+    VkPushConstantRange pc = { VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int32_t) };
     VkPipelineLayoutCreateInfo pli = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
     pli.setLayoutCount = 1; pli.pSetLayouts = &set_layout;
     pli.pushConstantRangeCount = 1; pli.pPushConstantRanges = &pc;
@@ -340,6 +347,56 @@ bool pyroclient::create_convert() {
     dpi.maxSets = sets; dpi.poolSizeCount = 2; dpi.pPoolSizes = ps;
     VK_TRY(vkCreateDescriptorPool(device, &dpi, nullptr, &desc_pool));
     return true;
+}
+
+bool pyroclient::create_fragment_convert() {
+    VkAttachmentDescription attachment = {};
+    attachment.format = VK_FORMAT_R8G8B8A8_UNORM; attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE; attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE; attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    attachment.initialLayout = attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    VkAttachmentReference reference = {0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+    VkSubpassDescription subpass = {}; subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subpass.colorAttachmentCount = 1; subpass.pColorAttachments = &reference;
+    VkRenderPassCreateInfo rp = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
+    rp.attachmentCount = 1; rp.pAttachments = &attachment; rp.subpassCount = 1; rp.pSubpasses = &subpass;
+    VK_TRY(vkCreateRenderPass(device, &rp, nullptr, &convert_render_pass));
+    VkShaderModule modules[2] = {};
+    VkShaderModuleCreateInfo sm = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
+    sm.codeSize = sizeof(CONVERT_VERT_SPV); sm.pCode = CONVERT_VERT_SPV;
+    VK_TRY(vkCreateShaderModule(device, &sm, nullptr, &modules[0]));
+    sm.codeSize = sizeof(CONVERT_FRAG_SPV); sm.pCode = CONVERT_FRAG_SPV;
+    VkResult created = vkCreateShaderModule(device, &sm, nullptr, &modules[1]);
+    if (created != VK_SUCCESS) { vkDestroyShaderModule(device, modules[0], nullptr); return false; }
+    VkPipelineShaderStageCreateInfo stages[2] = {};
+    for (int i = 0; i < 2; i++) {
+        stages[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        stages[i].stage = i ? VK_SHADER_STAGE_FRAGMENT_BIT : VK_SHADER_STAGE_VERTEX_BIT;
+        stages[i].module = modules[i]; stages[i].pName = "main";
+    }
+    VkPipelineVertexInputStateCreateInfo vertex = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
+    VkPipelineInputAssemblyStateCreateInfo assembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
+    assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    VkViewport viewport = {0, 0, float(width), float(height), 0, 1};
+    VkRect2D scissor = {{0, 0}, {width, height}};
+    VkPipelineViewportStateCreateInfo vp = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
+    vp.viewportCount = 1; vp.pViewports = &viewport; vp.scissorCount = 1; vp.pScissors = &scissor;
+    VkPipelineRasterizationStateCreateInfo raster = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
+    raster.polygonMode = VK_POLYGON_MODE_FILL; raster.cullMode = VK_CULL_MODE_NONE; raster.lineWidth = 1;
+    VkPipelineMultisampleStateCreateInfo samples = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
+    samples.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    VkPipelineColorBlendAttachmentState blend = {}; blend.colorWriteMask = 0xf;
+    VkPipelineColorBlendStateCreateInfo blends = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
+    blends.attachmentCount = 1; blends.pAttachments = &blend;
+    VkGraphicsPipelineCreateInfo pipeline_info = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
+    pipeline_info.stageCount = 2; pipeline_info.pStages = stages; pipeline_info.pVertexInputState = &vertex;
+    pipeline_info.pInputAssemblyState = &assembly; pipeline_info.pViewportState = &vp;
+    pipeline_info.pRasterizationState = &raster; pipeline_info.pMultisampleState = &samples;
+    pipeline_info.pColorBlendState = &blends; pipeline_info.layout = pipeline_layout;
+    pipeline_info.renderPass = convert_render_pass;
+    VkResult result = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &fragment_pipeline);
+    for (auto module : modules) vkDestroyShaderModule(device, module, nullptr);
+    return result == VK_SUCCESS;
 }
 
 static bool write_set(VkDevice device, VkSampler sampler, const Plane planes[3], VkImageView out,
@@ -382,7 +439,8 @@ bool pyroclient::create_slot(Slot &s) {
     ii.extent = { width, height, 1 }; ii.mipLevels = 1; ii.arrayLayers = 1;
     ii.samples = VK_SAMPLE_COUNT_1_BIT; ii.tiling = VK_IMAGE_TILING_OPTIMAL;
     ii.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
-        | (storage_on_ahb ? VK_IMAGE_USAGE_STORAGE_BIT : 0);
+        | (storage_on_ahb ? VK_IMAGE_USAGE_STORAGE_BIT : 0)
+        | (fragment_convert ? VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT : 0);
     ii.sharingMode = VK_SHARING_MODE_EXCLUSIVE; ii.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     VK_TRY(vkCreateImage(device, &ii, nullptr, &s.image));
 
@@ -401,6 +459,12 @@ bool pyroclient::create_slot(Slot &s) {
     vi.image = s.image; vi.viewType = VK_IMAGE_VIEW_TYPE_2D; vi.format = VK_FORMAT_R8G8B8A8_UNORM;
     vi.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
     VK_TRY(vkCreateImageView(device, &vi, nullptr, &s.view));
+    if (fragment_convert) {
+        VkFramebufferCreateInfo fb = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
+        fb.renderPass = convert_render_pass; fb.attachmentCount = 1; fb.pAttachments = &s.view;
+        fb.width = width; fb.height = height; fb.layers = 1;
+        VK_TRY(vkCreateFramebuffer(device, &fb, nullptr, &s.framebuffer));
+    }
 
     if (storage_on_ahb) {
         VkDescriptorSetAllocateInfo sa = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
@@ -436,7 +500,7 @@ bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info) {
     for (int i = 0; i < 3; i++)
         image_barrier(cmd, planes[i].image, planes_initialised ? VK_IMAGE_LAYOUT_GENERAL : VK_IMAGE_LAYOUT_UNDEFINED,
                       VK_IMAGE_LAYOUT_GENERAL, planes_initialised ? VK_ACCESS_SHADER_READ_BIT : 0, writeAccess,
-                      planes_initialised ? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT : VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, writeStages);
+                      planes_initialised ? (VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT) : VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, writeStages);
     planes_initialised = true;
 
     vkCmdResetQueryPool(cmd, queries, 0, 3);
@@ -449,13 +513,17 @@ bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info) {
 
     for (int i = 0; i < 3; i++)
         image_barrier(cmd, planes[i].image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL, writeAccess,
-                      VK_ACCESS_SHADER_READ_BIT, writeStages, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+                      VK_ACCESS_SHADER_READ_BIT, writeStages,
+                      fragment_convert ? VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT : VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
     // The output slot: take it back from the foreign (GLES) queue family, or from UNDEFINED the
     // first time, into GENERAL for the shader or TRANSFER_DST for the copy.
-    const VkImageLayout outLayout = storage_on_ahb ? VK_IMAGE_LAYOUT_GENERAL : VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    const VkAccessFlags outAccess = storage_on_ahb ? VK_ACCESS_SHADER_WRITE_BIT : VK_ACCESS_TRANSFER_WRITE_BIT;
-    const VkPipelineStageFlags outStage = storage_on_ahb ? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT : VK_PIPELINE_STAGE_TRANSFER_BIT;
+    const VkImageLayout outLayout = fragment_convert ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL :
+        storage_on_ahb ? VK_IMAGE_LAYOUT_GENERAL : VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    const VkAccessFlags outAccess = fragment_convert ? VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT :
+        storage_on_ahb ? VK_ACCESS_SHADER_WRITE_BIT : VK_ACCESS_TRANSFER_WRITE_BIT;
+    const VkPipelineStageFlags outStage = fragment_convert ? VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT :
+        storage_on_ahb ? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT : VK_PIPELINE_STAGE_TRANSFER_BIT;
     image_barrier(cmd, s.image, VK_IMAGE_LAYOUT_UNDEFINED, outLayout, 0, outAccess,
                   VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, outStage,
                   s.first_use ? VK_QUEUE_FAMILY_IGNORED : VK_QUEUE_FAMILY_FOREIGN_EXT,
@@ -463,16 +531,26 @@ bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info) {
     s.first_use = false;
 
     const int32_t limited = full_range ? 0 : 1;
-    if (storage_on_ahb) {
+    if (fragment_convert) {
+        VkRenderPassBeginInfo begin = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+        begin.renderPass = convert_render_pass; begin.framebuffer = s.framebuffer;
+        begin.renderArea.extent = {width, height};
+        vkCmdBeginRenderPass(cmd, &begin, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, fragment_pipeline);
+        vkCmdPushConstants(cmd, pipeline_layout, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof limited, &limited);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, 1, &s.set, 0, nullptr);
+        vkCmdDraw(cmd, 3, 1, 0, 0);
+        vkCmdEndRenderPass(cmd);
+    } else if (storage_on_ahb) {
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-        vkCmdPushConstants(cmd, pipeline_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof limited, &limited);
+        vkCmdPushConstants(cmd, pipeline_layout, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof limited, &limited);
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline_layout, 0, 1, &s.set, 0, nullptr);
         vkCmdDispatch(cmd, (width + 7) / 8, (height + 7) / 8, 1);
     } else {
         image_barrier(cmd, scratch.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 0,
                       VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-        vkCmdPushConstants(cmd, pipeline_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof limited, &limited);
+        vkCmdPushConstants(cmd, pipeline_layout, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof limited, &limited);
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline_layout, 0, 1, &scratch_set, 0, nullptr);
         vkCmdDispatch(cmd, (width + 7) / 8, (height + 7) / 8, 1);
         image_barrier(cmd, scratch.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
@@ -513,6 +591,7 @@ void pyroclient::destroy() {
     if (device) vkDeviceWaitIdle(device);
     if (decoder) pyrowave_decoder_destroy(decoder);
     for (Slot &s : ring) {
+        if (s.framebuffer) vkDestroyFramebuffer(device, s.framebuffer, nullptr);
         if (s.view) vkDestroyImageView(device, s.view, nullptr);
         if (s.image) vkDestroyImage(device, s.image, nullptr);
         if (s.memory) vkFreeMemory(device, s.memory, nullptr);
@@ -526,6 +605,8 @@ void pyroclient::destroy() {
     for (Plane &p : planes) killPlane(p);
     killPlane(scratch);
     if (pipeline) vkDestroyPipeline(device, pipeline, nullptr);
+    if (fragment_pipeline) vkDestroyPipeline(device, fragment_pipeline, nullptr);
+    if (convert_render_pass) vkDestroyRenderPass(device, convert_render_pass, nullptr);
     if (pipeline_layout) vkDestroyPipelineLayout(device, pipeline_layout, nullptr);
     if (desc_pool) vkDestroyDescriptorPool(device, desc_pool, nullptr);
     if (set_layout) vkDestroyDescriptorSetLayout(device, set_layout, nullptr);
@@ -568,6 +649,19 @@ extern "C" pyroclient *pyroclient_create_ex(uint32_t width, uint32_t height, int
         c->storage_on_ahb = vkGetPhysicalDeviceImageFormatProperties2(c->gpu, &fi, &p2) == VK_SUCCESS
             && (ep.externalMemoryProperties.externalMemoryFeatures & VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT);
         LOGI("RGBA8 AHB as storage image: %s", c->storage_on_ahb ? "yes (direct convert)" : "no (convert + copy)");
+        VkPhysicalDeviceProperties properties;
+        vkGetPhysicalDeviceProperties(c->gpu, &properties);
+        // Tile-based color output is faster on the measured Adreno 740. This changes
+        // only the YCbCr-to-RGBA bridge, independently of the selected wavelet path.
+        const bool prefer_fragment_convert = properties.vendorID == 0x5143 || getenv("PYROWAVE_FRAGMENT_CONVERT");
+        if (c->storage_on_ahb && prefer_fragment_convert && !getenv("PYROWAVE_CONVERT_COMPUTE")) {
+            fi.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+            if (vkGetPhysicalDeviceImageFormatProperties2(c->gpu, &fi, &p2) == VK_SUCCESS &&
+                (ep.externalMemoryProperties.externalMemoryFeatures & VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT)) {
+                c->fragment_convert = c->create_fragment_convert();
+            }
+        }
+        LOGI("RGBA conversion: %s", c->fragment_convert ? "fragment" : "compute fallback");
     }
     if (!c->storage_on_ahb) {
         if (!create_plain_image(c->gpu, c->device, VK_FORMAT_R8G8B8A8_UNORM, width, height,

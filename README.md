@@ -4,7 +4,7 @@ Experimental **Meta Quest 3 PCVR streaming with PyroWave 4:2:0 and optional 4:4:
 Maintained by [JMS1717](https://github.com/JMS1717). Designed to investigate low latency on
 same-room Wi-Fi 6E and 2.5 GbE, with **300 / 400 / 600 / 800 / 1000 / 1500 / 2000 Mbps** targets.
 
-**Development status:** Earlier clean APK and Windows streamer builds passed. The current full-resolution 4:2:0 build awaits manual acceptance. Real Quest 3 PCVR streamed in the earlier build. The current full-frame build disables all foveation and awaits maintainer in-headset acceptance.
+**Development status:** The full-resolution preview exposed dashboard and corrupted-frame bugs. The current repair fixes dashboard startup, uses an independent UDP receiver with complete-frame validation, and corrects 4:2:0 target extents. On-device decoder readbacks pass; live VR acceptance remains pending. See [repair evidence](results/CORRUPTION-FIX.md). Foveation remains disabled.
 Reviewed initial evidence is in [results](results/INITIAL-EVIDENCE.md). Those earlier foveated results do not validate the current full-frame build. High bitrate
 presets are experiment targets, not promises of usable throughput or quality.
 
@@ -33,7 +33,7 @@ This is a port and research project, not a claim to authorship of those componen
 | 240 Hz | 4.17 ms | Developer display scaling; probe required |
 
 [Meta's v2.7 documentation](https://developers.meta.com/vr/documentation/unity/unity-set-disp-freq/)
-permits integer 72–207 Hz on Quest 3 through standard requests even when enumeration omits them.
+permits integer 72â€“207 Hz on Quest 3 through standard requests even when enumeration omits them.
 The APK probes 90/120/144/207/240 Hz in its lobby, checks request success, reported rate and three
 consecutive frame periods, then restores its original rate before connecting. The server accepts
 only the resulting capabilities. Older OS versions fail extended requests gracefully.
@@ -49,9 +49,10 @@ The APK never changes system refresh properties or forces GPU clocks.
   the Galaxy XR beta cannot accidentally pair with it.
 - Removes Android XR required manifest features and uses ALVR's existing Quest OpenXR/tracking path.
 - Uniform full-frame rendering: server and client foveation are disabled, including stale sessions.
-- Full panel-relative starting size (requested 2064×2208, padded 2080×2208 per eye); adjustable render size.
+- Full panel-relative starting size (requested 2064Ã—2208, padded 2080Ã—2208 per eye); adjustable render size.
 - 300â€“2000 Mbps constant bitrate controls and one-click profiles; server pacing remains enabled.
-- Quest 3 Auto defaults to Compute, with explicit Compute/Fragment controls for manual comparison.
+- Quest 3 Auto defaults to Compute wavelet reconstruction, with explicit Compute/Fragment controls. The color-conversion bridge uses a separately capability-gated fragment pass on Adreno.
+- Independent UDP reception, bounded reorder-tolerant assembly, deduplication and a latest-complete-frame queue; partial frames are rejected before GPU submission.
 - PyroWave selected before the AMD AMF fallback chain, so an AMD PC cannot silently select AMF
   when PyroWave is requested. Vulkan/D3D11 external-memory and fence support is checked at startup.
 - v2.7-compatible refresh probing, runtime/frame-period verification and graceful rejection.
@@ -93,8 +94,8 @@ patches and research scripts remain available, but the supported Quest recipe is
 This remains experimental. A 2401 Mbps PHY link cannot guarantee 2000 Mbps application payload.
 At 2000 Mbps and 1400-byte datagrams the receiver handles roughly 179,000 packets/s before overhead.
 High resolution, high refresh and 4:4:4 all compete for mobile bandwidth and GPU time. The current
-Vulkan-to-GLES bridge waits for a fence, and packet reception and decode share a thread; both are
-candidates for architectural work after a measured baseline. See [architecture notes](docs/ARCHITECTURE.md).
+Vulkan-to-GLES bridge waits for a fence. Packet reception now runs independently of decode;
+complete-frame drops under radio loss and GPU budget remain constraints to measure. See [architecture notes](docs/ARCHITECTURE.md).
 
 No Galaxy XR decode, thermal, FPS or latency number is a Quest result. Inherited results are labelled
 by their original device. Optical latency, PC GPU clocks/load and full sustained gameplay comparisons

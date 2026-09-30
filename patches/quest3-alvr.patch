@@ -299,7 +299,7 @@ index 4d2e699..42133ae 100644
  
  use alvr_common::anyhow::Result;
 diff --git a/alvr/client_core/src/video_decoder/pyrowave_udp.rs b/alvr/client_core/src/video_decoder/pyrowave_udp.rs
-index f8a6cfe..b3cfe52 100644
+index f8a6cfe..1a47ae8 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave_udp.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave_udp.rs
 @@ -1,49 +1,15 @@
@@ -359,7 +359,7 @@ index f8a6cfe..b3cfe52 100644
  extern "C" {
      fn pyroclient_create_ex(width: u32, height: u32, chroma444: i32, full_range: i32, ring: u32, wavelet: i32, decode_path: i32) -> *mut PyroClient;
      fn pyroclient_push_packet(c: *mut PyroClient, data: *const u8, size: usize) -> i32;
-@@ -51,332 +17,175 @@ extern "C" {
+@@ -51,332 +17,183 @@ extern "C" {
      fn pyroclient_clear(c: *mut PyroClient);
      fn pyroclient_destroy(c: *mut PyroClient);
  }
@@ -416,7 +416,10 @@ index f8a6cfe..b3cfe52 100644
 -    let tag = CString::new("PYROWAVE-UDP").unwrap();
 -    let text = CString::new(msg).unwrap_or_default();
 -    unsafe { __android_log_write(4 /* ANDROID_LOG_INFO */, tag.as_ptr(), text.as_ptr()) };
--}
++    extern "C" { fn __android_log_write(prio: i32, tag: *const std::ffi::c_char, text: *const std::ffi::c_char) -> i32; }
++    let tag = CString::new("PYROWAVE-UDP").unwrap(); let text = CString::new(msg).unwrap_or_default();
++    unsafe { __android_log_write(4, tag.as_ptr(), text.as_ptr()) };
+ }
 -#[cfg(not(target_os = "android"))]
 -fn alog(msg: &str) {
 -    info!("[PYROWAVE-UDP] {msg}");
@@ -426,10 +429,7 @@ index f8a6cfe..b3cfe52 100644
 -    unsafe {
 -        libc::recvmmsg(fd, msgs.as_mut_ptr(), msgs.len() as libc::c_uint, flags, std::ptr::null_mut()) as isize
 -    }
-+    extern "C" { fn __android_log_write(prio: i32, tag: *const std::ffi::c_char, text: *const std::ffi::c_char) -> i32; }
-+    let tag = CString::new("PYROWAVE-UDP").unwrap(); let text = CString::new(msg).unwrap_or_default();
-+    unsafe { __android_log_write(4, tag.as_ptr(), text.as_ptr()) };
- }
+-}
 -
  const BATCH: usize = 64;
  const DATAGRAM: usize = 2048;
@@ -484,6 +484,14 @@ index f8a6cfe..b3cfe52 100644
      }
 -    // Short timeout so the deadline tick runs even when nothing arrives.
      socket.set_read_timeout(Some(Duration::from_millis(2)))?;
++    unsafe {
++        let mut actual: libc::c_int = 0;
++        let mut size = std::mem::size_of_val(&actual) as libc::socklen_t;
++        if libc::getsockopt(socket.as_raw_fd(), libc::SOL_SOCKET, libc::SO_RCVBUF,
++            &mut actual as *mut _ as *mut c_void, &mut size) == 0 {
++            alog(&format!("socket receive buffer: {actual} bytes (kernel accounting)"));
++        }
++    }
      Ok(socket)
  }
 -
@@ -650,6 +658,11 @@ index f8a6cfe..b3cfe52 100644
 -                        Some(p) if hdr.timestamp_ns < p.timestamp_ns => {
 -                            counters.stale_packets += 1;
 -                            continue;
+-                        }
+-                        Some(p) if hdr.timestamp_ns > p.timestamp_ns => {
+-                            let old = pending.take().unwrap();
+-                            let behind = skip_for_newer(old.timestamp_ns, inbox.iter().map(|(h, _)| h.timestamp_ns));
+-                            settle(old, now, &mut counters, true, behind);
 +                        let data = &bufs[i][..msgs[i].msg_len as usize];
 +                        let Some(header) = PyroWavePacketHeader::from_bytes(data) else {
 +                            assembler.counters.invalid += 1; continue;
@@ -660,11 +673,6 @@ index f8a6cfe..b3cfe52 100644
 +                            report_video_packet_received(timestamp);
 +                            crate::push_foveation_center(timestamp, header.foveation_center);
                          }
--                        Some(p) if hdr.timestamp_ns > p.timestamp_ns => {
--                            let old = pending.take().unwrap();
--                            let behind = skip_for_newer(old.timestamp_ns, inbox.iter().map(|(h, _)| h.timestamp_ns));
--                            settle(old, now, &mut counters, true, behind);
--                        }
 -                        _ => {}
 -                    }
 -                    if pending.is_none() {
@@ -813,10 +821,10 @@ index f8a6cfe..b3cfe52 100644
 -
 diff --git a/alvr/client_core/src/video_decoder/pyrowave_udp_assembly.rs b/alvr/client_core/src/video_decoder/pyrowave_udp_assembly.rs
 new file mode 100644
-index 0000000..782ebfa
+index 0000000..7d28e2c
 --- /dev/null
 +++ b/alvr/client_core/src/video_decoder/pyrowave_udp_assembly.rs
-@@ -0,0 +1,140 @@
+@@ -0,0 +1,155 @@
 +//! Bounded, reorder-tolerant transport assembly. Never submit missing blocks to the codec.
 +use alvr_packets::PyroWavePacketHeader;
 +use std::{collections::BTreeMap, time::{Duration, Instant}};
@@ -891,6 +899,10 @@ index 0000000..782ebfa
 +        }
 +        let first = !self.pending.contains_key(&header.timestamp_ns);
 +        if first && self.pending.len() == MAX_PENDING {
++            if header.timestamp_ns < *self.pending.first_key_value().unwrap().0 {
++                self.counters.stale += 1;
++                return (false, None);
++            }
 +            self.retire(*self.pending.first_key_value().unwrap().0);
 +            if self.retired_through.is_some_and(|ts| header.timestamp_ns <= ts) {
 +                self.counters.stale += 1;
@@ -955,6 +967,17 @@ index 0000000..782ebfa
 +        assert_eq!(a.counters.dropped, 1); assert_eq!(a.counters.invalid, 2);
 +        assert!(a.push(h(1, 1, 2), &[2], now).1.is_none());
 +        assert_eq!(a.counters.complete, 0);
++    }
++    #[test]
++    fn overload_preserves_four_newest_frames_and_bounds_allocations() {
++        let mut a = Assembler::new(Duration::from_millis(8)); let now = Instant::now();
++        for ts in 10..14 { a.push(h(ts, 0, 2), &[1], now); }
++        a.push(h(9, 0, 2), &[1], now);
++        assert!(a.pending.contains_key(&10));
++        a.push(h(14, 0, 2), &[1], now);
++        assert_eq!(a.pending.len(), 4); assert!(!a.pending.contains_key(&10));
++        assert!(a.push(h(15, 0, u16::MAX), &[1], now).1.is_none());
++        assert_eq!(a.pending.len(), 4); assert_eq!(a.counters.invalid, 1);
 +    }
 +}
 diff --git a/alvr/client_openxr/Cargo.toml b/alvr/client_openxr/Cargo.toml
