@@ -1460,7 +1460,7 @@ index ccc83c8..5e14bba 100644
                  .options
                  .into_iter()
 diff --git a/alvr/dashboard/src/dashboard/components/test_report.rs b/alvr/dashboard/src/dashboard/components/test_report.rs
-index 3be9319..1aba238 100644
+index 3be9319..12d7587 100644
 --- a/alvr/dashboard/src/dashboard/components/test_report.rs
 +++ b/alvr/dashboard/src/dashboard/components/test_report.rs
 @@ -255,8 +255,8 @@ fn effective_settings(settings: &Settings, session_settings: &Value) -> Value {
@@ -1474,17 +1474,21 @@ index 3be9319..1aba238 100644
          "render_per_eye": render,
          "render_scale_percent": render_percent,
          "refresh_hz": video.preferred_fps,
-@@ -549,8 +549,8 @@ mod tests {
+@@ -549,10 +549,10 @@ mod tests {
          let r = report(&Subjective::default());
          assert_eq!(r["schema_version"], 1);
          assert_eq!(r["settings"]["profile"], beta::RECOMMENDED_PROFILE);
 -        assert_eq!(r["settings"]["codec"], "PyroWave 4:4:4");
 -        assert_eq!(r["settings"]["chroma"], "4:4:4");
+-        assert_eq!(r["settings"]["render_per_eye"], json!([2131, 2304]));
+-        assert_eq!(r["settings"]["render_scale_percent"], 60.0);
 +        assert_eq!(r["settings"]["codec"], "PyroWave");
 +        assert_eq!(r["settings"]["chroma"], "4:2:0");
-         assert_eq!(r["settings"]["render_per_eye"], json!([2131, 2304]));
-         assert_eq!(r["settings"]["render_scale_percent"], 60.0);
++        assert_eq!(r["settings"]["render_per_eye"], json!([2064, 2208]));
++        assert_eq!(r["settings"]["render_scale_percent"], 100.0);
          assert_eq!(r["settings"]["pyrowave"]["transport"], "UDP");
+         assert_eq!(r["settings"]["advanced_changes"], json!([]));
+         assert_eq!(r["encoded_size"], json!([1984, 896]));
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
 index fc176da..647954d 100644
 --- a/alvr/server_core/src/connection.rs
