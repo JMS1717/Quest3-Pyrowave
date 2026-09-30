@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7b..0f75230 100644
+index 7cead7b..96569dd 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,7 +182,7 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -16,7 +16,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -25,7 +25,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -34,7 +34,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -43,7 +43,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -52,7 +52,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -61,7 +61,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -70,7 +70,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -79,7 +79,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "dirs",
   "once_cell",
@@ -88,7 +88,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -97,7 +97,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_common",
   "egui",
@@ -106,7 +106,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -115,7 +115,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -124,7 +124,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -133,7 +133,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -142,7 +142,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -151,7 +151,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -160,7 +160,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -169,7 +169,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_common",
   "jni",
@@ -178,7 +178,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -187,7 +187,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -196,7 +196,7 @@ index 7cead7b..0f75230 100644
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.3"
++version = "20.13.0-quest3.pyro.4"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
@@ -345,7 +345,7 @@ index 7765bb4..08fb2e4 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..6a207fb 100644
+index a0fd36f..cf60304 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -4,6 +4,7 @@ mod graphics;
@@ -401,7 +401,8 @@ index a0fd36f..6a207fb 100644
          let mut passthrough_layer = None;
  
          let mut event_storage = xr::EventDataBuffer::new();
-         let mut last_display_period = 0;
+-        let mut last_display_period = 0;
++        let mut last_display_period: u128 = 0;
 +        let mut last_cap_log = std::time::Instant::now();
 +        let mut last_rate_log = std::time::Instant::now();
          // Budget for the pre-xrWaitFrame poll: the previous frame's period, 72 Hz until known.
