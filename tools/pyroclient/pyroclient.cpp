@@ -689,6 +689,11 @@ extern "C" int pyroclient_is_ready(pyroclient *c, int allow_partial) {
 }
 
 extern "C" int pyroclient_decode(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info) {
+    return pyroclient_decode_guarded(c, out, info, nullptr, nullptr);
+}
+
+extern "C" int pyroclient_decode_guarded(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info,
+                                       AHardwareBuffer *protected_a, AHardwareBuffer *protected_b) {
     if (!c || !out) return -1;
     *out = nullptr;
     // Partial reconstruction requires pristine low-frequency bands. The old UDP caller
@@ -696,6 +701,11 @@ extern "C" int pyroclient_decode(pyroclient *c, AHardwareBuffer **out, pyroclien
     // Both transports now require a fully validated frame before recording GPU work.
     if (!pyrowave_decoder_decode_is_ready(c->decoder, false)) return -3;
     if (info) { *info = pyroclient_frame_info{}; info->complete = pyrowave_decoder_decode_is_ready(c->decoder, false) ? 1 : 0; }
+    uint32_t attempts = 0;
+    while (c->ring[c->next_slot].ahb == protected_a || c->ring[c->next_slot].ahb == protected_b) {
+        c->next_slot = (c->next_slot + 1) % (uint32_t)c->ring.size();
+        if (++attempts == c->ring.size()) return -4;
+    }
     Slot &s = c->ring[c->next_slot];
     c->next_slot = (c->next_slot + 1) % (uint32_t)c->ring.size();
     if (!c->record_and_submit(s, info)) return -2;

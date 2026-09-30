@@ -51,6 +51,10 @@ int pyroclient_is_ready(pyroclient *c, int allow_partial);
 // Decode the queued frame into the next ring buffer and wait for it. On success *out is the
 // AHardwareBuffer to import; it is owned by the library. Returns 0 on success.
 int pyroclient_decode(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info);
+// Streaming caller excludes the leased render buffer and the pending buffer that
+// could be dequeued while GPU work runs. Ring size must leave at least one free slot.
+int pyroclient_decode_guarded(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info,
+                             AHardwareBuffer *protected_a, AHardwareBuffer *protected_b);
 
 // Throw away whatever is queued (e.g. a frame whose deadline passed).
 void pyroclient_clear(pyroclient *c);

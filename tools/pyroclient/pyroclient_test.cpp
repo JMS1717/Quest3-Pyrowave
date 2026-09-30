@@ -29,7 +29,7 @@ static bool load(const char *path, Wave &w) {
 }
 
 int main(int argc, char **argv) {
-    if (argc < 3) { fprintf(stderr, "usage: %s <in.wave> <out.rgba> [iterations] [auto|compute|fragment] [warmup_frames]\n", argv[0]); return 1; }
+    if (argc < 3) { fprintf(stderr, "usage: %s <in.wave> <out.rgba> [iterations] [auto|compute|fragment] [warmup_frames] [protect_first_buffer=0|1]\n", argv[0]); return 1; }
     Wave w;
     if (!load(argv[1], w)) return 1;
     const int iters = argc > 3 ? atoi(argv[3]) : 1;
@@ -51,13 +51,22 @@ int main(int argc, char **argv) {
     std::vector<double> totals, decodes, converts;
     double warmupMax = 0;
     int completes = 0;
+    AHardwareBuffer *held = nullptr;
+    const bool protect_first = argc > 6 && atoi(argv[6]) != 0;
     for (int i = 0; i < iters + warmup; i++) {
         // Re-pushing the same frame reads as an old sequence number and is dropped; a decode
         // would then run on nothing. Clear first, as the harness does.
         if (i > 0) pyroclient_clear(c);
         int r = pyroclient_push_packet(c, w.frame.data(), w.frame.size());
         if (r < 0) { fprintf(stderr, "push failed %d\n", r); return 1; }
-        if (pyroclient_decode(c, &ahb, &info) != 0) { fprintf(stderr, "decode failed\n"); return 1; }
+        AHardwareBuffer *previous = ahb;
+        int decoded = protect_first ? pyroclient_decode_guarded(c, &ahb, &info, held, previous)
+                                    : pyroclient_decode(c, &ahb, &info);
+        if (decoded != 0) { fprintf(stderr, "decode failed\n"); return 1; }
+        if (protect_first && (ahb == held || ahb == previous)) {
+            fprintf(stderr, "protected hardware buffer was recycled\n"); return 1;
+        }
+        if (protect_first && !held) held = ahb;
         if (i < warmup) { warmupMax = std::max(warmupMax, info.total_ms); continue; }
         decodes.push_back(info.decode_ms); converts.push_back(info.convert_ms);
         if (info.decode_ms < bestDec) bestDec = info.decode_ms;

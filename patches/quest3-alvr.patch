@@ -286,7 +286,7 @@ index 90a7c0a..b91feea 100644
          dbg_client_core!("resume");
  
 diff --git a/alvr/client_core/src/video_decoder/mod.rs b/alvr/client_core/src/video_decoder/mod.rs
-index 4d2e699..42133ae 100644
+index 4d2e699..6e3f353 100644
 --- a/alvr/client_core/src/video_decoder/mod.rs
 +++ b/alvr/client_core/src/video_decoder/mod.rs
 @@ -4,6 +4,8 @@ mod android;
@@ -298,11 +298,98 @@ index 4d2e699..42133ae 100644
  pub mod telemetry;
  
  use alvr_common::anyhow::Result;
+@@ -137,15 +139,32 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
+ /// The newest decoded frame, handed out once. Intra-only codecs can always skip to the newest.
+ #[derive(Default)]
+ pub struct FrameSlot {
+-    inner: alvr_common::parking_lot::Mutex<Option<(Duration, usize)>>,
++    inner: alvr_common::parking_lot::Mutex<FrameSlotState>,
++}
++
++#[derive(Default)]
++struct FrameSlotState {
++    pending: Option<(Duration, usize)>,
++    /// The render loop can hold a dequeued buffer across xrWaitFrame. Keep it out
++    /// of the producer's write rotation until a subsequent frame is dequeued.
++    leased: usize,
+ }
+ 
+ impl FrameSlot {
+     pub fn publish(&self, timestamp: Duration, buffer: usize) {
+-        *self.inner.lock() = Some((timestamp, buffer));
++        self.inner.lock().pending = Some((timestamp, buffer));
+     }
+     pub fn take(&self) -> Option<(Duration, usize)> {
+-        self.inner.lock().take()
++        let mut state = self.inner.lock();
++        let frame = state.pending.take()?;
++        state.leased = frame.1;
++        Some(frame)
++    }
++    /// Exclude both possible consumer buffers before reserving a native output
++    /// slot: the currently leased one and the pending one that could be taken.
++    pub fn protected_buffers(&self) -> [usize; 2] {
++        let state = self.inner.lock();
++        [state.leased, state.pending.map_or(0, |(_, buffer)| buffer)]
+     }
+ }
+ 
+@@ -392,4 +411,21 @@ mod tests {
+         assert_eq!(slot.take(), Some((Duration::from_millis(2), 0x20)));
+         assert!(slot.take().is_none());
+     }
++
++    #[test]
++    fn producer_protects_a_held_frame_and_a_concurrently_dequeueable_frame() {
++        let slot = FrameSlot::default();
++        assert_eq!(slot.protected_buffers(), [0, 0]);
++        slot.publish(Duration::from_millis(1), 0x10);
++        assert_eq!(slot.protected_buffers(), [0, 0x10]);
++        slot.take();
++        slot.publish(Duration::from_millis(2), 0x20);
++        assert_eq!(slot.protected_buffers(), [0x10, 0x20]);
++        // Publishing newer frames while the render loop is stalled must retain
++        // protection of its old lease, even after the pending frame is replaced.
++        slot.publish(Duration::from_millis(3), 0x30);
++        assert_eq!(slot.protected_buffers(), [0x10, 0x30]);
++        slot.take();
++        assert_eq!(slot.protected_buffers(), [0x30, 0]);
++    }
+ }
+diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
+index 2e22601..7cffa63 100644
+--- a/alvr/client_core/src/video_decoder/pyrowave.rs
++++ b/alvr/client_core/src/video_decoder/pyrowave.rs
+@@ -38,10 +38,12 @@ struct FrameInfo {
+ extern "C" {
+     fn pyroclient_create_ex(width: u32, height: u32, chroma444: i32, full_range: i32, ring: u32, wavelet: i32, decode_path: i32) -> *mut PyroClient;
+     fn pyroclient_push_packet(c: *mut PyroClient, data: *const u8, size: usize) -> i32;
+-    fn pyroclient_decode(
++    fn pyroclient_decode_guarded(
+         c: *mut PyroClient,
+         out: *mut *mut c_void,
+         info: *mut FrameInfo,
++        protected_a: *mut c_void,
++        protected_b: *mut c_void,
+     ) -> i32;
+     fn pyroclient_destroy(c: *mut PyroClient);
+ }
+@@ -150,7 +152,9 @@ pub fn video_decoder_split(
+                 }
+                 let mut out: *mut c_void = std::ptr::null_mut();
+                 let mut info = FrameInfo::default();
+-                let rc = unsafe { pyroclient_decode(client, &mut out, &mut info) };
++                let protected = decoded.protected_buffers();
++                let rc = unsafe { pyroclient_decode_guarded(client, &mut out, &mut info,
++                    protected[0] as *mut c_void, protected[1] as *mut c_void) };
+                 if rc != 0 || out.is_null() {
+                     warn!("PyroWave: decode failed ({rc})");
+                     failures += 1;
 diff --git a/alvr/client_core/src/video_decoder/pyrowave_udp.rs b/alvr/client_core/src/video_decoder/pyrowave_udp.rs
-index f8a6cfe..1a47ae8 100644
+index f8a6cfe..85a39a2 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave_udp.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave_udp.rs
-@@ -1,49 +1,15 @@
+@@ -1,382 +1,202 @@
 -//! PyroWave over UDP: our own socket, straight into the decoder.
 -//!
 -//! One thread owns the socket and the decoder, so every Vulkan call and every packet push stays
@@ -359,7 +446,9 @@ index f8a6cfe..1a47ae8 100644
  extern "C" {
      fn pyroclient_create_ex(width: u32, height: u32, chroma444: i32, full_range: i32, ring: u32, wavelet: i32, decode_path: i32) -> *mut PyroClient;
      fn pyroclient_push_packet(c: *mut PyroClient, data: *const u8, size: usize) -> i32;
-@@ -51,332 +17,183 @@ extern "C" {
+-    fn pyroclient_decode(c: *mut PyroClient, out: *mut *mut c_void, info: *mut FrameInfo) -> i32;
++    fn pyroclient_decode_guarded(c: *mut PyroClient, out: *mut *mut c_void, info: *mut FrameInfo,
++        protected_a: *mut c_void, protected_b: *mut c_void) -> i32;
      fn pyroclient_clear(c: *mut PyroClient);
      fn pyroclient_destroy(c: *mut PyroClient);
  }
@@ -749,7 +838,9 @@ index f8a6cfe..1a47ae8 100644
                      } else {
 -                        pending = Some(p);
 +                        let mut out: *mut c_void = std::ptr::null_mut(); let mut info = FrameInfo::default();
-+                        let rc = unsafe { pyroclient_decode(client, &mut out, &mut info) };
++                        let protected = decoded.protected_buffers();
++                        let rc = unsafe { pyroclient_decode_guarded(client, &mut out, &mut info,
++                            protected[0] as *mut c_void, protected[1] as *mut c_void) };
 +                        if rc != 0 || out.is_null() || info.complete == 0 { failures += 1; }
 +                        else {
 +                            let ts = Duration::from_nanos(frame.timestamp_ns);
@@ -1291,7 +1382,7 @@ index 0000000..ea61e78
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..fc3b3cf 100644
+index b87dfe9..e7998c7 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -59,17 +59,9 @@ impl ParsedStreamConfig {
@@ -1328,6 +1419,14 @@ index b87dfe9..fc3b3cf 100644
          let foveation_profile = if let Some(config) = &config.clientside_foveation_config {
              if xr_exts.fb_swapchain_update_state.is_some()
                  && xr_exts.fb_foveation.is_some()
+@@ -294,6 +280,7 @@ impl StreamContext {
+     }
+ 
+     pub fn maybe_initialize_decoder(&mut self, codec: CodecType, config_nal: Vec<u8>) {
++        self.renderer.set_import_copy_sync(codec == CodecType::PyroWave);
+         let new_config = VideoDecoderConfig {
+             codec,
+             force_software_decoder: self.config.force_software_decoder,
 diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 index efb0f8e..1e91e7e 100644
 --- a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
@@ -1489,6 +1588,67 @@ index 3be9319..12d7587 100644
          assert_eq!(r["settings"]["pyrowave"]["transport"], "UDP");
          assert_eq!(r["settings"]["advanced_changes"], json!([]));
          assert_eq!(r["encoded_size"], json!([1984, 896]));
+diff --git a/alvr/graphics/src/staging.rs b/alvr/graphics/src/staging.rs
+index febd2c3..779de33 100644
+--- a/alvr/graphics/src/staging.rs
++++ b/alvr/graphics/src/staging.rs
+@@ -117,7 +117,7 @@ impl StagingRenderer {
+     }
+ 
+     #[allow(unused_variables)]
+-    pub unsafe fn render(&self, hardware_buffer: *mut c_void) {
++    pub unsafe fn render(&self, hardware_buffer: *mut c_void, wait_for_copy: bool) {
+         let gl = &self.context.gl_context;
+         self.context.make_current();
+ 
+@@ -140,6 +140,11 @@ impl StagingRenderer {
+                     ck!(gl.uniform_1_i32(Some(&self.view_idx_uloc), i as i32));
+                     ck!(gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4));
+                 }
++                // A PyroWave hardware buffer is reused by a separate Vulkan queue.
++                // Finish the import copy before the consumer releases its lease.
++                if wait_for_copy {
++                    ck!(gl.finish());
++                }
+             },
+         );
+     }
+diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
+index 737b7d0..4be1eaa 100644
+--- a/alvr/graphics/src/stream.rs
++++ b/alvr/graphics/src/stream.rs
+@@ -72,6 +72,7 @@ pub struct StreamRenderer {
+     ffe_params_buffer: Buffer,
+     /// `None` when foveated encoding is off, in which case there is nothing to steer.
+     foveated_encoding: Option<(UVec2, FoveatedEncodingConfig)>,
++    wait_for_import_copy: bool,
+ }
+ 
+ impl StreamRenderer {
+@@ -298,9 +299,14 @@ impl StreamRenderer {
+             views_objects: view_objects.try_into().unwrap(),
+             ffe_params_buffer,
+             foveated_encoding: foveated_encoding.map(|c| (base_view_resolution, c)),
++            wait_for_import_copy: false,
+         }
+     }
+ 
++    pub fn set_import_copy_sync(&mut self, enabled: bool) {
++        self.wait_for_import_copy = enabled;
++    }
++
+     /// Move the full-resolution centre to match the server's, for the frame about to be drawn.
+     ///
+     /// Per eye: the horizontal frusta are asymmetric and mirrored, so one shared shift is only
+@@ -335,7 +341,7 @@ impl StreamRenderer {
+     ) {
+         // if hardware_buffer is available copy stream to staging texture
+         if !hardware_buffer.is_null() {
+-            self.staging_renderer.render(hardware_buffer);
++            self.staging_renderer.render(hardware_buffer, self.wait_for_import_copy);
+         }
+ 
+         let mut encoder = self
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
 index fc176da..647954d 100644
 --- a/alvr/server_core/src/connection.rs

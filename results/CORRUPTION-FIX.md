@@ -16,7 +16,7 @@ The repair separates packet reception from GPU work, bounds assembly and the com
 queue, deduplicates packet indices, tolerates reordered tails, and rejects incomplete transport
 or codec frames. Loss now holds the last valid image. 4:2:0 chroma views describe their actual
 half-sized images. The dashboard label is corrected and missing preset defaults have a fallback.
-The Vulkan/GLES color bridge uses a capability-gated fragment pass on Adreno.
+The Vulkan/GLES color bridge uses a capability-gated fragment pass on Adreno. The producer now excludes the renderer's held buffer and the pending buffer from reuse, and the GLES copy completes before the render loop advances its lease. A native test holds the first buffer across 60 further complete decodes without recycling it; client-core lease/transport tests pass (14 total).
 
 ## On-device decoder checks
 
@@ -62,5 +62,4 @@ in `adb logcat -s PYROWAVE-UDP`. A scene submission count is not a decoded/displ
 Screenshots may include private surroundings when a system passthrough dialog is active; keep
 raw captures local and publish only reviewed synthetic test evidence.
 
-Remaining work: live full-resolution acceptance, loss recovery/pacing, explicit GLES buffer
-lifetime synchronization, and further decode/bridge optimization before a 120 fps guarantee.
+Remaining work: live full-resolution acceptance, loss recovery/pacing, an asynchronous replacement for the synchronized GLES handoff, and further decode/bridge optimization before a 120 fps guarantee.
