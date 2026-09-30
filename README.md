@@ -4,7 +4,7 @@ Experimental **Meta Quest 3 PCVR streaming with PyroWave 4:4:4**, built on ALVR.
 Maintained by [JMS1717](https://github.com/JMS1717). Designed to investigate low latency on
 same-room Wi-Fi 6E and 2.5 GbE, with **600 / 800 / 1000 / 1500 / 2000 Mbps** targets.
 
-**Development status:** Quest 3 port implemented; builds and device validation are in progress.
+**Development status:** Clean APK and Windows streamer builds pass. Real Quest 3 PCVR streaming works; benchmark validation is in progress.
 No Quest streaming performance result is claimed until it appears in `results/`. High bitrate
 presets are experiment targets, not promises of usable throughput or quality.
 
@@ -27,14 +27,20 @@ This is a port and research project, not a claim to authorship of those componen
 |---|---:|---|
 | 90 Hz | 11.11 ms | Use when runtime advertises it |
 | 120 Hz | 8.33 ms | Use when runtime advertises it |
-| 144 Hz | 6.94 ms | Experimental; capability gate required |
-| 207 Hz | 4.83 ms | Experimental; capability gate required |
-| 240 Hz | 4.17 ms | Experimental; capability gate required |
+| 144 Hz | 6.94 ms | HorizonOS v2.7+; request/frame-period probe |
+| 207 Hz | 4.83 ms | HorizonOS v2.7+; request/frame-period probe |
+| 240 Hz | 4.17 ms | Developer display scaling; probe required |
 
-The server rejects an unsupported rate instead of silently benchmarking a fallback. Runtime
-advertisement, request acceptance, effective refresh, and delivered frame rate are separate checks.
-An Android refresh override does not establish physical scanout capability. This project does not
-set persistent refresh overrides, root the headset, or force GPU clocks.
+[Meta's v2.7 documentation](https://developers.meta.com/vr/documentation/unity/unity-set-disp-freq/)
+permits integer 72–207 Hz on Quest 3 through standard requests even when enumeration omits them.
+The APK probes 90/120/144/207/240 Hz in its lobby, checks request success, reported rate and three
+consecutive frame periods, then restores its original rate before connecting. The server accepts
+only the resulting capabilities. Older OS versions fail extended requests gracefully.
+
+Above 207 Hz, developer display scaling is required and reduces fine-detail quality; see
+[extended refresh setup](docs/REFRESH-RATES.md). Scaling is separate from 4:4:4 chroma.
+Runtime acceptance, effective refresh, and delivered frame rate remain separate measurements.
+The APK never changes system refresh properties or forces GPU clocks.
 
 ## What the port changes
 
@@ -46,7 +52,7 @@ set persistent refresh overrides, root the headset, or force GPU clocks.
 - Qualcomm vendor decode selection plus explicit Compute/Fragment controls for controlled comparison.
 - PyroWave selected before the AMD AMF fallback chain, so an AMD PC cannot silently select AMF
   when PyroWave is requested. Vulkan/D3D11 external-memory and fence support is checked at startup.
-- Runtime rate enumeration, clean rejection logs and no refresh-request panic.
+- v2.7-compatible refresh probing, runtime/frame-period verification and graceful rejection.
 - Reconstructable pinned upstream sources, CI APK/streamer generation, tests and benchmark captures.
 
 ## Codec comparison

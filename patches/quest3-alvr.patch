@@ -213,6 +213,78 @@ index ae00ce8..1933718 100644
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
+diff --git a/alvr/client_core/src/connection.rs b/alvr/client_core/src/connection.rs
+index 1ed4333..56e4d25 100644
+--- a/alvr/client_core/src/connection.rs
++++ b/alvr/client_core/src/connection.rs
+@@ -112,7 +112,7 @@ fn is_streaming(ctx: &ConnectionContext) -> bool {
+ }
+ 
+ pub fn connection_lifecycle_loop(
+-    capabilities: ClientCapabilities,
++    capabilities: Arc<RwLock<ClientCapabilities>>,
+     ctx: Arc<ConnectionContext>,
+     lifecycle_state: Arc<RwLock<LifecycleState>>,
+     event_queue: Arc<Mutex<VecDeque<ClientCoreEvent>>>,
+@@ -123,8 +123,9 @@ pub fn connection_lifecycle_loop(
+ 
+     while *lifecycle_state.read() != LifecycleState::ShuttingDown {
+         if *lifecycle_state.read() == LifecycleState::Resumed {
++            let connection_capabilities = capabilities.read().clone();
+             if let Err(e) = connection_pipeline(
+-                capabilities.clone(),
++                connection_capabilities,
+                 Arc::clone(&ctx),
+                 Arc::clone(&lifecycle_state),
+                 Arc::clone(&event_queue),
+diff --git a/alvr/client_core/src/lib.rs b/alvr/client_core/src/lib.rs
+index 90a7c0a..b91feea 100644
+--- a/alvr/client_core/src/lib.rs
++++ b/alvr/client_core/src/lib.rs
+@@ -92,6 +92,7 @@ pub(crate) fn push_foveation_center(timestamp: Duration, center: [[f32; 2]; 2])
+ }
+ 
+ pub struct ClientCoreContext {
++    capabilities: Arc<RwLock<ClientCapabilities>>,
+     lifecycle_state: Arc<RwLock<LifecycleState>>,
+     event_queue: Arc<Mutex<VecDeque<ClientCoreEvent>>>,
+     connection_context: Arc<ConnectionContext>,
+@@ -115,6 +116,7 @@ impl ClientCoreContext {
+             alvr_system_info::set_wifi_lock(true);
+         }
+ 
++        let capabilities = Arc::new(RwLock::new(capabilities));
+         let lifecycle_state = Arc::new(RwLock::new(LifecycleState::Idle));
+         let event_queue = Arc::new(Mutex::new(VecDeque::new()));
+         let connection_context = Arc::new(ConnectionContext::default());
+@@ -122,6 +124,7 @@ impl ClientCoreContext {
+             let lifecycle_state = Arc::clone(&lifecycle_state);
+             let connection_context = Arc::clone(&connection_context);
+             let event_queue = Arc::clone(&event_queue);
++            let capabilities = Arc::clone(&capabilities);
+             move || {
+                 connection::connection_lifecycle_loop(
+                     capabilities,
+@@ -133,6 +136,7 @@ impl ClientCoreContext {
+         });
+ 
+         Self {
++            capabilities,
+             lifecycle_state,
+             event_queue,
+             connection_context,
+@@ -140,6 +144,11 @@ impl ClientCoreContext {
+         }
+     }
+ 
++    /// Update only while paused, before a capability-probed connection.
++    pub fn set_refresh_rates(&self, rates: Vec<f32>) {
++        self.capabilities.write().refresh_rates = rates;
++    }
++
+     pub fn resume(&self) {
+         dbg_client_core!("resume");
+ 
 diff --git a/alvr/client_openxr/Cargo.toml b/alvr/client_openxr/Cargo.toml
 index 995394b..d9d9cf1 100644
 --- a/alvr/client_openxr/Cargo.toml
@@ -258,11 +330,33 @@ index 995394b..d9d9cf1 100644
  
  [[package.metadata.android.queries.package]]
  name = "com.ultraleap.tracking.service"
+diff --git a/alvr/client_openxr/src/interaction.rs b/alvr/client_openxr/src/interaction.rs
+index 7765bb4..08fb2e4 100644
+--- a/alvr/client_openxr/src/interaction.rs
++++ b/alvr/client_openxr/src/interaction.rs
+@@ -947,6 +947,9 @@ pub fn get_eye_gazes(
+ /// rejected, a pose that is present but untracked -- otherwise collapses into the same silent
+ /// `[None, None]`, and the whole foveation feature downstream just quietly does nothing.
+ fn gaze_diag(message: &str) {
++    // Quest 3 has no eye tracking; avoid periodic error traffic for an expected absence.
++    static QUEST3: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
++    if *QUEST3.get_or_init(|| alvr_system_info::platform() == alvr_system_info::Platform::Quest3) { return; }
+     use std::sync::atomic::{AtomicU64, Ordering};
+     static TICK: AtomicU64 = AtomicU64::new(0);
+     let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..ceeeabf 100644
+index a0fd36f..7dbf354 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
-@@ -313,13 +313,20 @@ pub fn entry_point() {
+@@ -4,6 +4,7 @@ mod graphics;
+ mod interaction;
+ mod lobby;
+ mod passthrough;
++mod refresh_probe;
+ mod stream;
+ 
+ use crate::stream::ParsedStreamConfig;
+@@ -313,13 +314,20 @@ pub fn entry_point() {
              views_config[0].recommended_image_rect_height,
          );
  
@@ -285,38 +379,216 @@ index a0fd36f..ceeeabf 100644
          // error! so it reaches logcat even once connected -- see gaze_diag in interaction.rs.
          // The server picks the *closest* of these to preferred_fps and only warns
          // (server_core/src/connection.rs), so asking for a rate that is not here silently runs at
+@@ -365,7 +373,7 @@ pub fn entry_point() {
+ 
+         let capabilities = ClientCapabilities {
+             default_view_resolution,
+-            refresh_rates,
++            refresh_rates: refresh_rates.clone(),
+             foveated_encoding: galaxy_xr || platform != Platform::Unknown,
+             encoder_high_profile: galaxy_xr || platform != Platform::Unknown,
+             encoder_10_bits: galaxy_xr || platform != Platform::Unknown,
+@@ -412,6 +420,9 @@ pub fn entry_point() {
+             .select_sources(&lobby_interaction_sources);
+ 
+         let mut session_running = false;
++        let mut refresh_probe = None;
++        let mut refresh_probed = false;
++        let mut requested_refresh_rate = None::<f32>;
+         let mut stream_context = None::<StreamContext>;
+         let mut passthrough_layer = None;
+ 
+@@ -432,7 +443,12 @@ pub fn entry_point() {
+                                 .begin(xr::ViewConfigurationType::PRIMARY_STEREO)
+                                 .unwrap();
+ 
+-                            core_context.resume();
++                            if platform == Platform::Quest3 && exts.fb_display_refresh_rate && !refresh_probed {
++                                refresh_probe = Some(refresh_probe::RefreshProbe::new(
++                                    refresh_rates.clone(), xr_session.get_display_refresh_rate().unwrap_or(90.0)));
++                            } else {
++                                core_context.resume();
++                            }
+ 
+                             passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
+ 
+@@ -440,6 +456,7 @@ pub fn entry_point() {
+                         }
+                         xr::SessionState::STOPPING => {
+                             session_running = false;
++                            refresh_probe = None;
+ 
+                             passthrough_layer = None;
+ 
+@@ -495,6 +512,20 @@ pub fn entry_point() {
+                     }
+                     ClientCoreEvent::StreamingStarted(config) => {
+                         let config = ParsedStreamConfig::new(&config);
++                        // The runtime may reject a previously confirmed mode after OS/thermal changes.
++                        // Abort this connection, keep the lobby usable and require a new selection/relaunch.
++                        if exts.fb_display_refresh_rate {
++                            if let Err(err) = xr_session.request_display_refresh_rate(config.refresh_rate_hint) {
++                                error!("[Q3PW_RATE] request={} rejected={err:?}", config.refresh_rate_hint);
++                                core_context.pause();
++                                lobby.update_hud_message("Refresh request rejected. Select a supported rate on PC and reopen this app.");
++                                continue;
++                            }
++                        }
++                        requested_refresh_rate = Some(config.refresh_rate_hint);
++                        error!("[Q3PW_RATE] request={} accepted=true runtime_hz={:?}", config.refresh_rate_hint,
++                            xr_session.get_display_refresh_rate());
++
+ 
+                         let context = StreamContext::new(
+                             Arc::clone(&core_context),
+@@ -512,6 +543,7 @@ pub fn entry_point() {
+                         stream_context = Some(context);
+                     }
+                     ClientCoreEvent::StreamingStopped => {
++                        requested_refresh_rate = None;
+                         if passthrough_layer.is_none() {
+                             passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
+                         }
+@@ -569,6 +601,8 @@ pub fn entry_point() {
+                 }
+             }
+ 
++            if let Some(probe) = &mut refresh_probe { probe.request_next(&xr_session); }
++
+             let frame_state = match xr_frame_waiter.wait() {
+                 Ok(state) => state,
+                 Err(e) => {
+@@ -579,6 +613,21 @@ pub fn entry_point() {
+             let frame_interval =
+                 Duration::from_nanos(frame_state.predicted_display_period.as_nanos() as _);
+             poll_interval = frame_interval;
++            if let Some(probe) = &mut refresh_probe {
++                if let Some(rates) = probe.observe(&xr_session, frame_state.predicted_display_period.as_nanos()) {
++                    error!("[Q3PW_CAPS] model=Quest3 rates={rates:?} runtime=true source=probe");
++                    core_context.set_refresh_rates(rates);
++                    refresh_probe = None;
++                    refresh_probed = true;
++                    core_context.resume();
++                }
++            }
++            if platform == Platform::Quest3 && last_display_period != frame_interval.as_nanos() {
++                last_display_period = frame_interval.as_nanos();
++                error!("[Q3PW_EFFECTIVE] requested={requested_refresh_rate:?} runtime_hz={:?} period_ns={last_display_period}",
++                    xr_session.get_display_refresh_rate());
++            }
++
+             if galaxy_xr && last_display_period != frame_interval.as_nanos() {
+                 last_display_period = frame_interval.as_nanos();
+                 info!("Galaxy XR runtime display period: {} ns", last_display_period);
+diff --git a/alvr/client_openxr/src/refresh_probe.rs b/alvr/client_openxr/src/refresh_probe.rs
+new file mode 100644
+index 0000000..ea61e78
+--- /dev/null
++++ b/alvr/client_openxr/src/refresh_probe.rs
+@@ -0,0 +1,86 @@
++//! Quest 3 HorizonOS v2.7 permits rates absent from enumeration. Never infer support
++//! from a property: require request success, runtime frequency and three frame periods.
++use openxr as xr;
++use std::{collections::VecDeque, time::Instant};
++
++pub struct RefreshProbe {
++    pending: VecDeque<f32>,
++    current: Option<(f32, Instant)>,
++    stable: usize,
++    confirmed: Vec<f32>,
++    enumerated: Vec<f32>,
++    restore: f32,
++    restoring: bool,
++}
++
++pub fn matches(target: f32, actual: f32, period_ns: i64) -> bool {
++    period_ns > 0 && target.is_finite() && actual.is_finite()
++        && (actual - target).abs() < 0.1
++        && (1e9 / period_ns as f64 - target as f64).abs() < target as f64 * 0.005
++}
++
++impl RefreshProbe {
++    pub fn new(enumerated: Vec<f32>, restore: f32) -> Self {
++        Self { pending: [90.0, 120.0, 144.0, 207.0, 240.0].into(), current: None,
++            stable: 0, confirmed: vec![], enumerated, restore, restoring: false }
++    }
++
++    // Called only while the session runs, before xrWaitFrame. No sleeps on render thread.
++    pub fn request_next(&mut self, session: &xr::Session<xr::OpenGlEs>) {
++        while self.current.is_none() {
++            let target = if let Some(rate) = self.pending.pop_front() { rate } else {
++                self.restoring = true;
++                self.restore
++            };
++            match session.request_display_refresh_rate(target) {
++                Ok(()) => {
++                    self.current = Some((target, Instant::now()));
++                    self.stable = 0;
++                }
++                Err(err) => {
++                    alvr_common::error!("[Q3PW_PROBE] request={target} confirmed=false reason=request_rejected error={err:?}");
++                    if self.restoring {
++                        self.current = Some((target, Instant::now()));
++                        break;
++                    }
++                }
++            }
++        }
++    }
++
++    pub fn observe(&mut self, session: &xr::Session<xr::OpenGlEs>, period_ns: i64) -> Option<Vec<f32>> {
++        let (target, start) = self.current?;
++        let actual = session.get_display_refresh_rate().ok();
++        if actual.is_some_and(|actual| matches(target, actual, period_ns)) { self.stable += 1; }
++        else { self.stable = 0; }
++        let confirmed = self.stable >= 3;
++        if !confirmed && start.elapsed().as_secs_f32() < 2.0 { return None; }
++        alvr_common::error!("[Q3PW_PROBE] request={target} confirmed={confirmed} runtime_hz={actual:?} period_ns={period_ns} restore={}", self.restoring);
++        self.current = None;
++        if self.restoring {
++            // Preserve ordinary enumerated modes; extended benchmark modes only after confirmation.
++            let mut rates: Vec<_> = self.enumerated.iter().copied()
++                .filter(|r| ![90.0, 120.0, 144.0, 207.0, 240.0].contains(r)).collect();
++            rates.extend(&self.confirmed);
++            rates.sort_by(f32::total_cmp);
++            rates.dedup();
++            alvr_common::error!("[Q3PW_VERIFIED] rates={:?}", self.confirmed);
++            return Some(rates);
++        }
++        if confirmed { self.confirmed.push(target); }
++        None
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::matches;
++    #[test]
++    fn runtime_and_period_must_agree() {
++        assert!(matches(207.0, 207.0, 4_830_918));
++        assert!(!matches(207.0, 207.0, 8_333_333));
++        assert!(!matches(207.0, 120.0, 4_830_918));
++        assert!(!matches(240.0, f32::NAN, 4_166_667));
++        assert!(!matches(240.0, 240.0, 0));
++    }
++}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..83dde08 100644
+index b87dfe9..8fb8e08 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
-@@ -107,7 +107,7 @@ impl StreamContext {
-         gfx_ctx: Rc<GraphicsContext>,
-         interaction_ctx: Arc<RwLock<InteractionContext>>,
-         platform: Platform,
--        config: ParsedStreamConfig,
-+        mut config: ParsedStreamConfig,
-     ) -> StreamContext {
-         interaction_ctx
-             .write()
-@@ -116,9 +116,15 @@ impl StreamContext {
+@@ -115,12 +115,6 @@ impl StreamContext {
+ 
          let xr_exts = xr_session.instance().exts();
  
-         if xr_exts.fb_display_refresh_rate.is_some() {
+-        if xr_exts.fb_display_refresh_rate.is_some() {
 -            xr_session
 -                .request_display_refresh_rate(config.refresh_rate_hint)
 -                .unwrap();
-+            if let Err(err) = xr_session.request_display_refresh_rate(config.refresh_rate_hint) {
-+                alvr_common::error!("[Q3PW_RATE] request={} rejected={err:?}", config.refresh_rate_hint);
-+                // Keep the lobby alive; reconnect after choosing an advertised rate.
-+                if let Ok(actual) = xr_session.get_display_refresh_rate() {
-+                    config.refresh_rate_hint = actual;
-+                }
-+            }
-+            alvr_common::error!("[Q3PW_RATE] negotiated={} actual={:?}", config.refresh_rate_hint,
-+                xr_session.get_display_refresh_rate());
-         }
- 
+-        }
+-
          let foveation_profile = if let Some(config) = &config.clientside_foveation_config {
+             if xr_exts.fb_swapchain_update_state.is_some()
+                 && xr_exts.fb_foveation.is_some()
 diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 index efb0f8e..c83a7e0 100644
 --- a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
@@ -431,7 +703,7 @@ index efb0f8e..c83a7e0 100644
      }
  }
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da..1ceea3a 100644
+index fc176da..48386bd 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -629,6 +629,11 @@ fn connection_pipeline(
@@ -440,7 +712,7 @@ index fc176da..1ceea3a 100644
  
 +    if !streaming_caps.supported_refresh_rates.iter().any(|rate|
 +        rate.is_finite() && *rate > 0.0 && (*rate - initial_settings.video.preferred_fps).abs() < 0.01) {
-+        con_bail!("Quest3-Pyrowave: requested {} Hz unsupported; runtime rates {:?}. Choose an advertised rate.",
++        con_bail!("Quest3-Pyrowave: requested {} Hz unsupported; client-confirmed rates {:?}. Reopen the app to probe rates; choose a confirmed mode.",
 +            initial_settings.video.preferred_fps, streaming_caps.supported_refresh_rates);
 +    }
      let fps = {

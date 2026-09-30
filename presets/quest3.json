@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "device": "Quest 3",
+  "pyrowave": {
+    "bitrates_mbps": [
+      600,
+      800,
+      1000,
+      1500,
+      2000
+    ],
+    "refresh_targets_hz": [
+      90,
+      120,
+      144,
+      207,
+      240
+    ],
+    "start_hz": 90,
+    "wavelet": "Cdf97",
+    "decode_paths": [
+      "Compute",
+      "Fragment",
+      "Auto"
+    ],
+    "requested_eye_resolution": [
+      1651,
+      1766
+    ],
+    "fixed_foveation": {
+      "center_size": [
+        0.2,
+        0.178
+      ],
+      "edge_ratio": [
+        3,
+        4
+      ],
+      "follow_gaze": false
+    },
+    "chroma": "444",
+    "range": "full",
+    "transport": "Udp",
+    "requires_confirmed_runtime_rate": true
+  },
+  "comparisons": {
+    "codecs": [
+      "H264",
+      "Hevc",
+      "AV1"
+    ],
+    "target_mbps": 200,
+    "matched_resolution_and_foveation": true
+  },
+  "experimental_240_hz": {
+    "requires_developer_display_scaling": true,
+    "full_resolution_panel_payload": false
+  },
+  "measurements_claimed": false
+}

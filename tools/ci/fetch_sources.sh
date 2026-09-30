@@ -11,6 +11,7 @@ set -eu
 : "${GRANITE_COMMIT:=842d9d5686ba8c799a7d34a78a68f98d6aeb5a68}"
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 dest=${1:?usage: fetch_sources.sh <dest>}
+[ ! -e "$dest/ALVR-20.13.0" ] && [ ! -e "$dest/pyrowave" ] || { echo "Destination already contains sources; use a new directory to preserve local work." >&2; exit 1; }
 mkdir -p "$dest"
 
 checkout() {  # <url> <dir> <commit>

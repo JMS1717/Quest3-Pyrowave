@@ -6,6 +6,7 @@ import random
 import re
 import subprocess
 import time
+import threading
 from pathlib import Path
 
 RATES = (90, 120, 144, 207, 240)
@@ -15,13 +16,18 @@ def supported(requested, rates):
     return any(math.isfinite(r) and r > 0 and abs(r - requested) < .01 for r in rates)
 
 def parse_capabilities(log):
-    matches = re.findall(r'\[Q3PW_CAPS\] model=(\S+) rates=\[([^]]*)\] runtime=(true|false)', log)
+    matches = list(re.finditer(r'\[Q3PW_CAPS\] model=(\S+) rates=\[([^]]*)\] runtime=(true|false)(?: source=(\w+))?', log))
     if not matches:
         raise ValueError('No Quest3-Pyrowave runtime capability log. Launch the built APK first.')
-    model, values, runtime = matches[-1]
+    model, values, runtime, source = matches[-1].groups()
     rates = [float(v.strip()) for v in values.split(',') if v.strip()]
-    return {'model': model, 'rates_hz': sorted(set(r for r in rates if math.isfinite(r) and r > 0)),
-            'refresh_extension': runtime == 'true', 'source': 'OpenXR runtime enumeration'}
+    begin = matches[-2].end() if len(matches)>1 else 0
+    probes = [{'requested_hz':float(hz), 'confirmed':ok=='true'} for hz,ok in
+        re.findall(r'\[Q3PW_PROBE\] request=([0-9.]+) confirmed=(true|false)', log[begin:matches[-1].start()])]
+    return {'model':model, 'rates_hz':sorted(set(r for r in rates if math.isfinite(r) and r>0)),
+            'refresh_extension':runtime=='true', 'source':'request_and_frame_period' if source=='probe' else 'enumeration',
+            'probe_results':probes}
+
 
 def plan(caps, repeats=3, seed=1717, seconds=60):
     if not caps.get('refresh_extension'):
@@ -30,7 +36,10 @@ def plan(caps, repeats=3, seed=1717, seconds=60):
     skipped = []
     for hz in RATES:
         if not supported(hz, caps['rates_hz']):
-            skipped.append({'requested_hz': hz, 'status': 'unsupported', 'reason': 'not advertised by runtime'})
+            skipped.append({'requested_hz':hz, 'status':'not_confirmed',
+                'reason':('startup probe did not confirm this mode' if caps.get('source')=='request_and_frame_period'
+                    else 'enumeration alone is incomplete; launch current APK for request/frame-period probing'),
+                'requires_display_scaling':hz>207})
             continue
         for mbps in BITRATES:
             for path in ('Compute', 'Fragment'):
@@ -83,13 +92,14 @@ def summarise(events, requested_hz=None):
     if len(summaries)>1 and 'packets_lost_total' in summaries[0]:
         delta=summaries[-1]['packets_lost_total']-summaries[0]['packets_lost_total']
         result['packet_loss_delta']=delta if delta>=0 else None
+    result['network_latency_definition']='ALVR residual estimate; PyroWave separate UDP timing can clamp this to zero. Not a direct one-way measurement.'
     result['gpu_decode_ms']=distribution([v for t in telemetry if t.get('pyrowave')
         for v in t['pyrowave'].get('gpu_decode_ms',[])])
     result['decode_to_fence_ms']=distribution([v for t in telemetry if t.get('pyrowave')
         for v in t['pyrowave'].get('fence_ms',[])])
     if requested_hz and graphs:
-        fps=result['metrics']['client_fps']['p50']
-        result['sustained_requested_fps']=fps>=requested_hz*.98
+        fps=result['metrics']['client_fps']
+        result['sustained_requested_fps']=fps is not None and fps['p01']>=requested_hz*.98
     return result
 
 def adb_run(adb, *args):
@@ -108,13 +118,33 @@ def snapshot(adb):
         except (RuntimeError,subprocess.TimeoutExpired) as e: result[key]={'value':None,'error':str(e)}
     return result
 
+def active_settings():
+    from .control import session
+    s=session();v=s['session_settings']['video'];o=s.get('openvr_config',{})
+    return {'codec':v['preferred_codec']['variant'], 'target_mbps':v['bitrate']['mode']['ConstantMbps'],
+        'requested_hz':v['preferred_fps'], 'decode_path':v['pyrowave']['decode_path']['variant'],
+        'configured_view_resolution':v['transcoding_view_resolution'],
+        'openvr':{k:o.get(k) for k in ('refresh_rate','eye_resolution_width','eye_resolution_height',
+            'target_eye_resolution_width','target_eye_resolution_height','pyrowave_enabled','pyrowave_decode_path','enable_foveated_encoding')}}
+
+def runtime_evidence(adb):
+    log=adb_run(adb,'logcat','-d','-t','20000')
+    # Store only app diagnostic records, never the complete system log.
+    return [line.split(']: ',1)[-1] for line in log.splitlines()
+        if re.search(r'\[Q3PW_(CAPS|PROBE|VERIFIED|RATE|EFFECTIVE)\]',line)]
+
 def capture(args):
     import websocket
     root=Path(args.out);root.mkdir(parents=True,exist_ok=False)
-    start=snapshot(args.adb);events=[];samples=[];error=None
+    start=snapshot(args.adb);events=[];samples=[];error=None;ws=None
+    settings_start=active_settings();stop=threading.Event();begin=time.monotonic()
+    def sample_device():
+        while not stop.is_set():
+            samples.append({'elapsed_s':time.monotonic()-begin,'state':snapshot(args.adb)})
+            stop.wait(5)
+    sampler=threading.Thread(target=sample_device,daemon=True);sampler.start()
     try:
-        ws=websocket.create_connection(args.events,header=['X-ALVR: true'],timeout=3)
-        begin=time.monotonic();next_sample=begin
+        ws=websocket.create_connection(args.events,header=['X-ALVR: true'],timeout=2)
         with (root/'events.jsonl').open('w',encoding='utf-8') as out:
             while time.monotonic()-begin<args.seconds:
                 try:
@@ -123,17 +153,21 @@ def capture(args):
                         row={'capture_elapsed_s':time.monotonic()-begin,'event':event}
                         events.append(row);out.write(json.dumps(row)+'\n')
                 except websocket.WebSocketTimeoutException: pass
-                if time.monotonic()>=next_sample:
-                    samples.append({'elapsed_s':time.monotonic()-begin, 'state':snapshot(args.adb)})
-                    next_sample=time.monotonic()+5
-        ws.close()
-    except Exception as e: error=str(e)
-    report=summarise(events,args.hz);report.update({'duration_requested_s':args.seconds,
-        'error':error,'state_start':start,'state_end':snapshot(args.adb),'device_samples':samples})
-    if error: report['status']='capture_failed'
+    except Exception as e:error=str(e)
+    finally:
+        stop.set();sampler.join(timeout=25)
+        if ws:ws.close()
+    report=summarise(events,args.hz);settings_end=active_settings()
+    report.update({'duration_requested_s':args.seconds,'elapsed_s':time.monotonic()-begin,
+        'error':error,'state_start':start,'state_end':snapshot(args.adb),'device_samples':samples,
+        'settings_start':settings_start,'settings_end':settings_end,'runtime_evidence':runtime_evidence(args.adb)})
+    if settings_start!=settings_end:report['status']='settings_changed_during_capture'
+    if settings_start['openvr'].get('refresh_rate')!=args.hz:report['status']='negotiated_rate_mismatch'
+    if error:report['status']='capture_failed'
     (root/'report.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
     print(json.dumps({'status':report['status'],'frames':report['frames'],'out':str(root)}))
     return 0 if report['status']=='measured' else 1
+
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='command',required=True)

@@ -54,6 +54,7 @@ jobs:
         run: |
           mkdir out
           cp "$XRWIRED_INPUTS/research/ALVR-20.13.0/build/alvr_client_android/alvr_client_android.apk" out/Quest3-Pyrowave-dev.apk
+          cp "$XRWIRED_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" out/
           cp tools/udptest/udprecv-android tools/pyroclient/pyroclient_test tools/pyroclient/libpyroclient.so "$XRWIRED_INPUTS/research/pyrowave/build-android/libpyrowave-shared.so" out/
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs out/Quest3-Pyrowave-dev.apk > out/APK-CERTIFICATE.txt
           (cd out && sha256sum * > SHA256SUMS.txt)

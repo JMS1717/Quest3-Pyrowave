@@ -14,12 +14,13 @@ python -m tools.quest3.bench capabilities --adb adb --out capabilities.json
 python -m tools.quest3.bench plan --capabilities capabilities.json --out plan.json
 ```
 
-The client logs `[Q3PW_CAPS]`, enumerates runtime rates, and logs refresh request rejection and
-the currently reported rate. The server refuses unadvertised requests instead of choosing the
-closest rate. The plan includes 90,120,144,207,240 Hz where advertised, records unsupported rates
-as **skipped**, randomizes Compute/Fragment Ã— bitrate Ã— three replicates, and adds hardware-codec
-baselines. A debug property value alone is not evidence of panel operation. Confirm actual runtime
-rate and frame period after a request; refresh changes may settle asynchronously.
+The client logs `[Q3PW_CAPS]` initially from enumeration and again with `source=probe` after
+its startup probe. Enumeration is incomplete on HorizonOS v2.7: absence does not mean unsupported.
+Each request must succeed and match the runtime frequency and three consecutive frame periods.
+Unconfirmed rates are labelled **not_confirmed**, never silently benchmarked at a fallback.
+The plan randomizes confirmed Compute/Fragment × bitrate × three replicates and hardware-codec
+baselines. Run the probe again after OS or display-scaling changes by reopening the app.
+See [refresh setup](REFRESH-RATES.md) for the distinct 240 Hz scaling experiment.
 
 ## Capture
 
@@ -29,7 +30,7 @@ python -m tools.quest3.bench capture --hz 90 --seconds 60 --adb adb --out result
 python -m tools.quest3.bench capture --hz 120 --seconds 300 --adb adb --out results/local/sustained-120
 ```
 
-Each capture writes per-frame events as JSONL and a JSON report with p50/p95/p99 timings, actual
+Each capture checks session settings before/after and writes per-frame events as JSONL and a JSON report with p50/p95/p99 timings, actual
 FPS/bitrate, timestamp gaps and headset telemetry. No streaming frames is a failed measurement,
 not a zero-latency result. GPU-clock/load sysfs counters are read without root; unavailable counters
 carry their error, never an invented value. Thermal-service and battery snapshots complement the
@@ -55,3 +56,35 @@ panel scanout. Do not mix GPU-only decode, decode-to-fence wall time and total d
 
 Raw captures are local and may identify a device or setup. Share reviewed reports, not unchecked
 logcat/session dumps. Original Galaxy XR data in `captures/` is upstream evidence only.
+
+## Controlled session setup
+
+```powershell
+python -m tools.quest3.control apply --codec PyroWave --mbps 600 --hz 90 --decode-path Compute --capabilities capabilities.json
+python -m tools.quest3.control restart
+```
+
+Refresh, resolution, codec and decode-path changes need a SteamVR restart/reconnection. Wait for
+streaming to settle before capture. The tool verifies persisted settings; the report separately
+records negotiated OpenVR configuration. A settings change during capture invalidates that cell.
+ALVR network time is a residual estimate and can clamp to zero with the separate PyroWave UDP
+transport; this is not evidence of zero network latency.
+
+## Network-only and correctness probes
+
+Build `tools\quest3\build_probes.cmd` in a Visual Studio x64 developer prompt. Deploy the Actions
+Android artifact's `udprecv-android` to `/data/local/tmp/q3pw/` and make it executable. Then:
+
+```powershell
+python -m tools.quest3.network --ip HEADSET_IP --out results/local/udp --seconds 10
+```
+
+The sender reports achieved Mbps, burst duration, skipped and late frames. Receiver deadlines are
+relative to its first packet, not synchronized one-way latency. These are network-only tests;
+record whether the VR app is active, because Wi-Fi locks and contention change the result.
+
+`pyroclient_test input.wave output.rgba 200 compute` and `fragment` compare decode paths on the same
+bitstream. Deploy `libpyroclient.so`, `libpyrowave-shared.so`, and `libc++_shared.so` alongside it and
+run with `LD_LIBRARY_PATH=.`. Score each readback against the PC PyroWave decoder, converted to
+full-range BT.709 RGBA, with `python -m tools.quest3.score --help`. Include warm-up policy and
+image dimensions; these offline results exclude VR compositor and network work.

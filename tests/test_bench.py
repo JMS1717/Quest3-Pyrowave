@@ -2,12 +2,20 @@ import unittest
 from tools.quest3.bench import parse_capabilities,plan,summarise,distribution
 
 class BenchTests(unittest.TestCase):
-    def test_high_rates_are_skipped_and_never_fabricated(self):
+    def test_unprobed_rates_are_not_declared_unsupported(self):
         caps=parse_capabilities('[Q3PW_CAPS] model=Quest3 rates=[72.0, 90.0, 120.0] runtime=true')
         p=plan(caps,repeats=1)
         self.assertEqual([r['requested_hz'] for r in p['skipped']],[144,207,240])
         self.assertEqual(len(p['cells']),26)
+        self.assertTrue(all(r['status']=='not_confirmed' for r in p['skipped']))
         self.assertTrue(all(c['requested_hz'] in (90,120) for c in p['cells']))
+    def test_probe_can_confirm_non_enumerated_rates(self):
+        caps=parse_capabilities('[Q3PW_CAPS] model=Quest3 rates=[90.0,120.0] runtime=true\n'
+            '[Q3PW_PROBE] request=207 confirmed=true runtime_hz=Some(207.0) period_ns=4830918\n'
+            '[Q3PW_CAPS] model=Quest3 rates=[90.0,120.0,207.0] runtime=true source=probe')
+        self.assertEqual(caps['source'],'request_and_frame_period')
+        self.assertEqual(caps['probe_results'],[{'requested_hz':207,'confirmed':True}])
+        self.assertIn(207,{c['requested_hz'] for c in plan(caps,1)['cells']})
     def test_newest_capability_record_wins(self):
         caps=parse_capabilities('[Q3PW_CAPS] model=Quest3 rates=[90.0] runtime=true\n[Q3PW_CAPS] model=Quest3 rates=[90.0, 144.0] runtime=true')
         self.assertEqual(caps['rates_hz'],[90,144])
