@@ -42,8 +42,8 @@ request remains separate from delivered frame rate; no full-resolution 120 fps c
 
 Fragment color conversion differs from compute by at most 1/255 on the full-resolution 4:2:0
 readback. A separate 1536×768 4:4:4/full-range pattern yields identical conversion readbacks.
-Compute remains the default wavelet path because prior detailed-pattern reconstruction checks
-found larger errors in Fragment. Changing only color conversion avoids that tradeoff.
+Compute remains the default wavelet path because detailed-pattern reconstruction checks
+find larger errors in Fragment. A new 4160×2208 4:2:0 stress pattern (8-pixel seeded color blocks, ramps, diagonal lines and labels; 1,041,612-byte bitstream) passed 30 complete decodes on each path, but Fragment differed from Compute by up to 52/39/56 RGB levels (mean absolute 0.41/0.28/0.43 levels). This is a same-bitstream comparison, not source-image PSNR. Changing only color conversion avoids that reconstruction tradeoff.
 
 ## Reproduce and verify
 
