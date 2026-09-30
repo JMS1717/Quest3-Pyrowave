@@ -31,7 +31,7 @@ def set_values(values):
     request({'SetValues':[{'path':[{'Name':s} for s in path.split('.')],'value':value}
         for path,value in values.items()]})
 
-def apply(codec, mbps, hz, path, caps):
+def apply(codec, mbps, hz, path, caps, chroma="420"):
     if not caps.get('refresh_extension') or not supported(hz,caps['rates_hz']):
         raise ValueError(f'{hz} Hz unsupported by provided runtime capabilities')
     if hz>120 and caps.get('source')!='request_and_frame_period':
@@ -47,8 +47,10 @@ def apply(codec, mbps, hz, path, caps):
             'session_settings.video.foveated_encoding.enabled':False,
             'session_settings.video.clientside_foveation.enabled':False}
     if codec=='PyroWave':
+        if chroma not in ('420','444'): raise ValueError('Invalid chroma')
         if path not in ('Auto','Compute','Fragment'): raise ValueError('Invalid decode path')
-        values.update({'session_settings.video.pyrowave.transport.variant':'Udp',
+        values.update({'session_settings.video.pyrowave.chroma_444':chroma=='444',
+                       'session_settings.video.pyrowave.transport.variant':'Udp',
                        'session_settings.video.pyrowave.wavelet.variant':'Cdf97',
                        'session_settings.video.pyrowave.decode_path.variant':path})
     set_values(values)
@@ -57,7 +59,7 @@ def apply(codec, mbps, hz, path, caps):
         node=current
         for field in key.split('.'):node=node[field]
         if node!=value:raise RuntimeError(f'Setting rejected: {key}')
-    return {'codec':codec,'mbps':mbps,'requested_hz':hz,'decode_path':path,'verified':True}
+    return {'codec':codec,'mbps':mbps,'requested_hz':hz,'decode_path':path,'chroma':chroma,'verified':True}
 
 def restart(steamvr,streamer=None):
     # The HTTP request shuts the server down; only the dashboard's UI also launches it.
@@ -89,9 +91,9 @@ def main():
     c=sub.add_parser('apply');c.add_argument('--codec',choices=['PyroWave','H264','Hevc','AV1'],default='PyroWave')
     c.add_argument('--mbps',type=int,required=True);c.add_argument('--hz',type=int,required=True)
     c.add_argument('--decode-path',choices=['Auto','Compute','Fragment'],default='Auto');c.add_argument('--capabilities',required=True)
-    a=parser.parse_args()
+    c.add_argument('--chroma',choices=['420','444'],default='420');a=parser.parse_args()
     if a.cmd=='restart':restart(a.steamvr,a.streamer);return
-    if a.cmd=='apply':print(json.dumps(apply(a.codec,a.mbps,a.hz,a.decode_path,json.loads(Path(a.capabilities).read_text()))));return
+    if a.cmd=='apply':print(json.dumps(apply(a.codec,a.mbps,a.hz,a.decode_path,json.loads(Path(a.capabilities).read_text()),a.chroma)));return
     s=session();v=s['session_settings']['video'];clients=s.get('client_connections',{})
     print(json.dumps({'video':{key:v.get(key) for key in ('preferred_codec','preferred_fps','bitrate','pyrowave','transcoding_view_resolution')},
                      'client_count':len(clients)}))

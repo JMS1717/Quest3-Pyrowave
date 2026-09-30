@@ -201,7 +201,7 @@ index 7cead7b..da37ea0 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..dfc5576 100644
+index ae00ce8..f273896 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -209,7 +209,7 @@ index ae00ce8..dfc5576 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.2"
++version = "20.13.0-quest3.pyro.3"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -345,7 +345,7 @@ index 7765bb4..08fb2e4 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..1002b7f 100644
+index a0fd36f..6a207fb 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -4,6 +4,7 @@ mod graphics;
@@ -481,7 +481,7 @@ index a0fd36f..1002b7f 100644
 +                    core_context.resume();
 +                }
 +            }
-+            if platform == Platform::Quest3 && ((last_display_period - frame_interval.as_nanos()).abs() > frame_interval.as_nanos() / 200
++            if platform == Platform::Quest3 && (last_display_period.abs_diff(frame_interval.as_nanos()) > frame_interval.as_nanos() / 200
 +                || last_rate_log.elapsed().as_secs() >= 1) {
 +                last_rate_log = std::time::Instant::now();
 +                last_display_period = frame_interval.as_nanos();
@@ -633,7 +633,7 @@ index b87dfe9..fc3b3cf 100644
              if xr_exts.fb_swapchain_update_state.is_some()
                  && xr_exts.fb_foveation.is_some()
 diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
-index efb0f8e..ff7504b 100644
+index efb0f8e..4d6f9a4 100644
 --- a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 @@ -323,7 +323,7 @@ pub fn streaming_profile_schema() -> PresetSchemaNode {
@@ -693,7 +693,7 @@ index efb0f8e..ff7504b 100644
              .map(|o| o.display_name.as_str())
              .collect::<Vec<_>>();
 -        assert_eq!(names, ["PyroWave 4:4:4 (Recommended)", "ALVR H.264 (tuned)"]);
-+        assert_eq!(names, ["Quest 3 PyroWave 600 Mbps", "Quest 3 PyroWave 800 Mbps", "Quest 3 PyroWave 1000 Mbps", "Quest 3 PyroWave 1500 Mbps", "Quest 3 PyroWave 2000 Mbps", "H.264 comparison", "HEVC comparison", "AV1 comparison"]);
++        assert_eq!(names, ["Quest 3 PyroWave 300 Mbps", "Quest 3 PyroWave 400 Mbps", "Quest 3 PyroWave 600 Mbps", "Quest 3 PyroWave 800 Mbps", "Quest 3 PyroWave 1000 Mbps", "Quest 3 PyroWave 1500 Mbps", "Quest 3 PyroWave 2000 Mbps", "H.264 comparison", "HEVC comparison", "AV1 comparison"]);
          assert_eq!(schema.default_option_display_name, beta::RECOMMENDED_PROFILE);
          assert_eq!(
              schema.options[0].description.as_deref(),
@@ -745,8 +745,34 @@ index efb0f8e..ff7504b 100644
          assert_eq!(schema.default_option_display_name, "90 Hz");
      }
  }
+diff --git a/alvr/dashboard/src/dashboard/components/test_report.rs b/alvr/dashboard/src/dashboard/components/test_report.rs
+index 3be9319..1aba238 100644
+--- a/alvr/dashboard/src/dashboard/components/test_report.rs
++++ b/alvr/dashboard/src/dashboard/components/test_report.rs
+@@ -255,8 +255,8 @@ fn effective_settings(settings: &Settings, session_settings: &Value) -> Value {
+     };
+     json!({
+         "profile": beta::matching_profile(session_settings).unwrap_or("custom"),
+-        "codec": if pyrowave { "PyroWave 4:4:4" } else { "H.264" },
+-        "chroma": if pyrowave { "4:4:4" } else { "4:2:0" },
++        "codec": format!("{:?}", video.preferred_codec),
++        "chroma": if pyrowave && video.pyrowave.chroma_444 { "4:4:4" } else { "4:2:0" },
+         "render_per_eye": render,
+         "render_scale_percent": render_percent,
+         "refresh_hz": video.preferred_fps,
+@@ -549,8 +549,8 @@ mod tests {
+         let r = report(&Subjective::default());
+         assert_eq!(r["schema_version"], 1);
+         assert_eq!(r["settings"]["profile"], beta::RECOMMENDED_PROFILE);
+-        assert_eq!(r["settings"]["codec"], "PyroWave 4:4:4");
+-        assert_eq!(r["settings"]["chroma"], "4:4:4");
++        assert_eq!(r["settings"]["codec"], "PyroWave");
++        assert_eq!(r["settings"]["chroma"], "4:2:0");
+         assert_eq!(r["settings"]["render_per_eye"], json!([2131, 2304]));
+         assert_eq!(r["settings"]["render_scale_percent"], 60.0);
+         assert_eq!(r["settings"]["pyrowave"]["transport"], "UDP");
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da..2374b73 100644
+index fc176da..befd918 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -133,25 +133,15 @@ fn openvr_config_with_env(
@@ -784,7 +810,15 @@ index fc176da..2374b73 100644
  
      let mut brightness = 0.0;
      let mut contrast = 0.0;
-@@ -629,6 +619,11 @@ fn connection_pipeline(
+@@ -241,6 +231,7 @@ fn openvr_config_with_env(
+         pyrowave_udp: pyrowave.udp,
+         pyrowave_wavelet_53: pyrowave.wavelet_53,
+         pyrowave_decode_path: pyrowave.decode_path as u32,
++        pyrowave_chroma_444: settings.video.pyrowave.chroma_444,
+         _controller_profile,
+         _server_impl_debug: settings.extra.logging.debug_groups.server_impl,
+         _client_impl_debug: settings.extra.logging.debug_groups.client_impl,
+@@ -629,6 +620,11 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -796,7 +830,7 @@ index fc176da..2374b73 100644
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +644,7 @@ fn connection_pipeline(
+@@ -649,18 +645,7 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -829,6 +863,30 @@ index 64f93a6..d38c74e 100644
  
          self.last_face_data = face_data;
      }
+diff --git a/alvr/server_openvr/cpp/alvr_server/Settings.cpp b/alvr/server_openvr/cpp/alvr_server/Settings.cpp
+index e729ffa..6184758 100644
+--- a/alvr/server_openvr/cpp/alvr_server/Settings.cpp
++++ b/alvr/server_openvr/cpp/alvr_server/Settings.cpp
+@@ -65,6 +65,7 @@ void Settings::Load() {
+         m_pyrowaveEnabled = config.get("pyrowave_enabled").get<bool>();
+         m_pyrowaveUdp = config.get("pyrowave_udp").get<bool>();
+         m_pyrowaveWavelet53 = config.get("pyrowave_wavelet_53").get<bool>();
++        m_pyrowaveChroma444 = config.get("pyrowave_chroma_444").get<bool>();
+         m_pyrowaveDecodePath = (int32_t)config.get("pyrowave_decode_path").get<int64_t>();
+         m_h264Profile = (int32_t)config.get("h264_profile").get<int64_t>();
+         m_rateControlMode = (uint32_t)config.get("rate_control_mode").get<int64_t>();
+diff --git a/alvr/server_openvr/cpp/alvr_server/Settings.h b/alvr/server_openvr/cpp/alvr_server/Settings.h
+index 7bed823..e32e814 100644
+--- a/alvr/server_openvr/cpp/alvr_server/Settings.h
++++ b/alvr/server_openvr/cpp/alvr_server/Settings.h
+@@ -44,6 +44,7 @@ public:
+     bool m_pyrowaveEnabled = false;
+     bool m_pyrowaveUdp = false;
+     bool m_pyrowaveWavelet53 = false;
++    bool m_pyrowaveChroma444 = false;
+     int m_pyrowaveDecodePath = 0; // 0 auto, 1 fragment, 2 compute
+     int m_h264Profile;
+     bool m_use10bitEncoder;
 diff --git a/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp b/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp
 index 5aae602..2f68f66 100644
 --- a/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp
@@ -864,8 +922,253 @@ index 5aae602..2f68f66 100644
  
      try {
          Debug("Try to use VideoEncoderNVENC.\n");
+diff --git a/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp b/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
+index 3b23460..668f121 100644
+--- a/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
++++ b/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
+@@ -5,6 +5,7 @@
+ #include "alvr_server/bindings.h"
+ 
+ #include <cstdlib>
++#include <cstring>
+ 
+ extern uint64_t g_DriverTestMode;
+ 
+@@ -552,9 +553,9 @@ bool FrameRender::Startup() {
+         m_pStagingTexture = yuvTexture;
+     }
+ 
+-    // PyroWave path: three full-resolution YCbCr planes, 4:4:4. Built after FFE so the planes
+-    // carry the foveated image, and instead of -- not alongside -- the NV12 pass, which PyroWave
+-    // cannot consume correctly (importing a 2-plane NV12 texture misreads chroma).
++    // Uniform BT.709 planar conversion. Optional 4:2:0 uses a centered 2x2 box
++    // average in gamma-encoded chroma space; luma and eye geometry are unchanged.
++    // Separate R8 imports avoid the upstream NV12 external-memory chroma issue.
+     enablePlanarYuv = PyroWaveEnabled() && !Settings::Instance().m_enableHdr;
+     if (enablePlanarYuv) {
+         uint32_t texWidth, texHeight;
+@@ -647,6 +648,37 @@ bool FrameRender::Startup() {
+             planarTargets,
+             planarParamBuffer.Get()
+         );
++        if (!Settings::Instance().m_pyrowaveChroma444) {
++            if ((texWidth % 4) || (texHeight % 2)) {
++                throw MakeException("Stereo 4:2:0 requires even per-eye width and even height.");
++            }
++            // Use integer loads so each chroma sample averages exactly one 2x2
++            // block. The eye boundary is aligned, so no block mixes the eyes.
++            const char* shader = R"(
++                Texture2D<float> source : register(t0);
++                float main(float4 position : SV_Position) : SV_Target {
++                    int2 p = int2(position.xy) * 2;
++                    return 0.25 * (source.Load(int3(p, 0)) +
++                        source.Load(int3(p + int2(1, 0), 0)) +
++                        source.Load(int3(p + int2(0, 1), 0)) +
++                        source.Load(int3(p + int2(1, 1), 0)));
++                })";
++            ComPtr<ID3DBlob> code, errors;
++            OK_OR_THROW(D3DCompile(shader, strlen(shader), "Quest3Chroma420", nullptr,
++                nullptr, "main", "ps_5_0", D3DCOMPILE_OPTIMIZATION_LEVEL3, 0,
++                code.GetAddressOf(), errors.GetAddressOf()), L"4:2:0 shader compile failed.");
++            std::vector<uint8_t> cso((uint8_t*)code->GetBufferPointer(),
++                (uint8_t*)code->GetBufferPointer() + code->GetBufferSize());
++            planeDesc.Width = texWidth / 2;
++            planeDesc.Height = texHeight / 2;
++            for (int i = 0; i < 2; i++) {
++                OK_OR_THROW(m_pD3DRender->GetDevice()->CreateTexture2D(&planeDesc, nullptr,
++                    m_chroma420Textures[i].ReleaseAndGetAddressOf()), L"4:2:0 texture creation failed.");
++                m_chroma420Pipelines[i] = std::make_unique<RenderPipeline>(m_pD3DRender->GetDevice());
++                m_chroma420Pipelines[i]->Initialize({m_planarTextures[i + 1].Get()},
++                    quadVertexShader.Get(), cso, m_chroma420Textures[i].Get());
++            }
++        }
+     }
+ 
+     Debug("Staging Texture created\n");
+@@ -992,6 +1024,12 @@ bool FrameRender::RenderFrame(
+ 
+     if (enablePlanarYuv) {
+         m_planarPipeline->Render();
++        for (auto& pipeline : m_chroma420Pipelines) {
++            if (pipeline) pipeline->Render();
++        }
++        ID3D11ShaderResourceView* none = nullptr;
++        m_pD3DRender->GetContext()->PSSetShaderResources(0, 1, &none);
++        m_pD3DRender->GetContext()->OMSetRenderTargets(0, nullptr, nullptr);
+     }
+ 
+     m_pD3DRender->GetContext()->Flush();
+@@ -1003,7 +1041,8 @@ ComPtr<ID3D11Texture2D> FrameRender::GetTexture() { return m_pStagingTexture; }
+ 
+ void FrameRender::GetPlanarTextures(ID3D11Texture2D* out[3]) {
+     for (int i = 0; i < 3; i++) {
+-        out[i] = m_planarTextures[i].Get();
++        out[i] = i > 0 && m_chroma420Textures[i - 1]
++            ? m_chroma420Textures[i - 1].Get() : m_planarTextures[i].Get();
+     }
+ }
+ 
+diff --git a/alvr/server_openvr/cpp/platform/win32/FrameRender.h b/alvr/server_openvr/cpp/platform/win32/FrameRender.h
+index 8136dda..8a395c8 100644
+--- a/alvr/server_openvr/cpp/platform/win32/FrameRender.h
++++ b/alvr/server_openvr/cpp/platform/win32/FrameRender.h
+@@ -69,7 +69,7 @@ public:
+ 
+     ComPtr<ID3D11Texture2D> GetTexture();
+ 
+-    /// The three full-resolution YCbCr planes PyroWave encodes from, or nulls when the PyroWave
++    /// The three YCbCr planes (half-sized chroma when 4:2:0 is selected) PyroWave encodes from, or nulls when the PyroWave
+     /// path is off. Shared textures, so they can be imported by a Vulkan encoder.
+     void GetPlanarTextures(ID3D11Texture2D* out[3]);
+     bool HasPlanarTextures() const { return enablePlanarYuv; }
+@@ -125,6 +125,8 @@ private:
+     std::unique_ptr<d3d_render_utils::RenderPipelineYUV> m_yuvPipeline;
+ 
+     ComPtr<ID3D11Texture2D> m_planarTextures[3];
++    ComPtr<ID3D11Texture2D> m_chroma420Textures[2];
++    std::unique_ptr<d3d_render_utils::RenderPipeline> m_chroma420Pipelines[2];
+     std::unique_ptr<d3d_render_utils::RenderPipelinePlanar> m_planarPipeline;
+     bool enablePlanarYuv = false;
+ 
+diff --git a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
+index fc0632b..6e1dfc9 100644
+--- a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
++++ b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
+@@ -29,6 +29,7 @@ static bool UdpEnabled() { return Settings::Instance().m_pyrowaveUdp; }
+ // CDF 5/3 when the dashboard (or ALVR_PYROWAVE_WAVELET=53) asks for it; CDF 9/7 otherwise.
+ // Carried to the client as byte 13 of the decoder config so both sides agree by construction.
+ static bool Legall53() { return Settings::Instance().m_pyrowaveWavelet53; }
++static bool Chroma444() { return Settings::Instance().m_pyrowaveChroma444; }
+ 
+ VideoEncoderPyroWave::VideoEncoderPyroWave(
+     std::shared_ptr<CD3DRender> pD3DRender, int width, int height, ID3D11Texture2D* planes[3]
+@@ -122,7 +123,7 @@ void VideoEncoderPyroWave::Initialize() {
+     encoderInfo.device = m_pyroDevice;
+     encoderInfo.width = m_renderWidth;
+     encoderInfo.height = m_renderHeight;
+-    encoderInfo.chroma = PYROWAVE_CHROMA_SUBSAMPLING_444;
++    encoderInfo.chroma = Chroma444() ? PYROWAVE_CHROMA_SUBSAMPLING_444 : PYROWAVE_CHROMA_SUBSAMPLING_420;
+     encoderInfo.wavelet = Legall53() ? PYROWAVE_WAVELET_CDF53 : PYROWAVE_WAVELET_CDF97;
+     PYRO_OR_THROW(pyrowave_encoder_create(&encoderInfo, &m_pyroEncoder));
+     Info("[PYROWAVE] wavelet CDF %s\n", Legall53() ? "5/3" : "9/7");
+@@ -140,7 +141,7 @@ void VideoEncoderPyroWave::Initialize() {
+         uint32_t w = (uint32_t)m_renderWidth, h = (uint32_t)m_renderHeight;
+         memcpy(cfg, &w, 4);
+         memcpy(cfg + 4, &h, 4);
+-        cfg[8] = 1;  // this encoder is 4:4:4
++        cfg[8] = Chroma444() ? 1 : 0;
+         cfg[9] = Settings::Instance().m_useFullRangeEncoding ? 1 : 0;
+         cfg[10] = UdpEnabled() ? 1 : 0;
+         const int fps = Settings::Instance().m_refreshRate > 0 ? Settings::Instance().m_refreshRate : 72;
+@@ -151,9 +152,9 @@ void VideoEncoderPyroWave::Initialize() {
+         SetVideoConfigNals(cfg, sizeof cfg, 3 /* CodecType::PyroWave */);
+         static const char* kDecodePaths[] = { "auto", "fragment", "compute" };
+         const int path = Settings::Instance().m_pyrowaveDecodePath;
+-        Info("[PYROWAVE] decoder config registered: %ux%u 4:4:4 %s range, %s, deadline %u us, "
++        Info("[PYROWAVE] decoder config registered: %ux%u %s %s range, %s, deadline %u us, "
+              "CDF %s, decode path %s\n",
+-             w, h, cfg[9] ? "full" : "limited", cfg[10] ? "UDP" : "TCP", (unsigned)deadlineUs,
++             w, h, cfg[8] ? "4:4:4" : "4:2:0", cfg[9] ? "full" : "limited", cfg[10] ? "UDP" : "TCP", (unsigned)deadlineUs,
+              cfg[13] ? "5/3" : "9/7", (path >= 0 && path <= 2) ? kDecodePaths[path] : "auto");
+     }
+ 
+@@ -215,9 +216,9 @@ void VideoEncoderPyroWave::Initialize() {
+     // stream is neither H.264 nor HEVC whatever it is called.
+     BitstreamTap::Start(m_codec, m_renderWidth, m_renderHeight);
+ 
+-    Warn("[PYROWAVE] encoder ready: %dx%d 4:4:4, three imported R8 planes\n",
++    Warn("[PYROWAVE] encoder ready: %dx%d %s, three imported R8 planes\n",
+          m_renderWidth,
+-         m_renderHeight);
++         m_renderHeight, Chroma444() ? "4:4:4" : "4:2:0");
+ }
+ 
+ void VideoEncoderPyroWave::Shutdown() {
+@@ -313,19 +314,23 @@ void VideoEncoderPyroWave::DumpPlanes() {
+     // as a 29 dB luma loss -- lifted blacks and banding -- in an encoder that is actually exact.
+     // Declare what the data really is.
+     if (first) {
+-        fprintf(out, "YUV4MPEG2 W%d H%d F%u:1 Ip A1:1 XCOLORRANGE=%s C444\n",
++        fprintf(out, "YUV4MPEG2 W%d H%d F%u:1 Ip A1:1 XCOLORRANGE=%s C%s\n",
+                 m_renderWidth,
+                 m_renderHeight,
+                 m_framerate ? m_framerate : 72u,
+-                Settings::Instance().m_useFullRangeEncoding ? "FULL" : "LIMITED");
++                Settings::Instance().m_useFullRangeEncoding ? "FULL" : "LIMITED",
++                Chroma444() ? "444" : "420jpeg");
+     }
+     fprintf(out, "FRAME\n");
+ 
+     auto* context = m_pD3DRender->GetContext();
+     std::vector<uint8_t> planes[3];
+     for (int i = 0; i < 3; i++) {
+-        planes[i].resize((size_t)m_renderWidth * m_renderHeight);
+-        context->CopyResource(m_dumpStaging.Get(), m_planes[i].Get());
++        const int width = i && !Chroma444() ? m_renderWidth / 2 : m_renderWidth;
++        const int height = i && !Chroma444() ? m_renderHeight / 2 : m_renderHeight;
++        D3D11_BOX box = {0, 0, 0, (UINT)width, (UINT)height, 1};
++        planes[i].resize((size_t)width * height);
++        context->CopySubresourceRegion(m_dumpStaging.Get(), 0, 0, 0, 0, m_planes[i].Get(), 0, &box);
+         D3D11_MAPPED_SUBRESOURCE mapped;
+         if (FAILED(context->Map(m_dumpStaging.Get(), 0, D3D11_MAP_READ, 0, &mapped))) {
+             Error("[PYROWAVE] failed to map plane %d for dump\n", i);
+@@ -333,10 +338,10 @@ void VideoEncoderPyroWave::DumpPlanes() {
+             return;
+         }
+         const uint8_t* src = static_cast<const uint8_t*>(mapped.pData);
+-        for (int row = 0; row < m_renderHeight; row++) {
++        for (int row = 0; row < height; row++) {
+             const uint8_t* line = src + (size_t)row * mapped.RowPitch;
+-            fwrite(line, 1, (size_t)m_renderWidth, out);
+-            memcpy(planes[i].data() + (size_t)row * m_renderWidth, line, (size_t)m_renderWidth);
++            fwrite(line, 1, (size_t)width, out);
++            memcpy(planes[i].data() + (size_t)row * width, line, (size_t)width);
+         }
+         context->Unmap(m_dumpStaging.Get(), 0);
+     }
+@@ -362,12 +367,12 @@ void VideoEncoderPyroWave::DumpPlanes() {
+         pyrowave_cpu_buffer cpu = {};
+         for (int i = 0; i < 3; i++) {
+             cpu.data[i] = planes[i].data();
+-            cpu.row_stride_in_bytes[i] = (size_t)m_renderWidth;
+-            cpu.plane_size_in_bytes[i] = (size_t)m_renderWidth * m_renderHeight;
++            cpu.row_stride_in_bytes[i] = i && !Chroma444() ? m_renderWidth / 2 : m_renderWidth;
++            cpu.plane_size_in_bytes[i] = planes[i].size();
+         }
+         cpu.width = m_renderWidth;
+         cpu.height = m_renderHeight;
+-        cpu.format = PYROWAVE_CPU_BUFFER_FORMAT_YUV444P;
++        cpu.format = Chroma444() ? PYROWAVE_CPU_BUFFER_FORMAT_YUV444P : PYROWAVE_CPU_BUFFER_FORMAT_YUV420P;
+ 
+         pyrowave_rate_control rc = {};
+         rc.maximum_bitstream_size = m_bitrateBps && m_framerate
+@@ -387,7 +392,7 @@ void VideoEncoderPyroWave::DumpPlanes() {
+                 std::string wavePath = m_dumpPath + ".cpu.wave";
+                 FILE* wave = nullptr;
+                 if (fopen_s(&wave, wavePath.c_str(), "wb") == 0 && wave) {
+-                    const int32_t params[8] = { m_renderWidth, m_renderHeight, 1, 1,
++                    const int32_t params[8] = { m_renderWidth, m_renderHeight, Chroma444() ? 0 : 1, Chroma444() ? 1 : 0,
+                                                 Settings::Instance().m_useFullRangeEncoding ? 1 : 0,
+                                                 (int32_t)(m_framerate ? m_framerate : 72), 1, 0 };
+                     fwrite("PYROWAVE", 1, 8, wave);
+diff --git a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.h b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.h
+index a0356d3..230c751 100644
+--- a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.h
++++ b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.h
+@@ -23,9 +23,8 @@
+ // was 89 ms against a 60 ms target.
+ //
+ // Unlike the other encoders this one does not consume the composited RGB texture. FrameRender
+-// renders three full-resolution YCbCr planes (4:4:4) into shared textures, and this imports those
+-// directly as Vulkan images -- no colour conversion or copy here. 4:4:4 because PyroWave can
+-// afford it (~1.5x decode) and it removes chroma subsampling as a loss term entirely.
++// renders three YCbCr planes (4:2:0 or 4:4:4) into shared textures, and this imports those
++// directly as Vulkan images. The decoder configuration explicitly signals the selected chroma mode.
+ class VideoEncoderPyroWave : public VideoEncoder {
+ public:
+     VideoEncoderPyroWave(
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
-index 84100dc..ba66028 100644
+index 84100dc..6987aa7 100644
 --- a/alvr/session/src/beta.rs
 +++ b/alvr/session/src/beta.rs
 @@ -8,12 +8,12 @@ use serde_json as json;
@@ -875,8 +1178,8 @@ index 84100dc..ba66028 100644
 -pub const RECOMMENDED_PROFILE: &str = "PyroWave 4:4:4 (Recommended)";
 -pub const RECOMMENDED_SUBTITLE: &str = "Full-chroma experimental wireless VR streaming";
 -pub const H264_PROFILE: &str = "ALVR H.264 (tuned)";
-+pub const RECOMMENDED_PROFILE: &str = "Quest 3 PyroWave 600 Mbps";
-+pub const RECOMMENDED_SUBTITLE: &str = "Full-frame 4:4:4, foveation disabled, 90 Hz starting point";
++pub const RECOMMENDED_PROFILE: &str = "Quest 3 PyroWave 300 Mbps";
++pub const RECOMMENDED_SUBTITLE: &str = "Full-frame 4:2:0, foveation disabled, 90 Hz starting point";
 +pub const H264_PROFILE: &str = "H.264 comparison";
  
 -/// Galaxy XR panel, per eye, as reported by `dumpsys display` (7104x3840 for both).
@@ -913,7 +1216,7 @@ index 84100dc..ba66028 100644
          assign("video.max_buffering_frames", json::json!(1.5)),
          assign("video.enforce_server_frame_pacing", true.into()),
          assign("video.encoder_config.rate_control_mode.variant", "Cbr".into()),
-@@ -71,33 +72,34 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
+@@ -71,33 +72,36 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
          assign("video.encoder_config.nvenc.quality_preset.variant", "P1".into()),
          assign("connection.stream_protocol.variant", "Tcp".into()),
          assign("connection.packet_size", 65000.into()),
@@ -947,12 +1250,14 @@ index 84100dc..ba66028 100644
 -    ]
 +    let mut profiles = Vec::new();
 +    for (name, mbps) in [
-+        (RECOMMENDED_PROFILE, 600), ("Quest 3 PyroWave 800 Mbps", 800),
++        (RECOMMENDED_PROFILE, 300), ("Quest 3 PyroWave 400 Mbps", 400),
++        ("Quest 3 PyroWave 600 Mbps", 600), ("Quest 3 PyroWave 800 Mbps", 800),
 +        ("Quest 3 PyroWave 1000 Mbps", 1000), ("Quest 3 PyroWave 1500 Mbps", 1500),
 +        ("Quest 3 PyroWave 2000 Mbps", 2000),
 +    ] {
 +        let mut assignments = shared("PyroWave", mbps, 90.0, 50);
 +        assignments.extend([
++            assign("video.pyrowave.chroma_444", false.into()),
 +            assign("video.pyrowave.transport.variant", "Udp".into()),
 +            assign("video.pyrowave.wavelet.variant", "Cdf97".into()),
 +            assign("video.pyrowave.decode_path.variant", "Auto".into()),
@@ -969,7 +1274,15 @@ index 84100dc..ba66028 100644
  }
  
  #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-@@ -221,15 +223,7 @@ pub fn pyrowave_effective(
+@@ -186,6 +190,7 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
+ #[derive(Clone, Debug, PartialEq)]
+ pub struct PyroWaveEffective {
+     pub enabled: bool,
++    pub chroma_444: bool,
+     pub udp: bool,
+     pub wavelet_53: bool,
+     pub decode_path: PyroWaveDecodePath,
+@@ -221,18 +226,11 @@ pub fn pyrowave_effective(
      let wavelet_53 = read("ALVR_PYROWAVE_WAVELET")
          .map(|v| v == "53")
          .unwrap_or(video.pyrowave.wavelet == PyroWaveWavelet::Cdf53);
@@ -986,8 +1299,23 @@ index 84100dc..ba66028 100644
  
      PyroWaveEffective {
          enabled,
++        chroma_444: video.pyrowave.chroma_444,
+         udp,
+         wavelet_53,
+         decode_path: video.pyrowave.decode_path,
+@@ -255,8 +253,9 @@ impl fmt::Display for PyroWaveEffective {
+         };
+         write!(
+             f,
+-            "PyroWave effective config: chroma=4:4:4 transport={} wavelet=CDF {} \
++            "PyroWave effective config: chroma={} transport={} wavelet=CDF {} \
+              decode_path={decode_path} follow_gaze={} overrides={}",
++            if self.chroma_444 { "4:4:4" } else { "4:2:0" },
+             if self.udp { "UDP" } else { "TCP" },
+             if self.wavelet_53 { "5/3" } else { "9/7" },
+             if self.follow_gaze { "on" } else { "off" },
 diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
-index 985a4d0..421e5ca 100644
+index 985a4d0..d497492 100644
 --- a/alvr/session/src/beta_tests.rs
 +++ b/alvr/session/src/beta_tests.rs
 @@ -31,7 +31,7 @@ fn video_shows_only_codec_experiment_controls() {
@@ -1040,7 +1368,7 @@ index 985a4d0..421e5ca 100644
      let s = default_settings();
      assert_eq!(s.video.preferred_codec, CodecType::PyroWave);
 -    assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(400)));
-+    assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(600)));
++    assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(300)));
      assert_eq!(s.video.preferred_fps, 90.0);
      for size in [
          &s.video.transcoding_view_resolution,
@@ -1090,7 +1418,7 @@ index 985a4d0..421e5ca 100644
      let profiles = streaming_profiles();
 -    assert_eq!(profiles.len(), 2);
 -    assert_eq!(profiles[0].name, "PyroWave 4:4:4 (Recommended)");
-+    assert_eq!(profiles.len(), 8);
++    assert_eq!(profiles.len(), 10);
 +    assert_eq!(profiles[0].name, RECOMMENDED_PROFILE);
      assert_eq!(
          profiles[0].subtitle,
@@ -1155,17 +1483,42 @@ index 985a4d0..421e5ca 100644
      assert!(e.overrides.is_empty());
  }
  
-@@ -321,7 +302,7 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
+@@ -302,8 +283,7 @@ fn research_env_overrides_win_and_are_reported() {
+         vec![
+             "ALVR_PYROWAVE",
+             "ALVR_PYROWAVE_UDP",
+-            "ALVR_PYROWAVE_WAVELET",
+-            "ALVR_GAZE_FOVEATION"
++            "ALVR_PYROWAVE_WAVELET"
+         ]
+     );
+ }
+@@ -320,8 +300,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
+     let line = pyrowave_effective(&default_settings(), &env(&[])).to_string();
      assert_eq!(
          line,
-         "PyroWave effective config: chroma=4:4:4 transport=UDP wavelet=CDF 9/7 \
+-        "PyroWave effective config: chroma=4:4:4 transport=UDP wavelet=CDF 9/7 \
 -         decode_path=compute follow_gaze=on overrides=none"
++        "PyroWave effective config: chroma=4:2:0 transport=UDP wavelet=CDF 9/7 \
 +         decode_path=auto follow_gaze=off overrides=none"
      );
  }
  
+diff --git a/alvr/session/src/lib.rs b/alvr/session/src/lib.rs
+index d7d0dbb..037ad45 100644
+--- a/alvr/session/src/lib.rs
++++ b/alvr/session/src/lib.rs
+@@ -120,6 +120,8 @@ pub struct OpenvrConfig {
+     pub pyrowave_wavelet_53: bool,
+     #[serde(default)]
+     pub pyrowave_decode_path: u32,
++    #[serde(default)]
++    pub pyrowave_chroma_444: bool,
+ 
+     // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
+     // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99..7c5e56f 100644
+index 1009e99..c8dc142 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -1186,7 +1539,7 @@ index 1009e99..7c5e56f 100644
          max_throughput_mbps: Switch<u64>,
  
          #[schema(strings(display_name = "Minimum bitrate"))]
-@@ -582,10 +582,8 @@ pub enum CodecType {
+@@ -582,14 +582,12 @@ pub enum CodecType {
      // HEVC and AV1 stay in the enum (session files and the wire format know them) but are not
      // offered: on the Galaxy XR the hardware HEVC decoder measured ~8x slower than H.264.
      #[schema(strings(display_name = "HEVC"))]
@@ -1197,6 +1550,11 @@ index 1009e99..7c5e56f 100644
      AV1 = 2,
      // Intra-only wavelet codec on Vulkan compute; see patches/README.md. Frames go through our
      // own decoder on the client, not MediaCodec.
+-    #[schema(strings(display_name = "PyroWave 4:4:4"))]
++    #[schema(strings(display_name = "PyroWave"))]
+     PyroWave = 3,
+ }
+ 
 @@ -618,7 +616,6 @@ pub enum PyroWaveWavelet {
  #[schema(gui = "button_group")]
  pub enum PyroWaveDecodePath {
@@ -1205,7 +1563,19 @@ index 1009e99..7c5e56f 100644
      Auto = 0,
      Compute = 2,
      Fragment = 1,
-@@ -640,7 +637,7 @@ pub struct PyroWaveConfig {
+@@ -626,6 +623,11 @@ pub enum PyroWaveDecodePath {
+ 
+ #[derive(SettingsSchema, Serialize, Deserialize, Clone, PartialEq, Debug)]
+ pub struct PyroWaveConfig {
++    #[serde(default)]
++    #[schema(strings(display_name = "Full chroma (4:4:4)", help = "Off: 4:2:0, half-width and half-height chroma with full-resolution luma. On: 4:4:4. Restart SteamVR after changing this."))]
++    #[schema(flag = "steamvr-restart")]
++    pub chroma_444: bool,
++
+     #[schema(strings(
+         help = "UDP sends each frame as independent datagrams and drops late ones; TCP retransmits. UDP is the measured operating point."
+     ))]
+@@ -640,7 +642,7 @@ pub struct PyroWaveConfig {
  
      #[schema(strings(
          display_name = "Headset decode path",
@@ -1214,7 +1584,22 @@ index 1009e99..7c5e56f 100644
      ))]
      #[schema(flag = "steamvr-restart")]
      pub decode_path: PyroWaveDecodePath,
-@@ -811,11 +808,8 @@ pub struct VideoConfig {
+@@ -799,23 +801,20 @@ pub struct VideoConfig {
+     pub bitrate: BitrateConfig,
+ 
+     #[schema(strings(
+-        help = "PyroWave 4:4:4 is an intra-only wavelet codec decoded on the headset GPU. H.264 is ALVR's hardware path, tuned for this headset."
++        help = "PyroWave is an intra-only wavelet codec decoded on the headset GPU. H.264 is ALVR's hardware path, tuned for this headset."
+     ))]
+     #[schema(flag = "steamvr-restart")]
+     pub preferred_codec: CodecType,
+ 
+     #[schema(strings(
+-        display_name = "PyroWave 4:4:4",
+-        notice = "Chroma: 4:4:4 (full chroma). Every frame keeps full colour resolution; this is fixed, not a setting. These options apply only when the codec is PyroWave 4:4:4."
++        display_name = "PyroWave",
++        notice = "4:2:0 is the default; enable Full chroma for 4:4:4. Both keep full-resolution luma and uniform rendering. Bitrate is a separate limit."
+     ))]
      #[schema(flag = "steamvr-restart")]
      pub pyrowave: PyroWaveConfig,
  
@@ -1228,7 +1613,7 @@ index 1009e99..7c5e56f 100644
      pub foveated_encoding: Switch<FoveatedEncodingConfig>,
  
      #[schema(flag = "steamvr-restart")]
-@@ -1663,15 +1657,15 @@ pub struct Settings {
+@@ -1663,15 +1662,15 @@ pub struct Settings {
  }
  
  pub fn session_settings_default() -> SettingsDefault {
@@ -1247,16 +1632,24 @@ index 1009e99..7c5e56f 100644
              },
          },
      };
-@@ -1749,7 +1743,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1749,7 +1748,7 @@ pub fn session_settings_default() -> SettingsDefault {
              bitrate: BitrateConfigDefault {
                  gui_collapsed: false,
                  mode: BitrateModeDefault {
 -                    ConstantMbps: 400,
-+                    ConstantMbps: 600,
++                    ConstantMbps: 300,
                      Adaptive: BitrateModeAdaptiveDefault {
                          gui_collapsed: true,
                          saturation_multiplier: 0.95,
-@@ -1803,7 +1797,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1796,6 +1795,7 @@ pub fn session_settings_default() -> SettingsDefault {
+                 variant: CodecTypeDefaultVariant::PyroWave,
+             },
+             pyrowave: PyroWaveConfigDefault {
++                chroma_444: false,
+                 transport: PyroWaveTransportDefault {
+                     variant: PyroWaveTransportDefaultVariant::Udp,
+                 },
+@@ -1803,7 +1803,7 @@ pub fn session_settings_default() -> SettingsDefault {
                      variant: PyroWaveWaveletDefaultVariant::Cdf97,
                  },
                  decode_path: PyroWaveDecodePathDefault {
@@ -1265,7 +1658,7 @@ index 1009e99..7c5e56f 100644
                  },
              },
              encoder_config: EncoderConfigDefault {
-@@ -1901,7 +1895,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1901,7 +1901,7 @@ pub fn session_settings_default() -> SettingsDefault {
                  }
              },
              foveated_encoding: SwitchDefault {
@@ -1274,7 +1667,7 @@ index 1009e99..7c5e56f 100644
                  content: FoveatedEncodingConfigDefault {
                      force_enable: false,
                      center_size_x: 0.20,
-@@ -1910,7 +1904,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1910,7 +1910,7 @@ pub fn session_settings_default() -> SettingsDefault {
                      center_shift_y: 0.0,
                      edge_ratio_x: 3.,
                      edge_ratio_y: 4.,
@@ -1283,7 +1676,7 @@ index 1009e99..7c5e56f 100644
                  },
              },
              clientside_foveation: SwitchDefault {
-@@ -2179,7 +2173,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2179,7 +2179,7 @@ pub fn session_settings_default() -> SettingsDefault {
                  content: DiscoveryConfigDefault {
                      // Beta: no pairing step. The pre-release protocol ID already keeps stock
                      // ALVR clients out; turn this off to approve each headset by hand.
@@ -1292,7 +1685,7 @@ index 1009e99..7c5e56f 100644
                  },
              },
              wired_client_type: ClientFlavorDefault {
-@@ -2211,7 +2205,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2211,7 +2211,7 @@ pub fn session_settings_default() -> SettingsDefault {
              server_recv_buffer_bytes: socket_buffer.clone(),
              client_send_buffer_bytes: socket_buffer.clone(),
              client_recv_buffer_bytes: socket_buffer,

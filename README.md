@@ -1,10 +1,10 @@
 # Quest3-Pyrowave
 
-Experimental **Meta Quest 3 PCVR streaming with PyroWave 4:4:4**, built on ALVR.
+Experimental **Meta Quest 3 PCVR streaming with PyroWave 4:2:0 and optional 4:4:4**, built on ALVR.
 Maintained by [JMS1717](https://github.com/JMS1717). Designed to investigate low latency on
-same-room Wi-Fi 6E and 2.5 GbE, with **600 / 800 / 1000 / 1500 / 2000 Mbps** targets.
+same-room Wi-Fi 6E and 2.5 GbE, with **300 / 400 / 600 / 800 / 1000 / 1500 / 2000 Mbps** targets.
 
-**Development status:** Clean APK and Windows streamer builds pass. Real Quest 3 PCVR streamed in the earlier build. The current full-frame build disables all foveation and awaits maintainer in-headset acceptance.
+**Development status:** Earlier clean APK and Windows streamer builds passed. The current 4:2:0 build is being prepared for manual acceptance. Real Quest 3 PCVR streamed in the earlier build. The current full-frame build disables all foveation and awaits maintainer in-headset acceptance.
 Reviewed initial evidence is in [results](results/INITIAL-EVIDENCE.md). Those earlier foveated results do not validate the current full-frame build. High bitrate
 presets are experiment targets, not promises of usable throughput or quality.
 
@@ -19,8 +19,9 @@ This is a port and research project, not a claim to authorship of those componen
 1. Build or download the **Quest3-Pyrowave-Android** and **Quest3-Pyrowave-Windows** Actions artifacts.
 2. Follow [build/install instructions](docs/BUILD.md). Install the distinct Quest APK, register the
    streamer driver in SteamVR and explicitly trust your headset in the dashboard.
-3. Start at **Quest 3 PyroWave 600 Mbps**, **90 Hz**, CDF 9/7 and **Auto** decode. This uses uniform
-   full-frame rendering and full chroma at the encoded resolution. Foveation is disabled throughout this fork.
+3. Start at **Quest 3 PyroWave 300 Mbps**, **90 Hz**, CDF 9/7 and **Auto** decode. This uses uniform
+   full-frame rendering with 4:2:0 chroma at the encoded resolution. Enable **Full chroma (4:4:4)**
+   in PyroWave settings and restart SteamVR for full chroma. Foveation is disabled throughout this fork.
 4. Follow [the benchmark protocol](docs/BENCHMARKING.md) before raising bitrate, resolution or refresh.
 
 | Requested refresh | Frame budget | Policy |
@@ -38,7 +39,7 @@ consecutive frame periods, then restores its original rate before connecting. Th
 only the resulting capabilities. Older OS versions fail extended requests gracefully.
 
 Above 207 Hz, developer display scaling is required and reduces fine-detail quality; see
-[extended refresh setup](docs/REFRESH-RATES.md). Scaling is separate from 4:4:4 chroma.
+[extended refresh setup](docs/REFRESH-RATES.md). Scaling is separate from chroma subsampling.
 Runtime acceptance, effective refresh, and delivered frame rate remain separate measurements.
 The APK never changes system refresh properties or forces GPU clocks.
 
@@ -49,7 +50,7 @@ The APK never changes system refresh properties or forces GPU clocks.
 - Removes Android XR required manifest features and uses ALVR's existing Quest OpenXR/tracking path.
 - Uniform full-frame rendering: server and client foveation are disabled, including stale sessions.
 - Conservative 50% panel-relative starting size (requested 1032×1104, aligned 1024×1088 per eye); adjustable render size.
-- 600â€“2000 Mbps constant bitrate controls and one-click profiles; server pacing remains enabled.
+- 300â€“2000 Mbps constant bitrate controls and one-click profiles; server pacing remains enabled.
 - Quest 3 Auto defaults to Compute, with explicit Compute/Fragment controls for manual comparison.
 - PyroWave selected before the AMD AMF fallback chain, so an AMD PC cannot silently select AMF
   when PyroWave is requested. Vulkan/D3D11 external-memory and fence support is checked at startup.
@@ -60,7 +61,7 @@ The APK never changes system refresh properties or forces GPU clocks.
 
 | Codec | Client decode | Chroma in this path | Main tradeoff |
 |---|---|---|---|
-| PyroWave | Vulkan GPU wavelet + RGBA hardware-buffer bridge | 4:4:4 | Intra-only and high bandwidth; shares GPU/thermal budget with VR rendering |
+| PyroWave | Vulkan GPU wavelet + RGBA hardware-buffer bridge | 4:2:0 default; optional 4:4:4 | Intra-only and high bandwidth; shares GPU/thermal budget with VR rendering |
 | H.264 | Android MediaCodec | 4:2:0 | Hardware path, lower network demand; refresh/bitrate limits must be measured |
 | HEVC | Android MediaCodec | 4:2:0 | Hardware path and efficient compression; driver-dependent decode latency |
 | AV1 | Android MediaCodec on supported devices | 4:2:0 | Efficient compression; needs compatible PC encoder and headset decoder |

@@ -3,6 +3,8 @@
   "device": "Quest 3",
   "pyrowave": {
     "bitrates_mbps": [
+      300,
+      400,
       600,
       800,
       1000,
@@ -27,13 +29,18 @@
       1032,
       1104
     ],
-    "chroma": "444",
+    "chroma": "420",
     "range": "full",
     "transport": "Udp",
     "requires_confirmed_runtime_rate": true,
     "foveated_encoding": false,
     "clientside_foveation": false,
-    "quest3_auto_decode_path": "Compute"
+    "quest3_auto_decode_path": "Compute",
+    "chroma_options": [
+      "420",
+      "444"
+    ],
+    "start_mbps": 300
   },
   "comparisons": {
     "codecs": [

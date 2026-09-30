@@ -65,6 +65,8 @@ jobs:
       - name: Package development build
         run: |
           mkdir out
+          python3 tools/ci/package_licenses.py "$XRWIRED_INPUTS/research" /tmp/quest3-notices/LICENSES
+          (cd /tmp/quest3-notices && zip -qr "$GITHUB_WORKSPACE/out/LICENSES.zip" LICENSES)
           cp "$XRWIRED_INPUTS/research/ALVR-20.13.0/build/alvr_client_android/alvr_client_android.apk" out/Quest3-Pyrowave-dev.apk
           cp "$XRWIRED_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" out/
           cp tools/udptest/udprecv-android tools/pyroclient/pyroclient_test tools/pyroclient/libpyroclient.so "$XRWIRED_INPUTS/research/pyrowave/build-android/libpyrowave-shared.so" out/
@@ -96,6 +98,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory out | Out-Null
+          python tools/ci/package_licenses.py "$env:XRWIRED_INPUTS/research" "$env:XRWIRED_INPUTS/research/ALVR-20.13.0/build/alvr_streamer_windows/LICENSES"
           Compress-Archive "$env:XRWIRED_INPUTS/research/ALVR-20.13.0/build/alvr_streamer_windows/*" out/Quest3-Pyrowave-Windows.zip
           (Get-FileHash out/Quest3-Pyrowave-Windows.zip).Hash.ToLower() + '  Quest3-Pyrowave-Windows.zip' | Set-Content out/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4

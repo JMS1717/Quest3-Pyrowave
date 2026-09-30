@@ -123,9 +123,10 @@ def active_settings():
     s=session();v=s['session_settings']['video'];o=s.get('openvr_config',{})
     return {'codec':v['preferred_codec']['variant'], 'target_mbps':v['bitrate']['mode']['ConstantMbps'],
         'requested_hz':v['preferred_fps'], 'decode_path':v['pyrowave']['decode_path']['variant'],
+        'chroma':'444' if v['pyrowave'].get('chroma_444',False) else '420',
         'configured_view_resolution':v['transcoding_view_resolution'],
         'openvr':{k:o.get(k) for k in ('refresh_rate','eye_resolution_width','eye_resolution_height',
-            'target_eye_resolution_width','target_eye_resolution_height','pyrowave_enabled','pyrowave_decode_path','enable_foveated_encoding')}}
+            'target_eye_resolution_width','target_eye_resolution_height','pyrowave_enabled','pyrowave_decode_path','pyrowave_chroma_444','enable_foveated_encoding')}}
 
 def runtime_evidence(adb):
     log=adb_run(adb,'logcat','-d','-t','20000')

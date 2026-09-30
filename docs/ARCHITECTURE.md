@@ -29,7 +29,7 @@ Fragment remains an explicit manual experiment. CDF 5/3 forces Compute.
 
 Foveated encoding and client foveation are disabled in server/client logic, defaults and presets.
 The first full-frame configuration requests 1032×1104 per eye, aligned to 1024×1088 by ALVR,
-with 600 Mbps/90 Hz/CDF 9/7/Compute. Raise uniform resolution manually if desired.
+with 300 Mbps/90 Hz/CDF 9/7/Compute/4:2:0. Raise uniform resolution manually if desired.
 
 ## Ordered next changes
 
@@ -49,3 +49,18 @@ with 600 Mbps/90 Hz/CDF 9/7/Compute. Raise uniform resolution manually if desire
 The above redesigns are **proposals**, not implemented optimizations or performance claims. High
 refresh fundamentally needs the entire application and runtime to meet 8.33/6.94/4.83/4.17 ms budgets.
 HorizonOS v2.7 can accept rates absent from enumeration; this client verifies requests and frame periods.
+
+## Chroma selection
+
+4:2:0 is the default. Windows first converts RGB to three BT.709 R8 planes, then
+GPU passes average each 2x2 Cb/Cr block into half-width/half-height shared R8 textures.
+Luma keeps its full extent. Aligned per-eye widths prevent chroma averaging across
+the stereo seam. The encoder imports each plane with its actual extent and signals
+chroma in byte 8 of the decoder configuration. The Quest decoder already supports
+both modes; it allocates smaller chroma targets for 4:2:0.
+
+This halves the uncompressed component sample count, not necessarily compressed
+bitrate. A fixed bitrate remains a separate frame-size budget. 300/400 Mbps presets
+provide lower budgets; 600â€“2000 Mbps targets remain available. No savings, latency
+or visual quality measurements are claimed for this new path. A future fused
+conversion could avoid writing full-sized chroma intermediates.
