@@ -46,7 +46,7 @@ def plan(caps, repeats=3, seed=1717, seconds=60):
                 for rep in range(repeats):
                     cells.append({'id': f'pyro-{hz}-{mbps}-{path.lower()}-r{rep+1}',
                         'codec': 'PyroWave', 'requested_hz': hz, 'mbps': mbps,
-                        'decode_path': path, 'wavelet': 'Cdf97', 'replicate': rep+1,
+                        'decode_path': path, 'wavelet': 'Cdf97', 'chroma': '420', 'replicate': rep+1,
                         'seconds': seconds, 'status': 'planned', 'frame_budget_ms': 1000/hz,
                         'budget_bytes_per_frame': mbps*1e6/8/hz})
         for codec in ('H264', 'Hevc', 'AV1'):

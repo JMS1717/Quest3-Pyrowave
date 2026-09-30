@@ -26,6 +26,8 @@ def main():
     args.destination.mkdir(parents=True, exist_ok=True)
     for name in ('LICENSE', 'NOTICE', 'sources.lock.json'):
         shutil.copyfile(repo / name, args.destination / name)
+    if (repo / 'licenses').is_dir():
+        shutil.copytree(repo / 'licenses', args.destination / 'additional-components', dirs_exist_ok=True)
     for name in ('ALVR-20.13.0', 'pyrowave'):
         collect(args.sources / name, args.destination / name)
     # Include notices from the populated Rust dependency cache as a conservative

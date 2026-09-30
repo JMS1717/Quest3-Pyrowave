@@ -33,7 +33,7 @@ with 1000 Mbps/120 Hz/CDF 9/7/Compute/4:2:0. Dimensions are padded upward to cod
 
 ## Ordered next changes
 
-1. Measure an end-to-end 90 Hz baseline, then 120 Hz, at the smallest useful render size. Record
+1. Manually evaluate the default 1000 Mbps / 120 Hz / full-resolution configuration, then vary one setting at a time. Record
    actual encoded dimensions after alignment.
 2. Measure receive packet pressure separately from decode. Android's existing `recvmmsg` path is
    retained; increasing datagram size beyond MTU would trade packet cost for IP fragmentation loss.
