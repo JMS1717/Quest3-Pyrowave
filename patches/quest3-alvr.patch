@@ -285,6 +285,678 @@ index 90a7c0a..b91feea 100644
      pub fn resume(&self) {
          dbg_client_core!("resume");
  
+diff --git a/alvr/client_core/src/video_decoder/mod.rs b/alvr/client_core/src/video_decoder/mod.rs
+index 4d2e699..42133ae 100644
+--- a/alvr/client_core/src/video_decoder/mod.rs
++++ b/alvr/client_core/src/video_decoder/mod.rs
+@@ -4,6 +4,8 @@ mod android;
+ mod pyrowave;
+ #[cfg(target_os = "android")]
+ mod pyrowave_udp;
++#[cfg(any(target_os = "android", test))]
++mod pyrowave_udp_assembly;
+ pub mod telemetry;
+ 
+ use alvr_common::anyhow::Result;
+diff --git a/alvr/client_core/src/video_decoder/pyrowave_udp.rs b/alvr/client_core/src/video_decoder/pyrowave_udp.rs
+index f8a6cfe..b3cfe52 100644
+--- a/alvr/client_core/src/video_decoder/pyrowave_udp.rs
++++ b/alvr/client_core/src/video_decoder/pyrowave_udp.rs
+@@ -1,49 +1,15 @@
+-//! PyroWave over UDP: our own socket, straight into the decoder.
+-//!
+-//! One thread owns the socket and the decoder, so every Vulkan call and every packet push stays
+-//! on one thread. Datagrams are read in batches (`recvmmsg` with `MSG_WAITFORONE`: return as soon
+-//! as one is there -- without that flag the call waits for the whole batch and every frame's
+-//! tail arrives a frame late, measured) and pushed into PyroWave one by one; the codec
+-//! sequences frames itself. A frame is decoded the moment PyroWave reports it complete. A frame
+-//! still incomplete one deadline after its first datagram is decoded partial (missing blocks
+-//! blur) or dropped if nothing usable arrived; a newer frame arriving first supersedes it the
+-//! same way. Nothing is ever retransmitted.
+-use super::{
+-    dist, frame_decision, parse_pyrowave_config, skip_for_newer, FrameDecision, FrameSlot,
+-    PyroWaveConfig, VideoDecoderConfig,
+-};
+-use alvr_common::{
+-    anyhow::{anyhow, Result},
+-    info,
+-};
++//! Dedicated UDP reception plus a single GPU worker. Only whole frames are presented.
++use super::{dist, parse_pyrowave_config, pyrowave_udp_assembly::{Assembler, AssemblyCounters, CompleteFrame}, FrameSlot, VideoDecoderConfig};
++use alvr_common::{anyhow::{anyhow, Result}, parking_lot::{Condvar, Mutex}};
+ use alvr_packets::{PyroWavePacketHeader, PYROWAVE_UDP_HEADER_LEN, PYROWAVE_UDP_PORT};
+-use std::{
+-    collections::VecDeque,
+-    ffi::{c_void, CString},
+-    net::UdpSocket,
+-    os::fd::AsRawFd,
+-    sync::{
+-        atomic::{AtomicBool, Ordering},
+-        Arc,
+-    },
+-    thread::{self, JoinHandle},
+-    time::{Duration, Instant},
+-};
++use std::{ffi::{c_void, CString}, net::UdpSocket, os::fd::AsRawFd,
++    sync::{atomic::{AtomicBool, AtomicU64, Ordering}, Arc}, thread::{self, JoinHandle}, time::{Duration, Instant}};
+ 
+ #[repr(C)]
+-struct PyroClient {
+-    _private: [u8; 0],
+-}
+-
++struct PyroClient { _private: [u8; 0] }
+ #[repr(C)]
+ #[derive(Default, Clone, Copy)]
+-struct FrameInfo {
+-    decode_ms: f64,
+-    convert_ms: f64,
+-    total_ms: f64,
+-    complete: i32,
+-}
+-
++struct FrameInfo { decode_ms: f64, convert_ms: f64, total_ms: f64, complete: i32 }
+ extern "C" {
+     fn pyroclient_create_ex(width: u32, height: u32, chroma444: i32, full_range: i32, ring: u32, wavelet: i32, decode_path: i32) -> *mut PyroClient;
+     fn pyroclient_push_packet(c: *mut PyroClient, data: *const u8, size: usize) -> i32;
+@@ -51,332 +17,175 @@ extern "C" {
+     fn pyroclient_clear(c: *mut PyroClient);
+     fn pyroclient_destroy(c: *mut PyroClient);
+ }
+-
+-/// The TCP video stream carries nothing in this mode; anything that does arrive is ignored.
+ pub struct VideoDecoderSink;
+-
+ impl VideoDecoderSink {
+-    pub fn push_frame_nal(&mut self, _timestamp: Duration, _data: &[u8]) -> Result<bool> {
+-        Ok(true)
+-    }
++    pub fn push_frame_nal(&mut self, _timestamp: Duration, _data: &[u8]) -> Result<bool> { Ok(true) }
++}
++#[derive(Default)]
++struct Inbox {
++    frame: Mutex<Option<CompleteFrame>>,
++    ready: Condvar,
++    assembly: Mutex<AssemblyCounters>,
++    skipped: AtomicU64,
+ }
+-
+ pub struct VideoDecoderSource {
+-    running: Arc<AtomicBool>,
+-    thread: Option<JoinHandle<()>>,
+-    decoded: Arc<FrameSlot>,
++    running: Arc<AtomicBool>, inbox: Arc<Inbox>, threads: Vec<JoinHandle<()>>, decoded: Arc<FrameSlot>,
+ }
+-
+ impl VideoDecoderSource {
+     pub fn dequeue_frame(&mut self) -> Option<(Duration, *mut c_void)> {
+         self.decoded.take().map(|(ts, ptr)| (ts, ptr as *mut c_void))
+     }
+ }
+-
+ impl Drop for VideoDecoderSource {
+     fn drop(&mut self) {
+-        self.running.store(false, Ordering::Relaxed);
+-        if let Some(t) = self.thread.take() {
+-            t.join().ok();
+-        }
++        self.running.store(false, Ordering::Relaxed); self.inbox.ready.notify_all();
++        for thread in self.threads.drain(..) { thread.join().ok(); }
+     }
+ }
+-
+-/// Straight to logcat. Once the ALVR connection is up, the client's `info!` lines are forwarded
+-/// to the server and never reach logcat, which is how two runs went by with the receiver's
+-/// counters invisible. These are the lines the harness keeps per segment.
+-#[cfg(target_os = "android")]
+ fn alog(msg: &str) {
+-    extern "C" {
+-        fn __android_log_write(prio: i32, tag: *const std::ffi::c_char, text: *const std::ffi::c_char) -> i32;
+-    }
+-    let tag = CString::new("PYROWAVE-UDP").unwrap();
+-    let text = CString::new(msg).unwrap_or_default();
+-    unsafe { __android_log_write(4 /* ANDROID_LOG_INFO */, tag.as_ptr(), text.as_ptr()) };
+-}
+-#[cfg(not(target_os = "android"))]
+-fn alog(msg: &str) {
+-    info!("[PYROWAVE-UDP] {msg}");
+-}
+-
+-fn recv(fd: i32, msgs: &mut [libc::mmsghdr], flags: i32) -> isize {
+-    unsafe {
+-        libc::recvmmsg(fd, msgs.as_mut_ptr(), msgs.len() as libc::c_uint, flags, std::ptr::null_mut()) as isize
+-    }
++    extern "C" { fn __android_log_write(prio: i32, tag: *const std::ffi::c_char, text: *const std::ffi::c_char) -> i32; }
++    let tag = CString::new("PYROWAVE-UDP").unwrap(); let text = CString::new(msg).unwrap_or_default();
++    unsafe { __android_log_write(4, tag.as_ptr(), text.as_ptr()) };
+ }
+-
+ const BATCH: usize = 64;
+ const DATAGRAM: usize = 2048;
+-const SOCKET_RECV_BUFFER: libc::c_int = 16 << 20;
+-
+-/// The frame being assembled.
+-struct Pending {
+-    timestamp_ns: u64,
+-    first_seen: Instant,
+-    count: u16,
+-    received: u32,
+-    decodable: bool,
+-}
+-
+-#[derive(Default)]
+-struct Counters {
+-    complete: u64,
+-    partial: u64,
+-    dropped: u64,
+-    superseded: u64,
+-    /// Complete frames thrown away because a newer one was already queued behind them.
+-    skipped: u64,
+-    stale_packets: u64,
+-    foreign: u64,
+-    decode_failures: u64,
+-    total_ms: f64,
+-    last: FrameInfo,
+-    /// Per-frame GPU timings since the last report, for the distribution line.
+-    decode_samples: Vec<f32>,
+-    convert_samples: Vec<f32>,
+-    fence_samples: Vec<f32>,
+-    /// Frame count at the last report, so a loop iteration that completes no frame does not
+-    /// print the same report again (it did: every 720th count was logged ~100 times).
+-    last_report_frames: u64,
+-}
+-
+-
+ fn open_socket() -> Result<UdpSocket> {
+     let socket = UdpSocket::bind(("0.0.0.0", PYROWAVE_UDP_PORT))?;
+     unsafe {
+-        let v = SOCKET_RECV_BUFFER;
+-        libc::setsockopt(
+-            socket.as_raw_fd(),
+-            libc::SOL_SOCKET,
+-            libc::SO_RCVBUF,
+-            &v as *const _ as *const c_void,
+-            std::mem::size_of_val(&v) as libc::socklen_t,
+-        );
++        let size: libc::c_int = 16 << 20;
++        libc::setsockopt(socket.as_raw_fd(), libc::SOL_SOCKET, libc::SO_RCVBUF,
++            &size as *const _ as *const c_void, std::mem::size_of_val(&size) as libc::socklen_t);
+     }
+-    // Short timeout so the deadline tick runs even when nothing arrives.
+     socket.set_read_timeout(Some(Duration::from_millis(2)))?;
+     Ok(socket)
+ }
+-
+ pub fn video_decoder_split(
+     config: VideoDecoderConfig,
+     report_frame_decoded: impl Fn(Result<Duration>) + Send + Sync + 'static,
+     report_video_packet_received: impl Fn(Duration) + Send + Sync + 'static,
+ ) -> Result<(VideoDecoderSink, VideoDecoderSource)> {
+-    let cfg: PyroWaveConfig = parse_pyrowave_config(&config.config_buffer)?;
+-    let decoded = Arc::new(FrameSlot::default());
+-    let running = Arc::new(AtomicBool::new(true));
+-
+-    let thread = thread::spawn({
+-        let decoded = Arc::clone(&decoded);
+-        let running = Arc::clone(&running);
++    let cfg = parse_pyrowave_config(&config.config_buffer)?;
++    let socket = open_socket()?;
++    let decoded = Arc::new(FrameSlot::default()); let running = Arc::new(AtomicBool::new(true));
++    let inbox = Arc::new(Inbox::default());
++    let report_frame_decoded = Arc::new(report_frame_decoded);
++    super::telemetry::start(cfg.width, cfg.height);
++    let receive_thread = thread::spawn({
++        let running = Arc::clone(&running); let inbox = Arc::clone(&inbox);
++        let report_frame_decoded = Arc::clone(&report_frame_decoded);
+         move || {
+-            let socket = match open_socket() {
+-                Ok(s) => s,
+-                Err(e) => {
+-                    report_frame_decoded(Err(anyhow!("PyroWave UDP socket: {e}")));
+-                    return;
+-                }
+-            };
+-            let client = unsafe {
+-                pyroclient_create_ex(cfg.width, cfg.height, cfg.chroma444 as i32, cfg.full_range as i32, 3, cfg.wavelet as i32, cfg.decode_path as i32)
+-            };
+-            if client.is_null() {
+-                report_frame_decoded(Err(anyhow!("pyroclient_create_ex failed (see logcat pyroclient)")));
+-                return;
+-            }
+-            alog(&format!(
+-                "listening on {PYROWAVE_UDP_PORT}, {}x{}, deadline {:?}, CDF {}",
+-                cfg.width, cfg.height, cfg.deadline, cfg.wavelet
+-            ));
+-
+-            let fd = socket.as_raw_fd();
++            let fd = socket.as_raw_fd(); let mut assembler = Assembler::new(cfg.deadline);
+             let mut bufs = vec![[0u8; DATAGRAM]; BATCH];
+-            let mut iovs: Vec<libc::iovec> = bufs
+-                .iter_mut()
+-                .map(|b| libc::iovec { iov_base: b.as_mut_ptr() as *mut c_void, iov_len: DATAGRAM })
+-                .collect();
+-            let mut msgs: Vec<libc::mmsghdr> = (0..BATCH)
+-                .map(|i| {
+-                    let mut hdr: libc::msghdr = unsafe { std::mem::zeroed() };
+-                    hdr.msg_iov = &mut iovs[i];
+-                    hdr.msg_iovlen = 1;
+-                    libc::mmsghdr { msg_hdr: hdr, msg_len: 0 }
+-                })
+-                .collect();
+-
+-            let mut pending: Option<Pending> = None;
+-            let mut counters = Counters::default();
+-            super::telemetry::start(cfg.width, cfg.height);
+-            // Everything the socket held at the last read, parsed and in order. A completed frame
+-            // looks here for anything newer before it spends a decode on itself.
+-            let mut inbox: VecDeque<(PyroWavePacketHeader, Vec<u8>)> = VecDeque::new();
+-
+-            // Decode whatever is queued, publish it, and account for it.
+-            let decode_and_publish = |timestamp_ns: u64, counters: &mut Counters, complete: bool| {
+-                let mut out: *mut c_void = std::ptr::null_mut();
+-                let mut info = FrameInfo::default();
+-                let rc = unsafe { pyroclient_decode(client, &mut out, &mut info) };
+-                if rc != 0 || out.is_null() {
+-                    counters.decode_failures += 1;
+-                    return;
+-                }
+-                let ts = Duration::from_nanos(timestamp_ns);
+-                decoded.publish(ts, out as usize);
+-                report_frame_decoded(Ok(ts));
+-                counters.total_ms += info.total_ms;
+-                counters.decode_samples.push(info.decode_ms as f32);
+-                counters.convert_samples.push(info.convert_ms as f32);
+-                counters.fence_samples.push(info.total_ms as f32);
+-                super::telemetry::record_frame(info.decode_ms as f32, info.total_ms as f32);
+-                counters.last = info;
+-                if complete {
+-                    counters.complete += 1;
+-                } else {
+-                    counters.partial += 1;
+-                }
+-            };
+-
+-            // Settle an unfinished frame: decode it partial if anything usable arrived and nothing
+-            // newer is waiting, else drop it.
+-            let settle = |p: Pending, now: Instant, counters: &mut Counters, superseded: bool, behind: bool| {
+-                let decision = frame_decision(false, p.decodable, now - p.first_seen, cfg.deadline);
+-                let worth_decoding = matches!(decision, FrameDecision::DecodePartial)
+-                    || (matches!(decision, FrameDecision::Wait) && superseded && p.decodable);
+-                if worth_decoding && !behind {
+-                    if superseded {
+-                        counters.superseded += 1;
+-                    }
+-                    decode_and_publish(p.timestamp_ns, counters, false);
+-                } else {
+-                    counters.dropped += 1;
+-                    unsafe { pyroclient_clear(client) };
+-                }
+-            };
+-
++            let mut iovs: Vec<libc::iovec> = bufs.iter_mut().map(|b| libc::iovec {
++                iov_base: b.as_mut_ptr() as *mut c_void, iov_len: DATAGRAM,
++            }).collect();
++            let mut msgs: Vec<libc::mmsghdr> = (0..BATCH).map(|i| {
++                let mut hdr: libc::msghdr = unsafe { std::mem::zeroed() };
++                hdr.msg_iov = &mut iovs[i]; hdr.msg_iovlen = 1;
++                libc::mmsghdr { msg_hdr: hdr, msg_len: 0 }
++            }).collect();
++            alog(&format!("listening on {PYROWAVE_UDP_PORT}, {}x{}, independent receiver, complete frames only", cfg.width, cfg.height));
+             while running.load(Ordering::Relaxed) {
+-                // One read that waits for the first datagram (or the timeout), then drain the rest
+-                // without blocking, so `inbox` is the socket's whole backlog at this moment.
+-                let mut n = recv(fd, &mut msgs, libc::MSG_WAITFORONE);
++                // Reset output flags before each call; never drain an unbounded socket backlog
++                // into a second queue. Process each batch while the GPU runs independently.
++                for msg in &mut msgs { msg.msg_hdr.msg_flags = 0; msg.msg_len = 0; }
++                let n = unsafe { libc::recvmmsg(fd, msgs.as_mut_ptr(), BATCH as libc::c_uint,
++                    libc::MSG_WAITFORONE, std::ptr::null_mut()) };
+                 let now = Instant::now();
+                 if n < 0 {
+-                    // timeout or interrupt: run the deadline tick
+-                    if let Some(p) = pending.take() {
+-                        if now - p.first_seen >= cfg.deadline {
+-                            settle(p, now, &mut counters, false, false);
+-                        } else {
+-                            pending = Some(p);
+-                        }
++                    let e = std::io::Error::last_os_error();
++                    if !matches!(e.kind(), std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut | std::io::ErrorKind::Interrupted) {
++                        report_frame_decoded(Err(anyhow!("PyroWave UDP receive: {e}")));
++                        running.store(false, Ordering::Relaxed); inbox.ready.notify_all(); break;
+                     }
+-                    continue;
+-                }
+-                loop {
++                } else {
+                     for i in 0..n as usize {
+-                        let len = msgs[i].msg_len as usize;
+-                        let data = &bufs[i][..len];
+-                        match PyroWavePacketHeader::from_bytes(data) {
+-                            Some(hdr) => inbox.push_back((hdr, data[PYROWAVE_UDP_HEADER_LEN..].to_vec())),
+-                            None => counters.foreign += 1,
++                        if msgs[i].msg_hdr.msg_flags & libc::MSG_TRUNC != 0 {
++                            assembler.counters.invalid += 1; continue;
+                         }
+-                    }
+-                    n = recv(fd, &mut msgs, libc::MSG_DONTWAIT);
+-                    if n <= 0 {
+-                        break;
+-                    }
+-                }
+-
+-                while let Some((hdr, payload)) = inbox.pop_front() {
+-                    match &pending {
+-                        Some(p) if hdr.timestamp_ns < p.timestamp_ns => {
+-                            counters.stale_packets += 1;
+-                            continue;
++                        let data = &bufs[i][..msgs[i].msg_len as usize];
++                        let Some(header) = PyroWavePacketHeader::from_bytes(data) else {
++                            assembler.counters.invalid += 1; continue;
++                        };
++                        let (first, complete) = assembler.push(header, &data[PYROWAVE_UDP_HEADER_LEN..], now);
++                        if first {
++                            let timestamp = Duration::from_nanos(header.timestamp_ns);
++                            report_video_packet_received(timestamp);
++                            crate::push_foveation_center(timestamp, header.foveation_center);
+                         }
+-                        Some(p) if hdr.timestamp_ns > p.timestamp_ns => {
+-                            let old = pending.take().unwrap();
+-                            let behind = skip_for_newer(old.timestamp_ns, inbox.iter().map(|(h, _)| h.timestamp_ns));
+-                            settle(old, now, &mut counters, true, behind);
+-                        }
+-                        _ => {}
+-                    }
+-                    if pending.is_none() {
+-                        pending = Some(Pending {
+-                            timestamp_ns: hdr.timestamp_ns,
+-                            first_seen: now,
+-                            count: hdr.count,
+-                            received: 0,
+-                            decodable: false,
+-                        });
+-                        let ts = Duration::from_nanos(hdr.timestamp_ns);
+-                        report_video_packet_received(ts);
+-                        crate::push_foveation_center(ts, hdr.foveation_center);
+-                    }
+-                    let p = pending.as_mut().unwrap();
+-                    let r = unsafe { pyroclient_push_packet(client, payload.as_ptr(), payload.len()) };
+-                    p.received += 1;
+-                    if r >= 0 {
+-                        p.decodable = true;
+-                    }
+-                    if r == 1 || p.received >= p.count as u32 {
+-                        let done = pending.take().unwrap();
+-                        if skip_for_newer(done.timestamp_ns, inbox.iter().map(|(h, _)| h.timestamp_ns)) {
+-                            counters.skipped += 1;
+-                            unsafe { pyroclient_clear(client) };
+-                        } else {
+-                            decode_and_publish(done.timestamp_ns, &mut counters, r == 1);
++                        if let Some(frame) = complete {
++                            let mut slot = inbox.frame.lock();
++                            if slot.replace(frame).is_some() { inbox.skipped.fetch_add(1, Ordering::Relaxed); }
++                            inbox.ready.notify_one();
+                         }
+                     }
+                 }
+-                // deadline tick for the frame still pending after this batch
+-                if let Some(p) = pending.take() {
+-                    if now - p.first_seen >= cfg.deadline {
+-                        settle(p, now, &mut counters, false, false);
++                assembler.expire(now); *inbox.assembly.lock() = assembler.counters;
++            }
++        }
++    });
++    let decode_thread = thread::spawn({
++        let running = Arc::clone(&running); let inbox = Arc::clone(&inbox); let decoded = Arc::clone(&decoded);
++        move || {
++            // All codec/Vulkan state is owned by this worker. It never holds the socket.
++            let client = unsafe { pyroclient_create_ex(cfg.width, cfg.height, cfg.chroma444 as i32,
++                cfg.full_range as i32, 3, cfg.wavelet as i32, cfg.decode_path as i32) };
++            if client.is_null() {
++                report_frame_decoded(Err(anyhow!("pyroclient_create_ex failed (see logcat pyroclient)")));
++                running.store(false, Ordering::Relaxed); return;
++            }
++            let mut complete = 0u64; let mut failures = 0u64; let mut last = FrameInfo::default();
++            let mut decode_samples = Vec::new(); let mut convert_samples = Vec::new(); let mut fence_samples = Vec::new();
++            let mut last_report = Instant::now();
++            while running.load(Ordering::Relaxed) {
++                let frame = {
++                    let mut slot = inbox.frame.lock();
++                    if slot.is_none() { inbox.ready.wait_for(&mut slot, Duration::from_millis(100)); }
++                    slot.take()
++                };
++                if let Some(frame) = frame {
++                    unsafe { pyroclient_clear(client) };
++                    let mut status = 0;
++                    for packet in &frame.packets {
++                        status = unsafe { pyroclient_push_packet(client, packet.as_ptr(), packet.len()) };
++                        if status < 0 { break; }
++                    }
++                    // Receiving every transport packet is necessary but not sufficient: the
++                    // codec must also validate all blocks. Never decode partial input.
++                    if status != 1 {
++                        failures += 1;
++                        if failures <= 3 { alog(&format!("reject complete transport frame: codec readiness {status}, {} packets", frame.packets.len())); }
+                     } else {
+-                        pending = Some(p);
++                        let mut out: *mut c_void = std::ptr::null_mut(); let mut info = FrameInfo::default();
++                        let rc = unsafe { pyroclient_decode(client, &mut out, &mut info) };
++                        if rc != 0 || out.is_null() || info.complete == 0 { failures += 1; }
++                        else {
++                            let ts = Duration::from_nanos(frame.timestamp_ns);
++                            decoded.publish(ts, out as usize); report_frame_decoded(Ok(ts));
++                            complete += 1; last = info;
++                            decode_samples.push(info.decode_ms as f32); convert_samples.push(info.convert_ms as f32);
++                            fence_samples.push(info.total_ms as f32);
++                            super::telemetry::record_frame(info.decode_ms as f32, info.total_ms as f32);
++                        }
+                     }
+                 }
++                let rx = *inbox.assembly.lock(); let skipped = inbox.skipped.load(Ordering::Relaxed);
+                 super::telemetry::set_counters(super::telemetry::Counters {
+-                    complete: counters.complete,
+-                    partial: counters.partial,
+-                    skipped: counters.skipped,
+-                    dropped: counters.dropped,
+-                    superseded: counters.superseded,
+-                    stale_packets: counters.stale_packets,
+-                    decode_failures: counters.decode_failures,
++                    complete, partial: 0, dropped: rx.dropped, skipped, superseded: 0,
++                    stale_packets: rx.stale, decode_failures: failures,
+                 });
+-                let frames = counters.complete + counters.partial + counters.skipped + counters.dropped;
+-                if frames > 0 && frames % 720 == 0 && frames != counters.last_report_frames {
+-                    counters.last_report_frames = frames;
+-                    let decoded_n = (counters.complete + counters.partial).max(1);
+-                    alog(&format!(
+-                        "frames complete {} partial {} skipped {} dropped {} superseded {} | stale pk {} foreign {} decode fail {} | last decode {:.2} convert {:.2} submit->fence {:.2} ms (mean {:.2})",
+-                        counters.complete, counters.partial, counters.skipped, counters.dropped, counters.superseded,
+-                        counters.stale_packets, counters.foreign, counters.decode_failures,
+-                        counters.last.decode_ms, counters.last.convert_ms, counters.last.total_ms,
+-                        counters.total_ms / decoded_n as f64
+-                    ));
+-                    alog(&format!("gpu decode ms: {}", dist(&mut counters.decode_samples)));
+-                    alog(&format!("convert ms: {}", dist(&mut counters.convert_samples)));
+-                    alog(&format!("submit->fence ms: {}", dist(&mut counters.fence_samples)));
+-                    counters.decode_samples.clear();
+-                    counters.convert_samples.clear();
+-                    counters.fence_samples.clear();
++                if last_report.elapsed() >= Duration::from_secs(3) {
++                    last_report = Instant::now();
++                    alog(&format!("frames complete {complete} partial 0 skipped {skipped} dropped {} superseded 0 | stale pk {} foreign {} decode fail {failures} | rx complete {} duplicate {} | last decode {:.2} convert {:.2} submit->fence {:.2} ms",
++                        rx.dropped, rx.stale, rx.invalid, rx.complete, rx.duplicates, last.decode_ms, last.convert_ms, last.total_ms));
++                    alog(&format!("gpu decode ms: {}", dist(&mut decode_samples)));
++                    alog(&format!("convert ms: {}", dist(&mut convert_samples)));
++                    alog(&format!("submit->fence ms: {}", dist(&mut fence_samples)));
++                    decode_samples.clear(); convert_samples.clear(); fence_samples.clear();
+                 }
+             }
+             unsafe { pyroclient_destroy(client) };
+-            alog(&format!(
+-                "stopped: complete {} partial {} skipped {} dropped {} decode fail {}",
+-                counters.complete, counters.partial, counters.skipped, counters.dropped, counters.decode_failures
+-            ));
+         }
+     });
+-
+-    Ok((
+-        VideoDecoderSink,
+-        VideoDecoderSource {
+-            running,
+-            thread: Some(thread),
+-            decoded,
+-        },
+-    ))
++    Ok((VideoDecoderSink, VideoDecoderSource { running, inbox, threads: vec![receive_thread, decode_thread], decoded }))
+ }
+-
+diff --git a/alvr/client_core/src/video_decoder/pyrowave_udp_assembly.rs b/alvr/client_core/src/video_decoder/pyrowave_udp_assembly.rs
+new file mode 100644
+index 0000000..782ebfa
+--- /dev/null
++++ b/alvr/client_core/src/video_decoder/pyrowave_udp_assembly.rs
+@@ -0,0 +1,140 @@
++//! Bounded, reorder-tolerant transport assembly. Never submit missing blocks to the codec.
++use alvr_packets::PyroWavePacketHeader;
++use std::{collections::BTreeMap, time::{Duration, Instant}};
++
++const MAX_PACKETS: usize = 8192;
++const MAX_PENDING: usize = 4;
++
++pub struct CompleteFrame {
++    pub timestamp_ns: u64,
++    pub packets: Vec<Vec<u8>>,
++}
++
++struct PartialFrame {
++    first_seen: Instant,
++    packets: Vec<Option<Vec<u8>>>,
++    remaining: usize,
++}
++
++#[derive(Default, Clone, Copy)]
++pub struct AssemblyCounters {
++    pub complete: u64,
++    pub dropped: u64,
++    pub duplicates: u64,
++    pub stale: u64,
++    pub invalid: u64,
++}
++
++pub struct Assembler {
++    pending: BTreeMap<u64, PartialFrame>,
++    retired_through: Option<u64>,
++    timeout: Duration,
++    pub counters: AssemblyCounters,
++}
++
++impl Assembler {
++    pub fn new(frame_period: Duration) -> Self {
++        Self {
++            pending: BTreeMap::new(), retired_through: None,
++            // Wi-Fi can reorder tails across the next frame. Three periods is a bounded
++            // assembly window, not an additional wait on an already complete frame.
++            timeout: (frame_period * 3).clamp(Duration::from_millis(25), Duration::from_millis(50)),
++            counters: AssemblyCounters::default(),
++        }
++    }
++
++    fn retire(&mut self, timestamp: u64) {
++        self.retired_through = Some(self.retired_through.map_or(timestamp, |old| old.max(timestamp)));
++        let cutoff = self.retired_through.unwrap();
++        self.pending.retain(|ts, _| {
++            if *ts <= cutoff { self.counters.dropped += 1; false } else { true }
++        });
++    }
++
++    pub fn expire(&mut self, now: Instant) {
++        let expired = self.pending.iter().filter(|(_, p)| now.duration_since(p.first_seen) >= self.timeout)
++            .map(|(ts, _)| *ts).max();
++        if let Some(ts) = expired { self.retire(ts); }
++    }
++
++    /// Returns (first packet for this frame, completed frame). Duplicate indices cannot
++    /// satisfy completeness; count changes and truncated/empty payloads are rejected.
++    pub fn push(&mut self, header: PyroWavePacketHeader, payload: &[u8], now: Instant)
++        -> (bool, Option<CompleteFrame>) {
++        if header.count == 0 || header.index >= header.count || header.count as usize > MAX_PACKETS
++            || payload.is_empty() || payload.len() > alvr_packets::PYROWAVE_UDP_PAYLOAD {
++            self.counters.invalid += 1;
++            return (false, None);
++        }
++        if self.retired_through.is_some_and(|ts| header.timestamp_ns <= ts) {
++            self.counters.stale += 1;
++            return (false, None);
++        }
++        let first = !self.pending.contains_key(&header.timestamp_ns);
++        if first && self.pending.len() == MAX_PENDING {
++            self.retire(*self.pending.first_key_value().unwrap().0);
++            if self.retired_through.is_some_and(|ts| header.timestamp_ns <= ts) {
++                self.counters.stale += 1;
++                return (false, None);
++            }
++        }
++        let frame = self.pending.entry(header.timestamp_ns).or_insert_with(|| PartialFrame {
++            first_seen: now, packets: vec![None; header.count as usize], remaining: header.count as usize,
++        });
++        if frame.packets.len() != header.count as usize {
++            self.counters.invalid += 1;
++            return (false, None);
++        }
++        let packet = &mut frame.packets[header.index as usize];
++        if packet.is_some() {
++            self.counters.duplicates += 1;
++            return (false, None);
++        }
++        *packet = Some(payload.to_vec());
++        frame.remaining -= 1;
++        if frame.remaining != 0 { return (first, None); }
++        let frame = self.pending.remove(&header.timestamp_ns).unwrap();
++        self.retire(header.timestamp_ns);
++        self.counters.complete += 1;
++        (first, Some(CompleteFrame {
++            timestamp_ns: header.timestamp_ns,
++            packets: frame.packets.into_iter().map(Option::unwrap).collect(),
++        }))
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    fn h(ts: u64, index: u16, count: u16) -> PyroWavePacketHeader {
++        PyroWavePacketHeader { timestamp_ns: ts, index, count, foveation_center: [[0.0; 2]; 2] }
++    }
++    #[test]
++    fn duplicates_and_reordering_cannot_present_a_partial_frame() {
++        let mut a = Assembler::new(Duration::from_millis(8)); let now = Instant::now();
++        assert!(a.push(h(1, 2, 3), &[3], now).1.is_none());
++        assert!(a.push(h(1, 2, 3), &[3], now).1.is_none());
++        assert!(a.push(h(1, 0, 3), &[1], now).1.is_none());
++        assert_eq!(a.push(h(1, 1, 3), &[2], now).1.unwrap().packets, vec![vec![1], vec![2], vec![3]]);
++        assert!(a.push(h(1, 0, 3), &[1], now).1.is_none());
++        assert_eq!(a.counters.complete, 1); assert_eq!(a.counters.duplicates, 1);
++    }
++    #[test]
++    fn newer_first_packet_does_not_discard_a_reordered_tail() {
++        let mut a = Assembler::new(Duration::from_millis(8)); let now = Instant::now();
++        a.push(h(1, 0, 2), &[1], now); a.push(h(2, 0, 2), &[3], now);
++        assert_eq!(a.push(h(1, 1, 2), &[2], now).1.unwrap().timestamp_ns, 1);
++        assert_eq!(a.push(h(2, 1, 2), &[4], now).1.unwrap().timestamp_ns, 2);
++    }
++    #[test]
++    fn loss_count_changes_and_empty_payloads_never_decode() {
++        let mut a = Assembler::new(Duration::from_millis(8)); let now = Instant::now();
++        a.push(h(1, 0, 2), &[1], now);
++        assert!(a.push(h(1, 1, 3), &[2], now).1.is_none());
++        assert!(a.push(h(1, 1, 2), &[], now).1.is_none());
++        a.expire(now + Duration::from_millis(26));
++        assert_eq!(a.counters.dropped, 1); assert_eq!(a.counters.invalid, 2);
++        assert!(a.push(h(1, 1, 2), &[2], now).1.is_none());
++        assert_eq!(a.counters.complete, 0);
++    }
++}
 diff --git a/alvr/client_openxr/Cargo.toml b/alvr/client_openxr/Cargo.toml
 index 995394b..d9d9cf1 100644
 --- a/alvr/client_openxr/Cargo.toml
@@ -634,7 +1306,7 @@ index b87dfe9..fc3b3cf 100644
              if xr_exts.fb_swapchain_update_state.is_some()
                  && xr_exts.fb_foveation.is_some()
 diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
-index efb0f8e..a4eb91e 100644
+index efb0f8e..1e91e7e 100644
 --- a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 @@ -323,7 +323,7 @@ pub fn streaming_profile_schema() -> PresetSchemaNode {
@@ -659,7 +1331,7 @@ index efb0f8e..a4eb91e 100644
              "help".into(),
 -            "Per-eye render size as a share of the 3552x3840 panel. On static SteamVR Home, \
 -PyroWave held 90 fps up to 70 % at 400 Mbps; 80 % and above dropped frames and ran the headset hot."
-+            "Per-eye render size as a share of the Quest 3 2064x2208 panel. Uniform full-frame rendering starts at 50 percent; raise resolution manually as desired."
++            "Per-eye render size as a share of the Quest 3 2064x2208 panel. The starting preset uses 100 percent, with uniform full-frame rendering."
                  .into(),
          )]
          .into_iter()
@@ -668,7 +1340,7 @@ index efb0f8e..a4eb91e 100644
              })
              .collect(),
 -        default_option_display_name: "60 % (2131x2304 per eye)".into(),
-+        default_option_display_name: "100 % (2064x2208 per eye)".into(),
++        default_option_display_name: "100 % (2064x2208 per eye, panel)".into(),
          gui: ChoiceControlType::Dropdown,
      })
  }
@@ -703,7 +1375,7 @@ index efb0f8e..a4eb91e 100644
          );
          // every assignment of the shared profile table, under session_settings
          let profile = &beta::streaming_profiles()[0];
-@@ -474,15 +472,15 @@ mod tests {
+@@ -474,15 +472,16 @@ mod tests {
          assert_eq!(
              names,
              [
@@ -722,11 +1394,12 @@ index efb0f8e..a4eb91e 100644
              ]
          );
 -        assert_eq!(schema.default_option_display_name, "60 % (2131x2304 per eye)");
-+        assert_eq!(schema.default_option_display_name, "100 % (2064x2208 per eye)");
++        assert_eq!(schema.default_option_display_name, "100 % (2064x2208 per eye, panel)");
++        assert!(schema.options.iter().any(|o| o.display_name == schema.default_option_display_name));
          let seventy = &schema.options[2];
          let width = |field: &str| {
              seventy
-@@ -494,8 +492,8 @@ mod tests {
+@@ -494,8 +493,8 @@ mod tests {
                      value.clone()
                  })
          };
@@ -737,7 +1410,7 @@ index efb0f8e..a4eb91e 100644
      }
  
      #[test]
-@@ -506,7 +504,7 @@ mod tests {
+@@ -506,7 +505,7 @@ mod tests {
              .iter()
              .map(|o| o.display_name.as_str())
              .collect::<Vec<_>>();
@@ -746,6 +1419,23 @@ index efb0f8e..a4eb91e 100644
          assert_eq!(schema.default_option_display_name, "90 Hz");
      }
  }
+diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/higher_order_choice.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/higher_order_choice.rs
+index ccc83c8..5e14bba 100644
+--- a/alvr/dashboard/src/dashboard/components/settings_controls/presets/higher_order_choice.rs
++++ b/alvr/dashboard/src/dashboard/components/settings_controls/presets/higher_order_choice.rs
+@@ -66,9 +66,9 @@ impl Control {
+                 .options
+                 .iter()
+                 .find(|option| option.display_name == schema.default_option_display_name)
+-                .unwrap()
+-                .display_name
+-                .clone(),
++                .or_else(|| schema.options.first())
++                .map(|option| option.display_name.clone())
++                .unwrap_or_default(),
+             variants: schema
+                 .options
+                 .into_iter()
 diff --git a/alvr/dashboard/src/dashboard/components/test_report.rs b/alvr/dashboard/src/dashboard/components/test_report.rs
 index 3be9319..1aba238 100644
 --- a/alvr/dashboard/src/dashboard/components/test_report.rs

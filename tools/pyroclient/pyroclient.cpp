@@ -282,9 +282,9 @@ bool pyroclient::create_planes() {
             return false;
         pyrowave_image_view &v = buffers.planes[i];
         v.image = planes[i].image;
-        // Chroma views report the LUMA extent: these are the decoder's own targets and it derives
-        // chroma size from the subsampling mode.
-        v.width = width; v.height = height;
+        // WrappedViewBuffers uses these extents for viewport/render-area construction.
+        // A 4:2:0 chroma target must describe its actual half-sized image.
+        v.width = planes[i].width; v.height = planes[i].height;
         v.image_format = VK_FORMAT_R8_UNORM; v.view_format = VK_FORMAT_R8_UNORM;
         v.mip_level = 0; v.layer = 0; v.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
         v.swizzle = VK_COMPONENT_SWIZZLE_IDENTITY; v.layout = VK_IMAGE_LAYOUT_GENERAL;
@@ -596,6 +596,11 @@ extern "C" int pyroclient_is_ready(pyroclient *c, int allow_partial) {
 
 extern "C" int pyroclient_decode(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info) {
     if (!c || !out) return -1;
+    *out = nullptr;
+    // Partial reconstruction requires pristine low-frequency bands. The old UDP caller
+    // decoded arbitrary packet subsets, which can make the entire picture disappear.
+    // Both transports now require a fully validated frame before recording GPU work.
+    if (!pyrowave_decoder_decode_is_ready(c->decoder, false)) return -3;
     if (info) { *info = pyroclient_frame_info{}; info->complete = pyrowave_decoder_decode_is_ready(c->decoder, false) ? 1 : 0; }
     Slot &s = c->ring[c->next_slot];
     c->next_slot = (c->next_slot + 1) % (uint32_t)c->ring.size();
