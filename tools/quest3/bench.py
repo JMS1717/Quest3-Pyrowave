@@ -86,7 +86,7 @@ def summarise(events, requested_hz=None):
     result['gpu_decode_ms']=distribution([v for t in telemetry if t.get('pyrowave')
         for v in t['pyrowave'].get('gpu_decode_ms',[])])
     result['decode_to_fence_ms']=distribution([v for t in telemetry if t.get('pyrowave')
-        for v in t['pyrowave'].get('decode_to_fence_ms',[])])
+        for v in t['pyrowave'].get('fence_ms',[])])
     if requested_hz and graphs:
         fps=result['metrics']['client_fps']['p50']
         result['sustained_requested_fps']=fps>=requested_hz*.98

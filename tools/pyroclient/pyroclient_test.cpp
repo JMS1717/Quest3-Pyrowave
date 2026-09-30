@@ -29,12 +29,19 @@ static bool load(const char *path, Wave &w) {
 }
 
 int main(int argc, char **argv) {
-    if (argc < 3) { fprintf(stderr, "usage: %s <in.wave> <out.rgba> [iterations]\n", argv[0]); return 1; }
+    if (argc < 3) { fprintf(stderr, "usage: %s <in.wave> <out.rgba> [iterations] [auto|compute|fragment]\n", argv[0]); return 1; }
     Wave w;
     if (!load(argv[1], w)) return 1;
     const int iters = argc > 3 ? atoi(argv[3]) : 1;
+    if (iters < 1 || iters > 100000) return 2;
+    int hint = 0;
+    if (argc > 4) {
+        if (!strcmp(argv[4], "compute")) hint = 2;
+        else if (!strcmp(argv[4], "fragment")) hint = 1;
+        else if (strcmp(argv[4], "auto")) return 2;
+    }
     printf("input %dx%d %s %s range, %zu bytes\n", w.width, w.height, w.chroma == 1 ? "4:4:4" : "4:2:0", w.full_range ? "full" : "limited", w.frame.size());
-    pyroclient *c = pyroclient_create((uint32_t)w.width, (uint32_t)w.height, w.chroma == 1, w.full_range, 3, getenv("PYROWAVE_WAVELET") && !strcmp(getenv("PYROWAVE_WAVELET"), "53") ? 53 : 97);
+    pyroclient *c = pyroclient_create_ex((uint32_t)w.width, (uint32_t)w.height, w.chroma == 1, w.full_range, 3, getenv("PYROWAVE_WAVELET") && !strcmp(getenv("PYROWAVE_WAVELET"), "53") ? 53 : 97, hint);
     if (!c) { fprintf(stderr, "pyroclient_create failed (see logcat pyroclient)\n"); return 1; }
     AHardwareBuffer *ahb = nullptr;
     pyroclient_frame_info info{};
@@ -58,6 +65,8 @@ int main(int argc, char **argv) {
     std::sort(totals.begin(), totals.end());
     printf("complete %d/%d  decode best %.3f ms  convert best %.3f ms  submit->fence best %.3f p50 %.3f max %.3f ms\n",
            completes, iters, bestDec, bestConv, bestTot, totals[totals.size() / 2], totals.back());
+    printf("{\"requested_decode_path\":\"%s\",\"iterations\":%d,\"complete\":%d,\"decode_best_ms\":%.6f,\"convert_best_ms\":%.6f,\"fence_p50_ms\":%.6f,\"fence_p99_ms\":%.6f,\"fence_mean_ms\":%.6f,\"fence_max_ms\":%.6f}\n",
+        argc > 4 ? argv[4] : "auto", iters, completes, bestDec, bestConv, totals[totals.size()/2], totals[(totals.size()-1)*99/100],sumTot/iters,totals.back());
 
     AHardwareBuffer_Desc d = {};
     AHardwareBuffer_describe(ahb, &d);

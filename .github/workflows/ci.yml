@@ -76,8 +76,8 @@ jobs:
       - name: PyroWave and ALVR streamer
         shell: cmd
         run: |
-          tools\windows\build_pyrowave_pc.cmd interop
-          tools\windows\build_streamer.cmd
+          call tools\windows\build_pyrowave_pc.cmd interop || exit /b 1
+          call tools\windows\build_streamer.cmd || exit /b 1
       - name: Package
         shell: pwsh
         run: |
