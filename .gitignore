@@ -34,3 +34,15 @@ runtime/*.log
 
 # local list for tools/tests/test_privacy.py; never commit
 tools/tests/.banned_strings
+
+# Quest 3 local builds, signing and device evidence
+ws/
+out/
+results/local/
+*.keystore
+*.p12
+*.jks
+*.so
+tools/pyroclient/pyroclient_test
+tools/udptest/udprecv-android
+tools/udptest/udprecv-host

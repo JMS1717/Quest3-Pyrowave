@@ -1,0 +1,11 @@
+{
+  "integration": {"url": "https://github.com/Terminal-ennui/galaxy-xr-alvr-pyrowave-444", "commit": "54cc8519bddceff57e159e6f39914e373b512809"},
+  "alvr": {"url": "https://github.com/alvr-org/ALVR", "commit": "7eda092dbf0002281410a4222683ec228700cffb"},
+  "pyrowave": {"url": "https://github.com/Themaister/pyrowave", "commit": "d2997ac172bdc00e29c58e3f2938acb7e94580bf"},
+  "granite": {"url": "https://github.com/Themaister/Granite", "commit": "842d9d5686ba8c799a7d34a78a68f98d6aeb5a68"},
+  "cargo_apk": {"url": "https://github.com/zarik5/cargo-apk", "commit": "0fd3126dad5aa1c5f0f26cdae3410f2e5af62c60"},
+  "rust": "1.97.1",
+  "android_ndk": "27.2.12479018",
+  "openxr_loader": "release-1.0.34",
+  "reproducibility": "Pinned inputs and build recipe; signed APKs and ZIP metadata are not claimed byte-identical."
+}

@@ -24,6 +24,7 @@ checkout() {  # <url> <dir> <commit>
 checkout https://github.com/alvr-org/ALVR "$dest/ALVR-20.13.0" "$ALVR_BASE"
 git -C "$dest/ALVR-20.13.0" submodule update -q --init --recursive --depth 1   # openvr headers
 git -C "$dest/ALVR-20.13.0" apply --binary "$repo/patches/alvr-20.13.0-server-instrumentation.patch"
+git -C "$dest/ALVR-20.13.0" apply --binary "$repo/patches/quest3-alvr.patch"
 
 checkout https://github.com/Themaister/pyrowave "$dest/pyrowave" "$PYROWAVE_BASE"
 # pyrowave's checkout_granite.sh pins a newer Granite (9d44761), which spiked encoder p99 to 14 ms;

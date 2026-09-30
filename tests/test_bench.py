@@ -1,0 +1,30 @@
+import unittest
+from tools.quest3.bench import parse_capabilities,plan,summarise,distribution
+
+class BenchTests(unittest.TestCase):
+    def test_high_rates_are_skipped_and_never_fabricated(self):
+        caps=parse_capabilities('[Q3PW_CAPS] model=Quest3 rates=[72.0, 90.0, 120.0] runtime=true')
+        p=plan(caps,repeats=1)
+        self.assertEqual([r['requested_hz'] for r in p['skipped']],[144,207,240])
+        self.assertEqual(len(p['cells']),26)
+        self.assertTrue(all(c['requested_hz'] in (90,120) for c in p['cells']))
+    def test_newest_capability_record_wins(self):
+        caps=parse_capabilities('[Q3PW_CAPS] model=Quest3 rates=[90.0] runtime=true\n[Q3PW_CAPS] model=Quest3 rates=[90.0, 144.0] runtime=true')
+        self.assertEqual(caps['rates_hz'],[90,144])
+    def test_missing_and_fallback_capabilities_refused(self):
+        with self.assertRaises(ValueError):parse_capabilities('debug.oculus.refreshRate=240')
+        with self.assertRaises(ValueError):plan({'rates_hz':[90], 'refresh_extension':False})
+    def test_no_frames_is_failure_not_zero_latency(self):
+        r=summarise([])
+        self.assertEqual(r['status'],'no_stream_frames');self.assertIsNone(r['metrics']['encoder_ms'])
+    def test_pipeline_units_and_counter_delta(self):
+        events=[{'event_type':{'id':'GraphStatistics','data':{'encoder_s':.002,'client_fps':90,'target_timestamp_ns':100}}},
+                {'event_type':{'id':'StatisticsSummary','data':{'packets_lost_total':100}}},
+                {'event_type':{'id':'StatisticsSummary','data':{'packets_lost_total':105}}}]
+        r=summarise(events,90)
+        self.assertEqual(r['metrics']['encoder_ms']['p50'],2);self.assertEqual(r['packet_loss_delta'],5)
+        self.assertIsNone(r['optical_motion_to_photon_ms'])
+    def test_percentiles_filter_invalid_numbers(self):
+        self.assertEqual(distribution([None,float('nan'),1,3])['p50'],2)
+
+if __name__=='__main__':unittest.main()

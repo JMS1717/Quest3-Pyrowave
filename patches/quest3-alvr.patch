@@ -1,0 +1,839 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 7cead7b..3fe622c 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -182,7 +182,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_adb"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_common",
+  "alvr_filesystem",
+@@ -194,7 +194,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_audio"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_common",
+  "alvr_session",
+@@ -210,7 +210,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_client_core"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_audio",
+  "alvr_common",
+@@ -234,7 +234,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_client_mock"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_client_core",
+  "alvr_common",
+@@ -247,7 +247,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_client_openxr"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_client_core",
+  "alvr_common",
+@@ -264,7 +264,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_common"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "anyhow",
+  "backtrace",
+@@ -281,7 +281,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_dashboard"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_adb",
+  "alvr_common",
+@@ -313,7 +313,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_events"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_common",
+  "alvr_packets",
+@@ -324,7 +324,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_filesystem"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "dirs",
+  "once_cell",
+@@ -332,7 +332,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_graphics"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_common",
+  "alvr_session",
+@@ -346,7 +346,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_gui_common"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_common",
+  "egui",
+@@ -354,7 +354,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_launcher"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_adb",
+  "alvr_common",
+@@ -377,7 +377,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_packets"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_common",
+  "alvr_session",
+@@ -388,7 +388,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_server_core"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_adb",
+  "alvr_audio",
+@@ -422,7 +422,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_server_io"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_common",
+  "alvr_events",
+@@ -438,7 +438,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_server_openvr"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_common",
+  "alvr_filesystem",
+@@ -455,7 +455,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_session"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_common",
+  "alvr_filesystem",
+@@ -469,7 +469,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_sockets"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_common",
+  "alvr_session",
+@@ -482,7 +482,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_system_info"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_common",
+  "jni",
+@@ -496,7 +496,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_vrcompositor_wrapper"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_common",
+  "alvr_filesystem",
+@@ -506,7 +506,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_vulkan_layer"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_common",
+  "alvr_filesystem",
+@@ -518,7 +518,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "alvr_xtask"
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ dependencies = [
+  "alvr_filesystem",
+  "pico-args",
+diff --git a/Cargo.toml b/Cargo.toml
+index ae00ce8..1933718 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -4,7 +4,7 @@ members = ["alvr/*"]
+ 
+ [workspace.package]
+ # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
+-version = "20.13.0-pyro.1"
++version = "20.13.0-quest3.pyro.1"
+ edition = "2021"
+ rust-version = "1.82"
+ authors = ["alvr-org"]
+diff --git a/alvr/client_openxr/Cargo.toml b/alvr/client_openxr/Cargo.toml
+index 995394b..d9d9cf1 100644
+--- a/alvr/client_openxr/Cargo.toml
++++ b/alvr/client_openxr/Cargo.toml
+@@ -26,7 +26,7 @@ libc = "0.2"
+ ndk-context = "0.1"
+ 
+ [package.metadata.android]
+-package = "alvr.client.galaxy2013"          # Galaxy XR 20.13 test app
++package = "io.github.jms1717.quest3pyrowave"          # Galaxy XR 20.13 test app
+ install_location = "auto"
+ build_targets = ["aarch64-linux-android"]
+ runtime_libs = "../../deps/android_openxr"
+@@ -90,7 +90,7 @@ authorities = "org.khronos.openxr.runtime_broker;org.khronos.openxr.system_runti
+ debuggable = false
+ theme = "@android:style/Theme.Black.NoTitleBar.Fullscreen"
+ icon = "@mipmap/ic_launcher"
+-label = "ALVR 20.13 Galaxy"
++label = "Quest3 PyroWave"
+ 
+ [package.metadata.android.application.activity]
+ config_changes = "density|keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|uiMode"
+@@ -139,7 +139,7 @@ value = "vr_only"
+ name = "com.oculus.supportedDevices"
+ # Note: value is changed for the Meta store, which requires an explicit list of platforms.
+ # "all" is required to support Quest 1 which doesn't have newer platform names registered.
+-value = "all"
++value = "quest3"
+ [[package.metadata.android.application.meta_data]]
+ name = "com.oculus.vr.focusaware"
+ value = "true"
+@@ -213,13 +213,7 @@ value = "vr_only"
+ name = "libopenxr.google.so"
+ required = false
+ 
+-[[package.metadata.android.application.property]]
+-name = "android.window.PROPERTY_XR_ACTIVITY_START_MODE"
+-value = "XR_ACTIVITY_START_MODE_FULL_SPACE_UNMANAGED"
+ 
+-[[package.metadata.android.uses_feature]]
+-name = "android.software.xr.api.openxr"
+-required = true
+ 
+ [[package.metadata.android.queries.package]]
+ name = "com.ultraleap.tracking.service"
+diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
+index a0fd36f..957e51f 100644
+--- a/alvr/client_openxr/src/lib.rs
++++ b/alvr/client_openxr/src/lib.rs
+@@ -272,6 +272,10 @@ pub fn entry_point() {
+             .unwrap();
+         assert_eq!(views_config.len(), 2);
+ 
++        refresh_rates.retain(|r| r.is_finite() && *r > 0.0);
++        refresh_rates.sort_by(f32::total_cmp);
++        refresh_rates.dedup();
++        alvr_common::error!("[Q3PW_CAPS] model={platform:?} rates={refresh_rates:?} runtime={}", exts.fb_display_refresh_rate);
+         // error! so it reaches logcat even once connected -- see gaze_diag in interaction.rs.
+         // ALVR hardcodes EnvironmentBlendMode::OPAQUE and gets passthrough from a separate
+         // XR_FB_passthrough layer, which this runtime does not advertise (fb_passthrough: false).
+@@ -313,13 +317,20 @@ pub fn entry_point() {
+             views_config[0].recommended_image_rect_height,
+         );
+ 
+-        let refresh_rates = if exts.fb_display_refresh_rate {
+-            xr_session.enumerate_display_refresh_rates().unwrap()
++        let mut refresh_rates = if exts.fb_display_refresh_rate {
++            xr_session.enumerate_display_refresh_rates().unwrap_or_else(|err| {
++                error!("[Q3PW_CAPS] refresh enumeration failed: {err:?}");
++                xr_session.get_display_refresh_rate().map(|rate| vec![rate]).unwrap_or_default()
++            })
+         } else if galaxy_xr {
+             vec![72.0, 90.0]
+         } else {
+             vec![90.0]
+         };
++        refresh_rates.retain(|r| r.is_finite() && *r > 0.0);
++        refresh_rates.sort_by(f32::total_cmp);
++        refresh_rates.dedup();
++        alvr_common::error!("[Q3PW_CAPS] model={platform:?} rates={refresh_rates:?} runtime={}", exts.fb_display_refresh_rate);
+         // error! so it reaches logcat even once connected -- see gaze_diag in interaction.rs.
+         // The server picks the *closest* of these to preferred_fps and only warns
+         // (server_core/src/connection.rs), so asking for a rate that is not here silently runs at
+diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
+index b87dfe9..83dde08 100644
+--- a/alvr/client_openxr/src/stream.rs
++++ b/alvr/client_openxr/src/stream.rs
+@@ -107,7 +107,7 @@ impl StreamContext {
+         gfx_ctx: Rc<GraphicsContext>,
+         interaction_ctx: Arc<RwLock<InteractionContext>>,
+         platform: Platform,
+-        config: ParsedStreamConfig,
++        mut config: ParsedStreamConfig,
+     ) -> StreamContext {
+         interaction_ctx
+             .write()
+@@ -116,9 +116,15 @@ impl StreamContext {
+         let xr_exts = xr_session.instance().exts();
+ 
+         if xr_exts.fb_display_refresh_rate.is_some() {
+-            xr_session
+-                .request_display_refresh_rate(config.refresh_rate_hint)
+-                .unwrap();
++            if let Err(err) = xr_session.request_display_refresh_rate(config.refresh_rate_hint) {
++                alvr_common::error!("[Q3PW_RATE] request={} rejected={err:?}", config.refresh_rate_hint);
++                // Keep the lobby alive; reconnect after choosing an advertised rate.
++                if let Ok(actual) = xr_session.get_display_refresh_rate() {
++                    config.refresh_rate_hint = actual;
++                }
++            }
++            alvr_common::error!("[Q3PW_RATE] negotiated={} actual={:?}", config.refresh_rate_hint,
++                xr_session.get_display_refresh_rate());
+         }
+ 
+         let foveation_profile = if let Some(config) = &config.clientside_foveation_config {
+diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
+index efb0f8e..c83a7e0 100644
+--- a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
++++ b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
+@@ -323,7 +323,7 @@ pub fn streaming_profile_schema() -> PresetSchemaNode {
+         name: "streaming_profile".into(),
+         strings: [(
+             "help".into(),
+-            "Sets every streaming setting to a measured configuration. Changing any of them \
++            "Sets an experimental Quest 3 starting configuration. Changing any of them \
+ afterwards leaves no profile selected; pick the profile again to return to it."
+                 .into(),
+         )]
+@@ -351,14 +351,13 @@ afterwards leaves no profile selected; pick the profile again to return to it."
+     })
+ }
+ 
+-/// Render size as a share of the Galaxy XR panel, the axis the resolution matrix measured.
++/// Render size as a share of the Quest 3 panel (not lens-corrected recommendation).
+ pub fn render_scale_schema() -> PresetSchemaNode {
+     PresetSchemaNode::HigherOrderChoice(HigherOrderChoiceSchema {
+         name: "render_scale".into(),
+         strings: [(
+             "help".into(),
+-            "Per-eye render size as a share of the 3552x3840 panel. On static SteamVR Home, \
+-PyroWave held 90 fps up to 70 % at 400 Mbps; 80 % and above dropped frames and ran the headset hot."
++            "Per-eye render size as a share of the Quest 3 2064x2208 panel. Start at 80 percent and measure sustained performance before increasing."
+                 .into(),
+         )]
+         .into_iter()
+@@ -391,7 +390,7 @@ PyroWave held 90 fps up to 70 % at 400 Mbps; 80 % and above dropped frames and r
+                 }
+             })
+             .collect(),
+-        default_option_display_name: "60 % (2131x2304 per eye)".into(),
++        default_option_display_name: "80 % (1651x1766 per eye)".into(),
+         gui: ChoiceControlType::Dropdown,
+     })
+ }
+@@ -402,14 +401,13 @@ pub fn refresh_rate_schema() -> PresetSchemaNode {
+         name: "refresh_rate".into(),
+         strings: [(
+             "help".into(),
+-            "90 Hz is the measured operating point. Latency falls with the frame period; \
+-the tuned H.264 profile runs at 72 Hz because the headset's H.264 decode is too slow for 90."
++            "90/120 Hz are normal targets. 144/207/240 Hz require runtime advertisement; unsupported requests are rejected before streaming."
+                 .into(),
+         )]
+         .into_iter()
+         .collect(),
+         flags: ["steamvr-restart".into()].into_iter().collect(),
+-        options: [60, 72, 90]
++        options: [72, 80, 90, 120, 144, 207, 240]
+             .into_iter()
+             .map(|hz| HigherOrderChoiceOption {
+                 display_name: format!("{hz} Hz"),
+@@ -447,11 +445,11 @@ mod tests {
+             .iter()
+             .map(|o| o.display_name.as_str())
+             .collect::<Vec<_>>();
+-        assert_eq!(names, ["PyroWave 4:4:4 (Recommended)", "ALVR H.264 (tuned)"]);
++        assert_eq!(names, ["Quest 3 PyroWave 600 Mbps", "Quest 3 PyroWave 800 Mbps", "Quest 3 PyroWave 1000 Mbps", "Quest 3 PyroWave 1500 Mbps", "Quest 3 PyroWave 2000 Mbps", "H.264 comparison", "HEVC comparison", "AV1 comparison"]);
+         assert_eq!(schema.default_option_display_name, beta::RECOMMENDED_PROFILE);
+         assert_eq!(
+             schema.options[0].description.as_deref(),
+-            Some("Full-chroma experimental wireless VR streaming")
++            Some(beta::RECOMMENDED_SUBTITLE)
+         );
+         // every assignment of the shared profile table, under session_settings
+         let profile = &beta::streaming_profiles()[0];
+@@ -474,15 +472,15 @@ mod tests {
+         assert_eq!(
+             names,
+             [
+-                "50 % (1776x1920 per eye)",
+-                "60 % (2131x2304 per eye)",
+-                "70 % (2486x2688 per eye)",
+-                "80 % (2842x3072 per eye)",
+-                "90 % (3197x3456 per eye)",
+-                "100 % (3552x3840 per eye, panel)",
++                "50 % (1032x1104 per eye)",
++                "60 % (1238x1325 per eye)",
++                "70 % (1445x1546 per eye)",
++                "80 % (1651x1766 per eye)",
++                "90 % (1858x1987 per eye)",
++                "100 % (2064x2208 per eye, panel)",
+             ]
+         );
+-        assert_eq!(schema.default_option_display_name, "60 % (2131x2304 per eye)");
++        assert_eq!(schema.default_option_display_name, "80 % (1651x1766 per eye)");
+         let seventy = &schema.options[2];
+         let width = |field: &str| {
+             seventy
+@@ -494,8 +492,8 @@ mod tests {
+                     value.clone()
+                 })
+         };
+-        assert_eq!(width("transcoding_view_resolution"), Some(2486.into()));
+-        assert_eq!(width("emulated_headset_view_resolution"), Some(2486.into()));
++        assert_eq!(width("transcoding_view_resolution"), Some(1445.into()));
++        assert_eq!(width("emulated_headset_view_resolution"), Some(1445.into()));
+     }
+ 
+     #[test]
+@@ -506,7 +504,7 @@ mod tests {
+             .iter()
+             .map(|o| o.display_name.as_str())
+             .collect::<Vec<_>>();
+-        assert_eq!(names, ["60 Hz", "72 Hz", "90 Hz"]);
++        assert_eq!(names, ["72 Hz", "80 Hz", "90 Hz", "120 Hz", "144 Hz", "207 Hz", "240 Hz"]);
+         assert_eq!(schema.default_option_display_name, "90 Hz");
+     }
+ }
+diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
+index fc176da..1ceea3a 100644
+--- a/alvr/server_core/src/connection.rs
++++ b/alvr/server_core/src/connection.rs
+@@ -629,6 +629,11 @@ fn connection_pipeline(
+         streaming_caps.default_view_resolution,
+     );
+ 
++    if !streaming_caps.supported_refresh_rates.iter().any(|rate|
++        rate.is_finite() && *rate > 0.0 && (*rate - initial_settings.video.preferred_fps).abs() < 0.01) {
++        con_bail!("Quest3-Pyrowave: requested {} Hz unsupported; runtime rates {:?}. Choose an advertised rate.",
++            initial_settings.video.preferred_fps, streaming_caps.supported_refresh_rates);
++    }
+     let fps = {
+         let mut best_match = 0_f32;
+         let mut min_diff = f32::MAX;
+diff --git a/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp b/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp
+index 5aae602..2f68f66 100644
+--- a/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp
++++ b/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp
+@@ -36,14 +36,6 @@ void CEncoder::Initialize(std::shared_ptr<CD3DRender> d3dRender) {
+     }
+ #endif
+ 
+-    try {
+-        Debug("Try to use VideoEncoderAMF.\n");
+-        m_videoEncoder = std::make_shared<VideoEncoderAMF>(d3dRender, encoderWidth, encoderHeight);
+-        m_videoEncoder->Initialize();
+-        return;
+-    } catch (Exception e) {
+-        vceException = e;
+-    }
+ #ifdef ALVR_PYROWAVE
+     if (FrameRender::PyroWaveEnabled()) {
+         // Deliberately not inside the fallback chain: if PyroWave was asked for and cannot start,
+@@ -58,6 +50,15 @@ void CEncoder::Initialize(std::shared_ptr<CD3DRender> d3dRender) {
+         return;
+     }
+ #endif
++    try {
++        Debug("Try to use VideoEncoderAMF.\n");
++        m_videoEncoder = std::make_shared<VideoEncoderAMF>(d3dRender, encoderWidth, encoderHeight);
++        m_videoEncoder->Initialize();
++        return;
++    } catch (Exception e) {
++        vceException = e;
++    }
++
+ 
+     try {
+         Debug("Try to use VideoEncoderNVENC.\n");
+diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
+index 84100dc..887e7bc 100644
+--- a/alvr/session/src/beta.rs
++++ b/alvr/session/src/beta.rs
+@@ -8,12 +8,12 @@ use serde_json as json;
+ use settings_schema::{SchemaEntry, SchemaNode};
+ use std::fmt;
+ 
+-pub const RECOMMENDED_PROFILE: &str = "PyroWave 4:4:4 (Recommended)";
+-pub const RECOMMENDED_SUBTITLE: &str = "Full-chroma experimental wireless VR streaming";
+-pub const H264_PROFILE: &str = "ALVR H.264 (tuned)";
++pub const RECOMMENDED_PROFILE: &str = "Quest 3 PyroWave 600 Mbps";
++pub const RECOMMENDED_SUBTITLE: &str = "Experimental 4:4:4 starting point; benchmark before increasing load";
++pub const H264_PROFILE: &str = "H.264 comparison";
+ 
+-/// Galaxy XR panel, per eye, as reported by `dumpsys display` (7104x3840 for both).
+-pub const PANEL_PER_EYE: (u32, u32) = (3552, 3840);
++/// Quest 3 physical panel per eye. This is not the lens-corrected render recommendation.
++pub const PANEL_PER_EYE: (u32, u32) = (2064, 2208);
+ 
+ /// Per-eye render size for a percentage of the panel. ALVR floors the width to a multiple of 32
+ /// on its own, so the requested size is not pre-aligned.
+@@ -63,7 +63,7 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
+         assign("video.foveated_encoding.content.center_shift_y", json::json!(0.0)),
+         assign("video.foveated_encoding.content.edge_ratio_x", json::json!(3.0)),
+         assign("video.foveated_encoding.content.edge_ratio_y", json::json!(4.0)),
+-        assign("video.foveated_encoding.content.follow_gaze", true.into()),
++        assign("video.foveated_encoding.content.follow_gaze", false.into()),
+         assign("video.max_buffering_frames", json::json!(1.5)),
+         assign("video.enforce_server_frame_pacing", true.into()),
+         assign("video.encoder_config.rate_control_mode.variant", "Cbr".into()),
+@@ -71,33 +71,34 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
+         assign("video.encoder_config.nvenc.quality_preset.variant", "P1".into()),
+         assign("connection.stream_protocol.variant", "Tcp".into()),
+         assign("connection.packet_size", 65000.into()),
+-        assign("connection.max_queued_server_video_frames", 12.into()),
++        assign("connection.max_queued_server_video_frames", 2.into()),
+     ];
+     list.extend(render_size(percent));
+     list
+ }
+ 
+ pub fn streaming_profiles() -> Vec<StreamingProfile> {
+-    let mut pyrowave = shared("PyroWave", 400, 90.0, 60);
+-    pyrowave.extend([
+-        assign("video.pyrowave.transport.variant", "Udp".into()),
+-        assign("video.pyrowave.wavelet.variant", "Cdf97".into()),
+-        assign("video.pyrowave.decode_path.variant", "Compute".into()),
+-    ]);
+-
+-    vec![
+-        StreamingProfile {
+-            name: RECOMMENDED_PROFILE,
+-            subtitle: RECOMMENDED_SUBTITLE,
+-            assignments: pyrowave,
+-        },
+-        StreamingProfile {
+-            name: H264_PROFILE,
+-            subtitle: "ALVR's hardware H.264 path at its best measured settings (NVIDIA GPU)",
+-            // Panel-native, 600 Mbps, 72 Hz: the configuration that measured 80 ms
+-            assignments: shared("H264", 600, 72.0, 100),
+-        },
+-    ]
++    let mut profiles = Vec::new();
++    for (name, mbps) in [
++        (RECOMMENDED_PROFILE, 600), ("Quest 3 PyroWave 800 Mbps", 800),
++        ("Quest 3 PyroWave 1000 Mbps", 1000), ("Quest 3 PyroWave 1500 Mbps", 1500),
++        ("Quest 3 PyroWave 2000 Mbps", 2000),
++    ] {
++        let mut assignments = shared("PyroWave", mbps, 90.0, 80);
++        assignments.extend([
++            assign("video.pyrowave.transport.variant", "Udp".into()),
++            assign("video.pyrowave.wavelet.variant", "Cdf97".into()),
++            assign("video.pyrowave.decode_path.variant", "Auto".into()),
++        ]);
++        profiles.push(StreamingProfile { name, subtitle: RECOMMENDED_SUBTITLE, assignments });
++    }
++    for (name, codec) in [(H264_PROFILE, "H264"), ("HEVC comparison", "Hevc"), ("AV1 comparison", "AV1")] {
++        profiles.push(StreamingProfile {
++            name, subtitle: "Hardware codec baseline, 200 Mbps, 90 Hz, same render size",
++            assignments: shared(codec, 200, 90.0, 80),
++        });
++    }
++    profiles
+ }
+ 
+ #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
+index 985a4d0..0167890 100644
+--- a/alvr/session/src/beta_tests.rs
++++ b/alvr/session/src/beta_tests.rs
+@@ -49,7 +49,7 @@ fn video_shows_only_codec_experiment_controls() {
+ fn codec_picker_offers_pyrowave_and_h264_only() {
+     assert_eq!(
+         visible_variants(&schema(), &["video", "preferred_codec"]).unwrap(),
+-        sorted(&["H264", "PyroWave"])
++        sorted(&["H264", "Hevc", "AV1", "PyroWave"])
+     );
+ }
+ 
+@@ -62,7 +62,7 @@ fn pyrowave_section_exposes_transport_wavelet_and_decode_path() {
+     );
+     assert_eq!(
+         visible_variants(&schema(), &["video", "pyrowave", "decode_path"]).unwrap(),
+-        sorted(&["Compute", "Fragment"])
++        sorted(&["Auto", "Compute", "Fragment"])
+     );
+ }
+ 
+@@ -133,7 +133,7 @@ fn default_settings() -> Settings {
+ fn fresh_install_streams_the_recommended_profile() {
+     let s = default_settings();
+     assert_eq!(s.video.preferred_codec, CodecType::PyroWave);
+-    assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(400)));
++    assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(600)));
+     assert_eq!(s.video.preferred_fps, 90.0);
+     for size in [
+         &s.video.transcoding_view_resolution,
+@@ -142,8 +142,8 @@ fn fresh_install_streams_the_recommended_profile() {
+         assert!(matches!(
+             size,
+             FrameSize::Absolute {
+-                width: 2131,
+-                height: Some(2304)
++                width: 1651,
++                height: Some(1766)
+             }
+         ));
+     }
+@@ -153,22 +153,22 @@ fn fresh_install_streams_the_recommended_profile() {
+     assert_eq!((fov.center_size_x, fov.center_size_y), (0.20, 0.178));
+     assert_eq!((fov.edge_ratio_x, fov.edge_ratio_y), (3.0, 4.0));
+     assert_eq!((fov.center_shift_x, fov.center_shift_y), (0.0, 0.0));
+-    assert!(fov.follow_gaze);
++    assert!(!fov.follow_gaze);
+     assert_eq!(s.video.pyrowave.transport, PyroWaveTransport::Udp);
+     assert_eq!(s.video.pyrowave.wavelet, PyroWaveWavelet::Cdf97);
+-    assert_eq!(s.video.pyrowave.decode_path, PyroWaveDecodePath::Compute);
++    assert_eq!(s.video.pyrowave.decode_path, PyroWaveDecodePath::Auto);
+     assert_eq!(s.video.max_buffering_frames, 1.5);
+     assert!(s.video.enforce_server_frame_pacing);
+     assert!(!s.video.color_correction.enabled());
+     assert!(!s.video.upscaling.enabled());
+     assert!(!s.video.clientside_foveation.enabled());
+     assert_eq!(s.connection.packet_size, 65000);
+-    assert_eq!(s.connection.max_queued_server_video_frames, 12);
++    assert_eq!(s.connection.max_queued_server_video_frames, 2);
+     // No pairing step: a headset running the beta client connects as soon as it is discovered
+     let Switch::Enabled(discovery) = &s.connection.client_discovery else {
+         panic!("discovery off")
+     };
+-    assert!(discovery.auto_trust_clients);
++    assert!(!discovery.auto_trust_clients);
+ }
+ 
+ // Applies session-style assignments the way the dashboard's SetValues does.
+@@ -198,13 +198,13 @@ fn profile(name: &str) -> StreamingProfile {
+ #[test]
+ fn profiles_are_named_for_testers() {
+     let profiles = streaming_profiles();
+-    assert_eq!(profiles.len(), 2);
+-    assert_eq!(profiles[0].name, "PyroWave 4:4:4 (Recommended)");
++    assert_eq!(profiles.len(), 8);
++    assert_eq!(profiles[0].name, RECOMMENDED_PROFILE);
+     assert_eq!(
+         profiles[0].subtitle,
+-        "Full-chroma experimental wireless VR streaming"
++        RECOMMENDED_SUBTITLE
+     );
+-    assert_eq!(profiles[1].name, "ALVR H.264 (tuned)");
++    assert_eq!(profiles[5].name, H264_PROFILE);
+ }
+ 
+ #[test]
+@@ -218,13 +218,13 @@ fn recommended_profile_is_the_fresh_install() {
+ fn h264_profile_is_the_measured_b15_cell() {
+     let s = apply(&profile(H264_PROFILE));
+     assert_eq!(s.video.preferred_codec, CodecType::H264);
+-    assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(600)));
+-    assert_eq!(s.video.preferred_fps, 72.0);
++    assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(200)));
++    assert_eq!(s.video.preferred_fps, 90.0);
+     assert!(matches!(
+         s.video.transcoding_view_resolution,
+         FrameSize::Absolute {
+-            width: 3552,
+-            height: Some(3840)
++            width: 1651,
++            height: Some(1766)
+         }
+     ));
+     assert_eq!(s.video.max_buffering_frames, 1.5);
+@@ -239,14 +239,14 @@ fn h264_profile_is_the_measured_b15_cell() {
+         panic!("foveation off")
+     };
+     assert_eq!((fov.center_size_x, fov.center_size_y), (0.20, 0.178));
+-    assert!(fov.follow_gaze);
++    assert!(!fov.follow_gaze);
+ }
+ 
+ #[test]
+ fn render_scale_is_relative_to_the_panel() {
+-    assert_eq!(render_scale_size(60), (2131, 2304));
+-    assert_eq!(render_scale_size(70), (2486, 2688));
+-    assert_eq!(render_scale_size(100), (3552, 3840));
++    assert_eq!(render_scale_size(60), (1238, 1325));
++    assert_eq!(render_scale_size(70), (1445, 1546));
++    assert_eq!(render_scale_size(100), (2064, 2208));
+ }
+ 
+ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
+@@ -263,8 +263,8 @@ fn effective_config_follows_settings_without_env() {
+     assert!(e.enabled);
+     assert!(e.udp);
+     assert!(!e.wavelet_53);
+-    assert_eq!(e.decode_path, PyroWaveDecodePath::Compute);
+-    assert!(e.follow_gaze);
++    assert_eq!(e.decode_path, PyroWaveDecodePath::Auto);
++    assert!(!e.follow_gaze);
+     assert!(e.overrides.is_empty());
+ }
+ 
+@@ -321,7 +321,7 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
+     assert_eq!(
+         line,
+         "PyroWave effective config: chroma=4:4:4 transport=UDP wavelet=CDF 9/7 \
+-         decode_path=compute follow_gaze=on overrides=none"
++         decode_path=auto follow_gaze=off overrides=none"
+     );
+ }
+ 
+diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
+index 1009e99..4419cdc 100644
+--- a/alvr/session/src/settings.rs
++++ b/alvr/session/src/settings.rs
+@@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
+ #[schema(gui = "button_group")]
+ pub enum BitrateMode {
+     #[schema(strings(display_name = "Constant"))]
+-    ConstantMbps(#[schema(gui(slider(min = 5, max = 1000, logarithmic)), suffix = "Mbps")] u64),
++    ConstantMbps(#[schema(gui(slider(min = 5, max = 2000, logarithmic)), suffix = "Mbps")] u64),
+ 
+     #[schema(collapsible)]
+     Adaptive {
+@@ -418,7 +418,7 @@ pub enum BitrateMode {
+ 
+         #[schema(strings(display_name = "Maximum bitrate"))]
+         #[schema(flag = "real-time")]
+-        #[schema(gui(slider(min = 1, max = 1000, logarithmic)), suffix = "Mbps")]
++        #[schema(gui(slider(min = 1, max = 2000, logarithmic)), suffix = "Mbps")]
+         max_throughput_mbps: Switch<u64>,
+ 
+         #[schema(strings(display_name = "Minimum bitrate"))]
+@@ -582,10 +582,8 @@ pub enum CodecType {
+     // HEVC and AV1 stay in the enum (session files and the wire format know them) but are not
+     // offered: on the Galaxy XR the hardware HEVC decoder measured ~8x slower than H.264.
+     #[schema(strings(display_name = "HEVC"))]
+-    #[schema(flag = "hidden")]
+     Hevc = 1,
+     #[schema(strings(display_name = "AV1"))]
+-    #[schema(flag = "hidden")]
+     AV1 = 2,
+     // Intra-only wavelet codec on Vulkan compute; see patches/README.md. Frames go through our
+     // own decoder on the client, not MediaCodec.
+@@ -618,7 +616,6 @@ pub enum PyroWaveWavelet {
+ #[schema(gui = "button_group")]
+ pub enum PyroWaveDecodePath {
+     // The driver heuristic, which picks the fragment path on Qualcomm. Kept for research.
+-    #[schema(flag = "hidden")]
+     Auto = 0,
+     Compute = 2,
+     Fragment = 1,
+@@ -640,7 +637,7 @@ pub struct PyroWaveConfig {
+ 
+     #[schema(strings(
+         display_name = "Headset decode path",
+-        help = "Compute runs reconstruction as compute shaders, measured 13-17 % faster to completion than the fragment path on the Galaxy XR."
++        help = "Auto uses the GPU vendor heuristic. Benchmark Compute and Fragment on Quest 3; CDF 5/3 requires Compute."
+     ))]
+     #[schema(flag = "steamvr-restart")]
+     pub decode_path: PyroWaveDecodePath,
+@@ -1663,15 +1660,15 @@ pub struct Settings {
+ }
+ 
+ pub fn session_settings_default() -> SettingsDefault {
+-    // 60 % of the 3552x3840 panel per eye, the measured PyroWave operating point
++    // 80 % of the Quest 3 panel per eye; initial unvalidated operating point
+     let view_resolution = FrameSizeDefault {
+         variant: FrameSizeDefaultVariant::Absolute,
+         Scale: 1.0,
+         Absolute: FrameSizeAbsoluteDefault {
+-            width: 2131,
++            width: 1651,
+             height: OptionalDefault {
+                 set: true,
+-                content: 2304,
++                content: 1766,
+             },
+         },
+     };
+@@ -1749,7 +1746,7 @@ pub fn session_settings_default() -> SettingsDefault {
+             bitrate: BitrateConfigDefault {
+                 gui_collapsed: false,
+                 mode: BitrateModeDefault {
+-                    ConstantMbps: 400,
++                    ConstantMbps: 600,
+                     Adaptive: BitrateModeAdaptiveDefault {
+                         gui_collapsed: true,
+                         saturation_multiplier: 0.95,
+@@ -1803,7 +1800,7 @@ pub fn session_settings_default() -> SettingsDefault {
+                     variant: PyroWaveWaveletDefaultVariant::Cdf97,
+                 },
+                 decode_path: PyroWaveDecodePathDefault {
+-                    variant: PyroWaveDecodePathDefaultVariant::Compute,
++                    variant: PyroWaveDecodePathDefaultVariant::Auto,
+                 },
+             },
+             encoder_config: EncoderConfigDefault {
+@@ -1910,7 +1907,7 @@ pub fn session_settings_default() -> SettingsDefault {
+                     center_shift_y: 0.0,
+                     edge_ratio_x: 3.,
+                     edge_ratio_y: 4.,
+-                    follow_gaze: true,
++                    follow_gaze: false,
+                 },
+             },
+             clientside_foveation: SwitchDefault {
+@@ -2179,7 +2176,7 @@ pub fn session_settings_default() -> SettingsDefault {
+                 content: DiscoveryConfigDefault {
+                     // Beta: no pairing step. The pre-release protocol ID already keeps stock
+                     // ALVR clients out; turn this off to approve each headset by hand.
+-                    auto_trust_clients: true,
++                    auto_trust_clients: false,
+                 },
+             },
+             wired_client_type: ClientFlavorDefault {
+@@ -2211,7 +2208,7 @@ pub fn session_settings_default() -> SettingsDefault {
+             server_recv_buffer_bytes: socket_buffer.clone(),
+             client_send_buffer_bytes: socket_buffer.clone(),
+             client_recv_buffer_bytes: socket_buffer,
+-            max_queued_server_video_frames: 12,
++            max_queued_server_video_frames: 2,
+             avoid_video_glitching: true,
+             minimum_idr_interval_ms: 100,
+             enable_on_connect_script: false,
