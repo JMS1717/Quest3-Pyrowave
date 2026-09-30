@@ -105,3 +105,7 @@ cargo +1.97.1 test -p alvr_session --lib
 
 Main-branch CI builds artifacts only. Pull requests run tool regression checks; tests can also be run manually. On-device correctness and timing
 are separate gates: see [`BENCHMARKING.md`](BENCHMARKING.md).
+
+## Switching between PyroWave and Virtual Desktop
+
+Enable **ALVR** in SteamVR’s **Manage Add-ons** before starting Quest3-Pyrowave. A repair for a Virtual Desktop session may have disabled this add-on. When returning to Virtual Desktop, disable ALVR again so the drivers do not compete to claim the headset. Keep the Virtual Desktop installation.
