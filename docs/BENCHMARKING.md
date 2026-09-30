@@ -1,6 +1,6 @@
 # Benchmark protocol
 
-The physical Wi-Fi link rate is not application throughput. Start with 600 Mbps, measure delivered
+The physical Wi-Fi link rate is not application throughput. The startup preset is 1000 Mbps / 120 Hz / full panel-relative resolution. For manual throughput sweeps, measure each requested rate separately:, measure delivered
 bytes, loss and p99 timing, and increase through 800/1000/1500/2000 Mbps. A 2000 Mbps budget is
 250 MB/s before IP, Wi-Fi, control and retransmission overhead. Do not call a target bitrate achieved
 unless the actual payload and frame rate support that statement.
@@ -38,7 +38,7 @@ ALVR Android PowerManager telemetry. PC GPU encode time is measured by ALVR; ven
 clock/load sensors require an external tool (e.g. GPU-Z logging), joined by capture time.
 
 Use **the same resolution, scene, encoder range and refresh** across codecs. PyroWave
-preserves full chroma at the encoded resolution; foveation is disabled in the current build.
+uses 4:2:0 by default (optional 4:4:4); foveation is disabled in the current build.
 Run CDF 9/7 Compute and Fragment at equal settings. Quest 3 Auto uses Compute based on the initial reference/readback check; both paths remain
 available for manual comparison. CDF 5/3 forces Compute and is a separate experiment.
 Hardware H.264/HEVC/AV1 at 200 Mbps are comparison starting points, not equal-quality claims.
@@ -88,3 +88,5 @@ bitstream. Deploy `libpyroclient.so`, `libpyrowave-shared.so`, and `libc++_share
 run with `LD_LIBRARY_PATH=.`. Score each readback against the PC PyroWave decoder, converted to
 full-range BT.709 RGBA, with `python -m tools.quest3.score --help`. Include warm-up policy and
 image dimensions; these offline results exclude VR compositor and network work.
+
+Use `--chroma 420` or `--chroma 444` with `tools.quest3.control apply`. Chroma and bitrate are separate controls. Capture files record both requested and negotiated chroma.

@@ -28,8 +28,8 @@ same-bitstream reconstruction differences, not source-image PSNR or proof for ev
 Fragment remains an explicit manual experiment. CDF 5/3 forces Compute.
 
 Foveated encoding and client foveation are disabled in server/client logic, defaults and presets.
-The first full-frame configuration requests 1032×1104 per eye, aligned to 1024×1088 by ALVR,
-with 300 Mbps/90 Hz/CDF 9/7/Compute/4:2:0. Raise uniform resolution manually if desired.
+The first full-frame configuration requests 2064×2208 per eye, aligned to 2080×2208 by ALVR,
+with 1000 Mbps/120 Hz/CDF 9/7/Compute/4:2:0. Dimensions are padded upward to codec alignment. Panel-relative size is not the larger lens-corrected OpenXR recommendation.
 
 ## Ordered next changes
 

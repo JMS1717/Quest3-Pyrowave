@@ -18,7 +18,7 @@
       207,
       240
     ],
-    "start_hz": 90,
+    "start_hz": 120,
     "wavelet": "Cdf97",
     "decode_paths": [
       "Compute",
@@ -26,8 +26,8 @@
       "Auto"
     ],
     "requested_eye_resolution": [
-      1032,
-      1104
+      2064,
+      2208
     ],
     "chroma": "420",
     "range": "full",
@@ -40,7 +40,11 @@
       "420",
       "444"
     ],
-    "start_mbps": 300
+    "start_mbps": 1000,
+    "aligned_eye_resolution": [
+      2080,
+      2208
+    ]
   },
   "comparisons": {
     "codecs": [

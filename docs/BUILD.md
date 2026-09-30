@@ -83,7 +83,7 @@ adb shell am start -n io.github.jms1717.quest3pyrowave/android.app.NativeActivit
 ```
 
 Allow the requested microphone permission if you use it. In the dashboard, explicitly trust
-your headset, register this driver with SteamVR, and select **Quest 3 PyroWave 600 Mbps**. Use
+your headset, register this driver with SteamVR, and select **Quest 3 PyroWave 1000 Mbps**. Use
 only one active ALVR SteamVR driver. This fork has its own protocol version; stock and Galaxy XR
 clients cannot pair with it. Driver registration and firewall rules are through the ALVR UI.
 Allow the streamer on your private LAN only; the API is local at port 8082 and PyroWave UDP at 9948.
