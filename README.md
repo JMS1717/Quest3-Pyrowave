@@ -36,6 +36,11 @@ its slider sets a ceiling rather than a guaranteed rate.
 [Native USB streaming](docs/USB.md) is available through Devices → Wired Connection.
 The fork selects its own APK package and uses TCP for USB; verify the loopback peer before benchmarking.
 
+The [client performance overlay](docs/OVERLAY.md) is on by default in the next development
+build. Click both thumbsticks together to toggle the 3D panel. It shows bitrate, delivered
+and Game/host FPS, latency stages, frame counters and available Quest GPU/thermal data.
+Game/host FPS and latency are explicitly labeled estimates/proxies.
+
 | Requested refresh | Frame budget | Policy |
 |---|---:|---|
 | 72 Hz | 13.89 ms | Conservative candidate; live acceptance pending |

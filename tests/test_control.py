@@ -35,3 +35,15 @@ class ControlTests(unittest.TestCase):
     def test_unknown_transport_rejected_before_mutation(self):
         with self.assertRaises(ValueError):
             self.apply_offline(transport='Unknown')
+
+    def test_wavelet_is_explicit_and_preserved(self):
+        result, settings = self.apply_offline(wavelet='Cdf53')
+        self.assertEqual(result['wavelet'], 'Cdf53')
+        self.assertEqual(settings['video']['pyrowave']['wavelet']['variant'], 'Cdf53')
+
+    def test_fragment_cdf53_rejected_before_mutation(self):
+        with patch('tools.quest3.control.set_values') as write:
+            with self.assertRaises(ValueError):
+                apply('PyroWave', 1000, 120, 'Fragment',
+                      {'refresh_extension':True, 'rates_hz':[120]}, wavelet='Cdf53')
+            write.assert_not_called()

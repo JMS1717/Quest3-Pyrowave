@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7b..336bd13 100644
+index 7cead7b..02b73f9 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,7 +182,7 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -16,7 +16,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -25,7 +25,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -34,7 +34,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -43,7 +43,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -52,7 +52,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -61,7 +61,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -70,7 +70,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -79,7 +79,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "dirs",
   "once_cell",
@@ -88,7 +88,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -97,7 +97,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_common",
   "egui",
@@ -106,7 +106,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -115,7 +115,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -124,7 +124,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -133,7 +133,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -142,7 +142,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -151,7 +151,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -160,7 +160,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -169,7 +169,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_common",
   "jni",
@@ -178,7 +178,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -187,7 +187,7 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -196,12 +196,12 @@ index 7cead7b..336bd13 100644
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..e310a68 100644
+index ae00ce8..06824f9 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -209,15 +209,29 @@ index ae00ce8..e310a68 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.6"
++version = "20.13.0-quest3.pyro.7"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
 diff --git a/alvr/client_core/src/connection.rs b/alvr/client_core/src/connection.rs
-index 1ed4333..56e4d25 100644
+index 1ed4333..996268d 100644
 --- a/alvr/client_core/src/connection.rs
 +++ b/alvr/client_core/src/connection.rs
-@@ -112,7 +112,7 @@ fn is_streaming(ctx: &ConnectionContext) -> bool {
+@@ -80,11 +80,13 @@ pub struct ConnectionContext {
+     pub uses_multimodal_protocol: RelaxedAtomic,
+     pub velocities_multiplier: RwLock<f32>,
+     pub max_prediction: RwLock<Duration>,
++    pub performance: RwLock<Option<(alvr_packets::PerformanceSnapshot, Instant)>>,
+ }
+ 
+ impl ConnectionContext {
+     /// Drop everything tied to the stream that just ended.
+     fn end_stream(&self) {
++        *self.performance.write() = None;
+         *self.control_sender.lock() = None;
+         *self.tracking_sender.lock() = None;
+         *self.statistics_sender.lock() = None;
+@@ -112,7 +114,7 @@ fn is_streaming(ctx: &ConnectionContext) -> bool {
  }
  
  pub fn connection_lifecycle_loop(
@@ -226,7 +240,7 @@ index 1ed4333..56e4d25 100644
      ctx: Arc<ConnectionContext>,
      lifecycle_state: Arc<RwLock<LifecycleState>>,
      event_queue: Arc<Mutex<VecDeque<ClientCoreEvent>>>,
-@@ -123,8 +123,9 @@ pub fn connection_lifecycle_loop(
+@@ -123,8 +125,9 @@ pub fn connection_lifecycle_loop(
  
      while *lifecycle_state.read() != LifecycleState::ShuttingDown {
          if *lifecycle_state.read() == LifecycleState::Resumed {
@@ -237,11 +251,33 @@ index 1ed4333..56e4d25 100644
                  Arc::clone(&ctx),
                  Arc::clone(&lifecycle_state),
                  Arc::clone(&event_queue),
+@@ -571,6 +574,13 @@ fn connection_pipeline(
+                         set_hud_message(&event_queue, SERVER_RESTART_MESSAGE);
+                         disconnect_notif.notify_one();
+                     }
++                    Ok(ServerControlPacket::Reserved(text)) => {
++                        if let Some(json) = text.strip_prefix(alvr_packets::PERFORMANCE_PREFIX) {
++                            if let Ok(snapshot) = serde_json::from_str::<alvr_packets::PerformanceSnapshot>(json) {
++                                *ctx.performance.write() = Some((snapshot, Instant::now()));
++                            }
++                        }
++                    }
+                     Ok(ServerControlPacket::ReservedBuffer(buffer)) => {
+                         // NB: it's normal for deserialization to fail if server has different
+                         // version
 diff --git a/alvr/client_core/src/lib.rs b/alvr/client_core/src/lib.rs
-index 90a7c0a..b91feea 100644
+index 90a7c0a..041310e 100644
 --- a/alvr/client_core/src/lib.rs
 +++ b/alvr/client_core/src/lib.rs
-@@ -92,6 +92,7 @@ pub(crate) fn push_foveation_center(timestamp: Duration, center: [[f32; 2]; 2])
+@@ -11,6 +11,7 @@ mod logging_backend;
+ mod sockets;
+ mod statistics;
+ mod storage;
++pub mod performance;
+ 
+ #[cfg(target_os = "android")]
+ mod audio;
+@@ -92,6 +93,7 @@ pub(crate) fn push_foveation_center(timestamp: Duration, center: [[f32; 2]; 2])
  }
  
  pub struct ClientCoreContext {
@@ -249,7 +285,19 @@ index 90a7c0a..b91feea 100644
      lifecycle_state: Arc<RwLock<LifecycleState>>,
      event_queue: Arc<Mutex<VecDeque<ClientCoreEvent>>>,
      connection_context: Arc<ConnectionContext>,
-@@ -115,6 +116,7 @@ impl ClientCoreContext {
+@@ -99,6 +101,11 @@ pub struct ClientCoreContext {
+ }
+ 
+ impl ClientCoreContext {
++    pub fn performance_snapshot(&self) -> Option<alvr_packets::PerformanceSnapshot> {
++        self.connection_context.performance.read().as_ref()
++            .filter(|(_, received)| received.elapsed() < Duration::from_secs(3))
++            .map(|(snapshot, _)| snapshot.clone())
++    }
+     pub fn new(capabilities: ClientCapabilities) -> Self {
+         dbg_client_core!("Create");
+ 
+@@ -115,6 +122,7 @@ impl ClientCoreContext {
              alvr_system_info::set_wifi_lock(true);
          }
  
@@ -257,7 +305,7 @@ index 90a7c0a..b91feea 100644
          let lifecycle_state = Arc::new(RwLock::new(LifecycleState::Idle));
          let event_queue = Arc::new(Mutex::new(VecDeque::new()));
          let connection_context = Arc::new(ConnectionContext::default());
-@@ -122,6 +124,7 @@ impl ClientCoreContext {
+@@ -122,6 +130,7 @@ impl ClientCoreContext {
              let lifecycle_state = Arc::clone(&lifecycle_state);
              let connection_context = Arc::clone(&connection_context);
              let event_queue = Arc::clone(&event_queue);
@@ -265,7 +313,7 @@ index 90a7c0a..b91feea 100644
              move || {
                  connection::connection_lifecycle_loop(
                      capabilities,
-@@ -133,6 +136,7 @@ impl ClientCoreContext {
+@@ -133,6 +142,7 @@ impl ClientCoreContext {
          });
  
          Self {
@@ -273,7 +321,7 @@ index 90a7c0a..b91feea 100644
              lifecycle_state,
              event_queue,
              connection_context,
-@@ -140,6 +144,11 @@ impl ClientCoreContext {
+@@ -140,6 +150,11 @@ impl ClientCoreContext {
          }
      }
  
@@ -285,6 +333,74 @@ index 90a7c0a..b91feea 100644
      pub fn resume(&self) {
          dbg_client_core!("resume");
  
+diff --git a/alvr/client_core/src/performance.rs b/alvr/client_core/src/performance.rs
+new file mode 100644
+index 0000000..5e9bb7c
+--- /dev/null
++++ b/alvr/client_core/src/performance.rs
+@@ -0,0 +1,62 @@
++//! Client overlay controls; independent of graphics so the chord can be regression tested.
++pub struct OverlayToggle {
++    pub visible: bool,
++    armed: bool,
++}
++
++impl Default for OverlayToggle {
++    fn default() -> Self {
++        Self {
++            visible: true,
++            armed: true,
++        }
++    }
++}
++
++impl OverlayToggle {
++    pub fn update(&mut self, left: bool, right: bool) {
++        if !left && !right {
++            self.armed = true;
++        }
++        if self.armed && left && right {
++            self.visible = !self.visible;
++            self.armed = false;
++        }
++    }
++}
++
++pub fn metric(value: f32) -> String {
++    if value.is_finite() && value >= 0.0 {
++        format!("{value:.1}")
++    } else {
++        "--".into()
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn both_sticks_toggle_once_and_both_must_be_released_to_rearm() {
++        let mut toggle = OverlayToggle::default();
++        assert!(toggle.visible);
++        toggle.update(true, false);
++        assert!(toggle.visible);
++        toggle.update(true, true);
++        assert!(!toggle.visible);
++        toggle.update(true, true);
++        toggle.update(true, false);
++        toggle.update(true, true);
++        assert!(!toggle.visible);
++        toggle.update(false, false);
++        toggle.update(true, true);
++        assert!(toggle.visible);
++    }
++    #[test]
++    fn unknown_metrics_are_never_displayed_as_valid_numbers() {
++        assert_eq!(metric(f32::NAN), "--");
++        assert_eq!(metric(f32::INFINITY), "--");
++        assert_eq!(metric(-1.0), "--");
++        assert_eq!(metric(120.0), "120.0");
++    }
++}
 diff --git a/alvr/client_core/src/video_decoder/android.rs b/alvr/client_core/src/video_decoder/android.rs
 index f764033..d636442 100644
 --- a/alvr/client_core/src/video_decoder/android.rs
@@ -1713,18 +1829,19 @@ index 7765bb4..b102615 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..70bfeb8 100644
+index a0fd36f..7e95e42 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
-@@ -4,6 +4,7 @@ mod graphics;
+@@ -4,6 +4,8 @@ mod graphics;
  mod interaction;
  mod lobby;
  mod passthrough;
++mod performance;
 +mod refresh_probe;
  mod stream;
  
  use crate::stream::ParsedStreamConfig;
-@@ -291,11 +292,21 @@ pub fn entry_point() {
+@@ -291,11 +293,21 @@ pub fn entry_point() {
          // logcat once connected; the harness checks the DynamicPolicyManager vote against it.
          if exts.ext_performance_settings {
              match extra_extensions::perf_settings::level_from_property() {
@@ -1751,7 +1868,7 @@ index a0fd36f..70bfeb8 100644
              }
          } else {
              alvr_common::error!("[PERF] XR_EXT_performance_settings not advertised");
-@@ -313,19 +324,37 @@ pub fn entry_point() {
+@@ -313,19 +325,37 @@ pub fn entry_point() {
              views_config[0].recommended_image_rect_height,
          );
  
@@ -1793,7 +1910,7 @@ index a0fd36f..70bfeb8 100644
  
          // Whether anything is correcting for the ~26 ms the runtime predicts ahead. If the
          // compositor does not timewarp and ALVR does not either -- 20.13.0 hardcodes
-@@ -354,8 +383,10 @@ pub fn entry_point() {
+@@ -354,8 +384,10 @@ pub fn entry_point() {
              exts.fb_foveation,
              advertised_extension_names.len(),
          );
@@ -1806,7 +1923,7 @@ index a0fd36f..70bfeb8 100644
  
          if exts.fb_color_space {
              xr_session
-@@ -365,8 +396,8 @@ pub fn entry_point() {
+@@ -365,8 +397,8 @@ pub fn entry_point() {
  
          let capabilities = ClientCapabilities {
              default_view_resolution,
@@ -1817,7 +1934,7 @@ index a0fd36f..70bfeb8 100644
              encoder_high_profile: galaxy_xr || platform != Platform::Unknown,
              encoder_10_bits: galaxy_xr || platform != Platform::Unknown,
              encoder_av1: matches!(
-@@ -392,7 +423,11 @@ pub fn entry_point() {
+@@ -392,9 +424,16 @@ pub fn entry_point() {
              Rc::clone(&graphics_context),
              Arc::clone(&interaction_context),
              platform,
@@ -1829,8 +1946,13 @@ index a0fd36f..70bfeb8 100644
 +            },
              &last_lobby_message,
          );
++        let mut performance_overlay = performance::PerformanceOverlay::new(
++            xr_session.clone(), Rc::clone(&graphics_context), Arc::clone(&interaction_context)
++        ).map_err(|error| error!("Performance overlay unavailable: {error:?}")).ok();
          let lobby_body_tracking_config = BodyTrackingSourcesConfig {
-@@ -412,11 +447,16 @@ pub fn entry_point() {
+             body_tracking_fb: Switch::Disabled,
+             body_tracking_bd: Switch::Enabled(BodyTrackingBDConfig::BodyTracking {
+@@ -412,11 +451,16 @@ pub fn entry_point() {
              .select_sources(&lobby_interaction_sources);
  
          let mut session_running = false;
@@ -1848,7 +1970,7 @@ index a0fd36f..70bfeb8 100644
          // Budget for the pre-xrWaitFrame poll: the previous frame's period, 72 Hz until known.
          let mut poll_interval = Duration::from_micros(13_889);
          'render_loop: loop {
-@@ -432,7 +472,17 @@ pub fn entry_point() {
+@@ -432,7 +476,17 @@ pub fn entry_point() {
                                  .begin(xr::ViewConfigurationType::PRIMARY_STEREO)
                                  .unwrap();
  
@@ -1867,7 +1989,7 @@ index a0fd36f..70bfeb8 100644
  
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
  
-@@ -440,6 +490,7 @@ pub fn entry_point() {
+@@ -440,6 +494,7 @@ pub fn entry_point() {
                          }
                          xr::SessionState::STOPPING => {
                              session_running = false;
@@ -1875,9 +1997,11 @@ index a0fd36f..70bfeb8 100644
  
                              passthrough_layer = None;
  
-@@ -495,6 +546,27 @@ pub fn entry_point() {
+@@ -494,7 +549,29 @@ pub fn entry_point() {
+                         lobby.update_hud_message(&message);
                      }
                      ClientCoreEvent::StreamingStarted(config) => {
++                        if let Some(overlay) = &mut performance_overlay { overlay.set_stream(&config); }
                          let config = ParsedStreamConfig::new(&config);
 +                        // The runtime may reject a previously confirmed mode after OS/thermal changes.
 +                        // Abort this connection, keep the lobby usable and require a new selection/relaunch.
@@ -1903,15 +2027,16 @@ index a0fd36f..70bfeb8 100644
  
                          let context = StreamContext::new(
                              Arc::clone(&core_context),
-@@ -512,6 +584,7 @@ pub fn entry_point() {
+@@ -512,6 +589,8 @@ pub fn entry_point() {
                          stream_context = Some(context);
                      }
                      ClientCoreEvent::StreamingStopped => {
++                        if let Some(overlay) = &mut performance_overlay { overlay.disconnected(); }
 +                        requested_refresh_rate = None;
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -565,10 +638,16 @@ pub fn entry_point() {
+@@ -565,10 +644,16 @@ pub fn entry_point() {
              // Frame in hand before the runtime picks the display slot (stream.rs poll_frame).
              if early_poll {
                  if let Some(stream) = &mut stream_context {
@@ -1929,7 +2054,7 @@ index a0fd36f..70bfeb8 100644
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -579,9 +658,45 @@ pub fn entry_point() {
+@@ -579,9 +664,45 @@ pub fn entry_point() {
              let frame_interval =
                  Duration::from_nanos(frame_state.predicted_display_period.as_nanos() as _);
              poll_interval = frame_interval;
@@ -1976,7 +2101,7 @@ index a0fd36f..70bfeb8 100644
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +720,15 @@ pub fn entry_point() {
+@@ -605,15 +726,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -2001,7 +2126,7 @@ index a0fd36f..70bfeb8 100644
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,7 +736,7 @@ pub fn entry_point() {
+@@ -621,7 +742,7 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -2010,7 +2135,44 @@ index a0fd36f..70bfeb8 100644
                  }
              }
              let vsync_time =
-@@ -698,7 +813,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -654,22 +775,28 @@ pub fn entry_point() {
+                 xr::EnvironmentBlendMode::OPAQUE
+             };
+ 
+-            // todo: allow rendering lobby and stream layers at the same time and add cross fade
++            if let Some(overlay) = &mut performance_overlay {
++                if let Err(error) = overlay.update(&core_context) {
++                    error!("Performance overlay disabled after render failure: {error:?}");
++                    performance_overlay = None;
++                }
++            }
++            // Render the video independently of the client-local performance quad.
+             let (layer, display_time) = if let Some(stream) = &mut stream_context {
+                 stream.render(frame_interval, vsync_time)
+             } else {
+                 (lobby.render(vsync_time), vsync_time)
+             };
+ 
+-            let layers: &[&xr::CompositionLayerBase<_>] =
+-                if let Some(passthrough_layer) = &passthrough_layer {
+-                    &[passthrough_layer, &layer.build()]
+-                } else {
+-                    &[&layer.build()]
+-                };
++            let projection = layer.build();
++            let overlay_layer = performance_overlay.as_ref().and_then(|overlay| overlay.layer());
++            let mut layers: Vec<&xr::CompositionLayerBase<_>> = Vec::with_capacity(3);
++            if let Some(passthrough_layer) = &passthrough_layer { layers.push(passthrough_layer); }
++            layers.push(&projection);
++            if let Some(overlay_layer) = &overlay_layer { layers.push(overlay_layer); }
+ 
+             graphics_context.make_current();
+-            let res = xr_frame_stream.end(to_xr_time(display_time), blend_mode, layers);
++            let res = xr_frame_stream.end(to_xr_time(display_time), blend_mode, &layers);
+ 
+             if let Err(e) = res {
+                 let time = to_xr_time(display_time);
+@@ -698,7 +825,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
@@ -2021,6 +2183,266 @@ index a0fd36f..70bfeb8 100644
      })
  }
  
+diff --git a/alvr/client_openxr/src/performance.rs b/alvr/client_openxr/src/performance.rs
+new file mode 100644
+index 0000000..bc72294
+--- /dev/null
++++ b/alvr/client_openxr/src/performance.rs
+@@ -0,0 +1,254 @@
++use crate::interaction::{ButtonAction, InteractionContext};
++use alvr_client_core::{
++    performance::{metric, OverlayToggle},
++    ClientCoreContext,
++};
++use alvr_common::{
++    glam::UVec2, parking_lot::RwLock, LEFT_THUMBSTICK_CLICK_ID, RIGHT_THUMBSTICK_CLICK_ID,
++};
++use alvr_graphics::{GraphicsContext, PerformanceRenderer, SDR_FORMAT_GL};
++use alvr_packets::{PerformanceSnapshot, StreamConfig};
++use openxr as xr;
++use std::{
++    rc::Rc,
++    sync::Arc,
++    time::{Duration, Instant},
++};
++
++const RESOLUTION: UVec2 = UVec2::new(960, 448);
++
++pub struct PerformanceOverlay {
++    session: xr::Session<xr::OpenGlEs>,
++    context: Rc<GraphicsContext>,
++    interactions: Arc<RwLock<InteractionContext>>,
++    space: xr::Space,
++    swapchain: xr::Swapchain<xr::OpenGlEs>,
++    renderer: PerformanceRenderer,
++    toggle: OverlayToggle,
++    next_update: Instant,
++    header: String,
++}
++
++impl PerformanceOverlay {
++    pub fn new(
++        session: xr::Session<xr::OpenGlEs>,
++        context: Rc<GraphicsContext>,
++        interactions: Arc<RwLock<InteractionContext>>,
++    ) -> xr::Result<Self> {
++        context.make_current();
++        let space =
++            session.create_reference_space(xr::ReferenceSpaceType::VIEW, xr::Posef::IDENTITY)?;
++        let swapchain = session.create_swapchain(&xr::SwapchainCreateInfo {
++            create_flags: xr::SwapchainCreateFlags::EMPTY,
++            usage_flags: xr::SwapchainUsageFlags::COLOR_ATTACHMENT
++                | xr::SwapchainUsageFlags::SAMPLED,
++            format: SDR_FORMAT_GL,
++            sample_count: 1,
++            width: RESOLUTION.x,
++            height: RESOLUTION.y,
++            face_count: 1,
++            array_size: 1,
++            mip_count: 1,
++        })?;
++        let renderer = PerformanceRenderer::new(
++            Rc::clone(&context),
++            RESOLUTION,
++            &swapchain.enumerate_images()?,
++        );
++        Ok(Self {
++            session,
++            context,
++            interactions,
++            space,
++            swapchain,
++            renderer,
++            toggle: OverlayToggle::default(),
++            next_update: Instant::now(),
++            header: "Connecting".into(),
++        })
++    }
++
++    pub fn set_stream(&mut self, config: &StreamConfig) {
++        let v = &config.settings.video;
++        let n = &config.negotiated_config;
++        let transport = if n.wired {
++            "USB/TCP"
++        } else if v.preferred_codec == alvr_session::CodecType::PyroWave {
++            if v.pyrowave.transport == alvr_session::PyroWaveTransport::Udp {
++                "Wi-Fi/PWU2 UDP"
++            } else {
++                "Wi-Fi/TCP"
++            }
++        } else {
++            "Wireless"
++        };
++        self.header = format!(
++            "{:?} {}  |  {}x{} /eye  |  {:.0} Hz",
++            v.preferred_codec,
++            if v.preferred_codec == alvr_session::CodecType::PyroWave && v.pyrowave.chroma_444 {
++                "4:4:4"
++            } else {
++                "4:2:0"
++            },
++            n.view_resolution.x,
++            n.view_resolution.y,
++            n.refresh_rate_hint
++        );
++        self.header.push_str(&format!("  |  {transport}"));
++        self.next_update = Instant::now();
++    }
++
++    pub fn disconnected(&mut self) {
++        self.header = "Waiting for stream".into();
++        self.next_update = Instant::now();
++    }
++
++    pub fn update(&mut self, core: &ClientCoreContext) -> xr::Result<()> {
++        let interactions = self.interactions.read();
++        let pressed = |id: u64| {
++            if let Some(ButtonAction::Binary(action)) = interactions.button_actions.get(&id) {
++                action
++                    .state(&self.session, xr::Path::NULL)
++                    .ok()
++                    .is_some_and(|state| state.is_active && state.current_state)
++            } else {
++                false
++            }
++        };
++        let was_visible = self.toggle.visible;
++        self.toggle.update(
++            pressed(*LEFT_THUMBSTICK_CLICK_ID),
++            pressed(*RIGHT_THUMBSTICK_CLICK_ID),
++        );
++        drop(interactions);
++        if !was_visible && self.toggle.visible {
++            self.next_update = Instant::now();
++        }
++        if !self.toggle.visible || Instant::now() < self.next_update {
++            return Ok(());
++        }
++        let text = self.text(core.performance_snapshot());
++        self.context.make_current();
++        let image = self.swapchain.acquire_image()?;
++        self.swapchain.wait_image(xr::Duration::INFINITE)?;
++        self.renderer.update(image as usize, &text);
++        self.swapchain.release_image()?;
++        self.next_update = Instant::now() + Duration::from_millis(500);
++        Ok(())
++    }
++
++    fn text(&self, data: Option<PerformanceSnapshot>) -> String {
++        let Some(s) = data.filter(|s| s.frame_age_ms < 2000.0) else {
++            return format!("QUEST3 PYROWAVE PERFORMANCE\n{}\n\nWaiting for fresh stream statistics\n\nBoth thumbstick clicks: toggle overlay", self.header);
++        };
++        let mut text = format!(
++            "QUEST3 PYROWAVE PERFORMANCE\n{}\n\
++            Bitrate {} Mbps  |  target {} Mbps\n\
++            Delivered {} FPS  |  Game/host {} FPS*\n\
++            Latency {} ms*  |  Game {} / Encode {} / Network {}*\n\
++            Decode {} / Queue {} / Render {} / Vsync {} ms\n\
++            Presented frames {}  |  Lost packets {}\n",
++            self.header,
++            metric(s.bitrate_bps / 1e6),
++            metric(s.requested_bitrate_bps / 1e6),
++            metric(s.client_fps),
++            metric(s.server_fps),
++            metric(s.total_ms),
++            metric(s.game_ms),
++            metric(s.encoder_ms),
++            metric(s.network_ms),
++            metric(s.decoder_ms),
++            metric(s.queue_ms),
++            metric(s.compositor_ms),
++            metric(s.vsync_ms),
++            s.frames_total,
++            s.packets_lost_total
++        );
++        if let Some(h) = s.headset {
++            if let Some(p) = h.pyrowave {
++                let mean = |values: &[f32]| {
++                    let values: Vec<_> = values
++                        .iter()
++                        .copied()
++                        .filter(|v| v.is_finite() && *v >= 0.0)
++                        .collect();
++                    if values.is_empty() {
++                        "--".into()
++                    } else {
++                        metric(values.iter().sum::<f32>() / values.len() as f32)
++                    }
++                };
++                text.push_str(&format!(
++                    "GPU decode {} / Completion {} ms  |  Decoded {}\n\
++                    Dropped {} / Skipped {} / Superseded {} / Errors {}\n",
++                    mean(&p.gpu_decode_ms),
++                    mean(&p.fence_ms),
++                    p.complete,
++                    p.dropped,
++                    p.skipped,
++                    p.superseded,
++                    p.decode_failures
++                ));
++            }
++            text.push_str(&format!(
++                "Battery {}% / {} C  |  Thermal {}  |  GPU {} MHz\n",
++                h.battery_level
++                    .map(|v| metric(v * 100.0))
++                    .unwrap_or_else(|| "--".into()),
++                h.battery_temperature_c
++                    .map(metric)
++                    .unwrap_or_else(|| "--".into()),
++                h.thermal_status
++                    .map(|v| v.to_string())
++                    .unwrap_or_else(|| "--".into()),
++                gpu_clock()
++            ));
++        }
++        text.push_str("*ALVR estimates; host presents proxy game FPS. Network is residual.\nBoth thumbstick clicks: toggle overlay");
++        text
++    }
++
++    pub fn layer(&self) -> Option<xr::CompositionLayerQuad<'_, xr::OpenGlEs>> {
++        self.toggle.visible.then(|| {
++            xr::CompositionLayerQuad::new()
++                .layer_flags(
++                    xr::CompositionLayerFlags::BLEND_TEXTURE_SOURCE_ALPHA
++                        | xr::CompositionLayerFlags::UNPREMULTIPLIED_ALPHA,
++                )
++                .space(&self.space)
++                .eye_visibility(xr::EyeVisibility::BOTH)
++                .sub_image(
++                    xr::SwapchainSubImage::new()
++                        .swapchain(&self.swapchain)
++                        .image_array_index(0)
++                        .image_rect(xr::Rect2Di {
++                            offset: xr::Offset2Di { x: 0, y: 0 },
++                            extent: xr::Extent2Di {
++                                width: RESOLUTION.x as i32,
++                                height: RESOLUTION.y as i32,
++                            },
++                        }),
++                )
++                .pose(xr::Posef {
++                    position: xr::Vector3f {
++                        x: 0.0,
++                        y: -0.32,
++                        z: -1.2,
++                    },
++                    ..xr::Posef::IDENTITY
++                })
++                .size(xr::Extent2Df {
++                    width: 0.9,
++                    height: 0.42,
++                })
++        })
++    }
++}
++
++fn gpu_clock() -> String {
++    std::fs::read_to_string("/sys/class/kgsl/kgsl-3d0/gpuclk")
++        .ok()
++        .and_then(|v| v.trim().parse::<f32>().ok())
++        .map(|v| metric(v / 1e6))
++        .unwrap_or_else(|| "--".into())
++}
 diff --git a/alvr/client_openxr/src/refresh_probe.rs b/alvr/client_openxr/src/refresh_probe.rs
 new file mode 100644
 index 0000000..766b412
@@ -2611,6 +3033,244 @@ index 3be9319..c075556 100644
          assert_eq!(r["settings"]["advanced_changes"], json!([]));
          assert_eq!(r["encoded_size"], json!([1984, 896]));
          assert_eq!(r["window"]["frames"], 900);
+diff --git a/alvr/graphics/resources/performance.wgsl b/alvr/graphics/resources/performance.wgsl
+new file mode 100644
+index 0000000..4e06e89
+--- /dev/null
++++ b/alvr/graphics/resources/performance.wgsl
+@@ -0,0 +1,14 @@
++struct VertexOutput { @builtin(position) position: vec4<f32>, @location(0) uv: vec2<f32>, }
++@vertex fn vertex_main(@builtin(vertex_index) index: u32) -> VertexOutput {
++    let positions = array<vec2<f32>, 3>(vec2(-1.0, -1.0), vec2(3.0, -1.0), vec2(-1.0, 3.0));
++    let p = positions[index];
++    var out: VertexOutput;
++    out.position = vec4(p, 0.0, 1.0);
++    out.uv = p * vec2(0.5, -0.5) + vec2(0.5);
++    return out;
++}
++@group(0) @binding(0) var panel: texture_2d<f32>;
++@group(0) @binding(1) var panel_sampler: sampler;
++@fragment fn fragment_main(in: VertexOutput) -> @location(0) vec4<f32> {
++    return textureSample(panel, panel_sampler, in.uv);
++}
+diff --git a/alvr/graphics/src/lib.rs b/alvr/graphics/src/lib.rs
+index 3485570..ffe9a39 100644
+--- a/alvr/graphics/src/lib.rs
++++ b/alvr/graphics/src/lib.rs
+@@ -1,8 +1,10 @@
+ mod lobby;
++mod performance;
+ mod staging;
+ mod stream;
+ 
+ pub use lobby::*;
++pub use performance::*;
+ pub use stream::*;
+ 
+ use alvr_common::{
+diff --git a/alvr/graphics/src/performance.rs b/alvr/graphics/src/performance.rs
+new file mode 100644
+index 0000000..31f33b6
+--- /dev/null
++++ b/alvr/graphics/src/performance.rs
+@@ -0,0 +1,197 @@
++use crate::{create_gl_swapchain, create_texture, GraphicsContext, SDR_FORMAT};
++use alvr_common::glam::UVec2;
++use glyph_brush_layout::{
++    ab_glyph::{Font, FontRef, ScaleFont},
++    FontId, GlyphPositioner, Layout, SectionGeometry, SectionText,
++};
++use std::rc::Rc;
++use wgpu::*;
++
++/// A small client-local panel. Text is rasterized/uploaded only when updated, then
++/// the OpenXR compositor reuses the last released image at the headset refresh rate.
++pub struct PerformanceRenderer {
++    context: Rc<GraphicsContext>,
++    resolution: UVec2,
++    texture: Texture,
++    targets: Vec<TextureView>,
++    pipeline: RenderPipeline,
++    bind_group: BindGroup,
++}
++
++impl PerformanceRenderer {
++    pub fn new(context: Rc<GraphicsContext>, resolution: UVec2, images: &[u32]) -> Self {
++        let device = &context.device;
++        let texture = create_texture(device, resolution, SDR_FORMAT);
++        let targets = create_gl_swapchain(device, images, resolution, SDR_FORMAT);
++        let layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
++            label: Some("performance_panel"),
++            entries: &[
++                BindGroupLayoutEntry {
++                    binding: 0,
++                    visibility: ShaderStages::FRAGMENT,
++                    ty: BindingType::Texture {
++                        sample_type: TextureSampleType::Float { filterable: true },
++                        view_dimension: TextureViewDimension::D2,
++                        multisampled: false,
++                    },
++                    count: None,
++                },
++                BindGroupLayoutEntry {
++                    binding: 1,
++                    visibility: ShaderStages::FRAGMENT,
++                    ty: BindingType::Sampler(SamplerBindingType::Filtering),
++                    count: None,
++                },
++            ],
++        });
++        let view = texture.create_view(&TextureViewDescriptor::default());
++        let sampler = device.create_sampler(&SamplerDescriptor {
++            mag_filter: FilterMode::Linear,
++            min_filter: FilterMode::Linear,
++            ..Default::default()
++        });
++        let bind_group = device.create_bind_group(&BindGroupDescriptor {
++            label: None,
++            layout: &layout,
++            entries: &[
++                BindGroupEntry {
++                    binding: 0,
++                    resource: BindingResource::TextureView(&view),
++                },
++                BindGroupEntry {
++                    binding: 1,
++                    resource: BindingResource::Sampler(&sampler),
++                },
++            ],
++        });
++        let shader = device.create_shader_module(ShaderModuleDescriptor {
++            label: Some("performance_panel"),
++            source: ShaderSource::Wgsl(include_str!("../resources/performance.wgsl").into()),
++        });
++        let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
++            label: None,
++            bind_group_layouts: &[&layout],
++            push_constant_ranges: &[],
++        });
++        let pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
++            label: Some("performance_panel"),
++            layout: Some(&pipeline_layout),
++            vertex: VertexState {
++                module: &shader,
++                entry_point: Some("vertex_main"),
++                compilation_options: Default::default(),
++                buffers: &[],
++            },
++            primitive: PrimitiveState::default(),
++            depth_stencil: None,
++            multisample: Default::default(),
++            fragment: Some(FragmentState {
++                module: &shader,
++                entry_point: Some("fragment_main"),
++                compilation_options: Default::default(),
++                targets: &[Some(ColorTargetState {
++                    format: SDR_FORMAT,
++                    blend: None,
++                    write_mask: ColorWrites::ALL,
++                })],
++            }),
++            multiview: None,
++            cache: None,
++        });
++        Self {
++            context,
++            resolution,
++            texture,
++            targets,
++            pipeline,
++            bind_group,
++        }
++    }
++
++    pub fn update(&self, image: usize, text: &str) {
++        let font =
++            FontRef::try_from_slice(include_bytes!("../resources/Ubuntu-Medium.ttf")).unwrap();
++        let glyphs = Layout::default().calculate_glyphs(
++            &[&font],
++            &SectionGeometry {
++                screen_position: (24.0, 22.0),
++                bounds: (
++                    self.resolution.x as f32 - 48.0,
++                    self.resolution.y as f32 - 44.0,
++                ),
++            },
++            &[SectionText {
++                text,
++                scale: 27.0.into(),
++                font_id: FontId(0),
++            }],
++        );
++        let mut pixels = [10, 16, 24, 235].repeat((self.resolution.x * self.resolution.y) as usize);
++        let scaled = font.as_scaled(27.0);
++        for glyph in glyphs {
++            if let Some(outline) = scaled.outline_glyph(glyph.glyph) {
++                let bounds = outline.px_bounds();
++                outline.draw(|x, y, alpha| {
++                    let x = x as i32 + bounds.min.x as i32;
++                    let y = y as i32 + bounds.min.y as i32;
++                    if x >= 0
++                        && y >= 0
++                        && x < self.resolution.x as i32
++                        && y < self.resolution.y as i32
++                    {
++                        let index = ((y as u32 * self.resolution.x + x as u32) * 4) as usize;
++                        for channel in 0..3 {
++                            pixels[index + channel] =
++                                (pixels[index + channel] as f32 * (1.0 - alpha) + 245.0 * alpha)
++                                    as u8;
++                        }
++                        pixels[index + 3] = 255;
++                    }
++                });
++            }
++        }
++        self.context.queue.write_texture(
++            TexelCopyTextureInfo {
++                texture: &self.texture,
++                mip_level: 0,
++                origin: Origin3d::ZERO,
++                aspect: TextureAspect::All,
++            },
++            &pixels,
++            TexelCopyBufferLayout {
++                offset: 0,
++                bytes_per_row: Some(self.resolution.x * 4),
++                rows_per_image: Some(self.resolution.y),
++            },
++            Extent3d {
++                width: self.resolution.x,
++                height: self.resolution.y,
++                depth_or_array_layers: 1,
++            },
++        );
++        let mut encoder = self
++            .context
++            .device
++            .create_command_encoder(&CommandEncoderDescriptor { label: None });
++        {
++            let mut pass = encoder.begin_render_pass(&RenderPassDescriptor {
++                label: Some("performance_panel"),
++                color_attachments: &[Some(RenderPassColorAttachment {
++                    view: &self.targets[image],
++                    resolve_target: None,
++                    ops: Operations {
++                        load: LoadOp::Clear(Color::TRANSPARENT),
++                        store: StoreOp::Store,
++                    },
++                })],
++                depth_stencil_attachment: None,
++                timestamp_writes: None,
++                occlusion_query_set: None,
++            });
++            pass.set_pipeline(&self.pipeline);
++            pass.set_bind_group(0, &self.bind_group, &[]);
++            pass.draw(0..3, 0..1);
++        }
++        self.context.queue.submit(Some(encoder.finish()));
++    }
++}
 diff --git a/alvr/graphics/src/staging.rs b/alvr/graphics/src/staging.rs
 index febd2c3..779de33 100644
 --- a/alvr/graphics/src/staging.rs
@@ -2673,10 +3333,41 @@ index 737b7d0..4be1eaa 100644
  
          let mut encoder = self
 diff --git a/alvr/packets/src/lib.rs b/alvr/packets/src/lib.rs
-index 6b4ac58..a7af6d6 100644
+index 6b4ac58..479c8a5 100644
 --- a/alvr/packets/src/lib.rs
 +++ b/alvr/packets/src/lib.rs
-@@ -477,15 +477,15 @@ pub struct ViewParams {
+@@ -457,6 +457,30 @@ pub struct RealTimeConfig {
+     pub passthrough: Option<PassthroughMode>,
+ }
+ 
++/// Small one-second overlay feedback sent through the reserved control channel.
++/// FPS is host present cadence and delivered client cadence, not optical display timing.
++#[derive(Serialize, Deserialize, Clone, Default)]
++pub struct PerformanceSnapshot {
++    pub client_fps: f32,
++    pub server_fps: f32,
++    pub bitrate_bps: f32,
++    pub requested_bitrate_bps: f32,
++    pub total_ms: f32,
++    pub game_ms: f32,
++    pub encoder_ms: f32,
++    pub network_ms: f32,
++    pub decoder_ms: f32,
++    pub queue_ms: f32,
++    pub compositor_ms: f32,
++    pub vsync_ms: f32,
++    pub frames_total: u64,
++    pub packets_lost_total: u64,
++    pub frame_age_ms: f32,
++    pub headset: Option<HeadsetTelemetry>,
++}
++
++pub const PERFORMANCE_PREFIX: &str = "Q3PW_PERF:";
++
+ pub fn encode_real_time_config(config: &RealTimeConfig) -> Result<ServerControlPacket> {
+     Ok(ServerControlPacket::ReservedBuffer(bincode::serialize(
+         config,
+@@ -477,15 +501,15 @@ pub struct ViewParams {
  
  // ---- PyroWave over UDP ----
  //
@@ -2836,7 +3527,7 @@ index 81f2f8e..869fa77 100644
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da..80d8801 100644
+index fc176da..06f8ee4 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -53,7 +53,8 @@ pub struct VideoPacket {
@@ -2966,7 +3657,40 @@ index fc176da..80d8801 100644
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1552,9 +1549,10 @@ mod beta_tests {
+@@ -1115,6 +1112,7 @@ fn connection_pipeline(
+     let control_sender = Arc::new(Mutex::new(control_sender));
+ 
+     let real_time_update_thread = thread::spawn({
++        let ctx = Arc::clone(&ctx);
+         let control_sender = Arc::clone(&control_sender);
+         let client_hostname = client_hostname.clone();
+         move || {
+@@ -1131,6 +1129,14 @@ fn connection_pipeline(
+                 if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
+                     control_sender.lock().send(&config).ok();
+                 }
++                let snapshot = ctx.statistics_manager.read().as_ref()
++                    .and_then(|stats| stats.performance_snapshot());
++                if let Some(snapshot) = snapshot {
++                    if let Ok(json) = serde_json::to_string(&snapshot) {
++                        control_sender.lock().send(&ServerControlPacket::Reserved(
++                            format!("{}{json}", alvr_packets::PERFORMANCE_PREFIX))).ok();
++                    }
++                }
+ 
+                 thread::sleep(REAL_TIME_UPDATE_INTERVAL);
+             }
+@@ -1299,6 +1305,9 @@ fn connection_pipeline(
+                     }
+                     // Beta test report: forwarded untouched; the dashboard aggregates it
+                     ClientControlPacket::HeadsetTelemetry(telemetry) => {
++                        if let Some(stats) = &mut *ctx.statistics_manager.write() {
++                            stats.set_headset_telemetry(telemetry.clone());
++                        }
+                         alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
+                     }
+                     ClientControlPacket::Buttons(entries) => {
+@@ -1552,9 +1561,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -2995,6 +3719,121 @@ index efa67b1..b79e5bd 100644
          };
  
          if let Some((params, stats)) = pair {
+diff --git a/alvr/server_core/src/statistics.rs b/alvr/server_core/src/statistics.rs
+index 365db64..4ef88aa 100644
+--- a/alvr/server_core/src/statistics.rs
++++ b/alvr/server_core/src/statistics.rs
+@@ -9,6 +9,25 @@ use std::{
+ const FULL_REPORT_INTERVAL: Duration = Duration::from_millis(500);
+ const EPS_INTERVAL: Duration = Duration::from_micros(1);
+ 
++#[cfg(test)]
++mod performance_tests {
++    use super::*;
++    #[test]
++    fn alternating_delivered_rates_average_intervals_and_stalls_are_visible() {
++        let mut manager = StatisticsManager::new(120, Duration::from_secs_f32(1.0 / 120.0), 0.0);
++        for fps in [60.0, 120.0] {
++            manager.performance_window.push_back(alvr_packets::PerformanceSnapshot {
++                client_fps: fps, server_fps: 120.0, ..Default::default()
++            });
++        }
++        manager.last_performance_frame = Instant::now() - Duration::from_secs(3);
++        let snapshot = manager.performance_snapshot().unwrap();
++        assert!((snapshot.client_fps - 80.0).abs() < 0.001);
++        assert!((snapshot.server_fps - 120.0).abs() < 0.001);
++        assert!(snapshot.frame_age_ms >= 3000.0);
++    }
++}
++
+ pub struct HistoryFrame {
+     target_timestamp: Duration,
+     tracking_received: Instant,
+@@ -59,6 +78,10 @@ pub struct StatisticsManager {
+     frame_interval: Duration,
+     last_throughput_directives: BitrateDirectives,
+     phase_lock: PhaseLock,
++    performance_window: VecDeque<alvr_packets::PerformanceSnapshot>,
++    presented_frames_total: u64,
++    last_performance_frame: Instant,
++    headset_telemetry: Option<alvr_packets::HeadsetTelemetry>,
+ }
+ 
+ impl StatisticsManager {
+@@ -92,6 +115,10 @@ impl StatisticsManager {
+             frame_interval: nominal_server_frame_interval,
+             last_throughput_directives: BitrateDirectives::default(),
+             phase_lock: PhaseLock::from_env(),
++            performance_window: VecDeque::new(),
++            presented_frames_total: 0,
++            last_performance_frame: Instant::now(),
++            headset_telemetry: None,
+         }
+     }
+ 
+@@ -287,6 +314,22 @@ impl StatisticsManager {
+                 / Duration::max(self.last_frame_present_interval, EPS_INTERVAL).as_secs_f32();
+ 
+             // todo: the dashboard needs to use the first timestamp as the graph time origin.
++            self.presented_frames_total += 1;
++            self.last_performance_frame = Instant::now();
++            self.performance_window.push_back(alvr_packets::PerformanceSnapshot {
++                client_fps, server_fps, bitrate_bps,
++                requested_bitrate_bps: self.last_throughput_directives.requested_bitrate_bps,
++                total_ms: client_stats.total_pipeline_latency.as_secs_f32() * 1000.0,
++                game_ms: game_time_latency.as_secs_f32() * 1000.0,
++                encoder_ms: encoder_latency.as_secs_f32() * 1000.0,
++                network_ms: network_latency.as_secs_f32() * 1000.0,
++                decoder_ms: client_stats.video_decode.as_secs_f32() * 1000.0,
++                queue_ms: client_stats.video_decoder_queue.as_secs_f32() * 1000.0,
++                compositor_ms: client_stats.rendering.as_secs_f32() * 1000.0,
++                vsync_ms: client_stats.vsync_queue.as_secs_f32() * 1000.0,
++                ..Default::default()
++            });
++            if self.performance_window.len() > 120 { self.performance_window.pop_front(); }
+             alvr_events::send_event(EventType::GraphStatistics(GraphStatistics {
+                 target_timestamp_ns: frame.target_timestamp.as_nanos() as u64,
+                 video_packet_bytes: frame.video_packet_bytes,
+@@ -316,6 +359,39 @@ impl StatisticsManager {
+         self.motion_to_photon_latency_average.get_average()
+     }
+ 
++    pub fn set_headset_telemetry(&mut self, telemetry: alvr_packets::HeadsetTelemetry) {
++        self.headset_telemetry = Some(telemetry);
++    }
++
++    pub fn performance_snapshot(&self) -> Option<alvr_packets::PerformanceSnapshot> {
++        use alvr_packets::PerformanceSnapshot;
++        let mut snapshot = self.performance_window.back()?.clone();
++        let mean = |field: fn(&PerformanceSnapshot) -> f32| {
++            let values: Vec<_> = self.performance_window.iter().map(field)
++                .filter(|v| v.is_finite() && *v >= 0.0).collect();
++            if values.is_empty() { 0.0 } else { values.iter().sum::<f32>() / values.len() as f32 }
++        };
++        // Average intervals, not rates: alternating 60/120 FPS is 80 FPS, not 90.
++        let client_interval = mean(|s| if s.client_fps > 0.0 { 1.0 / s.client_fps } else { 0.0 });
++        let server_interval = mean(|s| if s.server_fps > 0.0 { 1.0 / s.server_fps } else { 0.0 });
++        snapshot.client_fps = if client_interval > 0.0 { 1.0 / client_interval } else { 0.0 };
++        snapshot.server_fps = if server_interval > 0.0 { 1.0 / server_interval } else { 0.0 };
++        snapshot.bitrate_bps = mean(|s| s.bitrate_bps);
++        snapshot.total_ms = mean(|s| s.total_ms);
++        snapshot.game_ms = mean(|s| s.game_ms);
++        snapshot.encoder_ms = mean(|s| s.encoder_ms);
++        snapshot.network_ms = mean(|s| s.network_ms);
++        snapshot.decoder_ms = mean(|s| s.decoder_ms);
++        snapshot.queue_ms = mean(|s| s.queue_ms);
++        snapshot.compositor_ms = mean(|s| s.compositor_ms);
++        snapshot.vsync_ms = mean(|s| s.vsync_ms);
++        snapshot.frames_total = self.presented_frames_total;
++        snapshot.packets_lost_total = self.packets_lost_total as u64;
++        snapshot.frame_age_ms = self.last_performance_frame.elapsed().as_secs_f32() * 1000.0;
++        snapshot.headset.clone_from(&self.headset_telemetry);
++        Some(snapshot)
++    }
++
+     pub fn tracker_pose_time_offset(&self) -> Duration {
+         // This is the opposite of the client's StatisticsManager::tracker_prediction_offset().
+         self.steamvr_pipeline_latency
 diff --git a/alvr/server_core/src/tracking/mod.rs b/alvr/server_core/src/tracking/mod.rs
 index 64f93a6..d38c74e 100644
 --- a/alvr/server_core/src/tracking/mod.rs

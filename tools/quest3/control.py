@@ -72,7 +72,7 @@ def usb(enabled):
     request({'UpdateClientList':{'hostname':'client.wired',
         'action':{'AddIfMissing':{'trusted':True,'manual_ips':[]}} if enabled else 'RemoveEntry'}})
 
-def apply(codec, mbps, hz, path, caps, chroma="420", transport="Tcp"):
+def apply(codec, mbps, hz, path, caps, chroma="420", transport="Tcp", wavelet="Cdf97"):
     if not caps.get('refresh_extension') or not supported(hz,caps['rates_hz']):
         raise ValueError(f'{hz} Hz unsupported by provided runtime capabilities')
     if hz>120 and caps.get('source')!='request_and_frame_period':
@@ -91,10 +91,13 @@ def apply(codec, mbps, hz, path, caps, chroma="420", transport="Tcp"):
         if transport not in ('Tcp', 'Udp'): raise ValueError('Invalid transport')
         if chroma not in ('420','444'): raise ValueError('Invalid chroma')
         if path not in ('Auto','Compute','Fragment'): raise ValueError('Invalid decode path')
+        if wavelet not in ('Cdf97','Cdf53'): raise ValueError('Invalid wavelet')
+        if wavelet == 'Cdf53' and path == 'Fragment':
+            raise ValueError('CDF 5/3 requires Compute or Auto decode')
         values.update({'session_settings.video.pyrowave.chroma_444':chroma=='444',
                        'session_settings.video.pyrowave.transport.variant':transport,
                        'session_settings.connection.stream_protocol.variant':'Tcp',
-                       'session_settings.video.pyrowave.wavelet.variant':'Cdf97',
+                       'session_settings.video.pyrowave.wavelet.variant':wavelet,
                        'session_settings.video.pyrowave.decode_path.variant':path})
     set_values(values)
     current=session()
@@ -104,6 +107,7 @@ def apply(codec, mbps, hz, path, caps, chroma="420", transport="Tcp"):
         if node!=value:raise RuntimeError(f'Setting rejected: {key}')
     return {'codec':codec,'mbps':mbps,'requested_hz':hz,'decode_path':path,'chroma':chroma,
             'transport':transport if codec=='PyroWave' else None,'settings_verified':True,
+            'wavelet':wavelet if codec=='PyroWave' else None,
             'sustained_performance_verified':False}
 
 def restart(steamvr,streamer=None):
@@ -138,10 +142,11 @@ def main():
     c.add_argument('--mbps',type=int,required=True);c.add_argument('--hz',type=int,required=True)
     c.add_argument('--decode-path',choices=['Auto','Compute','Fragment'],default='Auto');c.add_argument('--capabilities',required=True)
     c.add_argument('--chroma',choices=['420','444'],default='420')
+    c.add_argument('--wavelet',choices=['Cdf97','Cdf53'],default='Cdf97')
     c.add_argument('--transport',choices=['Tcp','Udp'],default='Tcp');a=parser.parse_args()
     if a.cmd=='restart':restart(a.steamvr,a.streamer);return
     if a.cmd=='usb':usb(a.enable);print('USB mode enabled; restart SteamVR if transport changed' if a.enable else 'USB mode disabled');return
-    if a.cmd=='apply':print(json.dumps(apply(a.codec,a.mbps,a.hz,a.decode_path,json.loads(Path(a.capabilities).read_text()),a.chroma,a.transport)));return
+    if a.cmd=='apply':print(json.dumps(apply(a.codec,a.mbps,a.hz,a.decode_path,json.loads(Path(a.capabilities).read_text()),a.chroma,a.transport,a.wavelet)));return
     s=session();v=s['session_settings']['video'];clients=s.get('client_connections',{})
     print(json.dumps({'video':{key:v.get(key) for key in ('preferred_codec','preferred_fps','bitrate','pyrowave','transcoding_view_resolution')},
                      'client_count':len(clients)}))
