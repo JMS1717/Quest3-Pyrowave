@@ -64,4 +64,13 @@ class BenchTests(unittest.TestCase):
         self.assertEqual(report['metrics']['client_fps']['p50'],120)
         self.assertFalse(report['sustained_requested_fps'])
 
+    def test_nominal_fps_does_not_hide_sparse_submissions(self):
+        events=[{'capture_elapsed_s':t,'event':{'event_type':{
+            'id':'GraphStatistics','data':{'client_fps':120}}}}
+            for t in (0,1/120,4/120)]
+        r=summarise(events,120)
+        self.assertEqual(r['metrics']['client_fps']['p01'],120)
+        self.assertAlmostEqual(r['submitted_frame_rate_fps'],60)
+        self.assertFalse(r['sustained_requested_fps'])
+
 if __name__=='__main__':unittest.main()

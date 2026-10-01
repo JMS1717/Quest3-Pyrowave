@@ -44,8 +44,19 @@ backups remain in the private sibling workspace.
     morning deadline. Leave a measured report, artifact hashes, current baseline
     and rollback instructions. Commit/push only as JMS1717.
 
-The tracking-prompt recovery route must be proved on the actual headset before
-claiming unattended operation is reliable. A disconnected cable or unrecoverable
+Unworn tracking recovery was verified on this headset: temporarily set
+`debug.oculus.guardian_pause=1`, refresh the bounded proximity override, send the
+wake-up key and launch our app. An ADB screenshot and fresh streaming events
+confirmed the prompt cleared. The private supervisor keeps the PC awake through
+Windows' execution-state API, pins ADB to this Quest, monitors temperature/battery,
+and stops workloads on Android severe thermal status, battery below 20%, or battery
+temperature at least 48°C. Battery temperature is not GPU die temperature. A
+separate process restores saved properties with readback and physical proximity
+at 08:00 Eastern October 2. Guardian is paused only for stationary unattended
+tests; normal boundary behavior is restored before later play. Windows power-plan
+and network settings are unchanged.
+
+A disconnected cable or unrecoverable
 headset failure can prevent further live tests; source work and cloud builds can
 continue. In-headset quality judgment and optical motion-to-photon latency still
 require later human/hardware acceptance.

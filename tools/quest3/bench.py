@@ -123,7 +123,9 @@ def summarise(events, requested_hz=None):
         result['eye_copy_counter_deltas'][field]=values[-1]-values[0] if monotonic else None
     if requested_hz and graphs:
         fps=result['metrics']['client_fps']
-        result['sustained_requested_fps']=fps is not None and fps['p01']>=requested_hz*.98
+        submitted=result['submitted_frame_rate_fps']
+        result['sustained_requested_fps']=(fps is not None and submitted is not None
+            and fps['p01']>=requested_hz*.98 and submitted>=requested_hz*.98)
     return result
 
 def adb_run(adb, *args):
