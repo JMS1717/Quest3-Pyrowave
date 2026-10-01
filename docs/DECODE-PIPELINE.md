@@ -139,3 +139,27 @@ For a same-build A/B control, `adb shell setprop debug.q3pw.repeat_render 1`
 disables reuse. Restart the client after changing the property. Empty/default
 means reuse; restore the original property after the experiment. Cloud compilation
 and live correctness/performance acceptance remain required before claiming a gain.
+
+
+## Optional fused Haar (.13 research candidate)
+
+A separate kernel reconstructs each coarsest coefficient's descendants in two
+32 x 32 shared float arrays, with the same intermediate storage rounding as .11.
+Luma uses five levels and 32 x 32 output tiles. 4:2:0 chroma uses four levels and
+16 x 16 output tiles, ending at level 1. Explicit texture bindings avoid descriptor
+indexing requirements. Dispatch covers aligned coarsest coefficients, with output
+bounds checks against visible plane size. It remains off by default.
+
+Use `PYROWAVE_FUSED_HAAR=1` for plain readback harness tests. The matching .13
+client accepts `adb shell setprop debug.q3pw.haar_fused 1`; restart the client
+before a trial. Set 0 or restore the original value to use the .11 pair-local path.
+The option only applies to Haar compute; the server's encoded transform stays
+Haar. It does not change the bitstream. Verify readbacks against .11 before live
+use; fewer dispatches are not proof of faster execution.
+
+Matching .13 timing records add CPU command-recording wall time, conversion GPU
+timestamps, and vkQueueSubmit + vkWaitForFences wall time. The existing completion
+metric starts before recording commands, so it is not simply submit-to-fence.
+Wait wall time includes queue scheduling and GPU work; subtracting GPU decode
+from completion does not isolate CPU cost. Use matching .13 native/Rust ABI and
+APK/server binaries: the control telemetry and frame-info layout changed together.

@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     AHardwareBuffer *ahb = nullptr;
     pyroclient_frame_info info{};
     double bestDec = 1e9, bestConv = 1e9, bestTot = 1e9, sumTot = 0;
-    std::vector<double> totals, decodes, converts;
+    std::vector<double> totals, decodes, converts, records, waits;
     double warmupMax = 0;
     int completes = 0;
     AHardwareBuffer *held = nullptr;
@@ -72,6 +72,7 @@ int main(int argc, char **argv) {
         if (protect_first && !held) held = ahb;
         if (i < warmup) { warmupMax = std::max(warmupMax, info.total_ms); continue; }
         decodes.push_back(info.decode_ms); converts.push_back(info.convert_ms);
+        records.push_back(info.record_ms); waits.push_back(info.wait_ms);
         if (info.decode_ms < bestDec) bestDec = info.decode_ms;
         if (info.convert_ms < bestConv) bestConv = info.convert_ms;
         if (info.total_ms < bestTot) bestTot = info.total_ms;
@@ -81,10 +82,11 @@ int main(int argc, char **argv) {
     }
     std::sort(totals.begin(), totals.end());
     std::sort(decodes.begin(), decodes.end()); std::sort(converts.begin(), converts.end());
+    std::sort(records.begin(), records.end()); std::sort(waits.begin(), waits.end());
     printf("complete %d/%d  decode best %.3f ms  convert best %.3f ms  submit->fence best %.3f p50 %.3f max %.3f ms\n",
            completes, iters, bestDec, bestConv, bestTot, totals[totals.size() / 2], totals.back());
-    printf("{\"requested_decode_path\":\"%s\",\"iterations\":%d,\"complete\":%d,\"decode_best_ms\":%.6f,\"convert_best_ms\":%.6f,\"fence_p50_ms\":%.6f,\"fence_p99_ms\":%.6f,\"fence_mean_ms\":%.6f,\"fence_max_ms\":%.6f,\"warmup_frames\":%d,\"warmup_max_fence_ms\":%.6f,\"gpu_decode_p50_ms\":%.6f,\"gpu_decode_p99_ms\":%.6f,\"convert_p50_ms\":%.6f}\n",
-        argc > 4 ? argv[4] : "auto", iters, completes, bestDec, bestConv, totals[totals.size()/2], totals[(totals.size()-1)*99/100],sumTot/iters,totals.back(),warmup,warmupMax,decodes[decodes.size()/2],decodes[(decodes.size()-1)*99/100],converts[converts.size()/2]);
+    printf("{\"requested_decode_path\":\"%s\",\"iterations\":%d,\"complete\":%d,\"decode_best_ms\":%.6f,\"convert_best_ms\":%.6f,\"fence_p50_ms\":%.6f,\"fence_p99_ms\":%.6f,\"fence_mean_ms\":%.6f,\"fence_max_ms\":%.6f,\"warmup_frames\":%d,\"warmup_max_fence_ms\":%.6f,\"gpu_decode_p50_ms\":%.6f,\"gpu_decode_p99_ms\":%.6f,\"convert_p50_ms\":%.6f,\"record_p50_ms\":%.6f,\"wait_p50_ms\":%.6f}\n",
+        argc > 4 ? argv[4] : "auto", iters, completes, bestDec, bestConv, totals[totals.size()/2], totals[(totals.size()-1)*99/100],sumTot/iters,totals.back(),warmup,warmupMax,decodes[decodes.size()/2],decodes[(decodes.size()-1)*99/100],converts[converts.size()/2],records[records.size()/2],waits[waits.size()/2]);
 
     AHardwareBuffer_Desc d = {};
     AHardwareBuffer_describe(ahb, &d);

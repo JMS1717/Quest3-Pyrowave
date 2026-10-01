@@ -24,8 +24,10 @@ typedef struct pyroclient pyroclient;
 typedef struct pyroclient_frame_info {
     double decode_ms;    // GPU time of PyroWave's decode (timestamp queries)
     double convert_ms;   // GPU time of the YCbCr->RGBA pass, i.e. the GLES bridge
-    double total_ms;     // wall clock from submit to fence, what the frame actually waited
+    double total_ms;     // wall clock from command recording start through fence/query completion
     int complete;        // 1 if every packet of the frame had arrived before decoding
+    double record_ms;    // CPU wall time preparing commands, before vkQueueSubmit
+    double wait_ms;      // CPU wall time in vkQueueSubmit + vkWaitForFences (includes scheduling)
 } pyroclient_frame_info;
 
 // width/height of the coded frame; chroma444 selects 4:4:4 (else 4:2:0); ring is how many output

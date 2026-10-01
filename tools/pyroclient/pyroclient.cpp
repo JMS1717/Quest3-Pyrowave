@@ -573,10 +573,14 @@ bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info) {
     VK_TRY(vkEndCommandBuffer(cmd));
     VkSubmitInfo si = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
     si.commandBufferCount = 1; si.pCommandBuffers = &cmd;
+    const auto t_submit = std::chrono::steady_clock::now();
     VK_TRY(vkQueueSubmit(queue, 1, &si, fence));
     VK_TRY(vkWaitForFences(device, 1, &fence, VK_TRUE, 1000ull * 1000 * 1000));
 
+    const auto t_fence = std::chrono::steady_clock::now();
     if (info) {
+        info->record_ms = std::chrono::duration<double, std::milli>(t_submit - t0).count();
+        info->wait_ms = std::chrono::duration<double, std::milli>(t_fence - t_submit).count();
         uint64_t t[3] = {};
         if (vkGetQueryPoolResults(device, queries, 0, 3, sizeof t, t, sizeof(uint64_t),
                                   VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT) == VK_SUCCESS) {
@@ -620,6 +624,9 @@ void pyroclient::destroy() {
     if (instance) vkDestroyInstance(instance, nullptr);
 }
 
+static_assert(sizeof(pyroclient_frame_info) == 48, "native frame timing ABI size");
+static_assert(offsetof(pyroclient_frame_info, record_ms) == 32, "native timing ABI offset");
+
 // ---- C API ----
 
 extern "C" pyroclient *pyroclient_create(uint32_t width, uint32_t height, int chroma444, int full_range, uint32_t ring_size, int wavelet) {
@@ -629,6 +636,11 @@ extern "C" pyroclient *pyroclient_create(uint32_t width, uint32_t height, int ch
 extern "C" pyroclient *pyroclient_create_ex(uint32_t width, uint32_t height, int chroma444, int full_range, uint32_t ring_size, int wavelet, int decode_path) {
     if (!width || !height || (!chroma444 && ((width | height) & 1))) { LOGE("bad geometry %ux%u", width, height); return nullptr; }
     if (wavelet != 97 && wavelet != 53 && wavelet != 2) { LOGE("bad wavelet %d (97, 53 or 2=Haar)", wavelet); return nullptr; }
+    char fused_prop[PROP_VALUE_MAX] = {};
+    if (__system_property_get("debug.q3pw.haar_fused", fused_prop) > 0)
+        setenv("PYROWAVE_FUSED_HAAR", !strcmp(fused_prop, "1") ? "1" : "0", 1);
+    LOGI("optional multilevel Haar: %s", wavelet == 2 && getenv("PYROWAVE_FUSED_HAAR") &&
+         !strcmp(getenv("PYROWAVE_FUSED_HAAR"), "1") ? "enabled" : "disabled");
     pyroclient *c = new pyroclient();
     c->width = width; c->height = height; c->chroma444 = chroma444 != 0; c->full_range = full_range != 0;
     c->legall53 = wavelet == 53;
