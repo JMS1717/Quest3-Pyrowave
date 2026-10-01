@@ -122,7 +122,7 @@ def active_settings():
     from .control import session
     s=session();v=s['session_settings']['video'];o=s.get('openvr_config',{})
     mode = v['bitrate']['mode']
-    return {'codec':v['preferred_codec']['variant'],
+    return {'server_version':s.get('server_version'), 'codec':v['preferred_codec']['variant'],
         'bitrate_mode':mode['variant'], 'bitrate_config':mode,
         'target_mbps':mode['ConstantMbps'] if mode['variant']=='ConstantMbps' else None,
         'requested_hz':v['preferred_fps'], 'decode_path':v['pyrowave']['decode_path']['variant'],
@@ -139,13 +139,23 @@ def runtime_evidence(adb):
     return [line.split(']: ',1)[-1] for line in log.splitlines()
         if re.search(r'\[Q3PW_(CAPS|PROBE|VERIFIED|RATE|EFFECTIVE)\]',line)]
 
+def client_build(adb):
+    try:
+        package=adb_run(adb,'shell','dumpsys','package','io.github.jms1717.quest3pyrowave')
+        version=re.search(r'^\s*versionName=(\S+)',package,re.MULTILINE)
+        return {'version':version.group(1) if version else None,
+                'error':None if version else 'Package version unavailable'}
+    except (RuntimeError,subprocess.TimeoutExpired) as exc:
+        return {'version':None,'error':str(exc)}
+
 def capture(args):
     import websocket
     root=Path(args.out);root.mkdir(parents=True,exist_ok=False)
-    start=snapshot(args.adb);events=[];samples=[];error=None;ws=None
+    start=snapshot(args.adb);build=client_build(args.adb);events=[];samples=[];error=None;ws=None
     try:settings_start=active_settings()
     except Exception as exc:
-        report={'status':'server_unavailable','frames':0,'error':str(exc),'state_start':start}
+        report={'status':'server_unavailable','frames':0,'error':str(exc),'state_start':start,
+                'client_build':build}
         (root/'report.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
         print(json.dumps({'status':report['status'],'out':str(root)}));return 1
     stop=threading.Event();begin=time.monotonic()
@@ -173,7 +183,8 @@ def capture(args):
     except Exception as exc:settings_end=None;error=str(exc)
     report.update({'duration_requested_s':args.seconds,'elapsed_s':time.monotonic()-begin,
         'error':error,'state_start':start,'state_end':snapshot(args.adb),'device_samples':samples,
-        'settings_start':settings_start,'settings_end':settings_end,'runtime_evidence':runtime_evidence(args.adb)})
+        'settings_start':settings_start,'settings_end':settings_end,'client_build':build,
+        'runtime_evidence':runtime_evidence(args.adb)})
     if settings_start!=settings_end:report['status']='settings_changed_during_capture'
     if settings_start['openvr'].get('refresh_rate')!=args.hz:report['status']='negotiated_rate_mismatch'
     if error:report['status']='capture_failed'

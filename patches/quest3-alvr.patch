@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7b..7a7dfc0 100644
+index 7cead7b..b781494 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,7 +182,7 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -16,7 +16,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -25,7 +25,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -34,7 +34,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -43,7 +43,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -52,7 +52,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -61,7 +61,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -70,7 +70,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -79,7 +79,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "dirs",
   "once_cell",
@@ -88,7 +88,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -97,7 +97,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_common",
   "egui",
@@ -106,7 +106,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -115,7 +115,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -124,7 +124,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -133,7 +133,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -142,7 +142,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -151,7 +151,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -160,7 +160,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -169,7 +169,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_common",
   "jni",
@@ -178,7 +178,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -187,7 +187,7 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -196,12 +196,12 @@ index 7cead7b..7a7dfc0 100644
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..c29934c 100644
+index ae00ce8..c896f40 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -209,7 +209,7 @@ index ae00ce8..c29934c 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.8"
++version = "20.13.0-quest3.pyro.9"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -429,7 +429,7 @@ index f764033..d636442 100644
                          decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
                      }
 diff --git a/alvr/client_core/src/video_decoder/mod.rs b/alvr/client_core/src/video_decoder/mod.rs
-index 4d2e699..6aa9030 100644
+index 4d2e699..023b6c1 100644
 --- a/alvr/client_core/src/video_decoder/mod.rs
 +++ b/alvr/client_core/src/video_decoder/mod.rs
 @@ -4,6 +4,8 @@ mod android;
@@ -493,7 +493,7 @@ index 4d2e699..6aa9030 100644
      if complete {
          FrameDecision::DecodeComplete
      } else if age < deadline {
-@@ -130,22 +148,51 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
+@@ -130,25 +148,76 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
      let mean = samples.iter().sum::<f32>() / n as f32;
      format!(
          "min {:.2} mean {:.2} p50 {:.2} p95 {:.2} p99 {:.2} max {:.2}",
@@ -517,6 +517,7 @@ index 4d2e699..6aa9030 100644
 +#[derive(Default)]
 +struct FrameSlotState {
 +    pending: Option<(Duration, usize)>,
++    latest_order: Option<u64>,
 +    superseded: u64,
 +    /// The render loop can hold a dequeued buffer across xrWaitFrame. Keep it out
 +    /// of the producer's write rotation until a subsequent frame is dequeued.
@@ -524,12 +525,29 @@ index 4d2e699..6aa9030 100644
  }
  
  impl FrameSlot {
-     pub fn publish(&self, timestamp: Duration, buffer: usize) {
+-    pub fn publish(&self, timestamp: Duration, buffer: usize) {
 -        *self.inner.lock() = Some((timestamp, buffer));
++    pub fn publish(&self, timestamp: Duration, buffer: usize) -> bool {
++        self.publish_with_order(timestamp, buffer, None)
++    }
++    pub fn publish_ordered(&self, timestamp: Duration, buffer: usize, order: u64) -> bool {
++        self.publish_with_order(timestamp, buffer, Some(order))
++    }
++    fn publish_with_order(&self, timestamp: Duration, buffer: usize, order: Option<u64>) -> bool {
 +        let mut state = self.inner.lock();
++        // Use ingress order: multiple game frames can share a tracking timestamp.
++        // Keep the watermark after take() to reject late independent completions.
++        if let Some(order) = order {
++            if state.latest_order.is_some_and(|latest| order <= latest) {
++                state.superseded += 1;
++                return false;
++            }
++            state.latest_order = Some(order);
++        }
 +        if state.pending.replace((timestamp, buffer)).is_some() {
 +            state.superseded += 1;
 +        }
++        true
 +    }
 +    pub fn superseded(&self) -> u64 {
 +        self.inner.lock().superseded
@@ -549,7 +567,15 @@ index 4d2e699..6aa9030 100644
      }
  }
  
-@@ -229,7 +276,9 @@ fn logcat_info(tag: &str, message: &str) {
++/// Bound the experimental independent TCP decoders; the default stays one worker.
++pub fn pyrowave_worker_count(value: &str) -> usize {
++    if value.trim() == "2" { 2 } else { 1 }
++}
++
+ #[derive(Clone, Default, PartialEq)]
+ pub struct VideoDecoderConfig {
+     pub codec: CodecType,
+@@ -229,7 +298,9 @@ fn logcat_info(tag: &str, message: &str) {
      }
      let tag = std::ffi::CString::new(tag).unwrap_or_default();
      let text = std::ffi::CString::new(message).unwrap_or_default();
@@ -560,7 +586,7 @@ index 4d2e699..6aa9030 100644
  }
  
  // report_frame_decoded: (target_timestamp: Duration) -> ()
-@@ -249,7 +298,9 @@ pub fn create_decoder(
+@@ -249,7 +320,9 @@ pub fn create_decoder(
              }
          }
          if config.codec == CodecType::PyroWave
@@ -571,7 +597,7 @@ index 4d2e699..6aa9030 100644
          {
              let (sink, source) = pyrowave_udp::video_decoder_split(
                  config.clone(),
-@@ -312,53 +363,95 @@ mod tests {
+@@ -312,53 +385,95 @@ mod tests {
          buf.push(1);
          buf.push(0);
          let c = parse_pyrowave_config(&buf).unwrap();
@@ -680,10 +706,33 @@ index 4d2e699..6aa9030 100644
          assert_eq!(dist(&mut Vec::new()), "-");
      }
  
-@@ -392,4 +485,22 @@ mod tests {
+@@ -392,4 +507,45 @@ mod tests {
          assert_eq!(slot.take(), Some((Duration::from_millis(2), 0x20)));
          assert!(slot.take().is_none());
      }
++
++    #[test]
++    fn late_worker_completion_cannot_replace_a_newer_or_already_taken_frame() {
++        let slot = FrameSlot::default();
++        assert!(slot.publish_ordered(Duration::from_millis(3), 0x30, 3));
++        assert!(!slot.publish_ordered(Duration::from_millis(2), 0x20, 2));
++        assert_eq!(slot.take(), Some((Duration::from_millis(3), 0x30)));
++        assert!(!slot.publish_ordered(Duration::from_millis(1), 0x10, 1));
++        assert!(!slot.publish_ordered(Duration::from_millis(3), 0x31, 3));
++        assert!(slot.take().is_none());
++        assert_eq!(slot.protected_buffers(), [0x30, 0]);
++        assert_eq!(slot.superseded(), 3);
++        assert!(slot.publish_ordered(Duration::from_millis(3), 0x40, 4));
++        assert_eq!(slot.take(), Some((Duration::from_millis(3), 0x40)));
++    }
++
++    #[test]
++    fn experimental_workers_are_bounded_and_opt_in() {
++        for value in ["", "0", "1", "3", "1000", "unknown"] {
++            assert_eq!(pyrowave_worker_count(value), 1);
++        }
++        assert_eq!(pyrowave_worker_count("2\n"), 2);
++    }
 +
 +    #[test]
 +    fn producer_protects_a_held_frame_and_a_concurrently_dequeueable_frame() {
@@ -704,19 +753,34 @@ index 4d2e699..6aa9030 100644
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601..e7525d1 100644
+index 2e22601..4578d10 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
-@@ -14,7 +14,7 @@ use alvr_common::{
+@@ -2,9 +2,9 @@
+ //!
+ //! Same shape as the MediaCodec path: a sink the video receive thread pushes frames into, a
+ //! source the render loop polls for an AHardwareBuffer. The differences are that PyroWave is
+-//! intra-only (every frame stands alone, so "latest frame wins" is always safe) and that the
+-//! decode is synchronous on our own thread, which keeps every Vulkan call on one thread and
+-//! keeps the receive thread free to keep reading the socket.
++//! intra-only (every frame stands alone, so "latest frame wins" is always safe) and that each
++//! independent worker owns its Vulkan decoder and output ring. The experimental
++//! two-worker path overlaps CPU recording/fence waits without sharing mutable GPU state.
+ use super::{parse_pyrowave_config, FrameSlot, VideoDecoderConfig};
+ use alvr_common::{
+     anyhow::{bail, Result},
+@@ -14,8 +14,8 @@ use alvr_common::{
  use std::{
      ffi::c_void,
      sync::{
 -        atomic::{AtomicBool, Ordering},
+-        Arc,
 +        atomic::{AtomicBool, AtomicU64, Ordering},
-         Arc,
++        Arc, Once,
      },
      thread::{self, JoinHandle},
-@@ -36,12 +36,23 @@ struct FrameInfo {
+     time::Duration,
+@@ -36,33 +36,48 @@ struct FrameInfo {
  }
  
  extern "C" {
@@ -742,23 +806,41 @@ index 2e22601..e7525d1 100644
      ) -> i32;
      fn pyroclient_destroy(c: *mut PyroClient);
  }
-@@ -50,6 +61,7 @@ extern "C" {
+ 
+ /// One pending frame, latest wins. Intra-only, so skipping a frame costs nothing downstream.
  struct Pending {
-     frame: Mutex<Option<(Duration, Vec<u8>)>>,
+-    frame: Mutex<Option<(Duration, Vec<u8>)>>,
++    frame: Mutex<Option<(Duration, Vec<u8>, u64)>>,
      ready: Condvar,
 +    skipped: AtomicU64,
  }
  
  pub struct VideoDecoderSink {
-@@ -60,6 +72,7 @@ impl VideoDecoderSink {
+     pending: Arc<Pending>,
++    next_order: u64,
+ }
+ 
+ impl VideoDecoderSink {
      pub fn push_frame_nal(&mut self, timestamp: Duration, data: &[u8]) -> Result<bool> {
          let mut slot = self.pending.frame.lock();
          if slot.is_some() {
 +            self.pending.skipped.fetch_add(1, Ordering::Relaxed);
              warn!("PyroWave: frame replaced before decode (decoder slower than the stream)");
          }
-         *slot = Some((timestamp, data.to_vec()));
-@@ -77,7 +90,9 @@ pub struct VideoDecoderSource {
+-        *slot = Some((timestamp, data.to_vec()));
++        *slot = Some((timestamp, data.to_vec(), self.next_order));
++        self.next_order = self.next_order.wrapping_add(1);
+         self.pending.ready.notify_one();
+         Ok(true)
+     }
+@@ -71,13 +86,15 @@ impl VideoDecoderSink {
+ pub struct VideoDecoderSource {
+     running: Arc<AtomicBool>,
+     pending: Arc<Pending>,
+-    thread: Option<JoinHandle<()>>,
++    threads: Vec<JoinHandle<()>>,
+     decoded: Arc<FrameSlot>,
+ }
  
  impl VideoDecoderSource {
      pub fn dequeue_frame(&mut self) -> Option<(Duration, *mut c_void)> {
@@ -769,7 +851,16 @@ index 2e22601..e7525d1 100644
      }
  }
  
-@@ -99,6 +114,7 @@ pub fn video_decoder_split(
+@@ -85,7 +102,7 @@ impl Drop for VideoDecoderSource {
+     fn drop(&mut self) {
+         self.running.store(false, Ordering::Relaxed);
+         self.pending.ready.notify_all();
+-        if let Some(t) = self.thread.take() {
++        for t in self.threads.drain(..) {
+             t.join().ok();
+         }
+     }
+@@ -99,14 +116,33 @@ pub fn video_decoder_split(
      let pending = Arc::new(Pending {
          frame: Mutex::new(None),
          ready: Condvar::new(),
@@ -777,7 +868,43 @@ index 2e22601..e7525d1 100644
      });
      let decoded = Arc::new(FrameSlot::default());
      let running = Arc::new(AtomicBool::new(true));
-@@ -136,22 +152,37 @@ pub fn video_decoder_split(
+-
+-    let thread = thread::spawn({
++    let totals = Arc::new(Mutex::new((0u64, 0u64)));
++    let telemetry_started = Arc::new(Once::new());
++    let mut property = [0u8; 92];
++    let property_len = unsafe {
++        libc::__system_property_get(
++            c"debug.q3pw.decode_workers".as_ptr(),
++            property.as_mut_ptr().cast(),
++        )
++    };
++    let workers = super::pyrowave_worker_count(&String::from_utf8_lossy(
++        &property[..property_len.max(0) as usize],
++    ));
++    alvr_common::info!("[Q3PW_WORKERS] TCP independent decoders={workers}");
++    let report_frame_decoded = Arc::new(report_frame_decoded);
++    let mut threads = Vec::with_capacity(workers);
++    for worker_index in 0..workers {
++        threads.push(thread::spawn({
+         let pending = Arc::clone(&pending);
+         let decoded = Arc::clone(&decoded);
+         let running = Arc::clone(&running);
++        let totals = Arc::clone(&totals);
++        let telemetry_started = Arc::clone(&telemetry_started);
++        let report_frame_decoded = Arc::clone(&report_frame_decoded);
+         move || {
+             // Created here so every Vulkan call the library makes stays on this thread.
+             let client = unsafe {
+@@ -129,63 +165,87 @@ pub fn video_decoder_split(
+                 return;
+             }
+             let mut frames: u64 = 0;
+-            let mut failures: u64 = 0;
+             let mut sum_total = 0.0f64;
+-            super::telemetry::start(cfg.width, cfg.height);
++            telemetry_started.call_once(|| super::telemetry::start(cfg.width, cfg.height));
+             while running.load(Ordering::Relaxed) {
                  let next = {
                      let mut slot = pending.frame.lock();
                      while slot.is_none() && running.load(Ordering::Relaxed) {
@@ -788,7 +915,8 @@ index 2e22601..e7525d1 100644
                      }
                      slot.take()
                  };
-                 let Some((timestamp, data)) = next else {
+-                let Some((timestamp, data)) = next else {
++                let Some((timestamp, data, order)) = next else {
                      continue;
                  };
 +                // TCP restores one whole codec frame. Do not carry any rejected frame's
@@ -799,7 +927,7 @@ index 2e22601..e7525d1 100644
 -                    warn!("PyroWave: push_packet failed ({pushed})");
 +                if pushed != 1 {
 +                    warn!("PyroWave: complete TCP frame rejected by codec ({pushed})");
-+                    failures += 1;
++                    totals.lock().1 += 1;
                      continue;
                  }
                  let mut out: *mut c_void = std::ptr::null_mut();
@@ -818,22 +946,61 @@ index 2e22601..e7525d1 100644
 +                };
 +                if rc != 0 || out.is_null() || info.complete == 0 {
                      warn!("PyroWave: decode failed ({rc})");
-                     failures += 1;
+-                    failures += 1;
++                    totals.lock().1 += 1;
                      continue;
-@@ -160,10 +191,12 @@ pub fn video_decoder_split(
-                 report_frame_decoded(Ok(timestamp));
+                 }
+-                decoded.publish(timestamp, out as usize);
+-                report_frame_decoded(Ok(timestamp));
++                if decoded.publish_ordered(timestamp, out as usize, order) {
++                    report_frame_decoded(Ok(timestamp));
++                }
                  frames += 1;
                  sum_total += info.total_ms;
 -                // TCP delivers every frame whole: all complete, nothing partial or dropped here
 +                // TCP is reliable, but overload can skip queued or supersede decoded frames.
++                // Serialize aggregate counter publication across both workers.
++                // Individual completions retain their timestamps and buffer leases.
++                let mut totals = totals.lock();
++                totals.0 += 1;
                  super::telemetry::record_frame(info.decode_ms as f32, info.total_ms as f32);
                  super::telemetry::set_counters(super::telemetry::Counters {
-                     complete: frames,
+-                    complete: frames,
+-                    decode_failures: failures,
++                    complete: totals.0,
 +                    skipped: pending.skipped.load(Ordering::Relaxed),
 +                    superseded: decoded.superseded(),
-                     decode_failures: failures,
++                    decode_failures: totals.1,
                      ..Default::default()
                  });
++                drop(totals);
+                 if frames % 720 == 0 {
+                     alvr_common::info!(
+-                        "[PYROWAVE] {frames} frames, last decode {:.2} ms convert {:.2} ms submit->fence {:.2} ms (mean {:.2}), complete={}",
++                        "[PYROWAVE] worker {worker_index}: {frames} frames, last decode {:.2} ms convert {:.2} ms completion {:.2} ms (mean {:.2}), complete={}",
+                         info.decode_ms, info.convert_ms, info.total_ms, sum_total / frames as f64, info.complete
+                     );
+                 }
+             }
+             unsafe { pyroclient_destroy(client) };
+         }
+-    });
++        }));
++    }
+ 
+     Ok((
+         VideoDecoderSink {
+             pending: Arc::clone(&pending),
++            next_order: 0,
+         },
+         VideoDecoderSource {
+             running,
+             pending,
+-            thread: Some(thread),
++            threads,
+             decoded,
+         },
+     ))
 diff --git a/alvr/client_core/src/video_decoder/pyrowave_udp.rs b/alvr/client_core/src/video_decoder/pyrowave_udp.rs
 index f8a6cfe..951b8ec 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave_udp.rs
