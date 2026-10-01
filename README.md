@@ -6,6 +6,7 @@ same-room Wi-Fi 6E and 2.5 GbE, with **300 / 400 / 600 / 800 / 1000 / 1500 / 200
 
 **Development status:** The PWU2 repair has delivered visible SteamVR Home video on Quest 3 over wireless TCP/UDP and native USB. Full-panel 1000 Mbps / 120 Hz still misses the frame budget; short captures often delivered ~60 new FPS. See [live observations and limitations](results/LIVE-2026-10-01.md). Gameplay, sustained thermals and an advantage over Virtual Desktop remain unvalidated. Foveation is disabled.
 The [original matching PWU2 build](results/PWU2-BUILD.md) passed Android/Windows builds and cloud regression tests. Matching .6 artifacts added latest-frame polling, byte-cap enforcement and Auto safeguards, with short live USB checks. See [research inputs and priorities](docs/RESEARCH-NOTES.md).
+The .8 overlay is upright and was checked in both eyes; the both-thumbstick toggle was confirmed by the owner. .9 parallel decoding regressed and remains off. .10 Haar and a GPU-level-7 request reduced decode cost but retained ~60 median FPS at native resolution. .11 removes unused Haar tile/apron work and has pre-install reference readback checks; see [the decoder investigation](docs/DECODE-PIPELINE.md).
 Reviewed initial evidence is in [results](results/INITIAL-EVIDENCE.md). Those earlier foveated results do not validate the current full-frame build. High bitrate
 presets are experiment targets, not promises of usable throughput or quality.
 
@@ -95,6 +96,7 @@ This build has no foveated encoding or client foveation. Compare the same scene 
 | Path | Purpose |
 |---|---|
 | `patches/quest3-alvr.patch` | Quest port on top of the cumulative research ALVR patch |
+| `patches/quest3-pyrowave.patch` | Quest kernel/header changes over the preserved cumulative research codec patch |
 | `sources.lock.json`, `tools/ci/` | Pinned source reconstruction |
 | `tools/quest3/`, `tests/` | Quest capability, plan, capture and analysis tools and regression tests |
 | `tools/pyroclient/` | Vulkan decoder and GLES hardware-buffer bridge |

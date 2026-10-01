@@ -100,3 +100,24 @@ compiler after GLSL changes. `shaders/quest3-manifest.json` hashes the changed
 kernel, shared definitions, variant description and generated header; Android
 and Windows interop build helpers reject stale inputs. The manually triggered
 `Regenerate pinned PyroWave shaders` workflow produces reviewable header artifacts.
+
+
+Before installing .11, the same cloud-built plain-R8 readback harness was run
+against the .10 and .11 codec libraries on Quest 3. Deterministic asymmetric
+512 x 320 and 4160 x 2208 Haar/4:2:0 frames produced at most one code-value
+difference. Changed samples were 1.34% and 1.17%, with mean absolute differences
+0.01342 and 0.01172. Source PSNR over all YUV samples changed by +0.00610 dB and
++0.00005 dB, respectively. These limited checks found no band/orientation error;
+they do not establish quality parity with CDF 9/7 or hardware codecs. The new
+kernel is not bit-identical. The first strict MAE <0.01 trial failed; acceptance
+was revised after recording both complete outputs and their source error to
+require max error <=1 and source PSNR loss <=0.05 dB. No APK was installed before
+that review. The three-iteration readback timing includes startup/clock variation
+and is not used as a streaming performance result.
+
+Create the same input with `python -m tools.quest3.reference_pattern pattern.y4m`
+(or add `--width 4160 --height 2208`), then encode with the pinned research
+`pyrowave-encode` using `PYROWAVE_WAVELET=haar` and byte caps 131072 or 2083333.
+For on-device readback use the cloud artifact `pyrowave_android` with
+`PYROWAVE_WAVELET=haar PYROWAVE_FORCE_COMPUTE=1 PYROWAVE_AHB=0`, and keep old/new
+codec libraries in separate directories selected by `LD_LIBRARY_PATH`.
