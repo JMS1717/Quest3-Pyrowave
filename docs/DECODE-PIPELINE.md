@@ -198,9 +198,15 @@ a compute-color-conversion control, independently of the wavelet decode path.
 Set 0 or restore the original property to retain capability-gated Adreno fragment
 conversion. Restart the client after changes. No default conversion change is implied.
 
-.14 Android CI passed, and its small/native Haar/4:2:0 plain readbacks were
+.14 Android and Windows CI passed, and its small/native Haar/4:2:0 plain readbacks were
 byte-identical to .13 with batching both off and on. Matching Windows build and
-live performance screening remain separate gates; this does not prove a speedup.
+live performance screening are separate gates; this does not prove a live speedup.
+The matching pair is installed for testing. Quest's tracking-recovery prompt
+blocked app launch, so the 15-second live comparison has not captured frames.
+Isolated native screens (80 frames / 20 warmup) showed completion p50 9.10 ms
+with batching versus 9.50–9.65 ms in off controls at a reported 690 MHz. These
+are short single-frame standalone checks, not sustained streaming results;
+[reviewed batch results](../results/BATCH-DEQUANT-2026-10-01.json) record the gates.
 
 A separate .13 FP16-math check gave max one YUV code-value difference, but the
 small asymmetric source PSNR fell by 0.05934 dB, slightly exceeding the existing

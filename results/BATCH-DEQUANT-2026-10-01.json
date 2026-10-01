@@ -1,0 +1,132 @@
+{
+  "source_commit": "4de9944dd0079296f7bfd3756c59735e19c81383",
+  "binary_version": "20.13.0-quest3.pyro.14",
+  "build_run_id": 36938089358,
+  "cloud_checks": "Android, Windows, Python/C++ and frame/session/server/dashboard regressions passed",
+  "chroma": "420",
+  "wavelet": "Haar",
+  "foveation": false,
+  "fused_haar": false,
+  "precision": 1,
+  "decode_path": "Vulkan Compute",
+  "encoded_eye_size": [
+    2080,
+    2208
+  ],
+  "readback_comparisons": [
+    {
+      "pattern": "asymmetric",
+      "batch": "off",
+      "bytes": 245760,
+      "max_error": 0,
+      "changed": 0,
+      "exact": true
+    },
+    {
+      "pattern": "asymmetric",
+      "batch": "on",
+      "bytes": 245760,
+      "max_error": 0,
+      "changed": 0,
+      "exact": true
+    },
+    {
+      "pattern": "native-asymmetric",
+      "batch": "off",
+      "bytes": 13777920,
+      "max_error": 0,
+      "changed": 0,
+      "exact": true
+    },
+    {
+      "pattern": "native-asymmetric",
+      "batch": "on",
+      "bytes": 13777920,
+      "max_error": 0,
+      "changed": 0,
+      "exact": true
+    }
+  ],
+  "native_only_screens": [
+    {
+      "label": "batch-off",
+      "batch_dequant": 0,
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 80,
+        "complete": 80,
+        "decode_best_ms": 4.360885,
+        "convert_best_ms": 1.952344,
+        "fence_p50_ms": 9.650262,
+        "fence_p99_ms": 10.619584,
+        "fence_mean_ms": 9.634033,
+        "fence_max_ms": 10.629272,
+        "warmup_frames": 20,
+        "warmup_max_fence_ms": 216.755699,
+        "gpu_decode_p50_ms": 6.031354,
+        "gpu_decode_p99_ms": 7.018854,
+        "convert_p50_ms": 2.790312,
+        "record_p50_ms": 0.592396,
+        "wait_p50_ms": 8.996303
+      },
+      "gpu_clock_end_hz": 690000000,
+      "own_client_stopped_and_auto_launch_disabled": true
+    },
+    {
+      "label": "batch-on",
+      "batch_dequant": 1,
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 80,
+        "complete": 80,
+        "decode_best_ms": 4.078854,
+        "convert_best_ms": 1.897865,
+        "fence_p50_ms": 9.098334,
+        "fence_p99_ms": 10.082761,
+        "fence_mean_ms": 8.995761,
+        "fence_max_ms": 10.162032,
+        "warmup_frames": 20,
+        "warmup_max_fence_ms": 218.456637,
+        "gpu_decode_p50_ms": 5.334792,
+        "gpu_decode_p99_ms": 6.347239,
+        "convert_p50_ms": 2.661562,
+        "record_p50_ms": 0.546562,
+        "wait_p50_ms": 8.492813
+      },
+      "gpu_clock_end_hz": 690000000,
+      "own_client_stopped_and_auto_launch_disabled": true
+    },
+    {
+      "label": "batch-off-r2",
+      "batch_dequant": 0,
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 80,
+        "complete": 80,
+        "decode_best_ms": 4.492864,
+        "convert_best_ms": 1.940729,
+        "fence_p50_ms": 9.501147,
+        "fence_p99_ms": 10.539897,
+        "fence_mean_ms": 9.466819,
+        "fence_max_ms": 10.771876,
+        "warmup_frames": 20,
+        "warmup_max_fence_ms": 216.865438,
+        "gpu_decode_p50_ms": 5.727864,
+        "gpu_decode_p99_ms": 7.138541,
+        "convert_p50_ms": 2.767396,
+        "record_p50_ms": 0.54526,
+        "wait_p50_ms": 8.872136
+      },
+      "gpu_clock_end_hz": 690000000,
+      "own_client_stopped_and_auto_launch_disabled": true
+    }
+  ],
+  "live_status": "pending: Quest tracking recovery prompt blocks launching the VR client. No .14 live FPS/pacing/latency acceptance captured.",
+  "decision": "Batch remains opt-in; bit-identical readbacks and modest standalone completion improvement require matched live confirmation. Published alpha.6 remains .13.",
+  "method_limits": [
+    "80 measured frames / 20 warmup; single deterministic native-size frame, not gameplay/endurance",
+    "GPU timestamps and submit waits vary with OS/compositor scheduling",
+    "Standalone timings do not include transport and OpenXR submission",
+    "Fresh live FPS, p1 and optical latency unmeasured for this candidate"
+  ]
+}
