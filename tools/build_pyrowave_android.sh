@@ -8,6 +8,7 @@ workspace_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 . "$workspace_dir/tools/lib/xrwired_env.sh"
 [ -f "$pyrowave_dir/pyrowave.h" ] || { echo "no pyrowave.h under $pyrowave_dir"; exit 1; }
 [ -f "$android_ndk/build/cmake/android.toolchain.cmake" ] || { echo "no NDK at $android_ndk"; exit 1; }
+python3 "$workspace_dir/tools/ci/check_shader_manifest.py" "$pyrowave_dir"
 build="$pyrowave_dir/build-android"
 cmake -S "$pyrowave_dir" -B "$build" -G Ninja \
     -DCMAKE_TOOLCHAIN_FILE="$android_ndk/build/cmake/android.toolchain.cmake" \

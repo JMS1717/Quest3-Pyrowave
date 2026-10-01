@@ -43,7 +43,10 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[4], "auto")) return 2;
     }
     printf("input %dx%d %s %s range, %zu bytes\n", w.width, w.height, w.chroma == 1 ? "4:4:4" : "4:2:0", w.full_range ? "full" : "limited", w.frame.size());
-    pyroclient *c = pyroclient_create_ex((uint32_t)w.width, (uint32_t)w.height, w.chroma == 1, w.full_range, 3, getenv("PYROWAVE_WAVELET") && !strcmp(getenv("PYROWAVE_WAVELET"), "53") ? 53 : 97, hint);
+    const char *wavelet_name = getenv("PYROWAVE_WAVELET");
+    const int wavelet = wavelet_name && !strcmp(wavelet_name, "haar") ? 2 :
+                        wavelet_name && !strcmp(wavelet_name, "53") ? 53 : 97;
+    pyroclient *c = pyroclient_create_ex((uint32_t)w.width, (uint32_t)w.height, w.chroma == 1, w.full_range, 3, wavelet, hint);
     if (!c) { fprintf(stderr, "pyroclient_create failed (see logcat pyroclient)\n"); return 1; }
     AHardwareBuffer *ahb = nullptr;
     pyroclient_frame_info info{};

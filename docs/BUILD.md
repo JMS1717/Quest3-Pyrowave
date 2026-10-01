@@ -114,3 +114,15 @@ are separate gates: see [`BENCHMARKING.md`](BENCHMARKING.md).
 ## Switching between PyroWave and Virtual Desktop
 
 Enable **ALVR** in SteamVR’s **Manage Add-ons** before starting Quest3-Pyrowave. A repair for a Virtual Desktop session may have disabled this add-on. When returning to Virtual Desktop, disable ALVR again so the drivers do not compete to claim the headset. Keep the Virtual Desktop installation.
+
+
+## Regenerating embedded shaders
+
+Normal builds consume the committed generated header. Both build helpers verify
+its source/header hash manifest before compiling. After editing GLSL, dispatch
+the `Regenerate pinned PyroWave shaders` GitHub workflow. Review the source hash
+and download its generated header; replace `shaders/slangmosh.hpp` in the pinned
+PyroWave tree, then run `python tools/ci/check_shader_manifest.py <tree> --write`.
+Regenerate `patches/quest3-pyrowave.patch` against the staged research baseline,
+including the manifest with `git add -N`. Reverse-check the patch before committing.
+The workflow records the pinned compiler configuration and invocation.

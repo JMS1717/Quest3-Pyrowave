@@ -45,6 +45,11 @@ Incomplete/rejected frames never publish. The pending and currently leased
 hardware buffers remain excluded from native writes. Frame-order and worker
 selection regression checks run in the client-core CI suite.
 
+The first matching .9 live trial **regressed**: one worker delivered ~60 median
+FPS with 15.20 ms completion; two delivered ~30 with 28.37 ms completion and
+126.34 ms median ALVR estimated total latency. One worker was restored immediately.
+This experiment remains off by default and is not a recommended performance preset.
+
 Compare one and two workers at the same resolution, codec/path, scene, bitrate
 and thermal state. Measure delivered FPS, completion/decode distributions,
 skipped/superseded frames, image correctness, latency and thermals. A cloud build
@@ -71,6 +76,27 @@ compute dispatch plus ~1.2 ms of preemption, and ~2 ms for the 4160 x 2208 RGBA
 surface. Separate eye-copy and presentation surfaces also execute. Detailed
 profiling adds overhead, so these are diagnostic timings, not benchmark cells.
 The ADB CPU/GPU level-6 trial retained a 640 MHz GPU and ~60 median client FPS;
-properties and detailed profiling were restored afterward. Meta documents these
+properties and detailed profiling were restored afterward. A separate level-7 GPU request
+reported 690 MHz and 14.51 ms completion, but retained ~60 median FPS; it was also
+restored. This is an observed request on this OS, not a guarantee on other firmware.
+Meta documents these
 [performance levels](https://developers.meta.com/vr/documentation/native/android/os-cpu-gpu-levels/)
 and the [GPU profiler](https://developers.meta.com/vr/documentation/spatial-sdk/ts-ovrgpuprofiler/).
+
+
+## Pair-local Haar inverse (.11)
+
+Haar coefficient pairs are independent. The experimental compute path now reads
+only the four bands for each 2 x 2 output block, rather than loading neighboring
+aprons and transposing a shared tile. The branch retains the transposed dispatch
+mapping and vertical-then-horizontal inverse order, including intermediate FP16
+rounding for reduced-range storage. Bounds checks cover padded dispatch edges.
+CDF 9/7 and CDF 5/3 keep their existing kernels. Multilevel dispatches, final RGBA
+conversion, completion fences and buffer leases remain; this optimization does
+not by itself guarantee the 8.33 ms complete-frame budget.
+
+The embedded header must be regenerated with the pinned Granite `slangmosh`
+compiler after GLSL changes. `shaders/quest3-manifest.json` hashes the changed
+kernel, shared definitions, variant description and generated header; Android
+and Windows interop build helpers reject stale inputs. The manually triggered
+`Regenerate pinned PyroWave shaders` workflow produces reviewable header artifacts.

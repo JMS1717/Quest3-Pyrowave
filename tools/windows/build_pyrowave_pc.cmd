@@ -21,6 +21,7 @@ echo BUILD_OK
 exit /b 0
 
 :interop
+python "%~dp0..\ci\check_shader_manifest.py" "%PW%" || exit /b 1
 cmake -S . -B build-interop -G "%GEN%" -DCMAKE_BUILD_TYPE=Release -DPYROWAVE_DEVEL=OFF -DSHADERC_ENABLE_SHARED_CRT=ON || exit /b 1
 cmake --build build-interop --config Release --target pyrowave-shared -j 16 || exit /b 1
 dir /b build-interop\Release\*pyrowave-shared*

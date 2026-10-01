@@ -16,8 +16,9 @@ jobs:
           cmake --build /tmp/shader-tools --target slangmosh -j 4
           compiler=$(find /tmp/shader-tools -type f -name slangmosh | head -n 1)
           "$compiler" "$p/shaders/slangmosh.json" --namespace PyroWave --output "$p/shaders/slangmosh.hpp" -O --strip
+          python3 tools/ci/check_shader_manifest.py "$p" --write
           mkdir out
-          cp "$p/shaders/slangmosh.hpp" out/
+          cp "$p/shaders/slangmosh.hpp" "$p/shaders/quest3-manifest.json" out/
           sha256sum "$p/shaders/idwt.comp" > out/SOURCE-SHA256.txt
       - uses: actions/upload-artifact@v4
         with:

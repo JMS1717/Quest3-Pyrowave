@@ -41,6 +41,7 @@ placement are part of hardware acceptance, beyond the chord regression tests.
 The .7 build passed cloud checks, displayed live statistics in both eyes and had
 its physical thumbstick toggle confirmed by the owner. Device screenshots exposed
 an upside-down texture origin; .8 corrects the GLES/OpenXR texture orientation and
-has passed matching Android/Windows builds and cloud regressions.
+has passed matching Android/Windows builds and cloud regressions. A .8 device
+screenshot confirmed upright text and the panel in both eyes during USB streaming.
 Do not use .7 as the final overlay acceptance build. Matched on/off overhead and
 long-duration gameplay checks remain pending.
