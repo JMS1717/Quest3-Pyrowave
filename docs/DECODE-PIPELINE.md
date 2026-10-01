@@ -192,3 +192,8 @@ harness or `debug.q3pw.dequant_batch=1` with a matching .14 client, then restart
 The property overrides the environment when present. Verify asymmetric small
 and native-size readbacks before APK deployment, then compare matched streaming
 windows with fused Haar off. This is a candidate, not a measured speedup.
+
+The matching .14 native bridge also exposes `debug.q3pw.convert_compute=1` for
+a compute-color-conversion control, independently of the wavelet decode path.
+Set 0 or restore the original property to retain capability-gated Adreno fragment
+conversion. Restart the client after changes. No default conversion change is implied.
