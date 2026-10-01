@@ -121,3 +121,21 @@ Create the same input with `python -m tools.quest3.reference_pattern pattern.y4m
 For on-device readback use the cloud artifact `pyrowave_android` with
 `PYROWAVE_WAVELET=haar PYROWAVE_FORCE_COMPUTE=1 PYROWAVE_AHB=0`, and keep old/new
 codec libraries in separate directories selected by `LD_LIBRARY_PATH`.
+
+
+## Reuse released eye images (.12 candidate)
+
+On Quest 3 PyroWave repeats, .12 skips eye swapchain acquisition/copy/redraw after
+one image has been rendered and released. It resubmits that last image with its
+original poses while the runtime reprojects it; the client overlay remains a
+separate layer. A presentation configuration update invalidates the cached image
+and causes one redraw. Fresh frames retain copy completion and buffer leases.
+Other clients/codecs keep their existing path. The
+[OpenXR specification](https://registry.khronos.org/OpenXR/specs/1.0-khr/html/xrspec.html)
+allows xrEndFrame without another release and uses the most recently released
+image. This saves repeat rendering; it does not count repeats as new video frames.
+
+For a same-build A/B control, `adb shell setprop debug.q3pw.repeat_render 1`
+disables reuse. Restart the client after changing the property. Empty/default
+means reuse; restore the original property after the experiment. Cloud compilation
+and live correctness/performance acceptance remain required before claiming a gain.

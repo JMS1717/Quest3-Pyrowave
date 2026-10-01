@@ -39,4 +39,14 @@ class BenchTests(unittest.TestCase):
     def test_percentiles_filter_invalid_numbers(self):
         self.assertEqual(distribution([None,float('nan'),1,3])['p50'],2)
 
+    def test_submission_rate_exposes_missed_slots(self):
+        from tools.quest3.bench import summarise
+        events=[{'capture_elapsed_s':t,'event':{'event_type':{
+            'id':'GraphStatistics','data':{'client_fps':fps}}}}
+            for t,fps in [(0,120),(1/120,120),(2/120,120),(4/120,60)]]
+        report=summarise(events,120)
+        self.assertAlmostEqual(report['submitted_frame_rate_fps'],90)
+        self.assertEqual(report['metrics']['client_fps']['p50'],120)
+        self.assertFalse(report['sustained_requested_fps'])
+
 if __name__=='__main__':unittest.main()

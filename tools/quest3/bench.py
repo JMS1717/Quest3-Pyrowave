@@ -68,11 +68,15 @@ def distribution(values):
             'p95':percentile(.95), 'p99':percentile(.99), 'max':v[-1]}
 
 def summarise(events, requested_hz=None):
-    graphs=[]; summaries=[]; telemetry=[]
+    graphs=[]; summaries=[]; telemetry=[]; graph_times=[]
     for item in events:
         event=item.get('event',item).get('event_type',{})
         data=event.get('data',{})
-        if event.get('id')=='GraphStatistics': graphs.append(data)
+        if event.get('id')=='GraphStatistics':
+            graphs.append(data)
+            elapsed=item.get('capture_elapsed_s')
+            if isinstance(elapsed,(int,float)) and math.isfinite(elapsed):
+                graph_times.append(elapsed)
         if event.get('id')=='StatisticsSummary': summaries.append(data)
         if event.get('id')=='HeadsetTelemetry': telemetry.append(data)
     result={'schema_version':1,'status':'measured' if graphs else 'no_stream_frames', 'frames':len(graphs),
@@ -82,6 +86,11 @@ def summarise(events, requested_hz=None):
     for field in ('encoder_s','decoder_s','network_s','total_pipeline_latency_s',
                   'decoder_queue_s','server_compositor_s','client_compositor_s','vsync_queue_s'):
         result['metrics'][field.replace('_s','_ms')]=distribution([g.get(field,0)*1000 for g in graphs if field in g])
+    # Submission-event rate over capture wall time exposes missed slots that a
+    # median instantaneous FPS can hide. This is not an optical/display counter.
+    span=graph_times[-1]-graph_times[0] if len(graph_times)>1 else 0
+    result['submitted_frame_rate_fps']=(len(graph_times)-1)/span if span>0 else None
+    result['submission_rate_definition']='GraphStatistics events per capture-time span; includes only submitted video frames, not repeated OpenXR layers.'
     result['metrics']['client_fps']=distribution([g.get('client_fps') for g in graphs])
     result['metrics']['server_fps']=distribution([g.get('server_fps') for g in graphs])
     result['metrics']['video_mbps']=distribution([g.get('bitrate_bps',0)/1e6 for g in graphs])
