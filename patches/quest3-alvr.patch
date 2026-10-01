@@ -2319,7 +2319,7 @@ index 84100dc..b9becc3 100644
              if self.wavelet_53 { "5/3" } else { "9/7" },
              if self.follow_gaze { "on" } else { "off" },
 diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
-index 985a4d0..e4cf42f 100644
+index 985a4d0..e1256bb 100644
 --- a/alvr/session/src/beta_tests.rs
 +++ b/alvr/session/src/beta_tests.rs
 @@ -31,7 +31,7 @@ fn video_shows_only_codec_experiment_controls() {
@@ -2331,7 +2331,7 @@ index 985a4d0..e4cf42f 100644
      );
      assert_eq!(
          names(entries, Visibility::Advanced),
-@@ -49,7 +49,7 @@ fn video_shows_only_codec_experiment_controls() {
+@@ -49,36 +49,26 @@ fn video_shows_only_codec_experiment_controls() {
  fn codec_picker_offers_pyrowave_and_h264_only() {
      assert_eq!(
          visible_variants(&schema(), &["video", "preferred_codec"]).unwrap(),
@@ -2340,7 +2340,14 @@ index 985a4d0..e4cf42f 100644
      );
  }
  
-@@ -62,23 +62,13 @@ fn pyrowave_section_exposes_transport_wavelet_and_decode_path() {
+ #[test]
+-fn pyrowave_section_exposes_transport_wavelet_and_decode_path() {
++fn pyrowave_section_exposes_chroma_transport_wavelet_and_decode_path() {
+     let entries = visible_children(&schema(), &["video", "pyrowave"]).unwrap();
+     assert_eq!(
+         names(entries, Visibility::Experiment),
+-        sorted(&["transport", "wavelet", "decode_path"])
++        sorted(&["chroma_444", "transport", "wavelet", "decode_path"])
      );
      assert_eq!(
          visible_variants(&schema(), &["video", "pyrowave", "decode_path"]).unwrap(),

@@ -10,7 +10,7 @@ import threading
 from pathlib import Path
 
 RATES = (72, 90, 120, 144, 207, 240)
-BITRATES = (600, 800, 1000, 1500, 2000)
+BITRATES = (400, 600, 800, 1000, 1500, 2000)
 
 def supported(requested, rates):
     return any(math.isfinite(r) and r > 0 and abs(r - requested) < .01 for r in rates)

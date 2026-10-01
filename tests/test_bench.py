@@ -6,9 +6,13 @@ class BenchTests(unittest.TestCase):
         caps=parse_capabilities('[Q3PW_CAPS] model=Quest3 rates=[72.0, 90.0, 120.0] runtime=true')
         p=plan(caps,repeats=1)
         self.assertEqual([r['requested_hz'] for r in p['skipped']],[144,207,240])
-        self.assertEqual(len(p['cells']),39)
+        self.assertEqual(len(p['cells']),45)
         self.assertTrue(all(r['status']=='not_confirmed' for r in p['skipped']))
         self.assertTrue(all(c['requested_hz'] in (72,90,120) for c in p['cells']))
+        baseline=[c for c in p['cells'] if c['codec']=='PyroWave'
+                  and c['requested_hz']==72 and c['mbps']==400]
+        self.assertEqual({c['decode_path'] for c in baseline},{'Compute','Fragment'})
+        self.assertTrue(all(c['chroma']=='420' and c['transport']=='Tcp' for c in baseline))
     def test_probe_can_confirm_non_enumerated_rates(self):
         caps=parse_capabilities('[Q3PW_CAPS] model=Quest3 rates=[90.0,120.0] runtime=true\n'
             '[Q3PW_PROBE] request=207 confirmed=true runtime_hz=Some(207.0) period_ns=4830918\n'
