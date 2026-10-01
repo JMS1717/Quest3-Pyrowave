@@ -1,8 +1,10 @@
 # Full-resolution corruption repair — September 30, 2026
 
-Status: fixed APK builds and decoder checks pass; live headset acceptance is pending.
-The OS tracking dialog currently prevents the repaired VR client from starting. This is not
-proof of a repaired streamed image or sustained 120 fps. Dashboard startup is verified locally.
+Status: the earlier buffer-safety APK builds and native decoder checks passed; the new PWU2
+transport repair is being built and tested on GitHub Actions. Live headset acceptance is pending.
+The last live TCP attempt encountered the OS tracking dialog. Testing then stopped at the owner's
+request. This is not proof of a repaired streamed image or sustained 120 fps. Dashboard startup
+was verified locally before development was isolated.
 
 ## Observed failures and changes
 

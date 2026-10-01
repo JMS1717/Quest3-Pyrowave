@@ -1593,7 +1593,7 @@ index ccc83c8..5e14bba 100644
                  .options
                  .into_iter()
 diff --git a/alvr/dashboard/src/dashboard/components/test_report.rs b/alvr/dashboard/src/dashboard/components/test_report.rs
-index 3be9319..12d7587 100644
+index 3be9319..c075556 100644
 --- a/alvr/dashboard/src/dashboard/components/test_report.rs
 +++ b/alvr/dashboard/src/dashboard/components/test_report.rs
 @@ -255,8 +255,8 @@ fn effective_settings(settings: &Settings, session_settings: &Value) -> Value {
@@ -1607,7 +1607,7 @@ index 3be9319..12d7587 100644
          "render_per_eye": render,
          "render_scale_percent": render_percent,
          "refresh_hz": video.preferred_fps,
-@@ -549,10 +549,10 @@ mod tests {
+@@ -549,11 +549,11 @@ mod tests {
          let r = report(&Subjective::default());
          assert_eq!(r["schema_version"], 1);
          assert_eq!(r["settings"]["profile"], beta::RECOMMENDED_PROFILE);
@@ -1615,13 +1615,15 @@ index 3be9319..12d7587 100644
 -        assert_eq!(r["settings"]["chroma"], "4:4:4");
 -        assert_eq!(r["settings"]["render_per_eye"], json!([2131, 2304]));
 -        assert_eq!(r["settings"]["render_scale_percent"], 60.0);
+-        assert_eq!(r["settings"]["pyrowave"]["transport"], "UDP");
 +        assert_eq!(r["settings"]["codec"], "PyroWave");
 +        assert_eq!(r["settings"]["chroma"], "4:2:0");
 +        assert_eq!(r["settings"]["render_per_eye"], json!([2064, 2208]));
 +        assert_eq!(r["settings"]["render_scale_percent"], 100.0);
-         assert_eq!(r["settings"]["pyrowave"]["transport"], "UDP");
++        assert_eq!(r["settings"]["pyrowave"]["transport"], "TCP");
          assert_eq!(r["settings"]["advanced_changes"], json!([]));
          assert_eq!(r["encoded_size"], json!([1984, 896]));
+         assert_eq!(r["window"]["frames"], 900);
 diff --git a/alvr/graphics/src/staging.rs b/alvr/graphics/src/staging.rs
 index febd2c3..779de33 100644
 --- a/alvr/graphics/src/staging.rs
@@ -2317,7 +2319,7 @@ index 84100dc..b9becc3 100644
              if self.wavelet_53 { "5/3" } else { "9/7" },
              if self.follow_gaze { "on" } else { "off" },
 diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
-index 985a4d0..649ac0e 100644
+index 985a4d0..e4cf42f 100644
 --- a/alvr/session/src/beta_tests.rs
 +++ b/alvr/session/src/beta_tests.rs
 @@ -31,7 +31,7 @@ fn video_shows_only_codec_experiment_controls() {
@@ -2475,9 +2477,12 @@ index 985a4d0..649ac0e 100644
  }
  
  fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
-@@ -263,8 +244,8 @@ fn effective_config_follows_settings_without_env() {
+@@ -261,21 +242,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
+ fn effective_config_follows_settings_without_env() {
+     let e = pyrowave_effective(&default_settings(), &env(&[]));
      assert!(e.enabled);
-     assert!(e.udp);
+-    assert!(e.udp);
++    assert!(!e.udp);
      assert!(!e.wavelet_53);
 -    assert_eq!(e.decode_path, PyroWaveDecodePath::Compute);
 -    assert!(e.follow_gaze);
@@ -2486,7 +2491,28 @@ index 985a4d0..649ac0e 100644
      assert!(e.overrides.is_empty());
  }
  
-@@ -302,8 +283,7 @@ fn research_env_overrides_win_and_are_reported() {
+ #[test]
+ fn effective_config_follows_a_non_default_setting() {
+     let mut s = default_settings();
+-    s.video.pyrowave.transport = PyroWaveTransport::Tcp;
++    s.video.pyrowave.transport = PyroWaveTransport::Udp;
+     s.video.pyrowave.wavelet = PyroWaveWavelet::Cdf53;
+     s.video.pyrowave.decode_path = PyroWaveDecodePath::Fragment;
+     let e = pyrowave_effective(&s, &env(&[]));
+-    assert!(!e.udp);
++    assert!(e.udp);
+     assert!(e.wavelet_53);
+     assert_eq!(e.decode_path, PyroWaveDecodePath::Fragment);
+ }
+@@ -284,6 +265,7 @@ fn effective_config_follows_a_non_default_setting() {
+ fn research_env_overrides_win_and_are_reported() {
+     let mut s = default_settings();
+     s.video.preferred_codec = CodecType::H264;
++    s.video.pyrowave.transport = PyroWaveTransport::Udp;
+     let e = pyrowave_effective(
+         &s,
+         &env(&[
+@@ -302,8 +284,7 @@ fn research_env_overrides_win_and_are_reported() {
          vec![
              "ALVR_PYROWAVE",
              "ALVR_PYROWAVE_UDP",
@@ -2496,13 +2522,13 @@ index 985a4d0..649ac0e 100644
          ]
      );
  }
-@@ -320,8 +300,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
+@@ -320,8 +301,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
      let line = pyrowave_effective(&default_settings(), &env(&[])).to_string();
      assert_eq!(
          line,
 -        "PyroWave effective config: chroma=4:4:4 transport=UDP wavelet=CDF 9/7 \
 -         decode_path=compute follow_gaze=on overrides=none"
-+        "PyroWave effective config: chroma=4:2:0 transport=UDP wavelet=CDF 9/7 \
++        "PyroWave effective config: chroma=4:2:0 transport=TCP wavelet=CDF 9/7 \
 +         decode_path=auto follow_gaze=off overrides=none"
      );
  }
