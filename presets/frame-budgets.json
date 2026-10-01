@@ -145,5 +145,47 @@
     "minimum_tcp_ethernet_mbps_at_cap": 2106.849315068493,
     "fits_pwu2_fragment_limit": true,
     "sustained_performance_verified": false
+  },
+  {
+    "requested_eye_resolution": [
+      1548,
+      1656
+    ],
+    "aligned_eye_resolution": [
+      1568,
+      1664
+    ],
+    "hz": 120,
+    "mbps": 1000,
+    "chroma": "420",
+    "frame_ms": 8.333333333333334,
+    "maximum_payload_bytes_per_frame": 1041666,
+    "raw_bytes_per_frame": 7827456,
+    "raw_to_payload_ratio": 7.514362569192044,
+    "encoded_bits_per_stereo_pixel": 1.5969418416405023,
+    "minimum_tcp_ethernet_mbps_at_cap": 1053.4246575342465,
+    "fits_pwu2_fragment_limit": true,
+    "sustained_performance_verified": false
+  },
+  {
+    "requested_eye_resolution": [
+      1238,
+      1325
+    ],
+    "aligned_eye_resolution": [
+      1248,
+      1344
+    ],
+    "hz": 120,
+    "mbps": 1000,
+    "chroma": "420",
+    "frame_ms": 8.333333333333334,
+    "maximum_payload_bytes_per_frame": 1041666,
+    "raw_bytes_per_frame": 5031936,
+    "raw_to_payload_ratio": 4.830661651623457,
+    "encoded_bits_per_stereo_pixel": 2.4841317536630036,
+    "minimum_tcp_ethernet_mbps_at_cap": 1053.4246575342465,
+    "fits_pwu2_fragment_limit": true,
+    "sustained_performance_verified": false
   }
 ]

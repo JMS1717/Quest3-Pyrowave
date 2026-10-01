@@ -28,7 +28,7 @@ def frame_budget(width, height, hz, mbps, chroma="420"):
 def profiles(config):
     p = config["pyrowave"]
     width, height = p["requested_eye_resolution"]
-    return [frame_budget(width, height, v["hz"], v["mbps"], v["chroma"])
+    return [frame_budget(*v.get("requested_eye_resolution", [width, height]), v["hz"], v["mbps"], v["chroma"])
             for v in p["candidate_profiles"] + p["experimental_profiles"]]
 
 

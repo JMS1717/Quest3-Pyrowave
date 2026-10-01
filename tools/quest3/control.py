@@ -10,6 +10,38 @@ from .bench import supported
 
 API='http://127.0.0.1:8082/api/dashboard-request'
 EVENTS='ws://127.0.0.1:8082/api/events'
+
+def windows_process_running(executable):
+    """Read the process snapshot directly; tasklist can hang during SteamVR shutdown."""
+    import ctypes
+    from ctypes import wintypes
+    class Entry(ctypes.Structure):
+        _fields_ = [('size', wintypes.DWORD), ('usage', wintypes.DWORD),
+                    ('pid', wintypes.DWORD), ('heap', ctypes.c_size_t),
+                    ('module', wintypes.DWORD), ('threads', wintypes.DWORD),
+                    ('parent', wintypes.DWORD), ('priority', wintypes.LONG),
+                    ('flags', wintypes.DWORD), ('name', wintypes.WCHAR * 260)]
+    kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+    kernel.CreateToolhelp32Snapshot.argtypes = [wintypes.DWORD, wintypes.DWORD]
+    kernel.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
+    for method in (kernel.Process32FirstW, kernel.Process32NextW):
+        method.argtypes = [wintypes.HANDLE, ctypes.POINTER(Entry)]
+        method.restype = wintypes.BOOL
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    handle = kernel.CreateToolhelp32Snapshot(2, 0)
+    if handle == ctypes.c_void_p(-1).value:
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        entry = Entry(); entry.size = ctypes.sizeof(Entry)
+        more = kernel.Process32FirstW(handle, ctypes.byref(entry))
+        while more:
+            if entry.name.casefold() == executable.casefold(): return True
+            more = kernel.Process32NextW(handle, ctypes.byref(entry))
+        if ctypes.get_last_error() != 18: # ERROR_NO_MORE_FILES
+            raise ctypes.WinError(ctypes.get_last_error())
+        return False
+    finally:
+        kernel.CloseHandle(handle)
 def request(value):
     req=urllib.request.Request(API,data=json.dumps(value).encode(),
         headers={'X-ALVR':'true','Content-Type':'application/json'})
@@ -30,6 +62,15 @@ def session():
 def set_values(values):
     request({'SetValues':[{'path':[{'Name':s} for s in path.split('.')],'value':value}
         for path,value in values.items()]})
+
+def usb(enabled):
+    if enabled:
+        set_values({'session_settings.connection.wired_client_type.variant':'Custom',
+                    'session_settings.connection.wired_client_type.Custom':'io.github.jms1717.quest3pyrowave',
+                    'session_settings.video.pyrowave.transport.variant':'Tcp',
+                    'session_settings.connection.stream_protocol.variant':'Tcp'})
+    request({'UpdateClientList':{'hostname':'client.wired',
+        'action':{'AddIfMissing':{'trusted':True,'manual_ips':[]}} if enabled else 'RemoveEntry'}})
 
 def apply(codec, mbps, hz, path, caps, chroma="420", transport="Tcp"):
     if not caps.get('refresh_extension') or not supported(hz,caps['rates_hz']):
@@ -78,8 +119,7 @@ def restart(steamvr,streamer=None):
     request('RestartSteamvr')
     deadline=time.monotonic()+40
     while time.monotonic()<deadline:
-        tasks=subprocess.run(['tasklist','/FI','IMAGENAME eq vrserver.exe','/FO','CSV','/NH'],capture_output=True,text=True,timeout=5)
-        if 'vrserver.exe' not in tasks.stdout.lower():break
+        if not windows_process_running('vrserver.exe'):break
         time.sleep(.5)
     else:raise RuntimeError('SteamVR did not shut down; leaving registrations unchanged')
     subprocess.run([str(reg),'adddriver',str(driver)],check=True,capture_output=True)
@@ -92,12 +132,15 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__);sub=parser.add_subparsers(dest='cmd',required=True)
     sub.add_parser('status');r=sub.add_parser('restart')
     r.add_argument('--steamvr',required=True);r.add_argument('--streamer')
+    u=sub.add_parser('usb');g=u.add_mutually_exclusive_group(required=True)
+    g.add_argument('--enable',action='store_true');g.add_argument('--disable',action='store_true')
     c=sub.add_parser('apply');c.add_argument('--codec',choices=['PyroWave','H264','Hevc','AV1'],default='PyroWave')
     c.add_argument('--mbps',type=int,required=True);c.add_argument('--hz',type=int,required=True)
     c.add_argument('--decode-path',choices=['Auto','Compute','Fragment'],default='Auto');c.add_argument('--capabilities',required=True)
     c.add_argument('--chroma',choices=['420','444'],default='420')
     c.add_argument('--transport',choices=['Tcp','Udp'],default='Tcp');a=parser.parse_args()
     if a.cmd=='restart':restart(a.steamvr,a.streamer);return
+    if a.cmd=='usb':usb(a.enable);print('USB mode enabled; restart SteamVR if transport changed' if a.enable else 'USB mode disabled');return
     if a.cmd=='apply':print(json.dumps(apply(a.codec,a.mbps,a.hz,a.decode_path,json.loads(Path(a.capabilities).read_text()),a.chroma,a.transport)));return
     s=session();v=s['session_settings']['video'];clients=s.get('client_connections',{})
     print(json.dumps({'video':{key:v.get(key) for key in ('preferred_codec','preferred_fps','bitrate','pyrowave','transcoding_view_resolution')},

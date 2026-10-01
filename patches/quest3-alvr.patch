@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7b..7543630 100644
+index 7cead7b..336bd13 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,7 +182,7 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -16,7 +16,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -25,7 +25,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -34,7 +34,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -43,7 +43,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -52,7 +52,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -61,7 +61,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -70,7 +70,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -79,7 +79,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "dirs",
   "once_cell",
@@ -88,7 +88,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -97,7 +97,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_common",
   "egui",
@@ -106,7 +106,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -115,7 +115,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -124,7 +124,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -133,7 +133,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -142,7 +142,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -151,7 +151,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -160,7 +160,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -169,7 +169,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_common",
   "jni",
@@ -178,7 +178,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -187,7 +187,7 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -196,12 +196,12 @@ index 7cead7b..7543630 100644
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..3f6f9f6 100644
+index ae00ce8..e310a68 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -209,7 +209,7 @@ index ae00ce8..3f6f9f6 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.5"
++version = "20.13.0-quest3.pyro.6"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -285,8 +285,35 @@ index 90a7c0a..b91feea 100644
      pub fn resume(&self) {
          dbg_client_core!("resume");
  
+diff --git a/alvr/client_core/src/video_decoder/android.rs b/alvr/client_core/src/video_decoder/android.rs
+index f764033..d636442 100644
+--- a/alvr/client_core/src/video_decoder/android.rs
++++ b/alvr/client_core/src/video_decoder/android.rs
+@@ -309,7 +309,10 @@ fn decoder_lifecycle(
+         });
+         match named {
+             Some(Ok(d)) => {
+-                info!("Using named decoder {}", decoder_name.as_deref().unwrap_or_default());
++                info!(
++                    "Using named decoder {}",
++                    decoder_name.as_deref().unwrap_or_default()
++                );
+                 d
+             }
+             _ => {
+@@ -319,7 +322,9 @@ fn decoder_lifecycle(
+                     Ok(d) => d,
+                     Err(e) => {
+                         // would be "warn!" but this is a severe caveat and a pretty major error.
+-                        error!("Attempting software fallback due to error in default decoder: {e:#}");
++                        error!(
++                            "Attempting software fallback due to error in default decoder: {e:#}"
++                        );
+ 
+                         decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
+                     }
 diff --git a/alvr/client_core/src/video_decoder/mod.rs b/alvr/client_core/src/video_decoder/mod.rs
-index 4d2e699..6e3f353 100644
+index 4d2e699..6aa9030 100644
 --- a/alvr/client_core/src/video_decoder/mod.rs
 +++ b/alvr/client_core/src/video_decoder/mod.rs
 @@ -4,6 +4,8 @@ mod android;
@@ -298,7 +325,72 @@ index 4d2e699..6e3f353 100644
  pub mod telemetry;
  
  use alvr_common::anyhow::Result;
-@@ -137,15 +139,32 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
+@@ -53,7 +55,10 @@ impl PyroWaveConfig {
+ pub fn parse_pyrowave_config(buffer: &[u8]) -> Result<PyroWaveConfig> {
+     use alvr_common::anyhow::bail;
+     if buffer.len() < 10 {
+-        bail!("PyroWave decoder config is {} bytes, expected 10", buffer.len());
++        bail!(
++            "PyroWave decoder config is {} bytes, expected 10",
++            buffer.len()
++        );
+     }
+     let width = u32::from_le_bytes(buffer[0..4].try_into().unwrap());
+     let height = u32::from_le_bytes(buffer[4..8].try_into().unwrap());
+@@ -68,7 +73,11 @@ pub fn parse_pyrowave_config(buffer: &[u8]) -> Result<PyroWaveConfig> {
+         0
+     };
+     // Byte 13 (Experiment 2): 0 = CDF 9/7, 1 = CDF 5/3. Absent on older servers.
+-    let wavelet = if buffer.len() >= 14 && buffer[13] == 1 { 53 } else { 97 };
++    let wavelet = if buffer.len() >= 14 && buffer[13] == 1 {
++        53
++    } else {
++        97
++    };
+     let decode_path = match buffer.get(14) {
+         Some(&path @ (1 | 2)) => path,
+         _ => 0,
+@@ -79,7 +88,11 @@ pub fn parse_pyrowave_config(buffer: &[u8]) -> Result<PyroWaveConfig> {
+         chroma444: buffer[8] != 0,
+         full_range: buffer[9] != 0,
+         udp,
+-        deadline: Duration::from_micros(if deadline_us == 0 { 13_889 } else { deadline_us as u64 }),
++        deadline: Duration::from_micros(if deadline_us == 0 {
++            13_889
++        } else {
++            deadline_us as u64
++        }),
+         wavelet,
+         decode_path,
+     })
+@@ -99,7 +112,12 @@ pub enum FrameDecision {
+     Drop,
+ }
+ 
+-pub fn frame_decision(complete: bool, any_decodable: bool, age: Duration, deadline: Duration) -> FrameDecision {
++pub fn frame_decision(
++    complete: bool,
++    any_decodable: bool,
++    age: Duration,
++    deadline: Duration,
++) -> FrameDecision {
+     if complete {
+         FrameDecision::DecodeComplete
+     } else if age < deadline {
+@@ -130,22 +148,51 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
+     let mean = samples.iter().sum::<f32>() / n as f32;
+     format!(
+         "min {:.2} mean {:.2} p50 {:.2} p95 {:.2} p99 {:.2} max {:.2}",
+-        samples[0], mean, q(0.5), q(0.95), q(0.99), samples[n - 1]
++        samples[0],
++        mean,
++        q(0.5),
++        q(0.95),
++        q(0.99),
++        samples[n - 1]
+     )
+ }
+ 
  /// The newest decoded frame, handed out once. Intra-only codecs can always skip to the newest.
  #[derive(Default)]
  pub struct FrameSlot {
@@ -309,6 +401,7 @@ index 4d2e699..6e3f353 100644
 +#[derive(Default)]
 +struct FrameSlotState {
 +    pending: Option<(Duration, usize)>,
++    superseded: u64,
 +    /// The render loop can hold a dequeued buffer across xrWaitFrame. Keep it out
 +    /// of the producer's write rotation until a subsequent frame is dequeued.
 +    leased: usize,
@@ -317,7 +410,13 @@ index 4d2e699..6e3f353 100644
  impl FrameSlot {
      pub fn publish(&self, timestamp: Duration, buffer: usize) {
 -        *self.inner.lock() = Some((timestamp, buffer));
-+        self.inner.lock().pending = Some((timestamp, buffer));
++        let mut state = self.inner.lock();
++        if state.pending.replace((timestamp, buffer)).is_some() {
++            state.superseded += 1;
++        }
++    }
++    pub fn superseded(&self) -> u64 {
++        self.inner.lock().superseded
      }
      pub fn take(&self) -> Option<(Duration, usize)> {
 -        self.inner.lock().take()
@@ -334,7 +433,138 @@ index 4d2e699..6e3f353 100644
      }
  }
  
-@@ -392,4 +411,21 @@ mod tests {
+@@ -229,7 +276,9 @@ fn logcat_info(tag: &str, message: &str) {
+     }
+     let tag = std::ffi::CString::new(tag).unwrap_or_default();
+     let text = std::ffi::CString::new(message).unwrap_or_default();
+-    unsafe { __android_log_write(4 /* ANDROID_LOG_INFO */, tag.as_ptr(), text.as_ptr()) };
++    unsafe {
++        __android_log_write(4 /* ANDROID_LOG_INFO */, tag.as_ptr(), text.as_ptr())
++    };
+ }
+ 
+ // report_frame_decoded: (target_timestamp: Duration) -> ()
+@@ -249,7 +298,9 @@ pub fn create_decoder(
+             }
+         }
+         if config.codec == CodecType::PyroWave
+-            && parse_pyrowave_config(&config.config_buffer).map(|c| c.udp).unwrap_or(false)
++            && parse_pyrowave_config(&config.config_buffer)
++                .map(|c| c.udp)
++                .unwrap_or(false)
+         {
+             let (sink, source) = pyrowave_udp::video_decoder_split(
+                 config.clone(),
+@@ -312,53 +363,95 @@ mod tests {
+         buf.push(1);
+         buf.push(0);
+         let c = parse_pyrowave_config(&buf).unwrap();
+-        assert_eq!(c, PyroWaveConfig { width: 3552, height: 3840, chroma444: true, full_range: false,
+-                                       udp: false, deadline: Duration::from_micros(13_889), wavelet: 97,
+-                                       decode_path: 0 });
++        assert_eq!(
++            c,
++            PyroWaveConfig {
++                width: 3552,
++                height: 3840,
++                chroma444: true,
++                full_range: false,
++                udp: false,
++                deadline: Duration::from_micros(13_889),
++                wavelet: 97,
++                decode_path: 0
++            }
++        );
+         // the 13-byte form: transport udp, deadline 11111 us
+         buf.push(1);
+         buf.extend_from_slice(&11_111u16.to_le_bytes());
+         let c = parse_pyrowave_config(&buf).unwrap();
+         assert!(c.udp);
+         assert_eq!(c.deadline, Duration::from_micros(11_111));
+-        assert_eq!(c.wavelet, 97, "13-byte blob from a server without the wavelet byte is 9/7");
++        assert_eq!(
++            c.wavelet, 97,
++            "13-byte blob from a server without the wavelet byte is 9/7"
++        );
+         // the 14-byte form (Experiment 2): wavelet byte 0 = 9/7, 1 = 5/3
+         buf.push(0);
+         assert_eq!(parse_pyrowave_config(&buf).unwrap().wavelet, 97);
+         buf[13] = 1;
+         assert_eq!(parse_pyrowave_config(&buf).unwrap().wavelet, 53);
+-        assert_eq!(parse_pyrowave_config(&buf).unwrap().decode_path, 0, "no byte 14 is auto");
++        assert_eq!(
++            parse_pyrowave_config(&buf).unwrap().decode_path,
++            0,
++            "no byte 14 is auto"
++        );
+         // the 15-byte form (beta): the dashboard's headset decode path, 1 fragment, 2 compute
+         buf.push(2);
+         assert_eq!(parse_pyrowave_config(&buf).unwrap().decode_path, 2);
+         buf[14] = 1;
+         assert_eq!(parse_pyrowave_config(&buf).unwrap().decode_path, 1);
+         buf[14] = 9;
+-        assert_eq!(parse_pyrowave_config(&buf).unwrap().decode_path, 0, "unknown is auto");
++        assert_eq!(
++            parse_pyrowave_config(&buf).unwrap().decode_path,
++            0,
++            "unknown is auto"
++        );
+     }
+ 
+     #[test]
+     fn frame_decision_waits_then_decodes_partial_then_drops() {
+         let d = Duration::from_millis(14);
+-        assert_eq!(frame_decision(true, true, Duration::ZERO, d), FrameDecision::DecodeComplete);
+-        assert_eq!(frame_decision(false, true, Duration::from_millis(5), d), FrameDecision::Wait);
+-        assert_eq!(frame_decision(false, true, Duration::from_millis(14), d), FrameDecision::DecodePartial);
+-        assert_eq!(frame_decision(false, false, Duration::from_millis(14), d), FrameDecision::Drop);
++        assert_eq!(
++            frame_decision(true, true, Duration::ZERO, d),
++            FrameDecision::DecodeComplete
++        );
++        assert_eq!(
++            frame_decision(false, true, Duration::from_millis(5), d),
++            FrameDecision::Wait
++        );
++        assert_eq!(
++            frame_decision(false, true, Duration::from_millis(14), d),
++            FrameDecision::DecodePartial
++        );
++        assert_eq!(
++            frame_decision(false, false, Duration::from_millis(14), d),
++            FrameDecision::Drop
++        );
+         // a complete frame is decoded even if it arrived late: it is newer than anything shown
+-        assert_eq!(frame_decision(true, true, Duration::from_millis(40), d), FrameDecision::DecodeComplete);
++        assert_eq!(
++            frame_decision(true, true, Duration::from_millis(40), d),
++            FrameDecision::DecodeComplete
++        );
+     }
+ 
+     #[test]
+     fn a_complete_frame_is_skipped_only_when_a_newer_one_is_already_queued() {
+         assert!(!skip_for_newer(10, []));
+-        assert!(!skip_for_newer(10, [10, 9, 3]), "same or older frames' packets do not count");
++        assert!(
++            !skip_for_newer(10, [10, 9, 3]),
++            "same or older frames' packets do not count"
++        );
+         assert!(skip_for_newer(10, [9, 11]));
+     }
+ 
+     #[test]
+     fn distribution_line_reports_the_quantiles() {
+         let mut v: Vec<f32> = (1..=100).map(|i| i as f32).collect();
+-        assert_eq!(dist(&mut v), "min 1.00 mean 50.50 p50 51.00 p95 95.00 p99 99.00 max 100.00");
++        assert_eq!(
++            dist(&mut v),
++            "min 1.00 mean 50.50 p50 51.00 p95 95.00 p99 99.00 max 100.00"
++        );
+         assert_eq!(dist(&mut Vec::new()), "-");
+     }
+ 
+@@ -392,4 +485,22 @@ mod tests {
          assert_eq!(slot.take(), Some((Duration::from_millis(2), 0x20)));
          assert!(slot.take().is_none());
      }
@@ -351,18 +581,39 @@ index 4d2e699..6e3f353 100644
 +        // Publishing newer frames while the render loop is stalled must retain
 +        // protection of its old lease, even after the pending frame is replaced.
 +        slot.publish(Duration::from_millis(3), 0x30);
++        assert_eq!(slot.superseded(), 1);
 +        assert_eq!(slot.protected_buffers(), [0x10, 0x30]);
 +        slot.take();
 +        assert_eq!(slot.protected_buffers(), [0x30, 0]);
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601..7f54d17 100644
+index 2e22601..e7525d1 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
-@@ -38,10 +38,13 @@ struct FrameInfo {
+@@ -14,7 +14,7 @@ use alvr_common::{
+ use std::{
+     ffi::c_void,
+     sync::{
+-        atomic::{AtomicBool, Ordering},
++        atomic::{AtomicBool, AtomicU64, Ordering},
+         Arc,
+     },
+     thread::{self, JoinHandle},
+@@ -36,12 +36,23 @@ struct FrameInfo {
+ }
+ 
  extern "C" {
-     fn pyroclient_create_ex(width: u32, height: u32, chroma444: i32, full_range: i32, ring: u32, wavelet: i32, decode_path: i32) -> *mut PyroClient;
+-    fn pyroclient_create_ex(width: u32, height: u32, chroma444: i32, full_range: i32, ring: u32, wavelet: i32, decode_path: i32) -> *mut PyroClient;
++    fn pyroclient_create_ex(
++        width: u32,
++        height: u32,
++        chroma444: i32,
++        full_range: i32,
++        ring: u32,
++        wavelet: i32,
++        decode_path: i32,
++    ) -> *mut PyroClient;
      fn pyroclient_push_packet(c: *mut PyroClient, data: *const u8, size: usize) -> i32;
 -    fn pyroclient_decode(
 +    fn pyroclient_clear(c: *mut PyroClient);
@@ -375,7 +626,52 @@ index 2e22601..7f54d17 100644
      ) -> i32;
      fn pyroclient_destroy(c: *mut PyroClient);
  }
-@@ -143,15 +146,21 @@ pub fn video_decoder_split(
+@@ -50,6 +61,7 @@ extern "C" {
+ struct Pending {
+     frame: Mutex<Option<(Duration, Vec<u8>)>>,
+     ready: Condvar,
++    skipped: AtomicU64,
+ }
+ 
+ pub struct VideoDecoderSink {
+@@ -60,6 +72,7 @@ impl VideoDecoderSink {
+     pub fn push_frame_nal(&mut self, timestamp: Duration, data: &[u8]) -> Result<bool> {
+         let mut slot = self.pending.frame.lock();
+         if slot.is_some() {
++            self.pending.skipped.fetch_add(1, Ordering::Relaxed);
+             warn!("PyroWave: frame replaced before decode (decoder slower than the stream)");
+         }
+         *slot = Some((timestamp, data.to_vec()));
+@@ -77,7 +90,9 @@ pub struct VideoDecoderSource {
+ 
+ impl VideoDecoderSource {
+     pub fn dequeue_frame(&mut self) -> Option<(Duration, *mut c_void)> {
+-        self.decoded.take().map(|(ts, ptr)| (ts, ptr as *mut c_void))
++        self.decoded
++            .take()
++            .map(|(ts, ptr)| (ts, ptr as *mut c_void))
+     }
+ }
+ 
+@@ -99,6 +114,7 @@ pub fn video_decoder_split(
+     let pending = Arc::new(Pending {
+         frame: Mutex::new(None),
+         ready: Condvar::new(),
++        skipped: AtomicU64::new(0),
+     });
+     let decoded = Arc::new(FrameSlot::default());
+     let running = Arc::new(AtomicBool::new(true));
+@@ -136,22 +152,37 @@ pub fn video_decoder_split(
+                 let next = {
+                     let mut slot = pending.frame.lock();
+                     while slot.is_none() && running.load(Ordering::Relaxed) {
+-                        pending.ready.wait_for(&mut slot, Duration::from_millis(100));
++                        pending
++                            .ready
++                            .wait_for(&mut slot, Duration::from_millis(100));
+                     }
+                     slot.take()
+                 };
                  let Some((timestamp, data)) = next else {
                      continue;
                  };
@@ -395,17 +691,38 @@ index 2e22601..7f54d17 100644
 -                let rc = unsafe { pyroclient_decode(client, &mut out, &mut info) };
 -                if rc != 0 || out.is_null() {
 +                let protected = decoded.protected_buffers();
-+                let rc = unsafe { pyroclient_decode_guarded(client, &mut out, &mut info,
-+                    protected[0] as *mut c_void, protected[1] as *mut c_void) };
++                let rc = unsafe {
++                    pyroclient_decode_guarded(
++                        client,
++                        &mut out,
++                        &mut info,
++                        protected[0] as *mut c_void,
++                        protected[1] as *mut c_void,
++                    )
++                };
 +                if rc != 0 || out.is_null() || info.complete == 0 {
                      warn!("PyroWave: decode failed ({rc})");
                      failures += 1;
                      continue;
+@@ -160,10 +191,12 @@ pub fn video_decoder_split(
+                 report_frame_decoded(Ok(timestamp));
+                 frames += 1;
+                 sum_total += info.total_ms;
+-                // TCP delivers every frame whole: all complete, nothing partial or dropped here
++                // TCP is reliable, but overload can skip queued or supersede decoded frames.
+                 super::telemetry::record_frame(info.decode_ms as f32, info.total_ms as f32);
+                 super::telemetry::set_counters(super::telemetry::Counters {
+                     complete: frames,
++                    skipped: pending.skipped.load(Ordering::Relaxed),
++                    superseded: decoded.superseded(),
+                     decode_failures: failures,
+                     ..Default::default()
+                 });
 diff --git a/alvr/client_core/src/video_decoder/pyrowave_udp.rs b/alvr/client_core/src/video_decoder/pyrowave_udp.rs
-index f8a6cfe..4fe9434 100644
+index f8a6cfe..951b8ec 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave_udp.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave_udp.rs
-@@ -1,382 +1,203 @@
+@@ -1,29 +1,20 @@
 -//! PyroWave over UDP: our own socket, straight into the decoder.
 -//!
 -//! One thread owns the socket and the decoder, so every Vulkan call and every packet push stays
@@ -416,55 +733,64 @@ index f8a6cfe..4fe9434 100644
 -//! still incomplete one deadline after its first datagram is decoded partial (missing blocks
 -//! blur) or dropped if nothing usable arrived; a newer frame arriving first supersedes it the
 -//! same way. Nothing is ever retransmitted.
--use super::{
++//! Dedicated UDP reception plus a single GPU worker. Only whole frames are presented.
+ use super::{
 -    dist, frame_decision, parse_pyrowave_config, skip_for_newer, FrameDecision, FrameSlot,
 -    PyroWaveConfig, VideoDecoderConfig,
--};
--use alvr_common::{
--    anyhow::{anyhow, Result},
++    dist, parse_pyrowave_config,
++    pyrowave_udp_assembly::{Assembler, AssemblyCounters, CompleteFrame},
++    FrameSlot, VideoDecoderConfig,
+ };
+ use alvr_common::{
+     anyhow::{anyhow, Result},
 -    info,
--};
-+//! Dedicated UDP reception plus a single GPU worker. Only whole frames are presented.
-+use super::{dist, parse_pyrowave_config, pyrowave_udp_assembly::{Assembler, AssemblyCounters, CompleteFrame}, FrameSlot, VideoDecoderConfig};
-+use alvr_common::{anyhow::{anyhow, Result}, parking_lot::{Condvar, Mutex}};
++    parking_lot::{Condvar, Mutex},
+ };
  use alvr_packets::{PyroWavePacketHeader, PYROWAVE_UDP_HEADER_LEN, PYROWAVE_UDP_PORT};
--use std::{
+ use std::{
 -    collections::VecDeque,
--    ffi::{c_void, CString},
--    net::UdpSocket,
--    os::fd::AsRawFd,
--    sync::{
+     ffi::{c_void, CString},
+     net::UdpSocket,
+     os::fd::AsRawFd,
+     sync::{
 -        atomic::{AtomicBool, Ordering},
--        Arc,
--    },
--    thread::{self, JoinHandle},
--    time::{Duration, Instant},
--};
-+use std::{ffi::{c_void, CString}, net::UdpSocket, os::fd::AsRawFd,
-+    sync::{atomic::{AtomicBool, AtomicU64, Ordering}, Arc}, thread::{self, JoinHandle}, time::{Duration, Instant}};
- 
- #[repr(C)]
--struct PyroClient {
--    _private: [u8; 0],
--}
++        atomic::{AtomicBool, AtomicU64, Ordering},
+         Arc,
+     },
+     thread::{self, JoinHandle},
+@@ -34,7 +25,6 @@ use std::{
+ struct PyroClient {
+     _private: [u8; 0],
+ }
 -
-+struct PyroClient { _private: [u8; 0] }
  #[repr(C)]
  #[derive(Default, Clone, Copy)]
--struct FrameInfo {
--    decode_ms: f64,
--    convert_ms: f64,
--    total_ms: f64,
--    complete: i32,
--}
+ struct FrameInfo {
+@@ -43,340 +33,328 @@ struct FrameInfo {
+     total_ms: f64,
+     complete: i32,
+ }
 -
-+struct FrameInfo { decode_ms: f64, convert_ms: f64, total_ms: f64, complete: i32 }
  extern "C" {
-     fn pyroclient_create_ex(width: u32, height: u32, chroma444: i32, full_range: i32, ring: u32, wavelet: i32, decode_path: i32) -> *mut PyroClient;
+-    fn pyroclient_create_ex(width: u32, height: u32, chroma444: i32, full_range: i32, ring: u32, wavelet: i32, decode_path: i32) -> *mut PyroClient;
++    fn pyroclient_create_ex(
++        width: u32,
++        height: u32,
++        chroma444: i32,
++        full_range: i32,
++        ring: u32,
++        wavelet: i32,
++        decode_path: i32,
++    ) -> *mut PyroClient;
      fn pyroclient_push_packet(c: *mut PyroClient, data: *const u8, size: usize) -> i32;
 -    fn pyroclient_decode(c: *mut PyroClient, out: *mut *mut c_void, info: *mut FrameInfo) -> i32;
-+    fn pyroclient_decode_guarded(c: *mut PyroClient, out: *mut *mut c_void, info: *mut FrameInfo,
-+        protected_a: *mut c_void, protected_b: *mut c_void) -> i32;
++    fn pyroclient_decode_guarded(
++        c: *mut PyroClient,
++        out: *mut *mut c_void,
++        info: *mut FrameInfo,
++        protected_a: *mut c_void,
++        protected_b: *mut c_void,
++    ) -> i32;
      fn pyroclient_clear(c: *mut PyroClient);
      fn pyroclient_destroy(c: *mut PyroClient);
  }
@@ -473,40 +799,44 @@ index f8a6cfe..4fe9434 100644
  pub struct VideoDecoderSink;
 -
  impl VideoDecoderSink {
--    pub fn push_frame_nal(&mut self, _timestamp: Duration, _data: &[u8]) -> Result<bool> {
--        Ok(true)
--    }
-+    pub fn push_frame_nal(&mut self, _timestamp: Duration, _data: &[u8]) -> Result<bool> { Ok(true) }
-+}
+     pub fn push_frame_nal(&mut self, _timestamp: Duration, _data: &[u8]) -> Result<bool> {
+         Ok(true)
+     }
+ }
+-
 +#[derive(Default)]
 +struct Inbox {
 +    frame: Mutex<Option<CompleteFrame>>,
 +    ready: Condvar,
 +    assembly: Mutex<AssemblyCounters>,
 +    skipped: AtomicU64,
- }
--
++}
  pub struct VideoDecoderSource {
--    running: Arc<AtomicBool>,
+     running: Arc<AtomicBool>,
 -    thread: Option<JoinHandle<()>>,
--    decoded: Arc<FrameSlot>,
-+    running: Arc<AtomicBool>, inbox: Arc<Inbox>, threads: Vec<JoinHandle<()>>, decoded: Arc<FrameSlot>,
++    inbox: Arc<Inbox>,
++    threads: Vec<JoinHandle<()>>,
+     decoded: Arc<FrameSlot>,
  }
 -
  impl VideoDecoderSource {
      pub fn dequeue_frame(&mut self) -> Option<(Duration, *mut c_void)> {
-         self.decoded.take().map(|(ts, ptr)| (ts, ptr as *mut c_void))
+-        self.decoded.take().map(|(ts, ptr)| (ts, ptr as *mut c_void))
++        self.decoded
++            .take()
++            .map(|(ts, ptr)| (ts, ptr as *mut c_void))
      }
  }
 -
  impl Drop for VideoDecoderSource {
      fn drop(&mut self) {
--        self.running.store(false, Ordering::Relaxed);
+         self.running.store(false, Ordering::Relaxed);
 -        if let Some(t) = self.thread.take() {
 -            t.join().ok();
--        }
-+        self.running.store(false, Ordering::Relaxed); self.inbox.ready.notify_all();
-+        for thread in self.threads.drain(..) { thread.join().ok(); }
++        self.inbox.ready.notify_all();
++        for thread in self.threads.drain(..) {
++            thread.join().ok();
+         }
      }
  }
 -
@@ -515,14 +845,17 @@ index f8a6cfe..4fe9434 100644
 -/// counters invisible. These are the lines the harness keeps per segment.
 -#[cfg(target_os = "android")]
  fn alog(msg: &str) {
--    extern "C" {
+     extern "C" {
 -        fn __android_log_write(prio: i32, tag: *const std::ffi::c_char, text: *const std::ffi::c_char) -> i32;
--    }
--    let tag = CString::new("PYROWAVE-UDP").unwrap();
--    let text = CString::new(msg).unwrap_or_default();
++        fn __android_log_write(
++            prio: i32,
++            tag: *const std::ffi::c_char,
++            text: *const std::ffi::c_char,
++        ) -> i32;
+     }
+     let tag = CString::new("PYROWAVE-UDP").unwrap();
+     let text = CString::new(msg).unwrap_or_default();
 -    unsafe { __android_log_write(4 /* ANDROID_LOG_INFO */, tag.as_ptr(), text.as_ptr()) };
-+    extern "C" { fn __android_log_write(prio: i32, tag: *const std::ffi::c_char, text: *const std::ffi::c_char) -> i32; }
-+    let tag = CString::new("PYROWAVE-UDP").unwrap(); let text = CString::new(msg).unwrap_or_default();
 +    unsafe { __android_log_write(4, tag.as_ptr(), text.as_ptr()) };
  }
 -#[cfg(not(target_os = "android"))]
@@ -576,25 +909,33 @@ index f8a6cfe..4fe9434 100644
      let socket = UdpSocket::bind(("0.0.0.0", PYROWAVE_UDP_PORT))?;
      unsafe {
 -        let v = SOCKET_RECV_BUFFER;
--        libc::setsockopt(
--            socket.as_raw_fd(),
--            libc::SOL_SOCKET,
--            libc::SO_RCVBUF,
++        let size: libc::c_int = 16 << 20;
+         libc::setsockopt(
+             socket.as_raw_fd(),
+             libc::SOL_SOCKET,
+             libc::SO_RCVBUF,
 -            &v as *const _ as *const c_void,
 -            std::mem::size_of_val(&v) as libc::socklen_t,
--        );
-+        let size: libc::c_int = 16 << 20;
-+        libc::setsockopt(socket.as_raw_fd(), libc::SOL_SOCKET, libc::SO_RCVBUF,
-+            &size as *const _ as *const c_void, std::mem::size_of_val(&size) as libc::socklen_t);
++            &size as *const _ as *const c_void,
++            std::mem::size_of_val(&size) as libc::socklen_t,
+         );
      }
 -    // Short timeout so the deadline tick runs even when nothing arrives.
      socket.set_read_timeout(Some(Duration::from_millis(2)))?;
 +    unsafe {
 +        let mut actual: libc::c_int = 0;
 +        let mut size = std::mem::size_of_val(&actual) as libc::socklen_t;
-+        if libc::getsockopt(socket.as_raw_fd(), libc::SOL_SOCKET, libc::SO_RCVBUF,
-+            &mut actual as *mut _ as *mut c_void, &mut size) == 0 {
-+            alog(&format!("socket receive buffer: {actual} bytes (kernel accounting)"));
++        if libc::getsockopt(
++            socket.as_raw_fd(),
++            libc::SOL_SOCKET,
++            libc::SO_RCVBUF,
++            &mut actual as *mut _ as *mut c_void,
++            &mut size,
++        ) == 0
++        {
++            alog(&format!(
++                "socket receive buffer: {actual} bytes (kernel accounting)"
++            ));
 +        }
 +    }
      Ok(socket)
@@ -606,20 +947,19 @@ index f8a6cfe..4fe9434 100644
      report_video_packet_received: impl Fn(Duration) + Send + Sync + 'static,
  ) -> Result<(VideoDecoderSink, VideoDecoderSource)> {
 -    let cfg: PyroWaveConfig = parse_pyrowave_config(&config.config_buffer)?;
--    let decoded = Arc::new(FrameSlot::default());
--    let running = Arc::new(AtomicBool::new(true));
++    let cfg = parse_pyrowave_config(&config.config_buffer)?;
++    let socket = open_socket()?;
+     let decoded = Arc::new(FrameSlot::default());
+     let running = Arc::new(AtomicBool::new(true));
 -
 -    let thread = thread::spawn({
 -        let decoded = Arc::clone(&decoded);
--        let running = Arc::clone(&running);
-+    let cfg = parse_pyrowave_config(&config.config_buffer)?;
-+    let socket = open_socket()?;
-+    let decoded = Arc::new(FrameSlot::default()); let running = Arc::new(AtomicBool::new(true));
 +    let inbox = Arc::new(Inbox::default());
 +    let report_frame_decoded = Arc::new(report_frame_decoded);
 +    super::telemetry::start(cfg.width, cfg.height);
 +    let receive_thread = thread::spawn({
-+        let running = Arc::clone(&running); let inbox = Arc::clone(&inbox);
+         let running = Arc::clone(&running);
++        let inbox = Arc::clone(&inbox);
 +        let report_frame_decoded = Arc::clone(&report_frame_decoded);
          move || {
 -            let socket = match open_socket() {
@@ -641,21 +981,29 @@ index f8a6cfe..4fe9434 100644
 -                cfg.width, cfg.height, cfg.deadline, cfg.wavelet
 -            ));
 -
--            let fd = socket.as_raw_fd();
-+            let fd = socket.as_raw_fd(); let mut assembler = Assembler::new(cfg.deadline);
+             let fd = socket.as_raw_fd();
++            let mut assembler = Assembler::new(cfg.deadline);
              let mut bufs = vec![[0u8; DATAGRAM]; BATCH];
--            let mut iovs: Vec<libc::iovec> = bufs
--                .iter_mut()
+             let mut iovs: Vec<libc::iovec> = bufs
+                 .iter_mut()
 -                .map(|b| libc::iovec { iov_base: b.as_mut_ptr() as *mut c_void, iov_len: DATAGRAM })
--                .collect();
--            let mut msgs: Vec<libc::mmsghdr> = (0..BATCH)
--                .map(|i| {
--                    let mut hdr: libc::msghdr = unsafe { std::mem::zeroed() };
--                    hdr.msg_iov = &mut iovs[i];
--                    hdr.msg_iovlen = 1;
++                .map(|b| libc::iovec {
++                    iov_base: b.as_mut_ptr() as *mut c_void,
++                    iov_len: DATAGRAM,
++                })
+                 .collect();
+             let mut msgs: Vec<libc::mmsghdr> = (0..BATCH)
+                 .map(|i| {
+                     let mut hdr: libc::msghdr = unsafe { std::mem::zeroed() };
+                     hdr.msg_iov = &mut iovs[i];
+                     hdr.msg_iovlen = 1;
 -                    libc::mmsghdr { msg_hdr: hdr, msg_len: 0 }
--                })
--                .collect();
++                    libc::mmsghdr {
++                        msg_hdr: hdr,
++                        msg_len: 0,
++                    }
+                 })
+                 .collect();
 -
 -            let mut pending: Option<Pending> = None;
 -            let mut counters = Counters::default();
@@ -706,14 +1054,6 @@ index f8a6cfe..4fe9434 100644
 -                }
 -            };
 -
-+            let mut iovs: Vec<libc::iovec> = bufs.iter_mut().map(|b| libc::iovec {
-+                iov_base: b.as_mut_ptr() as *mut c_void, iov_len: DATAGRAM,
-+            }).collect();
-+            let mut msgs: Vec<libc::mmsghdr> = (0..BATCH).map(|i| {
-+                let mut hdr: libc::msghdr = unsafe { std::mem::zeroed() };
-+                hdr.msg_iov = &mut iovs[i]; hdr.msg_iovlen = 1;
-+                libc::mmsghdr { msg_hdr: hdr, msg_len: 0 }
-+            }).collect();
 +            alog(&format!("listening on {PYROWAVE_UDP_PORT}, {}x{}, independent receiver, complete frames only", cfg.width, cfg.height));
              while running.load(Ordering::Relaxed) {
 -                // One read that waits for the first datagram (or the timeout), then drain the rest
@@ -721,9 +1061,19 @@ index f8a6cfe..4fe9434 100644
 -                let mut n = recv(fd, &mut msgs, libc::MSG_WAITFORONE);
 +                // Reset output flags before each call; never drain an unbounded socket backlog
 +                // into a second queue. Process each batch while the GPU runs independently.
-+                for msg in &mut msgs { msg.msg_hdr.msg_flags = 0; msg.msg_len = 0; }
-+                let n = unsafe { libc::recvmmsg(fd, msgs.as_mut_ptr(), BATCH as libc::c_uint,
-+                    libc::MSG_WAITFORONE, std::ptr::null_mut()) };
++                for msg in &mut msgs {
++                    msg.msg_hdr.msg_flags = 0;
++                    msg.msg_len = 0;
++                }
++                let n = unsafe {
++                    libc::recvmmsg(
++                        fd,
++                        msgs.as_mut_ptr(),
++                        BATCH as libc::c_uint,
++                        libc::MSG_WAITFORONE,
++                        std::ptr::null_mut(),
++                    )
++                };
                  let now = Instant::now();
                  if n < 0 {
 -                    // timeout or interrupt: run the deadline tick
@@ -734,9 +1084,16 @@ index f8a6cfe..4fe9434 100644
 -                            pending = Some(p);
 -                        }
 +                    let e = std::io::Error::last_os_error();
-+                    if !matches!(e.kind(), std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut | std::io::ErrorKind::Interrupted) {
++                    if !matches!(
++                        e.kind(),
++                        std::io::ErrorKind::WouldBlock
++                            | std::io::ErrorKind::TimedOut
++                            | std::io::ErrorKind::Interrupted
++                    ) {
 +                        report_frame_decoded(Err(anyhow!("PyroWave UDP receive: {e}")));
-+                        running.store(false, Ordering::Relaxed); inbox.ready.notify_all(); break;
++                        running.store(false, Ordering::Relaxed);
++                        inbox.ready.notify_all();
++                        break;
                      }
 -                    continue;
 -                }
@@ -748,7 +1105,10 @@ index f8a6cfe..4fe9434 100644
 -                        match PyroWavePacketHeader::from_bytes(data) {
 -                            Some(hdr) => inbox.push_back((hdr, data[PYROWAVE_UDP_HEADER_LEN..].to_vec())),
 -                            None => counters.foreign += 1,
--                        }
++                        if msgs[i].msg_hdr.msg_flags & libc::MSG_TRUNC != 0 {
++                            assembler.counters.invalid += 1;
++                            continue;
+                         }
 -                    }
 -                    n = recv(fd, &mut msgs, libc::MSG_DONTWAIT);
 -                    if n <= 0 {
@@ -760,26 +1120,31 @@ index f8a6cfe..4fe9434 100644
 -                    match &pending {
 -                        Some(p) if hdr.timestamp_ns < p.timestamp_ns => {
 -                            counters.stale_packets += 1;
--                            continue;
-+                        if msgs[i].msg_hdr.msg_flags & libc::MSG_TRUNC != 0 {
-+                            assembler.counters.invalid += 1; continue;
-                         }
--                        Some(p) if hdr.timestamp_ns > p.timestamp_ns => {
--                            let old = pending.take().unwrap();
--                            let behind = skip_for_newer(old.timestamp_ns, inbox.iter().map(|(h, _)| h.timestamp_ns));
--                            settle(old, now, &mut counters, true, behind);
 +                        let data = &bufs[i][..msgs[i].msg_len as usize];
 +                        let Some(header) = PyroWavePacketHeader::from_bytes(data) else {
-+                            assembler.counters.invalid += 1; continue;
++                            assembler.counters.invalid += 1;
+                             continue;
 +                        };
-+                        let (first, complete) = assembler.push(header, &data[PYROWAVE_UDP_HEADER_LEN..], now);
++                        let (first, complete) =
++                            assembler.push(header, &data[PYROWAVE_UDP_HEADER_LEN..], now);
 +                        if first {
 +                            let timestamp = Duration::from_nanos(header.timestamp_ns);
 +                            report_video_packet_received(timestamp);
 +                            crate::push_foveation_center(timestamp, header.foveation_center);
                          }
+-                        Some(p) if hdr.timestamp_ns > p.timestamp_ns => {
+-                            let old = pending.take().unwrap();
+-                            let behind = skip_for_newer(old.timestamp_ns, inbox.iter().map(|(h, _)| h.timestamp_ns));
+-                            settle(old, now, &mut counters, true, behind);
++                        if let Some(frame) = complete {
++                            let mut slot = inbox.frame.lock();
++                            if slot.replace(frame).is_some() {
++                                inbox.skipped.fetch_add(1, Ordering::Relaxed);
++                            }
++                            inbox.ready.notify_one();
+                         }
 -                        _ => {}
--                    }
+                     }
 -                    if pending.is_none() {
 -                        pending = Some(Pending {
 -                            timestamp_ns: hdr.timestamp_ns,
@@ -797,7 +1162,49 @@ index f8a6cfe..4fe9434 100644
 -                    p.received += 1;
 -                    if r >= 0 {
 -                        p.decodable = true;
--                    }
++                }
++                assembler.expire(now);
++                *inbox.assembly.lock() = assembler.counters;
++            }
++        }
++    });
++    let decode_thread = thread::spawn({
++        let running = Arc::clone(&running);
++        let inbox = Arc::clone(&inbox);
++        let decoded = Arc::clone(&decoded);
++        move || {
++            // All codec/Vulkan state is owned by this worker. It never holds the socket.
++            let client = unsafe {
++                pyroclient_create_ex(
++                    cfg.width,
++                    cfg.height,
++                    cfg.chroma444 as i32,
++                    cfg.full_range as i32,
++                    3,
++                    cfg.wavelet as i32,
++                    cfg.decode_path as i32,
++                )
++            };
++            if client.is_null() {
++                report_frame_decoded(Err(anyhow!(
++                    "pyroclient_create_ex failed (see logcat pyroclient)"
++                )));
++                running.store(false, Ordering::Relaxed);
++                return;
++            }
++            let mut complete = 0u64;
++            let mut failures = 0u64;
++            let mut last = FrameInfo::default();
++            let mut decode_samples = Vec::new();
++            let mut convert_samples = Vec::new();
++            let mut fence_samples = Vec::new();
++            let mut last_report = Instant::now();
++            while running.load(Ordering::Relaxed) {
++                let frame = {
++                    let mut slot = inbox.frame.lock();
++                    if slot.is_none() {
++                        inbox.ready.wait_for(&mut slot, Duration::from_millis(100));
+                     }
 -                    if r == 1 || p.received >= p.count as u32 {
 -                        let done = pending.take().unwrap();
 -                        if skip_for_newer(done.timestamp_ns, inbox.iter().map(|(h, _)| h.timestamp_ns)) {
@@ -805,38 +1212,6 @@ index f8a6cfe..4fe9434 100644
 -                            unsafe { pyroclient_clear(client) };
 -                        } else {
 -                            decode_and_publish(done.timestamp_ns, &mut counters, r == 1);
-+                        if let Some(frame) = complete {
-+                            let mut slot = inbox.frame.lock();
-+                            if slot.replace(frame).is_some() { inbox.skipped.fetch_add(1, Ordering::Relaxed); }
-+                            inbox.ready.notify_one();
-                         }
-                     }
-                 }
--                // deadline tick for the frame still pending after this batch
--                if let Some(p) = pending.take() {
--                    if now - p.first_seen >= cfg.deadline {
--                        settle(p, now, &mut counters, false, false);
-+                assembler.expire(now); *inbox.assembly.lock() = assembler.counters;
-+            }
-+        }
-+    });
-+    let decode_thread = thread::spawn({
-+        let running = Arc::clone(&running); let inbox = Arc::clone(&inbox); let decoded = Arc::clone(&decoded);
-+        move || {
-+            // All codec/Vulkan state is owned by this worker. It never holds the socket.
-+            let client = unsafe { pyroclient_create_ex(cfg.width, cfg.height, cfg.chroma444 as i32,
-+                cfg.full_range as i32, 3, cfg.wavelet as i32, cfg.decode_path as i32) };
-+            if client.is_null() {
-+                report_frame_decoded(Err(anyhow!("pyroclient_create_ex failed (see logcat pyroclient)")));
-+                running.store(false, Ordering::Relaxed); return;
-+            }
-+            let mut complete = 0u64; let mut failures = 0u64; let mut last = FrameInfo::default();
-+            let mut decode_samples = Vec::new(); let mut convert_samples = Vec::new(); let mut fence_samples = Vec::new();
-+            let mut last_report = Instant::now();
-+            while running.load(Ordering::Relaxed) {
-+                let frame = {
-+                    let mut slot = inbox.frame.lock();
-+                    if slot.is_none() { inbox.ready.wait_for(&mut slot, Duration::from_millis(100)); }
 +                    slot.take()
 +                };
 +                if let Some(frame) = frame {
@@ -846,30 +1221,56 @@ index f8a6cfe..4fe9434 100644
 +                    let timestamp_ns = frame.timestamp_ns;
 +                    let fragments = frame.packets.len();
 +                    let bitstream = frame.into_bitstream();
-+                    let status = unsafe { pyroclient_push_packet(client, bitstream.as_ptr(), bitstream.len()) };
++                    let status = unsafe {
++                        pyroclient_push_packet(client, bitstream.as_ptr(), bitstream.len())
++                    };
 +                    // Receiving every transport packet is necessary but not sufficient: the
 +                    // codec must also validate all blocks. Never decode partial input.
 +                    if status != 1 {
 +                        failures += 1;
-+                        if failures <= 3 { alog(&format!("reject complete transport frame: codec readiness {status}, {} packets", fragments)); }
++                        if failures <= 3 {
++                            alog(&format!("reject complete transport frame: codec readiness {status}, {} packets", fragments));
+                         }
+-                    }
+-                }
+-                // deadline tick for the frame still pending after this batch
+-                if let Some(p) = pending.take() {
+-                    if now - p.first_seen >= cfg.deadline {
+-                        settle(p, now, &mut counters, false, false);
                      } else {
 -                        pending = Some(p);
-+                        let mut out: *mut c_void = std::ptr::null_mut(); let mut info = FrameInfo::default();
++                        let mut out: *mut c_void = std::ptr::null_mut();
++                        let mut info = FrameInfo::default();
 +                        let protected = decoded.protected_buffers();
-+                        let rc = unsafe { pyroclient_decode_guarded(client, &mut out, &mut info,
-+                            protected[0] as *mut c_void, protected[1] as *mut c_void) };
-+                        if rc != 0 || out.is_null() || info.complete == 0 { failures += 1; }
-+                        else {
++                        let rc = unsafe {
++                            pyroclient_decode_guarded(
++                                client,
++                                &mut out,
++                                &mut info,
++                                protected[0] as *mut c_void,
++                                protected[1] as *mut c_void,
++                            )
++                        };
++                        if rc != 0 || out.is_null() || info.complete == 0 {
++                            failures += 1;
++                        } else {
 +                            let ts = Duration::from_nanos(timestamp_ns);
-+                            decoded.publish(ts, out as usize); report_frame_decoded(Ok(ts));
-+                            complete += 1; last = info;
-+                            decode_samples.push(info.decode_ms as f32); convert_samples.push(info.convert_ms as f32);
++                            decoded.publish(ts, out as usize);
++                            report_frame_decoded(Ok(ts));
++                            complete += 1;
++                            last = info;
++                            decode_samples.push(info.decode_ms as f32);
++                            convert_samples.push(info.convert_ms as f32);
 +                            fence_samples.push(info.total_ms as f32);
-+                            super::telemetry::record_frame(info.decode_ms as f32, info.total_ms as f32);
++                            super::telemetry::record_frame(
++                                info.decode_ms as f32,
++                                info.total_ms as f32,
++                            );
 +                        }
                      }
                  }
-+                let rx = *inbox.assembly.lock(); let skipped = inbox.skipped.load(Ordering::Relaxed);
++                let rx = *inbox.assembly.lock();
++                let skipped = inbox.skipped.load(Ordering::Relaxed);
                  super::telemetry::set_counters(super::telemetry::Counters {
 -                    complete: counters.complete,
 -                    partial: counters.partial,
@@ -878,8 +1279,13 @@ index f8a6cfe..4fe9434 100644
 -                    superseded: counters.superseded,
 -                    stale_packets: counters.stale_packets,
 -                    decode_failures: counters.decode_failures,
-+                    complete, partial: 0, dropped: rx.dropped, skipped, superseded: 0,
-+                    stale_packets: rx.stale, decode_failures: failures,
++                    complete,
++                    partial: 0,
++                    dropped: rx.dropped,
++                    skipped,
++                    superseded: decoded.superseded(),
++                    stale_packets: rx.stale,
++                    decode_failures: failures,
                  });
 -                let frames = counters.complete + counters.partial + counters.skipped + counters.dropped;
 -                if frames > 0 && frames % 720 == 0 && frames != counters.last_report_frames {
@@ -905,7 +1311,9 @@ index f8a6cfe..4fe9434 100644
 +                    alog(&format!("gpu decode ms: {}", dist(&mut decode_samples)));
 +                    alog(&format!("convert ms: {}", dist(&mut convert_samples)));
 +                    alog(&format!("submit->fence ms: {}", dist(&mut fence_samples)));
-+                    decode_samples.clear(); convert_samples.clear(); fence_samples.clear();
++                    decode_samples.clear();
++                    convert_samples.clear();
++                    fence_samples.clear();
                  }
              }
              unsafe { pyroclient_destroy(client) };
@@ -916,26 +1324,30 @@ index f8a6cfe..4fe9434 100644
          }
      });
 -
--    Ok((
--        VideoDecoderSink,
--        VideoDecoderSource {
--            running,
+     Ok((
+         VideoDecoderSink,
+         VideoDecoderSource {
+             running,
 -            thread: Some(thread),
--            decoded,
--        },
--    ))
-+    Ok((VideoDecoderSink, VideoDecoderSource { running, inbox, threads: vec![receive_thread, decode_thread], decoded }))
++            inbox,
++            threads: vec![receive_thread, decode_thread],
+             decoded,
+         },
+     ))
  }
 -
 diff --git a/alvr/client_core/src/video_decoder/pyrowave_udp_assembly.rs b/alvr/client_core/src/video_decoder/pyrowave_udp_assembly.rs
 new file mode 100644
-index 0000000..66c2a15
+index 0000000..16daa19
 --- /dev/null
 +++ b/alvr/client_core/src/video_decoder/pyrowave_udp_assembly.rs
-@@ -0,0 +1,172 @@
+@@ -0,0 +1,239 @@
 +//! Bounded, reorder-tolerant transport assembly. Never submit missing blocks to the codec.
 +use alvr_packets::PyroWavePacketHeader;
-+use std::{collections::BTreeMap, time::{Duration, Instant}};
++use std::{
++    collections::BTreeMap,
++    time::{Duration, Instant},
++};
 +
 +const MAX_PACKETS: usize = 8192;
 +const MAX_PENDING: usize = 4;
@@ -976,7 +1388,8 @@ index 0000000..66c2a15
 +impl Assembler {
 +    pub fn new(frame_period: Duration) -> Self {
 +        Self {
-+            pending: BTreeMap::new(), retired_through: None,
++            pending: BTreeMap::new(),
++            retired_through: None,
 +            // Wi-Fi can reorder tails across the next frame. Three periods is a bounded
 +            // assembly window, not an additional wait on an already complete frame.
 +            timeout: (frame_period * 3).clamp(Duration::from_millis(25), Duration::from_millis(50)),
@@ -985,29 +1398,54 @@ index 0000000..66c2a15
 +    }
 +
 +    fn retire(&mut self, timestamp: u64) {
-+        self.retired_through = Some(self.retired_through.map_or(timestamp, |old| old.max(timestamp)));
++        self.retired_through = Some(
++            self.retired_through
++                .map_or(timestamp, |old| old.max(timestamp)),
++        );
 +        let cutoff = self.retired_through.unwrap();
 +        self.pending.retain(|ts, _| {
-+            if *ts <= cutoff { self.counters.dropped += 1; false } else { true }
++            if *ts <= cutoff {
++                self.counters.dropped += 1;
++                false
++            } else {
++                true
++            }
 +        });
 +    }
 +
 +    pub fn expire(&mut self, now: Instant) {
-+        let expired = self.pending.iter().filter(|(_, p)| now.duration_since(p.first_seen) >= self.timeout)
-+            .map(|(ts, _)| *ts).max();
-+        if let Some(ts) = expired { self.retire(ts); }
++        let expired = self
++            .pending
++            .iter()
++            .filter(|(_, p)| now.duration_since(p.first_seen) >= self.timeout)
++            .map(|(ts, _)| *ts)
++            .max();
++        if let Some(ts) = expired {
++            self.retire(ts);
++        }
 +    }
 +
 +    /// Returns (first packet for this frame, completed frame). Duplicate indices cannot
 +    /// satisfy completeness; count changes and truncated/empty payloads are rejected.
-+    pub fn push(&mut self, header: PyroWavePacketHeader, payload: &[u8], now: Instant)
-+        -> (bool, Option<CompleteFrame>) {
-+        if header.count == 0 || header.index >= header.count || header.count as usize > MAX_PACKETS
-+            || payload.is_empty() || payload.len() > alvr_packets::PYROWAVE_UDP_PAYLOAD {
++    pub fn push(
++        &mut self,
++        header: PyroWavePacketHeader,
++        payload: &[u8],
++        now: Instant,
++    ) -> (bool, Option<CompleteFrame>) {
++        if header.count == 0
++            || header.index >= header.count
++            || header.count as usize > MAX_PACKETS
++            || payload.is_empty()
++            || payload.len() > alvr_packets::PYROWAVE_UDP_PAYLOAD
++        {
 +            self.counters.invalid += 1;
 +            return (false, None);
 +        }
-+        if self.retired_through.is_some_and(|ts| header.timestamp_ns <= ts) {
++        if self
++            .retired_through
++            .is_some_and(|ts| header.timestamp_ns <= ts)
++        {
 +            self.counters.stale += 1;
 +            return (false, None);
 +        }
@@ -1018,14 +1456,22 @@ index 0000000..66c2a15
 +                return (false, None);
 +            }
 +            self.retire(*self.pending.first_key_value().unwrap().0);
-+            if self.retired_through.is_some_and(|ts| header.timestamp_ns <= ts) {
++            if self
++                .retired_through
++                .is_some_and(|ts| header.timestamp_ns <= ts)
++            {
 +                self.counters.stale += 1;
 +                return (false, None);
 +            }
 +        }
-+        let frame = self.pending.entry(header.timestamp_ns).or_insert_with(|| PartialFrame {
-+            first_seen: now, packets: vec![None; header.count as usize], remaining: header.count as usize,
-+        });
++        let frame = self
++            .pending
++            .entry(header.timestamp_ns)
++            .or_insert_with(|| PartialFrame {
++                first_seen: now,
++                packets: vec![None; header.count as usize],
++                remaining: header.count as usize,
++            });
 +        if frame.packets.len() != header.count as usize {
 +            self.counters.invalid += 1;
 +            return (false, None);
@@ -1037,14 +1483,19 @@ index 0000000..66c2a15
 +        }
 +        *packet = Some(payload.to_vec());
 +        frame.remaining -= 1;
-+        if frame.remaining != 0 { return (first, None); }
++        if frame.remaining != 0 {
++            return (first, None);
++        }
 +        let frame = self.pending.remove(&header.timestamp_ns).unwrap();
 +        self.retire(header.timestamp_ns);
 +        self.counters.complete += 1;
-+        (first, Some(CompleteFrame {
-+            timestamp_ns: header.timestamp_ns,
-+            packets: frame.packets.into_iter().map(Option::unwrap).collect(),
-+        }))
++        (
++            first,
++            Some(CompleteFrame {
++                timestamp_ns: header.timestamp_ns,
++                packets: frame.packets.into_iter().map(Option::unwrap).collect(),
++            }),
++        )
 +    }
 +}
 +
@@ -1052,59 +1503,101 @@ index 0000000..66c2a15
 +mod tests {
 +    use super::*;
 +    fn h(ts: u64, index: u16, count: u16) -> PyroWavePacketHeader {
-+        PyroWavePacketHeader { timestamp_ns: ts, index, count, foveation_center: [[0.0; 2]; 2] }
++        PyroWavePacketHeader {
++            timestamp_ns: ts,
++            index,
++            count,
++            foveation_center: [[0.0; 2]; 2],
++        }
 +    }
 +    #[test]
 +    fn duplicates_and_reordering_cannot_present_a_partial_frame() {
-+        let mut a = Assembler::new(Duration::from_millis(8)); let now = Instant::now();
++        let mut a = Assembler::new(Duration::from_millis(8));
++        let now = Instant::now();
 +        assert!(a.push(h(1, 2, 3), &[3], now).1.is_none());
 +        assert!(a.push(h(1, 2, 3), &[3], now).1.is_none());
 +        assert!(a.push(h(1, 0, 3), &[1], now).1.is_none());
-+        assert_eq!(a.push(h(1, 1, 3), &[2], now).1.unwrap().packets, vec![vec![1], vec![2], vec![3]]);
++        assert_eq!(
++            a.push(h(1, 1, 3), &[2], now).1.unwrap().packets,
++            vec![vec![1], vec![2], vec![3]]
++        );
 +        assert!(a.push(h(1, 0, 3), &[1], now).1.is_none());
-+        assert_eq!(a.counters.complete, 1); assert_eq!(a.counters.duplicates, 1);
++        assert_eq!(a.counters.complete, 1);
++        assert_eq!(a.counters.duplicates, 1);
 +    }
 +    #[test]
 +    fn newer_first_packet_does_not_discard_a_reordered_tail() {
-+        let mut a = Assembler::new(Duration::from_millis(8)); let now = Instant::now();
-+        a.push(h(1, 0, 2), &[1], now); a.push(h(2, 0, 2), &[3], now);
++        let mut a = Assembler::new(Duration::from_millis(8));
++        let now = Instant::now();
++        a.push(h(1, 0, 2), &[1], now);
++        a.push(h(2, 0, 2), &[3], now);
 +        assert_eq!(a.push(h(1, 1, 2), &[2], now).1.unwrap().timestamp_ns, 1);
 +        assert_eq!(a.push(h(2, 1, 2), &[4], now).1.unwrap().timestamp_ns, 2);
 +    }
 +    #[test]
 +    fn loss_count_changes_and_empty_payloads_never_decode() {
-+        let mut a = Assembler::new(Duration::from_millis(8)); let now = Instant::now();
++        let mut a = Assembler::new(Duration::from_millis(8));
++        let now = Instant::now();
 +        a.push(h(1, 0, 2), &[1], now);
 +        assert!(a.push(h(1, 1, 3), &[2], now).1.is_none());
 +        assert!(a.push(h(1, 1, 2), &[], now).1.is_none());
 +        a.expire(now + Duration::from_millis(26));
-+        assert_eq!(a.counters.dropped, 1); assert_eq!(a.counters.invalid, 2);
++        assert_eq!(a.counters.dropped, 1);
++        assert_eq!(a.counters.invalid, 2);
 +        assert!(a.push(h(1, 1, 2), &[2], now).1.is_none());
 +        assert_eq!(a.counters.complete, 0);
 +    }
 +    #[test]
 +    fn fragments_restore_a_codec_block_larger_than_mtu() {
 +        let original: Vec<u8> = (0..5000).map(|i| (i % 251) as u8).collect();
-+        let chunks: Vec<_> = original.chunks(alvr_packets::PYROWAVE_UDP_PAYLOAD).collect();
-+        let mut a = Assembler::new(Duration::from_millis(8)); let now = Instant::now();
++        let chunks: Vec<_> = original
++            .chunks(alvr_packets::PYROWAVE_UDP_PAYLOAD)
++            .collect();
++        let mut a = Assembler::new(Duration::from_millis(8));
++        let now = Instant::now();
 +        let mut complete = None;
 +        for i in (0..chunks.len()).rev() {
-+            complete = a.push(h(1, i as u16, chunks.len() as u16), chunks[i], now).1.or(complete);
++            complete = a
++                .push(h(1, i as u16, chunks.len() as u16), chunks[i], now)
++                .1
++                .or(complete);
 +        }
 +        assert_eq!(complete.unwrap().into_bitstream(), original);
 +    }
 +    #[test]
 +    fn overload_preserves_four_newest_frames_and_bounds_allocations() {
-+        let mut a = Assembler::new(Duration::from_millis(8)); let now = Instant::now();
-+        for ts in 10..14 { a.push(h(ts, 0, 2), &[1], now); }
++        let mut a = Assembler::new(Duration::from_millis(8));
++        let now = Instant::now();
++        for ts in 10..14 {
++            a.push(h(ts, 0, 2), &[1], now);
++        }
 +        a.push(h(9, 0, 2), &[1], now);
 +        assert!(a.pending.contains_key(&10));
 +        a.push(h(14, 0, 2), &[1], now);
-+        assert_eq!(a.pending.len(), 4); assert!(!a.pending.contains_key(&10));
++        assert_eq!(a.pending.len(), 4);
++        assert!(!a.pending.contains_key(&10));
 +        assert!(a.push(h(15, 0, u16::MAX), &[1], now).1.is_none());
-+        assert_eq!(a.pending.len(), 4); assert_eq!(a.counters.invalid, 1);
++        assert_eq!(a.pending.len(), 4);
++        assert_eq!(a.counters.invalid, 1);
 +    }
 +}
+diff --git a/alvr/client_core/src/video_decoder/telemetry.rs b/alvr/client_core/src/video_decoder/telemetry.rs
+index da58258..d5f813b 100644
+--- a/alvr/client_core/src/video_decoder/telemetry.rs
++++ b/alvr/client_core/src/video_decoder/telemetry.rs
+@@ -115,7 +115,11 @@ mod tests {
+ 
+         record_frame(3.2, 4.9);
+         let second = take().unwrap();
+-        assert_eq!(second.gpu_decode_ms, vec![3.2], "only samples since the last report");
++        assert_eq!(
++            second.gpu_decode_ms,
++            vec![3.2],
++            "only samples since the last report"
++        );
+         assert_eq!(second.complete, 2, "counters are cumulative");
+ 
+         for _ in 0..(MAX_SAMPLES + 10) {
 diff --git a/alvr/client_openxr/Cargo.toml b/alvr/client_openxr/Cargo.toml
 index 995394b..d9d9cf1 100644
 --- a/alvr/client_openxr/Cargo.toml
@@ -1150,22 +1643,77 @@ index 995394b..d9d9cf1 100644
  
  [[package.metadata.android.queries.package]]
  name = "com.ultraleap.tracking.service"
+diff --git a/alvr/client_openxr/src/extra_extensions/eye_tracking_android.rs b/alvr/client_openxr/src/extra_extensions/eye_tracking_android.rs
+index 0edb24d..e11e482 100644
+--- a/alvr/client_openxr/src/extra_extensions/eye_tracking_android.rs
++++ b/alvr/client_openxr/src/extra_extensions/eye_tracking_android.rs
+@@ -72,11 +72,8 @@ type CreateEyeTracker = unsafe extern "system" fn(
+     *mut EyeTrackerHandle,
+ ) -> sys::Result;
+ type DestroyEyeTracker = unsafe extern "system" fn(EyeTrackerHandle) -> sys::Result;
+-type GetEyesInfo = unsafe extern "system" fn(
+-    EyeTrackerHandle,
+-    *const EyesGetInfo,
+-    *mut Eyes,
+-) -> sys::Result;
++type GetEyesInfo =
++    unsafe extern "system" fn(EyeTrackerHandle, *const EyesGetInfo, *mut Eyes) -> sys::Result;
+ 
+ unsafe fn proc_addr(instance: &xr::Instance, name: &str) -> Option<sys::pfn::VoidFunction> {
+     let cname = CString::new(name).ok()?;
+diff --git a/alvr/client_openxr/src/extra_extensions/perf_settings.rs b/alvr/client_openxr/src/extra_extensions/perf_settings.rs
+index 30b0e81..50d1bb6 100644
+--- a/alvr/client_openxr/src/extra_extensions/perf_settings.rs
++++ b/alvr/client_openxr/src/extra_extensions/perf_settings.rs
+@@ -76,8 +76,17 @@ mod tests {
+     #[test]
+     fn property_picks_the_level_and_off_leaves_the_default() {
+         assert_eq!(level_from_str("off"), None);
+-        assert_eq!(level_from_str(""), Some(sys::PerfSettingsLevelEXT::SUSTAINED_HIGH));
+-        assert_eq!(level_from_str("boost\n"), Some(sys::PerfSettingsLevelEXT::BOOST));
+-        assert_eq!(level_from_str("power_savings"), Some(sys::PerfSettingsLevelEXT::POWER_SAVINGS));
++        assert_eq!(
++            level_from_str(""),
++            Some(sys::PerfSettingsLevelEXT::SUSTAINED_HIGH)
++        );
++        assert_eq!(
++            level_from_str("boost\n"),
++            Some(sys::PerfSettingsLevelEXT::BOOST)
++        );
++        assert_eq!(
++            level_from_str("power_savings"),
++            Some(sys::PerfSettingsLevelEXT::POWER_SAVINGS)
++        );
+     }
+ }
 diff --git a/alvr/client_openxr/src/interaction.rs b/alvr/client_openxr/src/interaction.rs
-index 7765bb4..08fb2e4 100644
+index 7765bb4..b102615 100644
 --- a/alvr/client_openxr/src/interaction.rs
 +++ b/alvr/client_openxr/src/interaction.rs
-@@ -947,6 +947,9 @@ pub fn get_eye_gazes(
+@@ -342,8 +342,7 @@ impl InteractionContext {
+         xr_session.attach_action_sets(&[&action_set]).unwrap();
+ 
+         // Built before xr_session is moved into the returned struct below.
+-        let eye_tracker_android =
+-            extra_extensions::EyeTrackerAndroid::new(&xr_session, xr_system);
++        let eye_tracker_android = extra_extensions::EyeTrackerAndroid::new(&xr_session, xr_system);
+ 
+         // The gaze action space is created *after* attach, like the grip spaces below.
+         //
+@@ -947,6 +946,11 @@ pub fn get_eye_gazes(
  /// rejected, a pose that is present but untracked -- otherwise collapses into the same silent
  /// `[None, None]`, and the whole foveation feature downstream just quietly does nothing.
  fn gaze_diag(message: &str) {
 +    // Quest 3 has no eye tracking; avoid periodic error traffic for an expected absence.
 +    static QUEST3: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-+    if *QUEST3.get_or_init(|| alvr_system_info::platform() == alvr_system_info::Platform::Quest3) { return; }
++    if *QUEST3.get_or_init(|| alvr_system_info::platform() == alvr_system_info::Platform::Quest3) {
++        return;
++    }
      use std::sync::atomic::{AtomicU64, Ordering};
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..cf60304 100644
+index a0fd36f..70bfeb8 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -4,6 +4,7 @@ mod graphics;
@@ -1176,17 +1724,49 @@ index a0fd36f..cf60304 100644
  mod stream;
  
  use crate::stream::ParsedStreamConfig;
-@@ -313,13 +314,20 @@ pub fn entry_point() {
+@@ -291,11 +292,21 @@ pub fn entry_point() {
+         // logcat once connected; the harness checks the DynamicPolicyManager vote against it.
+         if exts.ext_performance_settings {
+             match extra_extensions::perf_settings::level_from_property() {
+-                Some(level) => match extra_extensions::perf_settings::set_performance_level(&xr_session, level) {
+-                    Ok(()) => alvr_common::error!("[PERF] performance level set: {:?} (cpu+gpu)", level),
+-                    Err(e) => alvr_common::error!("[PERF] performance level {:?} refused: {e}", level),
+-                },
+-                None => alvr_common::error!("[PERF] left at runtime default (debug.xrwired.perf_level=off)"),
++                Some(level) => {
++                    match extra_extensions::perf_settings::set_performance_level(&xr_session, level)
++                    {
++                        Ok(()) => alvr_common::error!(
++                            "[PERF] performance level set: {:?} (cpu+gpu)",
++                            level
++                        ),
++                        Err(e) => {
++                            alvr_common::error!("[PERF] performance level {:?} refused: {e}", level)
++                        }
++                    }
++                }
++                None => alvr_common::error!(
++                    "[PERF] left at runtime default (debug.xrwired.perf_level=off)"
++                ),
+             }
+         } else {
+             alvr_common::error!("[PERF] XR_EXT_performance_settings not advertised");
+@@ -313,19 +324,37 @@ pub fn entry_point() {
              views_config[0].recommended_image_rect_height,
          );
  
 -        let refresh_rates = if exts.fb_display_refresh_rate {
 -            xr_session.enumerate_display_refresh_rates().unwrap()
 +        let mut refresh_rates = if exts.fb_display_refresh_rate {
-+            xr_session.enumerate_display_refresh_rates().unwrap_or_else(|err| {
-+                error!("[Q3PW_CAPS] refresh enumeration failed: {err:?}");
-+                xr_session.get_display_refresh_rate().map(|rate| vec![rate]).unwrap_or_default()
-+            })
++            xr_session
++                .enumerate_display_refresh_rates()
++                .unwrap_or_else(|err| {
++                    error!("[Q3PW_CAPS] refresh enumeration failed: {err:?}");
++                    xr_session
++                        .get_display_refresh_rate()
++                        .map(|rate| vec![rate])
++                        .unwrap_or_default()
++                })
          } else if galaxy_xr {
              vec![72.0, 90.0]
          } else {
@@ -1195,11 +1775,38 @@ index a0fd36f..cf60304 100644
 +        refresh_rates.retain(|r| r.is_finite() && *r > 0.0);
 +        refresh_rates.sort_by(f32::total_cmp);
 +        refresh_rates.dedup();
-+        alvr_common::error!("[Q3PW_CAPS] model={} rates={refresh_rates:?} runtime={}", platform.to_string().replace(' ', ""), exts.fb_display_refresh_rate);
++        alvr_common::error!(
++            "[Q3PW_CAPS] model={} rates={refresh_rates:?} runtime={}",
++            platform.to_string().replace(' ', ""),
++            exts.fb_display_refresh_rate
++        );
          // error! so it reaches logcat even once connected -- see gaze_diag in interaction.rs.
          // The server picks the *closest* of these to preferred_fps and only warns
          // (server_core/src/connection.rs), so asking for a rate that is not here silently runs at
-@@ -365,8 +373,8 @@ pub fn entry_point() {
+         // a different one, which would quietly invalidate any budget derived from the frame period.
+-        alvr_common::error!("[RATES] enumerated={refresh_rates:?} from_runtime={}",
+-                            exts.fb_display_refresh_rate);
++        alvr_common::error!(
++            "[RATES] enumerated={refresh_rates:?} from_runtime={}",
++            exts.fb_display_refresh_rate
++        );
+ 
+         // Whether anything is correcting for the ~26 ms the runtime predicts ahead. If the
+         // compositor does not timewarp and ALVR does not either -- 20.13.0 hardcodes
+@@ -354,8 +383,10 @@ pub fn entry_point() {
+             exts.fb_foveation,
+             advertised_extension_names.len(),
+         );
+-        alvr_common::error!("[REPROJ] all advertised extensions: {:?}",
+-                            advertised_extension_names);
++        alvr_common::error!(
++            "[REPROJ] all advertised extensions: {:?}",
++            advertised_extension_names
++        );
+ 
+         if exts.fb_color_space {
+             xr_session
+@@ -365,8 +396,8 @@ pub fn entry_point() {
  
          let capabilities = ClientCapabilities {
              default_view_resolution,
@@ -1210,7 +1817,20 @@ index a0fd36f..cf60304 100644
              encoder_high_profile: galaxy_xr || platform != Platform::Unknown,
              encoder_10_bits: galaxy_xr || platform != Platform::Unknown,
              encoder_av1: matches!(
-@@ -412,11 +420,16 @@ pub fn entry_point() {
+@@ -392,7 +423,11 @@ pub fn entry_point() {
+             Rc::clone(&graphics_context),
+             Arc::clone(&interaction_context),
+             platform,
+-            if galaxy_xr { UVec2::new(1440, 1440) } else { default_view_resolution },
++            if galaxy_xr {
++                UVec2::new(1440, 1440)
++            } else {
++                default_view_resolution
++            },
+             &last_lobby_message,
+         );
+         let lobby_body_tracking_config = BodyTrackingSourcesConfig {
+@@ -412,11 +447,16 @@ pub fn entry_point() {
              .select_sources(&lobby_interaction_sources);
  
          let mut session_running = false;
@@ -1228,21 +1848,26 @@ index a0fd36f..cf60304 100644
          // Budget for the pre-xrWaitFrame poll: the previous frame's period, 72 Hz until known.
          let mut poll_interval = Duration::from_micros(13_889);
          'render_loop: loop {
-@@ -432,7 +445,12 @@ pub fn entry_point() {
+@@ -432,7 +472,17 @@ pub fn entry_point() {
                                  .begin(xr::ViewConfigurationType::PRIMARY_STEREO)
                                  .unwrap();
  
 -                            core_context.resume();
-+                            if platform == Platform::Quest3 && exts.fb_display_refresh_rate && !refresh_probed {
++                            if platform == Platform::Quest3
++                                && exts.fb_display_refresh_rate
++                                && !refresh_probed
++                            {
 +                                refresh_probe = Some(refresh_probe::RefreshProbe::new(
-+                                    refresh_rates.clone(), xr_session.get_display_refresh_rate().unwrap_or(90.0)));
++                                    refresh_rates.clone(),
++                                    xr_session.get_display_refresh_rate().unwrap_or(90.0),
++                                ));
 +                            } else {
 +                                core_context.resume();
 +                            }
  
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
  
-@@ -440,6 +458,7 @@ pub fn entry_point() {
+@@ -440,6 +490,7 @@ pub fn entry_point() {
                          }
                          xr::SessionState::STOPPING => {
                              session_running = false;
@@ -1250,28 +1875,35 @@ index a0fd36f..cf60304 100644
  
                              passthrough_layer = None;
  
-@@ -495,6 +514,20 @@ pub fn entry_point() {
+@@ -495,6 +546,27 @@ pub fn entry_point() {
                      }
                      ClientCoreEvent::StreamingStarted(config) => {
                          let config = ParsedStreamConfig::new(&config);
 +                        // The runtime may reject a previously confirmed mode after OS/thermal changes.
 +                        // Abort this connection, keep the lobby usable and require a new selection/relaunch.
 +                        if exts.fb_display_refresh_rate {
-+                            if let Err(err) = xr_session.request_display_refresh_rate(config.refresh_rate_hint) {
-+                                error!("[Q3PW_RATE] request={} rejected={err:?}", config.refresh_rate_hint);
++                            if let Err(err) =
++                                xr_session.request_display_refresh_rate(config.refresh_rate_hint)
++                            {
++                                error!(
++                                    "[Q3PW_RATE] request={} rejected={err:?}",
++                                    config.refresh_rate_hint
++                                );
 +                                core_context.pause();
 +                                lobby.update_hud_message("Refresh request rejected. Select a supported rate on PC and reopen this app.");
 +                                continue;
 +                            }
 +                        }
 +                        requested_refresh_rate = Some(config.refresh_rate_hint);
-+                        error!("[Q3PW_RATE] request={} accepted=true runtime_hz={:?}", config.refresh_rate_hint,
-+                            xr_session.get_display_refresh_rate());
-+
++                        error!(
++                            "[Q3PW_RATE] request={} accepted=true runtime_hz={:?}",
++                            config.refresh_rate_hint,
++                            xr_session.get_display_refresh_rate()
++                        );
  
                          let context = StreamContext::new(
                              Arc::clone(&core_context),
-@@ -512,6 +545,7 @@ pub fn entry_point() {
+@@ -512,6 +584,7 @@ pub fn entry_point() {
                          stream_context = Some(context);
                      }
                      ClientCoreEvent::StreamingStopped => {
@@ -1279,21 +1911,32 @@ index a0fd36f..cf60304 100644
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -569,6 +603,8 @@ pub fn entry_point() {
+@@ -565,10 +638,16 @@ pub fn entry_point() {
+             // Frame in hand before the runtime picks the display slot (stream.rs poll_frame).
+             if early_poll {
+                 if let Some(stream) = &mut stream_context {
+-                    stream.poll_frame(poll_interval);
++                    if !stream.uses_latest_frame_polling() {
++                        stream.poll_frame(poll_interval);
++                    }
                  }
              }
  
-+            if let Some(probe) = &mut refresh_probe { probe.request_next(&xr_session); }
++            if let Some(probe) = &mut refresh_probe {
++                probe.request_next(&xr_session);
++            }
 +
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -579,11 +615,34 @@ pub fn entry_point() {
+@@ -579,9 +658,45 @@ pub fn entry_point() {
              let frame_interval =
                  Duration::from_nanos(frame_state.predicted_display_period.as_nanos() as _);
              poll_interval = frame_interval;
 +            if let Some(probe) = &mut refresh_probe {
-+                if let Some(rates) = probe.observe(&xr_session, frame_state.predicted_display_period.as_nanos()) {
++                if let Some(rates) =
++                    probe.observe(&xr_session, frame_state.predicted_display_period.as_nanos())
++                {
 +                    error!("[Q3PW_CAPS] model=Quest3 rates={rates:?} runtime=true source=probe");
 +                    refresh_rates = rates.clone();
 +                    core_context.set_refresh_rates(rates);
@@ -1302,8 +1945,11 @@ index a0fd36f..cf60304 100644
 +                    core_context.resume();
 +                }
 +            }
-+            if platform == Platform::Quest3 && (last_display_period.abs_diff(frame_interval.as_nanos()) > frame_interval.as_nanos() / 200
-+                || last_rate_log.elapsed().as_secs() >= 1) {
++            if platform == Platform::Quest3
++                && (last_display_period.abs_diff(frame_interval.as_nanos())
++                    > frame_interval.as_nanos() / 200
++                    || last_rate_log.elapsed().as_secs() >= 1)
++            {
 +                last_rate_log = std::time::Instant::now();
 +                last_display_period = frame_interval.as_nanos();
 +                error!("[Q3PW_EFFECTIVE] requested={requested_refresh_rate:?} runtime_hz={:?} period_ns={last_display_period}",
@@ -1312,23 +1958,75 @@ index a0fd36f..cf60304 100644
 +
              if galaxy_xr && last_display_period != frame_interval.as_nanos() {
                  last_display_period = frame_interval.as_nanos();
-                 info!("Galaxy XR runtime display period: {} ns", last_display_period);
-             }
- 
-+            if platform == Platform::Quest3 && refresh_probed && last_cap_log.elapsed().as_secs() >= 30 {
-+                last_cap_log = std::time::Instant::now();
-+                error!("[Q3PW_CAPS] model=Quest3 rates={refresh_rates:?} runtime=true source=probe");
+-                info!("Galaxy XR runtime display period: {} ns", last_display_period);
++                info!(
++                    "Galaxy XR runtime display period: {} ns",
++                    last_display_period
++                );
 +            }
 +
++            if platform == Platform::Quest3
++                && refresh_probed
++                && last_cap_log.elapsed().as_secs() >= 30
++            {
++                last_cap_log = std::time::Instant::now();
++                error!(
++                    "[Q3PW_CAPS] model=Quest3 rates={refresh_rates:?} runtime=true source=probe"
++                );
+             }
+ 
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-             // and before the client has done any work at all.
-             //
+@@ -605,15 +720,15 @@ pub fn entry_point() {
+             // A measurement build should carry no diagnostics that can change what is measured.
+             if reproj_probe_enabled() {
+                 if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
+-                use std::sync::atomic::{AtomicU64, Ordering};
+-                static TICK: AtomicU64 = AtomicU64::new(0);
+-                let tick = TICK.fetch_add(1, Ordering::Relaxed);
+-                if tick % 72 == 0 {
+-                    let lead_ns = frame_state
+-                        .predicted_display_time
+-                        .as_nanos()
+-                        .saturating_sub(now.as_nanos());
+-                    alvr_common::error!(
++                    use std::sync::atomic::{AtomicU64, Ordering};
++                    static TICK: AtomicU64 = AtomicU64::new(0);
++                    let tick = TICK.fetch_add(1, Ordering::Relaxed);
++                    if tick % 72 == 0 {
++                        let lead_ns = frame_state
++                            .predicted_display_time
++                            .as_nanos()
++                            .saturating_sub(now.as_nanos());
++                        alvr_common::error!(
+                         "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
+                          ({:.2} periods ahead), should_render {}",
+                         lead_ns as f64 / 1e6,
+@@ -621,7 +736,7 @@ pub fn entry_point() {
+                         lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
+                         frame_state.should_render,
+                     );
+-                }
++                    }
+                 }
+             }
+             let vsync_time =
+@@ -698,7 +813,9 @@ fn reproj_probe_enabled() -> bool {
+     use std::sync::OnceLock;
+     static ENABLED: OnceLock<bool> = OnceLock::new();
+     *ENABLED.get_or_init(|| {
+-        std::env::var("ALVR_REPROJ_PROBE").map(|v| v != "0" && !v.is_empty()).unwrap_or(false)
++        std::env::var("ALVR_REPROJ_PROBE")
++            .map(|v| v != "0" && !v.is_empty())
++            .unwrap_or(false)
+     })
+ }
+ 
 diff --git a/alvr/client_openxr/src/refresh_probe.rs b/alvr/client_openxr/src/refresh_probe.rs
 new file mode 100644
-index 0000000..9bc784e
+index 0000000..766b412
 --- /dev/null
 +++ b/alvr/client_openxr/src/refresh_probe.rs
-@@ -0,0 +1,86 @@
+@@ -0,0 +1,112 @@
 +//! Quest 3 HorizonOS v2.7 permits rates absent from enumeration. Never infer support
 +//! from a property: require request success, runtime frequency and three frame periods.
 +use openxr as xr;
@@ -1345,21 +2043,32 @@ index 0000000..9bc784e
 +}
 +
 +pub fn matches(target: f32, actual: f32, period_ns: i64) -> bool {
-+    period_ns > 0 && target.is_finite() && actual.is_finite()
++    period_ns > 0
++        && target.is_finite()
++        && actual.is_finite()
 +        && (actual - target).abs() < 0.1
 +        && (1e9 / period_ns as f64 - target as f64).abs() < target as f64 * 0.005
 +}
 +
 +impl RefreshProbe {
 +    pub fn new(enumerated: Vec<f32>, restore: f32) -> Self {
-+        Self { pending: [72.0, 90.0, 120.0, 144.0, 207.0, 240.0].into(), current: None,
-+            stable: 0, confirmed: vec![], enumerated, restore, restoring: false }
++        Self {
++            pending: [72.0, 90.0, 120.0, 144.0, 207.0, 240.0].into(),
++            current: None,
++            stable: 0,
++            confirmed: vec![],
++            enumerated,
++            restore,
++            restoring: false,
++        }
 +    }
 +
 +    // Called only while the session runs, before xrWaitFrame. No sleeps on render thread.
 +    pub fn request_next(&mut self, session: &xr::Session<xr::OpenGlEs>) {
 +        while self.current.is_none() {
-+            let target = if let Some(rate) = self.pending.pop_front() { rate } else {
++            let target = if let Some(rate) = self.pending.pop_front() {
++                rate
++            } else {
 +                self.restoring = true;
 +                self.restore
 +            };
@@ -1379,26 +2088,41 @@ index 0000000..9bc784e
 +        }
 +    }
 +
-+    pub fn observe(&mut self, session: &xr::Session<xr::OpenGlEs>, period_ns: i64) -> Option<Vec<f32>> {
++    pub fn observe(
++        &mut self,
++        session: &xr::Session<xr::OpenGlEs>,
++        period_ns: i64,
++    ) -> Option<Vec<f32>> {
 +        let (target, start) = self.current?;
 +        let actual = session.get_display_refresh_rate().ok();
-+        if actual.is_some_and(|actual| matches(target, actual, period_ns)) { self.stable += 1; }
-+        else { self.stable = 0; }
++        if actual.is_some_and(|actual| matches(target, actual, period_ns)) {
++            self.stable += 1;
++        } else {
++            self.stable = 0;
++        }
 +        let confirmed = self.stable >= 3;
-+        if !confirmed && start.elapsed().as_secs_f32() < 2.0 { return None; }
++        if !confirmed && start.elapsed().as_secs_f32() < 2.0 {
++            return None;
++        }
 +        alvr_common::error!("[Q3PW_PROBE] request={target} confirmed={confirmed} runtime_hz={actual:?} period_ns={period_ns} restore={}", self.restoring);
 +        self.current = None;
 +        if self.restoring {
 +            // Preserve ordinary enumerated modes; extended benchmark modes only after confirmation.
-+            let mut rates: Vec<_> = self.enumerated.iter().copied()
-+                .filter(|r| ![72.0, 90.0, 120.0, 144.0, 207.0, 240.0].contains(r)).collect();
++            let mut rates: Vec<_> = self
++                .enumerated
++                .iter()
++                .copied()
++                .filter(|r| ![72.0, 90.0, 120.0, 144.0, 207.0, 240.0].contains(r))
++                .collect();
 +            rates.extend(&self.confirmed);
 +            rates.sort_by(f32::total_cmp);
 +            rates.dedup();
 +            alvr_common::error!("[Q3PW_VERIFIED] rates={:?}", self.confirmed);
 +            return Some(rates);
 +        }
-+        if confirmed { self.confirmed.push(target); }
++        if confirmed {
++            self.confirmed.push(target);
++        }
 +        None
 +    }
 +}
@@ -1416,7 +2140,7 @@ index 0000000..9bc784e
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..e7998c7 100644
+index b87dfe9..61eeb1b 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -59,17 +59,9 @@ impl ParsedStreamConfig {
@@ -1453,14 +2177,58 @@ index b87dfe9..e7998c7 100644
          let foveation_profile = if let Some(config) = &config.clientside_foveation_config {
              if xr_exts.fb_swapchain_update_state.is_some()
                  && xr_exts.fb_foveation.is_some()
-@@ -294,6 +280,7 @@ impl StreamContext {
+@@ -294,6 +280,8 @@ impl StreamContext {
      }
  
      pub fn maybe_initialize_decoder(&mut self, codec: CodecType, config_nal: Vec<u8>) {
-+        self.renderer.set_import_copy_sync(codec == CodecType::PyroWave);
++        self.renderer
++            .set_import_copy_sync(codec == CodecType::PyroWave);
          let new_config = VideoDecoderConfig {
              codec,
              force_software_decoder: self.config.force_software_decoder,
+@@ -338,12 +326,22 @@ impl StreamContext {
+     /// predicted display time is stale by the length of that wait and every frame targets a
+     /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
+     /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
++    pub fn uses_latest_frame_polling(&self) -> bool {
++        alvr_system_info::platform() == Platform::Quest3
++            && self
++                .decoder
++                .as_ref()
++                .is_some_and(|(config, _)| config.codec == CodecType::PyroWave)
++    }
++
+     pub fn poll_frame(&mut self, frame_interval: Duration) {
+         if self.pending_frame.is_some() {
+             return;
+         }
+         let deadline = Instant::now()
+-            + Duration::from_secs_f32(frame_interval.as_secs_f32() * DECODER_MAX_TIMEOUT_MULTIPLIER);
++            + Duration::from_secs_f32(
++                frame_interval.as_secs_f32() * DECODER_MAX_TIMEOUT_MULTIPLIER,
++            );
+         if let Some((_, source)) = &mut self.decoder {
+             while Instant::now() < deadline {
+                 if let Some(frame) = source.get_frame() {
+@@ -369,10 +367,17 @@ impl StreamContext {
+                 frame_interval.as_secs_f32() * DECODER_MAX_TIMEOUT_MULTIPLIER,
+             );
+         let mut frame_result = self.pending_frame.take();
++        // Quest PyroWave already has a bounded latest-frame queue on its GPU worker.
++        // Take the newest ready frame after xrWaitFrame without delaying that display slot.
++        // When decode falls behind, repeat the last layer and let the runtime reproject it.
++        let latest_only = self.uses_latest_frame_polling();
+         if let Some((_, source)) = &mut self.decoder {
+-            while frame_result.is_none() && Instant::now() < frame_poll_deadline {
++            if frame_result.is_none() {
+                 frame_result = source.get_frame();
++            }
++            while !latest_only && frame_result.is_none() && Instant::now() < frame_poll_deadline {
+                 thread::sleep(Duration::from_micros(500));
++                frame_result = source.get_frame();
+             }
+         }
+ 
 diff --git a/alvr/dashboard/src/dashboard/components/settings.rs b/alvr/dashboard/src/dashboard/components/settings.rs
 index 5cfc048..b6aba9b 100644
 --- a/alvr/dashboard/src/dashboard/components/settings.rs
@@ -1630,7 +2398,7 @@ index 5cfc048..b6aba9b 100644
 +    changes
 +}
 diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
-index efb0f8e..eb75b6c 100644
+index efb0f8e..93cd6ba 100644
 --- a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 @@ -323,7 +323,7 @@ pub fn streaming_profile_schema() -> PresetSchemaNode {
@@ -1685,13 +2453,41 @@ index efb0f8e..eb75b6c 100644
              .into_iter()
              .map(|hz| HigherOrderChoiceOption {
                  display_name: format!("{hz} Hz"),
-@@ -447,11 +445,11 @@ mod tests {
+@@ -426,7 +424,6 @@ the tuned H.264 profile runs at 72 Hz because the headset's H.264 decode is too
+     })
+ }
+ 
+-
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+@@ -447,16 +444,37 @@ mod tests {
              .iter()
              .map(|o| o.display_name.as_str())
              .collect::<Vec<_>>();
 -        assert_eq!(names, ["PyroWave 4:4:4 (Recommended)", "ALVR H.264 (tuned)"]);
-+        assert_eq!(names, ["Quest 3 PyroWave 400 Mbps / 72 Hz candidate", "Quest 3 PyroWave 600 Mbps / 90 Hz candidate", "Quest 3 PyroWave 600 Mbps / 120 Hz experiment", "Quest 3 PyroWave 800 Mbps / 120 Hz experiment", "Quest 3 PyroWave 1000 Mbps / 120 Hz experiment", "Quest 3 PyroWave 1500 Mbps / 120 Hz experiment", "Quest 3 PyroWave 2000 Mbps / 120 Hz experiment", "H.264 comparison", "HEVC comparison", "AV1 comparison"]);
-         assert_eq!(schema.default_option_display_name, beta::RECOMMENDED_PROFILE);
+-        assert_eq!(schema.default_option_display_name, beta::RECOMMENDED_PROFILE);
++        assert_eq!(
++            names,
++            [
++                "Quest 3 PyroWave 400 Mbps / 72 Hz candidate",
++                "Quest 3 PyroWave 600 Mbps / 90 Hz candidate",
++                "Quest 3 PyroWave 600 Mbps / 120 Hz experiment",
++                "Quest 3 PyroWave 800 Mbps / 120 Hz experiment",
++                "Quest 3 PyroWave 1000 Mbps / 120 Hz experiment",
++                "Quest 3 PyroWave 1500 Mbps / 120 Hz experiment",
++                "Quest 3 PyroWave 2000 Mbps / 120 Hz experiment",
++                "Quest 3 PyroWave 1000 Mbps / 120 Hz / 75% latency experiment",
++                "Quest 3 PyroWave 1000 Mbps / 120 Hz / 60% latency experiment",
++                "H.264 comparison",
++                "HEVC comparison",
++                "AV1 comparison"
++            ]
++        );
++        assert_eq!(
++            schema.default_option_display_name,
++            beta::RECOMMENDED_PROFILE
++        );
          assert_eq!(
              schema.options[0].description.as_deref(),
 -            Some("Full-chroma experimental wireless VR streaming")
@@ -1699,7 +2495,15 @@ index efb0f8e..eb75b6c 100644
          );
          // every assignment of the shared profile table, under session_settings
          let profile = &beta::streaming_profiles()[0];
-@@ -474,15 +472,16 @@ mod tests {
+         assert_eq!(schema.options[0].modifiers.len(), profile.assignments.len());
+-        for (modifier, (path, value)) in schema.options[0].modifiers.iter().zip(&profile.assignments) {
++        for (modifier, (path, value)) in
++            schema.options[0].modifiers.iter().zip(&profile.assignments)
++        {
+             assert_eq!(modifier.target_path, format!("session_settings.{path}"));
+             let PresetModifierOperation::Assign(assigned) = &modifier.operation;
+             assert_eq!(assigned, value);
+@@ -474,15 +492,22 @@ mod tests {
          assert_eq!(
              names,
              [
@@ -1718,12 +2522,18 @@ index efb0f8e..eb75b6c 100644
              ]
          );
 -        assert_eq!(schema.default_option_display_name, "60 % (2131x2304 per eye)");
-+        assert_eq!(schema.default_option_display_name, "100 % (2064x2208 per eye, panel)");
-+        assert!(schema.options.iter().any(|o| o.display_name == schema.default_option_display_name));
++        assert_eq!(
++            schema.default_option_display_name,
++            "100 % (2064x2208 per eye, panel)"
++        );
++        assert!(schema
++            .options
++            .iter()
++            .any(|o| o.display_name == schema.default_option_display_name));
          let seventy = &schema.options[2];
          let width = |field: &str| {
              seventy
-@@ -494,8 +493,8 @@ mod tests {
+@@ -494,8 +519,8 @@ mod tests {
                      value.clone()
                  })
          };
@@ -1734,12 +2544,15 @@ index efb0f8e..eb75b6c 100644
      }
  
      #[test]
-@@ -506,7 +505,7 @@ mod tests {
+@@ -506,7 +531,10 @@ mod tests {
              .iter()
              .map(|o| o.display_name.as_str())
              .collect::<Vec<_>>();
 -        assert_eq!(names, ["60 Hz", "72 Hz", "90 Hz"]);
-+        assert_eq!(names, ["72 Hz", "80 Hz", "90 Hz", "120 Hz", "144 Hz", "207 Hz", "240 Hz"]);
++        assert_eq!(
++            names,
++            ["72 Hz", "80 Hz", "90 Hz", "120 Hz", "144 Hz", "207 Hz", "240 Hz"]
++        );
          assert_eq!(schema.default_option_display_name, "90 Hz");
      }
  }
@@ -1944,7 +2757,7 @@ index 81f2f8e..8bf077b 100644
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da..647954d 100644
+index fc176da..6677a9d 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -53,7 +53,8 @@ pub struct VideoPacket {
@@ -2000,19 +2813,22 @@ index fc176da..647954d 100644
          _controller_profile,
          _server_impl_debug: settings.extra.logging.debug_groups.server_impl,
          _client_impl_debug: settings.extra.logging.debug_groups.client_impl,
-@@ -629,6 +621,11 @@ fn connection_pipeline(
+@@ -629,6 +621,14 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
-+    if !streaming_caps.supported_refresh_rates.iter().any(|rate|
-+        rate.is_finite() && *rate > 0.0 && (*rate - initial_settings.video.preferred_fps).abs() < 0.01) {
++    if !streaming_caps.supported_refresh_rates.iter().any(|rate| {
++        rate.is_finite()
++            && *rate > 0.0
++            && (*rate - initial_settings.video.preferred_fps).abs() < 0.01
++    }) {
 +        con_bail!("Quest3-Pyrowave: requested {} Hz unsupported; client-confirmed rates {:?}. Reopen the app to probe rates; choose a confirmed mode.",
 +            initial_settings.video.preferred_fps, streaming_caps.supported_refresh_rates);
 +    }
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +646,7 @@ fn connection_pipeline(
+@@ -649,18 +649,7 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -2032,6 +2848,42 @@ index fc176da..647954d 100644
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
+@@ -802,6 +791,10 @@ fn connection_pipeline(
+         proto_socket.split(STREAMING_RECV_TIMEOUT).to_con()?;
+ 
+     let mut new_openvr_config = contruct_openvr_config(session_manager_lock.session());
++    // ADB forwards TCP ports. The independent UDP video socket cannot reach a USB peer.
++    if wired {
++        new_openvr_config.pyrowave_udp = false;
++    }
+     new_openvr_config.eye_resolution_width = stream_view_resolution.x;
+     new_openvr_config.eye_resolution_height = stream_view_resolution.y;
+     new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
+@@ -869,10 +862,11 @@ fn connection_pipeline(
+ 
+     // PyroWave over UDP: a plain socket to the client's address. The same resolution fills
+     // openvr_config for the C++ encoder, so the two sides cannot disagree.
+-    let pyrowave = alvr_session::beta::pyrowave_effective(
+-        &initial_settings,
+-        &alvr_session::beta::process_env,
+-    );
++    let mut pyrowave =
++        alvr_session::beta::pyrowave_effective(&initial_settings, &alvr_session::beta::process_env);
++    if wired {
++        pyrowave.udp = false;
++    }
+     if pyrowave.enabled {
+         info!("{pyrowave}");
+     }
+@@ -1552,7 +1546,7 @@ mod beta_tests {
+         let session = SessionConfig::default();
+         let config = openvr_config_with_env(&session, &|_| None);
+         assert!(config.pyrowave_enabled);
+-        assert!(config.pyrowave_udp);
++        assert!(!config.pyrowave_udp);
+         assert!(!config.pyrowave_wavelet_53);
+         assert_eq!(config.pyrowave_decode_path, 2, "compute");
+     }
 diff --git a/alvr/server_core/src/tracking/mod.rs b/alvr/server_core/src/tracking/mod.rs
 index 64f93a6..d38c74e 100644
 --- a/alvr/server_core/src/tracking/mod.rs
@@ -2257,7 +3109,7 @@ index 8136dda..8a395c8 100644
      bool enablePlanarYuv = false;
  
 diff --git a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
-index fc0632b..ba3fc11 100644
+index fc0632b..ffc9a91 100644
 --- a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
 +++ b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
 @@ -29,6 +29,7 @@ static bool UdpEnabled() { return Settings::Instance().m_pyrowaveUdp; }
@@ -2377,7 +3229,23 @@ index fc0632b..ba3fc11 100644
                                                  Settings::Instance().m_useFullRangeEncoding ? 1 : 0,
                                                  (int32_t)(m_framerate ? m_framerate : 72), 1, 0 };
                      fwrite("PYROWAVE", 1, 8, wave);
-@@ -483,9 +488,9 @@ void VideoEncoderPyroWave::Transmit(
+@@ -431,10 +436,12 @@ void VideoEncoderPyroWave::Transmit(
+         return;
+     }
+ 
+-    // PyroWave's rate control is a hard per-frame byte cap rather than an average, which suits an
+-    // intra-only codec: every frame is independent, so there is no rate buffer to drain.
++    // Reserve room for packetization/RDO rounding. Enforce the *serialized* frame cap below;
++    // the codec target alone overshot it by about 0.8% in the full-panel live capture.
++    const size_t frameByteBudget = (size_t)(m_bitrateBps / 8 / m_framerate);
+     pyrowave_rate_control rateControl = {};
+-    rateControl.maximum_bitstream_size = (size_t)(m_bitrateBps / 8 / m_framerate);
++    rateControl.maximum_bitstream_size = (frameByteBudget * 98 / 100) & ~size_t(3);
++    if (rateControl.maximum_bitstream_size == 0) return;
+ 
+     // Order the D3D11 render before the Vulkan read. A shared fence imported as a timeline
+     // semaphore would avoid the CPU round trip; this is the simpler correct version, and the
+@@ -483,9 +490,9 @@ void VideoEncoderPyroWave::Transmit(
          return;
      }
  
@@ -2390,7 +3258,22 @@ index fc0632b..ba3fc11 100644
      size_t numPackets = 0;
      if (pyrowave_encoder_compute_num_packets(m_pyroEncoder, packetBoundary, &numPackets)
          != PYROWAVE_SUCCESS) {
-@@ -508,17 +513,24 @@ void VideoEncoderPyroWave::Transmit(
+@@ -503,22 +510,39 @@ void VideoEncoderPyroWave::Transmit(
+         return;
+     }
+ 
++    // The receiver decodes one complete independent codec frame. Never truncate codec bytes
++    // to meet bitrate, and never send a partial/oversized frame after a failed rate target.
++    if (outPackets != 1 || packets[0].offset > m_bitstream.size()
++        || packets[0].size > m_bitstream.size() - packets[0].offset
++        || packets[0].size > frameByteBudget) {
++        Error("[PYROWAVE] frame rejected: packets=%zu bytes=%zu budget=%zu\n",
++            outPackets, outPackets ? packets[0].size : 0, frameByteBudget);
++        return;
++    }
++
+     for (size_t i = 0; i < outPackets; i++) {
+         uint8_t* buf = m_bitstream.data() + packets[i].offset;
          int len = (int)packets[i].size;
  
          if (UdpEnabled()) {
@@ -2443,10 +3326,10 @@ index a0356d3..230c751 100644
  public:
      VideoEncoderPyroWave(
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
-index 84100dc..92140a7 100644
+index 84100dc..7677300 100644
 --- a/alvr/session/src/beta.rs
 +++ b/alvr/session/src/beta.rs
-@@ -3,25 +3,91 @@
+@@ -3,25 +3,93 @@
  //! environment overrides are applied. The server, the dashboard and the tests all read from here,
  //! so the UI, the defaults and the documentation cannot drift apart.
  
@@ -2501,8 +3384,10 @@ index 84100dc..92140a7 100644
 +    }
 +    let eye_width = width.checked_add(31)? / 32 * 32;
 +    let eye_height = height.checked_add(31)? / 32 * 32;
-+    let pixels = u64::from(eye_width) * u64::from(eye_height) * 2;
-+    let raw_bytes = pixels * 3 / if full_chroma { 1 } else { 2 };
++    let pixels = u64::from(eye_width)
++        .checked_mul(u64::from(eye_height))?
++        .checked_mul(2)?;
++    let raw_bytes = pixels.checked_mul(3)? / if full_chroma { 1 } else { 2 };
 +    // Match the encoder's integer bps / 8 / integer framerate calculation.
 +    let encoder_hz = hz as u64;
 +    if encoder_hz == 0 {
@@ -2545,7 +3430,7 @@ index 84100dc..92140a7 100644
  pub struct StreamingProfile {
      pub name: &'static str,
      pub subtitle: &'static str,
-@@ -35,20 +101,26 @@ fn assign(path: &str, value: json::Value) -> (String, json::Value) {
+@@ -35,20 +103,26 @@ fn assign(path: &str, value: json::Value) -> (String, json::Value) {
  
  fn render_size(percent: u32) -> Vec<(String, json::Value)> {
      let (width, height) = render_scale_size(percent);
@@ -2584,7 +3469,7 @@ index 84100dc..92140a7 100644
  /// socket values, so switching profiles never leaves one of them at a tester's experiment.
  fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::Value)> {
      let mut list = vec![
-@@ -56,48 +128,123 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
+@@ -56,48 +130,145 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
          assign("video.bitrate.mode.variant", "ConstantMbps".into()),
          assign("video.bitrate.mode.ConstantMbps", mbps.into()),
          assign("video.preferred_fps", json::json!(fps)),
@@ -2725,6 +3610,28 @@ index 84100dc..92140a7 100644
 +            assignments,
 +        });
 +    }
++    for (name, percent) in [
++        (
++            "Quest 3 PyroWave 1000 Mbps / 120 Hz / 75% latency experiment",
++            75,
++        ),
++        (
++            "Quest 3 PyroWave 1000 Mbps / 120 Hz / 60% latency experiment",
++            60,
++        ),
++    ] {
++        let mut assignments = shared("PyroWave", 1000, 120.0, percent);
++        assignments.extend([
++            assign("video.pyrowave.chroma_444", false.into()),
++            assign("video.pyrowave.transport.variant", "Udp".into()),
++            assign("video.pyrowave.wavelet.variant", "Cdf97".into()),
++            assign("video.pyrowave.decode_path.variant", "Compute".into()),
++            assign("video.max_buffering_frames", json::json!(1.0)),
++        ]);
++        profiles.push(StreamingProfile { name,
++            subtitle: "Lower resolution, full-frame 4:2:0, PWU2 UDP; short capture only, sustained 120 FPS unverified",
++            assignments });
++    }
 +    for (name, codec) in [
 +        (H264_PROFILE, "H264"),
 +        ("HEVC comparison", "Hevc"),
@@ -2740,7 +3647,7 @@ index 84100dc..92140a7 100644
  }
  
  #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-@@ -186,6 +333,7 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
+@@ -186,6 +357,7 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
  #[derive(Clone, Debug, PartialEq)]
  pub struct PyroWaveEffective {
      pub enabled: bool,
@@ -2748,7 +3655,7 @@ index 84100dc..92140a7 100644
      pub udp: bool,
      pub wavelet_53: bool,
      pub decode_path: PyroWaveDecodePath,
-@@ -211,9 +359,7 @@ pub fn pyrowave_effective(
+@@ -211,9 +383,7 @@ pub fn pyrowave_effective(
          value
      };
  
@@ -2759,7 +3666,7 @@ index 84100dc..92140a7 100644
          || video.preferred_codec == CodecType::PyroWave;
      let udp = read("ALVR_PYROWAVE_UDP")
          .map(|v| env_flag(&v))
-@@ -221,18 +367,11 @@ pub fn pyrowave_effective(
+@@ -221,18 +391,11 @@ pub fn pyrowave_effective(
      let wavelet_53 = read("ALVR_PYROWAVE_WAVELET")
          .map(|v| v == "53")
          .unwrap_or(video.pyrowave.wavelet == PyroWaveWavelet::Cdf53);
@@ -2780,7 +3687,7 @@ index 84100dc..92140a7 100644
          udp,
          wavelet_53,
          decode_path: video.pyrowave.decode_path,
-@@ -255,8 +394,9 @@ impl fmt::Display for PyroWaveEffective {
+@@ -255,8 +418,9 @@ impl fmt::Display for PyroWaveEffective {
          };
          write!(
              f,
@@ -2791,7 +3698,7 @@ index 84100dc..92140a7 100644
              if self.udp { "UDP" } else { "TCP" },
              if self.wavelet_53 { "5/3" } else { "9/7" },
              if self.follow_gaze { "on" } else { "off" },
-@@ -279,7 +419,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
+@@ -279,7 +443,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
  }
  
  fn at<'a>(root: &'a json::Value, path: &str) -> Option<&'a json::Value> {
@@ -2802,7 +3709,7 @@ index 84100dc..92140a7 100644
  
  /// The profile whose every assignment the session (`session_settings` as JSON) currently holds,
 diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
-index 985a4d0..e1256bb 100644
+index 985a4d0..02ebb6b 100644
 --- a/alvr/session/src/beta_tests.rs
 +++ b/alvr/session/src/beta_tests.rs
 @@ -31,7 +31,7 @@ fn video_shows_only_codec_experiment_controls() {
@@ -2857,16 +3764,21 @@ index 985a4d0..e1256bb 100644
  }
  
  #[test]
-@@ -134,7 +124,7 @@ fn fresh_install_streams_the_recommended_profile() {
+@@ -133,8 +123,11 @@ fn default_settings() -> Settings {
+ fn fresh_install_streams_the_recommended_profile() {
      let s = default_settings();
      assert_eq!(s.video.preferred_codec, CodecType::PyroWave);
-     assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(400)));
+-    assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(400)));
 -    assert_eq!(s.video.preferred_fps, 90.0);
++    assert!(matches!(
++        s.video.bitrate.mode,
++        BitrateMode::ConstantMbps(400)
++    ));
 +    assert_eq!(s.video.preferred_fps, 72.0);
      for size in [
          &s.video.transcoding_view_resolution,
          &s.video.emulated_headset_view_resolution,
-@@ -142,33 +132,27 @@ fn fresh_install_streams_the_recommended_profile() {
+@@ -142,33 +135,27 @@ fn fresh_install_streams_the_recommended_profile() {
          assert!(matches!(
              size,
              FrameSize::Absolute {
@@ -2907,31 +3819,34 @@ index 985a4d0..e1256bb 100644
  }
  
  // Applies session-style assignments the way the dashboard's SetValues does.
-@@ -198,13 +182,13 @@ fn profile(name: &str) -> StreamingProfile {
+@@ -198,13 +185,10 @@ fn profile(name: &str) -> StreamingProfile {
  #[test]
  fn profiles_are_named_for_testers() {
      let profiles = streaming_profiles();
 -    assert_eq!(profiles.len(), 2);
 -    assert_eq!(profiles[0].name, "PyroWave 4:4:4 (Recommended)");
-+    assert_eq!(profiles.len(), 10);
-+    assert_eq!(profiles[0].name, RECOMMENDED_PROFILE);
-     assert_eq!(
-         profiles[0].subtitle,
+-    assert_eq!(
+-        profiles[0].subtitle,
 -        "Full-chroma experimental wireless VR streaming"
-+        RECOMMENDED_SUBTITLE
-     );
+-    );
 -    assert_eq!(profiles[1].name, "ALVR H.264 (tuned)");
-+    assert_eq!(profiles[7].name, H264_PROFILE);
++    assert_eq!(profiles.len(), 12);
++    assert_eq!(profiles[0].name, RECOMMENDED_PROFILE);
++    assert_eq!(profiles[0].subtitle, RECOMMENDED_SUBTITLE);
++    assert_eq!(profiles[9].name, H264_PROFILE);
  }
  
  #[test]
-@@ -218,13 +202,13 @@ fn recommended_profile_is_the_fresh_install() {
+@@ -218,13 +202,16 @@ fn recommended_profile_is_the_fresh_install() {
  fn h264_profile_is_the_measured_b15_cell() {
      let s = apply(&profile(H264_PROFILE));
      assert_eq!(s.video.preferred_codec, CodecType::H264);
 -    assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(600)));
 -    assert_eq!(s.video.preferred_fps, 72.0);
-+    assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(200)));
++    assert!(matches!(
++        s.video.bitrate.mode,
++        BitrateMode::ConstantMbps(200)
++    ));
 +    assert_eq!(s.video.preferred_fps, 120.0);
      assert!(matches!(
          s.video.transcoding_view_resolution,
@@ -2943,9 +3858,15 @@ index 985a4d0..e1256bb 100644
          }
      ));
      assert_eq!(s.video.max_buffering_frames, 1.5);
-@@ -235,18 +219,15 @@ fn h264_profile_is_the_measured_b15_cell() {
+@@ -233,20 +220,20 @@ fn h264_profile_is_the_measured_b15_cell() {
+         EncoderQualityPresetNvidia::P1
+     );
      assert_eq!(s.video.encoder_config.entropy_coding, EntropyCoding::Cavlc);
-     assert_eq!(s.video.encoder_config.rate_control_mode, RateControlMode::Cbr);
+-    assert_eq!(s.video.encoder_config.rate_control_mode, RateControlMode::Cbr);
++    assert_eq!(
++        s.video.encoder_config.rate_control_mode,
++        RateControlMode::Cbr
++    );
      assert_eq!(s.connection.packet_size, 65000);
 -    let Switch::Enabled(fov) = &s.video.foveated_encoding else {
 -        panic!("foveation off")
@@ -2967,7 +3888,7 @@ index 985a4d0..e1256bb 100644
  }
  
  fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
-@@ -261,21 +242,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
+@@ -261,21 +248,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
  fn effective_config_follows_settings_without_env() {
      let e = pyrowave_effective(&default_settings(), &env(&[]));
      assert!(e.enabled);
@@ -2994,7 +3915,7 @@ index 985a4d0..e1256bb 100644
      assert!(e.wavelet_53);
      assert_eq!(e.decode_path, PyroWaveDecodePath::Fragment);
  }
-@@ -284,6 +265,7 @@ fn effective_config_follows_a_non_default_setting() {
+@@ -284,6 +271,7 @@ fn effective_config_follows_a_non_default_setting() {
  fn research_env_overrides_win_and_are_reported() {
      let mut s = default_settings();
      s.video.preferred_codec = CodecType::H264;
@@ -3002,7 +3923,7 @@ index 985a4d0..e1256bb 100644
      let e = pyrowave_effective(
          &s,
          &env(&[
-@@ -302,8 +284,7 @@ fn research_env_overrides_win_and_are_reported() {
+@@ -302,8 +290,7 @@ fn research_env_overrides_win_and_are_reported() {
          vec![
              "ALVR_PYROWAVE",
              "ALVR_PYROWAVE_UDP",
@@ -3012,7 +3933,7 @@ index 985a4d0..e1256bb 100644
          ]
      );
  }
-@@ -320,8 +301,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
+@@ -320,8 +307,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
      let line = pyrowave_effective(&default_settings(), &env(&[])).to_string();
      assert_eq!(
          line,
@@ -3037,7 +3958,7 @@ index d7d0dbb..037ad45 100644
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99..743c4c3 100644
+index 1009e99..5c271b7 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -3205,7 +4126,7 @@ index 1009e99..743c4c3 100644
                  },
              },
              clientside_foveation: SwitchDefault {
-@@ -2179,7 +2179,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2179,16 +2179,12 @@ pub fn session_settings_default() -> SettingsDefault {
                  content: DiscoveryConfigDefault {
                      // Beta: no pairing step. The pre-release protocol ID already keeps stock
                      // ALVR clients out; turn this off to approve each headset by hand.
@@ -3214,7 +4135,18 @@ index 1009e99..743c4c3 100644
                  },
              },
              wired_client_type: ClientFlavorDefault {
-@@ -2211,7 +2211,7 @@ pub fn session_settings_default() -> SettingsDefault {
+-                Custom: "alvr.client".to_owned(),
+-                variant: if alvr_common::is_stable() {
+-                    ClientFlavorDefaultVariant::Store
+-                } else {
+-                    ClientFlavorDefaultVariant::Github
+-                },
++                Custom: "io.github.jms1717.quest3pyrowave".to_owned(),
++                variant: ClientFlavorDefaultVariant::Custom,
+             },
+             wired_client_autolaunch: true,
+             web_server_port: 8082,
+@@ -2211,7 +2207,7 @@ pub fn session_settings_default() -> SettingsDefault {
              server_recv_buffer_bytes: socket_buffer.clone(),
              client_send_buffer_bytes: socket_buffer.clone(),
              client_recv_buffer_bytes: socket_buffer,
@@ -3223,3 +4155,12 @@ index 1009e99..743c4c3 100644
              avoid_video_glitching: true,
              minimum_idr_interval_ms: 100,
              enable_on_connect_script: false,
+@@ -2262,7 +2258,7 @@ pub fn session_settings_default() -> SettingsDefault {
+             },
+             steamvr_launcher: SteamvrLauncherDefault {
+                 driver_launch_action: DriverLaunchActionDefault {
+-                    variant: DriverLaunchActionDefaultVariant::UnregisterOtherDriversAtStartup,
++                    variant: DriverLaunchActionDefaultVariant::NoAction,
+                 },
+                 open_close_steamvr_with_dashboard: false,
+             },

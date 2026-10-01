@@ -33,6 +33,9 @@ budget. See [profile math and automatic bitrate](docs/BITRATE.md) for every pres
 resolution, bytes/frame, compression ratio and network overhead. Auto uses latency feedback;
 its slider sets a ceiling rather than a guaranteed rate.
 
+[Native USB streaming](docs/USB.md) is available through Devices → Wired Connection.
+The fork selects its own APK package and uses TCP for USB; verify the loopback peer before benchmarking.
+
 | Requested refresh | Frame budget | Policy |
 |---|---:|---|
 | 72 Hz | 13.89 ms | Conservative candidate; live acceptance pending |

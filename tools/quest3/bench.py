@@ -121,7 +121,10 @@ def snapshot(adb):
 def active_settings():
     from .control import session
     s=session();v=s['session_settings']['video'];o=s.get('openvr_config',{})
-    return {'codec':v['preferred_codec']['variant'], 'target_mbps':v['bitrate']['mode']['ConstantMbps'],
+    mode = v['bitrate']['mode']
+    return {'codec':v['preferred_codec']['variant'],
+        'bitrate_mode':mode['variant'], 'bitrate_config':mode,
+        'target_mbps':mode['ConstantMbps'] if mode['variant']=='ConstantMbps' else None,
         'requested_hz':v['preferred_fps'], 'decode_path':v['pyrowave']['decode_path']['variant'],
         'chroma':'444' if v['pyrowave'].get('chroma_444',False) else '420',
         'transport':v['pyrowave']['transport']['variant'], 'stream_protocol':s['session_settings']['connection']['stream_protocol']['variant'],

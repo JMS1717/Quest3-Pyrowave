@@ -89,6 +89,30 @@
         "hz": 120,
         "chroma": "420",
         "sustained_fps_verified": false
+      },
+      {
+        "mbps": 1000,
+        "hz": 120,
+        "chroma": "420",
+        "requested_eye_resolution": [
+          1548,
+          1656
+        ],
+        "render_scale_percent": 75,
+        "transport": "Udp",
+        "sustained_fps_verified": false
+      },
+      {
+        "mbps": 1000,
+        "hz": 120,
+        "chroma": "420",
+        "requested_eye_resolution": [
+          1238,
+          1325
+        ],
+        "render_scale_percent": 60,
+        "transport": "Udp",
+        "sustained_fps_verified": false
       }
     ]
   },
