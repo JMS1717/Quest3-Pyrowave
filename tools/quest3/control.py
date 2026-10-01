@@ -91,9 +91,9 @@ def apply(codec, mbps, hz, path, caps, chroma="420", transport="Tcp", wavelet="C
         if transport not in ('Tcp', 'Udp'): raise ValueError('Invalid transport')
         if chroma not in ('420','444'): raise ValueError('Invalid chroma')
         if path not in ('Auto','Compute','Fragment'): raise ValueError('Invalid decode path')
-        if wavelet not in ('Cdf97','Cdf53'): raise ValueError('Invalid wavelet')
-        if wavelet == 'Cdf53' and path == 'Fragment':
-            raise ValueError('CDF 5/3 requires Compute or Auto decode')
+        if wavelet not in ('Cdf97','Cdf53','Haar'): raise ValueError('Invalid wavelet')
+        if wavelet in ('Cdf53','Haar') and path == 'Fragment':
+            raise ValueError('CDF 5/3 and Haar require Compute or Auto decode')
         values.update({'session_settings.video.pyrowave.chroma_444':chroma=='444',
                        'session_settings.video.pyrowave.transport.variant':transport,
                        'session_settings.connection.stream_protocol.variant':'Tcp',
@@ -142,7 +142,7 @@ def main():
     c.add_argument('--mbps',type=int,required=True);c.add_argument('--hz',type=int,required=True)
     c.add_argument('--decode-path',choices=['Auto','Compute','Fragment'],default='Auto');c.add_argument('--capabilities',required=True)
     c.add_argument('--chroma',choices=['420','444'],default='420')
-    c.add_argument('--wavelet',choices=['Cdf97','Cdf53'],default='Cdf97')
+    c.add_argument('--wavelet',choices=['Cdf97','Cdf53','Haar'],default='Cdf97')
     c.add_argument('--transport',choices=['Tcp','Udp'],default='Tcp');a=parser.parse_args()
     if a.cmd=='restart':restart(a.steamvr,a.streamer);return
     if a.cmd=='usb':usb(a.enable);print('USB mode enabled; restart SteamVR if transport changed' if a.enable else 'USB mode disabled');return

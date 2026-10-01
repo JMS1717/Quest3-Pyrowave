@@ -47,3 +47,15 @@ class ControlTests(unittest.TestCase):
                 apply('PyroWave', 1000, 120, 'Fragment',
                       {'refresh_extension':True, 'rates_hz':[120]}, wavelet='Cdf53')
             write.assert_not_called()
+
+    def test_haar_is_explicit_without_sustained_performance_claim(self):
+        result, settings = self.apply_offline(wavelet='Haar')
+        self.assertEqual(settings['video']['pyrowave']['wavelet']['variant'], 'Haar')
+        self.assertFalse(result['sustained_performance_verified'])
+
+    def test_fragment_haar_rejected_before_mutation(self):
+        with patch('tools.quest3.control.set_values') as write:
+            with self.assertRaises(ValueError):
+                apply('PyroWave', 1000, 120, 'Fragment',
+                      {'refresh_extension':True, 'rates_hz':[120]}, wavelet='Haar')
+            write.assert_not_called()

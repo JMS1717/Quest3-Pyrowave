@@ -50,3 +50,27 @@ and thermal state. Measure delivered FPS, completion/decode distributions,
 skipped/superseded frames, image correctness, latency and thermals. A cloud build
 or successful decode does not establish sustained 120 FPS or a latency advantage
 over Virtual Desktop. Fragment decoding also needs reference-quality validation.
+
+## Shorter transform trial (.10)
+
+The pinned research codec also implements lifting Haar with matching encoder,
+decoder and band-gain handling. `.10` exposes it in the dashboard and control tool
+as **Haar (experimental)**. Config byte 13 carries `2`; both sides must use the
+matching build. Haar and CDF 5/3 require Compute, even if a research property asks
+for Fragment. The default remains CDF 9/7.
+
+Haar reduces inverse-transform arithmetic, but the existing multilevel passes and
+RGBA/copy work still cost time. Faster native-resolution decoding is a hypothesis
+to measure. Haar changes the rate/distortion tradeoff and can show block-like
+detail or poorer dense-content reconstruction. Higher bitrate can compensate for
+some errors but does not guarantee equivalence to CDF 9/7. Neither the supplied
+desktop/lab research nor a successful build validates Quest frame rate or quality.
+
+At native resolution a short .8 app-specific GPU trace showed about 8.7 ms of
+compute dispatch plus ~1.2 ms of preemption, and ~2 ms for the 4160 x 2208 RGBA
+surface. Separate eye-copy and presentation surfaces also execute. Detailed
+profiling adds overhead, so these are diagnostic timings, not benchmark cells.
+The ADB CPU/GPU level-6 trial retained a 640 MHz GPU and ~60 median client FPS;
+properties and detailed profiling were restored afterward. Meta documents these
+[performance levels](https://developers.meta.com/vr/documentation/native/android/os-cpu-gpu-levels/)
+and the [GPU profiler](https://developers.meta.com/vr/documentation/spatial-sdk/ts-ovrgpuprofiler/).

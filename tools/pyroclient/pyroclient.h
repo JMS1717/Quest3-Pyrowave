@@ -33,7 +33,7 @@ typedef struct pyroclient_frame_info {
 // failure, with the reason in logcat under "pyroclient".
 // full_range must match what the server encoded (ALVR's video.use_full_range); a mismatch is
 // silent and costs ~25 dB.
-// wavelet is 97 (CDF 9/7) or 53 (CDF 5/3, compute path only); it must match the stream's sequence
+// wavelet is 97 (CDF 9/7), 53 (CDF 5/3), or 2 (Haar); 53/2 require Compute; it must match the stream's sequence
 // header or every frame is rejected. Precision comes from the debug.xrwired.pyro_precision property.
 pyroclient *pyroclient_create(uint32_t width, uint32_t height, int chroma444, int full_range, uint32_t ring, int wavelet);
 

@@ -131,7 +131,7 @@ def active_settings():
         'transport':v['pyrowave']['transport']['variant'], 'stream_protocol':s['session_settings']['connection']['stream_protocol']['variant'],
         'configured_view_resolution':v['transcoding_view_resolution'],
         'openvr':{k:o.get(k) for k in ('refresh_rate','eye_resolution_width','eye_resolution_height',
-            'target_eye_resolution_width','target_eye_resolution_height','pyrowave_enabled','pyrowave_decode_path','pyrowave_wavelet_53','pyrowave_udp','pyrowave_chroma_444','enable_foveated_encoding')}}
+            'target_eye_resolution_width','target_eye_resolution_height','pyrowave_enabled','pyrowave_decode_path','pyrowave_wavelet_53','pyrowave_wavelet_haar','pyrowave_udp','pyrowave_chroma_444','enable_foveated_encoding')}}
 
 def runtime_evidence(adb):
     log=adb_run(adb,'logcat','-d','-t','20000')

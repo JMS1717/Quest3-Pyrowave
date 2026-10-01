@@ -78,6 +78,7 @@ struct pyroclient {
     bool chroma444 = false;
     bool full_range = true;
     bool fragment_path = false;
+    bool haar = false;
     bool legall53 = false;      // Experiment 2: CDF 5/3 instead of 9/7 (compute path only)
     int decode_path_hint = 0;   // dashboard setting: 0 auto, 1 fragment, 2 compute
 
@@ -227,7 +228,7 @@ bool pyroclient::create_device() {
         // Quest 3 reference/readback test favors Compute correctness. Keep explicit A/B choices.
         DecodePathChoice choice = choose_decode_path(
             quest3 ? false : pyrowave_decoder_device_prefers_fragment_path(pyro), decode_path_hint,
-            has_prop ? prop : nullptr, legall53);
+            has_prop ? prop : nullptr, legall53 || haar);
         fragment_path = choice.fragment;
         forced = choice.reason;
     }
@@ -235,7 +236,7 @@ bool pyroclient::create_device() {
     PW_TRY(pyrowave_device_set_queue_type(pyro, fragment_path ? VK_QUEUE_GRAPHICS_BIT : VK_QUEUE_COMPUTE_BIT));
     LOGI("pyrowave device (borrowed), %s path", fragment_path ? "fragment" : "compute");
     LOGI("decode path %s (%s)", fragment_path ? "fragment" : "compute", forced);
-    LOGI("wavelet CDF %s", legall53 ? "5/3" : "9/7");
+    LOGI("wavelet %s", haar ? "Haar" : legall53 ? "CDF 5/3" : "CDF 9/7");
 
     VkCommandPoolCreateInfo pool_info = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
     pool_info.queueFamilyIndex = family;
@@ -300,7 +301,7 @@ bool pyroclient::create_planes() {
     di.device = pyro; di.width = width; di.height = height;
     di.chroma = chroma444 ? PYROWAVE_CHROMA_SUBSAMPLING_444 : PYROWAVE_CHROMA_SUBSAMPLING_420;
     di.fragment_path = fragment_path;
-    di.wavelet = legall53 ? PYROWAVE_WAVELET_CDF53 : PYROWAVE_WAVELET_CDF97;
+    di.wavelet = haar ? PYROWAVE_WAVELET_HAAR : legall53 ? PYROWAVE_WAVELET_CDF53 : PYROWAVE_WAVELET_CDF97;
     PW_TRY(pyrowave_decoder_create(&di, &decoder));
     return true;
 }
@@ -627,10 +628,11 @@ extern "C" pyroclient *pyroclient_create(uint32_t width, uint32_t height, int ch
 
 extern "C" pyroclient *pyroclient_create_ex(uint32_t width, uint32_t height, int chroma444, int full_range, uint32_t ring_size, int wavelet, int decode_path) {
     if (!width || !height || (!chroma444 && ((width | height) & 1))) { LOGE("bad geometry %ux%u", width, height); return nullptr; }
-    if (wavelet != 97 && wavelet != 53) { LOGE("bad wavelet %d (97 or 53)", wavelet); return nullptr; }
+    if (wavelet != 97 && wavelet != 53 && wavelet != 2) { LOGE("bad wavelet %d (97, 53 or 2=Haar)", wavelet); return nullptr; }
     pyroclient *c = new pyroclient();
     c->width = width; c->height = height; c->chroma444 = chroma444 != 0; c->full_range = full_range != 0;
     c->legall53 = wavelet == 53;
+    c->haar = wavelet == 2;
     c->decode_path_hint = decode_path;
     c->ring.resize(ring_size < 2 ? 2 : ring_size);
     if (!c->create_device() || !c->create_planes() || !c->create_convert()) { c->destroy(); delete c; return nullptr; }
