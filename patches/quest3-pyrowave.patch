@@ -1,3 +1,44 @@
+diff --git a/pyrowave_decoder.cpp b/pyrowave_decoder.cpp
+index 114818c..387f18a 100644
+--- a/pyrowave_decoder.cpp
++++ b/pyrowave_decoder.cpp
+@@ -23,6 +23,7 @@ struct DequantizerPushData
+ 
+ struct Decoder::Impl final : public WaveletBuffers
+ {
++	bool fused_haar = getenv("PYROWAVE_FUSED_HAAR") && strcmp(getenv("PYROWAVE_FUSED_HAAR"), "1") == 0;
+ 	bool idwt_enabled = true;   // XRW Experiment 3
+ 
+ 	BufferHandle dequant_offset_buffer, payload_data;
+@@ -717,6 +718,28 @@ bool Decoder::Impl::idwt_fragment(CommandBuffer &cmd, const ViewBuffers &views)
+ 
+ bool Decoder::Impl::idwt(CommandBuffer &cmd, const ViewBuffers &views)
+ {
++    if (haar && fused_haar)
++    {
++        cmd.set_program(shaders.idwt_haar_fused[Configuration::get().get_precision()]);
++        cmd.enable_subgroup_size_control(false);
++        cmd.set_specialization_constant_mask(1);
++        for (int c = 0; c < NumComponents; c++)
++        {
++            // 420 chroma ends at level 1, producing half-size planes (16x16 per tile).
++            cmd.set_specialization_constant(0, chroma == ChromaSubsampling::Chroma420 && c != 0 ? 1 : 0);
++            for (int level = 0; level < DecompositionLevels; level++)
++                cmd.set_texture(0, level, *component_layer_views[c][level], *mirror_repeat_sampler);
++            cmd.set_storage_texture(0, 5, *views.planes[c]);
++            cmd.dispatch(component_layer_views[c][4]->get_view_width(),
++                         component_layer_views[c][4]->get_view_height(), 1);
++        }
++        cmd.set_specialization_constant_mask(0);
++        // Publish all complete planes before the caller's conversion pass samples them.
++        cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
++                    VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
++        return true;
++    }
++
+ 	cmd.set_program(shaders.idwt[Configuration::get().get_precision()]);
+ 	cmd.enable_subgroup_size_control(false);
+ 
 diff --git a/shaders/idwt.comp b/shaders/idwt.comp
 index e910c8b..18803c2 100644
 --- a/shaders/idwt.comp
@@ -72,6 +113,101 @@ index e910c8b..18803c2 100644
      local_index = gl_LocalInvocationIndex;
  
      load_image_with_apron();
+diff --git a/shaders/idwt_haar_fused.comp b/shaders/idwt_haar_fused.comp
+new file mode 100644
+index 0000000..b2473a6
+--- /dev/null
++++ b/shaders/idwt_haar_fused.comp
+@@ -0,0 +1,89 @@
++#version 450
++// Copyright (c) 2026 JMS1717
++// SPDX-License-Identifier: MIT
++// Optional multilevel Haar inverse; retains pair-local vertical/horizontal rounding.
++#if FP16
++#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
++#endif
++#if FP16 && PRECISION == 0
++#define FLOAT float16_t
++#else
++#define FLOAT float
++#endif
++layout(local_size_x=64) in;
++layout(constant_id=0) const int LastLevel=0;
++layout(set=0,binding=0) uniform sampler2DArray uLevel0;
++layout(set=0,binding=1) uniform sampler2DArray uLevel1;
++layout(set=0,binding=2) uniform sampler2DArray uLevel2;
++layout(set=0,binding=3) uniform sampler2DArray uLevel3;
++layout(set=0,binding=4) uniform sampler2DArray uLevel4;
++layout(set=0,binding=5) writeonly uniform image2D uOutput;
++shared float ping[1024];
++shared float pong[1024];
++FLOAT round_stage(FLOAT value)
++{
++#if PRECISION == 2
++    return value;
++#elif FP16
++    return FLOAT(float16_t(value));
++#else
++    return FLOAT(unpackHalf2x16(packHalf2x16(vec2(float(value),0.0))).x);
++#endif
++}
++vec4 bands(int level, ivec2 coord)
++{
++    // All invocations use the same level; explicit bindings avoid descriptor-index features.
++    if(level==4) return vec4(texelFetch(uLevel4,ivec3(coord,0),0).x,
++        texelFetch(uLevel4,ivec3(coord,1),0).x,texelFetch(uLevel4,ivec3(coord,2),0).x,texelFetch(uLevel4,ivec3(coord,3),0).x);
++    if(level==3) return vec4(0,texelFetch(uLevel3,ivec3(coord,1),0).x,
++        texelFetch(uLevel3,ivec3(coord,2),0).x,texelFetch(uLevel3,ivec3(coord,3),0).x);
++    if(level==2) return vec4(0,texelFetch(uLevel2,ivec3(coord,1),0).x,
++        texelFetch(uLevel2,ivec3(coord,2),0).x,texelFetch(uLevel2,ivec3(coord,3),0).x);
++    if(level==1) return vec4(0,texelFetch(uLevel1,ivec3(coord,1),0).x,
++        texelFetch(uLevel1,ivec3(coord,2),0).x,texelFetch(uLevel1,ivec3(coord,3),0).x);
++    return vec4(0,texelFetch(uLevel0,ivec3(coord,1),0).x,
++        texelFetch(uLevel0,ivec3(coord,2),0).x,texelFetch(uLevel0,ivec3(coord,3),0).x);
++}
++void main()
++{
++    ivec2 group=ivec2(gl_WorkGroupID.xy);
++    // Caller dispatches exactly the coarsest, aligned coefficient extent. Padded
++    // pixels are reconstructed normally; final writes guard the visible plane.
++    if(gl_LocalInvocationIndex==0)
++        ping[0]=texelFetch(uLevel4,ivec3(group,0),0).x;
++    barrier();
++    int n=1;
++    bool source_ping=true;
++    for(int level=4;level>=LastLevel;--level)
++    {
++        for(int i=int(gl_LocalInvocationIndex);i<n*n;i+=64)
++        {
++            ivec2 coord=ivec2(i%n,i/n);
++            vec4 b=bands(level,group*n+coord);
++            FLOAT a=FLOAT(source_ping?ping[coord.y*32+coord.x]:pong[coord.y*32+coord.x]);
++            FLOAT h=FLOAT(b.y),v=FLOAT(b.z),d=FLOAT(b.w);
++            FLOAT le=a-FLOAT(0.5)*v,lo=le+v;
++            FLOAT he=h-FLOAT(0.5)*d,ho=he+d;
++            le=round_stage(le);lo=round_stage(lo);he=round_stage(he);ho=round_stage(ho);
++            FLOAT p00=le-FLOAT(0.5)*he,p01=p00+he;
++            FLOAT p10=lo-FLOAT(0.5)*ho,p11=p10+ho;
++            p00=round_stage(p00);p01=round_stage(p01);
++            p10=round_stage(p10);p11=round_stage(p11);
++            int base=coord.y*64+coord.x*2;
++            if(source_ping){pong[base]=float(p00);pong[base+1]=float(p01);pong[base+32]=float(p10);pong[base+33]=float(p11);}
++            else{ping[base]=float(p00);ping[base+1]=float(p01);ping[base+32]=float(p10);ping[base+33]=float(p11);}
++        }
++        barrier();
++        source_ping=!source_ping;
++        n*=2;
++    }
++    for(int i=int(gl_LocalInvocationIndex);i<n*n;i+=64)
++    {
++        ivec2 local=ivec2(i%n,i/n),pixel=group*n+local;
++        if(all(lessThan(pixel,imageSize(uOutput))))
++        {
++            FLOAT value=FLOAT(source_ping?ping[local.y*32+local.x]:pong[local.y*32+local.x]);
++            imageStore(uOutput,pixel,vec4(float(value+FLOAT(0.5))));
++        }
++    }
++}
 diff --git a/shaders/quest3-manifest.json b/shaders/quest3-manifest.json
 new file mode 100644
 index 0000000..37fe336
@@ -11512,3 +11648,189 @@ index 9b8de39..d587ba1 100644
  }
  }
  #endif
+diff --git a/shaders/slangmosh.json b/shaders/slangmosh.json
+index da294ff..8538f02 100644
+--- a/shaders/slangmosh.json
++++ b/shaders/slangmosh.json
+@@ -1,71 +1,110 @@
+-{
+-	"shaders": [
+-		{
+-			"name": "dwt",
+-			"compute": true,
+-			"path": "dwt.comp",
+-			"variants": [
+-				{ "define": "PRECISION", "count": 3, "resolve": false },
+-				{ "define": "FP16", "count": 2, "resolve": true }
+-			]
+-		},
+-		{
+-			"name": "block_packing",
+-			"compute": true,
+-			"path": "block_packing.comp"
+-		},
+-		{
+-			"name": "idwt",
+-			"compute": true,
+-			"path": "idwt.comp",
+-			"variants": [
+-				{ "define": "PRECISION", "count": 3, "resolve": false },
+-				{ "define": "FP16", "count": 2, "resolve": true }
+-			]
+-		},
+-		{
+-			"name": "idwt_vs",
+-			"path": "idwt.vert"
+-		},
+-		{
+-			"name": "idwt_fs",
+-			"path": "idwt.frag",
+-			"variants": [
+-				{ "define": "CHROMA_CONFIG", "count": 3 }
+-			]
+-		},
+-		{
+-			"name": "power_to_db",
+-			"compute": true,
+-			"path": "power_to_db.comp"
+-		},
+-		{
+-			"name": "analyze_rate_control",
+-			"compute": true,
+-			"path": "analyze_rate_control.comp"
+-		},
+-		{
+-			"name": "analyze_rate_control_finalize",
+-			"compute": true,
+-			"path": "analyze_rate_control_finalize.comp"
+-		},
+-		{
+-			"name": "resolve_rate_control",
+-			"compute": true,
+-			"path": "resolve_rate_control.comp"
+-		},
+-		{
+-			"name": "wavelet_quant",
+-			"compute": true,
+-			"path": "wavelet_quant.comp"
+-		},
+-		{
+-			"name": "wavelet_dequant",
+-			"compute": true,
+-			"path": "wavelet_dequant.comp",
+-			"variants": [
+-				{ "define": "STORAGE_MODE", "count" : 3 }
+-			]
+-		}
+-	]
+-}
++{
++  "shaders": [
++    {
++      "name": "dwt",
++      "compute": true,
++      "path": "dwt.comp",
++      "variants": [
++        {
++          "define": "PRECISION",
++          "count": 3,
++          "resolve": false
++        },
++        {
++          "define": "FP16",
++          "count": 2,
++          "resolve": true
++        }
++      ]
++    },
++    {
++      "name": "block_packing",
++      "compute": true,
++      "path": "block_packing.comp"
++    },
++    {
++      "name": "idwt",
++      "compute": true,
++      "path": "idwt.comp",
++      "variants": [
++        {
++          "define": "PRECISION",
++          "count": 3,
++          "resolve": false
++        },
++        {
++          "define": "FP16",
++          "count": 2,
++          "resolve": true
++        }
++      ]
++    },
++    {
++      "name": "idwt_vs",
++      "path": "idwt.vert"
++    },
++    {
++      "name": "idwt_fs",
++      "path": "idwt.frag",
++      "variants": [
++        {
++          "define": "CHROMA_CONFIG",
++          "count": 3
++        }
++      ]
++    },
++    {
++      "name": "power_to_db",
++      "compute": true,
++      "path": "power_to_db.comp"
++    },
++    {
++      "name": "analyze_rate_control",
++      "compute": true,
++      "path": "analyze_rate_control.comp"
++    },
++    {
++      "name": "analyze_rate_control_finalize",
++      "compute": true,
++      "path": "analyze_rate_control_finalize.comp"
++    },
++    {
++      "name": "resolve_rate_control",
++      "compute": true,
++      "path": "resolve_rate_control.comp"
++    },
++    {
++      "name": "wavelet_quant",
++      "compute": true,
++      "path": "wavelet_quant.comp"
++    },
++    {
++      "name": "wavelet_dequant",
++      "compute": true,
++      "path": "wavelet_dequant.comp",
++      "variants": [
++        {
++          "define": "STORAGE_MODE",
++          "count": 3
++        }
++      ]
++    },
++    {
++      "name": "idwt_haar_fused",
++      "compute": true,
++      "path": "idwt_haar_fused.comp",
++      "variants": [
++        {
++          "define": "PRECISION",
++          "count": 3,
++          "resolve": false
++        },
++        {
++          "define": "FP16",
++          "count": 2,
++          "resolve": true
++        }
++      ]
++    }
++  ]
++}
