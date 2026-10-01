@@ -20,7 +20,7 @@ This is a port and research project, not a claim to authorship of those componen
 
 ## Start here
 
-1. Build or download the **Quest3-Pyrowave-Android** and **Quest3-Pyrowave-Windows** Actions artifacts.
+1. Download the matching APK and Windows ZIP from [alpha.6](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.6), or build the **Quest3-Pyrowave-Android** and **Quest3-Pyrowave-Windows** Actions artifacts. Read the [release setup and limitations](docs/RELEASE-alpha.6.md).
 2. Follow [build/install instructions](docs/BUILD.md). Install the distinct Quest APK, register the
    streamer driver in SteamVR and explicitly trust your headset in the dashboard.
 3. Start with **Quest 3 PyroWave 400 Mbps / 72 Hz candidate**, CDF 9/7, **Auto** decode and TCP.

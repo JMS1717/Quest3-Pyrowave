@@ -1,0 +1,133 @@
+{
+  "source_commit": "1508dd7efe9f454aacc6c3eb305b76a7bbba3b7c",
+  "build_run_id": 36933424039,
+  "codec": "PyroWave Haar Vulkan Compute",
+  "workers": 1,
+  "foveation": false,
+  "transport": "native USB / ALVR ADB TCP",
+  "scene": "Fixed colored HUD/reference chart",
+  "source_eye_size": [
+    2544,
+    2704
+  ],
+  "rows": [
+    {
+      "repeat_render": 1,
+      "fused_haar": 0,
+      "requested_hz": 120,
+      "chroma": "420",
+      "encoded_eye_size": [
+        2080,
+        2208
+      ],
+      "target_mbps": 1000,
+      "capture_requested_s": 45,
+      "fresh_submission_rate_fps": 100.73537871387781,
+      "instantaneous_fps_p1": 59.990948249999995,
+      "instantaneous_fps_p50": 119.99607,
+      "timestamp_gap_p95_ms": 16.7809135,
+      "timestamp_gap_max_ms": 25.167763,
+      "gpu_decode_p50_ms": 4.5429685,
+      "completion_p50_ms": 9.143829499999999,
+      "convert_p50_ms": 2.5771874,
+      "record_p50_ms": 0.83901,
+      "submit_wait_p50_ms": 8.278777,
+      "estimated_latency_p50_ms": 68.086815,
+      "payload_p50_mbps": 1003.8116,
+      "battery_temperature_start_c": 45.0,
+      "battery_temperature_end_c": 44.0,
+      "gpu_clock_start_hz": 690000000,
+      "gpu_clock_end_hz": 690000000,
+      "status": "measured"
+    },
+    {
+      "repeat_render": 0,
+      "fused_haar": 0,
+      "requested_hz": 120,
+      "chroma": "420",
+      "encoded_eye_size": [
+        2080,
+        2208
+      ],
+      "target_mbps": 1000,
+      "capture_requested_s": 45,
+      "fresh_submission_rate_fps": 99.66340197382091,
+      "instantaneous_fps_p1": 59.99305828,
+      "instantaneous_fps_p50": 119.99624,
+      "timestamp_gap_p95_ms": 16.73245,
+      "timestamp_gap_max_ms": 37.090628,
+      "gpu_decode_p50_ms": 4.58114585,
+      "completion_p50_ms": 9.19698,
+      "convert_p50_ms": 2.5665103,
+      "record_p50_ms": 0.8417705,
+      "submit_wait_p50_ms": 8.325079,
+      "estimated_latency_p50_ms": 65.58707,
+      "payload_p50_mbps": 1002.89344,
+      "battery_temperature_start_c": 44.0,
+      "battery_temperature_end_c": 44.0,
+      "gpu_clock_start_hz": 690000000,
+      "gpu_clock_end_hz": 690000000,
+      "status": "measured"
+    },
+    {
+      "repeat_render": 0,
+      "fused_haar": 1,
+      "requested_hz": 120,
+      "chroma": "420",
+      "encoded_eye_size": [
+        2080,
+        2208
+      ],
+      "target_mbps": 1000,
+      "capture_requested_s": 45,
+      "fresh_submission_rate_fps": 71.81143700861978,
+      "instantaneous_fps_p1": 59.990003370000004,
+      "instantaneous_fps_p50": 60.0015085,
+      "timestamp_gap_p95_ms": 16.815965499999997,
+      "timestamp_gap_max_ms": 24.939794,
+      "gpu_decode_p50_ms": 8.649479,
+      "completion_p50_ms": 13.244845,
+      "convert_p50_ms": 2.4891145,
+      "record_p50_ms": 0.830104,
+      "submit_wait_p50_ms": 12.411824,
+      "estimated_latency_p50_ms": 82.22647,
+      "payload_p50_mbps": 1003.10463,
+      "battery_temperature_start_c": 44.0,
+      "battery_temperature_end_c": 44.0,
+      "gpu_clock_start_hz": 690000000,
+      "gpu_clock_end_hz": 690000000,
+      "status": "measured"
+    }
+  ],
+  "readback": [
+    {
+      "pattern": "asymmetric",
+      "bytes": 245760,
+      "changed": 5235,
+      "max_error": 1,
+      "mae": 0.02130126953125,
+      "reference_psnr_db": 50.111021632533166,
+      "fused_psnr_db": 50.11088223408158,
+      "exact": false
+    },
+    {
+      "pattern": "native-asymmetric",
+      "bytes": 13777920,
+      "changed": 161517,
+      "max_error": 1,
+      "mae": 0.011722887054069119,
+      "reference_psnr_db": 26.307098138384486,
+      "fused_psnr_db": 26.307043596804128,
+      "exact": false
+    }
+  ],
+  "excluded_trial": "First reuse capture crossed the next client restart; 3075.858ms timestamp gap. Repeated as r2; excluded from acceptance.",
+  "limitations": [
+    "45s sequential cells, not thermal endurance or sustained120 acceptance",
+    "Fresh rate is submitted video graph events over capture time, not optical display FPS",
+    "Latency is ALVR estimate, not optical motion-to-photon",
+    "Reported battery temperature is not GPU die temperature",
+    "Source chart is fixed; no broad gameplay or in-headset quality acceptance"
+  ],
+  "decision": "Fused Haar stays off; correct limited readbacks but significant live decode/FPS regression. Eye-image reuse showed no clear FPS gain; keep optout available."
+}

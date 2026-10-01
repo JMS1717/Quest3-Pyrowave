@@ -163,3 +163,16 @@ metric starts before recording commands, so it is not simply submit-to-fence.
 Wait wall time includes queue scheduling and GPU work; subtracting GPU decode
 from completion does not isolate CPU cost. Use matching .13 native/Rust ABI and
 APK/server binaries: the control telemetry and frame-info layout changed together.
+
+### .13 measured acceptance
+
+The native asymmetric 4:2:0 fused readback passed the existing max-error <=1 /
+source-PSNR-loss <=0.05 dB gate. Live performance failed: the fixed-chart 45-second
+trial fell to 71.81 fresh FPS, 8.65 ms GPU decode and 13.24 ms completion. Keep
+fused Haar off. Pair-local controls produced 99.66–100.74 fresh FPS and 9.14–9.20 ms
+completion. Reuse did not show a clear FPS gain; keep the optout for comparison.
+One initial reuse trial overlapped the next client restart and was excluded,
+then repeated in a clean window. These sequential short observations do not
+validate sustained 120 FPS or thermal endurance. See the sanitized
+[timing/readback results](../results/DECODE-2026-10-01.json) and
+[alpha.6 setup](RELEASE-alpha.6.md).
