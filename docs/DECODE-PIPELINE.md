@@ -176,3 +176,19 @@ then repeated in a clean window. These sequential short observations do not
 validate sustained 120 FPS or thermal endurance. See the sanitized
 [timing/readback results](../results/DECODE-2026-10-01.json) and
 [alpha.6 setup](RELEASE-alpha.6.md).
+
+## Optional batched dequant (.14 candidate)
+
+The dequantizer previously dispatched each subband separately. A new opt-in path
+uses dispatch Z for adjacent bands of one component/level, after checking equal
+block count/stride and contiguous block offsets. Each workgroup retains its own
+shared storage and writes a different image layer. 4:2:0 dispatch count falls
+from 42 to 13; 4:4:4 falls from 48 to 15. Payload storage modes and the final
+write-to-sample barrier stay intact. The push-constant layout gains block count,
+so the generated shader header must match the C++ caller.
+
+It is off by default. Use `PYROWAVE_BATCH_DEQUANT=1` with the plain readback
+harness or `debug.q3pw.dequant_batch=1` with a matching .14 client, then restart.
+The property overrides the environment when present. Verify asymmetric small
+and native-size readbacks before APK deployment, then compare matched streaming
+windows with fused Haar off. This is a candidate, not a measured speedup.

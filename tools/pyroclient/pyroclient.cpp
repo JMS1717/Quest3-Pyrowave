@@ -641,6 +641,11 @@ extern "C" pyroclient *pyroclient_create_ex(uint32_t width, uint32_t height, int
         setenv("PYROWAVE_FUSED_HAAR", !strcmp(fused_prop, "1") ? "1" : "0", 1);
     LOGI("optional multilevel Haar: %s", wavelet == 2 && getenv("PYROWAVE_FUSED_HAAR") &&
          !strcmp(getenv("PYROWAVE_FUSED_HAAR"), "1") ? "enabled" : "disabled");
+    char batch_prop[PROP_VALUE_MAX] = {};
+    if (__system_property_get("debug.q3pw.dequant_batch", batch_prop) > 0)
+        setenv("PYROWAVE_BATCH_DEQUANT", !strcmp(batch_prop, "1") ? "1" : "0", 1);
+    LOGI("optional batched dequant: %s", getenv("PYROWAVE_BATCH_DEQUANT") &&
+         !strcmp(getenv("PYROWAVE_BATCH_DEQUANT"), "1") ? "enabled" : "disabled");
     pyroclient *c = new pyroclient();
     c->width = width; c->height = height; c->chroma444 = chroma444 != 0; c->full_range = full_range != 0;
     c->legall53 = wavelet == 53;

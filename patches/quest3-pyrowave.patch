@@ -1,5 +1,5 @@
 diff --git a/pyrowave_decoder.cpp b/pyrowave_decoder.cpp
-index 114818c..fc50c51 100644
+index 114818c..f2fa70d 100644
 --- a/pyrowave_decoder.cpp
 +++ b/pyrowave_decoder.cpp
 @@ -7,6 +7,8 @@
@@ -11,15 +11,59 @@ index 114818c..fc50c51 100644
  
  namespace PyroWave
  {
-@@ -23,6 +25,7 @@ struct DequantizerPushData
+@@ -19,10 +21,13 @@ struct DequantizerPushData
+ 	int32_t output_layer;
+ 	int32_t block_offset_32x32;
+ 	int32_t block_stride_32x32;
++	int32_t block_count_32x32;
+ };
  
  struct Decoder::Impl final : public WaveletBuffers
  {
 +	bool fused_haar = getenv("PYROWAVE_FUSED_HAAR") && strcmp(getenv("PYROWAVE_FUSED_HAAR"), "1") == 0;
++	bool batch_dequant = getenv("PYROWAVE_BATCH_DEQUANT") && strcmp(getenv("PYROWAVE_BATCH_DEQUANT"), "1") == 0;
  	bool idwt_enabled = true;   // XRW Experiment 3
  
  	BufferHandle dequant_offset_buffer, payload_data;
-@@ -717,6 +720,28 @@ bool Decoder::Impl::idwt_fragment(CommandBuffer &cmd, const ViewBuffers &views)
+@@ -353,13 +358,26 @@ bool Decoder::Impl::dequant(CommandBuffer &cmd)
+ 			snprintf(label, sizeof(label), "level %d - component %d", level, component);
+ 			cmd.begin_region(label);
+ 
+-			for (int band = (level == DecompositionLevels - 1 ? 0 : 1); band < 4; band++)
++			for (int band = (level == DecompositionLevels - 1 ? 0 : 1); band < 4;)
+ 			{
+ 				push.resolution.x = wavelet_img_high_res->get_width(level);
+ 				push.resolution.y = wavelet_img_high_res->get_height(level);
+ 				push.output_layer = band;
+ 				push.block_offset_32x32 = block_meta[component][level][band].block_offset_32x32;
+ 				push.block_stride_32x32 = block_meta[component][level][band].block_stride_32x32;
++                push.block_count_32x32 = block_meta[component][level][band].block_count_32x32;
++                // Bands at a component/level have contiguous, equal-sized block maps.
++                // Batch only a verified contiguous run; preserve the single-band control.
++                int band_count = 1;
++                while (batch_dequant && band + band_count < 4)
++                {
++                    const auto &next = block_meta[component][level][band + band_count];
++                    if (next.block_count_32x32 != push.block_count_32x32 ||
++                        next.block_stride_32x32 != push.block_stride_32x32 ||
++                        next.block_offset_32x32 != push.block_offset_32x32 + band_count * push.block_count_32x32)
++                        break;
++                    band_count++;
++                }
+ 				cmd.push_constants(&push, 0, sizeof(push));
+ 
+ 				cmd.set_storage_texture(0, 0, *component_layer_views[component][level]);
+@@ -380,7 +398,8 @@ bool Decoder::Impl::dequant(CommandBuffer &cmd)
+ 				else
+ 					cmd.set_storage_buffer(0, 2, *payload_data);
+ 
+-				cmd.dispatch((push.resolution.x + 31) / 32, (push.resolution.y + 31) / 32, 1);
++				cmd.dispatch((push.resolution.x + 31) / 32, (push.resolution.y + 31) / 32, band_count);
++                band += band_count;
+ 			}
+ 
+ 			cmd.end_region();
+@@ -717,6 +736,28 @@ bool Decoder::Impl::idwt_fragment(CommandBuffer &cmd, const ViewBuffers &views)
  
  bool Decoder::Impl::idwt(CommandBuffer &cmd, const ViewBuffers &views)
  {
@@ -12756,4 +12800,42 @@ index da294ff..b7bbaf3 100644
 +      ]
 +    }
 +  ]
+ }
+diff --git a/shaders/wavelet_dequant.comp b/shaders/wavelet_dequant.comp
+index ebce604..42fa782 100644
+--- a/shaders/wavelet_dequant.comp
++++ b/shaders/wavelet_dequant.comp
+@@ -57,6 +57,7 @@ layout(push_constant) uniform Registers
+     int output_layer;
+     int block_offset_32x32;
+     int block_stride_32x32;
++    int block_count_32x32;
+ } registers;
+ 
+ #if STORAGE_MODE == 1
+@@ -221,7 +222,9 @@ void main()
+ {
+     uint local_index = gl_SubgroupID * gl_SubgroupSize + gl_SubgroupInvocationID;
+ 
++    int output_layer = registers.output_layer + int(gl_WorkGroupID.z);
+     int block_index_32x32 = int(registers.block_offset_32x32 +
++        gl_WorkGroupID.z * registers.block_count_32x32 +
+         gl_WorkGroupID.y * registers.block_stride_32x32 +
+         gl_WorkGroupID.x);
+ 
+@@ -243,7 +246,7 @@ void main()
+     {
+         for (int j = 0; j < 2; j++)
+             for (int i = 0; i < 4; i++)
+-                imageStore(uDequantImg, ivec3(coord + ivec2(i, j), registers.output_layer), vec4(0.0));
++                imageStore(uDequantImg, ivec3(coord + ivec2(i, j), output_layer), vec4(0.0));
+         return;
+     }
+ 
+@@ -387,5 +390,5 @@ void main()
+     // Write output.
+     for (int j = 0; j < 2; j++)
+         for (int i = 0; i < 4; i++)
+-            imageStore(uDequantImg, ivec3(coord + ivec2(i, j), registers.output_layer), vec4(v[j][i]));
++            imageStore(uDequantImg, ivec3(coord + ivec2(i, j), output_layer), vec4(v[j][i]));
  }
