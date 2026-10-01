@@ -103,6 +103,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --release -p alvr_session --lib
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --release -p alvr_packets --lib
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --release -p alvr_server_core --lib
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --release -p alvr_server_io --lib initialization_tests

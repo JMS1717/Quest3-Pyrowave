@@ -39,6 +39,21 @@ class BenchTests(unittest.TestCase):
     def test_percentiles_filter_invalid_numbers(self):
         self.assertEqual(distribution([None,float('nan'),1,3])['p50'],2)
 
+    def test_eye_copy_paths_use_window_deltas_and_wall_timings(self):
+        events=[{'event_type':{'id':'HeadsetTelemetry','data':{'pyrowave':p}}}
+            for p in [
+                {'direct_eye_copies':100,'staging_eye_copies':40,'eye_render_ms':[3.0],
+                 'eye_acquire_wait_ms':[0.2],'eye_release_ms':[0.1]},
+                {'direct_eye_copies':120,'staging_eye_copies':40,'eye_render_ms':[4.0]}]]
+        r=summarise(events)
+        self.assertEqual(r['eye_copy_counter_deltas'],{'direct_eye_copies':20,'staging_eye_copies':0})
+        self.assertEqual(r['eye_render_ms']['p50'],3.5)
+        self.assertEqual(r['eye_acquire_wait_ms']['p50'],0.2)
+        events.append({'event_type':{'id':'HeadsetTelemetry','data':{'pyrowave':{
+            'direct_eye_copies':2,'staging_eye_copies':0}}}})
+        self.assertIsNone(summarise(events)['eye_copy_counter_deltas']['direct_eye_copies'])
+        self.assertIsNone(summarise([])['eye_copy_counter_deltas']['staging_eye_copies'])
+
     def test_submission_rate_exposes_missed_slots(self):
         from tools.quest3.bench import summarise
         events=[{'capture_elapsed_s':t,'event':{'event_type':{

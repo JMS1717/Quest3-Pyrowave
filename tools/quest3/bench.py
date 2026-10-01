@@ -109,6 +109,18 @@ def summarise(events, requested_hz=None):
     for field in ('convert_ms','record_ms','wait_ms'):
         result['native_'+field]=distribution([v for t in telemetry if t.get('pyrowave')
             for v in t['pyrowave'].get(field,[])])
+    for field in ('eye_acquire_wait_ms', 'eye_render_ms', 'eye_release_ms'):
+        result[field]=distribution([v for t in telemetry if t.get('pyrowave')
+            for v in t['pyrowave'].get(field,[])])
+    result['eye_timing_definition']='Client CPU wall time: OpenXR acquire/wait, renderer call (including its copy fence), and OpenXR release. These are not GPU timer-query durations.'
+    result['eye_copy_counter_deltas']={}
+    pyro=[t['pyrowave'] for t in telemetry if t.get('pyrowave')]
+    for field in ('direct_eye_copies', 'staging_eye_copies'):
+        values=[t.get(field) for t in pyro]
+        # Missing/reset counters cannot establish which path ran in this window.
+        valid=len(values)>1 and all(isinstance(v,int) and not isinstance(v,bool) and v>=0 for v in values)
+        monotonic=valid and all(b>=a for a,b in zip(values,values[1:]))
+        result['eye_copy_counter_deltas'][field]=values[-1]-values[0] if monotonic else None
     if requested_hz and graphs:
         fps=result['metrics']['client_fps']
         result['sustained_requested_fps']=fps is not None and fps['p01']>=requested_hz*.98

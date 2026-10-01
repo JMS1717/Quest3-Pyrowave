@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7b..0890acb 100644
+index 7cead7b..05c13a9 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,7 +182,7 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -16,7 +16,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -25,7 +25,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -34,7 +34,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -43,7 +43,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -52,7 +52,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -61,7 +61,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -70,7 +70,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -79,7 +79,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "dirs",
   "once_cell",
@@ -88,7 +88,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -97,7 +97,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_common",
   "egui",
@@ -106,7 +106,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -115,7 +115,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -124,7 +124,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -133,7 +133,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -142,7 +142,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -151,7 +151,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -160,7 +160,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -169,7 +169,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_common",
   "jni",
@@ -178,7 +178,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -187,7 +187,7 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -196,12 +196,12 @@ index 7cead7b..0890acb 100644
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..95a7d56 100644
+index ae00ce8..611e20e 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -209,7 +209,7 @@ index ae00ce8..95a7d56 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.14"
++version = "20.13.0-quest3.pyro.15"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -1877,20 +1877,25 @@ index 0000000..16daa19
 +    }
 +}
 diff --git a/alvr/client_core/src/video_decoder/telemetry.rs b/alvr/client_core/src/video_decoder/telemetry.rs
-index da58258..8bcc7ec 100644
+index da58258..3094639 100644
 --- a/alvr/client_core/src/video_decoder/telemetry.rs
 +++ b/alvr/client_core/src/video_decoder/telemetry.rs
-@@ -29,6 +29,9 @@ static STATE: Mutex<State> = Mutex::new(State {
+@@ -29,6 +29,14 @@ static STATE: Mutex<State> = Mutex::new(State {
          encoded_height: 0,
          gpu_decode_ms: vec![],
          fence_ms: vec![],
 +        convert_ms: vec![],
 +        record_ms: vec![],
 +        wait_ms: vec![],
++        eye_acquire_wait_ms: vec![],
++        eye_render_ms: vec![],
++        eye_release_ms: vec![],
++        direct_eye_copies: 0,
++        staging_eye_copies: 0,
      },
  });
  
-@@ -55,12 +58,21 @@ pub fn start(encoded_width: u32, encoded_height: u32) {
+@@ -55,12 +63,35 @@ pub fn start(encoded_width: u32, encoded_height: u32) {
      state.stats.encoded_height = encoded_height;
  }
  
@@ -1909,22 +1914,53 @@ index da58258..8bcc7ec 100644
 +        state.stats.convert_ms.push(convert_ms);
 +        state.stats.record_ms.push(record_ms);
 +        state.stats.wait_ms.push(wait_ms);
++    }
++}
++
++/// Called only after an actual Quest PyroWave eye redraw, including a forced
++/// repeat redraw. Skipped/reused OpenXR images are not counted as copies.
++pub fn record_eye_copy(acquire_wait_ms: f32, render_ms: f32, release_ms: f32, direct: bool) {
++    let mut state = STATE.lock().unwrap();
++    if !state.active { return; }
++    if direct { state.stats.direct_eye_copies += 1; }
++    else { state.stats.staging_eye_copies += 1; }
++    if state.stats.eye_render_ms.len() < MAX_SAMPLES {
++        state.stats.eye_acquire_wait_ms.push(acquire_wait_ms);
++        state.stats.eye_render_ms.push(render_ms);
++        state.stats.eye_release_ms.push(release_ms);
      }
  }
  
-@@ -87,6 +99,9 @@ pub fn take() -> Option<PyroWaveDecodeStats> {
+@@ -87,6 +118,12 @@ pub fn take() -> Option<PyroWaveDecodeStats> {
      let snapshot = state.stats.clone();
      state.stats.gpu_decode_ms.clear();
      state.stats.fence_ms.clear();
 +    state.stats.convert_ms.clear();
 +    state.stats.record_ms.clear();
 +    state.stats.wait_ms.clear();
++    state.stats.eye_acquire_wait_ms.clear();
++    state.stats.eye_render_ms.clear();
++    state.stats.eye_release_ms.clear();
      Some(snapshot)
  }
  
-@@ -113,10 +128,17 @@ mod tests {
+@@ -101,6 +138,8 @@ mod tests {
+         assert_eq!(take().map(|s| s.gpu_decode_ms.len()), Some(0));
+         record_frame(3.1, 4.8);
+         record_frame(3.3, 5.0);
++        record_eye_copy(0.1, 3.0, 0.2, true);
++        record_eye_copy(0.2, 4.0, 0.3, false);
+         set_counters(Counters {
+             complete: 2,
+             partial: 1,
+@@ -112,18 +151,36 @@ mod tests {
+         assert_eq!(first.gpu_decode_ms, vec![3.1, 3.3]);
          assert_eq!(first.fence_ms, vec![4.8, 5.0]);
          assert_eq!((first.complete, first.partial, first.dropped), (2, 1, 3));
++        assert_eq!(first.eye_render_ms, vec![3.0, 4.0]);
++        assert_eq!(first.eye_acquire_wait_ms, vec![0.1, 0.2]);
++        assert_eq!(first.eye_release_ms, vec![0.2, 0.3]);
++        assert_eq!((first.direct_eye_copies, first.staging_eye_copies), (1, 1));
  
 -        record_frame(3.2, 4.9);
 +        record_frame_details(3.2, 4.9, 1.1, 0.2, 4.6);
@@ -1939,9 +1975,24 @@ index da58258..8bcc7ec 100644
 +        assert_eq!(second.convert_ms, vec![1.1]);
 +        assert_eq!(second.record_ms, vec![0.2]);
 +        assert_eq!(second.wait_ms, vec![4.6]);
++        assert!(second.eye_render_ms.is_empty());
++        assert_eq!((second.direct_eye_copies, second.staging_eye_copies), (1, 1));
  
          for _ in 0..(MAX_SAMPLES + 10) {
              record_frame(1.0, 1.0);
++            record_eye_copy(1.0, 2.0, 0.5, true);
+         }
+-        assert_eq!(take().unwrap().gpu_decode_ms.len(), MAX_SAMPLES);
++        let capped = take().unwrap();
++        assert_eq!(capped.gpu_decode_ms.len(), MAX_SAMPLES);
++        assert_eq!(capped.eye_render_ms.len(), MAX_SAMPLES);
++        assert_eq!(capped.direct_eye_copies, (MAX_SAMPLES + 11) as u64);
+ 
+         start(1984, 896);
+         assert_eq!(take().unwrap().complete, 0, "a new stream starts from zero");
++        assert_eq!(take().unwrap().direct_eye_copies, 0);
+     }
+ }
 diff --git a/alvr/client_openxr/Cargo.toml b/alvr/client_openxr/Cargo.toml
 index 995394b..d9d9cf1 100644
 --- a/alvr/client_openxr/Cargo.toml
@@ -2793,7 +2844,7 @@ index 0000000..766b412
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..a31f12a 100644
+index b87dfe9..9d621a5 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -59,17 +59,9 @@ impl ParsedStreamConfig {
@@ -2850,16 +2901,22 @@ index b87dfe9..a31f12a 100644
              input_thread: None,
              input_thread_running,
              config,
-@@ -294,6 +286,8 @@ impl StreamContext {
-     }
+@@ -310,6 +302,14 @@ impl StreamContext {
+         };
  
-     pub fn maybe_initialize_decoder(&mut self, codec: CodecType, config_nal: Vec<u8>) {
-+        self.renderer
-+            .set_import_copy_sync(codec == CodecType::PyroWave);
-         let new_config = VideoDecoderConfig {
-             codec,
-             force_software_decoder: self.config.force_software_decoder,
-@@ -338,12 +332,22 @@ impl StreamContext {
+         if let Some(config) = maybe_config {
++            self.pending_frame = None;
++            self.released_eye_images_valid = false;
++            self.renderer.set_import_copy_sync(codec == CodecType::PyroWave);
++            self.renderer.set_direct_eye_copy(
++                codec == CodecType::PyroWave && alvr_system_info::platform() == Platform::Quest3
++                    && crate::extra_extensions::perf_settings::system_property("debug.q3pw.direct_eye_copy") == "1",
++                crate::extra_extensions::perf_settings::system_property("debug.q3pw.direct_flip_y") != "0",
++            );
+             let (mut sink, source) = video_decoder::create_decoder(
+                 config.clone(),
+                 {
+@@ -338,12 +338,22 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -2883,7 +2940,7 @@ index b87dfe9..a31f12a 100644
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -357,6 +361,8 @@ impl StreamContext {
+@@ -357,6 +367,8 @@ impl StreamContext {
  
      pub fn update_real_time_config(&mut self, config: &RealTimeConfig) {
          self.config.passthrough = config.passthrough.clone();
@@ -2892,7 +2949,7 @@ index b87dfe9..a31f12a 100644
      }
  
      pub fn render(
-@@ -369,10 +375,17 @@ impl StreamContext {
+@@ -369,10 +381,17 @@ impl StreamContext {
                  frame_interval.as_secs_f32() * DECODER_MAX_TIMEOUT_MULTIPLIER,
              );
          let mut frame_result = self.pending_frame.take();
@@ -2911,7 +2968,7 @@ index b87dfe9..a31f12a 100644
              }
          }
  
-@@ -401,37 +414,47 @@ impl StreamContext {
+@@ -401,37 +420,59 @@ impl StreamContext {
              ]);
          }
  
@@ -2951,6 +3008,7 @@ index b87dfe9..a31f12a 100644
 +        if !latest_only || !self.reuse_released_eye_images
 +            || !buffer_ptr.is_null() || !self.released_eye_images_valid
 +        {
++            let acquire_start = Instant::now();
 +            let left_swapchain_idx = self.swapchains[0].acquire_image().unwrap();
 +            let right_swapchain_idx = self.swapchains[1].acquire_image().unwrap();
 +
@@ -2960,9 +3018,10 @@ index b87dfe9..a31f12a 100644
 +            self.swapchains[1]
 +                .wait_image(xr::Duration::INFINITE)
 +                .unwrap();
- 
--        self.swapchains[0].release_image().unwrap();
--        self.swapchains[1].release_image().unwrap();
++
++            let render_start = Instant::now();
++            let acquire_wait_ms = acquire_start.elapsed().as_secs_f32() * 1000.0;
++
 +            unsafe {
 +                self.renderer.render(
 +                    buffer_ptr,
@@ -2982,8 +3041,18 @@ index b87dfe9..a31f12a 100644
 +                )
 +            };
 +
++            let eye_render_ms = render_start.elapsed().as_secs_f32() * 1000.0;
++            let release_start = Instant::now();
+ 
+-        self.swapchains[0].release_image().unwrap();
+-        self.swapchains[1].release_image().unwrap();
 +            self.swapchains[0].release_image().unwrap();
 +            self.swapchains[1].release_image().unwrap();
++            if latest_only {
++                video_decoder::telemetry::record_eye_copy(acquire_wait_ms, eye_render_ms,
++                    release_start.elapsed().as_secs_f32() * 1000.0,
++                    self.renderer.last_copy_was_direct());
++            }
 +            self.released_eye_images_valid = true;
 +        }
  
@@ -3379,6 +3448,50 @@ index 3be9319..d3a1d7c 100644
          assert_eq!(r["settings"]["advanced_changes"], json!([]));
          assert_eq!(r["encoded_size"], json!([1984, 896]));
          assert_eq!(r["window"]["frames"], 900);
+diff --git a/alvr/graphics/resources/direct_eye_fragment.glsl b/alvr/graphics/resources/direct_eye_fragment.glsl
+new file mode 100644
+index 0000000..4a61a5f
+--- /dev/null
++++ b/alvr/graphics/resources/direct_eye_fragment.glsl
+@@ -0,0 +1,23 @@
++#version 300 es
++#extension GL_OES_EGL_image_external_essl3 : require
++precision highp float;
++uniform samplerExternalOES tex;
++uniform int fix_limited_range;
++uniform int srgb_correction;
++uniform float encoding_gamma;
++in vec2 uv;
++out vec4 out_color;
++void main() {
++    vec3 color = texture(tex, uv).rgb;
++    if (fix_limited_range != 0)
++        color = vec3(16.0 / 255.0) + (219.0 / 255.0) * color;
++    if (srgb_correction != 0) {
++        vec3 low = color / 12.92;
++        vec3 high = pow((color + vec3(0.055)) / 1.055, vec3(2.4));
++        color = mix(high, low, lessThan(color, vec3(0.04045)));
++    }
++    if (encoding_gamma != 0.0)
++        color = mix(pow(max(color, vec3(0.0)), vec3(encoding_gamma)),
++                    color, lessThan(color, vec3(0.0)));
++    out_color = vec4(color, 1.0);
++}
+diff --git a/alvr/graphics/resources/direct_eye_vertex.glsl b/alvr/graphics/resources/direct_eye_vertex.glsl
+new file mode 100644
+index 0000000..fcae99d
+--- /dev/null
++++ b/alvr/graphics/resources/direct_eye_vertex.glsl
+@@ -0,0 +1,9 @@
++#version 300 es
++uniform int view_idx;
++uniform int flip_y;
++out vec2 uv;
++void main() {
++    vec2 p = vec2(gl_VertexID & 1, gl_VertexID >> 1);
++    gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
++    uv = vec2((p.x + float(view_idx)) * 0.5, flip_y != 0 ? 1.0 - p.y : p.y);
++}
 diff --git a/alvr/graphics/resources/performance.wgsl b/alvr/graphics/resources/performance.wgsl
 new file mode 100644
 index 0000000..bc6bee0
@@ -3400,11 +3513,192 @@ index 0000000..bc6bee0
 +@fragment fn fragment_main(in: VertexOutput) -> @location(0) vec4<f32> {
 +    return textureSample(panel, panel_sampler, in.uv);
 +}
+diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
+new file mode 100644
+index 0000000..f1f3e52
+--- /dev/null
++++ b/alvr/graphics/src/direct_eye.rs
+@@ -0,0 +1,174 @@
++//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
++//! Vulkan decoding and its protected consumer lease are unchanged. glFinish is
++//! deliberately retained until BOTH eyes have finished sampling that lease.
++use super::{GraphicsContext, GL_TEXTURE_EXTERNAL_OES};
++use alvr_common::glam::UVec2;
++use glow::{self as gl, HasContext};
++use std::{ffi::c_void, num::NonZeroU32, rc::Rc};
++
++pub struct DirectEyeConfig {
++    pub textures: [Vec<u32>; 2],
++    pub resolution: UVec2,
++    pub srgb_correction: bool,
++    pub fix_limited_range: bool,
++    pub encoding_gamma: f32,
++}
++
++pub struct DirectEyeRenderer {
++    context: Rc<GraphicsContext>,
++    program: gl::Program,
++    source_texture: gl::Texture,
++    vertex_array: gl::VertexArray,
++    framebuffers: [Vec<gl::Framebuffer>; 2],
++    resolution: UVec2,
++    view_idx: gl::UniformLocation,
++    flip_y: gl::UniformLocation,
++    flip: bool,
++}
++
++unsafe fn compile_program(gl: &gl::Context) -> Result<gl::Program, String> {
++    let program = gl.create_program()?;
++    let mut shaders = Vec::new();
++    let result = (|| {
++        for (kind, source) in [
++            (gl::VERTEX_SHADER, include_str!("../resources/direct_eye_vertex.glsl")),
++            (gl::FRAGMENT_SHADER, include_str!("../resources/direct_eye_fragment.glsl")),
++        ] {
++            let shader = gl.create_shader(kind)?;
++            shaders.push(shader);
++            gl.shader_source(shader, source);
++            gl.compile_shader(shader);
++            if !gl.get_shader_compile_status(shader) {
++                return Err(gl.get_shader_info_log(shader));
++            }
++            gl.attach_shader(program, shader);
++        }
++        gl.link_program(program);
++        if !gl.get_program_link_status(program) {
++            return Err(gl.get_program_info_log(program));
++        }
++        Ok(program)
++    })();
++    for shader in shaders { gl.delete_shader(shader); }
++    if result.is_err() { gl.delete_program(program); }
++    result
++}
++
++impl DirectEyeRenderer {
++    /// Any compile/import-target failure leaves the existing renderer usable.
++    pub fn new(context: Rc<GraphicsContext>, config: &DirectEyeConfig,
++               flip: bool) -> Result<Self, String> {
++        context.make_current();
++        let gl = &context.gl_context;
++        unsafe {
++            let program = compile_program(gl)?;
++            let source_texture = match gl.create_texture() {
++                Ok(texture) => texture,
++                Err(e) => { gl.delete_program(program); return Err(e); }
++            };
++            let vertex_array = match gl.create_vertex_array() {
++                Ok(array) => array,
++                Err(e) => {
++                    gl.delete_texture(source_texture);
++                    gl.delete_program(program);
++                    return Err(e);
++                }
++            };
++            let mut framebuffers: [Vec<gl::Framebuffer>; 2] = [vec![], vec![]];
++            let setup = (|| {
++                let location = |name: &str| gl.get_uniform_location(program, name)
++                    .ok_or_else(|| format!("Direct eye copy missing uniform {name}"));
++                let view_idx = location("view_idx")?;
++                let flip_y = location("flip_y")?;
++                gl.use_program(Some(program));
++                gl.uniform_1_i32(Some(&location("tex")?), 0);
++                gl.uniform_1_i32(Some(&location("fix_limited_range")?), config.fix_limited_range as i32);
++                gl.uniform_1_i32(Some(&location("srgb_correction")?), config.srgb_correction as i32);
++                gl.uniform_1_f32(Some(&location("encoding_gamma")?), config.encoding_gamma);
++                for eye in 0..2 {
++                    if config.textures[eye].is_empty() {
++                        return Err("Direct eye copy empty swapchain".into());
++                    }
++                    for &id in &config.textures[eye] {
++                        let texture = gl::NativeTexture(NonZeroU32::new(id)
++                            .ok_or("Direct eye copy zero texture")?);
++                        let framebuffer = gl.create_framebuffer()?;
++                        framebuffers[eye].push(framebuffer);
++                        gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, Some(framebuffer));
++                        gl.framebuffer_texture_2d(gl::DRAW_FRAMEBUFFER, gl::COLOR_ATTACHMENT0,
++                                                 gl::TEXTURE_2D, Some(texture), 0);
++                        if gl.check_framebuffer_status(gl::DRAW_FRAMEBUFFER) != gl::FRAMEBUFFER_COMPLETE {
++                            return Err("Direct eye copy framebuffer incomplete".into());
++                        }
++                    }
++                }
++                Ok((view_idx, flip_y))
++            })();
++            gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, None);
++            gl.use_program(None);
++            match setup {
++                Ok((view_idx, flip_y)) => Ok(Self { context, program, source_texture,
++                    vertex_array, framebuffers, resolution: config.resolution,
++                    view_idx, flip_y, flip }),
++                Err(e) => {
++                    for framebuffer in framebuffers.into_iter().flatten() { gl.delete_framebuffer(framebuffer); }
++                    gl.delete_vertex_array(vertex_array);
++                    gl.delete_texture(source_texture);
++                    gl.delete_program(program);
++                    Err(e)
++                }
++            }
++        }
++    }
++
++    /// The caller has acquired/waited both indices and keeps the PyroWave source
++    /// leased until this synchronous copy returns. These textures are borrowed;
++    /// this object owns ONLY its FBOs/program/external texture/VAO.
++    pub unsafe fn render(&self, buffer: *mut c_void, indices: [u32; 2]) {
++        self.context.make_current();
++        let gl = &self.context.gl_context;
++        self.context.render_ahardwarebuffer_using_texture(buffer, self.source_texture, || {
++            gl.use_program(Some(self.program));
++            gl.bind_vertex_array(Some(self.vertex_array));
++            gl.viewport(0, 0, self.resolution.x as i32, self.resolution.y as i32);
++            for state in [gl::SCISSOR_TEST, gl::STENCIL_TEST, gl::DEPTH_TEST, gl::BLEND, gl::CULL_FACE] {
++                gl.disable(state);
++            }
++            gl.color_mask(true, true, true, true);
++            // GLES normally always encodes sRGB FBO writes. WGPU may have used
++            // EXT_sRGB_write_control, so restore its enabled state where present.
++            if gl.supported_extensions().contains("GL_EXT_sRGB_write_control") {
++                gl.enable(0x8DB9); // GL_FRAMEBUFFER_SRGB_EXT
++            }
++            gl.active_texture(gl::TEXTURE0);
++            gl.bind_texture(GL_TEXTURE_EXTERNAL_OES, Some(self.source_texture));
++            gl.bind_sampler(0, None);
++            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
++            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
++            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
++            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
++            gl.uniform_1_i32(Some(&self.flip_y), self.flip as i32);
++            for (eye, &index) in indices.iter().enumerate() {
++                gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, Some(self.framebuffers[eye][index as usize]));
++                gl.uniform_1_i32(Some(&self.view_idx), eye as i32);
++                gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
++            }
++            gl.finish();
++            gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, None);
++            gl.bind_vertex_array(None);
++        });
++    }
++}
++
++impl Drop for DirectEyeRenderer {
++    fn drop(&mut self) {
++        self.context.make_current();
++        let gl = &self.context.gl_context;
++        unsafe {
++            for framebuffer in self.framebuffers.iter().flatten() { gl.delete_framebuffer(*framebuffer); }
++            gl.delete_vertex_array(self.vertex_array);
++            gl.delete_texture(self.source_texture);
++            gl.delete_program(self.program);
++        }
++    }
++}
 diff --git a/alvr/graphics/src/lib.rs b/alvr/graphics/src/lib.rs
-index 3485570..ffe9a39 100644
+index 3485570..62b316f 100644
 --- a/alvr/graphics/src/lib.rs
 +++ b/alvr/graphics/src/lib.rs
-@@ -1,8 +1,10 @@
+@@ -1,8 +1,11 @@
++mod direct_eye;
  mod lobby;
 +mod performance;
  mod staging;
@@ -3644,56 +3938,143 @@ index febd2c3..779de33 100644
          );
      }
 diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
-index 737b7d0..4be1eaa 100644
+index 737b7d0..1a77cb3 100644
 --- a/alvr/graphics/src/stream.rs
 +++ b/alvr/graphics/src/stream.rs
-@@ -72,6 +72,7 @@ pub struct StreamRenderer {
+@@ -1,10 +1,10 @@
+-use super::{staging::StagingRenderer, GraphicsContext, MAX_PUSH_CONSTANTS_SIZE};
++use super::{direct_eye::{DirectEyeConfig, DirectEyeRenderer}, staging::StagingRenderer, GraphicsContext, MAX_PUSH_CONSTANTS_SIZE};
+ use alvr_common::{
+     glam::{self, Mat4, Quat, UVec2, Vec3, Vec4},
+     Fov,
+ };
+ use alvr_session::{FoveatedEncodingConfig, PassthroughMode, UpscalingConfig};
+-use std::{collections::HashMap, ffi::c_void, iter, mem, rc::Rc};
++use std::{cell::Cell, collections::HashMap, ffi::c_void, iter, mem, ptr, rc::Rc};
+ use wgpu::{
+     hal::{api, gles},
+     include_wgsl, BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayoutDescriptor,
+@@ -72,6 +72,12 @@ pub struct StreamRenderer {
      ffe_params_buffer: Buffer,
      /// `None` when foveated encoding is off, in which case there is nothing to steer.
      foveated_encoding: Option<(UVec2, FoveatedEncodingConfig)>,
 +    wait_for_import_copy: bool,
++    direct_eye_config: Option<DirectEyeConfig>,
++    direct_eye_renderer: Option<DirectEyeRenderer>,
++    direct_eye_enabled: bool,
++    leased_pyrowave_buffer: Cell<*mut c_void>,
++    last_copy_direct: Cell<bool>,
  }
  
  impl StreamRenderer {
-@@ -298,9 +299,14 @@ impl StreamRenderer {
+@@ -90,6 +96,13 @@ impl StreamRenderer {
+     ) -> Self {
+         let device = &context.device;
+ 
++        let direct_eye_config = (base_view_resolution == target_view_resolution
++            && foveated_encoding.is_none() && upscaling.is_none()
++            && matches!(target_format, glow::SRGB8_ALPHA8 | glow::RGBA8))
++            .then(|| DirectEyeConfig { textures: swapchain_textures.clone(),
++                resolution: target_view_resolution, srgb_correction: enable_srgb_correction,
++                fix_limited_range, encoding_gamma });
++
+         let target_format = super::gl_format_to_wgpu(target_format);
+ 
+         let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+@@ -298,9 +311,40 @@ impl StreamRenderer {
              views_objects: view_objects.try_into().unwrap(),
              ffe_params_buffer,
              foveated_encoding: foveated_encoding.map(|c| (base_view_resolution, c)),
 +            wait_for_import_copy: false,
++            direct_eye_config,
++            direct_eye_renderer: None,
++            direct_eye_enabled: false,
++            leased_pyrowave_buffer: Cell::new(ptr::null_mut()),
++            last_copy_direct: Cell::new(false),
          }
      }
  
 +    pub fn set_import_copy_sync(&mut self, enabled: bool) {
 +        self.wait_for_import_copy = enabled;
++        // Called before decoder replacement: never retain a pointer into a
++        // destroyed decoder's pool. Other codecs do not provide this lease.
++        self.leased_pyrowave_buffer.set(ptr::null_mut());
++        self.last_copy_direct.set(false);
++        self.direct_eye_enabled = false;
 +    }
++
++    pub fn set_direct_eye_copy(&mut self, requested: bool, flip_y: bool) {
++        self.direct_eye_enabled = false;
++        if !requested || !self.wait_for_import_copy { return; }
++        let Some(config) = &self.direct_eye_config else { return; };
++        // Re-create only on stream/decoder initialization; errors fall back.
++        match DirectEyeRenderer::new(Rc::clone(&self.context), config, flip_y) {
++            Ok(renderer) => {
++                self.direct_eye_renderer = Some(renderer);
++                self.direct_eye_enabled = true;
++            }
++            Err(error) => alvr_common::error!("Direct eye copy unavailable; using staging: {error}"),
++        }
++    }
++
++    pub fn last_copy_was_direct(&self) -> bool { self.last_copy_direct.get() }
 +
      /// Move the full-resolution centre to match the server's, for the frame about to be drawn.
      ///
      /// Per eye: the horizontal frusta are asymmetric and mirrored, so one shared shift is only
-@@ -335,7 +341,7 @@ impl StreamRenderer {
+@@ -333,9 +377,29 @@ impl StreamRenderer {
+         view_params: [StreamViewParams; 2],
+         passthrough: Option<&PassthroughMode>,
      ) {
++        self.last_copy_direct.set(false);
++        if self.direct_eye_enabled && !hardware_buffer.is_null() {
++            self.leased_pyrowave_buffer.set(hardware_buffer);
++        }
++        // FrameSlot retains the last dequeued PyroWave buffer's consumer lease
++        // through repeats. Clear it before replacing the decoder. Reuse the
++        // source for a configuration-forced redraw as well as fresh frames.
++        let retained = self.leased_pyrowave_buffer.get();
++        let source = if !hardware_buffer.is_null() { hardware_buffer } else { retained };
++        if self.direct_eye_enabled && !source.is_null() && passthrough.is_none()
++            && view_params.iter().all(|view| view.reprojection_rotation == Quat::IDENTITY)
++        {
++            if let Some(renderer) = &self.direct_eye_renderer {
++                renderer.render(source, [view_params[0].swapchain_index, view_params[1].swapchain_index]);
++                self.last_copy_direct.set(true);
++                return;
++            }
++        }
          // if hardware_buffer is available copy stream to staging texture
-         if !hardware_buffer.is_null() {
+-        if !hardware_buffer.is_null() {
 -            self.staging_renderer.render(hardware_buffer);
-+            self.staging_renderer.render(hardware_buffer, self.wait_for_import_copy);
++        // A direct-only prior frame has no staging copy: use its protected
++        // source on fallback (e.g. passthrough configuration changed on a repeat).
++        if !source.is_null() {
++            self.staging_renderer.render(source, self.wait_for_import_copy);
          }
  
          let mut encoder = self
 diff --git a/alvr/packets/src/lib.rs b/alvr/packets/src/lib.rs
-index 6b4ac58..b94846a 100644
+index 6b4ac58..3904f06 100644
 --- a/alvr/packets/src/lib.rs
 +++ b/alvr/packets/src/lib.rs
-@@ -290,6 +290,9 @@ pub struct PyroWaveDecodeStats {
+@@ -290,6 +290,15 @@ pub struct PyroWaveDecodeStats {
      pub encoded_height: u32,
      pub gpu_decode_ms: Vec<f32>,
      pub fence_ms: Vec<f32>,
 +    pub convert_ms: Vec<f32>,
 +    pub record_ms: Vec<f32>,
 +    pub wait_ms: Vec<f32>,
++    /// CPU wall times, not GPU timer queries; samples cover actual eye redraws.
++    pub eye_acquire_wait_ms: Vec<f32>,
++    pub eye_render_ms: Vec<f32>,
++    pub eye_release_ms: Vec<f32>,
++    pub direct_eye_copies: u64,
++    pub staging_eye_copies: u64,
  }
  
  /// What the beta test report needs from the headset that per-frame statistics do not carry.
-@@ -457,6 +460,30 @@ pub struct RealTimeConfig {
+@@ -457,6 +466,30 @@ pub struct RealTimeConfig {
      pub passthrough: Option<PassthroughMode>,
  }
  
@@ -3724,7 +4105,7 @@ index 6b4ac58..b94846a 100644
  pub fn encode_real_time_config(config: &RealTimeConfig) -> Result<ServerControlPacket> {
      Ok(ServerControlPacket::ReservedBuffer(bincode::serialize(
          config,
-@@ -477,15 +504,15 @@ pub struct ViewParams {
+@@ -477,15 +510,15 @@ pub struct ViewParams {
  
  // ---- PyroWave over UDP ----
  //
@@ -3744,13 +4125,18 @@ index 6b4ac58..b94846a 100644
  /// Datagram payload budget below a 1500-byte MTU with IPv4/UDP headers and ours.
  pub const PYROWAVE_UDP_PAYLOAD: usize = 1400 - PYROWAVE_UDP_HEADER_LEN;
  
-@@ -586,6 +613,9 @@ mod beta_telemetry_tests {
+@@ -586,6 +619,14 @@ mod beta_telemetry_tests {
                  partial: 3,
                  gpu_decode_ms: vec![3.2, 3.4],
                  fence_ms: vec![4.9, 5.1],
 +                convert_ms: vec![1.2, 1.3],
 +                record_ms: vec![0.2, 0.3],
 +                wait_ms: vec![4.6, 4.7],
++                eye_acquire_wait_ms: vec![0.1, 0.2],
++                eye_render_ms: vec![3.0, 3.1],
++                eye_release_ms: vec![0.2, 0.3],
++                direct_eye_copies: 700,
++                staging_eye_copies: 200,
                  ..Default::default()
              }),
          };
