@@ -13,7 +13,9 @@ def frame_budget(width, height, hz, mbps, chroma="420"):
     w, h = ((v + 31) // 32 * 32 for v in (width, height))
     pixels = w * h * 2
     raw_bytes = pixels * 3 // (2 if chroma == "420" else 1)
-    payload = mbps * 1_000_000 // 8 // int(hz)
+    payload = mbps * 1_000_000 // 8 // math.floor(hz + 0.5)
+    if payload == 0:
+        raise ValueError("Bitrate is too small for the requested refresh")
     return {"requested_eye_resolution": [width, height], "aligned_eye_resolution": [w, h],
             "hz": hz, "mbps": mbps, "chroma": chroma, "frame_ms": 1000 / hz,
             "maximum_payload_bytes_per_frame": payload, "raw_bytes_per_frame": raw_bytes,

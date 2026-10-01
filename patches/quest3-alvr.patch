@@ -2230,7 +2230,7 @@ index b87dfe9..61eeb1b 100644
          }
  
 diff --git a/alvr/dashboard/src/dashboard/components/settings.rs b/alvr/dashboard/src/dashboard/components/settings.rs
-index 5cfc048..b6aba9b 100644
+index 5cfc048..7b4bab9 100644
 --- a/alvr/dashboard/src/dashboard/components/settings.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings.rs
 @@ -4,7 +4,7 @@ use super::{
@@ -2263,20 +2263,21 @@ index 5cfc048..b6aba9b 100644
                              path_value_pairs.extend(self.streaming_profile_preset.ui(ui));
                              ui.end_row();
  
-@@ -241,3 +242,133 @@ impl SettingsTab {
+@@ -241,3 +242,139 @@ impl SettingsTab {
          requests
      }
  }
 +
 +fn bitrate_controls(ui: &mut Ui, settings: &mut json::Value) -> Vec<PathValuePair> {
 +    let mut changes = Vec::new();
++    let pyrowave = settings["video"]["preferred_codec"]["variant"] == "PyroWave";
 +    let mode = &mut settings["video"]["bitrate"]["mode"];
 +    let mut automatic = mode["variant"] == "Adaptive";
 +    ui.label("Auto bitrate");
 +    if ui
 +        .checkbox(
 +            &mut automatic,
-+            "Adapt to network / encoder / decoder feedback",
++            "Adapt to network / encoder feedback",
 +        )
 +        .changed()
 +    {
@@ -2322,6 +2323,11 @@ index 5cfc048..b6aba9b 100644
 +        }
 +    }
 +    ui.end_row();
++    if automatic && pyrowave {
++        ui.label("PyroWave Auto");
++        ui.label("Decoder latency limiter is ignored: fixed GPU cost needs lower resolution or fewer passes.");
++        ui.end_row();
++    }
 +    let mut mbps = if automatic {
 +        mode["Adaptive"]["max_throughput_mbps"]["content"].as_u64()
 +    } else {
@@ -2691,10 +2697,38 @@ index 6b4ac58..a7af6d6 100644
  pub const PYROWAVE_UDP_PAYLOAD: usize = 1400 - PYROWAVE_UDP_HEADER_LEN;
  
 diff --git a/alvr/server_core/src/bitrate.rs b/alvr/server_core/src/bitrate.rs
-index 81f2f8e..8bf077b 100644
+index 81f2f8e..869fa77 100644
 --- a/alvr/server_core/src/bitrate.rs
 +++ b/alvr/server_core/src/bitrate.rs
-@@ -15,6 +15,45 @@ pub struct DynamicEncoderParams {
+@@ -1,7 +1,7 @@
+ use alvr_common::SlidingWindowAverage;
+ use alvr_events::BitrateDirectives;
+ use alvr_session::{
+-    settings_schema::Switch, BitrateAdaptiveFramerateConfig, BitrateConfig, BitrateMode,
++    settings_schema::Switch, BitrateAdaptiveFramerateConfig, BitrateConfig, BitrateMode, CodecType,
+ };
+ use std::{
+     collections::VecDeque,
+@@ -10,11 +10,96 @@ use std::{
+ 
+ const UPDATE_INTERVAL: Duration = Duration::from_secs(1);
+ 
++/// PyroWave's fixed GPU reconstruction cost scales mainly with resolution, not bytes.
++/// The hardware-decoder limiter compounds reductions even below that fixed cost and
++/// can starve the stream. Keep network/encoder feedback, but disable this limiter for
++/// PyroWave at both feedback collection and encoder parameter calculation.
++pub fn effective_bitrate_config(config: &BitrateConfig, codec: CodecType) -> BitrateConfig {
++    let mut effective = config.clone();
++    if codec == CodecType::PyroWave {
++        if let BitrateMode::Adaptive { decoder_latency_limiter, .. } = &mut effective.mode {
++            *decoder_latency_limiter = Switch::Disabled;
++        }
++    }
++    effective
++}
++
+ pub struct DynamicEncoderParams {
+     pub bitrate_bps: f32,
      pub framerate: f32,
  }
  
@@ -2702,6 +2736,38 @@ index 81f2f8e..8bf077b 100644
 +mod tests {
 +    use super::*;
 +    use alvr_session::{DecoderLatencyLimiter, SessionConfig};
++
++    #[test]
++    fn pyrowave_auto_does_not_compound_fixed_decode_cost() {
++        let mut manager = BitrateManager::new(1, 120.0);
++        let mut configured = SessionConfig::default().to_settings().video.bitrate;
++        configured.mode = BitrateMode::Adaptive {
++            saturation_multiplier: 1.0,
++            max_throughput_mbps: Switch::Enabled(1000),
++            min_throughput_mbps: Switch::Disabled,
++            max_network_latency_ms: Switch::Disabled,
++            encoder_latency_limiter: Switch::Disabled,
++            decoder_latency_limiter: Switch::Enabled(DecoderLatencyLimiter {
++                max_decoder_latency_ms: 8,
++                latency_overstep_frames: 8,
++                latency_overstep_multiplier: 0.9,
++            }),
++        };
++        let effective = effective_bitrate_config(&configured, CodecType::PyroWave);
++        let BitrateMode::Adaptive { decoder_latency_limiter, .. } = &effective.mode else { panic!("expected adaptive mode") };
++        assert!(!decoder_latency_limiter.enabled());
++        // Preserve the user's stored settings and hardware codec behavior.
++        assert!(effective_bitrate_config(&configured, CodecType::H264) == configured);
++        for i in 1..=1000 {
++            let timestamp = Duration::from_millis(i);
++            manager.report_frame_encoded(timestamp, Duration::from_millis(1), 1_000_000);
++            manager.report_frame_latencies(&effective.mode, timestamp,
++                Duration::from_millis(4), Duration::from_millis(40));
++        }
++        let (_, directives) = manager.get_encoder_params(&effective).unwrap();
++        assert_eq!(directives.decoder_latency_limiter_bps, None);
++        assert!(directives.requested_bitrate_bps >= 1_000_000.0);
++    }
 +
 +    #[test]
 +    fn decoder_limit_converts_bytes_per_frame_to_bits_per_second() {
@@ -2740,7 +2806,20 @@ index 81f2f8e..8bf077b 100644
  pub struct BitrateManager {
      nominal_frame_interval: Duration,
      frame_interval_average: SlidingWindowAverage<Duration>,
-@@ -196,10 +235,11 @@ impl BitrateManager {
+@@ -157,6 +242,12 @@ impl BitrateManager {
+             .map(|prev| config != prev)
+             .unwrap_or(true)
+         {
++            if self.previous_config.is_some() {
++                // Changing a limiter or switching back to Auto must forget an old
++                // learned cap; otherwise a previous overload can pin bitrate forever.
++                self.dynamic_decoder_max_bytes_per_frame = f32::MAX;
++                self.decoder_latency_overstep_count = 0;
++            }
+             self.previous_config = Some(config.clone());
+             // Continue method. Always update bitrate in this case
+         } else if !self.update_needed
+@@ -196,10 +287,11 @@ impl BitrateManager {
                  bitrate_directives.scaled_calculated_throughput_bps = Some(throughput_bps);
  
                  if decoder_latency_limiter.enabled() {
@@ -2757,7 +2836,7 @@ index 81f2f8e..8bf077b 100644
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da..6677a9d 100644
+index fc176da..80d8801 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -53,7 +53,8 @@ pub struct VideoPacket {
@@ -2875,15 +2954,47 @@ index fc176da..6677a9d 100644
      if pyrowave.enabled {
          info!("{pyrowave}");
      }
-@@ -1552,7 +1546,7 @@ mod beta_tests {
+@@ -1102,7 +1096,10 @@ fn connection_pipeline(
+ 
+                     let session_manager_lock = SESSION_MANAGER.read();
+                     ctx.bitrate_manager.lock().report_frame_latencies(
+-                        &session_manager_lock.settings().video.bitrate.mode,
++                        &crate::bitrate::effective_bitrate_config(
++                            &session_manager_lock.settings().video.bitrate,
++                            codec,
++                        ).mode,
+                         timestamp,
+                         network_latency,
+                         decoder_latency,
+@@ -1552,9 +1549,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
 -        assert!(config.pyrowave_udp);
 +        assert!(!config.pyrowave_udp);
          assert!(!config.pyrowave_wavelet_53);
-         assert_eq!(config.pyrowave_decode_path, 2, "compute");
+-        assert_eq!(config.pyrowave_decode_path, 2, "compute");
++        // Auto is carried on the wire; the Quest 3 client resolves it to Compute.
++        assert_eq!(config.pyrowave_decode_path, 0, "auto");
      }
+ 
+     #[test]
+diff --git a/alvr/server_core/src/lib.rs b/alvr/server_core/src/lib.rs
+index efa67b1..b79e5bd 100644
+--- a/alvr/server_core/src/lib.rs
++++ b/alvr/server_core/src/lib.rs
+@@ -527,7 +527,10 @@ impl ServerCoreContext {
+             self.connection_context
+                 .bitrate_manager
+                 .lock()
+-                .get_encoder_params(&session_manager_lock.settings().video.bitrate)
++                .get_encoder_params(&crate::bitrate::effective_bitrate_config(
++                    &session_manager_lock.settings().video.bitrate,
++                    session_manager_lock.settings().video.preferred_codec,
++                ))
+         };
+ 
+         if let Some((params, stats)) = pair {
 diff --git a/alvr/server_core/src/tracking/mod.rs b/alvr/server_core/src/tracking/mod.rs
 index 64f93a6..d38c74e 100644
 --- a/alvr/server_core/src/tracking/mod.rs
@@ -2898,10 +3009,43 @@ index 64f93a6..d38c74e 100644
          self.last_face_data = face_data;
      }
 diff --git a/alvr/server_io/src/lib.rs b/alvr/server_io/src/lib.rs
-index 1f84992..e180d88 100644
+index 1f84992..3bd71b9 100644
 --- a/alvr/server_io/src/lib.rs
 +++ b/alvr/server_io/src/lib.rs
-@@ -80,6 +80,14 @@ impl ServerSessionManager {
+@@ -20,12 +20,29 @@ use std::{
+     fs,
+     ops::{Deref, DerefMut},
+     path::{Path, PathBuf},
++    sync::atomic::{AtomicU64, Ordering},
+ };
+ 
+ fn save_session(session: &SessionConfig, path: &Path) -> Result<()> {
+-    fs::write(path, json::to_string_pretty(session)?)?;
+-
+-    Ok(())
++    static NEXT_SAVE: AtomicU64 = AtomicU64::new(0);
++    let temporary = path.with_file_name(format!("{}.{}.{}.tmp",
++        path.file_name().unwrap_or_default().to_string_lossy(),
++        std::process::id(), NEXT_SAVE.fetch_add(1, Ordering::Relaxed)));
++    // Native initialization and the dashboard read this file concurrently. Writing
++    // directly truncates it first and can make a valid session appear empty/invalid.
++    let result = (|| -> Result<()> {
++        fs::write(&temporary, json::to_vec_pretty(session)?)?;
++        for attempt in 0..5 {
++            match fs::rename(&temporary, path) {
++                Ok(()) => return Ok(()),
++                Err(_) if attempt < 4 => std::thread::sleep(std::time::Duration::from_millis(10)),
++                Err(error) => return Err(error.into()),
++            }
++        }
++        unreachable!()
++    })();
++    if result.is_err() { fs::remove_file(&temporary).ok(); }
++    result
+ }
+ 
+ // SessionConfig wrapper that saves session.json on destruction.
+@@ -80,6 +97,14 @@ impl ServerSessionManager {
              SessionConfig::default()
          };
  
@@ -2916,7 +3060,7 @@ index 1f84992..e180d88 100644
          Self {
              session_config: session_config.clone(),
              settings: session_config.to_settings(),
-@@ -337,3 +345,24 @@ impl Debug for ServerSessionManager {
+@@ -337,3 +362,46 @@ impl Debug for ServerSessionManager {
          write!(f, "{:?}", self.session_path)
      }
  }
@@ -2924,6 +3068,28 @@ index 1f84992..e180d88 100644
 +#[cfg(test)]
 +mod initialization_tests {
 +    use super::*;
++
++    #[test]
++    fn readers_never_observe_a_truncated_session_during_updates() {
++        let unique = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
++        let dir = std::env::temp_dir().join(format!("quest3-atomic-{}-{unique}", std::process::id()));
++        fs::create_dir_all(&dir).unwrap();
++        let path = dir.join("session.json");
++        let config = SessionConfig::default();
++        save_session(&config, &path).unwrap();
++        std::thread::scope(|scope| {
++            scope.spawn(|| {
++                for _ in 0..100 {
++                    let data = fs::read(&path).unwrap();
++                    json::from_slice::<SessionConfig>(&data).unwrap();
++                }
++            });
++            for _ in 0..100 { save_session(&config, &path).unwrap(); }
++        });
++        assert_eq!(fs::read_dir(&dir).unwrap().count(), 1);
++        fs::remove_file(path).unwrap();
++        fs::remove_dir(dir).unwrap();
++    }
 +
 +    #[test]
 +    fn fresh_portable_install_persists_config_before_native_driver_reads_it() {
@@ -3109,10 +3275,18 @@ index 8136dda..8a395c8 100644
      bool enablePlanarYuv = false;
  
 diff --git a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
-index fc0632b..ffc9a91 100644
+index fc0632b..3c0b78e 100644
 --- a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
 +++ b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
-@@ -29,6 +29,7 @@ static bool UdpEnabled() { return Settings::Instance().m_pyrowaveUdp; }
+@@ -12,6 +12,7 @@
+ #include <dxgi1_2.h>
+ 
+ #include <cstdio>
++#include <cmath>
+ #include <cstring>
+ #include <cstdlib>
+ 
+@@ -29,6 +30,7 @@ static bool UdpEnabled() { return Settings::Instance().m_pyrowaveUdp; }
  // CDF 5/3 when the dashboard (or ALVR_PYROWAVE_WAVELET=53) asks for it; CDF 9/7 otherwise.
  // Carried to the client as byte 13 of the decoder config so both sides agree by construction.
  static bool Legall53() { return Settings::Instance().m_pyrowaveWavelet53; }
@@ -3120,7 +3294,7 @@ index fc0632b..ffc9a91 100644
  
  VideoEncoderPyroWave::VideoEncoderPyroWave(
      std::shared_ptr<CD3DRender> pD3DRender, int width, int height, ID3D11Texture2D* planes[3]
-@@ -122,7 +123,7 @@ void VideoEncoderPyroWave::Initialize() {
+@@ -122,7 +124,7 @@ void VideoEncoderPyroWave::Initialize() {
      encoderInfo.device = m_pyroDevice;
      encoderInfo.width = m_renderWidth;
      encoderInfo.height = m_renderHeight;
@@ -3129,7 +3303,7 @@ index fc0632b..ffc9a91 100644
      encoderInfo.wavelet = Legall53() ? PYROWAVE_WAVELET_CDF53 : PYROWAVE_WAVELET_CDF97;
      PYRO_OR_THROW(pyrowave_encoder_create(&encoderInfo, &m_pyroEncoder));
      Info("[PYROWAVE] wavelet CDF %s\n", Legall53() ? "5/3" : "9/7");
-@@ -140,7 +141,7 @@ void VideoEncoderPyroWave::Initialize() {
+@@ -140,7 +142,7 @@ void VideoEncoderPyroWave::Initialize() {
          uint32_t w = (uint32_t)m_renderWidth, h = (uint32_t)m_renderHeight;
          memcpy(cfg, &w, 4);
          memcpy(cfg + 4, &h, 4);
@@ -3138,7 +3312,7 @@ index fc0632b..ffc9a91 100644
          cfg[9] = Settings::Instance().m_useFullRangeEncoding ? 1 : 0;
          cfg[10] = UdpEnabled() ? 1 : 0;
          const int fps = Settings::Instance().m_refreshRate > 0 ? Settings::Instance().m_refreshRate : 72;
-@@ -151,9 +152,9 @@ void VideoEncoderPyroWave::Initialize() {
+@@ -151,9 +153,9 @@ void VideoEncoderPyroWave::Initialize() {
          SetVideoConfigNals(cfg, sizeof cfg, 3 /* CodecType::PyroWave */);
          static const char* kDecodePaths[] = { "auto", "fragment", "compute" };
          const int path = Settings::Instance().m_pyrowaveDecodePath;
@@ -3150,7 +3324,7 @@ index fc0632b..ffc9a91 100644
               cfg[13] ? "5/3" : "9/7", (path >= 0 && path <= 2) ? kDecodePaths[path] : "auto");
      }
  
-@@ -215,9 +216,9 @@ void VideoEncoderPyroWave::Initialize() {
+@@ -215,9 +217,9 @@ void VideoEncoderPyroWave::Initialize() {
      // stream is neither H.264 nor HEVC whatever it is called.
      BitstreamTap::Start(m_codec, m_renderWidth, m_renderHeight);
  
@@ -3162,7 +3336,7 @@ index fc0632b..ffc9a91 100644
  }
  
  void VideoEncoderPyroWave::Shutdown() {
-@@ -313,19 +314,23 @@ void VideoEncoderPyroWave::DumpPlanes() {
+@@ -313,19 +315,23 @@ void VideoEncoderPyroWave::DumpPlanes() {
      // as a 29 dB luma loss -- lifted blacks and banding -- in an encoder that is actually exact.
      // Declare what the data really is.
      if (first) {
@@ -3190,7 +3364,7 @@ index fc0632b..ffc9a91 100644
          D3D11_MAPPED_SUBRESOURCE mapped;
          if (FAILED(context->Map(m_dumpStaging.Get(), 0, D3D11_MAP_READ, 0, &mapped))) {
              Error("[PYROWAVE] failed to map plane %d for dump\n", i);
-@@ -333,10 +338,10 @@ void VideoEncoderPyroWave::DumpPlanes() {
+@@ -333,10 +339,10 @@ void VideoEncoderPyroWave::DumpPlanes() {
              return;
          }
          const uint8_t* src = static_cast<const uint8_t*>(mapped.pData);
@@ -3204,7 +3378,7 @@ index fc0632b..ffc9a91 100644
          }
          context->Unmap(m_dumpStaging.Get(), 0);
      }
-@@ -362,12 +367,12 @@ void VideoEncoderPyroWave::DumpPlanes() {
+@@ -362,12 +368,12 @@ void VideoEncoderPyroWave::DumpPlanes() {
          pyrowave_cpu_buffer cpu = {};
          for (int i = 0; i < 3; i++) {
              cpu.data[i] = planes[i].data();
@@ -3220,7 +3394,7 @@ index fc0632b..ffc9a91 100644
  
          pyrowave_rate_control rc = {};
          rc.maximum_bitstream_size = m_bitrateBps && m_framerate
-@@ -387,7 +392,7 @@ void VideoEncoderPyroWave::DumpPlanes() {
+@@ -387,7 +393,7 @@ void VideoEncoderPyroWave::DumpPlanes() {
                  std::string wavePath = m_dumpPath + ".cpu.wave";
                  FILE* wave = nullptr;
                  if (fopen_s(&wave, wavePath.c_str(), "wb") == 0 && wave) {
@@ -3229,23 +3403,34 @@ index fc0632b..ffc9a91 100644
                                                  Settings::Instance().m_useFullRangeEncoding ? 1 : 0,
                                                  (int32_t)(m_framerate ? m_framerate : 72), 1, 0 };
                      fwrite("PYROWAVE", 1, 8, wave);
-@@ -431,10 +436,12 @@ void VideoEncoderPyroWave::Transmit(
+@@ -424,17 +430,22 @@ void VideoEncoderPyroWave::Transmit(
+     auto params = GetDynamicEncoderParams();
+     if (params.updated) {
+         m_bitrateBps = params.bitrate_bps;
+-        m_framerate = (uint32_t)params.framerate;
++        // Duration's nanosecond rounding can return 119.99999 for a 120 Hz mode.
++        // Truncating that to 119 permits ~0.84% more bytes per displayed frame.
++        if (std::isfinite(params.framerate) && params.framerate >= 1.0f && params.framerate <= 1000.0f)
++            m_framerate = (uint32_t)std::lround(params.framerate);
+     }
+     if (m_bitrateBps == 0 || m_framerate == 0) {
+         // Nothing to target yet; dropping the frame beats encoding at an arbitrary rate.
          return;
      }
  
 -    // PyroWave's rate control is a hard per-frame byte cap rather than an average, which suits an
 -    // intra-only codec: every frame is independent, so there is no rate buffer to drain.
-+    // Reserve room for packetization/RDO rounding. Enforce the *serialized* frame cap below;
-+    // the codec target alone overshot it by about 0.8% in the full-panel live capture.
++    // The codec takes a word-aligned byte cap. Check the serialized frame below as well;
++    // never truncate a codec frame to satisfy the transport or bitrate budget.
 +    const size_t frameByteBudget = (size_t)(m_bitrateBps / 8 / m_framerate);
      pyrowave_rate_control rateControl = {};
 -    rateControl.maximum_bitstream_size = (size_t)(m_bitrateBps / 8 / m_framerate);
-+    rateControl.maximum_bitstream_size = (frameByteBudget * 98 / 100) & ~size_t(3);
++    rateControl.maximum_bitstream_size = frameByteBudget & ~size_t(3);
 +    if (rateControl.maximum_bitstream_size == 0) return;
  
      // Order the D3D11 render before the Vulkan read. A shared fence imported as a timeline
      // semaphore would avoid the CPU round trip; this is the simpler correct version, and the
-@@ -483,9 +490,9 @@ void VideoEncoderPyroWave::Transmit(
+@@ -483,9 +494,9 @@ void VideoEncoderPyroWave::Transmit(
          return;
      }
  
@@ -3258,7 +3443,7 @@ index fc0632b..ffc9a91 100644
      size_t numPackets = 0;
      if (pyrowave_encoder_compute_num_packets(m_pyroEncoder, packetBoundary, &numPackets)
          != PYROWAVE_SUCCESS) {
-@@ -503,22 +510,39 @@ void VideoEncoderPyroWave::Transmit(
+@@ -503,22 +514,39 @@ void VideoEncoderPyroWave::Transmit(
          return;
      }
  
@@ -3326,10 +3511,10 @@ index a0356d3..230c751 100644
  public:
      VideoEncoderPyroWave(
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
-index 84100dc..7677300 100644
+index 84100dc..3b21e42 100644
 --- a/alvr/session/src/beta.rs
 +++ b/alvr/session/src/beta.rs
-@@ -3,25 +3,93 @@
+@@ -3,25 +3,94 @@
  //! environment overrides are applied. The server, the dashboard and the tests all read from here,
  //! so the UI, the defaults and the documentation cannot drift apart.
  
@@ -3389,7 +3574,7 @@ index 84100dc..7677300 100644
 +        .checked_mul(2)?;
 +    let raw_bytes = pixels.checked_mul(3)? / if full_chroma { 1 } else { 2 };
 +    // Match the encoder's integer bps / 8 / integer framerate calculation.
-+    let encoder_hz = hz as u64;
++    let encoder_hz = hz.round() as u64;
 +    if encoder_hz == 0 {
 +        return None;
 +    }
@@ -3415,6 +3600,7 @@ index 84100dc..7677300 100644
 +        let b = frame_budget(2064, 2208, 120.0, 1000, false).unwrap();
 +        assert_eq!((b.eye_width, b.eye_height), (2080, 2208));
 +        assert_eq!(b.payload_bytes, 1_041_666);
++        assert_eq!(frame_budget(2064, 2208, 119.99999, 1000, false).unwrap().payload_bytes, b.payload_bytes);
 +        assert_eq!(b.raw_bytes, 13_777_920);
 +        assert_eq!(
 +            frame_budget(2064, 2208, 120.0, 1000, true)
@@ -3430,7 +3616,7 @@ index 84100dc..7677300 100644
  pub struct StreamingProfile {
      pub name: &'static str,
      pub subtitle: &'static str,
-@@ -35,20 +103,26 @@ fn assign(path: &str, value: json::Value) -> (String, json::Value) {
+@@ -35,20 +104,26 @@ fn assign(path: &str, value: json::Value) -> (String, json::Value) {
  
  fn render_size(percent: u32) -> Vec<(String, json::Value)> {
      let (width, height) = render_scale_size(percent);
@@ -3469,7 +3655,7 @@ index 84100dc..7677300 100644
  /// socket values, so switching profiles never leaves one of them at a tester's experiment.
  fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::Value)> {
      let mut list = vec![
-@@ -56,48 +130,145 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
+@@ -56,48 +131,145 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
          assign("video.bitrate.mode.variant", "ConstantMbps".into()),
          assign("video.bitrate.mode.ConstantMbps", mbps.into()),
          assign("video.preferred_fps", json::json!(fps)),
@@ -3647,7 +3833,7 @@ index 84100dc..7677300 100644
  }
  
  #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-@@ -186,6 +357,7 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
+@@ -186,6 +358,7 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
  #[derive(Clone, Debug, PartialEq)]
  pub struct PyroWaveEffective {
      pub enabled: bool,
@@ -3655,7 +3841,7 @@ index 84100dc..7677300 100644
      pub udp: bool,
      pub wavelet_53: bool,
      pub decode_path: PyroWaveDecodePath,
-@@ -211,9 +383,7 @@ pub fn pyrowave_effective(
+@@ -211,9 +384,7 @@ pub fn pyrowave_effective(
          value
      };
  
@@ -3666,7 +3852,7 @@ index 84100dc..7677300 100644
          || video.preferred_codec == CodecType::PyroWave;
      let udp = read("ALVR_PYROWAVE_UDP")
          .map(|v| env_flag(&v))
-@@ -221,18 +391,11 @@ pub fn pyrowave_effective(
+@@ -221,18 +392,11 @@ pub fn pyrowave_effective(
      let wavelet_53 = read("ALVR_PYROWAVE_WAVELET")
          .map(|v| v == "53")
          .unwrap_or(video.pyrowave.wavelet == PyroWaveWavelet::Cdf53);
@@ -3687,7 +3873,7 @@ index 84100dc..7677300 100644
          udp,
          wavelet_53,
          decode_path: video.pyrowave.decode_path,
-@@ -255,8 +418,9 @@ impl fmt::Display for PyroWaveEffective {
+@@ -255,8 +419,9 @@ impl fmt::Display for PyroWaveEffective {
          };
          write!(
              f,
@@ -3698,7 +3884,7 @@ index 84100dc..7677300 100644
              if self.udp { "UDP" } else { "TCP" },
              if self.wavelet_53 { "5/3" } else { "9/7" },
              if self.follow_gaze { "on" } else { "off" },
-@@ -279,7 +443,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
+@@ -279,7 +444,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
  }
  
  fn at<'a>(root: &'a json::Value, path: &str) -> Option<&'a json::Value> {

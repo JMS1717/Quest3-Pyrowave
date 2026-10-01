@@ -9,6 +9,7 @@ class BudgetTests(unittest.TestCase):
         b = frame_budget(2064, 2208, 120, 1000)
         self.assertEqual(b["aligned_eye_resolution"], [2080, 2208])
         self.assertEqual(b["maximum_payload_bytes_per_frame"], 1_041_666)
+        self.assertEqual(frame_budget(2064, 2208, 119.99999, 1000)["maximum_payload_bytes_per_frame"], 1_041_666)
         self.assertEqual(b["raw_bytes_per_frame"], 13_777_920)
         self.assertAlmostEqual(b["frame_ms"], 8.33333333)
         self.assertAlmostEqual(b["raw_to_payload_ratio"], 13.227, places=2)

@@ -126,11 +126,12 @@ def active_settings():
         'bitrate_mode':mode['variant'], 'bitrate_config':mode,
         'target_mbps':mode['ConstantMbps'] if mode['variant']=='ConstantMbps' else None,
         'requested_hz':v['preferred_fps'], 'decode_path':v['pyrowave']['decode_path']['variant'],
+        'wavelet':v['pyrowave']['wavelet']['variant'],
         'chroma':'444' if v['pyrowave'].get('chroma_444',False) else '420',
         'transport':v['pyrowave']['transport']['variant'], 'stream_protocol':s['session_settings']['connection']['stream_protocol']['variant'],
         'configured_view_resolution':v['transcoding_view_resolution'],
         'openvr':{k:o.get(k) for k in ('refresh_rate','eye_resolution_width','eye_resolution_height',
-            'target_eye_resolution_width','target_eye_resolution_height','pyrowave_enabled','pyrowave_decode_path','pyrowave_chroma_444','enable_foveated_encoding')}}
+            'target_eye_resolution_width','target_eye_resolution_height','pyrowave_enabled','pyrowave_decode_path','pyrowave_wavelet53','pyrowave_udp','pyrowave_chroma_444','enable_foveated_encoding')}}
 
 def runtime_evidence(adb):
     log=adb_run(adb,'logcat','-d','-t','20000')
