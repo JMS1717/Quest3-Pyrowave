@@ -62,4 +62,29 @@ in `adb logcat -s PYROWAVE-UDP`. A scene submission count is not a decoded/displ
 Screenshots may include private surroundings when a system passthrough dialog is active; keep
 raw captures local and publish only reviewed synthetic test evidence.
 
-Remaining work: live full-resolution acceptance, loss recovery/pacing, an asynchronous replacement for the synchronized GLES handoff, and further decode/bridge optimization before a 120 fps guarantee.
+## Black-screen follow-up
+
+The repaired strict receiver still completed zero transport frames at 1000 Mbps/120 Hz;
+invalid-packet counters rose to 3714. Source inspection found a deterministic transport defect:
+PyroWave preserves whole codec blocks even when they exceed the requested 1368-byte boundary.
+The old server treated that boundary as a hard MTU limit. The strict receiver rejects oversized
+payloads, and older receivers can truncate sufficiently large datagrams. Invalid counters are
+aggregate evidence; they do not independently identify every rejected packet's cause.
+
+The new server encodes a complete frame, fragments its bytes into payloads no larger than
+1368 bytes, and the new receiver rejoins them before codec submission. PWU2 magic and protocol
+20.13.0-quest3.pyro.5 prevent silent mixing with the old UDP layout. Loss recovery remains absent.
+TCP is now the default. A live TCP attempt was interrupted by the system tracking interstitial;
+it does not establish successful streamed presentation.
+
+Presets now start at a **400 Mbps / 72 Hz / full-resolution / 4:2:0 / TCP candidate**.
+The 600 Mbps / 90 Hz candidate and 600–2000 Mbps / 120 Hz experiments remain available.
+Neither candidate is certified by sustained live testing. The change gives the GPU more frame
+time and reduces the per-frame byte budget; it is not a claim that lowering bitrate alone fixes
+full-resolution GPU throughput. Native timings exceed the 120 Hz budget in multiple test cases.
+
+The owner requested uninterrupted Virtual Desktop use. Development was moved to an isolated
+directory, the ALVR driver was disabled/unregistered, and headset tests stopped. Further builds
+and regression checks run on GitHub Actions. No repaired live image is claimed.
+
+Remaining work: live full-resolution acceptance with permission, loss recovery/pacing, an asynchronous replacement for the synchronized GLES handoff, and further decode/bridge optimization before a 120 fps guarantee.

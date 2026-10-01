@@ -4,7 +4,7 @@ Experimental **Meta Quest 3 PCVR streaming with PyroWave 4:2:0 and optional 4:4:
 Maintained by [JMS1717](https://github.com/JMS1717). Designed to investigate low latency on
 same-room Wi-Fi 6E and 2.5 GbE, with **300 / 400 / 600 / 800 / 1000 / 1500 / 2000 Mbps** targets.
 
-**Development status:** The full-resolution preview exposed dashboard and corrupted-frame bugs. The current repair fixes dashboard startup, uses an independent UDP receiver with complete-frame validation, and corrects 4:2:0 target extents. On-device decoder readbacks pass; live VR acceptance remains pending. See [repair evidence](results/CORRUPTION-FIX.md). Foveation remains disabled.
+**Development status:** The full-resolution preview delivered black/corrupted video. Dashboard startup and on-device decoder readbacks are repaired, but live VR acceptance remains pending. The new transport repair fragments complete codec frames below the MTU; the old packetizer could emit oversized blocks. TCP is the conservative transport default. Use matching client/server builds. See [repair evidence](results/CORRUPTION-FIX.md). Foveation remains disabled.
 Reviewed initial evidence is in [results](results/INITIAL-EVIDENCE.md). Those earlier foveated results do not validate the current full-frame build. High bitrate
 presets are experiment targets, not promises of usable throughput or quality.
 
@@ -19,13 +19,17 @@ This is a port and research project, not a claim to authorship of those componen
 1. Build or download the **Quest3-Pyrowave-Android** and **Quest3-Pyrowave-Windows** Actions artifacts.
 2. Follow [build/install instructions](docs/BUILD.md). Install the distinct Quest APK, register the
    streamer driver in SteamVR and explicitly trust your headset in the dashboard.
-3. Start at **Quest 3 PyroWave 1000 Mbps**, **120 Hz**, CDF 9/7 and **Auto** decode. This uses uniform
-   full-frame rendering with 4:2:0 chroma at the encoded resolution. Enable **Full chroma (4:4:4)**
+3. Start with **Quest 3 PyroWave 400 Mbps / 72 Hz candidate**, CDF 9/7, **Auto** decode and TCP.
+   This is a conservative full-resolution 4:2:0 candidate, with live acceptance pending.
+   **600 Mbps / 90 Hz** is the next candidate. **1000 Mbps / 120 Hz** and the 600–2000 Mbps
+   120 Hz profiles remain explicitly experimental: current full-resolution decode measurements
+   do not establish an 8.33 ms frame budget. Enable **Full chroma (4:4:4)**
    in PyroWave settings and restart SteamVR for full chroma. Foveation is disabled throughout this fork.
 4. Follow [the benchmark protocol](docs/BENCHMARKING.md) before raising bitrate, resolution or refresh.
 
 | Requested refresh | Frame budget | Policy |
 |---|---:|---|
+| 72 Hz | 13.89 ms | Conservative candidate; live acceptance pending |
 | 90 Hz | 11.11 ms | Use when runtime advertises it |
 | 120 Hz | 8.33 ms | Use when runtime advertises it |
 | 144 Hz | 6.94 ms | HorizonOS v2.7+; request/frame-period probe |
@@ -34,7 +38,7 @@ This is a port and research project, not a claim to authorship of those componen
 
 [Meta's v2.7 documentation](https://developers.meta.com/vr/documentation/unity/unity-set-disp-freq/)
 permits integer 72–207 Hz on Quest 3 through standard requests even when enumeration omits them.
-The APK probes 90/120/144/207/240 Hz in its lobby, checks request success, reported rate and three
+The APK probes 72/90/120/144/207/240 Hz in its lobby, checks request success, reported rate and three
 consecutive frame periods, then restores its original rate before connecting. The server accepts
 only the resulting capabilities. Older OS versions fail extended requests gracefully.
 
@@ -52,7 +56,7 @@ The APK never changes system refresh properties or forces GPU clocks.
 - Full panel-relative starting size (requested 2064×2208, padded 2080×2208 per eye); adjustable render size.
 - 300–2000 Mbps constant bitrate controls and one-click profiles; server pacing remains enabled.
 - Quest 3 Auto defaults to Compute wavelet reconstruction, with explicit Compute/Fragment controls. The color-conversion bridge uses a separately capability-gated fragment pass on Adreno.
-- Independent UDP reception, bounded reorder-tolerant assembly, deduplication and a latest-complete-frame queue; partial frames are rejected before GPU submission.
+- TCP default and experimental PWU2 UDP byte fragmentation, independent reception, bounded reorder-tolerant assembly and deduplication; partial frames are rejected before GPU submission.
 - PyroWave selected before the AMD AMF fallback chain, so an AMD PC cannot silently select AMF
   when PyroWave is requested. Vulkan/D3D11 external-memory and fence support is checked at startup.
 - v2.7-compatible refresh probing, runtime/frame-period verification and graceful rejection.

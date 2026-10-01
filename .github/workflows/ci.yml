@@ -12,7 +12,6 @@ env:
   XRWIRED_INPUTS: ${{ github.workspace }}/ws
 jobs:
   tests:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -94,6 +93,17 @@ jobs:
         run: |
           call tools\windows\build_pyrowave_pc.cmd interop || exit /b 1
           call tools\windows\build_streamer.cmd || exit /b 1
+      - name: Frame assembly and preset regression tests
+        shell: pwsh
+        run: |
+          $env:RUSTUP_TOOLCHAIN = $env:RUST_TOOLCHAIN
+          Set-Location "$env:XRWIRED_INPUTS/research/ALVR-20.13.0"
+          cargo test --release -p alvr_client_core --lib
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --release -p alvr_session --lib beta
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --release -p alvr_dashboard --bin alvr_dashboard
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Package
         shell: pwsh
         run: |

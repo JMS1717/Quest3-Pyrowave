@@ -12,13 +12,14 @@
       2000
     ],
     "refresh_targets_hz": [
+      72,
       90,
       120,
       144,
       207,
       240
     ],
-    "start_hz": 120,
+    "start_hz": 72,
     "wavelet": "Cdf97",
     "decode_paths": [
       "Compute",
@@ -31,7 +32,7 @@
     ],
     "chroma": "420",
     "range": "full",
-    "transport": "Udp",
+    "transport": "Tcp",
     "requires_confirmed_runtime_rate": true,
     "foveated_encoding": false,
     "clientside_foveation": false,
@@ -40,10 +41,55 @@
       "420",
       "444"
     ],
-    "start_mbps": 1000,
+    "start_mbps": 400,
     "aligned_eye_resolution": [
       2080,
       2208
+    ],
+    "baseline_status": "conservative_candidate_live_acceptance_pending",
+    "candidate_profiles": [
+      {
+        "mbps": 400,
+        "hz": 72,
+        "chroma": "420"
+      },
+      {
+        "mbps": 600,
+        "hz": 90,
+        "chroma": "420"
+      }
+    ],
+    "experimental_profiles": [
+      {
+        "mbps": 600,
+        "hz": 120,
+        "chroma": "420",
+        "sustained_fps_verified": false
+      },
+      {
+        "mbps": 800,
+        "hz": 120,
+        "chroma": "420",
+        "sustained_fps_verified": false
+      },
+      {
+        "mbps": 1000,
+        "hz": 120,
+        "chroma": "420",
+        "sustained_fps_verified": false
+      },
+      {
+        "mbps": 1500,
+        "hz": 120,
+        "chroma": "420",
+        "sustained_fps_verified": false
+      },
+      {
+        "mbps": 2000,
+        "hz": 120,
+        "chroma": "420",
+        "sustained_fps_verified": false
+      }
     ]
   },
   "comparisons": {

@@ -1,6 +1,6 @@
 # Benchmark protocol
 
-The physical Wi-Fi link rate is not application throughput. The startup preset is 1000 Mbps / 120 Hz / full panel-relative resolution. For manual throughput sweeps, measure each requested rate separately:, measure delivered
+The physical Wi-Fi link rate is not application throughput. The startup candidate is 400 Mbps / 72 Hz / full panel-relative resolution / 4:2:0 / TCP, with live acceptance pending. Try 600 Mbps / 90 Hz only after it passes. The 1000 Mbps / 120 Hz target is experimental. For manual throughput sweeps, measure each requested rate separately, including delivered
 bytes, loss and p99 timing, and increase through 800/1000/1500/2000 Mbps. A 2000 Mbps budget is
 250 MB/s before IP, Wi-Fi, control and retransmission overhead. Do not call a target bitrate achieved
 unless the actual payload and frame rate support that statement.
@@ -18,7 +18,7 @@ The client logs `[Q3PW_CAPS]` initially from enumeration and again with `source=
 its startup probe. Enumeration is incomplete on HorizonOS v2.7: absence does not mean unsupported.
 Each request must succeed and match the runtime frequency and three consecutive frame periods.
 Unconfirmed rates are labelled **not_confirmed**, never silently benchmarked at a fallback.
-The plan randomizes confirmed Compute/Fragment × bitrate × three replicates and hardware-codec
+The plan randomizes confirmed Compute/Fragment Ã— bitrate Ã— three replicates and hardware-codec
 baselines. Run the probe again after OS or display-scaling changes by reopening the app.
 See [refresh setup](REFRESH-RATES.md) for the distinct 240 Hz scaling experiment.
 

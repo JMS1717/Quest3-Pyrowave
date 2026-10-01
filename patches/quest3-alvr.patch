@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7b..96569dd 100644
+index 7cead7b..7543630 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,7 +182,7 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -16,7 +16,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -25,7 +25,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -34,7 +34,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -43,7 +43,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -52,7 +52,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -61,7 +61,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -70,7 +70,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -79,7 +79,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "dirs",
   "once_cell",
@@ -88,7 +88,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -97,7 +97,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_common",
   "egui",
@@ -106,7 +106,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -115,7 +115,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -124,7 +124,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -133,7 +133,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -142,7 +142,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -151,7 +151,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -160,7 +160,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -169,7 +169,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_common",
   "jni",
@@ -178,7 +178,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -187,7 +187,7 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -196,12 +196,12 @@ index 7cead7b..96569dd 100644
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..88762c6 100644
+index ae00ce8..3f6f9f6 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -209,7 +209,7 @@ index ae00ce8..88762c6 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.4"
++version = "20.13.0-quest3.pyro.5"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -357,14 +357,15 @@ index 4d2e699..6e3f353 100644
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601..7cffa63 100644
+index 2e22601..7f54d17 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
-@@ -38,10 +38,12 @@ struct FrameInfo {
+@@ -38,10 +38,13 @@ struct FrameInfo {
  extern "C" {
      fn pyroclient_create_ex(width: u32, height: u32, chroma444: i32, full_range: i32, ring: u32, wavelet: i32, decode_path: i32) -> *mut PyroClient;
      fn pyroclient_push_packet(c: *mut PyroClient, data: *const u8, size: usize) -> i32;
 -    fn pyroclient_decode(
++    fn pyroclient_clear(c: *mut PyroClient);
 +    fn pyroclient_decode_guarded(
          c: *mut PyroClient,
          out: *mut *mut c_void,
@@ -374,22 +375,37 @@ index 2e22601..7cffa63 100644
      ) -> i32;
      fn pyroclient_destroy(c: *mut PyroClient);
  }
-@@ -150,7 +152,9 @@ pub fn video_decoder_split(
+@@ -143,15 +146,21 @@ pub fn video_decoder_split(
+                 let Some((timestamp, data)) = next else {
+                     continue;
+                 };
++                // TCP restores one whole codec frame. Do not carry any rejected frame's
++                // state into the next submission, including sequence-counter wraparound.
++                unsafe { pyroclient_clear(client) };
+                 let pushed = unsafe { pyroclient_push_packet(client, data.as_ptr(), data.len()) };
+-                if pushed < 0 {
+-                    warn!("PyroWave: push_packet failed ({pushed})");
++                if pushed != 1 {
++                    warn!("PyroWave: complete TCP frame rejected by codec ({pushed})");
++                    failures += 1;
+                     continue;
                  }
                  let mut out: *mut c_void = std::ptr::null_mut();
                  let mut info = FrameInfo::default();
 -                let rc = unsafe { pyroclient_decode(client, &mut out, &mut info) };
+-                if rc != 0 || out.is_null() {
 +                let protected = decoded.protected_buffers();
 +                let rc = unsafe { pyroclient_decode_guarded(client, &mut out, &mut info,
 +                    protected[0] as *mut c_void, protected[1] as *mut c_void) };
-                 if rc != 0 || out.is_null() {
++                if rc != 0 || out.is_null() || info.complete == 0 {
                      warn!("PyroWave: decode failed ({rc})");
                      failures += 1;
+                     continue;
 diff --git a/alvr/client_core/src/video_decoder/pyrowave_udp.rs b/alvr/client_core/src/video_decoder/pyrowave_udp.rs
-index f8a6cfe..85a39a2 100644
+index f8a6cfe..4fe9434 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave_udp.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave_udp.rs
-@@ -1,382 +1,202 @@
+@@ -1,382 +1,203 @@
 -//! PyroWave over UDP: our own socket, straight into the decoder.
 -//!
 -//! One thread owns the socket and the decoder, so every Vulkan call and every packet push stays
@@ -732,9 +748,7 @@ index f8a6cfe..85a39a2 100644
 -                        match PyroWavePacketHeader::from_bytes(data) {
 -                            Some(hdr) => inbox.push_back((hdr, data[PYROWAVE_UDP_HEADER_LEN..].to_vec())),
 -                            None => counters.foreign += 1,
-+                        if msgs[i].msg_hdr.msg_flags & libc::MSG_TRUNC != 0 {
-+                            assembler.counters.invalid += 1; continue;
-                         }
+-                        }
 -                    }
 -                    n = recv(fd, &mut msgs, libc::MSG_DONTWAIT);
 -                    if n <= 0 {
@@ -747,7 +761,9 @@ index f8a6cfe..85a39a2 100644
 -                        Some(p) if hdr.timestamp_ns < p.timestamp_ns => {
 -                            counters.stale_packets += 1;
 -                            continue;
--                        }
++                        if msgs[i].msg_hdr.msg_flags & libc::MSG_TRUNC != 0 {
++                            assembler.counters.invalid += 1; continue;
+                         }
 -                        Some(p) if hdr.timestamp_ns > p.timestamp_ns => {
 -                            let old = pending.take().unwrap();
 -                            let behind = skip_for_newer(old.timestamp_ns, inbox.iter().map(|(h, _)| h.timestamp_ns));
@@ -825,16 +841,17 @@ index f8a6cfe..85a39a2 100644
 +                };
 +                if let Some(frame) = frame {
 +                    unsafe { pyroclient_clear(client) };
-+                    let mut status = 0;
-+                    for packet in &frame.packets {
-+                        status = unsafe { pyroclient_push_packet(client, packet.as_ptr(), packet.len()) };
-+                        if status < 0 { break; }
-+                    }
++                    // PWU2 payloads are byte fragments, not independently parseable
++                    // codec packets. Restore the whole bitstream before codec submission.
++                    let timestamp_ns = frame.timestamp_ns;
++                    let fragments = frame.packets.len();
++                    let bitstream = frame.into_bitstream();
++                    let status = unsafe { pyroclient_push_packet(client, bitstream.as_ptr(), bitstream.len()) };
 +                    // Receiving every transport packet is necessary but not sufficient: the
 +                    // codec must also validate all blocks. Never decode partial input.
 +                    if status != 1 {
 +                        failures += 1;
-+                        if failures <= 3 { alog(&format!("reject complete transport frame: codec readiness {status}, {} packets", frame.packets.len())); }
++                        if failures <= 3 { alog(&format!("reject complete transport frame: codec readiness {status}, {} packets", fragments)); }
                      } else {
 -                        pending = Some(p);
 +                        let mut out: *mut c_void = std::ptr::null_mut(); let mut info = FrameInfo::default();
@@ -843,7 +860,7 @@ index f8a6cfe..85a39a2 100644
 +                            protected[0] as *mut c_void, protected[1] as *mut c_void) };
 +                        if rc != 0 || out.is_null() || info.complete == 0 { failures += 1; }
 +                        else {
-+                            let ts = Duration::from_nanos(frame.timestamp_ns);
++                            let ts = Duration::from_nanos(timestamp_ns);
 +                            decoded.publish(ts, out as usize); report_frame_decoded(Ok(ts));
 +                            complete += 1; last = info;
 +                            decode_samples.push(info.decode_ms as f32); convert_samples.push(info.convert_ms as f32);
@@ -912,10 +929,10 @@ index f8a6cfe..85a39a2 100644
 -
 diff --git a/alvr/client_core/src/video_decoder/pyrowave_udp_assembly.rs b/alvr/client_core/src/video_decoder/pyrowave_udp_assembly.rs
 new file mode 100644
-index 0000000..7d28e2c
+index 0000000..66c2a15
 --- /dev/null
 +++ b/alvr/client_core/src/video_decoder/pyrowave_udp_assembly.rs
-@@ -0,0 +1,155 @@
+@@ -0,0 +1,172 @@
 +//! Bounded, reorder-tolerant transport assembly. Never submit missing blocks to the codec.
 +use alvr_packets::PyroWavePacketHeader;
 +use std::{collections::BTreeMap, time::{Duration, Instant}};
@@ -926,6 +943,12 @@ index 0000000..7d28e2c
 +pub struct CompleteFrame {
 +    pub timestamp_ns: u64,
 +    pub packets: Vec<Vec<u8>>,
++}
++
++impl CompleteFrame {
++    pub fn into_bitstream(self) -> Vec<u8> {
++        self.packets.into_iter().flatten().collect()
++    }
 +}
 +
 +struct PartialFrame {
@@ -1058,6 +1081,17 @@ index 0000000..7d28e2c
 +        assert_eq!(a.counters.dropped, 1); assert_eq!(a.counters.invalid, 2);
 +        assert!(a.push(h(1, 1, 2), &[2], now).1.is_none());
 +        assert_eq!(a.counters.complete, 0);
++    }
++    #[test]
++    fn fragments_restore_a_codec_block_larger_than_mtu() {
++        let original: Vec<u8> = (0..5000).map(|i| (i % 251) as u8).collect();
++        let chunks: Vec<_> = original.chunks(alvr_packets::PYROWAVE_UDP_PAYLOAD).collect();
++        let mut a = Assembler::new(Duration::from_millis(8)); let now = Instant::now();
++        let mut complete = None;
++        for i in (0..chunks.len()).rev() {
++            complete = a.push(h(1, i as u16, chunks.len() as u16), chunks[i], now).1.or(complete);
++        }
++        assert_eq!(complete.unwrap().into_bitstream(), original);
 +    }
 +    #[test]
 +    fn overload_preserves_four_newest_frames_and_bounds_allocations() {
@@ -1291,7 +1325,7 @@ index a0fd36f..cf60304 100644
              //
 diff --git a/alvr/client_openxr/src/refresh_probe.rs b/alvr/client_openxr/src/refresh_probe.rs
 new file mode 100644
-index 0000000..ea61e78
+index 0000000..9bc784e
 --- /dev/null
 +++ b/alvr/client_openxr/src/refresh_probe.rs
 @@ -0,0 +1,86 @@
@@ -1318,7 +1352,7 @@ index 0000000..ea61e78
 +
 +impl RefreshProbe {
 +    pub fn new(enumerated: Vec<f32>, restore: f32) -> Self {
-+        Self { pending: [90.0, 120.0, 144.0, 207.0, 240.0].into(), current: None,
++        Self { pending: [72.0, 90.0, 120.0, 144.0, 207.0, 240.0].into(), current: None,
 +            stable: 0, confirmed: vec![], enumerated, restore, restoring: false }
 +    }
 +
@@ -1357,7 +1391,7 @@ index 0000000..ea61e78
 +        if self.restoring {
 +            // Preserve ordinary enumerated modes; extended benchmark modes only after confirmation.
 +            let mut rates: Vec<_> = self.enumerated.iter().copied()
-+                .filter(|r| ![90.0, 120.0, 144.0, 207.0, 240.0].contains(r)).collect();
++                .filter(|r| ![72.0, 90.0, 120.0, 144.0, 207.0, 240.0].contains(r)).collect();
 +            rates.extend(&self.confirmed);
 +            rates.sort_by(f32::total_cmp);
 +            rates.dedup();
@@ -1428,7 +1462,7 @@ index b87dfe9..e7998c7 100644
              codec,
              force_software_decoder: self.config.force_software_decoder,
 diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
-index efb0f8e..1e91e7e 100644
+index efb0f8e..eb75b6c 100644
 --- a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 @@ -323,7 +323,7 @@ pub fn streaming_profile_schema() -> PresetSchemaNode {
@@ -1488,7 +1522,7 @@ index efb0f8e..1e91e7e 100644
              .map(|o| o.display_name.as_str())
              .collect::<Vec<_>>();
 -        assert_eq!(names, ["PyroWave 4:4:4 (Recommended)", "ALVR H.264 (tuned)"]);
-+        assert_eq!(names, ["Quest 3 PyroWave 1000 Mbps", "Quest 3 PyroWave 300 Mbps", "Quest 3 PyroWave 400 Mbps", "Quest 3 PyroWave 600 Mbps", "Quest 3 PyroWave 800 Mbps", "Quest 3 PyroWave 1500 Mbps", "Quest 3 PyroWave 2000 Mbps", "H.264 comparison", "HEVC comparison", "AV1 comparison"]);
++        assert_eq!(names, ["Quest 3 PyroWave 400 Mbps / 72 Hz candidate", "Quest 3 PyroWave 600 Mbps / 90 Hz candidate", "Quest 3 PyroWave 600 Mbps / 120 Hz experiment", "Quest 3 PyroWave 800 Mbps / 120 Hz experiment", "Quest 3 PyroWave 1000 Mbps / 120 Hz experiment", "Quest 3 PyroWave 1500 Mbps / 120 Hz experiment", "Quest 3 PyroWave 2000 Mbps / 120 Hz experiment", "H.264 comparison", "HEVC comparison", "AV1 comparison"]);
          assert_eq!(schema.default_option_display_name, beta::RECOMMENDED_PROFILE);
          assert_eq!(
              schema.options[0].description.as_deref(),
@@ -1649,6 +1683,30 @@ index 737b7d0..4be1eaa 100644
          }
  
          let mut encoder = self
+diff --git a/alvr/packets/src/lib.rs b/alvr/packets/src/lib.rs
+index 6b4ac58..a7af6d6 100644
+--- a/alvr/packets/src/lib.rs
++++ b/alvr/packets/src/lib.rs
+@@ -477,15 +477,15 @@ pub struct ViewParams {
+ 
+ // ---- PyroWave over UDP ----
+ //
+-// PyroWave frames leave the server as MTU-sized datagrams, one PyroWave packet each (the codec's
+-// own packetizer, so every datagram is independently decodable and a lost one costs blocks, not
+-// the frame). Each carries this 16-byte header. `count` lets the receiver judge completeness
++// PWU2 carries byte fragments of a complete codec frame, with a 32-byte transport header.
++// Codec blocks can exceed the MTU and cannot be parsed until byte fragments are reassembled.
++// A missing fragment drops the whole frame. `count` lets the receiver judge completeness
+ // against a deadline without waiting for the decoder; `timestamp_ns` is ALVR's target timestamp
+ // so the client's statistics line up with every other stage.
+ 
+ pub const PYROWAVE_UDP_PORT: u16 = 9948;
+ pub const PYROWAVE_UDP_HEADER_LEN: usize = 32;
+-pub const PYROWAVE_UDP_MAGIC: [u8; 4] = *b"PWU1";
++pub const PYROWAVE_UDP_MAGIC: [u8; 4] = *b"PWU2";
+ /// Datagram payload budget below a 1500-byte MTU with IPv4/UDP headers and ours.
+ pub const PYROWAVE_UDP_PAYLOAD: usize = 1400 - PYROWAVE_UDP_HEADER_LEN;
+ 
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
 index fc176da..647954d 100644
 --- a/alvr/server_core/src/connection.rs
@@ -1919,7 +1977,7 @@ index 8136dda..8a395c8 100644
      bool enablePlanarYuv = false;
  
 diff --git a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
-index fc0632b..6e1dfc9 100644
+index fc0632b..ba3fc11 100644
 --- a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
 +++ b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
 @@ -29,6 +29,7 @@ static bool UdpEnabled() { return Settings::Instance().m_pyrowaveUdp; }
@@ -2039,6 +2097,55 @@ index fc0632b..6e1dfc9 100644
                                                  Settings::Instance().m_useFullRangeEncoding ? 1 : 0,
                                                  (int32_t)(m_framerate ? m_framerate : 72), 1, 0 };
                      fwrite("PYROWAVE", 1, 8, wave);
+@@ -483,9 +488,9 @@ void VideoEncoderPyroWave::Transmit(
+         return;
+     }
+ 
+-    // TCP: one packet for the whole frame, ALVR shards it. UDP: MTU-sized packets from PyroWave's
+-    // own packetizer, each independently decodable, one datagram each -- the whole point.
+-    const size_t packetBoundary = UdpEnabled() ? 1368 /* alvr_packets::PYROWAVE_UDP_PAYLOAD: 1400 - 32-byte header */ : m_bitstream.size();
++    // packet_boundary is advisory: a single PyroWave block may exceed it. Produce a
++    // complete codec frame first; transport fragmentation must be independent of blocks.
++    const size_t packetBoundary = m_bitstream.size();
+     size_t numPackets = 0;
+     if (pyrowave_encoder_compute_num_packets(m_pyroEncoder, packetBoundary, &numPackets)
+         != PYROWAVE_SUCCESS) {
+@@ -508,17 +513,24 @@ void VideoEncoderPyroWave::Transmit(
+         int len = (int)packets[i].size;
+ 
+         if (UdpEnabled()) {
+-            VideoSendUdp(
+-                targetTimestampNs,
+-                (unsigned)i,
+-                (unsigned)outPackets,
+-                buf,
+-                len,
+-                AppliedFoveationCenterX().load(std::memory_order_relaxed),
+-                AppliedFoveationCenterY().load(std::memory_order_relaxed),
+-                AppliedFoveationCenterRightX().load(std::memory_order_relaxed),
+-                AppliedFoveationCenterRightY().load(std::memory_order_relaxed)
+-            );
++            constexpr size_t Payload = 1368; // alvr_packets::PYROWAVE_UDP_PAYLOAD
++            const size_t fragments = (packets[i].size + Payload - 1) / Payload;
++            // Client assembly is bounded to 8192 fragments (over 11 MB per frame).
++            if (outPackets != 1 || fragments == 0 || fragments > 8192) {
++                Error("[PYROWAVE] invalid UDP frame extent: %zu packets, %zu fragments\n", outPackets, fragments);
++                continue;
++            }
++            for (size_t fragment = 0; fragment < fragments; fragment++) {
++                const size_t offset = fragment * Payload;
++                const size_t remaining = packets[i].size - offset;
++                const int fragmentSize = (int)(remaining < Payload ? remaining : Payload);
++                VideoSendUdp(targetTimestampNs, (unsigned)fragment, (unsigned)fragments,
++                    buf + offset, fragmentSize,
++                    AppliedFoveationCenterX().load(std::memory_order_relaxed),
++                    AppliedFoveationCenterY().load(std::memory_order_relaxed),
++                    AppliedFoveationCenterRightX().load(std::memory_order_relaxed),
++                    AppliedFoveationCenterRightY().load(std::memory_order_relaxed));
++            }
+             BitstreamTap::Submit(targetTimestampNs, insertIDR, buf, len);
+             continue;
+         }
 diff --git a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.h b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.h
 index a0356d3..230c751 100644
 --- a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.h
@@ -2056,7 +2163,7 @@ index a0356d3..230c751 100644
  public:
      VideoEncoderPyroWave(
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
-index 84100dc..729c8a0 100644
+index 84100dc..b9becc3 100644
 --- a/alvr/session/src/beta.rs
 +++ b/alvr/session/src/beta.rs
 @@ -8,14 +8,14 @@ use serde_json as json;
@@ -2066,8 +2173,8 @@ index 84100dc..729c8a0 100644
 -pub const RECOMMENDED_PROFILE: &str = "PyroWave 4:4:4 (Recommended)";
 -pub const RECOMMENDED_SUBTITLE: &str = "Full-chroma experimental wireless VR streaming";
 -pub const H264_PROFILE: &str = "ALVR H.264 (tuned)";
-+pub const RECOMMENDED_PROFILE: &str = "Quest 3 PyroWave 1000 Mbps";
-+pub const RECOMMENDED_SUBTITLE: &str = "Full-frame 4:2:0, foveation disabled, 120 Hz, full panel-relative resolution";
++pub const RECOMMENDED_PROFILE: &str = "Quest 3 PyroWave 400 Mbps / 72 Hz candidate";
++pub const RECOMMENDED_SUBTITLE: &str = "Conservative candidate: full-frame 4:2:0, TCP, 72 Hz, full panel resolution; live acceptance pending";
 +pub const H264_PROFILE: &str = "H.264 comparison";
  
 -/// Galaxy XR panel, per eye, as reported by `dumpsys display` (7104x3840 for both).
@@ -2107,7 +2214,7 @@ index 84100dc..729c8a0 100644
          assign("video.max_buffering_frames", json::json!(1.5)),
          assign("video.enforce_server_frame_pacing", true.into()),
          assign("video.encoder_config.rate_control_mode.variant", "Cbr".into()),
-@@ -71,33 +72,36 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
+@@ -71,33 +72,40 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
          assign("video.encoder_config.nvenc.quality_preset.variant", "P1".into()),
          assign("connection.stream_protocol.variant", "Tcp".into()),
          assign("connection.packet_size", 65000.into()),
@@ -2140,20 +2247,24 @@ index 84100dc..729c8a0 100644
 -        },
 -    ]
 +    let mut profiles = Vec::new();
-+    for (name, mbps) in [
-+        (RECOMMENDED_PROFILE, 1000), ("Quest 3 PyroWave 300 Mbps", 300), ("Quest 3 PyroWave 400 Mbps", 400),
-+        ("Quest 3 PyroWave 600 Mbps", 600), ("Quest 3 PyroWave 800 Mbps", 800),
-+        ("Quest 3 PyroWave 1500 Mbps", 1500),
-+        ("Quest 3 PyroWave 2000 Mbps", 2000),
++    const EXPERIMENT: &str = "Experimental: full-frame 4:2:0, TCP, 120 Hz; decode/transport budget not validated";
++    for (name, mbps, fps, subtitle) in [
++        (RECOMMENDED_PROFILE, 400, 72.0, RECOMMENDED_SUBTITLE),
++        ("Quest 3 PyroWave 600 Mbps / 90 Hz candidate", 600, 90.0, "Candidate: full-frame 4:2:0, TCP, 90 Hz; live acceptance pending"),
++        ("Quest 3 PyroWave 600 Mbps / 120 Hz experiment", 600, 120.0, EXPERIMENT),
++        ("Quest 3 PyroWave 800 Mbps / 120 Hz experiment", 800, 120.0, EXPERIMENT),
++        ("Quest 3 PyroWave 1000 Mbps / 120 Hz experiment", 1000, 120.0, EXPERIMENT),
++        ("Quest 3 PyroWave 1500 Mbps / 120 Hz experiment", 1500, 120.0, EXPERIMENT),
++        ("Quest 3 PyroWave 2000 Mbps / 120 Hz experiment", 2000, 120.0, EXPERIMENT),
 +    ] {
-+        let mut assignments = shared("PyroWave", mbps, 120.0, 100);
++        let mut assignments = shared("PyroWave", mbps, fps, 100);
 +        assignments.extend([
 +            assign("video.pyrowave.chroma_444", false.into()),
-+            assign("video.pyrowave.transport.variant", "Udp".into()),
++            assign("video.pyrowave.transport.variant", "Tcp".into()),
 +            assign("video.pyrowave.wavelet.variant", "Cdf97".into()),
 +            assign("video.pyrowave.decode_path.variant", "Auto".into()),
 +        ]);
-+        profiles.push(StreamingProfile { name, subtitle: RECOMMENDED_SUBTITLE, assignments });
++        profiles.push(StreamingProfile { name, subtitle, assignments });
 +    }
 +    for (name, codec) in [(H264_PROFILE, "H264"), ("HEVC comparison", "Hevc"), ("AV1 comparison", "AV1")] {
 +        profiles.push(StreamingProfile {
@@ -2165,7 +2276,7 @@ index 84100dc..729c8a0 100644
  }
  
  #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-@@ -186,6 +190,7 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
+@@ -186,6 +194,7 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
  #[derive(Clone, Debug, PartialEq)]
  pub struct PyroWaveEffective {
      pub enabled: bool,
@@ -2173,7 +2284,7 @@ index 84100dc..729c8a0 100644
      pub udp: bool,
      pub wavelet_53: bool,
      pub decode_path: PyroWaveDecodePath,
-@@ -221,18 +226,11 @@ pub fn pyrowave_effective(
+@@ -221,18 +230,11 @@ pub fn pyrowave_effective(
      let wavelet_53 = read("ALVR_PYROWAVE_WAVELET")
          .map(|v| v == "53")
          .unwrap_or(video.pyrowave.wavelet == PyroWaveWavelet::Cdf53);
@@ -2194,7 +2305,7 @@ index 84100dc..729c8a0 100644
          udp,
          wavelet_53,
          decode_path: video.pyrowave.decode_path,
-@@ -255,8 +253,9 @@ impl fmt::Display for PyroWaveEffective {
+@@ -255,8 +257,9 @@ impl fmt::Display for PyroWaveEffective {
          };
          write!(
              f,
@@ -2206,7 +2317,7 @@ index 84100dc..729c8a0 100644
              if self.wavelet_53 { "5/3" } else { "9/7" },
              if self.follow_gaze { "on" } else { "off" },
 diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
-index 985a4d0..3e74c9d 100644
+index 985a4d0..649ac0e 100644
 --- a/alvr/session/src/beta_tests.rs
 +++ b/alvr/session/src/beta_tests.rs
 @@ -31,7 +31,7 @@ fn video_shows_only_codec_experiment_controls() {
@@ -2254,14 +2365,12 @@ index 985a4d0..3e74c9d 100644
  }
  
  #[test]
-@@ -133,8 +123,8 @@ fn default_settings() -> Settings {
- fn fresh_install_streams_the_recommended_profile() {
+@@ -134,7 +124,7 @@ fn fresh_install_streams_the_recommended_profile() {
      let s = default_settings();
      assert_eq!(s.video.preferred_codec, CodecType::PyroWave);
--    assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(400)));
+     assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(400)));
 -    assert_eq!(s.video.preferred_fps, 90.0);
-+    assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(1000)));
-+    assert_eq!(s.video.preferred_fps, 120.0);
++    assert_eq!(s.video.preferred_fps, 72.0);
      for size in [
          &s.video.transcoding_view_resolution,
          &s.video.emulated_headset_view_resolution,
@@ -2283,8 +2392,9 @@ index 985a4d0..3e74c9d 100644
 -    assert_eq!((fov.edge_ratio_x, fov.edge_ratio_y), (3.0, 4.0));
 -    assert_eq!((fov.center_shift_x, fov.center_shift_y), (0.0, 0.0));
 -    assert!(fov.follow_gaze);
+-    assert_eq!(s.video.pyrowave.transport, PyroWaveTransport::Udp);
 +    assert!(!s.video.foveated_encoding.enabled());
-     assert_eq!(s.video.pyrowave.transport, PyroWaveTransport::Udp);
++    assert_eq!(s.video.pyrowave.transport, PyroWaveTransport::Tcp);
      assert_eq!(s.video.pyrowave.wavelet, PyroWaveWavelet::Cdf97);
 -    assert_eq!(s.video.pyrowave.decode_path, PyroWaveDecodePath::Compute);
 +    assert_eq!(s.video.pyrowave.decode_path, PyroWaveDecodePath::Auto);
@@ -2411,7 +2521,7 @@ index d7d0dbb..037ad45 100644
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99..a5c10b9 100644
+index 1009e99..82a0363 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -2456,7 +2566,7 @@ index 1009e99..a5c10b9 100644
      Auto = 0,
      Compute = 2,
      Fragment = 1,
-@@ -626,6 +623,11 @@ pub enum PyroWaveDecodePath {
+@@ -626,8 +623,13 @@ pub enum PyroWaveDecodePath {
  
  #[derive(SettingsSchema, Serialize, Deserialize, Clone, PartialEq, Debug)]
  pub struct PyroWaveConfig {
@@ -2466,8 +2576,11 @@ index 1009e99..a5c10b9 100644
 +    pub chroma_444: bool,
 +
      #[schema(strings(
-         help = "UDP sends each frame as independent datagrams and drops late ones; TCP retransmits. UDP is the measured operating point."
+-        help = "UDP sends each frame as independent datagrams and drops late ones; TCP retransmits. UDP is the measured operating point."
++        help = "UDP sends each frame as independent datagrams and drops late ones; TCP retransmits. TCP is the conservative baseline; UDP is experimental and requires a matched PWU2 client/server."
      ))]
+     #[schema(flag = "steamvr-restart")]
+     pub transport: PyroWaveTransport,
 @@ -640,7 +642,7 @@ pub struct PyroWaveConfig {
  
      #[schema(strings(
@@ -2525,32 +2638,25 @@ index 1009e99..a5c10b9 100644
              },
          },
      };
-@@ -1742,14 +1741,14 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1742,7 +1741,7 @@ pub fn session_settings_default() -> SettingsDefault {
              adapter_index: 0,
              transcoding_view_resolution: view_resolution.clone(),
              emulated_headset_view_resolution: view_resolution,
 -            preferred_fps: 90.,
-+            preferred_fps: 120.,
++            preferred_fps: 72.,
              max_buffering_frames: 1.5,
              buffering_history_weight: 0.90,
              enforce_server_frame_pacing: true,
-             bitrate: BitrateConfigDefault {
-                 gui_collapsed: false,
-                 mode: BitrateModeDefault {
--                    ConstantMbps: 400,
-+                    ConstantMbps: 1000,
-                     Adaptive: BitrateModeAdaptiveDefault {
-                         gui_collapsed: true,
-                         saturation_multiplier: 0.95,
-@@ -1796,6 +1795,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1796,14 +1795,15 @@ pub fn session_settings_default() -> SettingsDefault {
                  variant: CodecTypeDefaultVariant::PyroWave,
              },
              pyrowave: PyroWaveConfigDefault {
 +                chroma_444: false,
                  transport: PyroWaveTransportDefault {
-                     variant: PyroWaveTransportDefaultVariant::Udp,
+-                    variant: PyroWaveTransportDefaultVariant::Udp,
++                    variant: PyroWaveTransportDefaultVariant::Tcp,
                  },
-@@ -1803,7 +1803,7 @@ pub fn session_settings_default() -> SettingsDefault {
+                 wavelet: PyroWaveWaveletDefault {
                      variant: PyroWaveWaveletDefaultVariant::Cdf97,
                  },
                  decode_path: PyroWaveDecodePathDefault {

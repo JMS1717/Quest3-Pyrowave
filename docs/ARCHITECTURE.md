@@ -1,14 +1,21 @@
 # Quest 3 pipeline and experiments
 
 SteamVR texture → ALVR uniform stereo composition → BT.709 planar Y/Cb/Cr (full-resolution luma, selectable chroma)
-D3D11 textures → Vulkan external-memory/fence import → PyroWave CDF 9/7 encoding → MTU-sized UDP
-datagrams → independent Android batch receive → bounded complete-frame assembly → Vulkan reconstruction → YCbCr-to-RGBA conversion into an
+D3D11 textures → Vulkan external-memory/fence import → PyroWave CDF 9/7 encoding → complete codec frame → TCP (default) or experimental MTU-sized UDP byte
+fragments → Android receive → bounded complete-frame assembly → Vulkan reconstruction → YCbCr-to-RGBA conversion into an
 AHardwareBuffer → EGL import → ALVR OpenXR projection → Meta compositor.
 
 The smallest implementation retains this already-established path. It is useful because tracking,
 controllers, audio and SteamVR presentation remain ALVR responsibilities; inventing a new VR stack
 would obscure codec and transport measurements. Existing GPU timestamps separate reconstruction
 from conversion, and wall timing records the decode-to-fence wait.
+
+PyroWave's packet boundary is advisory: an indivisible codec block can exceed 1368 bytes.
+The original one-codec-packet-per-datagram assumption caused oversize rejection/truncation.
+PWU2 encodes one complete frame, splits its bytes into payloads of at most 1368 bytes,
+and rejoins all fragments before the single codec push. Loss drops a frame; FEC/retransmission
+for this UDP path is not implemented. TCP preserves byte delivery but can delay later frames
+during retransmission. PWU2 and the new protocol version require matching client/server builds.
 
 ## Constraints to measure before redesign
 
@@ -29,11 +36,11 @@ Fragment remains an explicit manual experiment. CDF 5/3 forces Compute.
 
 Foveated encoding and client foveation are disabled in server/client logic, defaults and presets.
 The first full-frame configuration requests 2064×2208 per eye, aligned to 2080×2208 by ALVR,
-with 1000 Mbps/120 Hz/CDF 9/7/Compute/4:2:0. Dimensions are padded upward to codec alignment. Panel-relative size is not the larger lens-corrected OpenXR recommendation.
+with 400 Mbps/72 Hz/CDF 9/7/Compute/4:2:0/TCP as a conservative candidate. The 1000 Mbps/120 Hz target is experimental. Dimensions are padded upward to codec alignment. Panel-relative size is not the larger lens-corrected OpenXR recommendation.
 
 ## Ordered next changes
 
-1. Manually evaluate the default 1000 Mbps / 120 Hz / full-resolution configuration, then vary one setting at a time. Record
+1. With permission to resume headset testing, evaluate the 400 Mbps / 72 Hz / full-resolution candidate before advancing to 600 Mbps / 90 Hz and the 120 Hz experiments. Record
    actual encoded dimensions after alignment.
 2. Measure receive packet pressure separately from decode. Android's existing `recvmmsg` path is
    retained; increasing datagram size beyond MTU would trade packet cost for IP fragmentation loss.

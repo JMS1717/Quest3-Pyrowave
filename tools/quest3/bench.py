@@ -9,7 +9,7 @@ import time
 import threading
 from pathlib import Path
 
-RATES = (90, 120, 144, 207, 240)
+RATES = (72, 90, 120, 144, 207, 240)
 BITRATES = (600, 800, 1000, 1500, 2000)
 
 def supported(requested, rates):
@@ -46,7 +46,7 @@ def plan(caps, repeats=3, seed=1717, seconds=60):
                 for rep in range(repeats):
                     cells.append({'id': f'pyro-{hz}-{mbps}-{path.lower()}-r{rep+1}',
                         'codec': 'PyroWave', 'requested_hz': hz, 'mbps': mbps,
-                        'decode_path': path, 'wavelet': 'Cdf97', 'chroma': '420', 'replicate': rep+1,
+                        'decode_path': path, 'wavelet': 'Cdf97', 'chroma': '420', 'transport': 'Tcp', 'replicate': rep+1,
                         'seconds': seconds, 'status': 'planned', 'frame_budget_ms': 1000/hz,
                         'budget_bytes_per_frame': mbps*1e6/8/hz})
         for codec in ('H264', 'Hevc', 'AV1'):
@@ -124,6 +124,7 @@ def active_settings():
     return {'codec':v['preferred_codec']['variant'], 'target_mbps':v['bitrate']['mode']['ConstantMbps'],
         'requested_hz':v['preferred_fps'], 'decode_path':v['pyrowave']['decode_path']['variant'],
         'chroma':'444' if v['pyrowave'].get('chroma_444',False) else '420',
+        'transport':v['pyrowave']['transport']['variant'], 'stream_protocol':s['session_settings']['connection']['stream_protocol']['variant'],
         'configured_view_resolution':v['transcoding_view_resolution'],
         'openvr':{k:o.get(k) for k in ('refresh_rate','eye_resolution_width','eye_resolution_height',
             'target_eye_resolution_width','target_eye_resolution_height','pyrowave_enabled','pyrowave_decode_path','pyrowave_chroma_444','enable_foveated_encoding')}}
