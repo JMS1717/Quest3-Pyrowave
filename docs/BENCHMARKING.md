@@ -92,3 +92,11 @@ image dimensions; these offline results exclude VR compositor and network work.
 Use `--chroma 420` or `--chroma 444` with `tools.quest3.control apply`. Chroma and bitrate are separate controls. Capture files record both requested and negotiated chroma.
 
 For a reproducible fine colored HUD/text source, use `python -m tools.quest3.stereo_scene --quality --seconds 180 --out results/local/chroma-source`. Keep capture events strictly within its ready/start/end window. The client remains on420 by default; see [matched chroma evidence](CHROMA.md).
+# Fast iteration
+
+Plans and captures now default to **15-second screening cells**. Warm the unchanged
+configuration before capturing; use a few deterministic frames for image/readback
+correctness. Compare matched scenes and keep restarts outside the capture window.
+Do not run concurrent trials. These short windows can reject a regression quickly;
+they cannot establish sustained FPS or thermal behavior. Use longer explicit
+`--seconds` runs only when a candidate reaches the target and merits acceptance.

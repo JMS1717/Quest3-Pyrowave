@@ -197,3 +197,22 @@ The matching .14 native bridge also exposes `debug.q3pw.convert_compute=1` for
 a compute-color-conversion control, independently of the wavelet decode path.
 Set 0 or restore the original property to retain capability-gated Adreno fragment
 conversion. Restart the client after changes. No default conversion change is implied.
+
+.14 Android CI passed, and its small/native Haar/4:2:0 plain readbacks were
+byte-identical to .13 with batching both off and on. Matching Windows build and
+live performance screening remain separate gates; this does not prove a speedup.
+
+A separate .13 FP16-math check gave max one YUV code-value difference, but the
+small asymmetric source PSNR fell by 0.05934 dB, slightly exceeding the existing
+0.05 dB loss gate. Native-size source PSNR rose by 0.00026 dB. Precision stays at
+the default 1; no FP16 quality/performance promotion is made. Native color-bridge
+readbacks differed by at most one RGBA code value between compute and fragment.
+Their first timing sequence was confounded by wired client auto-launch and was
+excluded; subsequent isolated short timings still varied. Default fragment
+conversion remains, with the .14 control available for matched live trials.
+
+The separate 180-second .13 SteamVR Home observation delivered 94.46 fresh FPS,
+4.73 ms GPU decode, 2.52 ms conversion and 9.88 ms completion, with ALVR estimated
+latency 70.82 ms. It confirms the remaining budget problem beyond the short chart
+tests but is not a thermal-endurance certification. See
+[the sanitized Home result](../results/DECODE-HOME-2026-10-01.json).

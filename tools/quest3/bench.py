@@ -29,7 +29,7 @@ def parse_capabilities(log):
             'probe_results':probes}
 
 
-def plan(caps, repeats=3, seed=1717, seconds=60):
+def plan(caps, repeats=3, seed=1717, seconds=15):
     if not caps.get('refresh_extension'):
         raise ValueError('Refresh extension not advertised; a fallback rate is not a measured capability.')
     cells = []
@@ -56,7 +56,7 @@ def plan(caps, repeats=3, seed=1717, seconds=60):
                     'status': 'planned', 'decode_path': None})
     random.Random(seed).shuffle(cells)
     return {'schema_version': 1, 'capabilities': caps, 'seed': seed, 'cells': cells, 'skipped': skipped,
-            'method': 'Interleaved repetitions; same scene and resolution; cool between cells.'}
+            'method': 'Quick screening with interleaved repetitions; same scene and resolution; cool between cells. Longer explicit runs are required for sustained and thermal acceptance.'}
 
 def distribution(values):
     v = sorted(float(x) for x in values if x is not None and math.isfinite(float(x)))
@@ -209,9 +209,9 @@ def main():
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='command',required=True)
     c=sub.add_parser('capabilities');c.add_argument('--adb',default='adb');c.add_argument('--out',required=True)
     c=sub.add_parser('plan');c.add_argument('--capabilities',required=True);c.add_argument('--out',required=True)
-    c.add_argument('--repeats',type=int,default=3);c.add_argument('--seconds',type=int,default=60)
+    c.add_argument('--repeats',type=int,default=3);c.add_argument('--seconds',type=int,default=15)
     c=sub.add_parser('capture');c.add_argument('--adb',default='adb');c.add_argument('--out',required=True)
-    c.add_argument('--seconds',type=int,default=60);c.add_argument('--hz',type=int,required=True)
+    c.add_argument('--seconds',type=int,default=15);c.add_argument('--hz',type=int,required=True)
     c.add_argument('--events',default='ws://127.0.0.1:8082/api/events')
     c=sub.add_parser('summarise');c.add_argument('events');c.add_argument('--out',required=True)
     a=p.parse_args()
