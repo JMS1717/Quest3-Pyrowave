@@ -5,7 +5,7 @@ Maintained by [JMS1717](https://github.com/JMS1717). Designed to investigate low
 same-room Wi-Fi 6E and 2.5 GbE, with **300 / 400 / 600 / 800 / 1000 / 1500 / 2000 Mbps** targets.
 
 **Development status:** The PWU2 repair has delivered visible SteamVR Home video on Quest 3 over wireless TCP/UDP and native USB. Full-panel 1000 Mbps / 120 Hz still misses the frame budget; short captures often delivered ~60 new FPS. See [live observations and limitations](results/LIVE-2026-10-01.md). Gameplay, sustained thermals and an advantage over Virtual Desktop remain unvalidated. Foveation is disabled.
-The [original matching PWU2 build](results/PWU2-BUILD.md) passed Android/Windows builds and cloud regression tests. The next .6 iteration adds latest-frame polling, byte-cap enforcement and Auto safeguards; use matching artifacts after all CI checks pass. See [research inputs and priorities](docs/RESEARCH-NOTES.md).
+The [original matching PWU2 build](results/PWU2-BUILD.md) passed Android/Windows builds and cloud regression tests. Matching .6 artifacts added latest-frame polling, byte-cap enforcement and Auto safeguards, with short live USB checks. See [research inputs and priorities](docs/RESEARCH-NOTES.md).
 Reviewed initial evidence is in [results](results/INITIAL-EVIDENCE.md). Those earlier foveated results do not validate the current full-frame build. High bitrate
 presets are experiment targets, not promises of usable throughput or quality.
 
@@ -36,7 +36,7 @@ its slider sets a ceiling rather than a guaranteed rate.
 [Native USB streaming](docs/USB.md) is available through Devices → Wired Connection.
 The fork selects its own APK package and uses TCP for USB; verify the loopback peer before benchmarking.
 
-The [client performance overlay](docs/OVERLAY.md) is on by default in the next development
+The [client performance overlay](docs/OVERLAY.md) is on by default in development
 build. Click both thumbsticks together to toggle the 3D panel. It shows bitrate, delivered
 and Game/host FPS, latency stages, frame counters and available Quest GPU/thermal data.
 Game/host FPS and latency are explicitly labeled estimates/proxies.

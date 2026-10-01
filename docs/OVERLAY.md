@@ -37,3 +37,9 @@ one composition layer and some CPU/GPU work. Measure its overhead in matched on/
 captures before making performance claims. Initialization/render errors disable the
 overlay and leave video running. Physical thumbstick usability and in-headset text
 placement are part of hardware acceptance, beyond the chord regression tests.
+
+The .7 build passed cloud checks, displayed live statistics in both eyes and had
+its physical thumbstick toggle confirmed by the owner. Device screenshots exposed
+an upside-down texture origin; .8 corrects the GLES/OpenXR texture orientation.
+Do not use .7 as the final overlay acceptance build. Matched on/off overhead and
+long-duration gameplay checks remain pending.

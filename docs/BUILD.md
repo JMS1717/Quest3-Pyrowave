@@ -88,6 +88,11 @@ only one active ALVR SteamVR driver. This fork has its own protocol version; sto
 clients cannot pair with it. Driver registration and firewall rules are through the ALVR UI.
 Allow the streamer on your private LAN only; the API is local at port 8082 and PyroWave UDP at 9948.
 
+For standard Quest 3 controllers, choose **Settings → Headset → Controllers →
+Emulation mode → Quest 3 Touch Plus**, then restart SteamVR. The .8 fork defaults
+to this mode; older saved sessions can retain Quest 2 Touch. Games may choose their
+own controller meshes independently of SteamVR's render-model property.
+
 Rollback: stop SteamVR, unregister this driver in the dashboard, then re-register your previous
 driver. Uninstall only `io.github.jms1717.quest3pyrowave` if desired. No OS refresh properties,
 network adapter settings, root access, or persistent GPU clock changes are part of setup.

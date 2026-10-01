@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7b..02b73f9 100644
+index 7cead7b..7a7dfc0 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,7 +182,7 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -16,7 +16,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -25,7 +25,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -34,7 +34,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -43,7 +43,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -52,7 +52,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -61,7 +61,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -70,7 +70,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -79,7 +79,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "dirs",
   "once_cell",
@@ -88,7 +88,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -97,7 +97,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_common",
   "egui",
@@ -106,7 +106,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -115,7 +115,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -124,7 +124,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -133,7 +133,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -142,7 +142,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -151,7 +151,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -160,7 +160,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -169,7 +169,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_common",
   "jni",
@@ -178,7 +178,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -187,7 +187,7 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -196,12 +196,12 @@ index 7cead7b..02b73f9 100644
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..06824f9 100644
+index ae00ce8..c29934c 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -209,7 +209,7 @@ index ae00ce8..06824f9 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.7"
++version = "20.13.0-quest3.pyro.8"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -2185,10 +2185,10 @@ index a0fd36f..7e95e42 100644
  
 diff --git a/alvr/client_openxr/src/performance.rs b/alvr/client_openxr/src/performance.rs
 new file mode 100644
-index 0000000..bc72294
+index 0000000..688a94f
 --- /dev/null
 +++ b/alvr/client_openxr/src/performance.rs
-@@ -0,0 +1,254 @@
+@@ -0,0 +1,257 @@
 +use crate::interaction::{ButtonAction, InteractionContext};
 +use alvr_client_core::{
 +    performance::{metric, OverlayToggle},
@@ -2312,6 +2312,9 @@ index 0000000..bc72294
 +            pressed(*RIGHT_THUMBSTICK_CLICK_ID),
 +        );
 +        drop(interactions);
++        if was_visible != self.toggle.visible {
++            alvr_common::info!("[Q3PW_OVERLAY] visible={}", self.toggle.visible);
++        }
 +        if !was_visible && self.toggle.visible {
 +            self.next_update = Instant::now();
 +        }
@@ -3035,17 +3038,18 @@ index 3be9319..c075556 100644
          assert_eq!(r["window"]["frames"], 900);
 diff --git a/alvr/graphics/resources/performance.wgsl b/alvr/graphics/resources/performance.wgsl
 new file mode 100644
-index 0000000..4e06e89
+index 0000000..bc6bee0
 --- /dev/null
 +++ b/alvr/graphics/resources/performance.wgsl
-@@ -0,0 +1,14 @@
+@@ -0,0 +1,15 @@
 +struct VertexOutput { @builtin(position) position: vec4<f32>, @location(0) uv: vec2<f32>, }
 +@vertex fn vertex_main(@builtin(vertex_index) index: u32) -> VertexOutput {
 +    let positions = array<vec2<f32>, 3>(vec2(-1.0, -1.0), vec2(3.0, -1.0), vec2(-1.0, 3.0));
 +    let p = positions[index];
 +    var out: VertexOutput;
 +    out.position = vec4(p, 0.0, 1.0);
-+    out.uv = p * vec2(0.5, -0.5) + vec2(0.5);
++    // OpenXR GLES swapchain images have a bottom-left origin.
++    out.uv = p * vec2(0.5, 0.5) + vec2(0.5);
 +    return out;
 +}
 +@group(0) @binding(0) var panel: texture_2d<f32>;
@@ -4983,7 +4987,7 @@ index d7d0dbb..037ad45 100644
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99..5c271b7 100644
+index 1009e99..e982c8d 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -5151,6 +5155,15 @@ index 1009e99..5c271b7 100644
                  },
              },
              clientside_foveation: SwitchDefault {
+@@ -2066,7 +2066,7 @@ pub fn session_settings_default() -> SettingsDefault {
+                                 content: vec![],
+                             },
+                         },
+-                        variant: ControllersEmulationModeDefaultVariant::Quest2Touch,
++                        variant: ControllersEmulationModeDefaultVariant::Quest3Plus,
+                     },
+                     extra_openvr_props: default_custom_openvr_props,
+                     button_mappings: OptionalDefault {
 @@ -2179,16 +2179,12 @@ pub fn session_settings_default() -> SettingsDefault {
                  content: DiscoveryConfigDefault {
                      // Beta: no pairing step. The pre-release protocol ID already keeps stock
