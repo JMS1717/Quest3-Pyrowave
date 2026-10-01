@@ -1461,6 +1461,174 @@ index b87dfe9..e7998c7 100644
          let new_config = VideoDecoderConfig {
              codec,
              force_software_decoder: self.config.force_software_decoder,
+diff --git a/alvr/dashboard/src/dashboard/components/settings.rs b/alvr/dashboard/src/dashboard/components/settings.rs
+index 5cfc048..b6aba9b 100644
+--- a/alvr/dashboard/src/dashboard/components/settings.rs
++++ b/alvr/dashboard/src/dashboard/components/settings.rs
+@@ -4,7 +4,7 @@ use super::{
+ };
+ use crate::dashboard::ServerRequest;
+ use alvr_gui_common::{theme, DisplayString};
+-use alvr_packets::AudioDevicesList;
++use alvr_packets::{AudioDevicesList, PathValuePair};
+ use alvr_session::{SessionSettings, Settings};
+ use eframe::egui::{self, Align, Frame, Grid, Layout, RichText, ScrollArea, Ui};
+ #[cfg(target_arch = "wasm32")]
+@@ -68,9 +68,7 @@ impl SettingsTab {
+ 
+         Self {
+             selected_top_tab_id: "presets".into(),
+-            streaming_profile_preset: PresetControl::new(
+-                builtin_schema::streaming_profile_schema(),
+-            ),
++            streaming_profile_preset: PresetControl::new(builtin_schema::streaming_profile_schema()),
+             render_scale_preset: PresetControl::new(builtin_schema::render_scale_schema()),
+             refresh_rate_preset: PresetControl::new(builtin_schema::refresh_rate_schema()),
+             game_audio_preset: None,
+@@ -171,6 +169,9 @@ impl SettingsTab {
+                         .num_columns(2)
+                         .min_col_width(MIN_COLUMN_SIZE)
+                         .show(ui, |ui| {
++                            if let Some(settings) = &mut self.session_settings_json {
++                                path_value_pairs.extend(bitrate_controls(ui, settings));
++                            }
+                             path_value_pairs.extend(self.streaming_profile_preset.ui(ui));
+                             ui.end_row();
+ 
+@@ -241,3 +242,133 @@ impl SettingsTab {
+         requests
+     }
+ }
++
++fn bitrate_controls(ui: &mut Ui, settings: &mut json::Value) -> Vec<PathValuePair> {
++    let mut changes = Vec::new();
++    let mode = &mut settings["video"]["bitrate"]["mode"];
++    let mut automatic = mode["variant"] == "Adaptive";
++    ui.label("Auto bitrate");
++    if ui
++        .checkbox(
++            &mut automatic,
++            "Adapt to network / encoder / decoder feedback",
++        )
++        .changed()
++    {
++        mode["variant"] = json::json!(if automatic {
++            "Adaptive"
++        } else {
++            "ConstantMbps"
++        });
++        changes.push(PathValuePair {
++            path: vec![
++                "session_settings".into(),
++                "video".into(),
++                "bitrate".into(),
++                "mode".into(),
++                "variant".into(),
++            ],
++            value: mode["variant"].clone(),
++        });
++        if automatic {
++            let ceiling = mode["ConstantMbps"].as_u64().unwrap_or(400).clamp(5, 2000);
++            mode["Adaptive"]["max_throughput_mbps"]["enabled"] = json::json!(true);
++            mode["Adaptive"]["max_throughput_mbps"]["content"] = json::json!(ceiling);
++            // A minimum floor can prevent recovery from congestion. Leave it opt-in in Video.
++            mode["Adaptive"]["min_throughput_mbps"]["enabled"] = json::json!(false);
++            for (field, leaf, value) in [
++                ("max_throughput_mbps", "enabled", json::json!(true)),
++                ("max_throughput_mbps", "content", json::json!(ceiling)),
++                ("min_throughput_mbps", "enabled", json::json!(false)),
++            ] {
++                changes.push(PathValuePair {
++                    path: vec![
++                        "session_settings".into(),
++                        "video".into(),
++                        "bitrate".into(),
++                        "mode".into(),
++                        "Adaptive".into(),
++                        field.into(),
++                        leaf.into(),
++                    ],
++                    value,
++                });
++            }
++        }
++    }
++    ui.end_row();
++    let mut mbps = if automatic {
++        mode["Adaptive"]["max_throughput_mbps"]["content"].as_u64()
++    } else {
++        mode["ConstantMbps"].as_u64()
++    }
++    .unwrap_or(400);
++    ui.label(if automatic {
++        "Auto bitrate ceiling"
++    } else {
++        "Video bitrate"
++    });
++    if ui
++        .add(egui::Slider::new(&mut mbps, 5..=2000).suffix(" Mbps"))
++        .changed()
++    {
++        let mut path = vec![
++            "session_settings".into(),
++            "video".into(),
++            "bitrate".into(),
++            "mode".into(),
++        ];
++        if automatic {
++            mode["Adaptive"]["max_throughput_mbps"]["content"] = json::json!(mbps);
++            mode["Adaptive"]["max_throughput_mbps"]["enabled"] = json::json!(true);
++            changes.push(PathValuePair {
++                path: vec![
++                    "session_settings".into(),
++                    "video".into(),
++                    "bitrate".into(),
++                    "mode".into(),
++                    "Adaptive".into(),
++                    "max_throughput_mbps".into(),
++                    "enabled".into(),
++                ],
++                value: json::json!(true),
++            });
++            path.extend([
++                "Adaptive".into(),
++                "max_throughput_mbps".into(),
++                "content".into(),
++            ]);
++        } else {
++            mode["ConstantMbps"] = json::json!(mbps);
++            path.push("ConstantMbps".into());
++        }
++        changes.push(PathValuePair {
++            path,
++            value: json::json!(mbps),
++        });
++    }
++    ui.end_row();
++    ui.label("Per-frame budget");
++    let video = &settings["video"];
++    let res = &video["transcoding_view_resolution"];
++    if res["variant"] == "Absolute" {
++        if let Some(b) = alvr_session::beta::frame_budget(
++            res["Absolute"]["width"].as_u64().unwrap_or(0) as u32,
++            res["Absolute"]["height"]["content"].as_u64().unwrap_or(0) as u32,
++            video["preferred_fps"].as_f64().unwrap_or(0.0),
++            mbps,
++            video["pyrowave"]["chroma_444"].as_bool().unwrap_or(false),
++        ) {
++            ui.label(format!("{}×{} / eye • {:.2} ms • ≤{} B/frame • {:.2}:1 raw/payload{}",
++                b.eye_width, b.eye_height, b.frame_ms, b.payload_bytes, b.raw_to_payload,
++                if automatic { " at ceiling" } else { "" }))
++                .on_hover_text("PyroWave 8-bit codec payload after 32-pixel padding. Excludes network overhead. This budget does not prove decode speed or image quality. Resolution/refresh changes need a SteamVR restart.");
++        } else {
++            ui.label("Choose a valid resolution and refresh rate");
++        }
++    } else {
++        ui.label("Select an absolute panel render size to calculate the budget");
++    }
++    ui.end_row();
++    changes
++}
 diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 index efb0f8e..eb75b6c 100644
 --- a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
@@ -1709,6 +1877,72 @@ index 6b4ac58..a7af6d6 100644
  /// Datagram payload budget below a 1500-byte MTU with IPv4/UDP headers and ours.
  pub const PYROWAVE_UDP_PAYLOAD: usize = 1400 - PYROWAVE_UDP_HEADER_LEN;
  
+diff --git a/alvr/server_core/src/bitrate.rs b/alvr/server_core/src/bitrate.rs
+index 81f2f8e..8bf077b 100644
+--- a/alvr/server_core/src/bitrate.rs
++++ b/alvr/server_core/src/bitrate.rs
+@@ -15,6 +15,45 @@ pub struct DynamicEncoderParams {
+     pub framerate: f32,
+ }
+ 
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use alvr_session::{DecoderLatencyLimiter, SessionConfig};
++
++    #[test]
++    fn decoder_limit_converts_bytes_per_frame_to_bits_per_second() {
++        let mut manager = BitrateManager::new(1, 120.0);
++        let mut config = SessionConfig::default().to_settings().video.bitrate;
++        config.mode = BitrateMode::Adaptive {
++            saturation_multiplier: 1.0,
++            max_throughput_mbps: Switch::Enabled(1000),
++            min_throughput_mbps: Switch::Disabled,
++            max_network_latency_ms: Switch::Disabled,
++            encoder_latency_limiter: Switch::Disabled,
++            decoder_latency_limiter: Switch::Enabled(DecoderLatencyLimiter {
++                max_decoder_latency_ms: 1,
++                latency_overstep_frames: 1,
++                latency_overstep_multiplier: 0.5,
++            }),
++        };
++        let timestamp = Duration::from_secs(1);
++        manager.report_frame_encoded(timestamp, Duration::from_millis(1), 1_000_000);
++        manager.report_frame_latencies(
++            &config.mode,
++            timestamp,
++            Duration::from_millis(1),
++            Duration::from_millis(2),
++        );
++        let (params, directives) = manager.get_encoder_params(&config).unwrap();
++        // 500,000 bytes/frame * 8 * 120 = 480 Mbps, not 0.5 Mbps.
++        assert!((params.bitrate_bps - 480_000_000.0).abs() < 100.0);
++        assert_eq!(
++            directives.decoder_latency_limiter_bps,
++            Some(params.bitrate_bps)
++        );
++    }
++}
++
+ pub struct BitrateManager {
+     nominal_frame_interval: Duration,
+     frame_interval_average: SlidingWindowAverage<Duration>,
+@@ -196,10 +235,11 @@ impl BitrateManager {
+                 bitrate_directives.scaled_calculated_throughput_bps = Some(throughput_bps);
+ 
+                 if decoder_latency_limiter.enabled() {
+-                    throughput_bps =
+-                        f32::min(throughput_bps, self.dynamic_decoder_max_bytes_per_frame);
+-                    bitrate_directives.decoder_latency_limiter_bps =
+-                        Some(self.dynamic_decoder_max_bytes_per_frame);
++                    // The learned limit is bytes/frame; throughput and directives are bits/s.
++                    let decoder_max_bps = self.dynamic_decoder_max_bytes_per_frame * 8.0
++                        / frame_interval.as_secs_f32();
++                    throughput_bps = f32::min(throughput_bps, decoder_max_bps);
++                    bitrate_directives.decoder_latency_limiter_bps = Some(decoder_max_bps);
+                 }
+ 
+                 if let Switch::Enabled(max_ms) = max_network_latency_ms {
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
 index fc176da..647954d 100644
 --- a/alvr/server_core/src/connection.rs
@@ -1811,6 +2045,50 @@ index 64f93a6..d38c74e 100644
  
          self.last_face_data = face_data;
      }
+diff --git a/alvr/server_io/src/lib.rs b/alvr/server_io/src/lib.rs
+index 1f84992..e180d88 100644
+--- a/alvr/server_io/src/lib.rs
++++ b/alvr/server_io/src/lib.rs
+@@ -80,6 +80,14 @@ impl ServerSessionManager {
+             SessionConfig::default()
+         };
+ 
++        // The native OpenVR driver reads session.json during its own initialization, before
++        // the dashboard has made any edits. A fresh portable install must persist defaults now.
++        if let Some(path) = &session_path {
++            if let Err(err) = save_session(&session_config, path) {
++                error!("Could not initialize session configuration: {err}");
++            }
++        }
++
+         Self {
+             session_config: session_config.clone(),
+             settings: session_config.to_settings(),
+@@ -337,3 +345,24 @@ impl Debug for ServerSessionManager {
+         write!(f, "{:?}", self.session_path)
+     }
+ }
++
++#[cfg(test)]
++mod initialization_tests {
++    use super::*;
++
++    #[test]
++    fn fresh_portable_install_persists_config_before_native_driver_reads_it() {
++        let unique = std::time::SystemTime::now()
++            .duration_since(std::time::UNIX_EPOCH)
++            .unwrap()
++            .as_nanos();
++        let dir =
++            std::env::temp_dir().join(format!("quest3-session-{}-{unique}", std::process::id()));
++        let path = dir.join("session.json");
++        let manager = ServerSessionManager::new(Some(path.clone()));
++        let persisted: SessionConfig = json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
++        assert_eq!(persisted.server_version, manager.session().server_version);
++        fs::remove_file(path).unwrap();
++        fs::remove_dir(dir).unwrap();
++    }
++}
 diff --git a/alvr/server_openvr/cpp/alvr_server/Settings.cpp b/alvr/server_openvr/cpp/alvr_server/Settings.cpp
 index e729ffa..6184758 100644
 --- a/alvr/server_openvr/cpp/alvr_server/Settings.cpp
@@ -2165,10 +2443,18 @@ index a0356d3..230c751 100644
  public:
      VideoEncoderPyroWave(
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
-index 84100dc..b9becc3 100644
+index 84100dc..92140a7 100644
 --- a/alvr/session/src/beta.rs
 +++ b/alvr/session/src/beta.rs
-@@ -8,14 +8,14 @@ use serde_json as json;
+@@ -3,25 +3,91 @@
+ //! environment overrides are applied. The server, the dashboard and the tests all read from here,
+ //! so the UI, the defaults and the documentation cannot drift apart.
+ 
+-use crate::settings::{CodecType, PyroWaveDecodePath, PyroWaveTransport, PyroWaveWavelet, Settings};
++use crate::settings::{
++    CodecType, PyroWaveDecodePath, PyroWaveTransport, PyroWaveWavelet, Settings,
++};
+ use serde_json as json;
  use settings_schema::{SchemaEntry, SchemaNode};
  use std::fmt;
  
@@ -2189,8 +2475,108 @@ index 84100dc..b9becc3 100644
  /// on its own, so the requested size is not pre-aligned.
  pub fn render_scale_size(percent: u32) -> (u32, u32) {
      let scale = |v: u32| ((v as f64) * percent as f64 / 100.0).round() as u32;
-@@ -48,7 +48,7 @@ fn render_size(percent: u32) -> Vec<(String, json::Value)> {
-         .collect()
+     (scale(PANEL_PER_EYE.0), scale(PANEL_PER_EYE.1))
+ }
+ 
++/// Codec payload budget, after ALVR's per-eye padding. Excludes transport overhead.
++#[derive(Debug)]
++pub struct FrameBudget {
++    pub eye_width: u32,
++    pub eye_height: u32,
++    pub frame_ms: f64,
++    pub payload_bytes: u64,
++    pub raw_bytes: u64,
++    pub raw_to_payload: f64,
++}
++
++pub fn frame_budget(
++    width: u32,
++    height: u32,
++    hz: f64,
++    mbps: u64,
++    full_chroma: bool,
++) -> Option<FrameBudget> {
++    if width == 0 || height == 0 || !hz.is_finite() || hz <= 0.0 || mbps == 0 {
++        return None;
++    }
++    let eye_width = width.checked_add(31)? / 32 * 32;
++    let eye_height = height.checked_add(31)? / 32 * 32;
++    let pixels = u64::from(eye_width) * u64::from(eye_height) * 2;
++    let raw_bytes = pixels * 3 / if full_chroma { 1 } else { 2 };
++    // Match the encoder's integer bps / 8 / integer framerate calculation.
++    let encoder_hz = hz as u64;
++    if encoder_hz == 0 {
++        return None;
++    }
++    let payload_bytes = mbps.checked_mul(1_000_000)? / 8 / encoder_hz;
++    if payload_bytes == 0 {
++        return None;
++    }
++    Some(FrameBudget {
++        eye_width,
++        eye_height,
++        frame_ms: 1000.0 / hz,
++        payload_bytes,
++        raw_bytes,
++        raw_to_payload: raw_bytes as f64 / payload_bytes as f64,
++    })
++}
++
++#[cfg(test)]
++mod budget_tests {
++    use super::*;
++    #[test]
++    fn full_panel_120_budget_matches_encoder_and_420_sampling() {
++        let b = frame_budget(2064, 2208, 120.0, 1000, false).unwrap();
++        assert_eq!((b.eye_width, b.eye_height), (2080, 2208));
++        assert_eq!(b.payload_bytes, 1_041_666);
++        assert_eq!(b.raw_bytes, 13_777_920);
++        assert_eq!(
++            frame_budget(2064, 2208, 120.0, 1000, true)
++                .unwrap()
++                .raw_bytes,
++            b.raw_bytes * 2
++        );
++        assert!(frame_budget(0, 2208, 120.0, 1000, false).is_none());
++        assert!(frame_budget(2064, 2208, f64::NAN, 1000, false).is_none());
++    }
++}
++
+ pub struct StreamingProfile {
+     pub name: &'static str,
+     pub subtitle: &'static str,
+@@ -35,20 +101,26 @@ fn assign(path: &str, value: json::Value) -> (String, json::Value) {
+ 
+ fn render_size(percent: u32) -> Vec<(String, json::Value)> {
+     let (width, height) = render_scale_size(percent);
+-    ["transcoding_view_resolution", "emulated_headset_view_resolution"]
+-        .into_iter()
+-        .flat_map(|field| {
+-            [
+-                assign(&format!("video.{field}.variant"), "Absolute".into()),
+-                assign(&format!("video.{field}.Absolute.width"), width.into()),
+-                assign(&format!("video.{field}.Absolute.height.set"), true.into()),
+-                assign(&format!("video.{field}.Absolute.height.content"), height.into()),
+-            ]
+-        })
+-        .collect()
++    [
++        "transcoding_view_resolution",
++        "emulated_headset_view_resolution",
++    ]
++    .into_iter()
++    .flat_map(|field| {
++        [
++            assign(&format!("video.{field}.variant"), "Absolute".into()),
++            assign(&format!("video.{field}.Absolute.width"), width.into()),
++            assign(&format!("video.{field}.Absolute.height.set"), true.into()),
++            assign(
++                &format!("video.{field}.Absolute.height.content"),
++                height.into(),
++            ),
++        ]
++    })
++    .collect()
  }
  
 -/// The settings both profiles pin: the measured foveation, buffering, pacing, encoder and
@@ -2198,26 +2584,62 @@ index 84100dc..b9becc3 100644
  /// socket values, so switching profiles never leaves one of them at a tester's experiment.
  fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::Value)> {
      let mut list = vec![
-@@ -56,14 +56,15 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
+@@ -56,48 +128,123 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
          assign("video.bitrate.mode.variant", "ConstantMbps".into()),
          assign("video.bitrate.mode.ConstantMbps", mbps.into()),
          assign("video.preferred_fps", json::json!(fps)),
 -        assign("video.foveated_encoding.enabled", true.into()),
+-        assign("video.foveated_encoding.content.center_size_x", json::json!(0.20)),
+-        assign("video.foveated_encoding.content.center_size_y", json::json!(0.178)),
+-        assign("video.foveated_encoding.content.center_shift_x", json::json!(0.0)),
+-        assign("video.foveated_encoding.content.center_shift_y", json::json!(0.0)),
+-        assign("video.foveated_encoding.content.edge_ratio_x", json::json!(3.0)),
+-        assign("video.foveated_encoding.content.edge_ratio_y", json::json!(4.0)),
+-        assign("video.foveated_encoding.content.follow_gaze", true.into()),
 +        assign("video.foveated_encoding.enabled", false.into()),
 +        assign("video.clientside_foveation.enabled", false.into()),
-         assign("video.foveated_encoding.content.center_size_x", json::json!(0.20)),
-         assign("video.foveated_encoding.content.center_size_y", json::json!(0.178)),
-         assign("video.foveated_encoding.content.center_shift_x", json::json!(0.0)),
-         assign("video.foveated_encoding.content.center_shift_y", json::json!(0.0)),
-         assign("video.foveated_encoding.content.edge_ratio_x", json::json!(3.0)),
-         assign("video.foveated_encoding.content.edge_ratio_y", json::json!(4.0)),
--        assign("video.foveated_encoding.content.follow_gaze", true.into()),
++        assign(
++            "video.foveated_encoding.content.center_size_x",
++            json::json!(0.20),
++        ),
++        assign(
++            "video.foveated_encoding.content.center_size_y",
++            json::json!(0.178),
++        ),
++        assign(
++            "video.foveated_encoding.content.center_shift_x",
++            json::json!(0.0),
++        ),
++        assign(
++            "video.foveated_encoding.content.center_shift_y",
++            json::json!(0.0),
++        ),
++        assign(
++            "video.foveated_encoding.content.edge_ratio_x",
++            json::json!(3.0),
++        ),
++        assign(
++            "video.foveated_encoding.content.edge_ratio_y",
++            json::json!(4.0),
++        ),
 +        assign("video.foveated_encoding.content.follow_gaze", false.into()),
          assign("video.max_buffering_frames", json::json!(1.5)),
          assign("video.enforce_server_frame_pacing", true.into()),
-         assign("video.encoder_config.rate_control_mode.variant", "Cbr".into()),
-@@ -71,33 +72,40 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
-         assign("video.encoder_config.nvenc.quality_preset.variant", "P1".into()),
+-        assign("video.encoder_config.rate_control_mode.variant", "Cbr".into()),
+-        assign("video.encoder_config.entropy_coding.variant", "Cavlc".into()),
+-        assign("video.encoder_config.nvenc.quality_preset.variant", "P1".into()),
++        assign(
++            "video.encoder_config.rate_control_mode.variant",
++            "Cbr".into(),
++        ),
++        assign(
++            "video.encoder_config.entropy_coding.variant",
++            "Cavlc".into(),
++        ),
++        assign(
++            "video.encoder_config.nvenc.quality_preset.variant",
++            "P1".into(),
++        ),
          assign("connection.stream_protocol.variant", "Tcp".into()),
          assign("connection.packet_size", 65000.into()),
 -        assign("connection.max_queued_server_video_frames", 12.into()),
@@ -2249,15 +2671,46 @@ index 84100dc..b9becc3 100644
 -        },
 -    ]
 +    let mut profiles = Vec::new();
-+    const EXPERIMENT: &str = "Experimental: full-frame 4:2:0, TCP, 120 Hz; decode/transport budget not validated";
++    const EXPERIMENT: &str =
++        "Experimental: full-frame 4:2:0, TCP, 120 Hz; decode/transport budget not validated";
 +    for (name, mbps, fps, subtitle) in [
 +        (RECOMMENDED_PROFILE, 400, 72.0, RECOMMENDED_SUBTITLE),
-+        ("Quest 3 PyroWave 600 Mbps / 90 Hz candidate", 600, 90.0, "Candidate: full-frame 4:2:0, TCP, 90 Hz; live acceptance pending"),
-+        ("Quest 3 PyroWave 600 Mbps / 120 Hz experiment", 600, 120.0, EXPERIMENT),
-+        ("Quest 3 PyroWave 800 Mbps / 120 Hz experiment", 800, 120.0, EXPERIMENT),
-+        ("Quest 3 PyroWave 1000 Mbps / 120 Hz experiment", 1000, 120.0, EXPERIMENT),
-+        ("Quest 3 PyroWave 1500 Mbps / 120 Hz experiment", 1500, 120.0, EXPERIMENT),
-+        ("Quest 3 PyroWave 2000 Mbps / 120 Hz experiment", 2000, 120.0, EXPERIMENT),
++        (
++            "Quest 3 PyroWave 600 Mbps / 90 Hz candidate",
++            600,
++            90.0,
++            "Candidate: full-frame 4:2:0, TCP, 90 Hz; live acceptance pending",
++        ),
++        (
++            "Quest 3 PyroWave 600 Mbps / 120 Hz experiment",
++            600,
++            120.0,
++            EXPERIMENT,
++        ),
++        (
++            "Quest 3 PyroWave 800 Mbps / 120 Hz experiment",
++            800,
++            120.0,
++            EXPERIMENT,
++        ),
++        (
++            "Quest 3 PyroWave 1000 Mbps / 120 Hz experiment",
++            1000,
++            120.0,
++            EXPERIMENT,
++        ),
++        (
++            "Quest 3 PyroWave 1500 Mbps / 120 Hz experiment",
++            1500,
++            120.0,
++            EXPERIMENT,
++        ),
++        (
++            "Quest 3 PyroWave 2000 Mbps / 120 Hz experiment",
++            2000,
++            120.0,
++            EXPERIMENT,
++        ),
 +    ] {
 +        let mut assignments = shared("PyroWave", mbps, fps, 100);
 +        assignments.extend([
@@ -2266,11 +2719,20 @@ index 84100dc..b9becc3 100644
 +            assign("video.pyrowave.wavelet.variant", "Cdf97".into()),
 +            assign("video.pyrowave.decode_path.variant", "Auto".into()),
 +        ]);
-+        profiles.push(StreamingProfile { name, subtitle, assignments });
-+    }
-+    for (name, codec) in [(H264_PROFILE, "H264"), ("HEVC comparison", "Hevc"), ("AV1 comparison", "AV1")] {
 +        profiles.push(StreamingProfile {
-+            name, subtitle: "Hardware codec baseline, 200 Mbps, 120 Hz, same full render size",
++            name,
++            subtitle,
++            assignments,
++        });
++    }
++    for (name, codec) in [
++        (H264_PROFILE, "H264"),
++        ("HEVC comparison", "Hevc"),
++        ("AV1 comparison", "AV1"),
++    ] {
++        profiles.push(StreamingProfile {
++            name,
++            subtitle: "Hardware codec baseline, 200 Mbps, 120 Hz, same full render size",
 +            assignments: shared(codec, 200, 120.0, 100),
 +        });
 +    }
@@ -2278,7 +2740,7 @@ index 84100dc..b9becc3 100644
  }
  
  #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-@@ -186,6 +194,7 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
+@@ -186,6 +333,7 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
  #[derive(Clone, Debug, PartialEq)]
  pub struct PyroWaveEffective {
      pub enabled: bool,
@@ -2286,7 +2748,18 @@ index 84100dc..b9becc3 100644
      pub udp: bool,
      pub wavelet_53: bool,
      pub decode_path: PyroWaveDecodePath,
-@@ -221,18 +230,11 @@ pub fn pyrowave_effective(
+@@ -211,9 +359,7 @@ pub fn pyrowave_effective(
+         value
+     };
+ 
+-    let enabled = read("ALVR_PYROWAVE")
+-        .map(|v| env_flag(&v))
+-        .unwrap_or(false)
++    let enabled = read("ALVR_PYROWAVE").map(|v| env_flag(&v)).unwrap_or(false)
+         || video.preferred_codec == CodecType::PyroWave;
+     let udp = read("ALVR_PYROWAVE_UDP")
+         .map(|v| env_flag(&v))
+@@ -221,18 +367,11 @@ pub fn pyrowave_effective(
      let wavelet_53 = read("ALVR_PYROWAVE_WAVELET")
          .map(|v| v == "53")
          .unwrap_or(video.pyrowave.wavelet == PyroWaveWavelet::Cdf53);
@@ -2307,7 +2780,7 @@ index 84100dc..b9becc3 100644
          udp,
          wavelet_53,
          decode_path: video.pyrowave.decode_path,
-@@ -255,8 +257,9 @@ impl fmt::Display for PyroWaveEffective {
+@@ -255,8 +394,9 @@ impl fmt::Display for PyroWaveEffective {
          };
          write!(
              f,
@@ -2318,6 +2791,16 @@ index 84100dc..b9becc3 100644
              if self.udp { "UDP" } else { "TCP" },
              if self.wavelet_53 { "5/3" } else { "9/7" },
              if self.follow_gaze { "on" } else { "off" },
+@@ -279,7 +419,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
+ }
+ 
+ fn at<'a>(root: &'a json::Value, path: &str) -> Option<&'a json::Value> {
+-    path.split('.').try_fold(root, |node, segment| node.get(segment))
++    path.split('.')
++        .try_fold(root, |node, segment| node.get(segment))
+ }
+ 
+ /// The profile whose every assignment the session (`session_settings` as JSON) currently holds,
 diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
 index 985a4d0..e1256bb 100644
 --- a/alvr/session/src/beta_tests.rs
@@ -2554,7 +3037,7 @@ index d7d0dbb..037ad45 100644
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99..82a0363 100644
+index 1009e99..743c4c3 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -2566,7 +3049,7 @@ index 1009e99..82a0363 100644
  
      #[schema(collapsible)]
      Adaptive {
-@@ -418,7 +418,7 @@ pub enum BitrateMode {
+@@ -418,12 +418,12 @@ pub enum BitrateMode {
  
          #[schema(strings(display_name = "Maximum bitrate"))]
          #[schema(flag = "real-time")]
@@ -2575,6 +3058,12 @@ index 1009e99..82a0363 100644
          max_throughput_mbps: Switch<u64>,
  
          #[schema(strings(display_name = "Minimum bitrate"))]
+         #[schema(flag = "real-time")]
+-        #[schema(gui(slider(min = 1, max = 100, logarithmic)), suffix = "Mbps")]
++        #[schema(gui(slider(min = 1, max = 2000, logarithmic)), suffix = "Mbps")]
+         min_throughput_mbps: Switch<u64>,
+ 
+         #[schema(strings(display_name = "Maximum network latency"))]
 @@ -582,14 +582,12 @@ pub enum CodecType {
      // HEVC and AV1 stay in the enum (session files and the wire format know them) but are not
      // offered: on the Galaxy XR the hardware HEVC decoder measured ~8x slower than H.264.

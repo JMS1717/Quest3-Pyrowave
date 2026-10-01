@@ -102,6 +102,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --release -p alvr_session --lib
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --release -p alvr_server_core --lib bitrate::tests
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --release -p alvr_server_io --lib initialization_tests
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --release -p alvr_dashboard --bin alvr_dashboard
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Package

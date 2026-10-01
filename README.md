@@ -28,6 +28,11 @@ This is a port and research project, not a claim to authorship of those componen
    in PyroWave settings and restart SteamVR for full chroma. Foveation is disabled throughout this fork.
 4. Follow [the benchmark protocol](docs/BENCHMARKING.md) before raising bitrate, resolution or refresh.
 
+Settings → Presets includes a bitrate slider, Auto bitrate toggle and padded per-frame
+budget. See [profile math and automatic bitrate](docs/BITRATE.md) for every preset's
+resolution, bytes/frame, compression ratio and network overhead. Auto uses latency feedback;
+its slider sets a ceiling rather than a guaranteed rate.
+
 | Requested refresh | Frame budget | Policy |
 |---|---:|---|
 | 72 Hz | 13.89 ms | Conservative candidate; live acceptance pending |
