@@ -5,6 +5,7 @@ Maintained by [JMS1717](https://github.com/JMS1717). Designed to investigate low
 same-room Wi-Fi 6E and 2.5 GbE, with **300 / 400 / 600 / 800 / 1000 / 1500 / 2000 Mbps** targets.
 
 **Development status:** The full-resolution preview delivered black/corrupted video. Dashboard startup and on-device decoder readbacks are repaired, but live VR acceptance remains pending. The new transport repair fragments complete codec frames below the MTU; the old packetizer could emit oversized blocks. TCP is the conservative transport default. Use matching client/server builds. See [repair evidence](results/CORRUPTION-FIX.md). Foveation remains disabled.
+The [matching PWU2 build candidate](results/PWU2-BUILD.md) passed Android/Windows builds and cloud regression tests. It remains uninstalled and unvalidated in live VR.
 Reviewed initial evidence is in [results](results/INITIAL-EVIDENCE.md). Those earlier foveated results do not validate the current full-frame build. High bitrate
 presets are experiment targets, not promises of usable throughput or quality.
 
