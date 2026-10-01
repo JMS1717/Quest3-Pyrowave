@@ -1,0 +1,74 @@
+diff --git a/shaders/idwt.comp b/shaders/idwt.comp
+index e910c8b..18803c2 100644
+--- a/shaders/idwt.comp
++++ b/shaders/idwt.comp
+@@ -222,8 +222,69 @@ void inverse_transform4x2(bool active_lane, int y_offset)
+     }
+ }
+ 
++// Pair-local inverse Haar: no apron gathers, shared tile, or workgroup barriers.
++// Existing dispatch geometry is transposed (resolution = texture height, width).
++FLOAT haar_intermediate(FLOAT v)
++{
++#if PRECISION == 2
++    return v;
++#elif FP16
++    return FLOAT(float16_t(v));
++#else
++    return FLOAT(unpackHalf2x16(packHalf2x16(vec2(float(v), 0.0))).x);
++#endif
++}
++
++void inverse_haar_pairs()
++{
++    for (uint i = gl_LocalInvocationIndex; i < 256u; i += 64u)
++    {
++        ivec2 transposed = ivec2(gl_WorkGroupID.xy) * 16 + ivec2(i & 15u, i >> 4u);
++        if (any(greaterThanEqual(transposed, resolution)))
++            continue;
++        ivec2 coeff = transposed.yx;
++        FLOAT a = FLOAT(texelFetch(uTexture, ivec3(coeff, 0), 0).x);
++        FLOAT horizontal = FLOAT(texelFetch(uTexture, ivec3(coeff, 1), 0).x);
++        FLOAT vertical = FLOAT(texelFetch(uTexture, ivec3(coeff, 2), 0).x);
++        FLOAT diagonal = FLOAT(texelFetch(uTexture, ivec3(coeff, 3), 0).x);
++        // Match the old vertical-then-horizontal inverse and shared FP16 rounding.
++        FLOAT low_even = a - FLOAT(0.5) * vertical;
++        FLOAT low_odd = low_even + vertical;
++        FLOAT high_even = horizontal - FLOAT(0.5) * diagonal;
++        FLOAT high_odd = high_even + diagonal;
++        low_even = haar_intermediate(low_even);
++        low_odd = haar_intermediate(low_odd);
++        high_even = haar_intermediate(high_even);
++        high_odd = haar_intermediate(high_odd);
++        FLOAT even_even = low_even - FLOAT(0.5) * high_even;
++        FLOAT odd_even = even_even + high_even;
++        FLOAT even_odd = low_odd - FLOAT(0.5) * high_odd;
++        FLOAT odd_odd = even_odd + high_odd;
++        // The old path stores to shared memory once more before imageStore.
++        even_even = haar_intermediate(even_even);
++        odd_even = haar_intermediate(odd_even);
++        even_odd = haar_intermediate(even_odd);
++        odd_odd = haar_intermediate(odd_odd);
++        if (DCShift)
++        {
++            even_even += FLOAT(0.5); odd_even += FLOAT(0.5);
++            even_odd += FLOAT(0.5); odd_odd += FLOAT(0.5);
++        }
++        ivec2 pixel = 2 * coeff;
++        imageStore(uOutput, pixel, VEC4(even_even));
++        imageStore(uOutput, pixel + ivec2(1, 0), VEC4(odd_even));
++        imageStore(uOutput, pixel + ivec2(0, 1), VEC4(even_odd));
++        imageStore(uOutput, pixel + ivec2(1, 1), VEC4(odd_odd));
++    }
++}
++
+ void main()
+ {
++    if (HAAR)
++    {
++        inverse_haar_pairs();
++        return;
++    }
+     local_index = gl_LocalInvocationIndex;
+ 
+     load_image_with_apron();
