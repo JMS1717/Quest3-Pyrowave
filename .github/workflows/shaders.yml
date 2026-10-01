@@ -1,0 +1,25 @@
+name: Regenerate pinned PyroWave shaders
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  shaders:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sh tools/ci/fetch_sources.sh "$GITHUB_WORKSPACE/ws/research"
+      - name: Build pinned shader compiler
+        run: |
+          p="$GITHUB_WORKSPACE/ws/research/pyrowave"
+          cmake -S "$p/Granite" -B /tmp/shader-tools -G Ninja -DCMAKE_BUILD_TYPE=Release -DGRANITE_TOOLS=ON -DGRANITE_RENDERER=OFF -DGRANITE_VULKAN_SPIRV_CROSS=ON -DGRANITE_VULKAN_SHADER_MANAGER_RUNTIME_COMPILER=ON -DGRANITE_VULKAN_SYSTEM_HANDLES=OFF
+          cmake --build /tmp/shader-tools --target slangmosh -j 4
+          compiler=$(find /tmp/shader-tools -type f -name slangmosh | head -n 1)
+          "$compiler" "$p/shaders/slangmosh.json" --namespace PyroWave --output "$p/shaders/slangmosh.hpp" -O --strip
+          mkdir out
+          cp "$p/shaders/slangmosh.hpp" out/
+          sha256sum "$p/shaders/idwt.comp" > out/SOURCE-SHA256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PyroWave-generated-shaders
+          path: out/
