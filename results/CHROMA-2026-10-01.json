@@ -1,0 +1,174 @@
+{
+  "source_commit": "3c223ebee0075e56b65761db8fbd5bb48627778b",
+  "codec": "PyroWave Haar Vulkan Compute",
+  "workers": 1,
+  "foveation": false,
+  "transport": "native USB / ALVR ADB TCP",
+  "decision": "420 default, 444 optional: meaningful FPS/pacing/decode/completion/latency regression",
+  "quality_evidence": "Screenshot chart comparisons: fine saturated HUD/text strokes stronger in444/2000; no human in-headset superiority acceptance and no broad gameplay-quality comparison. Source references identical; source eye2544x2704 encoded2080x2208.",
+  "thermal_limit": "Matched reported battery45C,690MHzGPU,thermalstatus0 for chart pair; battery is not GPU die temperature. No thermal endurance claim.",
+  "rows": [
+    {
+      "scene": "SteamVR Home",
+      "chroma": "420",
+      "requested_hz": 120,
+      "encoded_eye_size": [
+        2080,
+        2208
+      ],
+      "target_mbps": 1000,
+      "capture_requested_s": 45,
+      "fresh_submission_rate_fps": 96.5039379887,
+      "instantaneous_fps_p1": 59.98419671,
+      "instantaneous_fps_p50": 119.9927975,
+      "timestamp_gap_p95_ms": 16.7543979,
+      "gpu_decode_p50_ms": 4.660286,
+      "completion_p50_ms": 9.582344500000001,
+      "estimated_latency_p50_ms": 62.8066625,
+      "payload_p50_mbps": 1001.8581,
+      "battery_temperature_start_c": 44.0,
+      "battery_temperature_end_c": 45.0,
+      "gpu_clock_hz": 690000000,
+      "thermal_status_observed": [
+        0
+      ],
+      "status": "measured",
+      "notes": "Short sequential cell; not sustained gameplay/endurance acceptance"
+    },
+    {
+      "scene": "SteamVR Home",
+      "chroma": "444",
+      "requested_hz": 120,
+      "encoded_eye_size": [
+        2080,
+        2208
+      ],
+      "target_mbps": 1000,
+      "capture_requested_s": 45,
+      "fresh_submission_rate_fps": 68.01065424682473,
+      "instantaneous_fps_p1": 59.964808,
+      "instantaneous_fps_p50": 60.001152,
+      "timestamp_gap_p95_ms": 19.5462676,
+      "gpu_decode_p50_ms": 8.68539,
+      "completion_p50_ms": 13.9719285,
+      "estimated_latency_p50_ms": 79.72248,
+      "payload_p50_mbps": 1003.02406,
+      "battery_temperature_start_c": 45.0,
+      "battery_temperature_end_c": 45.0,
+      "gpu_clock_hz": 690000000,
+      "thermal_status_observed": [
+        0
+      ],
+      "status": "measured",
+      "notes": "Short sequential cell; not sustained gameplay/endurance acceptance"
+    },
+    {
+      "scene": "SteamVR Home",
+      "chroma": "444",
+      "requested_hz": 120,
+      "encoded_eye_size": [
+        2080,
+        2208
+      ],
+      "target_mbps": 2000,
+      "capture_requested_s": 45,
+      "fresh_submission_rate_fps": 63.463185310842185,
+      "instantaneous_fps_p1": 40.0021182,
+      "instantaneous_fps_p50": 60.000553,
+      "timestamp_gap_p95_ms": 24.9991928,
+      "gpu_decode_p50_ms": 9.145885,
+      "completion_p50_ms": 14.312137,
+      "estimated_latency_p50_ms": 88.59469,
+      "payload_p50_mbps": 2006.9427,
+      "battery_temperature_start_c": 45.0,
+      "battery_temperature_end_c": 45.0,
+      "gpu_clock_hz": 690000000,
+      "thermal_status_observed": [
+        0
+      ],
+      "status": "measured",
+      "notes": "Short sequential cell; not sustained gameplay/endurance acceptance"
+    },
+    {
+      "scene": "SteamVR Home",
+      "chroma": "420",
+      "requested_hz": 120,
+      "encoded_eye_size": [
+        2080,
+        2208
+      ],
+      "target_mbps": 1000,
+      "capture_requested_s": 120,
+      "fresh_submission_rate_fps": 93.42847848264299,
+      "instantaneous_fps_p1": 59.967619639999995,
+      "instantaneous_fps_p50": 119.99323,
+      "timestamp_gap_p95_ms": 17.1167465,
+      "gpu_decode_p50_ms": 4.7304429,
+      "completion_p50_ms": 9.7977875,
+      "estimated_latency_p50_ms": 62.726000000000006,
+      "payload_p50_mbps": 1002.98944,
+      "battery_temperature_start_c": 44.0,
+      "battery_temperature_end_c": 44.0,
+      "gpu_clock_hz": 690000000,
+      "thermal_status_observed": [
+        0
+      ],
+      "status": "measured",
+      "notes": "Startup consumed about31s; submitted graph span about89s, not120s sustained window"
+    },
+    {
+      "scene": "chart",
+      "chroma": "420",
+      "requested_hz": 120,
+      "encoded_eye_size": [
+        2080,
+        2208
+      ],
+      "target_mbps": 1000,
+      "capture_requested_s": 45,
+      "fresh_submission_rate_fps": 99.97413852626102,
+      "instantaneous_fps_p1": 59.99017224,
+      "instantaneous_fps_p50": 119.99342,
+      "timestamp_gap_p95_ms": 16.800658199999997,
+      "gpu_decode_p50_ms": 4.6177604500000005,
+      "completion_p50_ms": 9.303282,
+      "estimated_latency_p50_ms": 71.30109,
+      "payload_p50_mbps": 1002.9296,
+      "battery_temperature_start_c": 45.0,
+      "battery_temperature_end_c": 45.0,
+      "gpu_clock_hz": 690000000,
+      "thermal_status_observed": [
+        0
+      ],
+      "status": "measured",
+      "notes": "Short sequential cell; not sustained gameplay/endurance acceptance"
+    },
+    {
+      "scene": "chart",
+      "chroma": "444",
+      "requested_hz": 120,
+      "encoded_eye_size": [
+        2080,
+        2208
+      ],
+      "target_mbps": 2000,
+      "capture_requested_s": 45,
+      "fresh_submission_rate_fps": 65.86182288728999,
+      "instantaneous_fps_p1": 39.99840996,
+      "instantaneous_fps_p50": 60.00149,
+      "timestamp_gap_p95_ms": 22.101858699999998,
+      "gpu_decode_p50_ms": 8.837083,
+      "completion_p50_ms": 13.554585,
+      "estimated_latency_p50_ms": 89.88661,
+      "payload_p50_mbps": 2004.7423,
+      "battery_temperature_start_c": 45.0,
+      "battery_temperature_end_c": 45.0,
+      "gpu_clock_hz": 690000000,
+      "thermal_status_observed": [
+        0
+      ],
+      "status": "measured",
+      "notes": "Short sequential cell; not sustained gameplay/endurance acceptance"
+    }
+  ]
+}

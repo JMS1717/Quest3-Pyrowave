@@ -170,7 +170,7 @@ def capture(args):
                 'client_build':build}
         (root/'report.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
         print(json.dumps({'status':report['status'],'out':str(root)}));return 1
-    stop=threading.Event();begin=time.monotonic()
+    stop=threading.Event();begin_wall_ns=time.time_ns();begin=time.monotonic()
     def sample_device():
         while not stop.is_set():
             samples.append({'elapsed_s':time.monotonic()-begin,'state':snapshot(args.adb)})
@@ -193,7 +193,7 @@ def capture(args):
     report=summarise(events,args.hz)
     try:settings_end=active_settings()
     except Exception as exc:settings_end=None;error=str(exc)
-    report.update({'duration_requested_s':args.seconds,'elapsed_s':time.monotonic()-begin,
+    report.update({'duration_requested_s':args.seconds,'capture_started_unix_ns':begin_wall_ns,'elapsed_s':time.monotonic()-begin,
         'error':error,'state_start':start,'state_end':snapshot(args.adb),'device_samples':samples,
         'settings_start':settings_start,'settings_end':settings_end,'client_build':build,
         'runtime_evidence':runtime_evidence(args.adb)})

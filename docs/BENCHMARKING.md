@@ -90,3 +90,5 @@ full-range BT.709 RGBA, with `python -m tools.quest3.score --help`. Include warm
 image dimensions; these offline results exclude VR compositor and network work.
 
 Use `--chroma 420` or `--chroma 444` with `tools.quest3.control apply`. Chroma and bitrate are separate controls. Capture files record both requested and negotiated chroma.
+
+For a reproducible fine colored HUD/text source, use `python -m tools.quest3.stereo_scene --quality --seconds 180 --out results/local/chroma-source`. Keep capture events strictly within its ready/start/end window. The client remains on420 by default; see [matched chroma evidence](CHROMA.md).
