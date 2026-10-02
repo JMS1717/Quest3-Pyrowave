@@ -323,7 +323,7 @@ so this asynchronous completion rate is a lower bound. The .17 candidate skips
 unchanged settings and counts pending copies drained for actual changes. That
 counter defect does not explain the measured fresh-FPS/latency regression.
 
-## Scheduling experiments (.17, unvalidated)
+## Scheduling experiments (.17)
 
 The matching .17 candidate adds three independently opt-in experiments. Defaults
 retain the working synchronous behavior; restart the client after changing properties.
@@ -356,6 +356,38 @@ inheritable parent handle does not reach the bootstrap child. This addresses the
 observed failure mechanism; an actual SteamVR restart is still needed for live
 acceptance. See the [pinned Rust process implementation](https://github.com/rust-lang/rust/blob/1.97.1/library/std/src/sys/process/windows.rs)
 and [Windows process API](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw).
+
+### Short matched .17 screens, October 2
+
+Three 15-second captures per sequence used native 2080×2208 per eye, confirmed
+120 Hz, 4:2:0, 1000 Mbps, one Haar Compute decoder and the same stationary chart.
+The source stayed active throughout each accepted sequence; all screenshots were
+inspected. The first runtime-time sequence was excluded because its final control
+outlasted the source fixture.
+
+| Sequence | Fresh submissions/s, control / experiment / restored control | GPU MHz at capture start |
+|---|---|---|
+| Runtime display time | 100.95 / 106.99 / 100.88 | 640 / 690 / 640 |
+| Synchronous copy handoff | 107.50 / 59.03 / 107.40 | 690 / 545 / 690 |
+| Handoff + async copy + 500 µs fence wait | 100.64 / 60.63 / 101.45 | 640 / 690 / 640 |
+
+Keep handoff and asynchronous copy **off**. Both handoff experiments significantly
+reduced delivery, and the restored controls recovered. The display-time result
+is confounded by dynamic clocks and lacks moving-head acceptance; it also remains
+off. These are short screens, not sustained success or proof of a single cause.
+
+During the synchronous control, scoped runtime logs reported median GPU load
+0.98 and mean-window `xrWaitFrame` CPU time near 0.19 ms. Synchronous handoff
+reported 0.78 and 6.17 ms; handoff plus async wait reported 0.60 and 7.24 ms.
+The reduced GPU load accompanied missed delivery slots, so merely overlapping
+CPU work did not solve pacing. Runtime FPS and stale counters are diagnostics,
+not optical fresh-display measurements.
+
+The faster control measured native decode around 4.58 ms, conversion 2.53 ms and
+completion 8.36 ms. The eye-render CPU interval was 8.40 ms and includes waiting
+for queued GPU work; **do not add it to native completion as an independent GPU
+stage**. The 120 Hz frame period is 8.33 ms, leaving little timing margin. Native
+sustained 120 FPS remains unmet. See [sanitized distributions and scoped logs](../results/PACING-LIVE-2026-10-02.json).
 
 ## Color-copy candidate (.18, unvalidated)
 
