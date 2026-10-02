@@ -279,10 +279,10 @@ index 64660b1..107f43d 100644
      adb_path: &str,
 diff --git a/alvr/adb/src/windows_launcher.rs b/alvr/adb/src/windows_launcher.rs
 new file mode 100644
-index 0000000..6ad2528
+index 0000000..c699c1b
 --- /dev/null
 +++ b/alvr/adb/src/windows_launcher.rs
-@@ -0,0 +1,121 @@
+@@ -0,0 +1,123 @@
 +//! Start the ADB daemon without inheriting SteamVR/dashboard socket handles.
 +//! Stable Rust Command currently inherits arbitrary inheritable handles; changing
 +//! stdout alone does not restrict that list. This bootstrap needs no stdio.
@@ -313,13 +313,15 @@ index 0000000..6ad2528
 +}
 +
 +fn run_no_inherit(program: &OsStr, command_line: &OsStr) -> io::Result<u32> {
-+    let program = wide(program)?;
++    wide(program)?; // validate even when Windows resolves a bare executable name
 +    let mut command_line = wide(command_line)?;
 +    let mut startup: STARTUPINFOW = unsafe { std::mem::zeroed() };
 +    startup.cb = size_of::<STARTUPINFOW>() as u32;
 +    let mut process = unsafe { std::mem::zeroed() };
 +    unsafe {
-+        if CreateProcessW(program.as_ptr(), command_line.as_mut_ptr(), ptr::null(),
++        // NULL application name enables Windows PATH lookup for an OS-provided
++        // adb.exe; the executable token in our command line is quoted explicitly.
++        if CreateProcessW(ptr::null(), command_line.as_mut_ptr(), ptr::null(),
 +            ptr::null(), 0, CREATE_NO_WINDOW, ptr::null(), ptr::null(),
 +            &startup, &mut process) == 0 {
 +            return Err(io::Error::last_os_error());
