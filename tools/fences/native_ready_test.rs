@@ -74,7 +74,13 @@ fn checked_import_wait_failure_and_retained_cleanup() {
     let context = Rc::new(GraphicsContext {
         egl_display: Display,
     });
-    let closed = |p: &mut UnixStream| matches!(p.read(&mut [0]), Ok(0));
+    // Closing a socket with unread synthetic data may reset its peer instead
+    // of returning EOF. Either is evidence that all copies were closed.
+    let closed = |p: &mut UnixStream| match p.read(&mut [0]) {
+        Ok(0) => true,
+        Err(e) if e.kind() == std::io::ErrorKind::ConnectionReset => true,
+        _ => false,
+    };
     for failure in [0, 1, 2, 4] {
         FAILURE.store(failure, Ordering::Relaxed);
         let (source, mut peer) = UnixStream::pair().unwrap();
