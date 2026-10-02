@@ -33,6 +33,30 @@ traffic. The 207-Hz target is 3.71 times the native120 pixel rate. Frame budgets
 
 ## Migration sequence
 
+### Eye-copy GPU diagnostic candidate (.25)
+
+`debug.q3pw.eye_gpu_probe=1` before client startup requests an optional GLES
+`EXT_disjoint_timer_query` diagnostic around the two eye draws. It defaults off.
+Eight query slots are polled for availability before reading 64-bit elapsed
+results. A full ring skips measurement; it never waits for a query. Extension,
+entrypoint, counter-width or GL errors disable the diagnostic. Disjoint events
+invalidate pending results, including events detected during result polling.
+The existing finish/fence and decoded-buffer lease rules remain intact.
+
+`[Q3PW_EYE_GPU_SETUP]` confirms whether the probe actually activated.
+`[Q3PW_EYE_GPU]` reports valid sample count, mean/p50/p95/max milliseconds,
+invalid results and skipped measurements. Empty/unsupported results are unknown,
+not zero cost. These GPU timings cover the draw interval, exclude CPU EGL import,
+decoder work and runtime presentation, and do not measure optical latency.
+Tile rendering can affect the meaning and overhead of timer boundaries; use
+off/on/off screens to check diagnostic bias before drawing performance conclusions.
+[Khronos timer-query semantics](https://registry.khronos.org/OpenGL/extensions/EXT/EXT_disjoint_timer_query.txt).
+
+This is an instrumentation candidate, not an optimization or a validated build.
+Matching cloud APK/server verification and Quest measurements are required.
+
+### Presentation migration
+
 1. First measure the current overlay with same-session visible/hidden/visible
    15-second screens, using `.24` visibility control and CPU-wall diagnostics.
    Preserve geometry, bitrate, scene, thermal state and clock samples. Reject

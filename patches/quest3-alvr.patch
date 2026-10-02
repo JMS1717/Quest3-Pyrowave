@@ -206,7 +206,7 @@ index 7cead7b..f16efe8 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..5601b29 100644
+index ae00ce8..3339e25 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..5601b29 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.24"
++version = "20.13.0-quest3.pyro.25"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -4140,10 +4140,10 @@ index 0000000..bc6bee0
 +}
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000..e3257fe
+index 0000000..38ae289
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,366 @@
+@@ -0,0 +1,376 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -4206,6 +4206,7 @@ index 0000000..e3257fe
 +    image_cache_enabled: Cell<bool>,
 +    image_cache: RefCell<Vec<CachedImport>>,
 +    pending: RefCell<Option<(gl::Fence, Instant)>>,
++    timer: RefCell<Option<super::eye_timer::EyeTimer>>,
 +}
 +
 +unsafe fn compile_program(gl: &gl::Context) -> Result<gl::Program, String> {
@@ -4298,11 +4299,15 @@ index 0000000..e3257fe
 +            gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, None);
 +            gl.use_program(None);
 +            match setup {
-+                Ok((view_idx, flip_y)) => Ok(Self { context, program, source_texture,
++                Ok((view_idx, flip_y)) => {
++                    let timer = RefCell::new(super::eye_timer::EyeTimer::new(&context));
++                    Ok(Self { context, program, source_texture,
 +                    vertex_array, framebuffers, resolution: config.resolution,
 +                    view_idx, flip_y, flip, asynchronous: Cell::new(asynchronous),
 +                    image_cache_enabled: Cell::new(image_cache_requested && cfg!(target_os = "android")),
-+                    image_cache: RefCell::new(Vec::new()), pending: RefCell::new(None), copy_wait_ns: copy_wait_us.clamp(0, 2000) * 1000, bypass_srgb }),
++                    timer,
++                    image_cache: RefCell::new(Vec::new()), pending: RefCell::new(None), copy_wait_ns: copy_wait_us.clamp(0, 2000) * 1000, bypass_srgb })
++                },
 +                Err(e) => {
 +                    for framebuffer in framebuffers.into_iter().flatten() { gl.delete_framebuffer(framebuffer); }
 +                    gl.delete_vertex_array(vertex_array);
@@ -4456,10 +4461,14 @@ index 0000000..e3257fe
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
 +            gl.uniform_1_i32(Some(&self.flip_y), self.flip as i32);
++            let query = self.timer.borrow_mut().as_mut().and_then(|timer| timer.begin(gl));
 +            for (eye, &index) in indices.iter().enumerate() {
 +                gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, Some(self.framebuffers[eye][index as usize]));
 +                gl.uniform_1_i32(Some(&self.view_idx), eye as i32);
 +                gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
++            }
++            if let Some(index) = query {
++                if let Some(timer) = self.timer.borrow_mut().as_mut() { timer.end(gl, index); }
 +            }
 +            // Restore the legacy state for WGPU/lobby/overlay users. This
 +            // does not change the already-recorded eye draws or their lease.
@@ -4496,6 +4505,7 @@ index 0000000..e3257fe
 +        let gl = &self.context.gl_context;
 +        unsafe {
 +            // Finish sampling before deleting siblings or dropping AHB references.
++            if let Some(timer) = self.timer.get_mut().as_mut() { timer.destroy(); }
 +            if !self.image_cache.get_mut().is_empty() { gl.finish(); }
 +            for entry in self.image_cache.get_mut().drain(..) {
 +                gl.delete_texture(entry.texture);
@@ -4510,12 +4520,311 @@ index 0000000..e3257fe
 +        }
 +    }
 +}
+diff --git a/alvr/graphics/src/eye_timer.rs b/alvr/graphics/src/eye_timer.rs
+new file mode 100644
+index 0000000..832dd35
+--- /dev/null
++++ b/alvr/graphics/src/eye_timer.rs
+@@ -0,0 +1,292 @@
++//! Optional EXT timer queries. No result read before availability, no added waits.
++use super::{direct_eye::import_diagnostic, GraphicsContext};
++use glow::HasContext;
++use std::{
++    ffi::c_void,
++    time::{Duration, Instant},
++};
++
++const ELAPSED: u32 = 0x88BF;
++const RESULT: u32 = 0x8866;
++const AVAILABLE: u32 = 0x8867;
++const BITS: u32 = 0x8864;
++const CURRENT: u32 = 0x8865;
++const DISJOINT: u32 = 0x8FBB;
++type Gen = unsafe extern "C" fn(i32, *mut u32);
++type Delete = unsafe extern "C" fn(i32, *const u32);
++type Begin = unsafe extern "C" fn(u32, u32);
++type End = unsafe extern "C" fn(u32);
++type Target = unsafe extern "C" fn(u32, u32, *mut i32);
++type Object = unsafe extern "C" fn(u32, u32, *mut u32);
++type Object64 = unsafe extern "C" fn(u32, u32, *mut u64);
++
++struct Slot {
++    id: u32,
++    pending: bool,
++    invalid: bool,
++}
++pub(super) struct EyeTimer {
++    delete: Delete,
++    begin: Begin,
++    end: End,
++    target: Target,
++    object: Object,
++    object64: Object64,
++    slots: Vec<Slot>,
++    values: Vec<f64>,
++    bits: u32,
++    invalid: u32,
++    busy: u32,
++    last_log: Instant,
++    enabled: bool,
++}
++
++fn requested() -> bool {
++    #[cfg(target_os = "android")]
++    unsafe {
++        extern "C" {
++            fn __system_property_get(
++                name: *const std::ffi::c_char,
++                value: *mut std::ffi::c_char,
++            ) -> i32;
++        }
++        let mut value = [0; 92];
++        return __system_property_get(
++            b"debug.q3pw.eye_gpu_probe\0".as_ptr().cast(),
++            value.as_mut_ptr(),
++        ) == 1
++            && value[0] == b'1' as std::ffi::c_char;
++    }
++    #[cfg(not(target_os = "android"))]
++    {
++        false
++    }
++}
++
++impl EyeTimer {
++    pub(super) unsafe fn new(context: &GraphicsContext) -> Option<Self> {
++        if !requested() {
++            return None;
++        }
++        let gl = &context.gl_context;
++        if !gl
++            .supported_extensions()
++            .contains("GL_EXT_disjoint_timer_query")
++        {
++            import_diagnostic(
++                5,
++                "[Q3PW_EYE_GPU_SETUP] requested=1 active=0 reason=extension".into(),
++            );
++            return None;
++        }
++        let names = [
++            "glGenQueriesEXT",
++            "glDeleteQueriesEXT",
++            "glBeginQueryEXT",
++            "glEndQueryEXT",
++            "glGetQueryivEXT",
++            "glGetQueryObjectuivEXT",
++            "glGetQueryObjectui64vEXT",
++        ];
++        let pointers: Vec<*const c_void> = names
++            .iter()
++            .map(|name| context.gl_proc_address(name))
++            .collect();
++        if pointers.iter().any(|p| p.is_null()) {
++            import_diagnostic(
++                5,
++                "[Q3PW_EYE_GPU_SETUP] requested=1 active=0 reason=entrypoint".into(),
++            );
++            return None;
++        }
++        let gen: Gen = std::mem::transmute(pointers[0]);
++        let delete: Delete = std::mem::transmute(pointers[1]);
++        let begin: Begin = std::mem::transmute(pointers[2]);
++        let end: End = std::mem::transmute(pointers[3]);
++        let target: Target = std::mem::transmute(pointers[4]);
++        let object: Object = std::mem::transmute(pointers[5]);
++        let object64: Object64 = std::mem::transmute(pointers[6]);
++        let mut bits = 0;
++        target(ELAPSED, BITS, &mut bits);
++        let error = gl.get_error();
++        if error != glow::NO_ERROR || bits < 30 || bits > 64 {
++            import_diagnostic(
++                5,
++                format!("[Q3PW_EYE_GPU_SETUP] requested=1 active=0 reason=counter_bits gl_error={error}"),
++            );
++            return None;
++        }
++        let mut ids = [0u32; 8];
++        gen(ids.len() as i32, ids.as_mut_ptr());
++        let error = gl.get_error();
++        if error != glow::NO_ERROR || ids.iter().any(|&id| id == 0) {
++            delete(ids.len() as i32, ids.as_ptr());
++            import_diagnostic(
++                5,
++                format!(
++                    "[Q3PW_EYE_GPU_SETUP] requested=1 active=0 reason=allocation gl_error={error}"
++                ),
++            );
++            return None;
++        }
++        // Establish a disjoint baseline before any measurement begins.
++        gl.get_parameter_i32(DISJOINT);
++        let error = gl.get_error();
++        if error != glow::NO_ERROR {
++            delete(ids.len() as i32, ids.as_ptr());
++            import_diagnostic(
++                5,
++                format!(
++                    "[Q3PW_EYE_GPU_SETUP] requested=1 active=0 reason=disjoint gl_error={error}"
++                ),
++            );
++            return None;
++        }
++        import_diagnostic(
++            4,
++            format!("[Q3PW_EYE_GPU_SETUP] requested=1 active=1 bits={bits} slots=8"),
++        );
++        Some(Self {
++            delete,
++            begin,
++            end,
++            target,
++            object,
++            object64,
++            slots: ids
++                .into_iter()
++                .map(|id| Slot {
++                    id,
++                    pending: false,
++                    invalid: false,
++                })
++                .collect(),
++            values: Vec::new(),
++            bits: bits as u32,
++            invalid: 0,
++            busy: 0,
++            last_log: Instant::now(),
++            enabled: true,
++        })
++    }
++
++    pub(super) unsafe fn begin(&mut self, gl: &glow::Context) -> Option<usize> {
++        if !self.enabled {
++            return None;
++        }
++        let prior_values = self.values.len();
++        let disjoint = gl.get_parameter_i32(DISJOINT) != 0;
++        if disjoint {
++            for slot in &mut self.slots {
++                if slot.pending {
++                    slot.invalid = true;
++                }
++            }
++        }
++        for slot in &mut self.slots {
++            if !slot.pending {
++                continue;
++            }
++            let mut ready = 0;
++            (self.object)(slot.id, AVAILABLE, &mut ready);
++            if ready == 0 {
++                continue;
++            }
++            if slot.invalid {
++                self.invalid += 1;
++            } else {
++                let mut ns = 0u64;
++                (self.object64)(slot.id, RESULT, &mut ns);
++                let saturated = ns == 0 || ns >= u64::MAX >> (64 - self.bits);
++                if saturated {
++                    self.invalid += 1;
++                } else {
++                    self.values.push(ns as f64 / 1e6);
++                }
++            }
++            slot.pending = false;
++        }
++        // The second check closes the interval containing the result reads.
++        // A disjoint event during polling invalidates those newly read values.
++        if gl.get_parameter_i32(DISJOINT) != 0 {
++            self.invalid += (self.values.len() - prior_values) as u32;
++            self.values.truncate(prior_values);
++            for slot in &mut self.slots {
++                if slot.pending {
++                    slot.invalid = true;
++                }
++            }
++        }
++        // Query errors disable the diagnostic, rather than reaching the normal
++        // import error check and aborting the streaming process.
++        if !self.check(gl, "poll") {
++            return None;
++        }
++        if self.last_log.elapsed() >= Duration::from_secs(1) {
++            if self.values.is_empty() {
++                import_diagnostic(
++                    4,
++                    format!(
++                        "[Q3PW_EYE_GPU] samples=0 invalid={} skipped={} elapsed_ms=unknown",
++                        self.invalid, self.busy
++                    ),
++                );
++            } else {
++                self.values.sort_by(f64::total_cmp);
++                let n = self.values.len();
++                import_diagnostic(4, format!("[Q3PW_EYE_GPU] samples={n} mean_ms={:.3} p50_ms={:.3} p95_ms={:.3} max_ms={:.3} invalid={} skipped={}",
++                    self.values.iter().sum::<f64>() / n as f64, self.values[(n-1)/2],
++                    self.values[((n-1) as f64 * 0.95) as usize], self.values[n-1], self.invalid, self.busy));
++            }
++            self.values.clear();
++            self.invalid = 0;
++            self.busy = 0;
++            self.last_log = Instant::now();
++        }
++        let mut current = 0;
++        (self.target)(ELAPSED, CURRENT, &mut current);
++        if !self.check(gl, "current") {
++            return None;
++        }
++        if current != 0 {
++            self.busy += 1;
++            return None;
++        }
++        let Some(index) = self.slots.iter().position(|slot| !slot.pending) else {
++            self.busy += 1;
++            return None;
++        };
++        (self.begin)(ELAPSED, self.slots[index].id);
++        if !self.check(gl, "begin") {
++            return None;
++        }
++        self.slots[index].invalid = false;
++        Some(index)
++    }
++
++    pub(super) unsafe fn end(&mut self, gl: &glow::Context, index: usize) {
++        (self.end)(ELAPSED);
++        self.slots[index].pending = true;
++        self.check(gl, "end");
++    }
++
++    unsafe fn check(&mut self, gl: &glow::Context, stage: &str) -> bool {
++        let error = gl.get_error();
++        if error == glow::NO_ERROR {
++            return true;
++        }
++        self.enabled = false;
++        self.values.clear();
++        for slot in &mut self.slots {
++            slot.invalid = true;
++        }
++        import_diagnostic(5, format!("[Q3PW_EYE_GPU_SETUP] requested=1 active=0 reason=gl_error stage={stage} gl_error={error}"));
++        false
++    }
++
++    pub(super) unsafe fn destroy(&mut self) {
++        for slot in self.slots.drain(..) {
++            (self.delete)(1, &slot.id);
++        }
++    }
++}
 diff --git a/alvr/graphics/src/lib.rs b/alvr/graphics/src/lib.rs
-index 3485570..b0aaae7 100644
+index 3485570..7152f85 100644
 --- a/alvr/graphics/src/lib.rs
 +++ b/alvr/graphics/src/lib.rs
-@@ -1,8 +1,11 @@
+@@ -1,8 +1,12 @@
 +mod direct_eye;
++mod eye_timer;
  mod lobby;
 +mod performance;
  mod staging;
@@ -4526,7 +4835,7 @@ index 3485570..b0aaae7 100644
  pub use stream::*;
  
  use alvr_common::{
-@@ -18,6 +21,11 @@ use wgpu::{
+@@ -18,6 +22,11 @@ use wgpu::{
      TextureFormat, TextureUsages, TextureView,
  };
  
@@ -4538,6 +4847,26 @@ index 3485570..b0aaae7 100644
  pub const SDR_FORMAT: TextureFormat = TextureFormat::Rgba8Unorm;
  pub const SDR_FORMAT_GL: u32 = gl::RGBA8;
  pub const GL_TEXTURE_EXTERNAL_OES: u32 = 0x8D65;
+@@ -209,6 +218,19 @@ pub struct GraphicsContext {
+ }
+ 
+ impl GraphicsContext {
++    pub(crate) unsafe fn gl_proc_address(&self, name: &str) -> *const c_void {
++        #[cfg(not(windows))]
++        {
++            self.adapter.as_hal::<api::Gles, _, _>(|adapter| {
++                let Some(adapter) = adapter else { return ptr::null(); };
++                let adapter_context = adapter.adapter_context();
++                adapter_context.egl_instance().and_then(|egl| egl.get_proc_address(name))
++                    .map(|f| f as *const c_void).unwrap_or(ptr::null())
++            })
++        }
++        #[cfg(windows)]
++        { let _ = name; ptr::null() }
++    }
+     #[cfg(not(windows))]
+     pub fn new_gl() -> Self {
+         use std::mem;
 diff --git a/alvr/graphics/src/performance.rs b/alvr/graphics/src/performance.rs
 new file mode 100644
 index 0000000..31f33b6
