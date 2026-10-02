@@ -125,6 +125,13 @@ jobs:
           restore-keys: |
             q3pw-streamer-v1-${{ runner.os }}-${{ env.RUST_TOOLCHAIN }}-
       - run: rustup toolchain install $env:RUST_TOOLCHAIN --profile minimal
+      - name: Check Windows process isolation before native builds
+        shell: pwsh
+        run: |
+          $env:RUSTUP_TOOLCHAIN = $env:RUST_TOOLCHAIN
+          Set-Location "$env:XRWIRED_INPUTS/research/ALVR-20.13.0"
+          cargo test --release -p alvr_adb --lib
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: PyroWave and ALVR streamer
         shell: cmd
         run: |
@@ -140,8 +147,6 @@ jobs:
           cargo test --release -p alvr_session --lib
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --release -p alvr_packets --lib
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --release -p alvr_adb --lib
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --release -p alvr_server_core --lib
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

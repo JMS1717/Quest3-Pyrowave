@@ -55,9 +55,12 @@ def main():
     parser.add_argument('--out', required=True)
     parser.add_argument('--seconds', type=float, default=30)
     parser.add_argument('--quality', action='store_true', help='Add fine colored HUD text and saturated edge diagnostics')
+    parser.add_argument('--stop-file', type=Path, help='End gracefully when this file appears; duration remains a hard limit')
     args = parser.parse_args()
     if not 1 <= args.seconds <= 600:
         parser.error('Use 1-600 seconds')
+    if args.stop_file and args.stop_file.exists():
+        parser.error('Stop file already exists; use a fresh path')
     root = Path(args.out); root.mkdir(parents=True, exist_ok=True)
     window = None
     system = openvr.init(openvr.VRApplication_Scene)
@@ -97,7 +100,7 @@ def main():
         frames = 0; start = time.monotonic(); started_unix_ns = time.time_ns()
         (root / 'ready.json').write_text(json.dumps({'started_unix_ns':started_unix_ns,
             'source_eye_size':[width,height], 'quality_chart':args.quality}),encoding='utf-8')
-        while time.monotonic() - start < args.seconds:
+        while time.monotonic() - start < args.seconds and not (args.stop_file and args.stop_file.exists()):
             compositor.waitGetPoses(poses, None)
             for eye, texture in textures:
                 compositor.submit(eye, texture, bounds)
@@ -106,6 +109,7 @@ def main():
                   'source_eye_size': [width, height], 'projections': projections,
                   'started_unix_ns':started_unix_ns,'ended_unix_ns':time.time_ns(),
                   'left_label': 'LEFT', 'right_label': 'RIGHT', 'quality_chart':args.quality,
+                  'stop_reason': 'stop_file' if args.stop_file and args.stop_file.exists() else 'duration',
                   'note': 'Submission count is not decoded or displayed frame rate.'}
         (root / 'scene.json').write_text(json.dumps(result, indent=2))
         print(json.dumps(result))

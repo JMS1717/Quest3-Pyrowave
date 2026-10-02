@@ -342,8 +342,9 @@ retain the working synchronous behavior; restart the client after changing prope
   per-frame runtime time query and does not measure optical latency.
 
 Tests cover producer blocking through dequeue until copy submission, protected
-buffer retention and shutdown without a rendering acknowledgement. These candidates
-have not been deployed or live-tested. Sustained native 120 FPS remains unmet.
+buffer retention and shutdown without a rendering acknowledgement. The matching .17
+build passed CI and was deployed for short stationary screens on October 2. These
+experiments are still off by default; sustained native 120 FPS remains unmet.
 
 Dashboard startup now retries a transient bind failure for at most five seconds
 and reports an error instead of panicking. It does not reuse another listener's
@@ -355,3 +356,31 @@ inheritable parent handle does not reach the bootstrap child. This addresses the
 observed failure mechanism; an actual SteamVR restart is still needed for live
 acceptance. See the [pinned Rust process implementation](https://github.com/rust-lang/rust/blob/1.97.1/library/std/src/sys/process/windows.rs)
 and [Windows process API](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw).
+
+## Color-copy candidate (.18, unvalidated)
+
+The direct-eye shader skips the identity power operation at encoding gamma 1.
+An additional `debug.q3pw.raw_srgb_copy=1` experiment bypasses the paired software
+sRGB decode and framebuffer sRGB encode. It requires an sRGB target, existing
+sRGB correction, identity gamma and `GL_EXT_sRGB_write_control`; otherwise it
+retains the original path. The range adjustment, external sampling, eye mapping,
+source lease and completion fence are unchanged. The framebuffer conversion state
+is restored after the eye draws, and `[Q3PW_COLOR_COPY]` logs whether the bypass
+actually activated. Restart the client after changing the property.
+
+This experiment is **off by default**. Numeric checks of the transfer-function
+round trip found no change after 8-bit rounding for all 256 source codes, with or
+without the range adjustment. A dense fractional sweep found at most one code of
+rounding difference. This does not validate external texture interpretation,
+compositor output, visible quality or performance; matched headset comparisons
+are required before enabling it by default.
+
+The [Khronos extension specification](https://registry.khronos.org/OpenGL/extensions/EXT/EXT_sRGB_write_control.txt)
+allows framebuffer sRGB conversion to be disabled. This supports the experiment's
+mechanism, not a performance claim. External texture format support remains
+[implementation dependent](https://registry.khronos.org/OpenGL/extensions/OES/OES_EGL_image_external_essl3.txt).
+
+Stationary source fixtures accept `--stop-file <fresh-path>` so a controller can
+finish its matched captures and then close the source gracefully. `--seconds`
+remains a hard upper bound. This avoids both unnecessary waiting and an early
+chart exit during client restarts; 15-second screens are not sustained acceptance.

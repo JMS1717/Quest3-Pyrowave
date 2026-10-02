@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7b..cbfe0e2 100644
+index 7cead7b..cf874df 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -138,7 +138,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -147,7 +147,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -156,7 +156,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -165,7 +165,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -174,7 +174,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_common",
   "jni",
@@ -183,7 +183,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -192,7 +192,7 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -201,12 +201,12 @@ index 7cead7b..cbfe0e2 100644
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..a3478a2 100644
+index ae00ce8..d09cd65 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..a3478a2 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.17"
++version = "20.13.0-quest3.pyro.18"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -3226,7 +3226,7 @@ index 0000000..766b412
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..ec7dcc6 100644
+index b87dfe9..19f6831 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -59,17 +59,9 @@ impl ParsedStreamConfig {
@@ -3283,7 +3283,7 @@ index b87dfe9..ec7dcc6 100644
              input_thread: None,
              input_thread_running,
              config,
-@@ -310,6 +302,17 @@ impl StreamContext {
+@@ -310,6 +302,18 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
@@ -3297,11 +3297,12 @@ index b87dfe9..ec7dcc6 100644
 +                crate::extra_extensions::perf_settings::system_property("debug.q3pw.async_eye_copy") == "1",
 +                crate::extra_extensions::perf_settings::system_property("debug.q3pw.copy_wait_us")
 +                    .parse::<i32>().unwrap_or(0).clamp(0, 2000),
++                crate::extra_extensions::perf_settings::system_property("debug.q3pw.raw_srgb_copy") == "1",
 +            );
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +341,22 @@ impl StreamContext {
+@@ -338,12 +342,22 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -3326,7 +3327,7 @@ index b87dfe9..ec7dcc6 100644
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +368,25 @@ impl StreamContext {
+@@ -355,8 +369,25 @@ impl StreamContext {
          }
      }
  
@@ -3352,7 +3353,7 @@ index b87dfe9..ec7dcc6 100644
      }
  
      pub fn render(
-@@ -368,11 +398,19 @@ impl StreamContext {
+@@ -368,11 +399,19 @@ impl StreamContext {
              + Duration::from_secs_f32(
                  frame_interval.as_secs_f32() * DECODER_MAX_TIMEOUT_MULTIPLIER,
              );
@@ -3374,7 +3375,7 @@ index b87dfe9..ec7dcc6 100644
              }
          }
  
-@@ -401,37 +439,67 @@ impl StreamContext {
+@@ -401,37 +440,67 @@ impl StreamContext {
              ]);
          }
  
@@ -3472,7 +3473,7 @@ index b87dfe9..ec7dcc6 100644
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +561,8 @@ impl StreamContext {
+@@ -493,6 +562,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
@@ -3873,10 +3874,10 @@ index 3be9319..d3a1d7c 100644
          assert_eq!(r["window"]["frames"], 900);
 diff --git a/alvr/graphics/resources/direct_eye_fragment.glsl b/alvr/graphics/resources/direct_eye_fragment.glsl
 new file mode 100644
-index 0000000..4a61a5f
+index 0000000..986cf17
 --- /dev/null
 +++ b/alvr/graphics/resources/direct_eye_fragment.glsl
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,24 @@
 +#version 300 es
 +#extension GL_OES_EGL_image_external_essl3 : require
 +precision highp float;
@@ -3895,7 +3896,8 @@ index 0000000..4a61a5f
 +        vec3 high = pow((color + vec3(0.055)) / 1.055, vec3(2.4));
 +        color = mix(high, low, lessThan(color, vec3(0.04045)));
 +    }
-+    if (encoding_gamma != 0.0)
++    // Identity gamma needs no power operation.
++    if (encoding_gamma != 0.0 && encoding_gamma != 1.0)
 +        color = mix(pow(max(color, vec3(0.0)), vec3(encoding_gamma)),
 +                    color, lessThan(color, vec3(0.0)));
 +    out_color = vec4(color, 1.0);
@@ -3938,10 +3940,10 @@ index 0000000..bc6bee0
 +}
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000..2872b24
+index 0000000..d5a7475
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,239 @@
+@@ -0,0 +1,254 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -3954,6 +3956,7 @@ index 0000000..2872b24
 +    pub textures: [Vec<u32>; 2],
 +    pub resolution: UVec2,
 +    pub srgb_correction: bool,
++    pub srgb_target: bool,
 +    pub fix_limited_range: bool,
 +    pub encoding_gamma: f32,
 +}
@@ -3970,6 +3973,7 @@ index 0000000..2872b24
 +    flip: bool,
 +    asynchronous: Cell<bool>,
 +    copy_wait_ns: i32,
++    bypass_srgb: bool,
 +    pending: RefCell<Option<(gl::Fence, Instant)>>,
 +}
 +
@@ -4004,10 +4008,19 @@ index 0000000..2872b24
 +impl DirectEyeRenderer {
 +    /// Any compile/import-target failure leaves the existing renderer usable.
 +    pub fn new(context: Rc<GraphicsContext>, config: &DirectEyeConfig,
-+               flip: bool, asynchronous: bool, copy_wait_us: i32) -> Result<Self, String> {
++               flip: bool, asynchronous: bool, copy_wait_us: i32, raw_srgb_requested: bool) -> Result<Self, String> {
 +        context.make_current();
 +        let gl = &context.gl_context;
 +        unsafe {
++            // Removing the paired transfer functions is valid only for the
++            // existing SDR identity-gamma path with an sRGB destination.
++            // External sampling and range adjustment remain unchanged.
++            let bypass_srgb = raw_srgb_requested && config.srgb_target
++                && config.srgb_correction && config.encoding_gamma == 1.0
++                && gl.supported_extensions().contains("GL_EXT_sRGB_write_control");
++            alvr_common::info!("[Q3PW_COLOR_COPY] requested={} active={} srgb_target={} correction={} gamma={}",
++                raw_srgb_requested, bypass_srgb, config.srgb_target,
++                config.srgb_correction, config.encoding_gamma);
 +            let program = compile_program(gl)?;
 +            let source_texture = match gl.create_texture() {
 +                Ok(texture) => texture,
@@ -4030,8 +4043,8 @@ index 0000000..2872b24
 +                gl.use_program(Some(program));
 +                gl.uniform_1_i32(Some(&location("tex")?), 0);
 +                gl.uniform_1_i32(Some(&location("fix_limited_range")?), config.fix_limited_range as i32);
-+                gl.uniform_1_i32(Some(&location("srgb_correction")?), config.srgb_correction as i32);
-+                gl.uniform_1_f32(Some(&location("encoding_gamma")?), config.encoding_gamma);
++                gl.uniform_1_i32(Some(&location("srgb_correction")?), (config.srgb_correction && !bypass_srgb) as i32);
++                gl.uniform_1_f32(Some(&location("encoding_gamma")?), if bypass_srgb { 0.0 } else { config.encoding_gamma });
 +                for eye in 0..2 {
 +                    if config.textures[eye].is_empty() {
 +                        return Err("Direct eye copy empty swapchain".into());
@@ -4057,7 +4070,7 @@ index 0000000..2872b24
 +                Ok((view_idx, flip_y)) => Ok(Self { context, program, source_texture,
 +                    vertex_array, framebuffers, resolution: config.resolution,
 +                    view_idx, flip_y, flip, asynchronous: Cell::new(asynchronous),
-+                    pending: RefCell::new(None), copy_wait_ns: copy_wait_us.clamp(0, 2000) * 1000 }),
++                    pending: RefCell::new(None), copy_wait_ns: copy_wait_us.clamp(0, 2000) * 1000, bypass_srgb }),
 +                Err(e) => {
 +                    for framebuffer in framebuffers.into_iter().flatten() { gl.delete_framebuffer(framebuffer); }
 +                    gl.delete_vertex_array(vertex_array);
@@ -4130,7 +4143,8 @@ index 0000000..2872b24
 +            // GLES normally always encodes sRGB FBO writes. WGPU may have used
 +            // EXT_sRGB_write_control, so restore its enabled state where present.
 +            if gl.supported_extensions().contains("GL_EXT_sRGB_write_control") {
-+                gl.enable(0x8DB9); // GL_FRAMEBUFFER_SRGB_EXT
++                if self.bypass_srgb { gl.disable(0x8DB9); }
++                else { gl.enable(0x8DB9); } // GL_FRAMEBUFFER_SRGB_EXT
 +            }
 +            gl.active_texture(gl::TEXTURE0);
 +            gl.bind_texture(GL_TEXTURE_EXTERNAL_OES, Some(self.source_texture));
@@ -4145,6 +4159,9 @@ index 0000000..2872b24
 +                gl.uniform_1_i32(Some(&self.view_idx), eye as i32);
 +                gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
 +            }
++            // Restore the legacy state for WGPU/lobby/overlay users. This
++            // does not change the already-recorded eye draws or their lease.
++            if self.bypass_srgb { gl.enable(0x8DB9); }
 +            if self.asynchronous.get() {
 +                match gl.fence_sync(gl::SYNC_GPU_COMMANDS_COMPLETE, 0) {
 +                    Ok(fence) if !fence.0.is_null() => {
@@ -4426,7 +4443,7 @@ index febd2c3..779de33 100644
          );
      }
 diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
-index 737b7d0..9024258 100644
+index 737b7d0..686e9e7 100644
 --- a/alvr/graphics/src/stream.rs
 +++ b/alvr/graphics/src/stream.rs
 @@ -1,10 +1,10 @@
@@ -4455,7 +4472,7 @@ index 737b7d0..9024258 100644
  }
  
  impl StreamRenderer {
-@@ -90,6 +96,13 @@ impl StreamRenderer {
+@@ -90,6 +96,14 @@ impl StreamRenderer {
      ) -> Self {
          let device = &context.device;
  
@@ -4464,12 +4481,13 @@ index 737b7d0..9024258 100644
 +            && matches!(target_format, glow::SRGB8_ALPHA8 | glow::RGBA8))
 +            .then(|| DirectEyeConfig { textures: swapchain_textures.clone(),
 +                resolution: target_view_resolution, srgb_correction: enable_srgb_correction,
++                srgb_target: target_format == glow::SRGB8_ALPHA8,
 +                fix_limited_range, encoding_gamma });
 +
          let target_format = super::gl_format_to_wgpu(target_format);
  
          let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-@@ -298,9 +311,53 @@ impl StreamRenderer {
+@@ -298,9 +312,53 @@ impl StreamRenderer {
              views_objects: view_objects.try_into().unwrap(),
              ffe_params_buffer,
              foveated_encoding: foveated_encoding.map(|c| (base_view_resolution, c)),
@@ -4492,12 +4510,12 @@ index 737b7d0..9024258 100644
 +        self.direct_eye_enabled = false;
 +    }
 +
-+    pub fn set_direct_eye_copy(&mut self, requested: bool, flip_y: bool, asynchronous: bool, copy_wait_us: i32) {
++    pub fn set_direct_eye_copy(&mut self, requested: bool, flip_y: bool, asynchronous: bool, copy_wait_us: i32, raw_srgb_requested: bool) {
 +        self.direct_eye_enabled = false;
 +        if !requested || !self.wait_for_import_copy { return; }
 +        let Some(config) = &self.direct_eye_config else { return; };
 +        // Re-create only on stream/decoder initialization; errors fall back.
-+        match DirectEyeRenderer::new(Rc::clone(&self.context), config, flip_y, asynchronous, copy_wait_us) {
++        match DirectEyeRenderer::new(Rc::clone(&self.context), config, flip_y, asynchronous, copy_wait_us, raw_srgb_requested) {
 +            Ok(renderer) => {
 +                self.direct_eye_renderer = Some(renderer);
 +                self.direct_eye_enabled = true;
@@ -4523,7 +4541,7 @@ index 737b7d0..9024258 100644
      /// Move the full-resolution centre to match the server's, for the frame about to be drawn.
      ///
      /// Per eye: the horizontal frusta are asymmetric and mirrored, so one shared shift is only
-@@ -333,9 +390,30 @@ impl StreamRenderer {
+@@ -333,9 +391,30 @@ impl StreamRenderer {
          view_params: [StreamViewParams; 2],
          passthrough: Option<&PassthroughMode>,
      ) {
