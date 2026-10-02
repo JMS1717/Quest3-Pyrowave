@@ -416,3 +416,18 @@ Stationary source fixtures accept `--stop-file <fresh-path>` so a controller can
 finish its matched captures and then close the source gracefully. `--seconds`
 remains a hard upper bound. This avoids both unnecessary waiting and an early
 chart exit during client restarts; 15-second screens are not sustained acceptance.
+
+### First .18 requested-toggle screen
+
+The verified matching .18 APK/server passed CI and three 15-second captures at
+native resolution, 120 Hz and 1000 Mbps. Baseline / requested raw-copy / restored
+baseline delivered **106.94 / 100.79 / 107.49 fresh submissions/s**, with starting
+GPU clocks **690 / 640 / 690 MHz**. Completion medians were 8.35 / 8.93 / 8.28 ms.
+All three screenshots showed the same correctly mapped, upright colored chart
+without an obvious color shift; this is not in-headset quality acceptance.
+
+Keep the bypass off. Clocks confound the comparison, and its info-level activation
+message was filtered from the release log, so this run records the **requested
+toggle**, not proof of effective activation. No performance gain or sustained
+native 120 FPS is established. Scoped runtime GPU load remained near 0.98.
+See [sanitized requested-toggle observations](../results/COLOR-COPY-LIVE-2026-10-02.json).
