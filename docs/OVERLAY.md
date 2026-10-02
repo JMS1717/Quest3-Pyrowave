@@ -28,7 +28,8 @@ Matching Android/Windows builds and a same-session visible/hidden/visible compar
 are required before attributing any pacing problem to the overlay.
 The matching `.24` pair passed all cloud checks, hashes, embedded version and
 signing review; [artifact evidence](../results/OVERLAY-CONTROL-CI-2026-10-02.json).
-It has not been installed or live-tested. No overlay performance gain is claimed.
+It was subsequently installed as a matching pair for authorized remote tests.
+No overlay performance gain is claimed.
 
 Summarize a saved `logcat -v epoch` from that client process without accessing a
 device: `python -m tools.quest3.overlay frame-loop.log --start START_UNIX_SECONDS
@@ -39,6 +40,17 @@ per-frame means by the recorded sample count, and reports missing timing as unkn
 Loop records cover frame windows ending inside the interval and may overlap its
 start; compare settled cases and review the controls separately. It does not
 declare a visibility or performance pass. Share reviewed summaries, not raw logs.
+
+The [six .24 same-session screens](../results/OVERLAY-LIVE-2026-10-02.json) used
+native120/1000-Mbps 4:2:0, no foveation, the same chart and no client restart.
+Visible / hidden / visible delivered 102.63 / 100.11 / 106.64 fresh submissions/s;
+hidden / visible / hidden delivered 111.79 / 103.78 / 96.72. Reported clock samples
+were 690 MHz throughout, while the headset warmed. These short screens found no
+repeatable FPS/p1 or latency gain when hidden. Visible updates averaged about
+0.09–0.10 ms CPU per loop frame, with 6.4–6.9 ms maxima. Hidden updates averaged
+0.007–0.009 ms and produced no redraw records. The default stays on. CPU cost is
+measurable, but hiding the panel did not establish sustained native120 or optical
+latency acceptance. Matching source coverage and property-mode logs were checked.
 
 The panel shows codec/chroma, per-eye stream size, requested refresh, transport,
 actual/target bitrate, delivered client FPS, Game/host FPS, pipeline latency and

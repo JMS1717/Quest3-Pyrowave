@@ -40,8 +40,10 @@ sustained streaming acceptance. [Readback evidence](results/GPU-READBACK-QUEST-2
 
 The matching `.24` diagnostic APK/server [passed builds, regressions and artifact review](results/OVERLAY-CONTROL-CI-2026-10-02.json).
 It adds an unattended overlay visibility override and CPU-wall timing diagnostics
-for same-session on/off comparisons. It has not been deployed or live-tested and
-does not claim an FPS gain. See [overlay controls](docs/OVERLAY.md) and the
+for same-session on/off comparisons. It was subsequently installed as a matching
+pair: six 15-second screens delivered **97–112 fresh FPS**, with no repeatable
+benefit from hiding the overlay. The default remains on. [Live overlay evidence](results/OVERLAY-LIVE-2026-10-02.json).
+See [overlay controls](docs/OVERLAY.md) and the
 [Vulkan presentation investigation](docs/VULKAN-PRESENTATION.md).
 
 Reviewed initial evidence is in [results](results/INITIAL-EVIDENCE.md). Those earlier foveated results do not validate the current full-frame build. High bitrate

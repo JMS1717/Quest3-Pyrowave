@@ -1,11 +1,22 @@
 # Unattended Quest 3 development
 
-**Current status: the bounded overnight hardware window has finished.**
-Original headset properties, physical proximity behavior and wired autolaunch were
-restored at 07:32:09 UTC on October 2 with no recorded errors. Hardware testing and
-its recovery workers have stopped; source analysis and cloud verification can
-continue. A new hardware window needs the owner's authorization. The following
-records the completed setup and the procedure for future authorized sessions.
+**Current status: remote unattended work resumed with renewed owner authorization
+on October 2.** The original overnight window and later short window restored
+their temporary settings. The owner subsequently authorized remote ADB recovery
+and continued unattended work. Device-pinned proximity/wake recovery restored
+visible SteamVR streaming without manual action; an ADB screenshot showed video
+in both eyes and logs confirmed a 120-Hz runtime period. This is recovery evidence,
+not sustained fresh 120 FPS acceptance.
+
+The new recovery supervisor has fresh original-property snapshots, thermal/battery
+holds, an independent restorer and a renewable four-hour operational safety lease.
+During ongoing owner-authorized work, the agent may renew this lease after fresh
+device/health/worker checks. A self-selected short watchdog timer must not be
+treated as revocation of ongoing owner authorization. An explicit owner deadline
+still limits work. Stop/failed renewal restores properties and physical proximity.
+The `.24` matching APK/server was installed with `.23` preserved for rollback;
+same-session overlay comparisons require no controller input. The following
+records recovery safeguards and the measurement procedure.
 Private budget/account state remains outside the repository.
 
 The owner authorized overnight headset testing on October 1, 2026. This supersedes
@@ -49,7 +60,7 @@ backups remain in the private sibling workspace.
    sleeping owner repeatedly. Do not reboot the PC or change network configuration.
 10. Pause device workloads on Android severe thermal status or low battery; allow
     cooling and recovery. Restore temporary settings and physical proximity at the
-    morning deadline. Leave a measured report, artifact hashes, current baseline
+    authorized work deadline or operational lease failure. Leave a measured report, artifact hashes, current baseline
     and rollback instructions. Commit/push only as JMS1717.
 
 Unworn tracking recovery was verified on this headset: temporarily set
@@ -60,7 +71,7 @@ Windows' execution-state API, pins ADB to this Quest, monitors temperature/batte
 and stops workloads on Android severe thermal status, battery below 20%, or battery
 temperature at least 48°C. Battery temperature is not GPU die temperature. A
 separate process restores saved properties with readback and physical proximity
-at the saved five-hour deadline or earlier stop marker. It stops our app before
+at the current operational deadline or earlier stop marker. It stops our app before
 restoring properties, because XR teardown can overwrite an earlier readback.
 Guardian is paused only for stationary unattended
 tests; normal boundary behavior is restored before later play. Windows power-plan
