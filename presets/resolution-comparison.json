@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "description": "Geometry-only A/B profiles. Preserve bitrate, refresh, wavelet, chroma, decoder, transport and foveation. No default is changed.",
+  "profiles": {
+    "native2080": {
+      "render_eye": [2080, 2208],
+      "encode_eye": [2080, 2208]
+    },
+    "supersampled3072": {
+      "render_eye": [3072, 3216],
+      "encode_eye": [2080, 2208]
+    }
+  },
+  "comparison_target": {
+    "hz": 120,
+    "mbps": 1000,
+    "chroma": "420",
+    "foveated_encoding": false,
+    "sustained_performance_verified": false,
+    "visual_improvement_verified": false
+  }
+}

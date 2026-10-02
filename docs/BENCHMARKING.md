@@ -1,5 +1,9 @@
 # Benchmark protocol
 
+For a larger SteamVR source at unchanged Quest decode resolution, use the
+[independent render/encode A/B procedure](RENDER-ENCODE-RESOLUTION.md).
+Reports distinguish both settings, negotiated geometry and observed encoded size.
+
 The physical Wi-Fi link rate is not application throughput. The startup candidate is 400 Mbps / 72 Hz / full panel-relative resolution / 4:2:0 / TCP, with live acceptance pending. Try 600 Mbps / 90 Hz only after it passes. The 1000 Mbps / 120 Hz target is experimental. For manual throughput sweeps, measure each requested rate separately, including delivered
 bytes, loss and p99 timing, and increase through 800/1000/1500/2000 Mbps. A 2000 Mbps budget is
 250 MB/s before IP, Wi-Fi, control and retransmission overhead. Do not call a target bitrate achieved

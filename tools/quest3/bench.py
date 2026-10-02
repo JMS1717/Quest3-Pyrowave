@@ -204,6 +204,7 @@ def active_settings():
         'chroma':'444' if v['pyrowave'].get('chroma_444',False) else '420',
         'transport':v['pyrowave']['transport']['variant'], 'stream_protocol':s['session_settings']['connection']['stream_protocol']['variant'],
         'configured_view_resolution':v['transcoding_view_resolution'],
+        'configured_render_view_resolution':v.get('emulated_headset_view_resolution'),
         'openvr':{k:o.get(k) for k in ('refresh_rate','eye_resolution_width','eye_resolution_height',
             'target_eye_resolution_width','target_eye_resolution_height','pyrowave_enabled','pyrowave_decode_path','pyrowave_wavelet_53','pyrowave_wavelet_haar','pyrowave_udp','pyrowave_chroma_444','enable_foveated_encoding')}}
 
@@ -261,6 +262,9 @@ def capture(args):
         'runtime_evidence':runtime_evidence(args.adb)})
     if settings_start!=settings_end:report['status']='settings_changed_during_capture'
     if settings_start['openvr'].get('refresh_rate')!=args.hz:report['status']='negotiated_rate_mismatch'
+    from .resolution import evidence
+    report['resolution_evidence']=evidence(settings_start, report['headset_telemetry'])
+    if report['resolution_evidence']['status']=='mismatch':report['status']='resolution_mismatch'
     if error:report['status']='capture_failed'
     (root/'report.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
     print(json.dumps({'status':report['status'],'frames':report['frames'],'out':str(root)}))

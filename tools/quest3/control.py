@@ -7,6 +7,7 @@ import time
 import os
 from pathlib import Path
 from .bench import supported
+from .resolution import assignments, profiles, aligned_eye, RENDER_FIELD, ENCODE_FIELD
 
 API='http://127.0.0.1:8082/api/dashboard-request'
 EVENTS='ws://127.0.0.1:8082/api/events'
@@ -62,6 +63,29 @@ def session():
 def set_values(values):
     request({'SetValues':[{'path':[{'Name':s} for s in path.split('.')],'value':value}
         for path,value in values.items()]})
+
+def resolution(render_eye=None, encode_eye=None, profile=None):
+    if profile is not None:
+        if render_eye is not None or encode_eye is not None:
+            raise ValueError('Use a profile or explicit eye dimensions, not both')
+        selected = profiles().get(profile)
+        if selected is None: raise ValueError('Unknown resolution profile')
+        render_eye, encode_eye = selected['render_eye'], selected['encode_eye']
+    values = assignments(render_eye, encode_eye)
+    before = session()
+    previous = {field:before['session_settings']['video'].get(field)
+                for field in (RENDER_FIELD, ENCODE_FIELD)}
+    set_values(values)
+    current = session()
+    for key, value in values.items():
+        node = current
+        for field in key.split('.'): node = node[field]
+        if node != value: raise RuntimeError(f'Setting rejected: {key}')
+    return {'settings_verified': True, 'steamvr_restart_required': True,
+            'render_eye_requested': render_eye, 'encode_eye_requested': encode_eye,
+            'render_eye_aligned': aligned_eye(render_eye), 'encode_eye_aligned': aligned_eye(encode_eye),
+            'previous_resolution_settings': previous,
+            'sustained_performance_verified': False}
 
 def usb(enabled):
     if enabled:
@@ -136,6 +160,10 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__);sub=parser.add_subparsers(dest='cmd',required=True)
     sub.add_parser('status');r=sub.add_parser('restart')
     r.add_argument('--steamvr',required=True);r.add_argument('--streamer')
+    r=sub.add_parser('resolution',help='Independent geometry only; requires a SteamVR restart')
+    r.add_argument('--render-eye',type=int,nargs=2,metavar=('WIDTH','HEIGHT'))
+    r.add_argument('--encode-eye',type=int,nargs=2,metavar=('WIDTH','HEIGHT'))
+    r.add_argument('--profile',choices=tuple(profiles()))
     u=sub.add_parser('usb');g=u.add_mutually_exclusive_group(required=True)
     g.add_argument('--enable',action='store_true');g.add_argument('--disable',action='store_true')
     c=sub.add_parser('apply');c.add_argument('--codec',choices=['PyroWave','H264','Hevc','AV1'],default='PyroWave')
@@ -145,10 +173,13 @@ def main():
     c.add_argument('--wavelet',choices=['Cdf97','Cdf53','Haar'],default='Cdf97')
     c.add_argument('--transport',choices=['Tcp','Udp'],default='Tcp');a=parser.parse_args()
     if a.cmd=='restart':restart(a.steamvr,a.streamer);return
+    if a.cmd=='resolution':print(json.dumps(resolution(a.render_eye,a.encode_eye,a.profile)));return
     if a.cmd=='usb':usb(a.enable);print('USB mode enabled; restart SteamVR if transport changed' if a.enable else 'USB mode disabled');return
     if a.cmd=='apply':print(json.dumps(apply(a.codec,a.mbps,a.hz,a.decode_path,json.loads(Path(a.capabilities).read_text()),a.chroma,a.transport,a.wavelet)));return
     s=session();v=s['session_settings']['video'];clients=s.get('client_connections',{})
-    print(json.dumps({'video':{key:v.get(key) for key in ('preferred_codec','preferred_fps','bitrate','pyrowave','transcoding_view_resolution')},
+    print(json.dumps({'video':{key:v.get(key) for key in ('preferred_codec','preferred_fps','bitrate','pyrowave',ENCODE_FIELD,RENDER_FIELD)},
+                     'openvr_config':{key:s.get('openvr_config',{}).get(key) for key in
+                        ('eye_resolution_width','eye_resolution_height','target_eye_resolution_width','target_eye_resolution_height')},
                      'client_count':len(clients)}))
 
 if __name__=='__main__':main()

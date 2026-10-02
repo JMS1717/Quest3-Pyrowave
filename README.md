@@ -1,5 +1,10 @@
 # Quest3-Pyrowave
 
+[Independent SteamVR render / PyroWave encode resolution](docs/RENDER-ENCODE-RESOLUTION.md)
+supports an opt-in larger PC source while keeping Quest decode at 2080x2208 per eye.
+The [Nightfall native-fence review](docs/NIGHTFALL-SYNC-REVIEW.md) identifies a
+possible next synchronization experiment; it is not enabled in the current build.
+
 Experimental **Meta Quest 3 PCVR streaming with PyroWave 4:2:0 and optional 4:4:4**, built on ALVR.
 Maintained by [JMS1717](https://github.com/JMS1717). Designed to investigate low latency on
 same-room Wi-Fi 6E and 2.5 GbE, with **300 / 400 / 600 / 800 / 1000 / 1500 / 2000 Mbps** targets.

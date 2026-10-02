@@ -26,6 +26,8 @@ class ControlTests(unittest.TestCase):
         self.assertFalse(settings['video']['pyrowave']['chroma_444'])
         self.assertTrue(result['settings_verified'])
         self.assertFalse(result['sustained_performance_verified'])
+        self.assertNotIn('transcoding_view_resolution', settings['video'])
+        self.assertNotIn('emulated_headset_view_resolution', settings['video'])
 
     def test_udp_requires_explicit_selection(self):
         result, settings = self.apply_offline(transport='Udp')

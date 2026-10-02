@@ -1,0 +1,117 @@
+# Independent PC render and encoded resolution
+
+The Windows pipeline already supports a larger SteamVR source with a smaller
+PyroWave frame. This change exposes that separation through geometry-only
+controls and paired benchmark profiles. No shaders, codec, defaults, client
+buffers or foveation settings change. It works with the existing matching .25
+APK/server; a new APK is not required.
+
+## Verified semantics
+
+Both settings are **per eye**. The names below refer to session settings, not
+the differently named OpenVR configuration fields.
+
+| Session setting | OpenVR configuration | Meaning |
+| --- | --- | --- |
+| `emulated_headset_view_resolution` | `target_eye_resolution_width/height` | SteamVR recommended game render size |
+| `transcoding_view_resolution` | `eye_resolution_width/height` | Stream/composition size and negotiated Quest decode/output size |
+
+Verified against pinned ALVR `7eda092` and our reconstructed patched tree:
+
+- `alvr/session/src/settings.rs`, `VideoConfig`: upstream describes the first
+  as the default game rendering size and the second as encoding/decoding size.
+  [Pinned upstream settings](https://github.com/alvr-org/ALVR/blob/7eda092dbf0002281410a4222683ec228700cffb/alvr/session/src/settings.rs).
+- `alvr/server_core/src/connection.rs`: resolves both independently; sends only
+  stream resolution to the client and writes both separately to OpenVR config.
+- `Settings.cpp` maps stream size to `m_renderWidth/Height` (stereo width),
+  recommended size to `m_recommendedTargetWidth/Height`.
+- `HMD.cpp::GetRecommendedRenderTargetSize` returns recommended per-eye size;
+  output viewports remain at stream size.
+- `FrameRender.cpp` allocates its composition texture and eye viewports at
+  stream size, samples the submitted game textures using their normalized eye
+  bounds with the existing anisotropic sampler, then converts at that size.
+- `CEncoder.cpp::Initialize` passes `GetEncodingResolution` to PyroWave. With
+  FFE off, this is stream stereo width/height. `client_openxr/src/stream.rs`
+  derives client swapchains from negotiated stream size, subject to its existing
+  client upscaling option. Leave upscaling disabled for this comparison.
+
+The direct-eye requirement for equal encoded/output eye size refers to the
+**Quest's decoded frame versus its output swapchain**, not the SteamVR source.
+There is already a PC downsampling/composition pass; no added intermediate
+texture or new resampling filter is necessary.
+
+Our server rounds **both** axes up to multiples of 32. A request for
+3072x3216 therefore becomes a **3072x3232 recommendation**. The encode request
+2080x2208 is unchanged. This preserves the existing alignment semantics.
+SteamVR automatic/global/per-app resolution and game settings may further alter
+the actual submitted source size: a recommendation is not proof of game texture
+dimensions. Record SteamVR's displayed per-eye size and the game's render size.
+
+## Controls and paired profiles
+
+Run from the repo root with the matching server running:
+
+```powershell
+python -m tools.quest3.control status
+python -m tools.quest3.control resolution --profile native2080
+python -m tools.quest3.control resolution --profile supersampled3072
+```
+
+Each command changes only the two resolution fields, verifies session readback,
+prints requested and aligned sizes, and includes the previous resolution
+settings for archival. It does **not** restart SteamVR automatically. Save its
+JSON output beside the capture. Restart SteamVR after each geometry change,
+wait for reconnection, and restart the game if it caches its render targets.
+Do not run both profile commands consecutively without capturing between them.
+
+For independent manual control, either argument may be omitted; omitted geometry
+is preserved:
+
+```powershell
+python -m tools.quest3.control resolution --render-eye 3072 3216
+python -m tools.quest3.control resolution --encode-eye 2080 2208
+```
+
+These commands leave the existing refresh, bitrate, wavelet, chroma, decoder,
+transport and foveation settings alone. They do not enable 120 Hz implicitly.
+Use your current best 4:2:0/noFFE/no-client-upscaling configuration for both.
+The comparison manifest is `presets/resolution-comparison.json`; 1000 Mbps /120 Hz
+remains an experimental target. Existing dashboard overall resolution/render
+scale profiles still assign both fields together: apply those first, then the
+independent resolution command. Existing defaults are preserved.
+
+## Quick old/new benchmark
+
+Use native2080 -> supersampled3072 -> native2080, with one restart/reconnect and
+15-second capture per cell, then reverse the order in another repetition.
+Keep scene, camera, source animation, SteamVR global/per-app percentages, refresh,
+bitrate, wavelet, chroma, decoder properties, overlay and thermal state constant.
+Ensure source-frame coverage; do not compare a live scene to idle SteamVR.
+
+```powershell
+python -m tools.quest3.bench capture --hz 120 --seconds 15 --adb adb --out results/local/source-native-r1
+# Select the larger-source profile and restart/reconnect before this capture.
+python -m tools.quest3.bench capture --hz 120 --seconds 15 --adb adb --out results/local/source-super-r1
+```
+
+Capture reports now retain both configured fields and `resolution_evidence`:
+requested aligned sizes, negotiated sizes, actual telemetry decode stereo size,
+and the PC source pixel ratio. A mismatch marks the capture `resolution_mismatch`
+(e.g. an unapplied restart or accidentally larger decoded frame). Missing
+telemetry or scale/inferred-height settings remain `unknown`, not verified.
+For both profiles expect decoded **4160x2208 stereo**. Reports cannot certify
+actual game texture resolution or optical presentation.
+
+The larger recommendation is **2.162x** the source pixels of native2080; encoding
+stays 9,185,280 stereo pixels. At 4:2:0/120 Hz/1000 Mbps both retain 13,777,920
+raw bytes/frame and a maximum budget of 1,041,666 encoded bytes/frame. Actual
+payload and content-dependent codec cost can still change. Compare game/server
+FPS, compositor/encoder time, delivered fresh FPS/p1, GPU decode/completion,
+pipeline latency and thermals; visually compare text, HUD edges and fine detail.
+Higher PC workload can erase a quality benefit by missing display deadlines.
+No quality or performance improvement is claimed until matched live comparisons.
+
+To restore the existing native geometry use `--profile native2080`, restart and
+reconnect. For an exact restoration of prior Scale/optional-height configuration,
+use the saved `previous_resolution_settings` through ALVR settings, rather than
+guessing it from the aligned negotiated dimensions.
