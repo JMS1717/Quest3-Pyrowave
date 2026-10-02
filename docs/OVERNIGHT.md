@@ -1,5 +1,11 @@
 # Unattended Quest 3 development
 
+**Current status: paused at the owner's request for Virtual Desktop PCVR.**
+The goal and heartbeat are paused; test/recovery workers stopped, temporary headset
+properties and physical proximity control restored, and the project SteamVR driver
+disabled and unregistered. Preserve this isolation until explicit permission to resume.
+The following plan documents the authorized session, not an instruction to restart it.
+
 The owner authorized overnight headset testing on October 1, 2026. This supersedes
 the older offline-only instruction for this session; it does not grant other users
 permission to alter devices automatically. Keep the PC powered, Codex open, and the

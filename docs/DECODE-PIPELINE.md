@@ -209,8 +209,8 @@ conversion. Restart the client after changes. No default conversion change is im
 .14 Android and Windows CI passed, and its small/native Haar/4:2:0 plain readbacks were
 byte-identical to .13 with batching both off and on. Matching Windows build and
 live performance screening are separate gates; this does not prove a live speedup.
-The matching pair is installed for testing. Quest's tracking-recovery prompt
-blocked app launch, so the 15-second live comparison has not captured frames.
+The initial tracking-recovery prompt blocked launch. It was subsequently recovered;
+the live off/on/off comparison above found no gain and batching remains off.
 Isolated native screens (80 frames / 20 warmup) showed completion p50 9.10 ms
 with batching versus 9.50–9.65 ms in off controls at a reported 690 MHz. These
 are short single-frame standalone checks, not sustained streaming results;
@@ -230,3 +230,42 @@ The separate 180-second .13 SteamVR Home observation delivered 94.46 fresh FPS,
 latency 70.82 ms. It confirms the remaining budget problem beyond the short chart
 tests but is not a thermal-endurance certification. See
 [the sanitized Home result](../results/DECODE-HOME-2026-10-01.json).
+
+## Direct eye copy (.15)
+
+Matching `.15` Android/Windows builds and regression checks passed
+[CI](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/36942639620).
+An optional GLES copy samples the decoded AHardwareBuffer directly into both
+OpenXR eye textures, avoiding the intermediate staging and WGPU eye pass.
+PyroWave decoding remains Vulkan compute. Source leases and the synchronous
+completion barrier remain intact. Geometry, SDR color, no foveation/upscaling,
+identity warp and no passthrough are required; unsupported configurations fall back.
+
+At 2080 × 2208 per eye, runtime-confirmed 120 Hz, 4:2:0, no foveated encoding,
+Haar compute, one worker and native USB/TCP at 1000 Mbps, the same static quality
+scene gave these sequential 15-second screens after 3 seconds settling:
+
+| Path | Fresh submissions FPS | GPU decode p50 ms | Completion p50 ms | Eye render CPU p50 ms | GPU MHz |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Staging control 1 | 98.67 | 4.65 | 9.40 | 9.22 | 690 |
+| Direct 1 | 103.71 | 4.86 | 8.72 | 8.68 | 640 |
+| Staging control 2 | 99.33 | 4.62 | 9.32 | 9.11 | 690 |
+| Direct 2 | 103.63 | 4.81 | 8.74 | 8.69 | 640 |
+| Direct + OpenXR BOOST, single screen | 108.19 | 4.58 | 8.29 | 8.32 | 690 |
+
+Actual direct/staging counters confirmed the paths. Battery temperature was 45 °C
+and reported thermal status 0. Acquire/release CPU times were only a few microseconds;
+eye rendering, including its GPU completion wait, consumed most of the frame budget.
+Dynamic clocks differed between paths, and BOOST has only one matched-scene screen.
+These observations identify the next bottleneck; they do not establish fixed-clock
+causality, endurance, or a default promotion. GPU work completion still needs careful
+buffer synchronization in any future asynchronous copy experiment.
+
+Private captures showed correct left/right labels, upright orientation and matching
+dominant flat colors. Full reference equivalence and human in-headset acceptance
+remain unverified. p1 nominal FPS remained about 60 and p95 timestamp gaps about
+16.7 ms. Fresh submission rate and ALVR estimated pipeline latency are not optical
+display or motion-to-photon measurements. **Sustained fresh 120 FPS remains unmet.**
+See the [sanitized full distributions](../results/DIRECT-EYE-LIVE-2026-10-01.json).
+Direct copy stays optional/off by default, and 4:2:0 remains the default.
+The owner paused hardware work for Virtual Desktop; resume only with explicit permission.

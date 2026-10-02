@@ -1,0 +1,665 @@
+{
+  "schema_version": 1,
+  "version": "20.13.0-quest3.pyro.15",
+  "binary_source": "ba415a8f21d25db3c8a1fb7a077a454dc189d9b6",
+  "ci_run": "https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/36942639620",
+  "encoded_per_eye": [
+    2080,
+    2208
+  ],
+  "requested_and_runtime_confirmed_hz": 120,
+  "chroma": "4:2:0",
+  "foveated_encoding": false,
+  "wavelet": "Haar",
+  "decode": "compute Vulkan",
+  "transport": "native ALVR USB/ADB TCP",
+  "manual_target_mbps": 1000,
+  "source_per_eye": [
+    2544,
+    2704
+  ],
+  "decoder_workers": 1,
+  "method": "Same static asymmetric colored quality scene; sequential staging/direct/staging/direct, followed by one direct BOOST screen. Three seconds settle, 15 seconds capture. Source start/end coverage verified. GPU/CPU debug requests 7/6; clocks dynamic, not locked. Battery 45 C, reported thermal status 0.",
+  "cases": [
+    {
+      "case": "off-r2",
+      "direct_requested": false,
+      "openxr_performance_request": "SUSTAINED_HIGH",
+      "duration_s": 21.05474089999916,
+      "fresh_submissions_fps": 98.66832297891582,
+      "p1_nominal_client_fps": 59.988506,
+      "gpu_decode_ms": {
+        "n": 1502,
+        "p01": 3.7391212709999997,
+        "p50": 4.64877575,
+        "p95": 5.3414319400000005,
+        "p99": 5.50770436,
+        "max": 5.883021
+      },
+      "decode_completion_ms": {
+        "n": 1502,
+        "p01": 7.80407029,
+        "p50": 9.400652000000001,
+        "p95": 10.09329835,
+        "p99": 11.091410790000001,
+        "max": 11.468595
+      },
+      "cpu_record_ms": {
+        "n": 1502,
+        "p01": 0.6058444599999999,
+        "p50": 0.8621875,
+        "p95": 1.14090405,
+        "p99": 1.2913992300000001,
+        "max": 1.835469
+      },
+      "cpu_submit_wait_ms": {
+        "n": 1502,
+        "p01": 7.1357377,
+        "p50": 8.498334,
+        "p95": 9.2210029,
+        "p99": 10.13098285,
+        "max": 10.563907
+      },
+      "color_convert_ms": {
+        "n": 1502,
+        "p01": 1.8811426580000001,
+        "p50": 2.5128645,
+        "p95": 2.898346355,
+        "p99": 3.466755497,
+        "max": 3.861354
+      },
+      "eye_acquire_cpu_ms": {
+        "n": 1486,
+        "p01": 0.002604,
+        "p50": 0.003542,
+        "p95": 0.2415235,
+        "p99": 0.8123651000000002,
+        "max": 2.2214592
+      },
+      "eye_render_cpu_ms": {
+        "n": 1486,
+        "p01": 3.5559771000000002,
+        "p50": 9.218308,
+        "p95": 10.271993,
+        "p99": 10.93639445,
+        "max": 11.226824
+      },
+      "eye_release_cpu_ms": {
+        "n": 1486,
+        "p01": 0.002604,
+        "p50": 0.0038540002,
+        "p95": 0.006927,
+        "p99": 0.014497350000000042,
+        "max": 0.058802
+      },
+      "actual_copy_counter_deltas": {
+        "direct_eye_copies": 0,
+        "staging_eye_copies": 1387
+      },
+      "encoder_ms": {
+        "n": 1481,
+        "p01": 1.44138,
+        "p50": 1.8638000000000001,
+        "p95": 2.3896,
+        "p99": 2.5714600000000005,
+        "max": 3.4334000000000002
+      },
+      "network_ms": {
+        "n": 1481,
+        "p01": 3.7183224,
+        "p50": 4.286614999999999,
+        "p95": 6.579179999999999,
+        "p99": 11.571794200000006,
+        "max": 14.669843
+      },
+      "alvr_pipeline_latency_ms": {
+        "n": 1481,
+        "p01": 73.8033248,
+        "p50": 82.40612999999999,
+        "p95": 82.76931,
+        "p99": 85.528491,
+        "max": 93.91291
+      },
+      "frame_timestamp_gap_ms": {
+        "n": 1480,
+        "p01": 5.48324254,
+        "p50": 8.346068500000001,
+        "p95": 16.75326485,
+        "p99": 19.536849020000002,
+        "max": 27.778232
+      },
+      "actual_payload_mbps": {
+        "n": 1481,
+        "p01": 944.27834,
+        "p50": 1003.84557,
+        "p95": 1037.8686,
+        "p99": 1062.17217,
+        "max": 1083.4414
+      },
+      "gpu_clock_mhz": [
+        690.0
+      ],
+      "battery_temperature_c": [
+        45.0
+      ],
+      "thermal_status": [
+        0
+      ],
+      "sustained_requested_fps": false
+    },
+    {
+      "case": "on-r1",
+      "direct_requested": true,
+      "openxr_performance_request": "SUSTAINED_HIGH",
+      "duration_s": 21.046571000000768,
+      "fresh_submissions_fps": 103.70567123939233,
+      "p1_nominal_client_fps": 59.99544342,
+      "gpu_decode_ms": {
+        "n": 1571,
+        "p01": 3.93701028,
+        "p50": 4.863802,
+        "p95": 5.65888,
+        "p99": 5.825999759999999,
+        "max": 6.0430207
+      },
+      "decode_completion_ms": {
+        "n": 1571,
+        "p01": 7.9881565,
+        "p50": 8.723595,
+        "p95": 9.4520845,
+        "p99": 10.0571054,
+        "max": 10.761355
+      },
+      "cpu_record_ms": {
+        "n": 1571,
+        "p01": 0.528683,
+        "p50": 0.810209,
+        "p95": 1.017474,
+        "p99": 1.1642864999999998,
+        "max": 1.668438
+      },
+      "cpu_submit_wait_ms": {
+        "n": 1571,
+        "p01": 7.1413444,
+        "p50": 7.871355,
+        "p95": 8.6974745,
+        "p99": 9.1321879,
+        "max": 9.872449
+      },
+      "color_convert_ms": {
+        "n": 1571,
+        "p01": 1.84138015,
+        "p50": 2.5771875,
+        "p95": 2.7934114,
+        "p99": 3.10900002,
+        "max": 3.7609894
+      },
+      "eye_acquire_cpu_ms": {
+        "n": 1564,
+        "p01": 0.002865,
+        "p50": 0.003802,
+        "p95": 0.00649439974499999,
+        "p99": 0.011653480814999988,
+        "max": 0.070833
+      },
+      "eye_render_cpu_ms": {
+        "n": 1564,
+        "p01": 2.97880461,
+        "p50": 8.6817975,
+        "p95": 9.8481361,
+        "p99": 10.618523609999999,
+        "max": 11.612293
+      },
+      "eye_release_cpu_ms": {
+        "n": 1564,
+        "p01": 0.002344,
+        "p50": 0.004635,
+        "p95": 0.008533199999999996,
+        "p99": 0.023222829999999296,
+        "max": 0.071563
+      },
+      "actual_copy_counter_deltas": {
+        "direct_eye_copies": 1460,
+        "staging_eye_copies": 0
+      },
+      "encoder_ms": {
+        "n": 1555,
+        "p01": 1.322522,
+        "p50": 1.6020999999999999,
+        "p95": 1.92245,
+        "p99": 2.074978,
+        "max": 2.8184
+      },
+      "network_ms": {
+        "n": 1555,
+        "p01": 3.49024626,
+        "p50": 4.238615,
+        "p95": 5.827472199999997,
+        "p99": 10.413841580000001,
+        "max": 30.473758
+      },
+      "alvr_pipeline_latency_ms": {
+        "n": 1555,
+        "p01": 66.3293884,
+        "p50": 66.818185,
+        "p95": 75.240967,
+        "p99": 77.99877323999999,
+        "max": 99.90546
+      },
+      "frame_timestamp_gap_ms": {
+        "n": 1551,
+        "p01": 5.407031999999999,
+        "p50": 8.345886,
+        "p95": 16.7499235,
+        "p99": 19.5285695,
+        "max": 38.842192
+      },
+      "actual_payload_mbps": {
+        "n": 1555,
+        "p01": 942.0376779999999,
+        "p50": 1002.89344,
+        "p95": 1045.8156,
+        "p99": 1066.594772,
+        "max": 1091.4025
+      },
+      "gpu_clock_mhz": [
+        640.0
+      ],
+      "battery_temperature_c": [
+        45.0
+      ],
+      "thermal_status": [
+        0
+      ],
+      "sustained_requested_fps": false
+    },
+    {
+      "case": "off-r3",
+      "direct_requested": false,
+      "openxr_performance_request": "SUSTAINED_HIGH",
+      "duration_s": 21.04872710000018,
+      "fresh_submissions_fps": 99.33136573117945,
+      "p1_nominal_client_fps": 59.9905434,
+      "gpu_decode_ms": {
+        "n": 1464,
+        "p01": 3.7414603840000002,
+        "p50": 4.6229166500000005,
+        "p95": 5.351137945,
+        "p99": 5.420466542,
+        "max": 5.5227084
+      },
+      "decode_completion_ms": {
+        "n": 1464,
+        "p01": 7.897182910000001,
+        "p50": 9.324662,
+        "p95": 9.9847849,
+        "p99": 10.165211389999996,
+        "max": 10.762397
+      },
+      "cpu_record_ms": {
+        "n": 1464,
+        "p01": 0.59311316,
+        "p50": 0.876276,
+        "p95": 1.1521958999999997,
+        "p99": 1.3637794499999991,
+        "max": 2.182657
+      },
+      "cpu_submit_wait_ms": {
+        "n": 1464,
+        "p01": 7.11706967,
+        "p50": 8.3614845,
+        "p95": 9.1529749,
+        "p99": 9.301379509999999,
+        "max": 9.578595
+      },
+      "color_convert_ms": {
+        "n": 1464,
+        "p01": 1.866143165,
+        "p50": 2.50940095,
+        "p95": 2.9708513699999997,
+        "p99": 3.0994712819999997,
+        "max": 3.3885937
+      },
+      "eye_acquire_cpu_ms": {
+        "n": 1451,
+        "p01": 0.002812,
+        "p50": 0.00375,
+        "p95": 0.43627599,
+        "p99": 1.0523699999999998,
+        "max": 2.081094
+      },
+      "eye_render_cpu_ms": {
+        "n": 1451,
+        "p01": 3.6707815,
+        "p50": 9.113386,
+        "p95": 10.164480000000001,
+        "p99": 10.4681785,
+        "max": 10.947555
+      },
+      "eye_release_cpu_ms": {
+        "n": 1451,
+        "p01": 0.0029165,
+        "p50": 0.004375,
+        "p95": 0.008333499500000001,
+        "p99": 0.024271,
+        "max": 0.058073003
+      },
+      "actual_copy_counter_deltas": {
+        "direct_eye_copies": 0,
+        "staging_eye_copies": 1350
+      },
+      "encoder_ms": {
+        "n": 1489,
+        "p01": 1.36836,
+        "p50": 1.5939,
+        "p95": 1.92302,
+        "p99": 2.114988,
+        "max": 2.4627999999999997
+      },
+      "network_ms": {
+        "n": 1489,
+        "p01": 3.7483342399999997,
+        "p50": 4.484269,
+        "p95": 6.818472999999998,
+        "p99": 11.771280519999973,
+        "max": 15.178782
+      },
+      "alvr_pipeline_latency_ms": {
+        "n": 1489,
+        "p01": 73.57459472,
+        "p50": 77.03865,
+        "p95": 82.67114,
+        "p99": 85.40890239999999,
+        "max": 87.95967999999999
+      },
+      "frame_timestamp_gap_ms": {
+        "n": 1487,
+        "p01": 5.48324636,
+        "p50": 8.338073,
+        "p95": 16.7413141,
+        "p99": 19.512751100000003,
+        "max": 25.060888
+      },
+      "actual_payload_mbps": {
+        "n": 1489,
+        "p01": 944.0191120000001,
+        "p50": 1004.3054,
+        "p95": 1032.816676,
+        "p99": 1064.2420012,
+        "max": 1134.2789
+      },
+      "gpu_clock_mhz": [
+        690.0
+      ],
+      "battery_temperature_c": [
+        45.0
+      ],
+      "thermal_status": [
+        0
+      ],
+      "sustained_requested_fps": false
+    },
+    {
+      "case": "on-r2",
+      "direct_requested": true,
+      "openxr_performance_request": "SUSTAINED_HIGH",
+      "duration_s": 21.026421700000355,
+      "fresh_submissions_fps": 103.62620106219683,
+      "p1_nominal_client_fps": 59.99436431,
+      "gpu_decode_ms": {
+        "n": 1519,
+        "p01": 3.958695662,
+        "p50": 4.811146,
+        "p95": 5.77756228,
+        "p99": 5.984424028,
+        "max": 6.343385
+      },
+      "decode_completion_ms": {
+        "n": 1519,
+        "p01": 8.07045602,
+        "p50": 8.742084,
+        "p95": 9.5190849,
+        "p99": 10.238342279999998,
+        "max": 11.449116
+      },
+      "cpu_record_ms": {
+        "n": 1519,
+        "p01": 0.5118100600000001,
+        "p50": 0.801146,
+        "p95": 1.0340892999999998,
+        "p99": 1.19017658,
+        "max": 1.510261
+      },
+      "cpu_submit_wait_ms": {
+        "n": 1519,
+        "p01": 7.18125348,
+        "p50": 7.85474,
+        "p95": 8.747693199999999,
+        "p99": 9.39141486,
+        "max": 10.270001
+      },
+      "color_convert_ms": {
+        "n": 1519,
+        "p01": 1.842083294,
+        "p50": 2.550156,
+        "p95": 2.95848963,
+        "p99": 3.187189556,
+        "max": 3.6672916
+      },
+      "eye_acquire_cpu_ms": {
+        "n": 1512,
+        "p01": 0.002812,
+        "p50": 0.003698,
+        "p95": 0.006690399865000003,
+        "p99": 0.012436560110000012,
+        "max": 0.05974
+      },
+      "eye_render_cpu_ms": {
+        "n": 1512,
+        "p01": 2.47159988,
+        "p50": 8.6940895,
+        "p95": 9.935771599999999,
+        "p99": 10.51965831,
+        "max": 12.1995325
+      },
+      "eye_release_cpu_ms": {
+        "n": 1512,
+        "p01": 0.00208961,
+        "p50": 0.004479,
+        "p95": 0.008646,
+        "p99": 0.020898670000000133,
+        "max": 0.046042003
+      },
+      "actual_copy_counter_deltas": {
+        "direct_eye_copies": 1411,
+        "staging_eye_copies": 0
+      },
+      "encoder_ms": {
+        "n": 1554,
+        "p01": 1.389037,
+        "p50": 1.67565,
+        "p95": 2.0378450000000004,
+        "p99": 2.2337990000000003,
+        "max": 2.9779
+      },
+      "network_ms": {
+        "n": 1554,
+        "p01": 3.6650812999999998,
+        "p50": 4.17426,
+        "p95": 6.335651349999999,
+        "p99": 9.721219290000002,
+        "max": 14.974085
+      },
+      "alvr_pipeline_latency_ms": {
+        "n": 1554,
+        "p01": 63.81505272,
+        "p50": 66.60245,
+        "p95": 74.9745195,
+        "p99": 77.62343620000001,
+        "max": 83.27692
+      },
+      "frame_timestamp_gap_ms": {
+        "n": 1553,
+        "p01": 5.524684000000001,
+        "p50": 8.340834,
+        "p95": 16.7433038,
+        "p99": 19.45673088,
+        "max": 25.056722
+      },
+      "actual_payload_mbps": {
+        "n": 1554,
+        "p01": 945.1553538000001,
+        "p50": 1003.4829,
+        "p95": 1038.424794,
+        "p99": 1060.5417472,
+        "max": 1090.8739
+      },
+      "gpu_clock_mhz": [
+        640.0
+      ],
+      "battery_temperature_c": [
+        45.0
+      ],
+      "thermal_status": [
+        0
+      ],
+      "sustained_requested_fps": false
+    },
+    {
+      "case": "boost-on-r1",
+      "direct_requested": true,
+      "openxr_performance_request": "BOOST",
+      "duration_s": 21.02562880000005,
+      "fresh_submissions_fps": 108.18841686220833,
+      "p1_nominal_client_fps": 59.99662946,
+      "gpu_decode_ms": {
+        "n": 1637,
+        "p01": 3.711049928,
+        "p50": 4.575677,
+        "p95": 5.32120822,
+        "p99": 5.496364292,
+        "max": 5.646875
+      },
+      "decode_completion_ms": {
+        "n": 1637,
+        "p01": 7.68823656,
+        "p50": 8.290522,
+        "p95": 9.155084200000001,
+        "p99": 9.704842999999997,
+        "max": 10.634897
+      },
+      "cpu_record_ms": {
+        "n": 1637,
+        "p01": 0.50314196,
+        "p50": 0.797656,
+        "p95": 1.038927,
+        "p99": 1.207866759999999,
+        "max": 1.939219
+      },
+      "cpu_submit_wait_ms": {
+        "n": 1637,
+        "p01": 6.84431756,
+        "p50": 7.465365,
+        "p95": 8.3922928,
+        "p99": 8.891208879999997,
+        "max": 9.823283
+      },
+      "color_convert_ms": {
+        "n": 1637,
+        "p01": 1.826835388,
+        "p50": 2.5618749,
+        "p95": 2.818270779999999,
+        "p99": 3.246947803999999,
+        "max": 3.777604
+      },
+      "eye_acquire_cpu_ms": {
+        "n": 1629,
+        "p01": 0.0026562802,
+        "p50": 0.003593,
+        "p95": 0.0067189997,
+        "p99": 0.02258944,
+        "max": 0.066719
+      },
+      "eye_render_cpu_ms": {
+        "n": 1629,
+        "p01": 2.6399754399999997,
+        "p50": 8.316772,
+        "p95": 9.3949178,
+        "p99": 9.93219848,
+        "max": 10.87599
+      },
+      "eye_release_cpu_ms": {
+        "n": 1629,
+        "p01": 0.00234328,
+        "p50": 0.0047919997,
+        "p95": 0.008958,
+        "p99": 0.018952480000000004,
+        "max": 0.071562
+      },
+      "actual_copy_counter_deltas": {
+        "direct_eye_copies": 1519,
+        "staging_eye_copies": 0
+      },
+      "encoder_ms": {
+        "n": 1622,
+        "p01": 1.4391729999999998,
+        "p50": 1.8585500000000001,
+        "p95": 2.3601849999999995,
+        "p99": 2.509692,
+        "max": 2.7615
+      },
+      "network_ms": {
+        "n": 1622,
+        "p01": 3.69178499,
+        "p50": 4.2657620000000005,
+        "p95": 5.84715355,
+        "p99": 9.947968789999965,
+        "max": 13.802223000000001
+      },
+      "alvr_pipeline_latency_ms": {
+        "n": 1622,
+        "p01": 60.85460354,
+        "p50": 69.27382499999999,
+        "p95": 77.31106425,
+        "p99": 77.6346431,
+        "max": 80.28525
+      },
+      "frame_timestamp_gap_ms": {
+        "n": 1621,
+        "p01": 5.575760600000001,
+        "p50": 8.336928,
+        "p95": 16.654481,
+        "p99": 16.738106,
+        "max": 25.178388
+      },
+      "actual_payload_mbps": {
+        "n": 1622,
+        "p01": 943.8275374,
+        "p50": 1003.467075,
+        "p95": 1035.8304,
+        "p99": 1061.490541,
+        "max": 1090.2173
+      },
+      "gpu_clock_mhz": [
+        690.0
+      ],
+      "battery_temperature_c": [
+        45.0
+      ],
+      "thermal_status": [
+        0
+      ],
+      "sustained_requested_fps": false
+    }
+  ],
+  "image_check": "Private direct and staging captures showed correct LEFT/RIGHT, upright BOTTOM, matching dominant red [188,40,55] and blue [49,62,199]. This is a basic image check, not full reference equivalence or human in-headset acceptance.",
+  "limitations": [
+    "Fresh submission count is not an optical delivered-display measurement. ALVR estimated pipeline latency is not optical motion-to-photon latency.",
+    "120 Hz accepted; sustained fresh 120 FPS unmet. p1 remains about 60 nominal FPS and p95 gaps about 16.7 ms.",
+    "Dynamic GPU clock differs between staging and direct controls; cannot assign all differences causally to the copy path.",
+    "BOOST single screen is not replicated or endurance-validated; no default promotion.",
+    "Initial direct image preflight crossed a scene change and is excluded. A later BOOST staging screen used a replacement source session and is excluded from this matched set.",
+    "Testing paused at owner request for Virtual Desktop; no further hardware work authorized until explicit resume."
+  ],
+  "decision": "Keep 4:2:0 and existing defaults. Direct copy remains optional and off by default. Resume paired controls and sustained acceptance only with owner permission."
+}
