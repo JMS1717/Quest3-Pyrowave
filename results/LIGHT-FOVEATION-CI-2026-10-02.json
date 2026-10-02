@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-02",
+  "version": "20.13.0-quest3.pyro.28",
+  "source_sha": "2b87fc717764c7588d1b511e062f1d4e6df682ea",
+  "ci_url": "https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37040275450",
+  "status": "matching_cloud_builds_and_offline_checks_passed_live_acceptance_separate",
+  "jobs": {
+    "tests": "success",
+    "client": "success",
+    "streamer": "success"
+  },
+  "checks": {
+    "python_tests": 70,
+    "software_gles_shared_mapping_coordinate_cases": 490,
+    "dense_cpu_roundtrips": true,
+    "rust_default_legacy_capability_and_visible_control_tests": true,
+    "apk_certificate_verified": true,
+    "apk_and_packaged_native_libraries_match": true,
+    "decoder_native_libraries_unchanged_from_26": true,
+    "windows_embedded_version_verified": true,
+    "windows_ffe_shader_explicitly_recompiled": true,
+    "compiled_ffe_shader_sha256": "15a04a0022a722d95fdbfd91eb8bdc7e67b5e0c1d6d8c500519ac14c49d65980"
+  },
+  "artifacts": {
+    "apk_sha256": "6dd816664f83b7d8ff04d5d7bc175208861f1b17b1d522713cd186a7facdef55",
+    "windows_zip_sha256": "e7b3f5d8f7197e958a390974589c2371f567c364d71f1f967992c290f2a6f39c"
+  },
+  "profile": {
+    "enabled_by_default": false,
+    "center_axes": 0.8,
+    "edge_ratio": 1.5,
+    "center_shift": [
+      0,
+      0
+    ],
+    "gaze_driven": false,
+    "expanded_eye": [
+      2080,
+      2208
+    ],
+    "encoded_eye": [
+      1952,
+      2080
+    ],
+    "encoded_pixel_reduction_percent": 11.594202898550725,
+    "reconstruction": "Existing direct-eye GLES draw; Vulkan PyroWave decoder unchanged"
+  },
+  "limitations": [
+    "Software mapping tests do not prove D3D sampling, Quest interop, visual comfort or sustained performance.",
+    "No proprietary Virtual Desktop implementation or WiVRn code incorporated.",
+    "CPU/CI and runtime frequency acceptance do not certify 120 fresh or optical FPS."
+  ]
+}

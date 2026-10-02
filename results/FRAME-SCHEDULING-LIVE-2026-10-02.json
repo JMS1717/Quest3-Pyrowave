@@ -1,0 +1,369 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-02",
+  "version": "20.13.0-quest3.pyro.27",
+  "source_sha": "28ac9a3ea01fdf51774feadb663dc1c394c5961c",
+  "status": "short_diagnostic_screen_not_performance_acceptance",
+  "sequence": "probe off/on/off",
+  "encoded_eye": [
+    2080,
+    2208
+  ],
+  "requested_and_runtime_hz": 120,
+  "target_mbps": 1000,
+  "chroma": "4:2:0",
+  "foveated_encoding": false,
+  "decode": "Haar/Vulkan compute",
+  "transport": "ALVR USB/ADB TCP",
+  "native_release_fd": false,
+  "cases": [
+    {
+      "status": "measured",
+      "fresh_submissions_fps": 108.65244538741628,
+      "completed_direct_copies_fps": 108.19822525559881,
+      "p1_nominal_fps": 59.98416168,
+      "timestamp_gap_p95_ms": 16.67434545,
+      "decode_gpu_p50_ms": 4.4093747,
+      "decode_completion_p50_ms": 5.973386,
+      "eye_cpu_p50_ms": 1.653489,
+      "conversion_p50_ms": 0.62343746,
+      "estimated_latency_p50_ms": 58.940765,
+      "network_residual_p50_ms": 4.130662999999999,
+      "encode_p50_ms": 1.4299,
+      "video_payload_p50_mbps": 1004.1844,
+      "experiment": {
+        "loop_probe": 0,
+        "release_fd": 0,
+        "eye_gpu_probe": 0,
+        "repeat_render": 0,
+        "fused_haar": 0,
+        "batch": 0,
+        "precision": 1,
+        "compute_conversion": 0,
+        "direct_eye_copy": 1,
+        "direct_flip_y": 1,
+        "async_eye_copy": 0,
+        "decode_handoff": 0,
+        "copy_wait_us": 0,
+        "runtime_display_time": 0,
+        "raw_srgb_copy": 0,
+        "fragment_min_usage": 1,
+        "optimal_ahb_usage": 1,
+        "image_cache": 0,
+        "frame_wait_us": 0,
+        "pre_wait_poll": 0
+      },
+      "limitations": "Short stationary screen; dynamic clocks; submissions/completions are not optical FPS or motion-to-photon.",
+      "case": "baseline",
+      "source_coverage_verified": true,
+      "capture_seconds": 15,
+      "actual_source_eye": [
+        2544,
+        2704
+      ],
+      "counter_window": {
+        "samples": 14,
+        "interval_s": 13.558447899995372,
+        "counter_deltas": {
+          "complete": 1623,
+          "partial": 0,
+          "skipped": 4,
+          "dropped": 0,
+          "superseded": 156,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1467,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1467,
+          "pending_eye_copy_deferrals": 0
+        },
+        "counter_rates_per_s": {
+          "complete": 119.70396700057047,
+          "partial": 0.0,
+          "skipped": 0.29501901910183725,
+          "dropped": 0.0,
+          "superseded": 11.505741744971653,
+          "stale_packets": 0.0,
+          "decode_failures": 0.0,
+          "direct_eye_copies": 108.19822525559881,
+          "staging_eye_copies": 0.0,
+          "completed_eye_copies": 108.19822525559881,
+          "pending_eye_copy_deferrals": 0.0
+        },
+        "definition": "Matching HeadsetTelemetry endpoints. Complete is producer decode completion; superseded includes pending replacement and out-of-order publication. Eye completion can include configuration redraws; staging completion is unobserved. Not unique or optical display FPS."
+      },
+      "gpu_clock_samples_mhz": [
+        690.0,
+        690.0,
+        690.0
+      ],
+      "battery_temperature_samples_c": [
+        45.0
+      ],
+      "thermal_status_samples": [
+        0
+      ],
+      "scheduling": {
+        "status": "no_probe_records",
+        "logged_selection_slots": 0,
+        "outcome_counts": {
+          "held": 0,
+          "immediate": 0,
+          "late": 0,
+          "empty": 0,
+          "copy_pending": 0,
+          "no_decoder": 0
+        },
+        "selection_mean_cpu_us": null,
+        "loop_mean_cpu_ms": {
+          "wait_mean_ms": null,
+          "end_mean_ms": null,
+          "overlay_mean_cpu_ms": null,
+          "wait_call_mean_ms": null,
+          "begin_mean_ms": null,
+          "render_mean_ms": null,
+          "frame_work_mean_ms": null
+        },
+        "malformed_records": 0,
+        "foreign_process_records": 0,
+        "scope": "Whole logged windows ending inside the interval; boundary windows can start before it. Counts are render selections, not unique frames or optical FPS. CPU phases overlap producer GPU work and must not be added to GPU decode time.",
+        "performance_acceptance": false,
+        "optical_latency_measured": false
+      }
+    },
+    {
+      "status": "measured",
+      "fresh_submissions_fps": 107.96817314184621,
+      "completed_direct_copies_fps": 107.85940951085439,
+      "p1_nominal_fps": 59.9870138,
+      "timestamp_gap_p95_ms": 16.68407705,
+      "decode_gpu_p50_ms": 5.5925,
+      "decode_completion_p50_ms": 7.1835685,
+      "eye_cpu_p50_ms": 5.2863545,
+      "conversion_p50_ms": 0.6660937,
+      "estimated_latency_p50_ms": 65.51088,
+      "network_residual_p50_ms": 4.058369,
+      "encode_p50_ms": 1.4308999999999998,
+      "video_payload_p50_mbps": 1006.86816,
+      "experiment": {
+        "loop_probe": 1,
+        "release_fd": 0,
+        "eye_gpu_probe": 0,
+        "repeat_render": 0,
+        "fused_haar": 0,
+        "batch": 0,
+        "precision": 1,
+        "compute_conversion": 0,
+        "direct_eye_copy": 1,
+        "direct_flip_y": 1,
+        "async_eye_copy": 0,
+        "decode_handoff": 0,
+        "copy_wait_us": 0,
+        "runtime_display_time": 0,
+        "raw_srgb_copy": 0,
+        "fragment_min_usage": 1,
+        "optimal_ahb_usage": 1,
+        "image_cache": 0,
+        "frame_wait_us": 0,
+        "pre_wait_poll": 0
+      },
+      "limitations": "Short stationary screen; dynamic clocks; submissions/completions are not optical FPS or motion-to-photon.",
+      "case": "experiment",
+      "source_coverage_verified": true,
+      "capture_seconds": 15,
+      "actual_source_eye": [
+        2544,
+        2704
+      ],
+      "counter_window": {
+        "samples": 15,
+        "interval_s": 14.231488999997964,
+        "counter_deltas": {
+          "complete": 1708,
+          "partial": 0,
+          "skipped": 0,
+          "dropped": 0,
+          "superseded": 173,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1535,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1535,
+          "pending_eye_copy_deferrals": 0
+        },
+        "counter_rates_per_s": {
+          "complete": 120.0155514296673,
+          "partial": 0.0,
+          "skipped": 0.0,
+          "dropped": 0.0,
+          "superseded": 12.156141918812905,
+          "stale_packets": 0.0,
+          "decode_failures": 0.0,
+          "direct_eye_copies": 107.85940951085439,
+          "staging_eye_copies": 0.0,
+          "completed_eye_copies": 107.85940951085439,
+          "pending_eye_copy_deferrals": 0.0
+        },
+        "definition": "Matching HeadsetTelemetry endpoints. Complete is producer decode completion; superseded includes pending replacement and out-of-order publication. Eye completion can include configuration redraws; staging completion is unobserved. Not unique or optical display FPS."
+      },
+      "gpu_clock_samples_mhz": [
+        640.0,
+        599.0,
+        599.0
+      ],
+      "battery_temperature_samples_c": [
+        45.0
+      ],
+      "thermal_status_samples": [
+        0
+      ],
+      "scheduling": {
+        "status": "parsed",
+        "logged_selection_slots": 1800,
+        "outcome_counts": {
+          "held": 0,
+          "immediate": 1601,
+          "late": 0,
+          "empty": 199,
+          "copy_pending": 0,
+          "no_decoder": 0
+        },
+        "selection_mean_cpu_us": 68.97333333333333,
+        "loop_mean_cpu_ms": {
+          "wait_mean_ms": 3.5056666666666665,
+          "end_mean_ms": 0.32986666666666664,
+          "overlay_mean_cpu_ms": 0.09906666666666666,
+          "wait_call_mean_ms": 3.5032666666666668,
+          "begin_mean_ms": 0.032,
+          "render_mean_ms": 4.2276,
+          "frame_work_mean_ms": 8.3008
+        },
+        "malformed_records": 0,
+        "foreign_process_records": 0,
+        "scope": "Whole logged windows ending inside the interval; boundary windows can start before it. Counts are render selections, not unique frames or optical FPS. CPU phases overlap producer GPU work and must not be added to GPU decode time.",
+        "performance_acceptance": false,
+        "optical_latency_measured": false
+      }
+    },
+    {
+      "status": "measured",
+      "fresh_submissions_fps": 106.12393641251053,
+      "completed_direct_copies_fps": 106.40377254077022,
+      "p1_nominal_fps": 59.98229776,
+      "timestamp_gap_p95_ms": 16.684131899999997,
+      "decode_gpu_p50_ms": 4.4210674999999995,
+      "decode_completion_p50_ms": 5.943724,
+      "eye_cpu_p50_ms": 2.018959,
+      "conversion_p50_ms": 0.6192187,
+      "estimated_latency_p50_ms": 52.642953,
+      "network_residual_p50_ms": 4.1995629999999995,
+      "encode_p50_ms": 1.4339000000000002,
+      "video_payload_p50_mbps": 1003.2556,
+      "experiment": {
+        "loop_probe": 0,
+        "release_fd": 0,
+        "eye_gpu_probe": 0,
+        "repeat_render": 0,
+        "fused_haar": 0,
+        "batch": 0,
+        "precision": 1,
+        "compute_conversion": 0,
+        "direct_eye_copy": 1,
+        "direct_flip_y": 1,
+        "async_eye_copy": 0,
+        "decode_handoff": 0,
+        "copy_wait_us": 0,
+        "runtime_display_time": 0,
+        "raw_srgb_copy": 0,
+        "fragment_min_usage": 1,
+        "optimal_ahb_usage": 1,
+        "image_cache": 0,
+        "frame_wait_us": 0,
+        "pre_wait_poll": 0
+      },
+      "limitations": "Short stationary screen; dynamic clocks; submissions/completions are not optical FPS or motion-to-photon.",
+      "case": "restore",
+      "source_coverage_verified": true,
+      "capture_seconds": 15,
+      "actual_source_eye": [
+        2544,
+        2704
+      ],
+      "counter_window": {
+        "samples": 14,
+        "interval_s": 14.07844820000173,
+        "counter_deltas": {
+          "complete": 1683,
+          "partial": 0,
+          "skipped": 6,
+          "dropped": 0,
+          "superseded": 184,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1498,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1498,
+          "pending_eye_copy_deferrals": 0
+        },
+        "counter_rates_per_s": {
+          "complete": 119.54442535788803,
+          "partial": 0.0,
+          "skipped": 0.42618333460922647,
+          "dropped": 0.0,
+          "superseded": 13.069622261349613,
+          "stale_packets": 0.0,
+          "decode_failures": 0.0,
+          "direct_eye_copies": 106.40377254077022,
+          "staging_eye_copies": 0.0,
+          "completed_eye_copies": 106.40377254077022,
+          "pending_eye_copy_deferrals": 0.0
+        },
+        "definition": "Matching HeadsetTelemetry endpoints. Complete is producer decode completion; superseded includes pending replacement and out-of-order publication. Eye completion can include configuration redraws; staging completion is unobserved. Not unique or optical display FPS."
+      },
+      "gpu_clock_samples_mhz": [
+        690.0,
+        690.0,
+        690.0
+      ],
+      "battery_temperature_samples_c": [
+        45.0
+      ],
+      "thermal_status_samples": [
+        0
+      ],
+      "scheduling": {
+        "status": "no_probe_records",
+        "logged_selection_slots": 0,
+        "outcome_counts": {
+          "held": 0,
+          "immediate": 0,
+          "late": 0,
+          "empty": 0,
+          "copy_pending": 0,
+          "no_decoder": 0
+        },
+        "selection_mean_cpu_us": null,
+        "loop_mean_cpu_ms": {
+          "wait_mean_ms": null,
+          "end_mean_ms": null,
+          "overlay_mean_cpu_ms": null,
+          "wait_call_mean_ms": null,
+          "begin_mean_ms": null,
+          "render_mean_ms": null,
+          "frame_work_mean_ms": null
+        },
+        "malformed_records": 0,
+        "foreign_process_records": 0,
+        "scope": "Whole logged windows ending inside the interval; boundary windows can start before it. Counts are render selections, not unique frames or optical FPS. CPU phases overlap producer GPU work and must not be added to GPU decode time.",
+        "performance_acceptance": false,
+        "optical_latency_measured": false
+      }
+    }
+  ],
+  "limitations": [
+    "Three 15-second stationary chart screens, not sustained/gameplay/optical acceptance.",
+    "Same continuous source interval, application restarted between cells; dynamic GPU clocks and producer phase confound overhead attribution.",
+    "Selection windows ending within capture may start before it; counts are not exact interval deltas.",
+    "Private orchestrator reader placement corrected after capture; saved PID/time-bounded logs parsed and validated offline without rerunning."
+  ]
+}

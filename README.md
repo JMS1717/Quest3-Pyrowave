@@ -29,7 +29,7 @@ USB or Wi-Fi, tune the stream, and measure where every millisecond goes.
 | GPU PyroWave decoding | Vulkan wavelet reconstruction, with an AHardwareBuffer bridge into the Quest's GLES/OpenXR eye images |
 | USB and wireless PCVR | ALVR's wired TCP mode, wireless TCP, and an experimental UDP transport |
 | High bitrate controls | 300-2000 Mbps targets, a bitrate slider, and latency-driven Auto bitrate |
-| Full-frame image | 4:2:0 by default; optional 4:4:4. Foveated encoding and client foveation are disabled |
+| Full-frame default | 4:2:0 by default; optional 4:4:4. Development `.28` also offers [light peripheral encoding](docs/LIGHT-FOVEATION.md); client foveation stays disabled |
 | Independent resolutions | Increase PC source rendering while keeping Quest decode at 2080x2208 per eye |
 | In-headset stats | A 3D performance panel, toggled by clicking both thumbsticks together |
 | Reproducible experiments | Pinned source inputs, matching APK/Windows builds, short benchmarks and published findings |
@@ -124,6 +124,7 @@ only and preserves bitrate, refresh, chroma and decoder settings.
 | Producer completed about **120 decodes/s**, while eye copies completed about **112-113/s** | Superseded outputs account for the counted gap. This does not prove its synchronization cause. [Counters](results/OUTPUT-SLOT-LOSS-2026-10-02.json) |
 | Later short captures varied, rather than consistently matching the best run | Frame selection: ~97-110 FPS; `.25` timer calibration: ~99-108 FPS. Dynamic clocks and thermal state matter. [Selection](results/FRAME-SELECTION-LIVE-2026-10-02.json), [timer](results/EYE-GPU-LIVE-2026-10-02.json) |
 | 4:4:4 cost performance in the matched chroma comparison | About 100 fresh FPS at 1000 Mbps/420 versus 66 at 2000 Mbps/444. **4:2:0 remains the default.** [Decision](docs/CHROMA.md) |
+| Optional light encoding reduced GPU decode p50 to **3.91 ms** versus **4.49 / 4.46 ms** controls | `.28`, same 1000 Mbps/native expanded view; short screens only, CPU eye time rose. [Mapping, tradeoffs and results](docs/LIGHT-FOVEATION.md) |
 | The Vulkan -> AHB -> GLES bridge preserved RGB bytes in tested allocation modes | Small and native stereo readbacks; relative preservation, not an absolute color/quality certification. [Readbacks](results/GPU-READBACK-QUEST-2026-10-02.json) |
 
 These are **short stationary screening measurements**, not sustained gameplay
@@ -167,8 +168,8 @@ intact. [Installation and rollback](docs/BUILD.md#install-and-rollback).
 - **Understand the code:** [architecture](docs/ARCHITECTURE.md),
   [decode pipeline](docs/DECODE-PIPELINE.md), [Vulkan presentation](docs/VULKAN-PRESENTATION.md).
 - **Development quality option:** [light peripheral encoding](docs/LIGHT-FOVEATION.md)
-  keeps the central region sharp and reduces encoded pixels. The `.28` candidate
-  is optional, off by default and awaiting live/visual acceptance.
+  keeps the central region sharp and reduces encoded pixels. Matching `.28` short screens verified mapping and lower GPU decode cost; it
+  stays optional and off by default pending sustained and in-headset acceptance.
 - **Report a problem:** include release/build version, PC GPU/driver, connection
   type, resolution, refresh, bitrate and the visible symptom. Remove device IDs,
   private network information and secrets from logs before sharing.

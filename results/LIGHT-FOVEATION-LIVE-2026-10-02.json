@@ -1,0 +1,402 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-02",
+  "version": "20.13.0-quest3.pyro.28",
+  "source_sha": "2b87fc717764c7588d1b511e062f1d4e6df682ea",
+  "status": "short_full_light_full_screen_keep_optional_default_off",
+  "sequence": "full/light/full",
+  "expanded_eye": [
+    2080,
+    2208
+  ],
+  "requested_and_runtime_hz": 120,
+  "target_mbps": 1000,
+  "chroma": "4:2:0",
+  "decode": "Haar/Vulkan compute",
+  "transport": "ALVR USB/ADB TCP",
+  "native_release_fd": false,
+  "eye_gpu_timer_enabled": false,
+  "overlay_visible": true,
+  "cases": [
+    {
+      "status": "measured",
+      "fresh_submissions_fps": 100.21775342829783,
+      "completed_direct_copies_fps": 100.88362262782343,
+      "p1_nominal_fps": 59.947140919999995,
+      "timestamp_gap_p95_ms": 16.705877500000003,
+      "decode_gpu_p50_ms": 4.490937,
+      "decode_completion_p50_ms": 6.168543,
+      "eye_cpu_p50_ms": 1.808854,
+      "conversion_p50_ms": 0.6328646,
+      "estimated_latency_p50_ms": 54.600704,
+      "network_residual_p50_ms": 4.199532,
+      "encode_p50_ms": 1.4169,
+      "video_payload_p50_mbps": 1001.7216,
+      "experiment": {
+        "loop_probe": 0,
+        "release_fd": 0,
+        "eye_gpu_probe": 0,
+        "repeat_render": 0,
+        "fused_haar": 0,
+        "batch": 0,
+        "precision": 1,
+        "compute_conversion": 0,
+        "direct_eye_copy": 1,
+        "direct_flip_y": 1,
+        "async_eye_copy": 0,
+        "decode_handoff": 0,
+        "copy_wait_us": 0,
+        "runtime_display_time": 0,
+        "raw_srgb_copy": 0,
+        "fragment_min_usage": 1,
+        "optimal_ahb_usage": 1,
+        "image_cache": 0,
+        "frame_wait_us": 0,
+        "pre_wait_poll": 0
+      },
+      "limitations": "Short stationary screen; dynamic clocks; submissions/completions are not optical FPS or motion-to-photon.",
+      "case": "baseline",
+      "source_coverage_verified": true,
+      "capture_seconds": 15,
+      "actual_source_eye": [
+        2544,
+        2704
+      ],
+      "resolution_evidence": {
+        "status": "verified",
+        "mismatches": [],
+        "aligned_requested_render_eye": [
+          2080,
+          2208
+        ],
+        "aligned_requested_encode_eye": [
+          2080,
+          2208
+        ],
+        "negotiated_render_eye": [
+          2080,
+          2208
+        ],
+        "negotiated_encode_eye": [
+          2080,
+          2208
+        ],
+        "expected_decode_eye": [
+          2080,
+          2208
+        ],
+        "light_foveation_verified": false,
+        "observed_encoded_stereo_frames": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "pc_source_pixel_ratio": 1.0,
+        "scope": "Geometry only; SteamVR recommendation is not proof of game texture size, image quality or sustained performance."
+      },
+      "counter_window": {
+        "samples": 14,
+        "interval_s": 13.57009160000598,
+        "counter_deltas": {
+          "complete": 1628,
+          "partial": 0,
+          "skipped": 0,
+          "dropped": 0,
+          "superseded": 259,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1369,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1369,
+          "pending_eye_copy_deferrals": 0
+        },
+        "counter_rates_per_s": {
+          "complete": 119.96971339524949,
+          "partial": 0.0,
+          "skipped": 0.0,
+          "dropped": 0.0,
+          "superseded": 19.086090767426054,
+          "stale_packets": 0.0,
+          "decode_failures": 0.0,
+          "direct_eye_copies": 100.88362262782343,
+          "staging_eye_copies": 0.0,
+          "completed_eye_copies": 100.88362262782343,
+          "pending_eye_copy_deferrals": 0.0
+        },
+        "definition": "Matching HeadsetTelemetry endpoints. Complete is producer decode completion; superseded includes pending replacement and out-of-order publication. Eye completion can include configuration redraws; staging completion is unobserved. Not unique or optical display FPS."
+      },
+      "gpu_clock_samples_mhz": [
+        690.0,
+        690.0,
+        690.0
+      ],
+      "battery_temperature_samples_c": [
+        45.0
+      ],
+      "thermal_status_samples": [
+        0
+      ]
+    },
+    {
+      "status": "measured",
+      "fresh_submissions_fps": 107.05748987205003,
+      "completed_direct_copies_fps": 107.38869422012043,
+      "p1_nominal_fps": 59.9818972,
+      "timestamp_gap_p95_ms": 16.6759806,
+      "decode_gpu_p50_ms": 3.90624985,
+      "decode_completion_p50_ms": 5.3769015,
+      "eye_cpu_p50_ms": 2.14455755,
+      "conversion_p50_ms": 0.5393229,
+      "estimated_latency_p50_ms": 53.446885,
+      "network_residual_p50_ms": 4.0667935,
+      "encode_p50_ms": 1.42795,
+      "video_payload_p50_mbps": 1005.04333,
+      "experiment": {
+        "loop_probe": 0,
+        "release_fd": 0,
+        "eye_gpu_probe": 0,
+        "repeat_render": 0,
+        "fused_haar": 0,
+        "batch": 0,
+        "precision": 1,
+        "compute_conversion": 0,
+        "direct_eye_copy": 1,
+        "direct_flip_y": 1,
+        "async_eye_copy": 0,
+        "decode_handoff": 0,
+        "copy_wait_us": 0,
+        "runtime_display_time": 0,
+        "raw_srgb_copy": 0,
+        "fragment_min_usage": 1,
+        "optimal_ahb_usage": 1,
+        "image_cache": 0,
+        "frame_wait_us": 0,
+        "pre_wait_poll": 0
+      },
+      "limitations": "Short stationary screen; dynamic clocks; submissions/completions are not optical FPS or motion-to-photon.",
+      "case": "light",
+      "source_coverage_verified": true,
+      "capture_seconds": 15,
+      "actual_source_eye": [
+        2544,
+        2704
+      ],
+      "resolution_evidence": {
+        "status": "verified",
+        "mismatches": [],
+        "aligned_requested_render_eye": [
+          2080,
+          2208
+        ],
+        "aligned_requested_encode_eye": [
+          2080,
+          2208
+        ],
+        "negotiated_render_eye": [
+          2080,
+          2208
+        ],
+        "negotiated_encode_eye": [
+          2080,
+          2208
+        ],
+        "expected_decode_eye": [
+          1952,
+          2080
+        ],
+        "light_foveation_verified": true,
+        "observed_encoded_stereo_frames": [
+          [
+            3904,
+            2080
+          ]
+        ],
+        "pc_source_pixel_ratio": 1.0,
+        "scope": "Geometry only; SteamVR recommendation is not proof of game texture size, image quality or sustained performance."
+      },
+      "counter_window": {
+        "samples": 13,
+        "interval_s": 13.548912300000666,
+        "counter_deltas": {
+          "complete": 1626,
+          "partial": 0,
+          "skipped": 0,
+          "dropped": 0,
+          "superseded": 170,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1455,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1455,
+          "pending_eye_copy_deferrals": 0
+        },
+        "counter_rates_per_s": {
+          "complete": 120.00963354083561,
+          "partial": 0.0,
+          "skipped": 0.0,
+          "dropped": 0.0,
+          "superseded": 12.547132658020942,
+          "stale_packets": 0.0,
+          "decode_failures": 0.0,
+          "direct_eye_copies": 107.38869422012043,
+          "staging_eye_copies": 0.0,
+          "completed_eye_copies": 107.38869422012043,
+          "pending_eye_copy_deferrals": 0.0
+        },
+        "definition": "Matching HeadsetTelemetry endpoints. Complete is producer decode completion; superseded includes pending replacement and out-of-order publication. Eye completion can include configuration redraws; staging completion is unobserved. Not unique or optical display FPS."
+      },
+      "gpu_clock_samples_mhz": [
+        690.0,
+        690.0,
+        690.0
+      ],
+      "battery_temperature_samples_c": [
+        45.0
+      ],
+      "thermal_status_samples": [
+        0
+      ]
+    },
+    {
+      "status": "measured",
+      "fresh_submissions_fps": 105.87664551537378,
+      "completed_direct_copies_fps": 105.86581456481308,
+      "p1_nominal_fps": 59.984232580000004,
+      "timestamp_gap_p95_ms": 16.68464975,
+      "decode_gpu_p50_ms": 4.464479,
+      "decode_completion_p50_ms": 6.000001,
+      "eye_cpu_p50_ms": 1.676094,
+      "conversion_p50_ms": 0.624375,
+      "estimated_latency_p50_ms": 53.763071499999995,
+      "network_residual_p50_ms": 4.107400500000001,
+      "encode_p50_ms": 1.88755,
+      "video_payload_p50_mbps": 1002.58452,
+      "experiment": {
+        "loop_probe": 0,
+        "release_fd": 0,
+        "eye_gpu_probe": 0,
+        "repeat_render": 0,
+        "fused_haar": 0,
+        "batch": 0,
+        "precision": 1,
+        "compute_conversion": 0,
+        "direct_eye_copy": 1,
+        "direct_flip_y": 1,
+        "async_eye_copy": 0,
+        "decode_handoff": 0,
+        "copy_wait_us": 0,
+        "runtime_display_time": 0,
+        "raw_srgb_copy": 0,
+        "fragment_min_usage": 1,
+        "optimal_ahb_usage": 1,
+        "image_cache": 0,
+        "frame_wait_us": 0,
+        "pre_wait_poll": 0
+      },
+      "limitations": "Short stationary screen; dynamic clocks; submissions/completions are not optical FPS or motion-to-photon.",
+      "case": "restore",
+      "source_coverage_verified": true,
+      "capture_seconds": 15,
+      "actual_source_eye": [
+        2544,
+        2704
+      ],
+      "resolution_evidence": {
+        "status": "verified",
+        "mismatches": [],
+        "aligned_requested_render_eye": [
+          2080,
+          2208
+        ],
+        "aligned_requested_encode_eye": [
+          2080,
+          2208
+        ],
+        "negotiated_render_eye": [
+          2080,
+          2208
+        ],
+        "negotiated_encode_eye": [
+          2080,
+          2208
+        ],
+        "expected_decode_eye": [
+          2080,
+          2208
+        ],
+        "light_foveation_verified": false,
+        "observed_encoded_stereo_frames": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "pc_source_pixel_ratio": 1.0,
+        "scope": "Geometry only; SteamVR recommendation is not proof of game texture size, image quality or sustained performance."
+      },
+      "counter_window": {
+        "samples": 15,
+        "interval_s": 14.5561624999973,
+        "counter_deltas": {
+          "complete": 1745,
+          "partial": 0,
+          "skipped": 2,
+          "dropped": 0,
+          "superseded": 203,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1541,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1541,
+          "pending_eye_copy_deferrals": 0
+        },
+        "counter_rates_per_s": {
+          "complete": 119.88049734951254,
+          "partial": 0.0,
+          "skipped": 0.13739885083038686,
+          "dropped": 0.0,
+          "superseded": 13.945983359284266,
+          "stale_packets": 0.0,
+          "decode_failures": 0.0,
+          "direct_eye_copies": 105.86581456481308,
+          "staging_eye_copies": 0.0,
+          "completed_eye_copies": 105.86581456481308,
+          "pending_eye_copy_deferrals": 0.0
+        },
+        "definition": "Matching HeadsetTelemetry endpoints. Complete is producer decode completion; superseded includes pending replacement and out-of-order publication. Eye completion can include configuration redraws; staging completion is unobserved. Not unique or optical display FPS."
+      },
+      "gpu_clock_samples_mhz": [
+        690.0,
+        690.0,
+        690.0
+      ],
+      "battery_temperature_samples_c": [
+        45.0
+      ],
+      "thermal_status_samples": [
+        0
+      ]
+    }
+  ],
+  "sustained_120_accepted": false,
+  "optical_latency_measured": false,
+  "perceptual_in_headset_acceptance": false,
+  "screenshot_assessment": "Both eyes retain correct LEFT/RIGHT labels, upright text, matching grid placement and outward arrows. No gross warp, inversion or eye bleed visible in inspected captures. Screenshots cannot certify peripheral invisibility, lens comfort or game quality.",
+  "limitations": [
+    "Three 15-second stationary chart cells, restart-based, with verified individual source coverage and identical reference-image hashes.",
+    "Actual source texture is SteamVR-scaled 2544x2704 per eye, while expanded/encoder target is2080x2208.",
+    "All sampled clocks690MHz, battery45C, Android thermal status0; sparse clock samples do not prove continuously fixed clocks or equal silicon temperature.",
+    "Fresh submissions/completed eye copies are not optical display FPS or motion-to-photon.",
+    "Light saved GPU decode time but raised median CPU eye time; this is not sustained or perceptual acceptance."
+  ],
+  "excluded_followup": {
+    "mode": "GPU eye timer enabled in every planned cell",
+    "planned_sequence": "full/light/full",
+    "completed_controls": 1,
+    "stop_reason": "Conservative screening temperature cutoff at46C before second cell",
+    "comparative_gpu_reconstruction_cost_available": false,
+    "temporaries_restored_and_read_back": true,
+    "note": "No result from this incomplete comparison is used to estimate the added inverse shader cost."
+  }
+}

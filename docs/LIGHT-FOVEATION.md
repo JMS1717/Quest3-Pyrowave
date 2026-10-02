@@ -1,7 +1,8 @@
 # Light peripheral encoding
 
-Development candidate `.28`; **off by default** until GPU, live pacing and
-in-headset quality comparisons pass. The current no-foveation native120 goal
+Development `.28`; **off by default**. Matching cloud builds and short Quest 3
+mapping/timing screens passed; sustained performance and in-headset quality
+acceptance remain pending. The current no-foveation native120 goal
 remains separate. This mode deliberately trades a little peripheral detail for
 fewer encoded/decoded pixels; it does not reduce the game's rendering workload.
 
@@ -55,6 +56,48 @@ and payload. Inspect separate LEFT/RIGHT labels, saturated edges, peripheral HUD
 text and the stereo seam. Leave it optional if quality is noticeable or pacing
 regresses. Runtime120 acceptance alone does not certify 120 fresh frames/s.
 
+## First Quest 3 comparison (October 2)
+
+Matching `.28` APK/Windows artifacts passed [CI and provenance checks](../results/LIGHT-FOVEATION-CI-2026-10-02.json).
+Three short 15-second screens used the same 2544×2704 game-source chart,
+expanded 2080×2208 view, runtime120, 4:2:0, Haar/compute, 1000 Mbps USB/TCP and
+visible overlay. Restarts applied each geometry; individual source intervals and
+reference-image hashes matched. All three clock snapshots in every cell were
+690 MHz, battery temperature stayed 45°C and Android thermal status was zero.
+Those sparse readings do not prove a continuously fixed clock or silicon temperature.
+
+| Metric | Full | Light | Full restored |
+| --- | ---: | ---: | ---: |
+| Fresh submissions/s | 100.22 | 107.06 | 105.88 |
+| Completed eye copies/s | 100.88 | 107.39 | 105.87 |
+| GPU decode p50, ms | 4.49 | 3.91 | 4.46 |
+| Decode completion p50, ms | 6.17 | 5.38 | 6.00 |
+| CPU eye render p50, ms | 1.81 | 2.14 | 1.68 |
+| Estimated pipeline latency p50, ms | 54.60 | 53.45 | 53.76 |
+| Actual video payload p50, Mbps | 1001.72 | 1005.04 | 1002.58 |
+| Timestamp gap p95, ms | 16.71 | 16.68 | 16.68 |
+
+The actual decoder received **1952×2080 per eye** only in light mode, while the
+reconstructed view stayed full size. GPU decode cost fell; CPU eye time rose,
+and the fresh-FPS difference over the restored control was small. This is an
+encouraging decode-budget result, not sustained 120 FPS or a proven latency win.
+At the same constant bitrate, pixel reduction does **not** promise less payload.
+The p1 nominal client rate remained about 60 FPS because some timestamps spanned
+two 120-Hz slots; median nominal120 must not be substituted for fresh FPS.
+
+Inspected ADB screenshots preserve LEFT/RIGHT labels, outward arrows, upright
+colored HUD text and grid placement, with no gross warp or inversion seen.
+They do not establish that peripheral loss is invisible in the lenses. The
+[aggregate live record](../results/LIGHT-FOVEATION-LIVE-2026-10-02.json) retains
+counter deltas, pacing, thermals and geometry. Full-frame mode was restored;
+light remains an optional experiment pending sustained and human quality checks.
+
+A follow-up with the GPU eye timer enabled in every mode stopped at the
+conservative 46°C screening cutoff after its first control. It yielded no
+comparative GPU reconstruction-cost result and is excluded from acceptance.
+Temporary properties were restored with readback, and the proximity automation
+was disabled; no thermal safeguards were changed.
+
 ## Mapping safeguards and inspiration
 
 The implementation adapts the existing MIT-licensed
@@ -69,8 +112,8 @@ CPU tests check dense forward/inverse round trips, transitions, monotonicity,
 center density, both eyes, budgets and legacy/default settings. A software GLES
 CI check evaluates the **same shared inverse helper** for 490 coordinates,
 including corners and transition boundaries. It verifies mapping math, not Quest
-interop, D3D sampling, image quality or headset performance. Matching live
-asymmetric-chart and quality comparisons are required after the cloud build.
+interop, D3D sampling, image quality or headset performance. A matching live asymmetric-chart screen confirmed both-eye mapping and reduced
+decode geometry. Gameplay/perceptual acceptance remains separate.
 
 Virtual Desktop's developer publicly described spatial foveated streaming in
 [the 1.8 announcement](https://www.reddit.com/r/OculusQuest/comments/dufzov/virtual_desktop_update_18_improved_image_quality/).

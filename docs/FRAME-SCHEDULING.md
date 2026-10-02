@@ -58,4 +58,23 @@ Start by distinguishing empty selections from copy deferrals, then compare
 runtime wait/acquire/render phases and producer superseding over the same
 capture. Do not promote a new selection policy from lower CPU time alone.
 
+## First short screen (October 2)
+
+Matching `.27` probe off/on/off captures delivered **108.65 / 107.97 / 106.12**
+fresh submissions/s. In the probe-on logged windows, 1,800 display selections
+included **1,601 immediate frames and 199 empty selections**, with no late,
+held-frame, missing-decoder or pending-copy outcomes. Mean selection CPU time
+was 69 microseconds; actual `xrWaitFrame` call time averaged 3.50 ms and the
+recorded total loop work 8.30 ms. These CPU phases overlap producer GPU work.
+
+This identifies an empty selection boundary in this window; it does not prove
+why a producer completing around 120 frames/s misses display slots. The
+probe-on decode completion and latency were higher than both controls, with
+dynamic clocks and phase differences, so the screen does not establish
+negligible probe overhead. Keep the probe off during normal play. The
+[aggregate measurements](../results/FRAME-SCHEDULING-LIVE-2026-10-02.json)
+include both controls, clocks, thermals and limits. Source coverage was verified;
+the private reader was corrected and applied to saved logs after capture.
+Neither sustained 120 FPS nor optical latency was accepted.
+
 [![Support development](https://img.shields.io/badge/PayPal-Support%20development-0070BA?logo=paypal&logoColor=white)](https://www.paypal.com/paypalme/jasonselsley)
