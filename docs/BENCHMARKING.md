@@ -20,6 +20,8 @@ python -m tools.quest3.bench plan --capabilities capabilities.json --out plan.js
 
 The client logs `[Q3PW_CAPS]` initially from enumeration and again with `source=probe` after
 its startup probe. Enumeration is incomplete on HorizonOS v2.7: absence does not mean unsupported.
+The helper now selects only the running client's PID and epoch-format diagnostics;
+an old app process cannot supply its capabilities. No running client is an error.
 Each request must succeed and match the runtime frequency and three consecutive frame periods.
 Unconfirmed rates are labelled **not_confirmed**, never silently benchmarked at a fallback.
 The plan randomizes confirmed Compute/Fragment × bitrate × three replicates and hardware-codec
@@ -41,8 +43,19 @@ carry their error, never an invented value. Thermal-service and battery snapshot
 ALVR Android PowerManager telemetry. PC GPU encode time is measured by ALVR; vendor-specific PC
 clock/load sensors require an external tool (e.g. GPU-Z logging), joined by capture time.
 
+The helper records `client_process` before/after. A changed or missing client
+invalidates the cell and clears both rate-acceptance flags; no old-process runtime
+records are retained. `runtime_evidence` contains only the same client's startup
+diagnostics. Those can predate capture: they are context, not continuous refresh
+proof, and matching PIDs alone do not prove an unchanged session generation.
+For controlled experiments, retain PID/time-bounded logs and source coverage as
+well. Previously published accepted screens used separate private PID/interval
+checks; their broader legacy `runtime_evidence` must not be used as live proof.
+
 Use **the same resolution, scene, encoder range and refresh** across codecs. PyroWave
-uses 4:2:0 by default (optional 4:4:4); foveation is disabled in the current build.
+uses 4:2:0 by default (optional 4:4:4); full-frame encoding remains the default.
+Development `.28` offers optional [light peripheral encoding](LIGHT-FOVEATION.md).
+Record that mode and actual decode geometry, and keep it fixed across codec comparisons.
 Run CDF 9/7 Compute and Fragment at equal settings. Quest 3 Auto uses Compute based on the initial reference/readback check; both paths remain
 available for manual comparison. CDF 5/3 forces Compute and is a separate experiment.
 Hardware H.264/HEVC/AV1 at 200 Mbps are comparison starting points, not equal-quality claims.

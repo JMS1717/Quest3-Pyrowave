@@ -108,8 +108,21 @@ cd C:\q3pw\research\ALVR-20.13.0
 cargo +1.97.1 test -p alvr_session --lib
 ```
 
-Main-branch CI builds artifacts only. Pull requests run tool regression checks; tests can also be run manually. On-device correctness and timing
-are separate gates: see [`BENCHMARKING.md`](BENCHMARKING.md).
+Default CI runs regression checks and builds matching APK/server artifacts.
+On-device correctness and timing are separate gates: see
+[`BENCHMARKING.md`](BENCHMARKING.md).
+
+For tooling changes, dispatch the **Quest3-Pyrowave** workflow with `tests_only`
+enabled to run Python, portable C++ and software-GLES regressions without
+rebuilding APK/server artifacts. The default is a full matching build. With GitHub CLI:
+
+```powershell
+gh workflow run ci.yml --ref main -f tests_only=true
+```
+
+A tests-only run produces no installable pair; retain the last reviewed matching
+APK/server and its source hash. Native source, shader or build changes still need
+the full workflow.
 
 ## Switching between PyroWave and Virtual Desktop
 

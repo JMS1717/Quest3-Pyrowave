@@ -8,6 +8,7 @@ import subprocess
 import time
 import threading
 from pathlib import Path
+from .runtime_logs import extract as extract_runtime_logs, parse_pid, process_evidence
 
 RATES = (72, 90, 120, 144, 207, 240)
 BITRATES = (400, 600, 800, 1000, 1500, 2000)
@@ -210,11 +211,14 @@ def active_settings():
             'target_eye_resolution_width','target_eye_resolution_height','pyrowave_enabled','pyrowave_decode_path','pyrowave_wavelet_53','pyrowave_wavelet_haar','pyrowave_udp','pyrowave_chroma_444','enable_foveated_encoding',
             'foveation_center_size_x','foveation_center_size_y','foveation_center_shift_x','foveation_center_shift_y','foveation_edge_ratio_x','foveation_edge_ratio_y')}}
 
-def runtime_evidence(adb):
-    log=adb_run(adb,'logcat','-d','-t','20000')
-    # Store only app diagnostic records, never the complete system log.
-    return [line.split(']: ',1)[-1] for line in log.splitlines()
-        if re.search(r'\[Q3PW_(CAPS|PROBE|VERIFIED|RATE|EFFECTIVE)\]',line)]
+def client_pid(adb):
+    return parse_pid(adb_run(adb,'shell','pidof','io.github.jms1717.quest3pyrowave'))
+
+def runtime_evidence(adb, pid):
+    log=adb_run(adb,'logcat','-d','-v','epoch','--pid='+str(pid),'-t','20000')
+    # Check prefixes as well: old/fallback logcat output must never select a
+    # different process. Retain startup context, not unverified capture clocks.
+    return [row['message'] for row in extract_runtime_logs(log, pid)]
 
 def client_build(adb):
     try:
@@ -233,6 +237,13 @@ def capture(args):
     except Exception as exc:
         report={'status':'server_unavailable','frames':0,'error':str(exc),'state_start':start,
                 'client_build':build}
+        (root/'report.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
+        print(json.dumps({'status':report['status'],'out':str(root)}));return 1
+    try:pid_start=client_pid(args.adb)
+    except (RuntimeError,ValueError,subprocess.TimeoutExpired) as exc:
+        report={'status':'client_process_unavailable','frames':0,'error':str(exc),
+                'client_build':build,'settings_start':settings_start,
+                'client_process':process_evidence(None,None)}
         (root/'report.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
         print(json.dumps({'status':report['status'],'out':str(root)}));return 1
     stop=threading.Event();begin_wall_ns=time.time_ns();begin=time.monotonic()
@@ -256,18 +267,31 @@ def capture(args):
         stop.set();sampler.join(timeout=25)
         if ws:ws.close()
     report=summarise(events,args.hz)
+    pid_end=None;runtime_records=[]
+    try:
+        pid_end=client_pid(args.adb)
+        if pid_end==pid_start:runtime_records=runtime_evidence(args.adb,pid_start)
+    except (RuntimeError,ValueError,subprocess.TimeoutExpired) as exc:error=str(exc)
+    process=process_evidence(pid_start,pid_end)
     try:settings_end=active_settings()
     except Exception as exc:settings_end=None;error=str(exc)
     report.update({'duration_requested_s':args.seconds,'capture_started_unix_ns':begin_wall_ns,'elapsed_s':time.monotonic()-begin,
         'error':error,'state_start':start,'state_end':snapshot(args.adb),'device_samples':samples,
         'settings_start':settings_start,'settings_end':settings_end,'client_build':build,
-        'runtime_evidence':runtime_evidence(args.adb)})
+        'runtime_evidence':runtime_records,'client_process':process})
+    if not process['same_pid_during_capture']:
+        report['status']='client_process_changed_or_unavailable'
+        report['requested_rate_screen_passed']=False
+        report['sustained_requested_fps']=False
     if settings_start!=settings_end:report['status']='settings_changed_during_capture'
     if settings_start['openvr'].get('refresh_rate')!=args.hz:report['status']='negotiated_rate_mismatch'
     from .resolution import evidence
     report['resolution_evidence']=evidence(settings_start, report['headset_telemetry'])
     if report['resolution_evidence']['status']=='mismatch':report['status']='resolution_mismatch'
     if error:report['status']='capture_failed'
+    if report['status']!='measured':
+        report['requested_rate_screen_passed']=False
+        report['sustained_requested_fps']=False
     (root/'report.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
     print(json.dumps({'status':report['status'],'frames':report['frames'],'out':str(root)}))
     return 0 if report['status']=='measured' else 1
@@ -284,7 +308,7 @@ def main():
     c=sub.add_parser('summarise');c.add_argument('events');c.add_argument('--out',required=True)
     a=p.parse_args()
     if a.command=='capture': return capture(a)
-    if a.command=='capabilities': data=parse_capabilities(adb_run(a.adb,'shell','logcat -d -t 20000'))
+    if a.command=='capabilities': data=parse_capabilities('\n'.join(runtime_evidence(a.adb,client_pid(a.adb))))
     elif a.command=='plan': data=plan(json.loads(Path(a.capabilities).read_text()),a.repeats,seconds=a.seconds)
     else: data=summarise([json.loads(line) for line in Path(a.events).read_text().splitlines()])
     Path(a.out).write_text(json.dumps(data,indent=2),encoding='utf-8');print(a.out);return 0
