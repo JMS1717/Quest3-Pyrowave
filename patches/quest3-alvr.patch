@@ -2422,7 +2422,7 @@ index 7765bb4..b102615 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..9d7c4c3 100644
+index a0fd36f..60a317c 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -4,6 +4,8 @@ mod graphics;
@@ -2756,7 +2756,7 @@ index a0fd36f..9d7c4c3 100644
              let vsync_time =
                  Duration::from_nanos(frame_state.predicted_display_time.as_nanos() as _);
  
-@@ -654,22 +785,44 @@ pub fn entry_point() {
+@@ -654,22 +785,45 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
@@ -2767,6 +2767,7 @@ index a0fd36f..9d7c4c3 100644
 +                    performance_overlay = None;
 +                }
 +            }
++            let streaming = stream_context.is_some();
 +            // Render the video independently of the client-local performance quad.
              let (layer, display_time) = if let Some(stream) = &mut stream_context {
                  stream.render(frame_interval, vsync_time)
@@ -2789,7 +2790,7 @@ index a0fd36f..9d7c4c3 100644
  
              graphics_context.make_current();
 -            let res = xr_frame_stream.end(to_xr_time(display_time), blend_mode, layers);
-+            let end_time = if use_runtime_display_time && stream_context.is_some() {
++            let end_time = if use_runtime_display_time && streaming {
 +                frame_state.predicted_display_time
 +            } else { to_xr_time(display_time) };
 +            let end_started = loop_probe.then(Instant::now);
@@ -2809,7 +2810,7 @@ index a0fd36f..9d7c4c3 100644
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +851,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +852,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {

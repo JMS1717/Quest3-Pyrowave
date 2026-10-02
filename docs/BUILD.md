@@ -126,3 +126,13 @@ PyroWave tree, then run `python tools/ci/check_shader_manifest.py <tree> --write
 Regenerate `patches/quest3-pyrowave.patch` against the staged research baseline,
 including the manifest with `git add -N`. Reverse-check the patch before committing.
 The workflow records the pinned compiler configuration and invocation.
+# Cloud build caching
+
+Actions reconstructs the pinned source trees on every run, then restores Cargo
+registry/git dependencies and compiled target directories for the same platform
+and pinned toolchain. Cargo still checks the changed sources and dependencies;
+native PyroWave configuration/build, tests, signing, packaging and checksums run
+again. Caches exclude signing keys, Cargo credentials, headset captures and session
+configuration. The first run populates the cache; speed gains require a later run.
+For a clean comparison, bump the workflow cache generation or remove its cache
+steps and dispatch a new build. Artifacts remain tied to their exact CI commit.

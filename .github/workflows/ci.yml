@@ -29,6 +29,18 @@ jobs:
           java-version: '17'
       - name: Reconstruct pinned source trees
         run: sh tools/ci/fetch_sources.sh "$XRWIRED_INPUTS/research"
+      - name: Cache Rust dependencies and compiled Android targets
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ws/research/ALVR-20.13.0/target/release
+            ws/research/ALVR-20.13.0/target/debug
+            ws/research/ALVR-20.13.0/target/aarch64-linux-android/release
+          key: q3pw-client-v1-${{ runner.os }}-${{ env.RUST_TOOLCHAIN }}-${{ env.NDK_VERSION }}-${{ github.sha }}
+          restore-keys: |
+            q3pw-client-v1-${{ runner.os }}-${{ env.RUST_TOOLCHAIN }}-${{ env.NDK_VERSION }}-
       - name: Android toolchain
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" "platforms;android-35" "build-tools;35.0.0" >/dev/null
@@ -88,6 +100,17 @@ jobs:
       - name: Reconstruct pinned sources
         shell: bash
         run: sh tools/ci/fetch_sources.sh "$XRWIRED_INPUTS/research"
+      - name: Cache Rust dependencies and compiled Windows targets
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ws/research/ALVR-20.13.0/target/release
+            ws/research/ALVR-20.13.0/target/debug
+          key: q3pw-streamer-v1-${{ runner.os }}-${{ env.RUST_TOOLCHAIN }}-${{ github.sha }}
+          restore-keys: |
+            q3pw-streamer-v1-${{ runner.os }}-${{ env.RUST_TOOLCHAIN }}-
       - run: rustup toolchain install $env:RUST_TOOLCHAIN --profile minimal
       - name: PyroWave and ALVR streamer
         shell: cmd
