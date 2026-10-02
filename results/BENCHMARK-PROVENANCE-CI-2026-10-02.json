@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "source_commit": "c2cd9f2286814e56e225397df1f935031c551392",
+  "run_url": "https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37045482756",
+  "event": "workflow_dispatch",
+  "tests_only": true,
+  "conclusion": "success",
+  "checks": {
+    "python_regressions": 77,
+    "portable_release_fence_ownership": "passed",
+    "portable_decode_path": "passed",
+    "software_gles_readback": "passed",
+    "software_gles_light_mapping_cases": 490
+  },
+  "native_builds": {
+    "client": "skipped",
+    "streamer": "skipped",
+    "installable_artifacts": 0
+  },
+  "last_reviewed_matching_native_source": "2b87fc717764c7588d1b511e062f1d4e6df682ea",
+  "hardware_tested_by_this_change": false,
+  "scope": "Benchmark process provenance and tests-only dispatch, not live performance or image acceptance. Current-PID startup diagnostics are context and may predate capture."
+}

@@ -51,6 +51,8 @@ proof, and matching PIDs alone do not prove an unchanged session generation.
 For controlled experiments, retain PID/time-bounded logs and source coverage as
 well. Previously published accepted screens used separate private PID/interval
 checks; their broader legacy `runtime_evidence` must not be used as live proof.
+The provenance fix has [77 Python and native/software-GLES CI checks recorded](../results/BENCHMARK-PROVENANCE-CI-2026-10-02.json).
+This tooling-only run builds no new APK/server pair and makes no performance claim.
 
 Use **the same resolution, scene, encoder range and refresh** across codecs. PyroWave
 uses 4:2:0 by default (optional 4:4:4); full-frame encoding remains the default.

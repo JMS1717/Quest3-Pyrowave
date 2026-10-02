@@ -1,11 +1,12 @@
 # Nightfall native-fence review
 
-Source review on 2026-10-02; no new native synchronization code or hardware
-benchmark was deployed by this review. Keep the current matching .25 path and
-4:2:0 default until a separate opt-in experiment passes correctness and pacing.
+Source review on 2026-10-02; the review itself did not deploy a native change.
+The latest matching development pair is now .28. Keep full-frame 4:2:0 and
+synchronous producer completion as the defaults.
 
 Follow-up: the [.26 release-fence candidate](RELEASE-FENCE-EXPERIMENT.md) implements
-the first step below, default off. This is source work, not a validated live gain.
+the first step below, default off. Its queued-read/reuse correctness checks passed,
+but its first short live screen regressed fresh FPS; it has no validated live gain.
 
 Reviewed Nightfall main at `e111b5c0825ad27be28d6584007c60cac2b017ea` (merge of
 PR #47), especially:
@@ -119,6 +120,56 @@ fresh FPS/p1, superseding, CPU wait, GPU time, latency and thermal behavior. Fol
 screening with sustained and in-headset acceptance. Preserve the known-good
 synchronous runtime throughout. Implement the API-level model independently;
 Nightfall is GPL-3.0 and this review does not import its code or binaries.
+
+## Producer lifetime audit after .28
+
+The reconstructed sources match the pins in
+[`fetch_sources.sh`](../tools/ci/fetch_sources.sh): PyroWave
+`d2997ac172bdc00e29c58e3f2938acb7e94580bf` plus our cumulative patches,
+and Granite `842d9d5686ba8c799a7d34a78a68f98d6aeb5a68`.
+This is a source audit, not a new timing measurement or asynchronous candidate.
+
+| Resource | Current lifetime | Required before overlapping submissions |
+| --- | --- | --- |
+| Command buffer, completion fence, three timestamp queries | One set in `pyroclient`, reset on each decode after the preceding synchronous wait | Slot-owned resources; reset/read/recycle only after verified completion |
+| Packet payload and offset CPU vectors | Copied by `Decoder::Impl::decode` into `cmd.update_buffer` staging allocations during recording | Preserve complete-frame ingestion and copied allocation lifetime; retaining the original packet pointer alone is insufficient |
+| Granite staging blocks, temporary views and descriptors | Owned/recycled through Granite frame contexts | Ensure every borrowed command is actually submitted on the tracked queue before advancing its context; preserve completion coverage on failures |
+| Payload/offset GPU buffers and internal wavelet images | Shared by one PyroWave decoder | Audit read-before-overwrite dependencies across submissions, or isolate resources; queue order alone is not a substitute for memory dependencies |
+| YUV planes and conversion scratch | Shared by all three AHB slots | Preserve dependencies through the last conversion/copy read before a later decode/write; the scratch fallback also needs review |
+| AHB output | Three slots, with consumer lease/generation and optional release FD | Add ready FD and submitted/completed state without weakening the existing release protection |
+
+The important additional constraint is **Granite's frame ring has two contexts,
+not three**. `Device::set_context` initializes two; every
+`pyrowave_decoder_decode_gpu_buffer` calls `next_frame_context`, including the
+borrowed-command path. `CommandBuffer::update_buffer` allocates staging memory
+and records a copy. Ending the borrowed wrapper moves those allocations to its
+frame's recycling list; `submit_external` marks that queue as needing completion
+coverage. Context advancement emits a covering submission, and `PerFrame::begin`
+waits before recycling staging memory and other frame resources.
+[Pinned device implementation](https://github.com/Themaister/Granite/blob/842d9d5686ba8c799a7d34a78a68f98d6aeb5a68/vulkan/device.cpp),
+[pinned command-buffer implementation](https://github.com/Themaister/Granite/blob/842d9d5686ba8c799a7d34a78a68f98d6aeb5a68/vulkan/command_buffer.cpp).
+
+Consequently, adding three command buffers cannot guarantee a nonblocking
+producer: the third context reuse can still wait for earlier GPU work. Our
+current synchronous path submits the borrowed command before the next decode;
+that ordering must remain explicit in any asynchronous path, including after a
+failed submission. A three-slot AHB ring does not extend the staging ring.
+
+The smallest conservative candidate should start with **at most two in-flight
+submissions**, per-slot command/fence/query ownership, and a checked readiness
+gate before Granite context advancement. The upstream C wrapper currently offers
+no nonblocking context gate; expose a narrow checked wrapper or retain a bounded
+CPU wait at reuse, rather than bypassing context recycling. Keep one decoder on
+the existing queue, add the necessary cross-submission resource dependencies,
+and carry ready FD/generation/pose through the frame descriptor. Retain separate
+submission and actual completion metrics. More contexts or per-slot decoders
+would be later experiments with additional memory cost, not prerequisites to
+claim an unmeasured speedup.
+
+Before live use, prove delayed completion, two-context exhaustion, submit failure,
+payload growth/reallocation, both conversion paths and teardown with outstanding
+work. Existing software-GLES and release-FD tests do not exercise these producer
+lifetimes. No producer wait has been removed by this audit.
 
 The independently implemented `.26` release-FD step now has reviewed matching
 builds and passing queued-read/reuse GPU checks. Its first complete off/on/off
