@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7b..af33556 100644
+index 7cead7b..f16efe8 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -138,7 +138,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -147,7 +147,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -156,7 +156,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -165,7 +165,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -174,7 +174,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_common",
   "jni",
@@ -183,7 +183,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -192,7 +192,7 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -201,12 +201,12 @@ index 7cead7b..af33556 100644
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..349cde8 100644
+index ae00ce8..9dd27d2 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..349cde8 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.21"
++version = "20.13.0-quest3.pyro.22"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -3226,7 +3226,7 @@ index 0000000..766b412
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..28ed526 100644
+index b87dfe9..0534e9b 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -59,17 +59,9 @@ impl ParsedStreamConfig {
@@ -3259,7 +3259,17 @@ index b87dfe9..28ed526 100644
      input_thread: Option<JoinHandle<()>>,
      input_thread_running: Arc<RelaxedAtomic>,
      config: ParsedStreamConfig,
-@@ -115,12 +109,6 @@ impl StreamContext {
+@@ -98,6 +92,9 @@ pub struct StreamContext {
+     /// the earliest slot after the frame is in hand rather than one chosen before the wait for
+     /// it (see `poll_frame`).
+     pending_frame: Option<(Duration, *mut std::ffi::c_void)>,
++    frame_wait_budget: Duration,
++    frame_wait_stats: [u64; 4], // waits, ready hits, total microseconds, max microseconds
++    frame_wait_last_log: Instant,
+ }
+ 
+ impl StreamContext {
+@@ -115,12 +112,6 @@ impl StreamContext {
  
          let xr_exts = xr_session.instance().exts();
  
@@ -3272,7 +3282,7 @@ index b87dfe9..28ed526 100644
          let foveation_profile = if let Some(config) = &config.clientside_foveation_config {
              if xr_exts.fb_swapchain_update_state.is_some()
                  && xr_exts.fb_foveation.is_some()
-@@ -228,6 +216,10 @@ impl StreamContext {
+@@ -228,6 +219,10 @@ impl StreamContext {
              view_reference_space,
              swapchains,
              last_good_view_params: [ViewParams::default(); 2],
@@ -3283,7 +3293,19 @@ index b87dfe9..28ed526 100644
              input_thread: None,
              input_thread_running,
              config,
-@@ -310,6 +302,19 @@ impl StreamContext {
+@@ -235,6 +230,11 @@ impl StreamContext {
+             renderer,
+             decoder: None,
+             pending_frame: None,
++            frame_wait_budget: Duration::from_micros(
++                crate::extra_extensions::perf_settings::system_property("debug.q3pw.frame_wait_us")
++                    .parse::<u64>().unwrap_or(0).min(1000)),
++            frame_wait_stats: [0; 4],
++            frame_wait_last_log: Instant::now(),
+         };
+ 
+         this.update_reference_space();
+@@ -310,6 +310,19 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
@@ -3303,7 +3325,7 @@ index b87dfe9..28ed526 100644
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +343,22 @@ impl StreamContext {
+@@ -338,12 +351,22 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -3328,7 +3350,7 @@ index b87dfe9..28ed526 100644
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +370,25 @@ impl StreamContext {
+@@ -355,8 +378,25 @@ impl StreamContext {
          }
      }
  
@@ -3354,7 +3376,7 @@ index b87dfe9..28ed526 100644
      }
  
      pub fn render(
-@@ -368,11 +400,19 @@ impl StreamContext {
+@@ -368,11 +408,48 @@ impl StreamContext {
              + Duration::from_secs_f32(
                  frame_interval.as_secs_f32() * DECODER_MAX_TIMEOUT_MULTIPLIER,
              );
@@ -3365,18 +3387,47 @@ index b87dfe9..28ed526 100644
 +        // Take the newest ready frame after xrWaitFrame without delaying that display slot.
 +        // When decode falls behind, repeat the last layer and let the runtime reproject it.
 +        let latest_only = self.uses_latest_frame_polling();
++        let latest_wait_budget = self.frame_wait_budget.min(frame_interval / 8);
++        let mut latest_wait_observed = None;
          if let Some((_, source)) = &mut self.decoder {
 -            while frame_result.is_none() && Instant::now() < frame_poll_deadline {
 +            if copy_ready && frame_result.is_none() {
                  frame_result = source.get_frame();
 +            }
++            // An optimized decoder can finish just after the nonblocking poll.
++            // Wait only for an empty ready queue, never while an eye copy holds a
++            // lease. Default zero preserves the existing immediate-repeat path.
++            if copy_ready && latest_only && frame_result.is_none() && !latest_wait_budget.is_zero() {
++                let started = Instant::now();
++                let deadline = started + latest_wait_budget;
++                while frame_result.is_none() && Instant::now() < deadline {
++                    thread::sleep(Duration::from_micros(50));
++                    frame_result = source.get_frame();
++                }
++                latest_wait_observed = Some((started.elapsed().as_micros() as u64, frame_result.is_some()));
++            }
 +            while copy_ready && !latest_only && frame_result.is_none() && Instant::now() < frame_poll_deadline {
                  thread::sleep(Duration::from_micros(500));
 +                frame_result = source.get_frame();
++            }
++        }
++
++        if let Some((elapsed_us, hit)) = latest_wait_observed {
++            self.frame_wait_stats[0] += 1;
++            self.frame_wait_stats[1] += hit as u64;
++            self.frame_wait_stats[2] += elapsed_us;
++            self.frame_wait_stats[3] = self.frame_wait_stats[3].max(elapsed_us);
++            if self.frame_wait_last_log.elapsed() >= Duration::from_secs(1) {
++                alvr_graphics::log_quest_experiment(format!(
++                    "[Q3PW_FRAME_WAIT] budget_us={} waits={} hits={} mean_us={:.1} max_us={}",
++                    latest_wait_budget.as_micros(), self.frame_wait_stats[0], self.frame_wait_stats[1],
++                    self.frame_wait_stats[2] as f64 / self.frame_wait_stats[0] as f64, self.frame_wait_stats[3]));
++                self.frame_wait_stats = [0; 4];
++                self.frame_wait_last_log = Instant::now();
              }
          }
  
-@@ -401,37 +441,67 @@ impl StreamContext {
+@@ -401,37 +478,67 @@ impl StreamContext {
              ]);
          }
  
@@ -3426,7 +3477,9 @@ index b87dfe9..28ed526 100644
 +            self.swapchains[1]
 +                .wait_image(xr::Duration::INFINITE)
 +                .unwrap();
-+
+ 
+-        self.swapchains[0].release_image().unwrap();
+-        self.swapchains[1].release_image().unwrap();
 +            let render_start = Instant::now();
 +            let acquire_wait_ms = acquire_start.elapsed().as_secs_f32() * 1000.0;
 +
@@ -3448,9 +3501,7 @@ index b87dfe9..28ed526 100644
 +                    self.config.passthrough.as_ref(),
 +                )
 +            };
- 
--        self.swapchains[0].release_image().unwrap();
--        self.swapchains[1].release_image().unwrap();
++
 +            if !buffer_ptr.is_null() {
 +                if let Some((_, source)) = &self.decoder {
 +                    source.notify_frame_copy_submitted();
@@ -3474,7 +3525,7 @@ index b87dfe9..28ed526 100644
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +563,8 @@ impl StreamContext {
+@@ -493,6 +600,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
@@ -3941,7 +3992,7 @@ index 0000000..bc6bee0
 +}
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000..b2f117f
+index 0000000..e3257fe
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
 @@ -0,0 +1,366 @@
@@ -3964,7 +4015,7 @@ index 0000000..b2f117f
 +
 +// Initialization diagnostics bypass the mirrored-log severity filter. No per-frame
 +// logging or device/pointer identifiers; this confirms effective experimental paths.
-+fn import_diagnostic(priority: i32, message: String) {
++pub(super) fn import_diagnostic(priority: i32, message: String) {
 +    #[cfg(target_os = "android")]
 +    if let Ok(message) = std::ffi::CString::new(message) {
 +        unsafe { __android_log_write(priority, b"q3pw_copy\0".as_ptr().cast(), message.as_ptr()); }
@@ -4312,7 +4363,7 @@ index 0000000..b2f117f
 +    }
 +}
 diff --git a/alvr/graphics/src/lib.rs b/alvr/graphics/src/lib.rs
-index 3485570..62b316f 100644
+index 3485570..b0aaae7 100644
 --- a/alvr/graphics/src/lib.rs
 +++ b/alvr/graphics/src/lib.rs
 @@ -1,8 +1,11 @@
@@ -4327,6 +4378,18 @@ index 3485570..62b316f 100644
  pub use stream::*;
  
  use alvr_common::{
+@@ -18,6 +21,11 @@ use wgpu::{
+     TextureFormat, TextureUsages, TextureView,
+ };
+ 
++/// Low-frequency experimental setup/timing diagnostics, independent of log mirroring.
++pub fn log_quest_experiment(message: String) {
++    direct_eye::import_diagnostic(4, message);
++}
++
+ pub const SDR_FORMAT: TextureFormat = TextureFormat::Rgba8Unorm;
+ pub const SDR_FORMAT_GL: u32 = gl::RGBA8;
+ pub const GL_TEXTURE_EXTERNAL_OES: u32 = 0x8D65;
 diff --git a/alvr/graphics/src/performance.rs b/alvr/graphics/src/performance.rs
 new file mode 100644
 index 0000000..31f33b6

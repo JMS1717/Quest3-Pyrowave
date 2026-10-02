@@ -493,3 +493,18 @@ matching artifact and live image/pacing checks.
 
 See [EGL image lifetime and siblings](https://registry.khronos.org/EGL/extensions/KHR/EGL_KHR_image_base.txt)
 and [Android hardware buffer references](https://developer.android.com/ndk/reference/group/a-hardware-buffer).
+## Experimental latest-frame wait (.22)
+
+`debug.q3pw.frame_wait_us` defaults to zero. Values up to 1000 request a short
+polling window when Quest PyroWave has no completed frame immediately after
+`xrWaitFrame`. The applied budget is capped at one eighth of the frame interval.
+Polling sleeps in 50 microsecond requests; scheduler oversleep is possible and
+reported through wait/hit counts and observed mean/maximum duration. Default zero
+keeps immediate repetition of the previous layer.
+
+This path only polls an empty completed-frame queue when the previous eye copy is
+ready. It retains the complete-frame and buffer lease checks. It adds no wait when
+a frame is already available. Test it with measured spare copy time, and reject it
+if the extra polling harms pacing or latency; there is no default promotion or
+performance claim. Setup/timing diagnostics use native Android logging so Error-only
+mirrored logging cannot hide actual activation.
