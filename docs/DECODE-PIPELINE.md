@@ -649,3 +649,6 @@ but no matching hidden-overlay case occurred; overlay overhead is unmeasured.
 Runtime logs advertise Vulkan OpenXR bindings. The current decoder already uses
 Vulkan; presentation still uses the GLES bridge. Binding advertisement does not
 validate a direct Vulkan presentation implementation or its performance.
+The [Vulkan presentation investigation](VULKAN-PRESENTATION.md) records device,
+swapchain, synchronization and renderer migration requirements, with pixel/traffic
+math for native120 and the later resolution/refresh targets.

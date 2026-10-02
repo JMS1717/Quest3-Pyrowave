@@ -1,7 +1,7 @@
 # Client performance overlay
 
 The Quest app displays a head-relative OpenXR quad below the center of view, at
-1.2 m depth, visible in both eyes. The panel is rendered locally after the video;
+1.2 m depth, visible in both eyes. The panel is rendered locally alongside the video;
 its text is not compressed into the PC stream. It is **on by default for development**.
 
 Click **both thumbsticks together** to toggle it. Holding the chord toggles once;
