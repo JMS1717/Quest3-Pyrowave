@@ -58,6 +58,22 @@ libraries remain byte-identical to `.21`. This is an instrumentation candidate,
 not a measured optimization; Quest measurements remain required.
 [Build verification](../results/EYE-GPU-CI-2026-10-02.json).
 
+Six matched 15-second Quest screens subsequently confirmed activation with a
+53-bit counter. Enabled GPU draw means were 0.616, 0.636 and 0.663 ms, with no
+invalid or skipped query results. Fresh submissions remained about 99–108 FPS.
+CPU eye-render median spikes occurred with the probe both on and off, alongside
+lower sampled GPU clocks (599–640 versus 690 MHz). Battery samples were 43–44°C,
+Android thermal status 0. These restart-based screens do not isolate diagnostic
+bias or session phase and do not establish sustained 120 FPS. The timer stays off
+by default; investigate synchronization, handoff and pacing alongside decoder
+cost. GPU draw timestamps do not account for all memory/compositor completion.
+[Live calibration](../results/EYE-GPU-LIVE-2026-10-02.json).
+
+Read saved epoch logs with `python -m tools.quest3.eye_gpu LOG --start EPOCH
+--end EPOCH --pid RECORDED_PID --out REPORT.json`. The reader requires verified
+activation for that process before the capture, rejects malformed/disabled results
+and retains per-window percentiles without inventing pooled percentiles.
+
 ### Presentation migration
 
 1. First measure the current overlay with same-session visible/hidden/visible

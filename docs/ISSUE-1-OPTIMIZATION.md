@@ -57,8 +57,12 @@ submissions/s despite producer completion near 120/s. Hiding the overlay did not
 yield a repeatable gain. These 15-second screens do not prove sustained acceptance.
 [Recorded results](../results/OVERLAY-LIVE-2026-10-02.json).
 
-First separate actual eye-draw GPU time from CPU synchronization and runtime
-waiting using the opt-in `.25` diagnostic. Then prioritize the measured limiter,
+The opt-in `.25` diagnostic subsequently measured two-eye GPU draw means around
+0.6–0.7 ms. Six short screens still delivered 99–108 fresh FPS. CPU-render spikes
+occurred with the timer both on and off, alongside lower clock samples; these
+are not evidence of a timer optimization or total copy-completion cost.
+[GPU calibration](../results/EYE-GPU-LIVE-2026-10-02.json).
+Continue separating synchronization, handoff and runtime waiting. Prioritize the measured limiter,
 including a shared-device Vulkan presentation path if interop/copy proves material.
 See [presentation investigation](VULKAN-PRESENTATION.md).
 
