@@ -11,6 +11,7 @@ from pathlib import Path
 
 RATES = (72, 90, 120, 144, 207, 240)
 BITRATES = (400, 600, 800, 1000, 1500, 2000)
+SUSTAINED_RATE_WINDOW_SECONDS = 300
 
 def supported(requested, rates):
     return any(math.isfinite(r) and r > 0 and abs(r - requested) < .01 for r in rates)
@@ -105,9 +106,7 @@ def summarise(events, requested_hz=None):
         data=event.get('data',{})
         if event.get('id')=='GraphStatistics':
             graphs.append(data)
-            elapsed=item.get('capture_elapsed_s')
-            if isinstance(elapsed,(int,float)) and math.isfinite(elapsed):
-                graph_times.append(elapsed)
+            graph_times.append(item.get('capture_elapsed_s'))
         if event.get('id')=='StatisticsSummary': summaries.append(data)
         if event.get('id')=='HeadsetTelemetry':
             telemetry.append(data)
@@ -123,8 +122,14 @@ def summarise(events, requested_hz=None):
         result['metrics'][field.replace('_s','_ms')]=distribution([g.get(field,0)*1000 for g in graphs if field in g])
     # Submission-event rate over capture wall time exposes missed slots that a
     # median instantaneous FPS can hide. This is not an optical/display counter.
-    span=graph_times[-1]-graph_times[0] if len(graph_times)>1 else 0
+    valid_graph_times=len(graph_times)>1 and all(isinstance(t,(int,float))
+        and not isinstance(t,bool) and math.isfinite(t) and t>=0 for t in graph_times)
+    increasing=valid_graph_times and all(b>a for a,b in zip(graph_times,graph_times[1:]))
+    span=graph_times[-1]-graph_times[0] if increasing else 0
     result['submitted_frame_rate_fps']=(len(graph_times)-1)/span if span>0 else None
+    result['submission_rate_window_s']=span if span>0 else None
+    result['sustained_rate_window_min_seconds']=SUSTAINED_RATE_WINDOW_SECONDS
+    result['rate_check_scope']='Submission and available direct-completion rate proxies. A short pass is screening only; even a long rate pass does not certify configuration, image correctness, gameplay, thermals or optical FPS.'
     result['submission_rate_definition']='GraphStatistics events per capture-time span; submitted video frames, not repeated OpenXR layers. With async copies this is submission, not GPU completion or optical display FPS.'
     result['metrics']['client_fps']=distribution([g.get('client_fps') for g in graphs])
     result['metrics']['server_fps']=distribution([g.get('server_fps') for g in graphs])
@@ -160,11 +165,15 @@ def summarise(events, requested_hz=None):
     if requested_hz and graphs:
         fps=result['metrics']['client_fps']
         submitted=result['submitted_frame_rate_fps']
-        result['sustained_requested_fps']=(fps is not None and submitted is not None
+        result['requested_rate_screen_passed']=(fps is not None and submitted is not None
             and fps['p01']>=requested_hz*.98 and submitted>=requested_hz*.98)
         completed=result['completed_eye_copy_rate_fps']
         if completed is not None:
-            result['sustained_requested_fps'] &= completed>=requested_hz*.98
+            result['requested_rate_screen_passed'] &= completed>=requested_hz*.98
+        # Keep the legacy key, but never label a short screen as sustained.
+        # This remains a rate check, not full native120/thermal/image acceptance.
+        result['sustained_requested_fps']=(result['requested_rate_screen_passed']
+            and span>=SUSTAINED_RATE_WINDOW_SECONDS)
     return result
 
 def adb_run(adb, *args):

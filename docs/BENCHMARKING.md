@@ -26,8 +26,8 @@ See [refresh setup](REFRESH-RATES.md) for the distinct 240 Hz scaling experiment
 
 ```powershell
 python -m pip install websocket-client==1.8.0
-python -m tools.quest3.bench capture --hz 90 --seconds 60 --adb adb --out results/local/pyro-90-600-compute-r1
-python -m tools.quest3.bench capture --hz 120 --seconds 300 --adb adb --out results/local/sustained-120
+python -m tools.quest3.bench capture --hz 90 --seconds 15 --adb adb --out results/local/pyro-90-600-compute-r1
+python -m tools.quest3.bench capture --hz 120 --seconds 310 --adb adb --out results/local/sustained-120
 ```
 
 Each capture checks session settings before/after and writes per-frame events as JSONL and a JSON report with p50/p95/p99 timings, actual
@@ -53,6 +53,18 @@ ALVR `total_pipeline_latency_s` is an **estimated pipeline latency** from tracki
 display, not a photodiode measurement. Optical end-to-end latency requires a high-speed camera or
 photodiode and independently documented stimulus. Timestamp gaps are a frame delivery proxy, not
 panel scanout. Do not mix GPU-only decode, decode-to-fence wall time and total decoder stage.
+
+`requested_rate_screen_passed` tests the observed submission rate, p1 instantaneous
+FPS and direct-copy completion rate when available against the requested rate
+(with the existing 2% sampling tolerance). A 15-second pass is a screening result.
+The legacy `sustained_requested_fps` flag additionally requires at least **300
+seconds between the first and last observed frame events**. Use a slightly longer
+capture (for example, 310 seconds) to leave room for connection/startup overhead.
+`submission_rate_window_s` records the actual interval. Requested capture duration
+or time spent in ADB cleanup cannot substitute for observed streaming time.
+Neither flag certifies full configuration, image correctness, thermal endurance,
+gameplay, optical display FPS or the native120 goal. Review those gates separately.
+Long tests remain reserved for candidates that pass repeated short comparisons.
 
 Raw captures are local and may identify a device or setup. Share reviewed reports, not unchecked
 logcat/session dumps. Original Galaxy XR data in `captures/` is upstream evidence only.

@@ -118,4 +118,39 @@ class BenchTests(unittest.TestCase):
         w=pyrowave_counter_window([(0,{'complete':False}),(1,{'complete':120})])
         self.assertIsNone(w['counter_deltas']['complete'])
 
+    def test_short_rate_pass_is_not_sustained_acceptance(self):
+        events=[{'capture_elapsed_s':i/120,'event':{'event_type':{
+            'id':'GraphStatistics','data':{'client_fps':120}}}}
+            for i in range(1801)]
+        r=summarise(events,120)
+        self.assertEqual(r['submission_rate_window_s'],15)
+        self.assertTrue(r['requested_rate_screen_passed'])
+        self.assertFalse(r['sustained_requested_fps'])
+
+    def test_sustained_rate_check_needs_five_minutes_of_observed_frames(self):
+        events=[{'capture_elapsed_s':i/120,'event':{'event_type':{
+            'id':'GraphStatistics','data':{'client_fps':120}}}}
+            for i in range(36001)]
+        short=summarise(events[:-1],120)
+        self.assertTrue(short['requested_rate_screen_passed'])
+        self.assertFalse(short['sustained_requested_fps'])
+        full=summarise(events,120)
+        self.assertEqual(full['submission_rate_window_s'],300)
+        self.assertTrue(full['sustained_requested_fps'])
+        # A long but sparse submission stream still cannot pass at nominal 120.
+        slow=summarise(events[::2],120)
+        self.assertFalse(slow['requested_rate_screen_passed'])
+        self.assertFalse(slow['sustained_requested_fps'])
+
+    def test_missing_or_invalid_submission_times_invalidate_rate_window(self):
+        for middle in (None,True,float('nan'),-1,0,3):
+            events=[{'capture_elapsed_s':t,'event':{'event_type':{
+                'id':'GraphStatistics','data':{'client_fps':120}}}}
+                for t in (0,middle,2)]
+            r=summarise(events,120)
+            self.assertIsNone(r['submitted_frame_rate_fps'])
+            self.assertIsNone(r['submission_rate_window_s'])
+            self.assertFalse(r['requested_rate_screen_passed'])
+            self.assertFalse(r['sustained_requested_fps'])
+
 if __name__=='__main__':unittest.main()
