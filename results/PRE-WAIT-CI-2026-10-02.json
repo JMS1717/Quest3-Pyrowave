@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "status": "cloud_verified_not_deployed_or_live_validated",
+  "source_sha": "4e0d1cf5c99aa4a96ce3b1cdc5065e4d446addfa",
+  "version": "20.13.0-quest3.pyro.23",
+  "ci_run": 36989503984,
+  "ci_url": "https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/36989503984",
+  "checks": {
+    "python_tests": 30,
+    "android_build": "success",
+    "windows_build": "success",
+    "windows_regressions": "success",
+    "artifact_hashes_versions_and_APK_certificate_verified": true,
+    "production_native_libraries_identical_to_21": true,
+    "GPU_consumer_probe_identical_to_846a4a5": true
+  },
+  "artifact_sha256": {
+    "android": {
+      "APK-CERTIFICATE.txt": "19579aee5e2153e65b88ee5d86b93b07058b80a1a952af5c38dbc8a24637a02d",
+      "LICENSES.zip": "90bf36e1a692a7cbf577fcb47b48dbeab9f1b272ae77b75343819dc987d20db3",
+      "Quest3-Pyrowave-dev.apk": "febe9f1921b2c046bc25149a5ebd69e41b650ccac219f05f6154e40572eafe19",
+      "libc++_shared.so": "f9992c4ba6b7c5a716e3a202fceb1ce029d6a2b0605838ac6b3219f489dd7970",
+      "libpyroclient.so": "ef5c82902a7e9cd8422416e5011774259813be4bb58bf76cf9a9b0d6e1a0e3bf",
+      "libpyrowave-shared.so": "9c5ba02ba372745f23289a5ebd9555a6b2a21a9672a3ad545143c26889c09848",
+      "pyroclient_test": "547da209d7bdfa2f5cd7e11503f6ccf8969c6e5d39dd60593b324cab199ef2f8",
+      "pyrowave_android": "0d940d943a7eb05e9c0b6335f85ac41dd308f824042fafa46a78afcff6cd31d9",
+      "udprecv-android": "b8e092ec3dcd0a2d2640d1296e8abe0d4f0537c4cbb59f882329620c3a8aac05"
+    },
+    "windows": {
+      "Quest3-Pyrowave-Windows.zip": "c1c0d8947b1aaf0d0e53a03cd3cc6da582d014fe5a2e50242f75da665e40435c"
+    }
+  },
+  "apk_certificate_sha256": "2f2c5b3bb99cd69edc58cc53fbac30325426e410b3fecafc76fe447549886779",
+  "defaults": {
+    "pre_wait_poll": 0,
+    "frame_wait_us": 0
+  },
+  "limitations": [
+    "No deployment or new headset measurements in this build.",
+    "GPU consumer readback reference acceptance on Quest remains pending.",
+    "Nonblocking pre-wait selection may hold older frames; its freshness, pacing and latency need matched tests.",
+    "Native 120 fresh FPS and the 207-Hz/high-resolution stretch target remain unmet.",
+    "Alpha.7 remains the public preview release; these are matching experimental Actions artifacts."
+  ]
+}

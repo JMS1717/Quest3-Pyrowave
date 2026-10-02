@@ -609,3 +609,9 @@ with 3 seconds settling, the same chart, native geometry, 120-Hz runtime accepta
 Confirm eligible polls/hits and actual direct-copy counters. Reject image errors,
 fresh-FPS/p1 or latency regression; only a repeated improvement justifies a longer
 sustained run. Do not deploy outside a newly authorized hardware window.
+
+The matching `.23` APK/server passed cloud builds and regressions; APK signing,
+artifact hashes, embedded versions and the new scheduling markers were verified.
+The production native decoder libraries remain byte-identical to `.21`, and the
+GPU reference probe matches `846a4a5`. [Build proof and hashes](../results/PRE-WAIT-CI-2026-10-02.json).
+These outputs are stored separately and have not been installed or benchmarked.
