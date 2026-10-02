@@ -30,7 +30,8 @@ jobs:
       - name: Reconstruct pinned source trees
         run: sh tools/ci/fetch_sources.sh "$XRWIRED_INPUTS/research"
       - name: Cache Rust dependencies and compiled Android targets
-        uses: actions/cache@v4
+        id: cargo_client_cache
+        uses: actions/cache/restore@v4
         with:
           path: |
             ~/.cargo/registry
@@ -88,6 +89,17 @@ jobs:
         with:
           name: Quest3-Pyrowave-Android
           path: out/
+      - name: Save reusable Android compilation after success or test failure
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo_client_cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ws/research/ALVR-20.13.0/target/release
+            ws/research/ALVR-20.13.0/target/debug
+            ws/research/ALVR-20.13.0/target/aarch64-linux-android/release
+          key: ${{ steps.cargo_client_cache.outputs.cache-primary-key }}
   streamer:
     runs-on: windows-2022
     needs: tests
@@ -101,7 +113,8 @@ jobs:
         shell: bash
         run: sh tools/ci/fetch_sources.sh "$XRWIRED_INPUTS/research"
       - name: Cache Rust dependencies and compiled Windows targets
-        uses: actions/cache@v4
+        id: cargo_streamer_cache
+        uses: actions/cache/restore@v4
         with:
           path: |
             ~/.cargo/registry
@@ -147,3 +160,13 @@ jobs:
         with:
           name: Quest3-Pyrowave-Windows
           path: out/
+      - name: Save reusable Windows compilation after success or test failure
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo_streamer_cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ws/research/ALVR-20.13.0/target/release
+            ws/research/ALVR-20.13.0/target/debug
+          key: ${{ steps.cargo_streamer_cache.outputs.cache-primary-key }}

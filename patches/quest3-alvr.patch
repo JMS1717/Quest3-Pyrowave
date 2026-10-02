@@ -279,10 +279,10 @@ index 64660b1..107f43d 100644
      adb_path: &str,
 diff --git a/alvr/adb/src/windows_launcher.rs b/alvr/adb/src/windows_launcher.rs
 new file mode 100644
-index 0000000..c699c1b
+index 0000000..057b458
 --- /dev/null
 +++ b/alvr/adb/src/windows_launcher.rs
-@@ -0,0 +1,123 @@
+@@ -0,0 +1,146 @@
 +//! Start the ADB daemon without inheriting SteamVR/dashboard socket handles.
 +//! Stable Rust Command currently inherits arbitrary inheritable handles; changing
 +//! stdout alone does not restrict that list. This bootstrap needs no stdio.
@@ -360,7 +360,7 @@ index 0000000..c699c1b
 +mod tests {
 +    use super::*;
 +    use windows_sys::Win32::{Foundation::{GetHandleInformation, HANDLE_FLAG_INHERIT},
-+        Security::SECURITY_ATTRIBUTES, System::Threading::CreateEventW};
++        Security::SECURITY_ATTRIBUTES, System::Threading::{CreateEventW, SetEvent}};
 +
 +    #[test]
 +    fn bootstrap_preserves_exit_status_and_rejects_bad_paths() {
@@ -392,6 +392,29 @@ index 0000000..c699c1b
 +        // A distinct status proves the child probe actually ran, rather than
 +        // accepting a harness invocation that matched no tests.
 +        assert_eq!(run_no_inherit(exe.as_os_str(), OsStr::new(&command)).unwrap(), 57);
++        // A handle number may be reused for an unrelated object in the child.
++        // Check the parent event's identity by observing its signal, not whether
++        // that number is valid in a different process.
++        assert_eq!(unsafe { WaitForSingleObject(event.0, 0) }, WAIT_TIMEOUT,
++            "Parent event was signaled through a leaked inheritable handle");
++
++        // Positive control: the same probe must signal this actual parent event
++        // when inheritance is explicitly enabled. This prevents a no-op child
++        // or unrelated child handle from making the isolation assertion vacuous.
++        let mut line = wide(OsStr::new(&command)).unwrap();
++        let mut startup: STARTUPINFOW = unsafe { std::mem::zeroed() };
++        startup.cb = size_of::<STARTUPINFOW>() as u32;
++        let mut process = unsafe { std::mem::zeroed() };
++        assert_ne!(unsafe { CreateProcessW(ptr::null(), line.as_mut_ptr(), ptr::null(),
++            ptr::null(), 1, CREATE_NO_WINDOW, ptr::null(), ptr::null(),
++            &startup, &mut process) }, 0);
++        let process = ProcessHandles(process);
++        assert_eq!(unsafe { WaitForSingleObject(process.0.hProcess, 30_000) }, WAIT_OBJECT_0);
++        let mut exit_code = 0;
++        assert_ne!(unsafe { GetExitCodeProcess(process.0.hProcess, &mut exit_code) }, 0);
++        assert_eq!(exit_code, 57);
++        assert_eq!(unsafe { WaitForSingleObject(event.0, 0) }, WAIT_OBJECT_0,
++            "Positive control did not signal the actual parent event");
 +    }
 +
 +    #[test]
@@ -400,9 +423,9 @@ index 0000000..c699c1b
 +        let marker = std::env::args().find(|a| a.starts_with("windows_launcher::tests::child_handle_probe_"))
 +            .expect("parent handle marker");
 +        let handle = usize::from_str_radix(marker.rsplit('_').next().unwrap(), 16).unwrap() as HANDLE;
-+        let mut flags = 0;
-+        assert_eq!(unsafe { GetHandleInformation(handle, &mut flags) }, 0,
-+            "Parent inheritable handle leaked into isolated bootstrap");
++        // Failure is expected for a non-inherited handle. A reused handle may
++        // refer to a child-local event; only the parent's signal proves a leak.
++        unsafe { SetEvent(handle); }
 +        std::process::exit(57);
 +    }
 +}
