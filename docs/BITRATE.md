@@ -58,3 +58,27 @@ from SteamVR's larger lens-corrected render recommendation.
 Regenerate machine-readable budgets using `python -m tools.quest3.budget --out
 presets/frame-budgets.json`. The dashboard uses the same padding and integer cap math
 for whichever resolution, rate and chroma you select.
+
+## Native USB screen, October 2
+
+At 2080×2208 encoded pixels per eye, confirmed 120 Hz, 4:2:0, Haar Compute
+decode, synchronous direct eye copy and a stationary chart, three 15-second
+screens measured:
+
+| Target Mbps | Actual video payload, median Mbps | Fresh submissions/s | Completed direct copies/s | Median completion ms | Estimated pipeline latency ms | GPU MHz |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1000, control 1 | 1000.5 | 106.56 | 106.78 | 8.40 | 61.74 | 690 |
+| 1500 | 1509.3 | 96.86 | 97.34 | 9.12 | 74.15 | 640 |
+| 1000, control 2 | 1002.7 | 106.65 | 106.79 | 8.31 | 61.25 | 690 |
+
+This shows native USB can carry roughly 1.5 Gbps of video payload in a short
+screen. Extra bandwidth did not improve frame delivery in this sequence, so
+1000 Mbps remains the working experimental target. Dynamic clocks differed;
+these measurements do not isolate bitrate as the sole cause or establish a
+sustained USB capacity. Battery temperature was 45–46 °C, thermal status 0.
+
+The chart remained correct in both eyes. Captures do not establish a noticeable
+in-headset quality benefit. ALVR network latency is a residual estimate, and
+completed copies/submissions do not prove optical FPS or motion-to-photon.
+P1 nominal FPS stayed near 60; sustained fresh 120 FPS remains unmet.
+See [complete sanitized distributions](../results/BITRATE-USB-LIVE-2026-10-02.json).

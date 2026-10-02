@@ -1,0 +1,539 @@
+{
+  "schema_version": 1,
+  "binary_version": "20.13.0-quest3.pyro.16",
+  "binary_commit": "c08674ccc9d4fb920df1056505ff92d4f4d07d2f",
+  "configuration": {
+    "encoded_per_eye": [
+      2080,
+      2208
+    ],
+    "runtime_hz": 120,
+    "chroma": "420",
+    "foveated_encoding": false,
+    "wavelet": "Haar",
+    "decode": "Vulkan compute",
+    "conversion": "fragment",
+    "precision": 1,
+    "workers": 1,
+    "direct_eye_copy": true,
+    "asynchronous_eye_copy": false,
+    "transport": "native ALVR USB/TCP",
+    "openxr_performance_request": "BOOST"
+  },
+  "cases": [
+    {
+      "label": "iteration16-bitrate-1000-r1",
+      "target_mbps": 1000,
+      "source_coverage_verified": true,
+      "source_eye_size": [
+        2544,
+        2704
+      ],
+      "battery_temperature_c": 45.0,
+      "thermal_status": 0,
+      "gpu_clock_start_mhz": 690.0,
+      "submitted_frame_rate_fps": 106.56279084081106,
+      "completed_eye_copy_rate_fps": 106.78370331289314,
+      "gpu_decode_ms": {
+        "n": 1625,
+        "p01": 3.733197816,
+        "p50": 4.581771,
+        "p95": 5.3799788,
+        "p99": 5.5825749799999995,
+        "max": 5.875104
+      },
+      "decode_to_fence_ms": {
+        "n": 1625,
+        "p01": 7.77778896,
+        "p50": 8.398803,
+        "p95": 9.242261,
+        "p99": 9.694488640000001,
+        "max": 10.704636
+      },
+      "native_convert_ms": {
+        "n": 1625,
+        "p01": 1.824027008,
+        "p50": 2.527656,
+        "p95": 3.03516652,
+        "p99": 3.33049368,
+        "max": 3.9053123
+      },
+      "native_record_ms": {
+        "n": 1625,
+        "p01": 0.5052416000000001,
+        "p50": 0.826042,
+        "p95": 1.074854,
+        "p99": 1.25612296,
+        "max": 1.550521
+      },
+      "native_wait_ms": {
+        "n": 1625,
+        "p01": 6.96131956,
+        "p50": 7.525522,
+        "p95": 8.417584399999999,
+        "p99": 8.739400999999999,
+        "max": 9.700626
+      },
+      "eye_render_ms": {
+        "n": 1610,
+        "p01": 2.5591074689999997,
+        "p50": 8.4324225,
+        "p95": 9.493646299999998,
+        "p99": 9.990457470000003,
+        "max": 10.624689
+      },
+      "eye_copy_counter_deltas": {
+        "direct_eye_copies": 1501,
+        "staging_eye_copies": 0,
+        "completed_eye_copies": 1501,
+        "pending_eye_copy_deferrals": 0
+      },
+      "metrics": {
+        "encoder_ms": {
+          "n": 1599,
+          "p01": 1.0441979999999997,
+          "p50": 1.3173,
+          "p95": 1.6149199999999995,
+          "p99": 1.7530559999999997,
+          "max": 2.0707
+        },
+        "decoder_ms": {
+          "n": 1599,
+          "p01": 9.10134514,
+          "p50": 12.978907,
+          "p95": 17.096022099999995,
+          "p99": 18.296934439999998,
+          "max": 19.171355000000002
+        },
+        "network_ms": {
+          "n": 1599,
+          "p01": 3.6985206600000002,
+          "p50": 4.271421,
+          "p95": 6.6796469,
+          "p99": 9.45621812,
+          "max": 13.788049
+        },
+        "total_pipeline_latency_ms": {
+          "n": 1599,
+          "p01": 52.804455659999995,
+          "p50": 61.740365,
+          "p95": 66.1296615,
+          "p99": 67.85833499999998,
+          "max": 74.052334
+        },
+        "decoder_queue_ms": {
+          "n": 1599,
+          "p01": 1.49359048,
+          "p50": 2.807605,
+          "p95": 3.4978598999999995,
+          "p99": 8.24708514,
+          "max": 9.580887
+        },
+        "server_compositor_ms": {
+          "n": 1599,
+          "p01": 0.135198,
+          "p50": 0.1917,
+          "p95": 0.29141999999999996,
+          "p99": 0.3359919999999999,
+          "max": 0.48519999999999996
+        },
+        "client_compositor_ms": {
+          "n": 1599,
+          "p01": 2.4925675000000003,
+          "p50": 8.451979999999999,
+          "p95": 9.5223075,
+          "p99": 9.987561979999999,
+          "max": 10.648282
+        },
+        "vsync_queue_ms": {
+          "n": 1599,
+          "p01": 13.21748626,
+          "p50": 17.123524,
+          "p95": 22.1053784,
+          "p99": 23.85340776,
+          "max": 28.07062
+        },
+        "client_fps": {
+          "n": 1599,
+          "p01": 59.98704952,
+          "p50": 119.96924,
+          "p95": 119.9969305,
+          "p99": 120.00999,
+          "max": 120.44898
+        },
+        "server_fps": {
+          "n": 1599,
+          "p01": 109.2840572,
+          "p50": 120.07541,
+          "p95": 130.236659,
+          "p99": 134.40358600000002,
+          "max": 144.27309
+        },
+        "video_mbps": {
+          "n": 1599,
+          "p01": 910.6247460000001,
+          "p50": 1000.54515,
+          "p95": 1085.24479,
+          "p99": 1119.935802,
+          "max": 1202.1756
+        },
+        "frame_timestamp_gap_ms": {
+          "n": 1598,
+          "p01": 5.45098519,
+          "p50": 8.341588999999999,
+          "p95": 16.6589837,
+          "p99": 19.49115873,
+          "max": 27.849899
+        }
+      },
+      "packet_loss_delta": 0,
+      "sustained_requested_fps": false
+    },
+    {
+      "label": "iteration16-bitrate-1500-r1",
+      "target_mbps": 1500,
+      "source_coverage_verified": true,
+      "source_eye_size": [
+        2544,
+        2704
+      ],
+      "battery_temperature_c": 45.0,
+      "thermal_status": 0,
+      "gpu_clock_start_mhz": 640.0,
+      "submitted_frame_rate_fps": 96.85812404891587,
+      "completed_eye_copy_rate_fps": 97.33692747387288,
+      "gpu_decode_ms": {
+        "n": 1365,
+        "p01": 4.056297696,
+        "p50": 5.0096354,
+        "p95": 6.4046249,
+        "p99": 6.515547719999999,
+        "max": 6.6966143
+      },
+      "decode_to_fence_ms": {
+        "n": 1365,
+        "p01": 8.043844720000001,
+        "p50": 9.117814,
+        "p95": 10.3835952,
+        "p99": 10.683213559999999,
+        "max": 11.414012
+      },
+      "native_convert_ms": {
+        "n": 1365,
+        "p01": 1.8769312439999999,
+        "p50": 2.6529167,
+        "p95": 3.08390604,
+        "p99": 3.351095719999997,
+        "max": 3.9377604
+      },
+      "native_record_ms": {
+        "n": 1365,
+        "p01": 0.52431224,
+        "p50": 0.86151,
+        "p95": 1.2345731999999998,
+        "p99": 1.4226879999999995,
+        "max": 1.703438
+      },
+      "native_wait_ms": {
+        "n": 1365,
+        "p01": 7.1482736000000004,
+        "p50": 8.153022,
+        "p95": 9.6281676,
+        "p99": 9.95048284,
+        "max": 10.359376
+      },
+      "eye_render_ms": {
+        "n": 1361,
+        "p01": 3.3622604000000003,
+        "p50": 9.435678,
+        "p95": 11.039637,
+        "p99": 11.466177800000002,
+        "max": 12.263596
+      },
+      "eye_copy_counter_deltas": {
+        "direct_eye_copies": 1272,
+        "staging_eye_copies": 0,
+        "completed_eye_copies": 1272,
+        "pending_eye_copy_deferrals": 0
+      },
+      "metrics": {
+        "encoder_ms": {
+          "n": 1452,
+          "p01": 1.456157,
+          "p50": 1.6372,
+          "p95": 1.961645,
+          "p99": 2.0671920000000004,
+          "max": 2.2693000000000003
+        },
+        "decoder_ms": {
+          "n": 1452,
+          "p01": 9.93655677,
+          "p50": 14.0811995,
+          "p95": 18.4295585,
+          "p99": 19.618788750000004,
+          "max": 22.145836
+        },
+        "network_ms": {
+          "n": 1452,
+          "p01": 5.0716674,
+          "p50": 6.4297895,
+          "p95": 9.0051182,
+          "p99": 13.291304690000004,
+          "max": 21.065837000000002
+        },
+        "total_pipeline_latency_ms": {
+          "n": 1452,
+          "p01": 69.0448258,
+          "p50": 74.150015,
+          "p95": 79.685999,
+          "p99": 85.23736719000001,
+          "max": 88.83765000000001
+        },
+        "decoder_queue_ms": {
+          "n": 1452,
+          "p01": 2.1645258099999998,
+          "p50": 3.019558,
+          "p95": 3.8060550000000006,
+          "p99": 8.657704110000001,
+          "max": 10.298803000000001
+        },
+        "server_compositor_ms": {
+          "n": 1452,
+          "p01": 1.497412,
+          "p50": 1.8430499999999999,
+          "p95": 2.265,
+          "p99": 2.412186,
+          "max": 2.6002
+        },
+        "client_compositor_ms": {
+          "n": 1452,
+          "p01": 3.2709984,
+          "p50": 9.427084,
+          "p95": 11.04703505,
+          "p99": 11.462326730000001,
+          "max": 12.291772
+        },
+        "vsync_queue_ms": {
+          "n": 1452,
+          "p01": 13.397384350000001,
+          "p50": 18.323036000000002,
+          "p95": 22.4440809,
+          "p99": 23.662410720000004,
+          "max": 28.266920000000002
+        },
+        "client_fps": {
+          "n": 1452,
+          "p01": 59.9825855,
+          "p50": 119.9616,
+          "p95": 120.00298,
+          "p99": 120.01930130000001,
+          "max": 120.21422
+        },
+        "server_fps": {
+          "n": 1452,
+          "p01": 113.2625135,
+          "p50": 120.74742499999999,
+          "p95": 124.94673945,
+          "p99": 127.329249,
+          "max": 133.0973
+        },
+        "video_mbps": {
+          "n": 1452,
+          "p01": 1415.770431,
+          "p50": 1509.3312,
+          "p95": 1561.77425,
+          "p99": 1591.579427,
+          "max": 1663.6823
+        },
+        "frame_timestamp_gap_ms": {
+          "n": 1451,
+          "p01": 5.5173705,
+          "p50": 8.345938,
+          "p95": 16.7649495,
+          "p99": 19.482813999999998,
+          "max": 25.063804
+        }
+      },
+      "packet_loss_delta": 0,
+      "sustained_requested_fps": false
+    },
+    {
+      "label": "iteration16-bitrate-1000-r2",
+      "target_mbps": 1000,
+      "source_coverage_verified": true,
+      "source_eye_size": [
+        2544,
+        2704
+      ],
+      "battery_temperature_c": 45.0,
+      "thermal_status": 0,
+      "gpu_clock_start_mhz": 690.0,
+      "submitted_frame_rate_fps": 106.64891772559903,
+      "completed_eye_copy_rate_fps": 106.79057835108509,
+      "gpu_decode_ms": {
+        "n": 1584,
+        "p01": 3.7068473209999997,
+        "p50": 4.56549455,
+        "p95": 5.311489475,
+        "p99": 5.418763965,
+        "max": 5.5761456
+      },
+      "decode_to_fence_ms": {
+        "n": 1584,
+        "p01": 7.45310053,
+        "p50": 8.305755999999999,
+        "p95": 9.1361236,
+        "p99": 9.31672784,
+        "max": 9.769793
+      },
+      "native_convert_ms": {
+        "n": 1584,
+        "p01": 1.836069736,
+        "p50": 2.56903635,
+        "p95": 2.85461177,
+        "p99": 2.9624634750000003,
+        "max": 3.2786458
+      },
+      "native_record_ms": {
+        "n": 1584,
+        "p01": 0.48147982,
+        "p50": 0.8054685,
+        "p95": 1.01477885,
+        "p99": 1.176539860000001,
+        "max": 1.453594
+      },
+      "native_wait_ms": {
+        "n": 1584,
+        "p01": 6.75773082,
+        "p50": 7.4717975,
+        "p95": 8.34688925,
+        "p99": 8.583488720000002,
+        "max": 8.999897
+      },
+      "eye_render_ms": {
+        "n": 1556,
+        "p01": 2.52917495,
+        "p50": 8.32961,
+        "p95": 9.3222135,
+        "p99": 9.735004300000002,
+        "max": 10.624585
+      },
+      "eye_copy_counter_deltas": {
+        "direct_eye_copies": 1448,
+        "staging_eye_copies": 0,
+        "completed_eye_copies": 1448,
+        "pending_eye_copy_deferrals": 0
+      },
+      "metrics": {
+        "encoder_ms": {
+          "n": 1600,
+          "p01": 1.113869,
+          "p50": 1.699,
+          "p95": 1.9401249999999999,
+          "p99": 2.138933,
+          "max": 2.5115
+        },
+        "decoder_ms": {
+          "n": 1600,
+          "p01": 8.492527310000002,
+          "p50": 12.943074,
+          "p95": 16.93075465,
+          "p99": 17.83075652,
+          "max": 19.254792
+        },
+        "network_ms": {
+          "n": 1600,
+          "p01": 3.68700388,
+          "p50": 4.276577,
+          "p95": 6.517751649999998,
+          "p99": 11.42433544,
+          "max": 25.6044
+        },
+        "total_pipeline_latency_ms": {
+          "n": 1600,
+          "p01": 52.14603215,
+          "p50": 61.2507535,
+          "p95": 64.80618704999999,
+          "p99": 69.552788,
+          "max": 72.68812
+        },
+        "decoder_queue_ms": {
+          "n": 1600,
+          "p01": 0.87555581,
+          "p50": 2.80138,
+          "p95": 4.0012061999999995,
+          "p99": 8.50951229,
+          "max": 9.52521
+        },
+        "server_compositor_ms": {
+          "n": 1600,
+          "p01": 0.13119699999999998,
+          "p50": 0.157,
+          "p95": 0.26916499999999993,
+          "p99": 0.331711,
+          "max": 0.4374
+        },
+        "client_compositor_ms": {
+          "n": 1600,
+          "p01": 2.53782334,
+          "p50": 8.350782,
+          "p95": 9.35178455,
+          "p99": 9.78431961,
+          "max": 10.648385999999999
+        },
+        "vsync_queue_ms": {
+          "n": 1600,
+          "p01": 12.57469512,
+          "p50": 16.963991999999998,
+          "p95": 21.9904851,
+          "p99": 24.95651046,
+          "max": 27.616415
+        },
+        "client_fps": {
+          "n": 1600,
+          "p01": 59.98499974,
+          "p50": 119.9692025,
+          "p95": 120.002991,
+          "p99": 120.0255101,
+          "max": 120.87643
+        },
+        "server_fps": {
+          "n": 1600,
+          "p01": 110.88349365,
+          "p50": 120.3289825,
+          "p95": 127.868411,
+          "p99": 132.9266274,
+          "max": 147.44913
+        },
+        "video_mbps": {
+          "n": 1600,
+          "p01": 923.9522625999999,
+          "p50": 1002.67542,
+          "p95": 1065.483312,
+          "p99": 1107.5876509999998,
+          "max": 1228.6405
+        },
+        "frame_timestamp_gap_ms": {
+          "n": 1599,
+          "p01": 5.53624792,
+          "p50": 8.337501,
+          "p95": 16.6606366,
+          "p99": 19.4333323,
+          "max": 36.150733
+        }
+      },
+      "packet_loss_delta": 0,
+      "sustained_requested_fps": false
+    }
+  ],
+  "decision": "Keep 1000 Mbps working target: the 1500 Mbps screen delivered lower fresh/completed rate and higher estimated latency. USB payload capacity alone did not improve pacing.",
+  "limitations": [
+    "Three 15-second screens with three-second settling; not sustained acceptance.",
+    "Dynamic GPU clocks 690/640/690 MHz confound causal isolation of bitrate cost.",
+    "Stationary chart; no gameplay or human in-headset quality comparison.",
+    "Screenshots showed the same chart, correct eyes and orientation; overlay obscures some detail.",
+    "ALVR network latency is a residual estimate, not direct one-way USB timing.",
+    "Fresh submissions and completed direct copies are not optical displayed FPS or motion-to-photon.",
+    "P1 nominal FPS stayed near60; native sustained120 remains unmet."
+  ]
+}
