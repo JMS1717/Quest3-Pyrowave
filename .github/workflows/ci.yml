@@ -48,8 +48,34 @@ jobs:
           echo "XRWIRED_ANDROID_SDK=$ANDROID_HOME" >> "$GITHUB_ENV"
           echo "XRWIRED_NDK=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
           rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --target aarch64-linux-android
+      - name: Restore pinned Android build tools
+        id: android_tools_cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cargo/bin/cargo-ndk
+            ~/.cargo/bin/cbindgen
+            ~/.cargo/bin/cargo-apk
+          key: q3pw-android-tools-v1-ubuntu24-${{ env.RUST_TOOLCHAIN }}-ndk4.1.2-cbindgen0.29.4-apk0fd3126dad5aa1c5f0f26cdae3410f2e5af62c60
+      - name: Install pinned Android build tools on cache miss
+        if: steps.android_tools_cache.outputs.cache-hit != 'true'
+        run: |
           cargo +"$RUST_TOOLCHAIN" install --locked cargo-ndk@4.1.2 cbindgen@0.29.4
           cargo +"$RUST_TOOLCHAIN" install --locked --git https://github.com/zarik5/cargo-apk --rev 0fd3126dad5aa1c5f0f26cdae3410f2e5af62c60 cargo-apk
+      - name: Verify cached tool executables
+        run: |
+          test -x "$HOME/.cargo/bin/cargo-ndk"
+          test -x "$HOME/.cargo/bin/cbindgen"
+          test -x "$HOME/.cargo/bin/cargo-apk"
+      - name: Save pinned Android tools before application compilation
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.android_tools_cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/bin/cargo-ndk
+            ~/.cargo/bin/cbindgen
+            ~/.cargo/bin/cargo-apk
+          key: ${{ steps.android_tools_cache.outputs.cache-primary-key }}
       - name: Khronos loader used by upstream ALVR on Quest 3
         run: |
           dest="$XRWIRED_INPUTS/research/ALVR-20.13.0/deps/android_openxr/arm64-v8a"
