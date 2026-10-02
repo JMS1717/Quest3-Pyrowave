@@ -175,3 +175,25 @@ To restore the existing native geometry use `--profile native2080`, restart and
 reconnect. For an exact restoration of prior Scale/optional-height configuration,
 use the saved `previous_resolution_settings` through ALVR settings, rather than
 guessing it from the aligned negotiated dimensions.
+
+## When the larger source still looks soft
+
+Confirm the active game's render size, including its own resolution scale and
+SteamVR per-application settings. A larger recommendation does not prove that
+an already-running game recreated its render textures. Restart that game after
+changing the recommendation if it caches render targets.
+
+The final stream remains 2080x2208 per eye. Supersampling can reduce aliasing;
+it cannot transmit the extra source pixels as additional decoded detail.
+Downsampling, chroma subsampling and codec quantization can limit the visible
+benefit. This profile is not a claim of Virtual Desktop Godlike equivalence.
+
+For optional edge sharpening, the existing Windows color-correction pass can
+use a modest `sharpening` value such as `0.2`, with brightness, contrast and
+saturation all `0` and gamma `1`. These are neutral color values in this shader;
+the existing default saturation `0.5` would increase saturation when enabled.
+Enable color correction and restart SteamVR/stream initialization to apply it.
+This adds a PC GPU pass after downsampling, without increasing Quest decode
+resolution. It can accentuate compression or halos and is not recovered detail.
+Keep this setting identical across resolution comparisons; it remains disabled
+in the repository's baseline.

@@ -17,6 +17,19 @@ updates its session state underneath an override, which wins while set. Clearing
 the property restores that controller state. The normal unset default stays on.
 Snapshot and restore the original property along with the rest of a bounded test.
 
+If both thumbsticks cannot hide the panel after a benchmark, check for a leftover
+forced-visible override. Clear it before normal play; `1` intentionally overrides
+the controller chord. From PowerShell, using your connected Quest's serial:
+
+```powershell
+adb -s YOUR_QUEST_SERIAL shell 'setprop debug.q3pw.overlay_visible ""'
+adb -s YOUR_QUEST_SERIAL shell getprop debug.q3pw.overlay_visible
+```
+
+The readback should be empty. Release both sticks, then click both together.
+No APK update or SteamVR restart is needed. Leave the property unset in manual
+play launchers; the overlay already starts enabled by default.
+
 With `debug.q3pw.loop_probe=1` set before launching `.24`, `[Q3PW_OVERLAY_DRAW]`
 records text construction, graphics-context/acquire/wait, renderer submission and
 release wall times for each redraw. `[Q3PW_LOOP]` also reports total overlay-update
