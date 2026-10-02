@@ -540,14 +540,14 @@ rejects incomplete producers/readbacks, mismatched bytes/dimensions, inconsisten
 orientation and CPU reads incompatible with source allocation. Legacy files without
 metadata require an explicit unverified override. See the [probe instructions](../tools/pyroclient/README.md).
 Cloud software-GLES tests cannot validate Quest Vulkan-to-EGL interop or the
-recommended allocation; those checks await a new hardware window. This adds a
-correctness tool, not a new FPS or latency result.
+recommended allocation. The subsequent Quest checks below verify relative RGB
+preservation through that consumer; an independent absolute reference remains needed.
 
 The [cloud readback validation](../results/GPU-READBACK-CI-2026-10-02.json)
 passed exact RGB/alpha, row flip, changing-image, pack-state and bounds checks on
 Mesa llvmpipe. Android and Windows builds/regressions passed, and matching artifact
 hashes/signing were reviewed. The production native decoder libraries match the
-previous .21/.22 pair. The new probe has not been run on Quest.
+previous .21/.22 pair. The new probe was subsequently run on Quest with .23.
 
 The optional `stereo_scene --pulse` counter updates a small texture region at 10 Hz.
 With three cached imports, both eyes visibly advanced through ticks 324, 371 and
@@ -598,11 +598,11 @@ held frame and its timing state before replacing the decoder.
 held frames, and CPU-wall mean/maximum hold time. A requested flag alone does not
 prove activation. Frames held across a skipped render remain lease-protected;
 that interval is included when eventually consumed. Holding an older frame can
-increase latency even if fewer outputs are replaced. Keep this off pending
-matching artifact verification and live comparison; no FPS improvement is claimed.
+increase latency even if fewer outputs are replaced. The live comparisons below
+found no repeatable improvement, so this remains off.
 
-For the next authorized window, first finish the GPU reference readback gate for
-the recommended allocation. Then compare **off / on / off** for 15 seconds each,
+The authorized morning window finished the relative GPU readback gate for
+the recommended allocation, then compared **off / on / off** for 15 seconds each,
 with 3 seconds settling, the same chart, native geometry, 120-Hz runtime acceptance,
 1000-Mbps 4:2:0, no foveation and the same thermal state. Keep `frame_wait_us=0`,
 `decode_handoff=0`, `async_eye_copy=0` and `image_cache=0` to isolate selection.
@@ -614,4 +614,38 @@ The matching `.23` APK/server passed cloud builds and regressions; APK signing,
 artifact hashes, embedded versions and the new scheduling markers were verified.
 The production native decoder libraries remain byte-identical to `.21`, and the
 GPU reference probe matches `846a4a5`. [Build proof and hashes](../results/PRE-WAIT-CI-2026-10-02.json).
-These outputs are stored separately and have not been installed or benchmarked.
+These outputs were installed as a matching pair for the bounded morning tests;
+the prior .22 runtime remains preserved. Alpha.7 remains the published preview.
+
+## Morning .23 Quest checks
+
+[GPU readback](../results/GPU-READBACK-QUEST-2026-10-02.json) used asymmetric
+512×320 and 4160×2208 Haar 4:2:0 fixtures, 10 warmups and 80 completed decodes
+per case. Standard / recommended allocation plus minimal fragment usage / standard
+produced identical RGB at both sizes, using preserved EGL import, external-image
+sampling and ordinary RGBA8 readback. No CPU lock or CPU-readable source allocation
+was introduced. This is a relative consumer correctness gate, not absolute decoder
+accuracy, an in-headset quality judgment or a timing speedup.
+
+[Nine live screens](../results/FRAME-SELECTION-LIVE-2026-10-02.json) used
+2080×2208 per eye, 120 Hz requested, 1000 Mbps, 4:2:0, no foveation, synchronous
+direct eye copy, recommended allocation and minimal fragment usage over USB/ADB TCP.
+Pre-wait off/on/off delivered 106.89 / 110.06 / 98.95 fresh submissions/s in the
+first round and 96.91 / 107.00 / 109.82 in the second. The second round used identical
+CPU/GPU/OpenXR performance requests, but GPU clocks still differed. Actual pre-wait
+poll/hit and hold-duration logs confirmed activation. Selecting before the runtime
+wait held frames for several milliseconds and did not establish a latency benefit.
+
+With pre-wait off, post-wait 0 / 250 / 0 microseconds delivered 110.12 / 100.94 /
+106.97 fresh submissions/s. Neither candidate earned a sustained run or default
+promotion. Clock variation prevents a causal performance conclusion. P1 nominal
+FPS stayed near 60, and native 120 remains unmet. Baseline producer completion
+was about 120/s; superseded output accounted for the lower completed eye-copy rate.
+The reported 55–67 ms latency is an ALVR estimate, not optical motion-to-photon.
+
+The window ended with temporary properties and proximity behavior restored and
+no recorded restoration errors. A separate overlay-visible screen was collected,
+but no matching hidden-overlay case occurred; overlay overhead is unmeasured.
+Runtime logs advertise Vulkan OpenXR bindings. The current decoder already uses
+Vulkan; presentation still uses the GLES bridge. Binding advertisement does not
+validate a direct Vulkan presentation implementation or its performance.

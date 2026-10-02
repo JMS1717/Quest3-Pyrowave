@@ -17,15 +17,26 @@ Later .21 allocation experiments reached **112–113 fresh FPS** at 2080×2208 p
 did not establish an improvement. These short stationary screens still fall short of
 sustained native 120 FPS. [Full results and limitations](results/OUTPUT-BRIDGE-LIVE-2026-10-02.json).
 The matching .22 APK/server [passed all cloud checks](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/36976871902);
-its optional frame-wait experiment remains untested and off by default. Alpha.7 remains
+its optional frame-wait experiment stays off by default. Alpha.7 remains
 the published preview; newer Actions artifacts are experimental.
 
 Saved stage counters now show about **120 completed decodes/s but 112–113 completed
 eye copies/s**; superseded outputs account for the difference within one frame.
 The .23 nonblocking pre-wait selection is opt-in and off by default; its matching
-APK/server passed cloud checks and artifact verification, but it has not been
-tested on Quest. [Count analysis](results/OUTPUT-SLOT-LOSS-2026-10-02.json) and
+APK/server passed cloud checks and artifact verification. New matched Quest screens
+found no repeatable gain from pre-wait selection or a 250-microsecond post-wait;
+both remain off. The nine 15-second cases delivered **97–110 fresh FPS**, with
+dynamic GPU clocks and roughly 55–67 ms estimated ALVR latency. These are fresh
+submission rates, not optical FPS or motion-to-photon measurements.
+[Live comparisons](results/FRAME-SELECTION-LIVE-2026-10-02.json),
+[count analysis](results/OUTPUT-SLOT-LOSS-2026-10-02.json) and
 [verified build, hashes and limits](results/PRE-WAIT-CI-2026-10-02.json).
+
+The new GPU consumer readback passed on Quest at 512×320 and 4160×2208:
+recommended allocation/minimal fragment usage and standard allocation produced
+**byte-identical RGB** in off/on/off tests. This establishes relative preservation
+through Vulkan → AHB → GLES, not an independent absolute color reference or
+sustained streaming acceptance. [Readback evidence](results/GPU-READBACK-QUEST-2026-10-02.json).
 
 Reviewed initial evidence is in [results](results/INITIAL-EVIDENCE.md). Those earlier foveated results do not validate the current full-frame build. High bitrate
 presets are experiment targets, not promises of usable throughput or quality.

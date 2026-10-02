@@ -82,9 +82,12 @@ The checksum links the record to the file; it does not establish reference corre
 
 Cloud Mesa software-GLES tests exercise external-image sampling, exact RGB/alpha,
 explicit row flip, odd widths, changing pixels, pack-state isolation and bounds.
-Android compile checks cover the AHB wrapper. Actual Quest Vulkan-to-EGL visibility,
-recommended allocation layout and independent color reference acceptance remain pending
-hardware testing. This diagnostic is not a sustained streaming or optical-latency test.
+Android compile checks cover the AHB wrapper. Quest off/on/off readbacks now show
+byte-identical RGB between standard allocation and recommended allocation/minimal
+fragment usage at 512×320 and 4160×2208. See [Quest readback evidence](../../results/GPU-READBACK-QUEST-2026-10-02.json).
+This verifies relative Vulkan-to-EGL consumer preservation; independent absolute
+color reference acceptance remains pending. This diagnostic is not a sustained
+streaming or optical-latency test.
 See [recorded cloud checks and artifact hashes](../../results/GPU-READBACK-CI-2026-10-02.json),
 [Android EGL image import](https://registry.khronos.org/EGL/extensions/ANDROID/EGL_ANDROID_image_native_buffer.txt)
 and [external-image ESSL3 sampling](https://registry.khronos.org/OpenGL/extensions/OES/OES_EGL_image_external_essl3.txt).

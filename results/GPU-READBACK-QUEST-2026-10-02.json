@@ -1,0 +1,177 @@
+{
+  "status": "quest_gpu_consumer_readback_verified_relative_to_standard_allocation",
+  "source_sha": "4e0d1cf5c99aa4a96ce3b1cdc5065e4d446addfa",
+  "native_libraries_identical_to_21": true,
+  "cases": [
+    {
+      "pattern": "asymmetric",
+      "label": "baseline",
+      "dimensions": [
+        512,
+        320
+      ],
+      "complete": 80,
+      "iterations": 80,
+      "warmup": 10,
+      "source_ahb_usage": 768,
+      "readback_method": "gles_external_rgba8",
+      "readback_complete": true,
+      "producer_complete": true,
+      "rgb_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "pattern": "asymmetric",
+      "label": "optimal",
+      "dimensions": [
+        512,
+        320
+      ],
+      "complete": 80,
+      "iterations": 80,
+      "warmup": 10,
+      "source_ahb_usage": 268436224,
+      "readback_method": "gles_external_rgba8",
+      "readback_complete": true,
+      "producer_complete": true,
+      "rgb_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "pattern": "asymmetric",
+      "label": "restore",
+      "dimensions": [
+        512,
+        320
+      ],
+      "complete": 80,
+      "iterations": 80,
+      "warmup": 10,
+      "source_ahb_usage": 768,
+      "readback_method": "gles_external_rgba8",
+      "readback_complete": true,
+      "producer_complete": true,
+      "rgb_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "pattern": "native-asymmetric",
+      "label": "baseline",
+      "dimensions": [
+        4160,
+        2208
+      ],
+      "complete": 80,
+      "iterations": 80,
+      "warmup": 10,
+      "source_ahb_usage": 768,
+      "readback_method": "gles_external_rgba8",
+      "readback_complete": true,
+      "producer_complete": true,
+      "rgb_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "pattern": "native-asymmetric",
+      "label": "optimal",
+      "dimensions": [
+        4160,
+        2208
+      ],
+      "complete": 80,
+      "iterations": 80,
+      "warmup": 10,
+      "source_ahb_usage": 268436224,
+      "readback_method": "gles_external_rgba8",
+      "readback_complete": true,
+      "producer_complete": true,
+      "rgb_range": [
+        0,
+        255
+      ]
+    },
+    {
+      "pattern": "native-asymmetric",
+      "label": "restore",
+      "dimensions": [
+        4160,
+        2208
+      ],
+      "complete": 80,
+      "iterations": 80,
+      "warmup": 10,
+      "source_ahb_usage": 768,
+      "readback_method": "gles_external_rgba8",
+      "readback_complete": true,
+      "producer_complete": true,
+      "rgb_range": [
+        0,
+        255
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "pattern": "asymmetric",
+      "label": "optimal",
+      "identical_rgb": true,
+      "max_channel_error": [
+        0,
+        0,
+        0
+      ],
+      "rgb_mse": 0.0
+    },
+    {
+      "pattern": "asymmetric",
+      "label": "restore",
+      "identical_rgb": true,
+      "max_channel_error": [
+        0,
+        0,
+        0
+      ],
+      "rgb_mse": 0.0
+    },
+    {
+      "pattern": "native-asymmetric",
+      "label": "optimal",
+      "identical_rgb": true,
+      "max_channel_error": [
+        0,
+        0,
+        0
+      ],
+      "rgb_mse": 0.0
+    },
+    {
+      "pattern": "native-asymmetric",
+      "label": "restore",
+      "identical_rgb": true,
+      "max_channel_error": [
+        0,
+        0,
+        0
+      ],
+      "rgb_mse": 0.0
+    }
+  ],
+  "actual_activation": {
+    "recommended_allocation_log": "requested=1 recommendation=0x10000300 active=1",
+    "minimal_fragment_log": "requested=1 supported=1 fragment=1; slot usage=0x14 minimal=1"
+  },
+  "method": "Same fixed encoded Haar 4:2:0 frame; protected native output buffers, producer completion before preserved EGL import, GLES sampling into ordinary RGBA8 and glReadPixels. No CPU locks or CPU_READ allocation flags.",
+  "limitations": [
+    "This verifies relative RGB preservation through the GPU consumer for the recommended allocation; it is not an independent absolute decoder/color reference.",
+    "Static repeated fixtures and one final readback per case do not measure sustained fresh VR FPS, gameplay, in-headset quality or optical motion-to-photon.",
+    "No timing speedup is claimed from this correctness gate."
+  ]
+}
