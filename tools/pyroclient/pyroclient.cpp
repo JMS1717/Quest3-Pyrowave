@@ -118,6 +118,7 @@ struct pyroclient {
     VkRenderPass convert_render_pass = VK_NULL_HANDLE;
     bool fragment_convert = false;
     bool fragment_min_usage = false; // optional sampled/color-only imported output
+    uint64_t optimal_ahb_usage = 0; // driver recommendation; valid only for minimal usage
     VkDescriptorPool desc_pool = VK_NULL_HANDLE;
     bool storage_on_ahb = false;   // convert writes the AHB image directly
     Plane scratch;                 // else convert writes here and a copy follows
@@ -428,7 +429,19 @@ bool pyroclient::create_slot(Slot &s) {
     d.width = width; d.height = height; d.layers = 1;
     d.format = AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM;
     d.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE | AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT;
-    if (AHardwareBuffer_allocate(&d, &s.ahb) != 0 || !s.ahb) { LOGE("AHardwareBuffer_allocate %ux%u", width, height); return false; }
+    if (fragment_min_usage && optimal_ahb_usage) d.usage |= optimal_ahb_usage;
+    int allocated = AHardwareBuffer_allocate(&d, &s.ahb);
+    if (allocated != 0 && optimal_ahb_usage) {
+        LOGI("[Q3PW_AHB_USAGE] recommended allocation failed=%d; retry standard flags", allocated);
+        optimal_ahb_usage = 0;
+        d.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE | AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT;
+        allocated = AHardwareBuffer_allocate(&d, &s.ahb);
+    }
+    if (allocated != 0 || !s.ahb) { LOGE("AHardwareBuffer_allocate %ux%u", width, height); return false; }
+    AHardwareBuffer_Desc actual = {};
+    AHardwareBuffer_describe(s.ahb, &actual);
+    LOGI("[Q3PW_AHB_USAGE] allocated=0x%llx recommended=0x%llx", (unsigned long long)actual.usage,
+         (unsigned long long)optimal_ahb_usage);
 
     auto getProps = (PFN_vkGetAndroidHardwareBufferPropertiesANDROID)vkGetDeviceProcAddr(device, "vkGetAndroidHardwareBufferPropertiesANDROID");
     if (!getProps) { LOGE("no vkGetAndroidHardwareBufferPropertiesANDROID"); return false; }
@@ -452,6 +465,16 @@ bool pyroclient::create_slot(Slot &s) {
     if (image_result != VK_SUCCESS && fragment_min_usage) {
         LOGI("[Q3PW_FRAGMENT_USAGE] minimal create failed=%d; retry legacy", int(image_result));
         fragment_min_usage = false;
+        if (optimal_ahb_usage) {
+            // Vendor-recommended allocations cannot be repurposed for broader
+            // image usage. No VkImage/memory exists yet: reallocate a standard
+            // AHB before retrying once with the legacy image parameters.
+            optimal_ahb_usage = 0;
+            AHardwareBuffer_release(s.ahb);
+            s.ahb = nullptr;
+            s.image = VK_NULL_HANDLE;
+            return create_slot(s);
+        }
         ii.usage = legacy_usage;
         image_result = vkCreateImage(device, &ii, nullptr, &s.image);
     }
@@ -704,12 +727,24 @@ extern "C" pyroclient *pyroclient_create_ex(uint32_t width, uint32_t height, int
             && !strcmp(minimal_prop, "1");
         if (requested && c->fragment_convert) {
             fi.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+            VkAndroidHardwareBufferUsageANDROID recommended = { VK_STRUCTURE_TYPE_ANDROID_HARDWARE_BUFFER_USAGE_ANDROID };
+            ep.pNext = &recommended;
             const VkResult supported = vkGetPhysicalDeviceImageFormatProperties2(c->gpu, &fi, &p2);
             c->fragment_min_usage = supported == VK_SUCCESS &&
                 (ep.externalMemoryProperties.externalMemoryFeatures & VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT) &&
                 p2.imageFormatProperties.maxExtent.width >= width &&
                 p2.imageFormatProperties.maxExtent.height >= height &&
                 (p2.imageFormatProperties.sampleCounts & VK_SAMPLE_COUNT_1_BIT);
+            char optimal_prop[PROP_VALUE_MAX] = {};
+            const bool optimal_requested = __system_property_get("debug.q3pw.optimal_ahb_usage", optimal_prop) > 0
+                && !strcmp(optimal_prop, "1");
+            const uint64_t required = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE | AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT;
+            if (optimal_requested && c->fragment_min_usage &&
+                (recommended.androidHardwareBufferUsage & required) == required)
+                c->optimal_ahb_usage = recommended.androidHardwareBufferUsage;
+            LOGI("[Q3PW_AHB_USAGE] requested=%d recommendation=0x%llx active=%d", optimal_requested,
+                 (unsigned long long)recommended.androidHardwareBufferUsage, c->optimal_ahb_usage != 0);
+            ep.pNext = nullptr;
         }
         LOGI("[Q3PW_FRAGMENT_USAGE] requested=%d supported=%d fragment=%d", requested,
              c->fragment_min_usage, c->fragment_convert);

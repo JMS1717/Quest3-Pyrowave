@@ -449,3 +449,19 @@ and [descriptor writes](https://docs.vulkan.org/refpages/latest/refpages/source/
 
 The color-copy activation log now uses the release-visible warning level, so future
 comparisons can distinguish requesting that mode from actually activating it.
+
+In .20, `debug.q3pw.optimal_ahb_usage=1` additionally requests driver-recommended
+AHB allocation flags, and requires the minimal fragment path above. The recommendation
+comes from `VkAndroidHardwareBufferUsageANDROID`; no vendor bits are hardcoded.
+Unsupported recommendations keep standard allocation. A failed recommended allocation
+retries standard flags. If minimal image creation fails with a recommended allocation,
+the buffer is released and reallocated before the legacy image retry: vendor flags
+must never be reused for broader image parameters. Later import/allocation errors
+retain normal decoder cleanup. Requested recommendation and actual allocation flags
+are logged separately. Both experiments default off.
+
+This addresses a separate allocation constraint: generic AHB GPU flags can require
+broad Vulkan compatibility even when the imported image has narrower usage. A returned
+recommendation may still equal standard flags; activation alone proves no layout,
+compression or performance benefit. See [optimal Android hardware buffer usage](https://docs.vulkan.org/spec/latest/chapters/memory.html#memory-external-android-hardware-buffer-optimal-usages)
+and [the usage query](https://docs.vulkan.org/refpages/latest/refpages/source/VkAndroidHardwareBufferUsageANDROID.html).
