@@ -56,6 +56,14 @@ at 08:00 Eastern October 2. Guardian is paused only for stationary unattended
 tests; normal boundary behavior is restored before later play. Windows power-plan
 and network settings are unchanged.
 
+A second startup issue was reproduced: a resumed unworn session sometimes retained
+the probe's 72-Hz property and reported only 72/80 Hz. Before relaunch, temporarily
+requesting `debug.oculus.refreshRate=120` recovered this headset to OpenXR 120 Hz
+with an 8,333,333-ns frame period. This property alone is not a capability test;
+the request/frequency/frame-period gate remains required. Its original value is
+included in the independent morning restoration. The supervisor avoids app
+restarts while experiment locks are held and backs off between recovery attempts.
+
 A disconnected cable or unrecoverable
 headset failure can prevent further live tests; source work and cloud builds can
 continue. In-headset quality judgment and optical motion-to-photon latency still
