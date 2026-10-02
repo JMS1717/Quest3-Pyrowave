@@ -103,8 +103,11 @@ int main(int argc,char **argv) {
         if (!image) {error="Output outside three-slot ring";return fail();}
         if (!q3pw::readback_egl_image(image->image,width,height,false,actual,error)) return fail();
         if (actual!=(i%2?ref_b:ref_a)) {error="Fenced pixels differ from synchronous reference";return fail();}
+        // Decoder::decode clears packet readiness after recording; it is not a
+        // completion signal. The native fence and original complete-frame info,
+        // plus exact readback despite the pending clear, are the checks here.
         if (pyroclient_finish_pending(raw,&info)!=0 || !std::isfinite(info.total_ms) || info.total_ms<=0 || !info.complete
-            || !pyroclient_is_ready(raw,0)) {error="Verified completion or clear protection failed";return fail();}
+            || !std::isfinite(info.decode_ms) || info.decode_ms<=0) {error="Verified fence/timing completion failed";return fail();}
         ++completed;
     }
     if (!unsignaled) {error="No initially unsignaled native fence observed; queued handoff not exercised";return fail();}

@@ -1,0 +1,42 @@
+name: Android native diagnostic probes
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  NDK_VERSION: '27.2.12479018'
+  XRWIRED_INPUTS: ${{ github.workspace }}/ws
+jobs:
+  probes:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: CPU regression checks
+        run: |
+          python3 -m unittest discover -s tests -v
+          rustc --edition=2021 --test tools/fences/native_ready_test.rs -o /tmp/native-ready-test
+          /tmp/native-ready-test
+          rustc --edition=2021 --test tools/fences/ready_frames.rs -o /tmp/ready-frames-test
+          /tmp/ready-frames-test
+      - name: Reconstruct pinned sources
+        run: sh tools/ci/fetch_sources.sh "$XRWIRED_INPUTS/research"
+      - name: Android NDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" >/dev/null
+          echo "XRWIRED_ANDROID_SDK=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "XRWIRED_NDK=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+      - name: Compile native libraries and standalone probes
+        run: |
+          sh tools/build_pyrowave_android.sh
+          bash tools/pyroclient/build.sh
+      - name: Package diagnostics only
+        run: |
+          mkdir out
+          cp tools/pyroclient/ready_fence_gpu_test tools/pyroclient/release_fence_gpu_test tools/pyroclient/pyroclient_test tools/pyroclient/libpyroclient.so "$XRWIRED_INPUTS/research/pyrowave/build-android/libpyrowave-shared.so" out/
+          cp "$XRWIRED_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" out/
+          printf '%s\n' "Diagnostic executables only; no APK/server. Compare all three library hashes against the reviewed matching APK before running. Source: $GITHUB_SHA" > out/DIAGNOSTICS.txt
+          (cd out && sha256sum * > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Quest3-Pyrowave-Native-Diagnostics
+          path: out/

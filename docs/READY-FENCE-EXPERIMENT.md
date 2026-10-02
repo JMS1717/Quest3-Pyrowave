@@ -47,9 +47,16 @@ Haar/compute frames, including native 4160×2208 stereo. It uses persistent EGL
 imports, requires an initially unsignaled native fence, queues the server wait
 before sampling, compares six outputs across all three slots with synchronous
 references, rejects packet/second-submission reuse while pending, checks that
-clear preserves the pending frame and exercises outstanding-work teardown.
+clear does not corrupt the pending pixels and exercises outstanding-work teardown.
 This is GPU correctness evidence, not a latency or optical measurement. CPU
 mock/poll/ownership tests in CI do not substitute for the device probe.
+
+Packet readiness is consumed when PyroWave records a decode; it must not be used
+as a GPU completion check. Diagnostic-only repairs can use the manual **Android
+native diagnostic probes** workflow to avoid rebuilding the Windows server.
+Its artifact contains no APK/server: all three native library hashes must match
+the reviewed APK exactly before using a probe with that pair. Runtime/native API
+changes still require the full matching build workflow.
 
 Then use a short 15-second OFF/ON/OFF screen with the same actual source texture
 size, normalized chart, projection, encode geometry, bitrate, runtime rate,
