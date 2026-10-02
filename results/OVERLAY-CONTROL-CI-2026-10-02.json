@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "status": "cloud_verified_not_deployed_or_live_validated",
+  "source_sha": "f19f8353558867384308ac7b6df10469dd9f8c01",
+  "version": "20.13.0-quest3.pyro.24",
+  "ci_run": 37008273093,
+  "ci_url": "https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37008273093",
+  "checks": {
+    "python_tests": 33,
+    "android_build": "success",
+    "windows_build": "success",
+    "windows_regressions": "success",
+    "artifact_hashes_versions_and_APK_certificate_verified": true,
+    "production_native_libraries_identical_to_21": true,
+    "GPU_consumer_probe_identical_to_846a4a5": true,
+    "windows_test_counts": {
+      "adb": 2,
+      "client_core": 22,
+      "session": 25,
+      "packets": 4,
+      "server_core": 10,
+      "server_io_initialization": 2,
+      "dashboard": 9
+    },
+    "windows_ignored_tests": {
+      "adb": 1,
+      "dashboard": 1
+    }
+  },
+  "artifact_sha256": {
+    "android": {
+      "APK-CERTIFICATE.txt": "19579aee5e2153e65b88ee5d86b93b07058b80a1a952af5c38dbc8a24637a02d",
+      "LICENSES.zip": "248b549ab07b481f4712aea126d1af61597563b537eeeac60010ac2182b66bb9",
+      "Quest3-Pyrowave-dev.apk": "c045473a1deb880e25de8c18c9b1c82d840a376bec2b494ee9058762c7f82a0c",
+      "libc++_shared.so": "f9992c4ba6b7c5a716e3a202fceb1ce029d6a2b0605838ac6b3219f489dd7970",
+      "libpyroclient.so": "ef5c82902a7e9cd8422416e5011774259813be4bb58bf76cf9a9b0d6e1a0e3bf",
+      "libpyrowave-shared.so": "9c5ba02ba372745f23289a5ebd9555a6b2a21a9672a3ad545143c26889c09848",
+      "pyroclient_test": "547da209d7bdfa2f5cd7e11503f6ccf8969c6e5d39dd60593b324cab199ef2f8",
+      "pyrowave_android": "0d940d943a7eb05e9c0b6335f85ac41dd308f824042fafa46a78afcff6cd31d9",
+      "udprecv-android": "b8e092ec3dcd0a2d2640d1296e8abe0d4f0537c4cbb59f882329620c3a8aac05"
+    },
+    "windows": {
+      "Quest3-Pyrowave-Windows.zip": "8900135a2e4764493f6e2271a2ecea7467794003e99f46897a55e78831869af9"
+    }
+  },
+  "apk_certificate_sha256": "2f2c5b3bb99cd69edc58cc53fbac30325426e410b3fecafc76fe447549886779",
+  "defaults": {
+    "pre_wait_poll": 0,
+    "frame_wait_us": 0,
+    "overlay_visible": "unset: controller state, initially on",
+    "loop_probe": 0
+  },
+  "limitations": [
+    "These .24 outputs have not been deployed or live-tested.",
+    "The new property enables same-session forced-visible/hidden comparisons, not an FPS optimization.",
+    "Overlay stage measurements are CPU wall time; renderer submission is not completed GPU work.",
+    "The matching production native libraries are unchanged; .23 relative Quest readback evidence applies to those bytes, not independent absolute color correctness.",
+    "Native 120 fresh FPS, sustained performance and the 207-Hz/high-resolution stretch target remain unmet.",
+    "Alpha.7 remains the public preview release; these are matching experimental Actions artifacts."
+  ]
+}

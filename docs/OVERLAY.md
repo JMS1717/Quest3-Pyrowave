@@ -26,6 +26,9 @@ work. Property mode and effective visibility changes have native diagnostic logs
 No render ordering or GPU synchronization changes accompany these diagnostics.
 Matching Android/Windows builds and a same-session visible/hidden/visible comparison
 are required before attributing any pacing problem to the overlay.
+The matching `.24` pair passed all cloud checks, hashes, embedded version and
+signing review; [artifact evidence](../results/OVERLAY-CONTROL-CI-2026-10-02.json).
+It has not been installed or live-tested. No overlay performance gain is claimed.
 
 The panel shows codec/chroma, per-eye stream size, requested refresh, transport,
 actual/target bitrate, delivered client FPS, Game/host FPS, pipeline latency and

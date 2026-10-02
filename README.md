@@ -38,6 +38,12 @@ recommended allocation/minimal fragment usage and standard allocation produced
 through Vulkan → AHB → GLES, not an independent absolute color reference or
 sustained streaming acceptance. [Readback evidence](results/GPU-READBACK-QUEST-2026-10-02.json).
 
+The matching `.24` diagnostic APK/server [passed builds, regressions and artifact review](results/OVERLAY-CONTROL-CI-2026-10-02.json).
+It adds an unattended overlay visibility override and CPU-wall timing diagnostics
+for same-session on/off comparisons. It has not been deployed or live-tested and
+does not claim an FPS gain. See [overlay controls](docs/OVERLAY.md) and the
+[Vulkan presentation investigation](docs/VULKAN-PRESENTATION.md).
+
 Reviewed initial evidence is in [results](results/INITIAL-EVIDENCE.md). Those earlier foveated results do not validate the current full-frame build. High bitrate
 presets are experiment targets, not promises of usable throughput or quality.
 
