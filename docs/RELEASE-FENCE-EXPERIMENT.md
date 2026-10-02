@@ -124,6 +124,8 @@ source gracefully on failure.
 The next scheduling investigation should measure empty/late frame selection and
 runtime queue/`xrWaitFrame` feedback. This result supports safe buffer ownership,
 not the assumption that more asynchronous submission alone solves the FPS gap.
+The default-off [`.27` scheduling probe](FRAME-SCHEDULING.md) distinguishes
+selection outcomes and isolates CPU phases without changing scheduling.
 
 A follow-up with native release disabled tried the existing bounded selection
 wait at **0/1000/0 microseconds**. Fresh FPS was **105.96/108.78/109.90** and

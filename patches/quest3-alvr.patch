@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7b..f16efe8 100644
+index 7cead7b..73f2a26 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -138,7 +138,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -147,7 +147,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -156,7 +156,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -165,7 +165,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -174,7 +174,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_common",
   "jni",
@@ -183,7 +183,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -192,7 +192,7 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -201,12 +201,12 @@ index 7cead7b..f16efe8 100644
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.27"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..7a73edb 100644
+index ae00ce8..bae0997 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..7a73edb 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.26"
++version = "20.13.0-quest3.pyro.27"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -2534,7 +2534,7 @@ index 7765bb4..b102615 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..082190d 100644
+index a0fd36f..c1e923b 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -4,6 +4,8 @@ mod graphics;
@@ -2555,7 +2555,7 @@ index a0fd36f..082190d 100644
  use stream::StreamContext;
  
  fn from_xr_vec3(v: xr::Vector3f) -> Vec3 {
-@@ -137,6 +139,16 @@ pub fn entry_point() {
+@@ -137,6 +139,21 @@ pub fn entry_point() {
      alvr_client_core::init_logging();
  
      let platform = alvr_system_info::platform();
@@ -2565,6 +2565,11 @@ index a0fd36f..082190d 100644
 +        && extra_extensions::perf_settings::system_property("debug.q3pw.runtime_display_time") == "1";
 +    let mut loop_samples: u32 = 0;
 +    let mut loop_wait_sum: f64 = 0.0;
++    let mut loop_wait_call_sum: f64 = 0.0;
++    let mut loop_begin_sum: f64 = 0.0;
++    let mut loop_render_sum: f64 = 0.0;
++    let mut loop_work_sum: f64 = 0.0;
++    let mut loop_work_max: f64 = 0.0;
 +    let mut loop_end_sum: f64 = 0.0;
 +    let mut loop_overlay_sum: f64 = 0.0;
 +    let mut loop_overlay_max: f64 = 0.0;
@@ -2572,7 +2577,7 @@ index a0fd36f..082190d 100644
      #[cfg(target_os = "android")]
      let galaxy_xr = alvr_system_info::model_name() == "SM-I610";
      #[cfg(not(target_os = "android"))]
-@@ -291,11 +303,21 @@ pub fn entry_point() {
+@@ -291,11 +308,21 @@ pub fn entry_point() {
          // logcat once connected; the harness checks the DynamicPolicyManager vote against it.
          if exts.ext_performance_settings {
              match extra_extensions::perf_settings::level_from_property() {
@@ -2599,7 +2604,7 @@ index a0fd36f..082190d 100644
              }
          } else {
              alvr_common::error!("[PERF] XR_EXT_performance_settings not advertised");
-@@ -313,19 +335,37 @@ pub fn entry_point() {
+@@ -313,19 +340,37 @@ pub fn entry_point() {
              views_config[0].recommended_image_rect_height,
          );
  
@@ -2641,7 +2646,7 @@ index a0fd36f..082190d 100644
  
          // Whether anything is correcting for the ~26 ms the runtime predicts ahead. If the
          // compositor does not timewarp and ALVR does not either -- 20.13.0 hardcodes
-@@ -354,8 +394,10 @@ pub fn entry_point() {
+@@ -354,8 +399,10 @@ pub fn entry_point() {
              exts.fb_foveation,
              advertised_extension_names.len(),
          );
@@ -2654,7 +2659,7 @@ index a0fd36f..082190d 100644
  
          if exts.fb_color_space {
              xr_session
-@@ -365,8 +407,8 @@ pub fn entry_point() {
+@@ -365,8 +412,8 @@ pub fn entry_point() {
  
          let capabilities = ClientCapabilities {
              default_view_resolution,
@@ -2665,7 +2670,7 @@ index a0fd36f..082190d 100644
              encoder_high_profile: galaxy_xr || platform != Platform::Unknown,
              encoder_10_bits: galaxy_xr || platform != Platform::Unknown,
              encoder_av1: matches!(
-@@ -392,9 +434,16 @@ pub fn entry_point() {
+@@ -392,9 +439,16 @@ pub fn entry_point() {
              Rc::clone(&graphics_context),
              Arc::clone(&interaction_context),
              platform,
@@ -2683,7 +2688,7 @@ index a0fd36f..082190d 100644
          let lobby_body_tracking_config = BodyTrackingSourcesConfig {
              body_tracking_fb: Switch::Disabled,
              body_tracking_bd: Switch::Enabled(BodyTrackingBDConfig::BodyTracking {
-@@ -412,11 +461,16 @@ pub fn entry_point() {
+@@ -412,11 +466,16 @@ pub fn entry_point() {
              .select_sources(&lobby_interaction_sources);
  
          let mut session_running = false;
@@ -2701,7 +2706,7 @@ index a0fd36f..082190d 100644
          // Budget for the pre-xrWaitFrame poll: the previous frame's period, 72 Hz until known.
          let mut poll_interval = Duration::from_micros(13_889);
          'render_loop: loop {
-@@ -432,7 +486,17 @@ pub fn entry_point() {
+@@ -432,7 +491,17 @@ pub fn entry_point() {
                                  .begin(xr::ViewConfigurationType::PRIMARY_STEREO)
                                  .unwrap();
  
@@ -2720,7 +2725,7 @@ index a0fd36f..082190d 100644
  
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
  
-@@ -440,6 +504,7 @@ pub fn entry_point() {
+@@ -440,6 +509,7 @@ pub fn entry_point() {
                          }
                          xr::SessionState::STOPPING => {
                              session_running = false;
@@ -2728,7 +2733,7 @@ index a0fd36f..082190d 100644
  
                              passthrough_layer = None;
  
-@@ -494,7 +559,29 @@ pub fn entry_point() {
+@@ -494,7 +564,29 @@ pub fn entry_point() {
                          lobby.update_hud_message(&message);
                      }
                      ClientCoreEvent::StreamingStarted(config) => {
@@ -2758,7 +2763,7 @@ index a0fd36f..082190d 100644
  
                          let context = StreamContext::new(
                              Arc::clone(&core_context),
-@@ -512,6 +599,8 @@ pub fn entry_point() {
+@@ -512,6 +604,8 @@ pub fn entry_point() {
                          stream_context = Some(context);
                      }
                      ClientCoreEvent::StreamingStopped => {
@@ -2767,7 +2772,11 @@ index a0fd36f..082190d 100644
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -565,10 +654,19 @@ pub fn entry_point() {
+@@ -562,13 +656,23 @@ pub fn entry_point() {
+                 }
+             }
+ 
++            let frame_work_started = loop_probe.then(Instant::now);
              // Frame in hand before the runtime picks the display slot (stream.rs poll_frame).
              if early_poll {
                  if let Some(stream) = &mut stream_context {
@@ -2788,7 +2797,11 @@ index a0fd36f..082190d 100644
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -579,9 +677,45 @@ pub fn entry_point() {
+@@ -576,12 +680,49 @@ pub fn entry_point() {
+                     panic!();
+                 }
+             };
++            let wait_call_ms = wait_started.map_or(0.0, |s| s.elapsed().as_secs_f64() * 1000.0);
              let frame_interval =
                  Duration::from_nanos(frame_state.predicted_display_period.as_nanos() as _);
              poll_interval = frame_interval;
@@ -2835,7 +2848,7 @@ index a0fd36f..082190d 100644
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +739,15 @@ pub fn entry_point() {
+@@ -605,15 +746,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -2860,7 +2873,7 @@ index a0fd36f..082190d 100644
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,9 +755,10 @@ pub fn entry_point() {
+@@ -621,13 +762,16 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -2872,7 +2885,13 @@ index a0fd36f..082190d 100644
              let vsync_time =
                  Duration::from_nanos(frame_state.predicted_display_time.as_nanos() as _);
  
-@@ -654,22 +789,53 @@ pub fn entry_point() {
++            let begin_started = loop_probe.then(Instant::now);
+             xr_frame_stream.begin().unwrap();
++            let begin_ms = begin_started.map_or(0.0, |s| s.elapsed().as_secs_f64() * 1000.0);
+ 
+             if !frame_state.should_render {
+                 xr_frame_stream
+@@ -654,22 +798,65 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
@@ -2891,6 +2910,7 @@ index a0fd36f..082190d 100644
 +            }
 +            let streaming = stream_context.is_some();
 +            // Render the video independently of the client-local performance quad.
++            let render_started = loop_probe.then(Instant::now);
              let (layer, display_time) = if let Some(stream) = &mut stream_context {
                  stream.render(frame_interval, vsync_time)
              } else {
@@ -2903,6 +2923,7 @@ index a0fd36f..082190d 100644
 -                } else {
 -                    &[&layer.build()]
 -                };
++            let render_ms = render_started.map_or(0.0, |s| s.elapsed().as_secs_f64() * 1000.0);
 +            let projection = layer.build();
 +            let overlay_layer = performance_overlay.as_ref().and_then(|overlay| overlay.layer());
 +            let mut layers: Vec<&xr::CompositionLayerBase<_>> = Vec::with_capacity(3);
@@ -2920,21 +2941,31 @@ index a0fd36f..082190d 100644
 +            if let Some(started) = end_started {
 +                loop_samples += 1;
 +                loop_wait_sum += waited_ms;
++                loop_wait_call_sum += wait_call_ms;
++                loop_begin_sum += begin_ms;
++                loop_render_sum += render_ms;
++                let work_ms = frame_work_started.unwrap().elapsed().as_secs_f64() * 1000.0;
++                loop_work_sum += work_ms;
++                loop_work_max = loop_work_max.max(work_ms);
 +                loop_end_sum += started.elapsed().as_secs_f64() * 1000.0;
 +                let time_delta_ms = (end_time.as_nanos() - to_xr_time(display_time).as_nanos()) as f64 / 1e6;
 +                if loop_samples >= 120 {
-+                    error!("[Q3PW_LOOP] samples={} wait_mean_ms={:.3} end_mean_ms={:.3} runtime_display_time={} end_minus_source_ms={:.3} overlay_mean_cpu_ms={:.3} overlay_max_cpu_ms={:.3}",
++                    error!("[Q3PW_LOOP] samples={} wait_mean_ms={:.3} end_mean_ms={:.3} runtime_display_time={} end_minus_source_ms={:.3} overlay_mean_cpu_ms={:.3} overlay_max_cpu_ms={:.3} wait_call_mean_ms={:.3} begin_mean_ms={:.3} render_mean_ms={:.3} frame_work_mean_ms={:.3} frame_work_max_ms={:.3}",
 +                        loop_samples, loop_wait_sum / loop_samples as f64,
 +                        loop_end_sum / loop_samples as f64, use_runtime_display_time, time_delta_ms,
-+                        loop_overlay_sum / loop_samples as f64, loop_overlay_max);
++                        loop_overlay_sum / loop_samples as f64, loop_overlay_max,
++                        loop_wait_call_sum / loop_samples as f64, loop_begin_sum / loop_samples as f64,
++                        loop_render_sum / loop_samples as f64, loop_work_sum / loop_samples as f64, loop_work_max);
 +                    loop_samples = 0; loop_wait_sum = 0.0; loop_end_sum = 0.0;
++                    loop_wait_call_sum = 0.0; loop_begin_sum = 0.0; loop_render_sum = 0.0;
++                    loop_work_sum = 0.0; loop_work_max = 0.0;
 +                    loop_overlay_sum = 0.0; loop_overlay_max = 0.0;
 +                }
 +            }
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +864,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +885,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
@@ -3374,7 +3405,7 @@ index 0000000..766b412
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..37e157c 100644
+index b87dfe9..362dbf1 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -59,17 +59,9 @@ impl ParsedStreamConfig {
@@ -3398,7 +3429,7 @@ index b87dfe9..37e157c 100644
              upscaling: config.settings.video.upscaling.as_option().cloned(),
              force_software_decoder: config.settings.video.force_software_decoder,
              max_buffering_frames: config.settings.video.max_buffering_frames,
-@@ -88,16 +80,25 @@ pub struct StreamContext {
+@@ -88,16 +80,28 @@ pub struct StreamContext {
      view_reference_space: Arc<xr::Space>,
      swapchains: [xr::Swapchain<xr::OpenGlEs>; 2],
      last_good_view_params: [ViewParams; 2],
@@ -3424,10 +3455,13 @@ index b87dfe9..37e157c 100644
 +    pending_frame_selected_at: Option<Instant>,
 +    pre_wait_stats: [u64; 5], // polls, hits, consumed held frames, total hold us, max hold us
 +    pre_wait_last_log: Instant,
++    selection_probe: bool,
++    // held/immediate/late/empty/copy-pending/no-decoder outcomes, total/max CPU us
++    selection_stats: [u64; 8],
  }
  
  impl StreamContext {
-@@ -115,12 +116,6 @@ impl StreamContext {
+@@ -115,12 +119,6 @@ impl StreamContext {
  
          let xr_exts = xr_session.instance().exts();
  
@@ -3440,7 +3474,7 @@ index b87dfe9..37e157c 100644
          let foveation_profile = if let Some(config) = &config.clientside_foveation_config {
              if xr_exts.fb_swapchain_update_state.is_some()
                  && xr_exts.fb_foveation.is_some()
-@@ -228,6 +223,10 @@ impl StreamContext {
+@@ -228,6 +226,10 @@ impl StreamContext {
              view_reference_space,
              swapchains,
              last_good_view_params: [ViewParams::default(); 2],
@@ -3451,7 +3485,7 @@ index b87dfe9..37e157c 100644
              input_thread: None,
              input_thread_running,
              config,
-@@ -235,8 +234,23 @@ impl StreamContext {
+@@ -235,8 +237,26 @@ impl StreamContext {
              renderer,
              decoder: None,
              pending_frame: None,
@@ -3466,6 +3500,9 @@ index b87dfe9..37e157c 100644
 +            pending_frame_selected_at: None,
 +            pre_wait_stats: [0; 5],
 +            pre_wait_last_log: Instant::now(),
++            selection_probe: platform == Platform::Quest3
++                && crate::extra_extensions::perf_settings::system_property("debug.q3pw.loop_probe") == "1",
++            selection_stats: [0; 8],
          };
  
 +        alvr_graphics::log_quest_experiment(format!(
@@ -3475,12 +3512,13 @@ index b87dfe9..37e157c 100644
          this.update_reference_space();
  
          this
-@@ -310,6 +324,22 @@ impl StreamContext {
+@@ -310,6 +330,23 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
 +            self.pending_frame = None;
 +            self.pending_frame_selected_at = None;
++            self.selection_stats = [0; 8];
 +            self.pre_wait_stats = [0; 5];
 +            self.pre_wait_last_log = Instant::now();
 +            self.released_eye_images_valid = false;
@@ -3498,7 +3536,7 @@ index b87dfe9..37e157c 100644
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +368,42 @@ impl StreamContext {
+@@ -338,12 +375,42 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -3543,7 +3581,7 @@ index b87dfe9..37e157c 100644
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +415,25 @@ impl StreamContext {
+@@ -355,8 +422,25 @@ impl StreamContext {
          }
      }
  
@@ -3569,13 +3607,20 @@ index b87dfe9..37e157c 100644
      }
  
      pub fn render(
-@@ -368,11 +445,69 @@ impl StreamContext {
+@@ -364,15 +448,96 @@ impl StreamContext {
+         frame_interval: Duration,
+         vsync_time: Duration,
+     ) -> (ProjectionLayerBuilder, Duration) {
++        let selection_started = self.selection_probe.then(Instant::now);
+         let frame_poll_deadline = Instant::now()
              + Duration::from_secs_f32(
                  frame_interval.as_secs_f32() * DECODER_MAX_TIMEOUT_MULTIPLIER,
              );
 -        let mut frame_result = self.pending_frame.take();
 +        let copy_ready = self.poll_eye_copy();
 +        let mut frame_result = if copy_ready { self.pending_frame.take() } else { None };
++        let held_ready = frame_result.is_some();
++        let mut immediate_ready = false;
 +        if frame_result.is_some() {
 +            if let Some(selected_at) = self.pending_frame_selected_at.take() {
 +                let hold_us = selected_at.elapsed().as_micros() as u64;
@@ -3607,6 +3652,7 @@ index b87dfe9..37e157c 100644
 -            while frame_result.is_none() && Instant::now() < frame_poll_deadline {
 +            if copy_ready && frame_result.is_none() {
                  frame_result = source.get_frame();
++                immediate_ready = frame_result.is_some();
 +            }
 +            // An optimized decoder can finish just after the nonblocking poll.
 +            // Wait only for an empty ready queue, never while an eye copy holds a
@@ -3638,10 +3684,29 @@ index b87dfe9..37e157c 100644
 +                    self.frame_wait_stats[2] as f64 / self.frame_wait_stats[0] as f64, self.frame_wait_stats[3]));
 +                self.frame_wait_stats = [0; 4];
 +                self.frame_wait_last_log = Instant::now();
++            }
++        }
++
++        if let Some(started) = selection_started.filter(|_| latest_only) {
++            let outcome = if !copy_ready { 4 } else if self.decoder.is_none() { 5 }
++                else if held_ready { 0 } else if immediate_ready { 1 }
++                else if frame_result.is_some() { 2 } else { 3 };
++            let elapsed_us = started.elapsed().as_micros() as u64;
++            self.selection_stats[outcome] += 1;
++            self.selection_stats[6] += elapsed_us;
++            self.selection_stats[7] = self.selection_stats[7].max(elapsed_us);
++            let slots: u64 = self.selection_stats[..6].iter().sum();
++            if slots >= 120 {
++                alvr_graphics::log_quest_experiment(format!(
++                    "[Q3PW_SELECTION] slots={} held={} immediate={} late={} empty={} copy_pending={} no_decoder={} select_mean_us={:.1} select_max_us={}",
++                    slots, self.selection_stats[0], self.selection_stats[1], self.selection_stats[2],
++                    self.selection_stats[3], self.selection_stats[4], self.selection_stats[5],
++                    self.selection_stats[6] as f64 / slots as f64, self.selection_stats[7]));
++                self.selection_stats = [0; 8];
              }
          }
  
-@@ -401,37 +536,80 @@ impl StreamContext {
+@@ -401,37 +566,80 @@ impl StreamContext {
              ]);
          }
  
@@ -3691,9 +3756,7 @@ index b87dfe9..37e157c 100644
 +            self.swapchains[1]
 +                .wait_image(xr::Duration::INFINITE)
 +                .unwrap();
- 
--        self.swapchains[0].release_image().unwrap();
--        self.swapchains[1].release_image().unwrap();
++
 +            let render_start = Instant::now();
 +            let acquire_wait_ms = acquire_start.elapsed().as_secs_f32() * 1000.0;
 +
@@ -3720,7 +3783,9 @@ index b87dfe9..37e157c 100644
 +                    self.config.passthrough.as_ref(),
 +                )
 +            };
-+
+ 
+-        self.swapchains[0].release_image().unwrap();
+-        self.swapchains[1].release_image().unwrap();
 +            if !buffer_ptr.is_null() {
 +                if let Some(fence) = self.renderer.take_release_fence() {
 +                    let buffer = fence.buffer as *mut std::ffi::c_void;
@@ -3752,7 +3817,7 @@ index b87dfe9..37e157c 100644
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +671,8 @@ impl StreamContext {
+@@ -493,6 +701,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
