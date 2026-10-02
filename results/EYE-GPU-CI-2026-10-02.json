@@ -1,0 +1,40 @@
+{
+  "run_id": 37015134369,
+  "head_sha": "3ddd23acb81fa57a7b77853d727ecd0617a54266",
+  "version": "20.13.0-quest3.pyro.25",
+  "android_hashes_and_cert_verified": true,
+  "native_libraries_match_APK": true,
+  "native_libraries_identical_to_21": true,
+  "pyroclient_identical_to_22_846a4a5": true,
+  "server_build_pending": false,
+  "all_jobs_passed": true,
+  "windows_hashes_and_embedded_version_verified": true,
+  "status": "matching_cloud_pair_verified_before_Quest_timer_measurement",
+  "ci_url": "https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37015134369",
+  "cloud_python_tests": 38,
+  "additional_local_python_tests": 43,
+  "local_reader_sha": "c65e436",
+  "probe_default": "off",
+  "native120_goal_accepted": false,
+  "known_limitations": [
+    "Instrumentation build; not a performance improvement",
+    "GPU timer covers GLES eye draws, not optical presentation",
+    "15-second screens cannot establish sustained performance"
+  ],
+  "artifact_hashes": {
+    "android": {
+      "APK-CERTIFICATE.txt": "19579aee5e2153e65b88ee5d86b93b07058b80a1a952af5c38dbc8a24637a02d",
+      "LICENSES.zip": "4f803fbf09b487a7cc75420a89d94acd5a1796c1c9ce11190c1469d2bcf75169",
+      "Quest3-Pyrowave-dev.apk": "52f08c28006989044f3348385045fb37b63b8bf118b07ddeed24d7f461b1fc92",
+      "libc++_shared.so": "f9992c4ba6b7c5a716e3a202fceb1ce029d6a2b0605838ac6b3219f489dd7970",
+      "libpyroclient.so": "ef5c82902a7e9cd8422416e5011774259813be4bb58bf76cf9a9b0d6e1a0e3bf",
+      "libpyrowave-shared.so": "9c5ba02ba372745f23289a5ebd9555a6b2a21a9672a3ad545143c26889c09848",
+      "pyroclient_test": "547da209d7bdfa2f5cd7e11503f6ccf8969c6e5d39dd60593b324cab199ef2f8",
+      "pyrowave_android": "0d940d943a7eb05e9c0b6335f85ac41dd308f824042fafa46a78afcff6cd31d9",
+      "udprecv-android": "b8e092ec3dcd0a2d2640d1296e8abe0d4f0537c4cbb59f882329620c3a8aac05"
+    },
+    "windows": {
+      "Quest3-Pyrowave-Windows.zip": "fd1981b70bae9dfb33489f64a31ff5c2814da31cd2258a4d7543a36cd16a4b6b"
+    }
+  }
+}

@@ -52,8 +52,11 @@ Tile rendering can affect the meaning and overhead of timer boundaries; use
 off/on/off screens to check diagnostic bias before drawing performance conclusions.
 [Khronos timer-query semantics](https://registry.khronos.org/OpenGL/extensions/EXT/EXT_disjoint_timer_query.txt).
 
-This is an instrumentation candidate, not an optimization or a validated build.
-Matching cloud APK/server verification and Quest measurements are required.
+The matching `.25` cloud APK/server built successfully and passed artifact hash,
+signing, embedded-version and packaged-native-library verification. Native decoder
+libraries remain byte-identical to `.21`. This is an instrumentation candidate,
+not a measured optimization; Quest measurements remain required.
+[Build verification](../results/EYE-GPU-CI-2026-10-02.json).
 
 ### Presentation migration
 
