@@ -1,0 +1,265 @@
+{
+  "schema_version": 1,
+  "binary_source": "4de9944dd0079296f7bfd3756c59735e19c81383",
+  "version": "20.13.0-quest3.pyro.14",
+  "encoded_per_eye": [
+    2080,
+    2208
+  ],
+  "requested_and_runtime_confirmed_hz": 120,
+  "chroma": "4:2:0",
+  "foveated_encoding": false,
+  "wavelet": "Haar",
+  "decode": "compute Vulkan",
+  "transport": "native ALVR USB/ADB TCP",
+  "manual_target_mbps": 1000,
+  "source_per_eye": [
+    2544,
+    2704
+  ],
+  "method": "Same static asymmetric colored quality scene, 3-second settle and sequential 15-second off/on/off screens; actual source coverage checked. GPU 690 MHz; battery 43-44 C. These are screening runs, not thermal endurance acceptance.",
+  "cases": [
+    {
+      "order": 1,
+      "batch_requested": 0,
+      "duration_s": 15,
+      "fresh_submissions_fps": 98.752531334311,
+      "p1_nominal_client_fps": 59.987548000000004,
+      "gpu_decode_ms": {
+        "n": 1450,
+        "p01": 3.747339534,
+        "p50": 4.6358853,
+        "p95": 5.33743737,
+        "p99": 5.517982295,
+        "max": 5.7748437
+      },
+      "decode_completion_ms": {
+        "n": 1450,
+        "p01": 8.3032921,
+        "p50": 9.425313,
+        "p95": 10.242493549999999,
+        "p99": 11.04102698,
+        "max": 11.640105
+      },
+      "cpu_record_ms": {
+        "n": 1450,
+        "p01": 0.6015774700000001,
+        "p50": 0.865756,
+        "p95": 1.0991256,
+        "p99": 1.1950047400000001,
+        "max": 1.528646
+      },
+      "cpu_submit_wait_ms": {
+        "n": 1450,
+        "p01": 7.39698729,
+        "p50": 8.538021,
+        "p95": 9.37458195,
+        "p99": 10.14917429,
+        "max": 10.733542
+      },
+      "color_convert_ms": {
+        "n": 1450,
+        "p01": 1.84957705,
+        "p50": 2.5355729,
+        "p95": 2.865742015,
+        "p99": 3.354982722,
+        "max": 3.8068228
+      },
+      "alvr_pipeline_latency_ms": {
+        "n": 1481,
+        "p01": 69.0754638,
+        "p50": 77.42989,
+        "p95": 80.36416,
+        "p99": 88.294053,
+        "max": 88.51154
+      },
+      "frame_timestamp_gap_ms": {
+        "n": 1480,
+        "p01": 5.4569786,
+        "p50": 8.376251,
+        "p95": 16.671399450000003,
+        "p99": 19.452026869999997,
+        "max": 24.871981
+      },
+      "actual_payload_mbps": {
+        "n": 1481,
+        "p01": 944.463388,
+        "p50": 1003.6061,
+        "p95": 1035.7141,
+        "p99": 1058.672408,
+        "max": 1089.7702
+      },
+      "gpu_clock_mhz": [
+        690.0
+      ],
+      "battery_temperature_c": [
+        43.0,
+        43.0
+      ]
+    },
+    {
+      "order": 2,
+      "batch_requested": 1,
+      "duration_s": 15,
+      "fresh_submissions_fps": 97.73473028841754,
+      "p1_nominal_client_fps": 59.9867512,
+      "gpu_decode_ms": {
+        "n": 1487,
+        "p01": 3.811242692,
+        "p50": 4.716198,
+        "p95": 5.4215463999999995,
+        "p99": 5.612021574000002,
+        "max": 5.7591667
+      },
+      "decode_completion_ms": {
+        "n": 1487,
+        "p01": 8.14235462,
+        "p50": 9.597501,
+        "p95": 10.2181624,
+        "p99": 11.033034380000002,
+        "max": 11.254845
+      },
+      "cpu_record_ms": {
+        "n": 1487,
+        "p01": 0.53229394,
+        "p50": 0.817656,
+        "p95": 1.0911406000000001,
+        "p99": 1.2768253600000001,
+        "max": 1.896771
+      },
+      "cpu_submit_wait_ms": {
+        "n": 1487,
+        "p01": 7.46718266,
+        "p50": 8.745834,
+        "p95": 9.4190268,
+        "p99": 10.122558580000002,
+        "max": 10.49521
+      },
+      "color_convert_ms": {
+        "n": 1487,
+        "p01": 1.849943688,
+        "p50": 2.523073,
+        "p95": 2.82760938,
+        "p99": 3.347170750000004,
+        "max": 3.6202602
+      },
+      "alvr_pipeline_latency_ms": {
+        "n": 1467,
+        "p01": 74.5827256,
+        "p50": 83.368585,
+        "p95": 83.5261028,
+        "p99": 83.5717832,
+        "max": 91.79348
+      },
+      "frame_timestamp_gap_ms": {
+        "n": 1466,
+        "p01": 8.11815165,
+        "p50": 8.341043,
+        "p95": 16.761981,
+        "p99": 16.8671318,
+        "max": 25.091357
+      },
+      "actual_payload_mbps": {
+        "n": 1467,
+        "p01": 944.8944004,
+        "p50": 1004.70726,
+        "p95": 1038.7442740000001,
+        "p99": 1057.5829019999999,
+        "max": 1089.7192
+      },
+      "gpu_clock_mhz": [
+        640.0
+      ],
+      "battery_temperature_c": [
+        43.0,
+        43.0
+      ]
+    },
+    {
+      "order": 3,
+      "batch_requested": 0,
+      "duration_s": 15,
+      "fresh_submissions_fps": 99.47231404150789,
+      "p1_nominal_client_fps": 59.9924856,
+      "gpu_decode_ms": {
+        "n": 1555,
+        "p01": 3.701871766,
+        "p50": 4.6060414,
+        "p95": 5.4936197899999994,
+        "p99": 5.69883824,
+        "max": 5.965052
+      },
+      "decode_completion_ms": {
+        "n": 1555,
+        "p01": 8.07328326,
+        "p50": 9.321616,
+        "p95": 10.1747354,
+        "p99": 10.77671656,
+        "max": 11.223439
+      },
+      "cpu_record_ms": {
+        "n": 1555,
+        "p01": 0.60949618,
+        "p50": 0.879687,
+        "p95": 1.0983384999999999,
+        "p99": 1.2913563200000011,
+        "max": 1.648802
+      },
+      "cpu_submit_wait_ms": {
+        "n": 1555,
+        "p01": 7.29836858,
+        "p50": 8.435365,
+        "p95": 9.2671105,
+        "p99": 9.772444060000002,
+        "max": 10.465574
+      },
+      "color_convert_ms": {
+        "n": 1555,
+        "p01": 1.829279128,
+        "p50": 2.5677605,
+        "p95": 2.9767082599999997,
+        "p99": 3.215060368,
+        "max": 3.5916665
+      },
+      "alvr_pipeline_latency_ms": {
+        "n": 1493,
+        "p01": 76.32490279999999,
+        "p50": 76.89500000000001,
+        "p95": 85.36836,
+        "p99": 87.9770824,
+        "max": 88.136345
+      },
+      "frame_timestamp_gap_ms": {
+        "n": 1492,
+        "p01": 5.577051,
+        "p50": 8.346537,
+        "p95": 16.7639989,
+        "p99": 19.44830528,
+        "max": 25.213024
+      },
+      "actual_payload_mbps": {
+        "n": 1493,
+        "p01": 945.9140152,
+        "p50": 1003.7851,
+        "p95": 1031.373664,
+        "p99": 1060.8313159999998,
+        "max": 1074.8881
+      },
+      "gpu_clock_mhz": [
+        690.0
+      ],
+      "battery_temperature_c": [
+        43.0,
+        44.0
+      ]
+    }
+  ],
+  "decision": "Keep batch dequantization off. No live throughput/completion benefit in this screen despite the earlier native-only improvement. Repeat before attributing the small regression; native 120 fresh FPS remains unmet.",
+  "limitations": [
+    "Actual payload is ALVR video payload, not USB wire utilization.",
+    "ALVR pipeline latency is estimated, not optical motion-to-photon.",
+    "Battery temperature is not GPU die temperature.",
+    "Stationary unworn headset with temporarily paused Guardian; no human in-headset acceptance.",
+    "Batch property requested; separate per-dispatch activation telemetry is not available."
+  ]
+}

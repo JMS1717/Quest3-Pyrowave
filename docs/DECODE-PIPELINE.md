@@ -179,6 +179,14 @@ validate sustained 120 FPS or thermal endurance. See the sanitized
 
 ## Optional batched dequant (.14 candidate)
 
+The first matched live screen is now available in
+[BATCH-DEQUANT-LIVE-2026-10-01.json](../results/BATCH-DEQUANT-LIVE-2026-10-01.json).
+Three sequential **15-second** off/on/off windows delivered **98.75 / 97.73 /
+99.47 fresh FPS**, with median completion **9.43 / 9.60 / 9.32 ms**. GPU clock was
+690 MHz throughout; battery temperature was 43–44°C. This did not reproduce the
+native-only improvement, so batching remains off. These quick screens do not
+establish a thermal endurance result or sustained fresh 120 FPS.
+
 The dequantizer previously dispatched each subband separately. A new opt-in path
 uses dispatch Z for adjacent bands of one component/level, after checking equal
 block count/stride and contiguous block offsets. Each workgroup retains its own
