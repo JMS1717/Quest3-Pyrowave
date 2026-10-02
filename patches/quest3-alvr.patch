@@ -206,7 +206,7 @@ index 7cead7b..68e3db9 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..c40e18a 100644
+index ae00ce8..9f2f0a5 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..c40e18a 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.29"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -668,10 +668,15 @@ index f764033..d636442 100644
                          decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
                      }
 diff --git a/alvr/client_core/src/video_decoder/mod.rs b/alvr/client_core/src/video_decoder/mod.rs
-index 4d2e699..ab78fee 100644
+index 4d2e699..f929b8b 100644
 --- a/alvr/client_core/src/video_decoder/mod.rs
 +++ b/alvr/client_core/src/video_decoder/mod.rs
-@@ -4,6 +4,8 @@ mod android;
+@@ -1,9 +1,13 @@
++#[cfg(unix)]
++mod ready_frames;
+ #[cfg(target_os = "android")]
+ mod android;
+ #[cfg(target_os = "android")]
  mod pyrowave;
  #[cfg(target_os = "android")]
  mod pyrowave_udp;
@@ -680,7 +685,7 @@ index 4d2e699..ab78fee 100644
  pub mod telemetry;
  
  use alvr_common::anyhow::Result;
-@@ -53,7 +55,10 @@ impl PyroWaveConfig {
+@@ -53,7 +57,10 @@ impl PyroWaveConfig {
  pub fn parse_pyrowave_config(buffer: &[u8]) -> Result<PyroWaveConfig> {
      use alvr_common::anyhow::bail;
      if buffer.len() < 10 {
@@ -692,7 +697,7 @@ index 4d2e699..ab78fee 100644
      }
      let width = u32::from_le_bytes(buffer[0..4].try_into().unwrap());
      let height = u32::from_le_bytes(buffer[4..8].try_into().unwrap());
-@@ -68,7 +73,11 @@ pub fn parse_pyrowave_config(buffer: &[u8]) -> Result<PyroWaveConfig> {
+@@ -68,7 +75,11 @@ pub fn parse_pyrowave_config(buffer: &[u8]) -> Result<PyroWaveConfig> {
          0
      };
      // Byte 13 (Experiment 2): 0 = CDF 9/7, 1 = CDF 5/3. Absent on older servers.
@@ -705,7 +710,7 @@ index 4d2e699..ab78fee 100644
      let decode_path = match buffer.get(14) {
          Some(&path @ (1 | 2)) => path,
          _ => 0,
-@@ -79,7 +88,11 @@ pub fn parse_pyrowave_config(buffer: &[u8]) -> Result<PyroWaveConfig> {
+@@ -79,7 +90,11 @@ pub fn parse_pyrowave_config(buffer: &[u8]) -> Result<PyroWaveConfig> {
          chroma444: buffer[8] != 0,
          full_range: buffer[9] != 0,
          udp,
@@ -718,7 +723,7 @@ index 4d2e699..ab78fee 100644
          wavelet,
          decode_path,
      })
-@@ -99,7 +112,12 @@ pub enum FrameDecision {
+@@ -99,7 +114,12 @@ pub enum FrameDecision {
      Drop,
  }
  
@@ -732,7 +737,7 @@ index 4d2e699..ab78fee 100644
      if complete {
          FrameDecision::DecodeComplete
      } else if age < deadline {
-@@ -130,25 +148,115 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
+@@ -130,23 +150,136 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
      let mean = samples.iter().sum::<f32>() / n as f32;
      format!(
          "min {:.2} mean {:.2} p50 {:.2} p95 {:.2} p99 {:.2} max {:.2}",
@@ -766,6 +771,8 @@ index 4d2e699..ab78fee 100644
 +    leased: usize,
 +    pending_release_token: u64,
 +    leased_release_token: u64,
++    #[cfg(unix)]
++    ready_fds: ready_frames::ReadyFrames,
  }
  
  impl FrameSlot {
@@ -805,6 +812,18 @@ index 4d2e699..ab78fee 100644
 +    }
 +    fn publish_inner(&self, timestamp: Duration, buffer: usize, order: Option<u64>, token: u64) -> bool {
 +        let mut state = self.inner.lock();
++        Self::publish_locked(&mut state, timestamp, buffer, order, token)
++    }
++    #[cfg(unix)]
++    pub fn publish_ready_fenced(&self, timestamp: Duration, buffer: usize, order: u64,
++                                token: u64, ready_fd: std::os::fd::OwnedFd) -> bool {
++        let mut state = self.inner.lock();
++        if !Self::publish_locked(&mut state, timestamp, buffer, Some(order), token) { return false; }
++        state.ready_fds.replace_pending(Some(ready_fd));
++        true
++    }
++    fn publish_locked(state: &mut FrameSlotState, timestamp: Duration, buffer: usize,
++                      order: Option<u64>, token: u64) -> bool {
 +        // Use ingress order: multiple game frames can share a tracking timestamp.
 +        // Keep the watermark after take() to reject late independent completions.
 +        if let Some(order) = order {
@@ -818,6 +837,8 @@ index 4d2e699..ab78fee 100644
 +            state.superseded += 1;
 +        }
 +        state.pending_release_token = token;
++        #[cfg(unix)]
++        { state.ready_fds.replace_pending(None); }
 +        true
 +    }
 +    pub fn superseded(&self) -> u64 {
@@ -830,6 +851,8 @@ index 4d2e699..ab78fee 100644
 +        state.leased = frame.1;
 +        state.leased_release_token = state.pending_release_token;
 +        state.pending_release_token = 0;
++        #[cfg(unix)]
++        { state.ready_fds.lease(frame.1); }
 +        state.awaiting_copy_submit = state.handoff_enabled;
 +        Some(frame)
 +    }
@@ -843,20 +866,27 @@ index 4d2e699..ab78fee 100644
 +        let state = self.inner.lock();
 +        if state.leased == buffer { state.leased_release_token } else { 0 }
      }
- }
- 
++    #[cfg(unix)]
++    pub fn take_ready_fd(&self, buffer: usize) -> Option<std::os::fd::OwnedFd> {
++        let mut state = self.inner.lock();
++        if buffer != 0 && state.leased == buffer { state.ready_fds.consume(buffer) } else { None }
++    }
++}
++
 +/// Bound the experimental independent TCP decoders; the default stays one worker.
 +pub fn pyrowave_worker_count(value: &str) -> usize {
 +    if value.trim() == "2" { 2 } else { 1 }
-+}
-+
+ }
+ 
  #[derive(Clone, Default, PartialEq)]
- pub struct VideoDecoderConfig {
-     pub codec: CodecType,
-@@ -203,6 +311,31 @@ pub struct VideoDecoderSource {
+@@ -203,6 +336,35 @@ pub struct VideoDecoderSource {
  }
  
  impl VideoDecoderSource {
++    #[cfg(target_os = "android")]
++    pub fn take_ready_fd(&self, buffer: *mut std::ffi::c_void) -> Option<std::os::fd::OwnedFd> {
++        if let SourceInner::PyroWave(source) = &self.inner { source.take_ready_fd(buffer) } else { None }
++    }
 +    /// TCP-only experimental native release-fence handoff. Zero means unsupported.
 +    pub fn release_token(&self, buffer: *mut std::ffi::c_void) -> u64 {
 +        #[cfg(target_os = "android")]
@@ -885,7 +915,7 @@ index 4d2e699..ab78fee 100644
      /// If a frame is available, return the timestamp and the AHardwareBuffer.
      pub fn get_frame(&mut self) -> Option<(Duration, *mut std::ffi::c_void)> {
          #[cfg(target_os = "android")]
-@@ -229,7 +362,9 @@ fn logcat_info(tag: &str, message: &str) {
+@@ -229,7 +391,9 @@ fn logcat_info(tag: &str, message: &str) {
      }
      let tag = std::ffi::CString::new(tag).unwrap_or_default();
      let text = std::ffi::CString::new(message).unwrap_or_default();
@@ -896,7 +926,7 @@ index 4d2e699..ab78fee 100644
  }
  
  // report_frame_decoded: (target_timestamp: Duration) -> ()
-@@ -249,7 +384,9 @@ pub fn create_decoder(
+@@ -249,7 +413,9 @@ pub fn create_decoder(
              }
          }
          if config.codec == CodecType::PyroWave
@@ -907,7 +937,7 @@ index 4d2e699..ab78fee 100644
          {
              let (sink, source) = pyrowave_udp::video_decoder_split(
                  config.clone(),
-@@ -304,6 +441,22 @@ pub fn create_decoder(
+@@ -304,6 +470,22 @@ pub fn create_decoder(
  mod tests {
      use super::*;
  
@@ -930,7 +960,7 @@ index 4d2e699..ab78fee 100644
      #[test]
      fn config_round_trips_the_encoder_blob() {
          let mut buf = Vec::new();
-@@ -312,53 +465,97 @@ mod tests {
+@@ -312,53 +494,97 @@ mod tests {
          buf.push(1);
          buf.push(0);
          let c = parse_pyrowave_config(&buf).unwrap();
@@ -1041,7 +1071,7 @@ index 4d2e699..ab78fee 100644
          assert_eq!(dist(&mut Vec::new()), "-");
      }
  
-@@ -392,4 +589,84 @@ mod tests {
+@@ -392,4 +618,84 @@ mod tests {
          assert_eq!(slot.take(), Some((Duration::from_millis(2), 0x20)));
          assert!(slot.take().is_none());
      }
@@ -1127,7 +1157,7 @@ index 4d2e699..ab78fee 100644
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601..8593ff3 100644
+index 2e22601..53ca49f 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -1143,7 +1173,7 @@ index 2e22601..8593ff3 100644
  use super::{parse_pyrowave_config, FrameSlot, VideoDecoderConfig};
  use alvr_common::{
      anyhow::{bail, Result},
-@@ -14,8 +14,8 @@ use alvr_common::{
+@@ -14,11 +14,12 @@ use alvr_common::{
  use std::{
      ffi::c_void,
      sync::{
@@ -1154,7 +1184,11 @@ index 2e22601..8593ff3 100644
      },
      thread::{self, JoinHandle},
      time::Duration,
-@@ -33,36 +33,55 @@ struct FrameInfo {
++    os::fd::{FromRawFd, OwnedFd},
+ };
+ 
+ #[repr(C)]
+@@ -33,36 +34,58 @@ struct FrameInfo {
      convert_ms: f64,
      total_ms: f64,
      complete: i32,
@@ -1184,6 +1218,9 @@ index 2e22601..8593ff3 100644
 +        protected_b: *mut c_void,
      ) -> i32;
      fn pyroclient_destroy(c: *mut PyroClient);
++    fn pyroclient_submit_guarded(c: *mut PyroClient, out: *mut *mut c_void,
++        info: *mut FrameInfo, protected_a: *mut c_void, protected_b: *mut c_void, ready_fd: *mut i32) -> i32;
++    fn pyroclient_finish_pending(c: *mut PyroClient, info: *mut FrameInfo) -> i32;
 +    fn pyroclient_output_release_token(buffer: *mut c_void) -> u64;
 +    fn pyroclient_attach_release_fd(buffer: *mut c_void, token: u64, fd: i32) -> i32;
  }
@@ -1214,7 +1251,7 @@ index 2e22601..8593ff3 100644
          self.pending.ready.notify_one();
          Ok(true)
      }
-@@ -71,13 +90,25 @@ impl VideoDecoderSink {
+@@ -71,13 +94,28 @@ impl VideoDecoderSink {
  pub struct VideoDecoderSource {
      running: Arc<AtomicBool>,
      pending: Arc<Pending>,
@@ -1224,6 +1261,9 @@ index 2e22601..8593ff3 100644
  }
  
  impl VideoDecoderSource {
++    pub fn take_ready_fd(&self, buffer: *mut c_void) -> Option<OwnedFd> {
++        self.decoded.take_ready_fd(buffer as usize)
++    }
 +    pub fn release_token(&self, buffer: *mut c_void) -> u64 {
 +        self.decoded.leased_release_token(buffer as usize)
 +    }
@@ -1242,7 +1282,7 @@ index 2e22601..8593ff3 100644
      }
  }
  
-@@ -85,7 +116,7 @@ impl Drop for VideoDecoderSource {
+@@ -85,7 +123,7 @@ impl Drop for VideoDecoderSource {
      fn drop(&mut self) {
          self.running.store(false, Ordering::Relaxed);
          self.pending.ready.notify_all();
@@ -1251,7 +1291,7 @@ index 2e22601..8593ff3 100644
              t.join().ok();
          }
      }
-@@ -99,14 +130,42 @@ pub fn video_decoder_split(
+@@ -99,14 +137,50 @@ pub fn video_decoder_split(
      let pending = Arc::new(Pending {
          frame: Mutex::new(None),
          ready: Condvar::new(),
@@ -1281,6 +1321,14 @@ index 2e22601..8593ff3 100644
 +    let handoff = workers == 1 && &property[..property_len.max(0) as usize] == b"1";
 +    let property_len = unsafe { libc::__system_property_get(c"debug.q3pw.release_fd".as_ptr(), property.as_mut_ptr().cast()) };
 +    let release_requested = &property[..property_len.max(0) as usize] == b"1";
++    let async_len = unsafe { libc::__system_property_get(c"debug.q3pw.async_eye_copy".as_ptr(), property.as_mut_ptr().cast()) };
++    let async_requested = async_len == 1 && property[0] == b'1';
++    let ready_requested = workers == 1 && !handoff && !release_requested && !async_requested &&
++        [c"debug.q3pw.ready_fd", c"debug.q3pw.direct_eye_copy"].iter().all(|name| {
++            let len = unsafe { libc::__system_property_get(name.as_ptr(), property.as_mut_ptr().cast()) };
++            len == 1 && property[0] == b'1'
++        });
++    alvr_common::info!("[Q3PW_READY_FD] TCP requested={ready_requested} max_inflight=1 completion_verified_before_resource_reuse=true");
 +    if handoff { decoded.enable_copy_handoff(); }
 +    alvr_common::info!("[Q3PW_WORKERS] TCP independent decoders={workers} copy_handoff={handoff}");
 +    let report_frame_decoded = Arc::new(report_frame_decoded);
@@ -1296,13 +1344,15 @@ index 2e22601..8593ff3 100644
          move || {
              // Created here so every Vulkan call the library makes stays on this thread.
              let client = unsafe {
-@@ -129,63 +188,90 @@ pub fn video_decoder_split(
+@@ -129,63 +203,118 @@ pub fn video_decoder_split(
                  return;
              }
              let mut frames: u64 = 0;
 -            let mut failures: u64 = 0;
              let mut sum_total = 0.0f64;
 -            super::telemetry::start(cfg.width, cfg.height);
++            let mut submitted_early = 0u64;
++            let mut completed_early = 0u64;
 +            telemetry_started.call_once(|| super::telemetry::start(cfg.width, cfg.height));
              while running.load(Ordering::Relaxed) {
 +                if !decoded.wait_producer_ready(|| running.load(Ordering::Relaxed)) { break; }
@@ -1336,25 +1386,51 @@ index 2e22601..8593ff3 100644
 -                let rc = unsafe { pyroclient_decode(client, &mut out, &mut info) };
 -                if rc != 0 || out.is_null() {
 +                let protected = decoded.protected_buffers();
++                let mut ready_fd = -1;
 +                let rc = unsafe {
-+                    pyroclient_decode_guarded(
++                    if ready_requested { pyroclient_submit_guarded(client, &mut out, &mut info,
++                        protected[0] as *mut c_void, protected[1] as *mut c_void, &mut ready_fd) }
++                    else { pyroclient_decode_guarded(
 +                        client,
 +                        &mut out,
 +                        &mut info,
 +                        protected[0] as *mut c_void,
 +                        protected[1] as *mut c_void,
-+                    )
++                    ) }
 +                };
++                // Wrap immediately: rejection, superseding and teardown all close.
++                let ready_fd = (ready_fd >= 0).then(|| unsafe { OwnedFd::from_raw_fd(ready_fd) });
 +                if rc != 0 || out.is_null() || info.complete == 0 {
                      warn!("PyroWave: decode failed ({rc})");
 -                    failures += 1;
 +                    totals.lock().1 += 1;
++                    if matches!(rc, -2 | -5 | -6) {
++                        report_frame_decoded(Err(alvr_common::anyhow::anyhow!("PyroWave native submission failed; decoder stopped ({rc})")));
++                        break;
++                    }
                      continue;
                  }
 -                decoded.publish(timestamp, out as usize);
 -                report_frame_decoded(Ok(timestamp));
 +                let token = if release_requested { unsafe { pyroclient_output_release_token(out) } } else { 0 };
-+                if decoded.publish_fenced(timestamp, out as usize, order, token) {
++                let early = ready_fd.is_some();
++                let published = if let Some(fd) = ready_fd {
++                    submitted_early += 1;
++                    decoded.publish_ready_fenced(timestamp, out as usize, order, token, fd)
++                } else { decoded.publish_fenced(timestamp, out as usize, order, token) };
++                if early {
++                    // Frame is fenced, not completed. No packet/codec/context reuse
++                    // or completion counter may precede this verified CPU observation.
++                    if unsafe { pyroclient_finish_pending(client, &mut info) } != 0 {
++                        report_frame_decoded(Err(alvr_common::anyhow::anyhow!("PyroWave queued completion failed; decoder stopped")));
++                        break;
++                    }
++                    completed_early += 1;
++                    if completed_early <= 3 || completed_early % 120 == 0 {
++                        alvr_common::info!("[Q3PW_READY_FD] submitted={submitted_early} completed={completed_early} max_inflight=1");
++                    }
++                }
++                if published {
 +                    report_frame_decoded(Ok(timestamp));
 +                }
                  frames += 1;
@@ -3405,7 +3481,7 @@ index 0000000..766b412
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..4fad0e9 100644
+index b87dfe9..17dde56 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -59,17 +59,12 @@ impl ParsedStreamConfig {
@@ -3610,7 +3686,7 @@ index b87dfe9..4fad0e9 100644
      }
  
      pub fn render(
-@@ -364,15 +451,96 @@ impl StreamContext {
+@@ -364,15 +451,109 @@ impl StreamContext {
          frame_interval: Duration,
          vsync_time: Duration,
      ) -> (ProjectionLayerBuilder, Duration) {
@@ -3706,10 +3782,23 @@ index b87dfe9..4fad0e9 100644
 +                    self.selection_stats[3], self.selection_stats[4], self.selection_stats[5],
 +                    self.selection_stats[6] as f64 / slots as f64, self.selection_stats[7]));
 +                self.selection_stats = [0; 8];
++            }
++        }
++
++        // A ready FD orders the GPU read; it does not claim CPU completion.
++        // Reject before changing poses or acquiring eyes, preserving the last
++        // released image and its matching poses on a failed checked wait.
++        #[cfg(target_os = "android")]
++        if let Some((_, buffer)) = frame_result {
++            if let Some(fd) = self.decoder.as_ref().and_then(|(_, source)| source.take_ready_fd(buffer)) {
++                if !self.renderer.wait_source_ready(fd) {
++                    alvr_graphics::log_quest_experiment("[Q3PW_READY_FD] rejected_read preserve_previous_layer=true".into());
++                    frame_result = None;
++                }
              }
          }
  
-@@ -401,37 +569,80 @@ impl StreamContext {
+@@ -401,37 +582,80 @@ impl StreamContext {
              ]);
          }
  
@@ -3820,7 +3909,7 @@ index b87dfe9..4fad0e9 100644
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +704,8 @@ impl StreamContext {
+@@ -493,6 +717,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
@@ -5057,13 +5146,17 @@ index 0000000..832dd35
 +    }
 +}
 diff --git a/alvr/graphics/src/lib.rs b/alvr/graphics/src/lib.rs
-index 3485570..50472ab 100644
+index 3485570..490fe8c 100644
 --- a/alvr/graphics/src/lib.rs
 +++ b/alvr/graphics/src/lib.rs
-@@ -1,9 +1,15 @@
+@@ -1,9 +1,19 @@
 +mod direct_eye;
 +mod eye_timer;
 +mod native_release;
++#[cfg(unix)]
++mod native_ready;
++#[cfg(unix)]
++mod ready_wait;
  mod lobby;
 +mod performance;
  mod staging;
@@ -5076,7 +5169,7 @@ index 3485570..50472ab 100644
  
  use alvr_common::{
      glam::{Mat4, UVec2, Vec4},
-@@ -18,6 +24,11 @@ use wgpu::{
+@@ -18,6 +28,11 @@ use wgpu::{
      TextureFormat, TextureUsages, TextureView,
  };
  
@@ -5088,7 +5181,7 @@ index 3485570..50472ab 100644
  pub const SDR_FORMAT: TextureFormat = TextureFormat::Rgba8Unorm;
  pub const SDR_FORMAT_GL: u32 = gl::RGBA8;
  pub const GL_TEXTURE_EXTERNAL_OES: u32 = 0x8D65;
-@@ -209,6 +220,19 @@ pub struct GraphicsContext {
+@@ -209,6 +224,19 @@ pub struct GraphicsContext {
  }
  
  impl GraphicsContext {
@@ -5468,7 +5561,7 @@ index febd2c3..779de33 100644
          );
      }
 diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
-index 737b7d0..7f0f410 100644
+index 737b7d0..9f1548c 100644
 --- a/alvr/graphics/src/stream.rs
 +++ b/alvr/graphics/src/stream.rs
 @@ -1,10 +1,10 @@
@@ -5484,7 +5577,16 @@ index 737b7d0..7f0f410 100644
  use wgpu::{
      hal::{api, gles},
      include_wgsl, BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayoutDescriptor,
-@@ -72,6 +72,12 @@ pub struct StreamRenderer {
+@@ -65,6 +65,8 @@ struct ViewObjects {
+ }
+ 
+ pub struct StreamRenderer {
++    #[cfg(unix)]
++    ready_wait: std::cell::RefCell<Option<super::native_ready::NativeReady>>,
+     context: Rc<GraphicsContext>,
+     staging_renderer: StagingRenderer,
+     pipeline: RenderPipeline,
+@@ -72,6 +74,12 @@ pub struct StreamRenderer {
      ffe_params_buffer: Buffer,
      /// `None` when foveated encoding is off, in which case there is nothing to steer.
      foveated_encoding: Option<(UVec2, FoveatedEncodingConfig)>,
@@ -5497,7 +5599,7 @@ index 737b7d0..7f0f410 100644
  }
  
  impl StreamRenderer {
-@@ -90,6 +96,22 @@ impl StreamRenderer {
+@@ -90,6 +98,22 @@ impl StreamRenderer {
      ) -> Self {
          let device = &context.device;
  
@@ -5520,7 +5622,15 @@ index 737b7d0..7f0f410 100644
          let target_format = super::gl_format_to_wgpu(target_format);
  
          let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-@@ -298,9 +320,65 @@ impl StreamRenderer {
+@@ -292,15 +316,82 @@ impl StreamRenderer {
+         );
+ 
+         Self {
++            #[cfg(unix)]
++            ready_wait: std::cell::RefCell::new(None),
+             context,
+             staging_renderer,
+             pipeline,
              views_objects: view_objects.try_into().unwrap(),
              ffe_params_buffer,
              foveated_encoding: foveated_encoding.map(|c| (base_view_resolution, c)),
@@ -5558,6 +5668,15 @@ index 737b7d0..7f0f410 100644
      }
  
 +    pub fn last_copy_was_direct(&self) -> bool { self.last_copy_direct.get() }
++    #[cfg(unix)]
++    pub fn wait_source_ready(&self, fd: std::os::fd::OwnedFd) -> bool {
++        self.context.make_current();
++        unsafe {
++            let mut state = self.ready_wait.borrow_mut();
++            state.get_or_insert_with(||super::native_ready::NativeReady::new(&self.context))
++                .wait(&self.context,fd)
++        }
++    }
 +
 +    pub fn poll_import_copy(&self) -> (bool, Vec<f32>) {
 +        self.direct_eye_renderer.as_ref().map_or((true, Vec::new()), |r| r.poll_copy())
@@ -5586,7 +5705,7 @@ index 737b7d0..7f0f410 100644
      /// Move the full-resolution centre to match the server's, for the frame about to be drawn.
      ///
      /// Per eye: the horizontal frusta are asymmetric and mirrored, so one shared shift is only
-@@ -333,9 +411,30 @@ impl StreamRenderer {
+@@ -333,9 +424,30 @@ impl StreamRenderer {
          view_params: [StreamViewParams; 2],
          passthrough: Option<&PassthroughMode>,
      ) {

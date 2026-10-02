@@ -4,7 +4,7 @@
 // an AHardwareBuffer wrapped in an EGLImage. This library gives it exactly that for PyroWave.
 // It owns a Vulkan device, lends it to PyroWave (the borrowed-device path: nothing is imported or
 // exported between us and the codec), decodes into three plain R8 planes, and converts them into
-// one of a ring of RGBA8 AHardwareBuffer-backed images. Every call is synchronous: when
+// one of a ring of RGBA8 AHardwareBuffer-backed images. Legacy decode is synchronous: when
 // pyroclient_decode returns, the buffer is finished on the GPU and safe to import.
 //
 // Everything here was proven first in tools/pyrowave_android (55 dB against the PC reference);
@@ -57,6 +57,15 @@ int pyroclient_decode(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_inf
 // could be dequeued while GPU work runs. Ring size must leave at least one free slot.
 int pyroclient_decode_guarded(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info,
                              AHardwareBuffer *protected_a, AHardwareBuffer *protected_b);
+
+// Experimental early publication (debug.q3pw.ready_fd=1). At most ONE submission
+// may be outstanding. ready_fd >= 0 is transferred to caller and MUST gate all
+// GLES reads. info is provisional until finish_pending succeeds. ready_fd == -1
+// means a completed synchronous fallback. Before pushing/clearing/decoding another
+// frame, call finish_pending; no codec/upload/command resources overlap.
+int pyroclient_submit_guarded(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info,
+                             AHardwareBuffer *protected_a, AHardwareBuffer *protected_b, int *ready_fd);
+int pyroclient_finish_pending(pyroclient *c, pyroclient_frame_info *info);
 
 // Optional GLES release-fence handoff. Decode remains synchronous. Nonzero token
 // identifies a completed frame whose native context supports SYNC_FD import.

@@ -21,6 +21,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 -m unittest discover -s tests -v
+      - name: Ready-fence fallback and descriptor ownership (CPU only)
+        run: |
+          rustc --edition=2021 --test tools/fences/ready_wait.rs -o /tmp/ready-wait-test
+          /tmp/ready-wait-test
+          rustc --edition=2021 --test tools/fences/ready_frames.rs -o /tmp/ready-frames-test
+          /tmp/ready-frames-test
+          rustc --edition=2021 --test tools/fences/native_ready_test.rs -o /tmp/native-ready-test
+          /tmp/native-ready-test
       - name: CPU source-chart scale and stripe regression (no VR)
         run: |
           python3 -m pip install --disable-pip-version-check -r tools/requirements-test.txt
@@ -132,7 +140,7 @@ jobs:
           (cd /tmp/quest3-notices && zip -qr "$GITHUB_WORKSPACE/out/LICENSES.zip" LICENSES)
           cp "$XRWIRED_INPUTS/research/ALVR-20.13.0/build/alvr_client_android/alvr_client_android.apk" out/Quest3-Pyrowave-dev.apk
           cp "$XRWIRED_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" out/
-          cp tools/pyrowave_android/pyrowave_android tools/udptest/udprecv-android tools/pyroclient/pyroclient_test tools/pyroclient/release_fence_gpu_test tools/pyroclient/libpyroclient.so "$XRWIRED_INPUTS/research/pyrowave/build-android/libpyrowave-shared.so" out/
+          cp tools/pyrowave_android/pyrowave_android tools/udptest/udprecv-android tools/pyroclient/pyroclient_test tools/pyroclient/release_fence_gpu_test tools/pyroclient/ready_fence_gpu_test tools/pyroclient/libpyroclient.so "$XRWIRED_INPUTS/research/pyrowave/build-android/libpyrowave-shared.so" out/
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs out/Quest3-Pyrowave-dev.apk > out/APK-CERTIFICATE.txt
           (cd out && sha256sum * > SHA256SUMS.txt)
       - uses: actions/upload-artifact@v4

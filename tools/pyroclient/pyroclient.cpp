@@ -115,6 +115,11 @@ struct pyroclient {
     bool release_poisoned = false;
     uint64_t release_imports = 0;
     PFN_vkImportSemaphoreFdKHR import_semaphore_fd = nullptr;
+    bool ready_fences = false;
+    PFN_vkGetSemaphoreFdKHR get_semaphore_fd = nullptr;
+    VkSemaphore ready_semaphore = VK_NULL_HANDLE;
+    bool pending_submission = false;
+    std::chrono::steady_clock::time_point pending_begin, pending_submit;
 
     pyrowave_device pyro = nullptr;
     pyrowave_decoder decoder = nullptr;
@@ -150,7 +155,8 @@ struct pyroclient {
     bool create_convert();
     bool create_fragment_convert();
     bool create_slot(Slot &s);
-    bool record_and_submit(Slot &s, pyroclient_frame_info *info);
+    bool record_and_submit(Slot &s, pyroclient_frame_info *info, int *ready_fd = nullptr);
+    bool finish_pending(pyroclient_frame_info *info);
     void destroy();
 };
 
@@ -197,7 +203,10 @@ bool pyroclient::create_device() {
     device_info.queueCreateInfoCount = 1;
     device_info.pQueueCreateInfos = &queue_info;
     char release_prop[PROP_VALUE_MAX] = {};
-    if (__system_property_get("debug.q3pw.release_fd", release_prop) > 0 && !strcmp(release_prop, "1")) {
+    const bool release_requested = __system_property_get("debug.q3pw.release_fd", release_prop) > 0 && !strcmp(release_prop, "1");
+    char ready_prop[PROP_VALUE_MAX] = {};
+    const bool ready_requested = __system_property_get("debug.q3pw.ready_fd", ready_prop) > 0 && !strcmp(ready_prop, "1");
+    if (release_requested || ready_requested) {
         uint32_t count = 0;
         vkEnumerateDeviceExtensionProperties(gpu, nullptr, &count, nullptr);
         std::vector<VkExtensionProperties> extensions(count);
@@ -208,12 +217,14 @@ bool pyroclient::create_device() {
                 external.handleType = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_SYNC_FD_BIT;
                 VkExternalSemaphoreProperties props = { VK_STRUCTURE_TYPE_EXTERNAL_SEMAPHORE_PROPERTIES };
                 vkGetPhysicalDeviceExternalSemaphoreProperties(gpu, &external, &props);
-                release_fences = (props.externalSemaphoreFeatures & VK_EXTERNAL_SEMAPHORE_FEATURE_IMPORTABLE_BIT) != 0;
-                if (release_fences) device_extensions.push_back(VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME);
+                release_fences = release_requested && (props.externalSemaphoreFeatures & VK_EXTERNAL_SEMAPHORE_FEATURE_IMPORTABLE_BIT) != 0;
+                ready_fences = ready_requested && (props.externalSemaphoreFeatures & VK_EXTERNAL_SEMAPHORE_FEATURE_EXPORTABLE_BIT) != 0;
+                if (release_fences || ready_fences) device_extensions.push_back(VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME);
                 break;
             }
         }
-        LOGI("[Q3PW_RELEASE_FD] Vulkan requested=1 importable=%d", release_fences);
+        if (release_requested) LOGI("[Q3PW_RELEASE_FD] Vulkan requested=1 importable=%d", release_fences);
+        if (ready_requested) LOGI("[Q3PW_READY_FD] Vulkan requested=1 exportable=%d max_inflight=1", ready_fences);
     }
     device_info.enabledExtensionCount = uint32_t(device_extensions.size());
     device_info.ppEnabledExtensionNames = device_extensions.data();
@@ -222,6 +233,20 @@ bool pyroclient::create_device() {
     if (release_fences) {
         import_semaphore_fd = reinterpret_cast<PFN_vkImportSemaphoreFdKHR>(vkGetDeviceProcAddr(device, "vkImportSemaphoreFdKHR"));
         if (!import_semaphore_fd) { release_fences = false; LOGE("[Q3PW_RELEASE_FD] Vulkan import entry point unavailable"); }
+    }
+    if (ready_fences) {
+        get_semaphore_fd = reinterpret_cast<PFN_vkGetSemaphoreFdKHR>(vkGetDeviceProcAddr(device, "vkGetSemaphoreFdKHR"));
+        if (!get_semaphore_fd) ready_fences = false;
+        else {
+            VkExportSemaphoreCreateInfo exported = { VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO };
+            exported.handleTypes = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_SYNC_FD_BIT;
+            VkSemaphoreCreateInfo ci = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+            ci.pNext = &exported;
+            if (vkCreateSemaphore(device, &ci, nullptr, &ready_semaphore) != VK_SUCCESS) {
+                ready_fences = false;
+                LOGE("[Q3PW_READY_FD] semaphore creation failed; synchronous fallback");
+            }
+        }
     }
 
     // Experiment 2: debug.xrwired.pyro_precision = 0|1|2 selects PyroWave's math /
@@ -564,8 +589,8 @@ static void image_barrier(VkCommandBuffer cmd, VkImage img, VkImageLayout from, 
     vkCmdPipelineBarrier(cmd, srcS, dstS, 0, 0, nullptr, 0, nullptr, 1, &b);
 }
 
-bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info) {
-    if (release_poisoned) return false;
+bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info, int *ready_fd) {
+    if (release_poisoned || pending_submission) return false;
     const auto t0 = std::chrono::steady_clock::now();
     bool wait_released = false;
     if (s.release_registered) {
@@ -685,27 +710,65 @@ bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info) {
         si.pWaitDstStageMask = &wait_stage;
     }
     si.commandBufferCount = 1; si.pCommandBuffers = &cmd;
+    const bool early = ready_fd && ready_fences;
+    if (early) { si.signalSemaphoreCount = 1; si.pSignalSemaphores = &ready_semaphore; }
     const auto t_submit = std::chrono::steady_clock::now();
     VK_TRY(vkQueueSubmit(queue, 1, &si, fence));
-    VK_TRY(vkWaitForFences(device, 1, &fence, VK_TRUE, 1000ull * 1000 * 1000));
+    pending_submission = true;
+    pending_begin = t0; pending_submit = t_submit;
+    if (early) {
+        VkSemaphoreGetFdInfoKHR exported = { VK_STRUCTURE_TYPE_SEMAPHORE_GET_FD_INFO_KHR };
+        exported.semaphore = ready_semaphore;
+        exported.handleType = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_SYNC_FD_BIT;
+        int fd = -1;
+        const VkResult export_result = get_semaphore_fd(device, &exported, &fd);
+        if (export_result == VK_SUCCESS && fd >= 0) {
+            *ready_fd = fd;
+            if (info) info->record_ms = std::chrono::duration<double, std::milli>(t_submit - t0).count();
+            return true; // Packet-complete; GPU completion must NOT be reported yet.
+        }
+        // SYNC_FD -1 on success represents an already-signaled payload. The
+        // export still reset the semaphore; drain the CPU fence for legacy ABI.
+        if (export_result == VK_SUCCESS && fd == -1) return finish_pending(info);
+        if (fd >= 0) close(fd);
+        LOGE("[Q3PW_READY_FD] export failed; draining before synchronous fallback");
+        // An unexported signaled binary semaphore cannot be signaled again.
+        ready_fences = false;
+    }
+    return finish_pending(info);
+}
+
+bool pyroclient::finish_pending(pyroclient_frame_info *info) {
+    if (release_poisoned) return false;
+    if (!pending_submission) return true;
+    const VkResult completed = vkWaitForFences(device, 1, &fence, VK_TRUE, 1000ull * 1000 * 1000);
+    if (completed != VK_SUCCESS) {
+        // A timeout is not completion: never reset an outstanding command/fence
+        // or recycle shared Granite staging/planes after this failure.
+        release_poisoned = true;
+        LOGE("[Q3PW_READY_FD] completion failed=%d; decoder poisoned", int(completed));
+        return false;
+    }
+    pending_submission = false;
 
     const auto t_fence = std::chrono::steady_clock::now();
     if (info) {
-        info->record_ms = std::chrono::duration<double, std::milli>(t_submit - t0).count();
-        info->wait_ms = std::chrono::duration<double, std::milli>(t_fence - t_submit).count();
+        info->record_ms = std::chrono::duration<double, std::milli>(pending_submit - pending_begin).count();
+        info->wait_ms = std::chrono::duration<double, std::milli>(t_fence - pending_submit).count();
         uint64_t t[3] = {};
         if (vkGetQueryPoolResults(device, queries, 0, 3, sizeof t, t, sizeof(uint64_t),
                                   VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT) == VK_SUCCESS) {
             info->decode_ms = double(t[1] - t[0]) * ns_per_tick / 1e6;
             info->convert_ms = double(t[2] - t[1]) * ns_per_tick / 1e6;
         }
-        info->total_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+        info->total_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - pending_begin).count();
     }
     return true;
 }
 
 void pyroclient::destroy() {
     if (device) vkDeviceWaitIdle(device);
+    if (ready_semaphore) vkDestroySemaphore(device, ready_semaphore, nullptr);
     if (decoder) pyrowave_decoder_destroy(decoder);
     for (Slot &s : ring) {
         if (s.release_registered) release_registry.remove(s.ahb);
@@ -843,6 +906,7 @@ extern "C" pyroclient *pyroclient_create_ex(uint32_t width, uint32_t height, int
 
 extern "C" int pyroclient_push_packet(pyroclient *c, const void *data, size_t size) {
     if (!c || !data || !size) return -1;
+    if (c->pending_submission || c->release_poisoned) return -3;
     pyrowave_result r = pyrowave_decoder_push_packet(c->decoder, data, size);
     if (r != PYROWAVE_SUCCESS) return -2;
     return pyrowave_decoder_decode_is_ready(c->decoder, false) ? 1 : 0;
@@ -858,8 +922,15 @@ extern "C" int pyroclient_decode(pyroclient *c, AHardwareBuffer **out, pyroclien
 
 extern "C" int pyroclient_decode_guarded(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info,
                                        AHardwareBuffer *protected_a, AHardwareBuffer *protected_b) {
+    return pyroclient_submit_guarded(c, out, info, protected_a, protected_b, nullptr);
+}
+
+extern "C" int pyroclient_submit_guarded(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info,
+                                       AHardwareBuffer *protected_a, AHardwareBuffer *protected_b, int *ready_fd) {
+    if (ready_fd) *ready_fd = -1;
     if (!c || !out) return -1;
     *out = nullptr;
+    if (c->pending_submission || c->release_poisoned) return -6;
     // Partial reconstruction requires pristine low-frequency bands. The old UDP caller
     // decoded arbitrary packet subsets, which can make the entire picture disappear.
     // Both transports now require a fully validated frame before recording GPU work.
@@ -872,18 +943,24 @@ extern "C" int pyroclient_decode_guarded(pyroclient *c, AHardwareBuffer **out, p
     }
     Slot &s = c->ring[c->next_slot];
     c->next_slot = (c->next_slot + 1) % (uint32_t)c->ring.size();
-    if (!c->record_and_submit(s, info)) {
-        if (c->release_fences) c->release_poisoned = true;
+    if (!c->record_and_submit(s, info, ready_fd)) {
+        c->release_poisoned = true;
         return -2;
     }
     if (s.release_registered && !release_registry.publish(s.ahb)) {
+        if (ready_fd && *ready_fd >= 0) { close(*ready_fd); *ready_fd = -1; }
         c->release_poisoned = true; return -5;
     }
     *out = s.ahb;
     return 0;
 }
 
-extern "C" void pyroclient_clear(pyroclient *c) { if (c) pyrowave_decoder_clear(c->decoder); }
+extern "C" int pyroclient_finish_pending(pyroclient *c, pyroclient_frame_info *info) {
+    return c && c->finish_pending(info) ? 0 : -1;
+}
+extern "C" void pyroclient_clear(pyroclient *c) {
+    if (c && !c->pending_submission && !c->release_poisoned) pyrowave_decoder_clear(c->decoder);
+}
 
 extern "C" uint64_t pyroclient_output_release_token(AHardwareBuffer *buffer) {
     return release_registry.token(buffer);

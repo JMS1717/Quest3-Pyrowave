@@ -176,3 +176,11 @@ builds and passing queued-read/reuse GPU checks. Its first complete off/on/off
 screen reduced CPU copy cost, but fresh FPS fell to ~98 versus ~103/~112 controls
 and superseding increased. It remains off by default. See the
 [recorded outcome](RELEASE-FENCE-EXPERIMENT.md#recorded-outcome-on-quest-3).
+
+The next `.29` candidate is deliberately smaller than two simultaneous decodes:
+[early publication with a ready FD](READY-FENCE-EXPERIMENT.md). It moves publication
+ahead of the existing producer wait, lets GLES order its reads against that FD,
+and verifies completion before any shared resource reuse. The producer still
+waits and only one submission is outstanding. This isolates publication timing
+without depending on a third Granite context or claiming full zero-copy pipeline
+overlap. Builds, native correctness and controlled performance are separate gates.
