@@ -17,6 +17,16 @@ jobs:
       - uses: actions/checkout@v4
       - run: python3 -m unittest discover -s tests -v
       - run: g++ -std=c++17 -Wall -Werror tools/pyroclient/decode_path_test.cpp -o /tmp/decode-path && /tmp/decode-path
+      - name: Software GLES readback correctness (no Quest hardware)
+        env:
+          EGL_PLATFORM: surfaceless
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          MESA_LOADER_DRIVER_OVERRIDE: llvmpipe
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libegl-dev libgles-dev libegl-mesa0 libgl1-mesa-dri
+          g++ -std=c++17 -O2 -Wall -Wextra -Werror tools/pyroclient/gpu_readback_gles.cpp tools/pyroclient/gpu_readback_test.cpp -lEGL -lGLESv2 -o /tmp/readback-test
+          /tmp/readback-test
   client:
     runs-on: ubuntu-24.04
     needs: tests

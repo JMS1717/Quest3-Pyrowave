@@ -14,6 +14,7 @@ $CXX $FLAGS -shared -fPIC -Wl,-soname,libpyroclient.so \
     -Wl,--version-script="$HERE/exports.map" \
     "$HERE/pyroclient.cpp" -o "$HERE/libpyroclient.so" \
     -L"$PW/build-android" -lpyrowave-shared -lvulkan -landroid -llog
-$CXX $FLAGS "$HERE/pyroclient_test.cpp" -o "$HERE/pyroclient_test" \
-    -L"$HERE" -lpyroclient -L"$PW/build-android" -lpyrowave-shared -landroid -llog
+$CXX $FLAGS "$HERE/pyroclient_test.cpp" "$HERE/gpu_readback_gles.cpp" \
+    "$HERE/gpu_readback_android.cpp" -o "$HERE/pyroclient_test" \
+    -L"$HERE" -lpyroclient -L"$PW/build-android" -lpyrowave-shared -landroid -llog -lEGL -lGLESv3 -lz
 echo "BUILD_OK -> $HERE/libpyroclient.so $HERE/pyroclient_test"

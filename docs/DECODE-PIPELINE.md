@@ -528,6 +528,21 @@ Do not promote standalone timing results based on that CPU dump.
 The probe now refuses unsupported CPU dumps and accepts `-` for timing-only runs.
 Its timing-only success does not establish image correctness.
 
+The newer probe also offers GPU consumer readback, without changing source AHB flags:
+after all timed decodes complete, it imports the last buffer with preservation,
+samples through `samplerExternalOES` into linear RGBA8, finishes sampling and reads
+that ordinary framebuffer. The acquired AHB reference, image and texture remain
+alive until sampling finishes. No further producer writes occur during this probe.
+The production decoder/renderer and their lease rules are unchanged.
+
+Raw pixels have explicit orientation and checksum-linked sidecar metadata. The scorer
+rejects incomplete producers/readbacks, mismatched bytes/dimensions, inconsistent
+orientation and CPU reads incompatible with source allocation. Legacy files without
+metadata require an explicit unverified override. See the [probe instructions](../tools/pyroclient/README.md).
+Cloud software-GLES tests cannot validate Quest Vulkan-to-EGL interop or the
+recommended allocation; those checks await a new hardware window. This adds a
+correctness tool, not a new FPS or latency result.
+
 The optional `stereo_scene --pulse` counter updates a small texture region at 10 Hz.
 With three cached imports, both eyes visibly advanced through ticks 324, 371 and
 419. This verifies new pixels through the consumer path, and does not measure
