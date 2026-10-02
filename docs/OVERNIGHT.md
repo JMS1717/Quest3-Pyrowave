@@ -1,10 +1,10 @@
 # Unattended Quest 3 development
 
-**Current status: paused at the owner's request for Virtual Desktop PCVR.**
-The goal and heartbeat are paused; test/recovery workers stopped, temporary headset
-properties and physical proximity control restored, and the project SteamVR driver
-disabled and unregistered. Preserve this isolation until explicit permission to resume.
-The following plan documents the authorized session, not an instruction to restart it.
+**Current status: resumed under the owner's explicit overnight authorization.**
+Hardware access and automatic own-app recovery were verified again after the
+Virtual Desktop pause. Independent restoration enforces a bounded five-hour session;
+credit checks follow the owner's requested sparse schedule. Private budget/account
+state is kept outside the repository. An earlier pause remains documented for rollback.
 
 The owner authorized overnight headset testing on October 1, 2026. This supersedes
 the older offline-only instruction for this session; it does not grant other users
@@ -20,7 +20,7 @@ backups remain in the private sibling workspace.
 3. Screen one change at a time for **15 seconds after 3 seconds settling**. Run
    sequential baseline/candidate/baseline controls with the same scene, thermal
    state and GPU clock. Reject missing frames, configuration changes and restarts.
-4. Test batched dequantization first. The development `.15` pair also adds an opt-in
+4. Batching showed no live gain and stays off. The development `.15` pair adds an opt-in
    direct AHB-to-OpenXR eye copy, preserving Vulkan decoding, both source-buffer
    leases and `glFinish`. It is restricted to equal encoded/output eye resolution,
    SDR, no foveation/upscaling, no passthrough, and identity client reprojection.
@@ -58,7 +58,9 @@ Windows' execution-state API, pins ADB to this Quest, monitors temperature/batte
 and stops workloads on Android severe thermal status, battery below 20%, or battery
 temperature at least 48°C. Battery temperature is not GPU die temperature. A
 separate process restores saved properties with readback and physical proximity
-at 08:00 Eastern October 2. Guardian is paused only for stationary unattended
+at the saved five-hour deadline or earlier stop marker. It stops our app before
+restoring properties, because XR teardown can overwrite an earlier readback.
+Guardian is paused only for stationary unattended
 tests; normal boundary behavior is restored before later play. Windows power-plan
 and network settings are unchanged.
 
@@ -76,3 +78,25 @@ A disconnected cable or unrecoverable
 headset failure can prevent further live tests; source work and cloud builds can
 continue. In-headset quality judgment and optical motion-to-photon latency still
 require later human/hardware acceptance.
+
+## Stretch target and next bottlenecks
+
+First establish sustained fresh native 120 FPS. Then investigate **3072 × 3216
+pixels per eye at runtime-supported 207 Hz**, with **15–20 ms idealized
+motion-to-photon** as a research target. That is about **3.71 times** the pixel
+rate of 2080 × 2208 at 120 Hz and only **4.83 ms per frame**. Attainability is not
+established. Mode requests must fail gracefully when unsupported. Separate
+idealized pipeline estimates from ALVR telemetry and actual optical latency.
+
+Prioritize the measured eye-copy completion stall, conversion and decoder/render
+concurrency. Any asynchronous copy must retain both the hardware-buffer lease and
+imported-image storage until completion, count completed copies separately from
+queued work, and preserve a synchronous fallback. Research primary OpenXR/EGL/GL
+specifications and relevant codec/GPU papers before changing these contracts.
+
+A fast Windows restart also exposed the dashboard's fatal bind on a temporarily
+occupied port. The private supervisor now permits bounded server recovery only
+when this project's driver is registered/enabled and no benchmark lock is held;
+it waits for server exit and a bindable port before relaunching. A source-level
+fallible bind/retry fix remains pending. Virtual Desktop's service/driver and all
+network settings remain preserved.
