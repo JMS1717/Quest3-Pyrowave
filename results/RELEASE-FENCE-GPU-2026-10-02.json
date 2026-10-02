@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-02",
+  "device": "Meta Quest 3 / Adreno GPU",
+  "source_commit": "bf7b5f7640bf9f05548c1dea85f11343f8e9f753",
+  "run_id": 37027807642,
+  "default_off": true,
+  "tests": [
+    {
+      "pattern": "asymmetric",
+      "default_off_identical_to_tested_bridge": true,
+      "default_off_crc32": "c0e656fb",
+      "gpu_reuse": {
+        "probe": "release_fd_gpu_reuse",
+        "width": 512,
+        "height": 320,
+        "repeats": 3,
+        "draws_per_read": 64,
+        "attached_fds": 3,
+        "source_reuses": 3,
+        "unsignaled_at_export": 3,
+        "a_crc32": "c0e656fb",
+        "b_crc32": "f501a6ca",
+        "exact_a_and_b": true
+      },
+      "gpu_import_confirmed": true
+    },
+    {
+      "pattern": "native-asymmetric",
+      "default_off_identical_to_tested_bridge": true,
+      "default_off_crc32": "aad9df7c",
+      "gpu_reuse": {
+        "probe": "release_fd_gpu_reuse",
+        "width": 4160,
+        "height": 2208,
+        "repeats": 3,
+        "draws_per_read": 8,
+        "attached_fds": 3,
+        "source_reuses": 3,
+        "unsignaled_at_export": 3,
+        "a_crc32": "aad9df7c",
+        "b_crc32": "3113ccb5",
+        "exact_a_and_b": true
+      },
+      "gpu_import_confirmed": true
+    }
+  ],
+  "installed_runtime_unchanged_during_standalone_probe": true,
+  "temporary_properties_restored_with_readback": true,
+  "uses_cpu_source_locks": false,
+  "limitations": [
+    "Synchronous producer completion; standalone consumer, not OpenXR scheduling.",
+    "Exact preservation relative to same-decoder reference, not independent absolute color certification.",
+    "Fences unsignaled at export; no artificial GPU delay or proof the FD is the only driver dependency.",
+    "No FPS, optical latency, sustained or in-headset acceptance from this probe."
+  ]
+}

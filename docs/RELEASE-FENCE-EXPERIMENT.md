@@ -1,6 +1,7 @@
 # .26 release-fence experiment
 
-**Default off. Source candidate; matching build review and live acceptance required.**
+**Default off. Matching builds and GPU reuse checks passed; the first live
+comparison did not improve delivered FPS. Sustained acceptance is pending.**
 This implements the first step of the [Nightfall synchronization assessment](NIGHTFALL-SYNC-REVIEW.md).
 It does not enable asynchronous Vulkan decoding, change defaults, enable foveation,
 or change stream resolution/bitrate. Keep the matching .25 runtime for rollback.
@@ -75,6 +76,60 @@ reports FD attachments, verified source reuse and how many exports were still
 unsignaled. It does not force a fixed GPU delay, prove the FD is the only driver
 dependency, reproduce OpenXR scheduling or establish absolute image quality.
 This extra diagnostic is not linked into the production renderer/library.
+
+## Recorded outcome on Quest 3
+
+[Matching `.26` CI builds](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37027807642)
+passed all jobs. APK/server versions, hashes, packaged native libraries, stable
+certificate metadata and the two native API exports were reviewed.
+[Artifact record](../results/RELEASE-FENCE-CI-2026-10-02.json).
+
+The standalone probe passed three reuses at 512x320 and three at native
+4160x2208 stereo. All six exported fences were initially unsignaled; Vulkan
+imports were confirmed. Queued A captures and later overwritten B outputs
+matched their references exactly. Default-off pixels also matched the previously
+tested bridge. [GPU proof](../results/RELEASE-FENCE-GPU-2026-10-02.json).
+
+The complete 15-second off/on/off comparison, after settling, measured:
+
+| Metric | Off control | On | Off restore |
+| --- | ---: | ---: | ---: |
+| Fresh submissions FPS | 103.11 | 97.69 | 112.02 |
+| Completed eye copies/s | 103.08 | 97.67 | 112.66 |
+| CPU eye-copy p50 ms | 2.37 | 0.55 | 6.04 |
+| Decode completion p50 ms | 6.53 | 5.93 | 6.97 |
+| Superseded outputs/s | 16.94 | 22.14 | 7.38 |
+| Estimated pipeline latency p50 ms | 58.71 | 68.44 | 66.27 |
+
+Native GPU imports and GLES completion observers were active without fallback.
+Both controls and the experiment completed about 120 producer decodes/s. Thus
+removing this CPU wait **did not remove output superseding or improve delivered
+fresh FPS** in this comparison. Keep the experiment off; do not publish it as a
+performance improvement. [Live evidence](../results/RELEASE-FENCE-LIVE-2026-10-02.json).
+
+These were stationary screens at 43 C, thermal status 0 and dynamic GPU clocks
+(off 599 MHz, on 690 MHz, restore 599-640 MHz). Requested decode geometry stayed
+2080x2208/eye, 120 Hz, 1000 Mbps, Haar/Compute, 420/noFFE. The actual SteamVR
+source texture was 2544x2704/eye due to its scaling, identical across the group.
+CPU completion observations are quantized by the next poll; they are not exact
+GPU draw times. Screenshot eyes/orientation looked correct, but optical latency,
+sustained gameplay and human in-headset acceptance remain unverified.
+
+An initial partial comparison was rejected: its validator matched an unrelated
+color-copy `active=false` message and aborted before complete source-interval
+metadata. It is excluded from the accepted comparison; it was not a native-fence
+failure. The validator now checks only release-fence messages and closes the
+source gracefully on failure.
+
+The next scheduling investigation should measure empty/late frame selection and
+runtime queue/`xrWaitFrame` feedback. This result supports safe buffer ownership,
+not the assumption that more asynchronous submission alone solves the FPS gap.
+
+A follow-up with native release disabled tried the existing bounded selection
+wait at **0/1000/0 microseconds**. Fresh FPS was **105.96/108.78/109.90** and
+estimated latency p50 **59.58/64.45/61.26 ms**. The wait caught late completions,
+but did not establish a gain over both controls. Its default stays zero.
+[Wait evidence](../results/FRAME-WAIT-1000-LIVE-2026-10-02.json).
 
 Use saved original properties, a device-pinned ADB wrapper and existing thermal,
 process-identity and experiment-lock guards. Enable only after matching artifacts

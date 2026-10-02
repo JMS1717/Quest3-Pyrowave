@@ -1,0 +1,344 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-02",
+  "source_sha": "bf7b5f7640bf9f05548c1dea85f11343f8e9f753",
+  "run_id": 37027807642,
+  "status": "short_matched_comparison_no_gain_keep_default_off",
+  "sequence": "off/on/off",
+  "configuration": {
+    "render_setting_eye": [
+      2080,
+      2208
+    ],
+    "encoded_eye": [
+      2080,
+      2208
+    ],
+    "actual_source_eye": [
+      2544,
+      2704
+    ],
+    "requested_and_runtime_hz": 120,
+    "chroma": "4:2:0",
+    "foveated_encoding": false,
+    "target_mbps": 1000,
+    "transport": "ALVR USB/ADB TCP",
+    "wavelet": "Haar",
+    "decode": "Vulkan compute",
+    "convert": "fragment",
+    "direct_eye": true,
+    "optimal_ahb_and_minimal_fragment_usage": true,
+    "cpu_requested": 6,
+    "gpu_requested": 7,
+    "perf_requested": "BOOST",
+    "overlay": true,
+    "gpu_eye_timer": false
+  },
+  "cases": [
+    {
+      "status": "measured",
+      "fresh_submissions_fps": 103.10870888658825,
+      "completed_direct_copies_fps": 103.08394697565569,
+      "p1_nominal_fps": 59.981161400000005,
+      "timestamp_gap_p95_ms": 16.6933458,
+      "decode_gpu_p50_ms": 4.9821613,
+      "decode_completion_p50_ms": 6.5254435,
+      "eye_cpu_p50_ms": 2.3688545999999997,
+      "conversion_p50_ms": 0.6323437,
+      "estimated_latency_p50_ms": 58.7077485,
+      "network_residual_p50_ms": 4.1143944999999995,
+      "encode_p50_ms": 1.4419499999999998,
+      "video_payload_p50_mbps": 1005.19093,
+      "experiment": {
+        "release_fd": 0,
+        "eye_gpu_probe": 0,
+        "repeat_render": 0,
+        "fused_haar": 0,
+        "batch": 0,
+        "precision": 1,
+        "compute_conversion": 0,
+        "direct_eye_copy": 1,
+        "direct_flip_y": 1,
+        "async_eye_copy": 0,
+        "decode_handoff": 0,
+        "copy_wait_us": 0,
+        "runtime_display_time": 0,
+        "raw_srgb_copy": 0,
+        "fragment_min_usage": 1,
+        "optimal_ahb_usage": 1,
+        "image_cache": 0,
+        "frame_wait_us": 0,
+        "pre_wait_poll": 0
+      },
+      "limitations": "Short stationary screen; dynamic clocks; submissions/completions are not optical FPS or motion-to-photon.",
+      "case": "baseline",
+      "source_coverage_verified": true,
+      "capture_seconds": 15,
+      "runtime_hz": 120,
+      "encoded_eye": [
+        2080,
+        2208
+      ],
+      "game_source_eye": [
+        2544,
+        2704
+      ],
+      "counter_window": {
+        "samples": 15,
+        "interval_s": 14.289324799989117,
+        "counter_deltas": {
+          "complete": 1714,
+          "partial": 0,
+          "skipped": 0,
+          "dropped": 0,
+          "superseded": 242,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1473,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1473,
+          "pending_eye_copy_deferrals": 0
+        },
+        "counter_rates_per_s": {
+          "complete": 119.9496843966557,
+          "partial": 0.0,
+          "skipped": 0.0,
+          "dropped": 0.0,
+          "superseded": 16.935719733950222,
+          "stale_packets": 0.0,
+          "decode_failures": 0.0,
+          "direct_eye_copies": 103.08394697565569,
+          "staging_eye_copies": 0.0,
+          "completed_eye_copies": 103.08394697565569,
+          "pending_eye_copy_deferrals": 0.0
+        },
+        "definition": "Matching HeadsetTelemetry endpoints. Complete is producer decode completion; superseded includes pending replacement and out-of-order publication. Eye completion can include configuration redraws; staging completion is unobserved. Not unique or optical display FPS."
+      },
+      "gpu_clock_samples_mhz": [
+        599.0,
+        599.0,
+        599.0
+      ],
+      "battery_temperature_samples_c": [
+        43.0,
+        43.0,
+        43.0
+      ],
+      "thermal_status_samples": [
+        0,
+        0,
+        0
+      ],
+      "eye_acquire_wait_p95_ms": 2.14621135,
+      "estimated_vsync_queue_p50_ms": 17.642193499999998,
+      "observer_completion_definition": "Client CPU wall time: acquire/wait, renderer call, release. Async completion is wall time until a later nonblocking fence poll, quantized by polling; none of these are GPU timer-query durations."
+    },
+    {
+      "status": "measured",
+      "fresh_submissions_fps": 97.692683002262,
+      "completed_direct_copies_fps": 97.66803415692117,
+      "p1_nominal_fps": 59.98196256,
+      "timestamp_gap_p95_ms": 16.7731164,
+      "decode_gpu_p50_ms": 4.4629946,
+      "decode_completion_p50_ms": 5.93323,
+      "eye_cpu_p50_ms": 0.54927003,
+      "conversion_p50_ms": 0.6175,
+      "estimated_latency_p50_ms": 68.44447600000001,
+      "network_residual_p50_ms": 4.1095619999999995,
+      "encode_p50_ms": 1.6313,
+      "video_payload_p50_mbps": 1005.2164,
+      "experiment": {
+        "release_fd": 1,
+        "eye_gpu_probe": 0,
+        "repeat_render": 0,
+        "fused_haar": 0,
+        "batch": 0,
+        "precision": 1,
+        "compute_conversion": 0,
+        "direct_eye_copy": 1,
+        "direct_flip_y": 1,
+        "async_eye_copy": 0,
+        "decode_handoff": 0,
+        "copy_wait_us": 0,
+        "runtime_display_time": 0,
+        "raw_srgb_copy": 0,
+        "fragment_min_usage": 1,
+        "optimal_ahb_usage": 1,
+        "image_cache": 0,
+        "frame_wait_us": 0,
+        "pre_wait_poll": 0
+      },
+      "limitations": "Short stationary screen; dynamic clocks; submissions/completions are not optical FPS or motion-to-photon.",
+      "case": "experiment",
+      "source_coverage_verified": true,
+      "capture_seconds": 15,
+      "runtime_hz": 120,
+      "encoded_eye": [
+        2080,
+        2208
+      ],
+      "game_source_eye": [
+        2544,
+        2704
+      ],
+      "counter_window": {
+        "samples": 15,
+        "interval_s": 14.272837700002128,
+        "counter_deltas": {
+          "complete": 1710,
+          "partial": 0,
+          "skipped": 2,
+          "dropped": 0,
+          "superseded": 316,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1394,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1394,
+          "pending_eye_copy_deferrals": 0
+        },
+        "counter_rates_per_s": {
+          "complete": 119.80799024988177,
+          "partial": 0.0,
+          "skipped": 0.14012630438582663,
+          "dropped": 0.0,
+          "superseded": 22.13995609296061,
+          "stale_packets": 0.0,
+          "decode_failures": 0.0,
+          "direct_eye_copies": 97.66803415692117,
+          "staging_eye_copies": 0.0,
+          "completed_eye_copies": 97.66803415692117,
+          "pending_eye_copy_deferrals": 0.0
+        },
+        "definition": "Matching HeadsetTelemetry endpoints. Complete is producer decode completion; superseded includes pending replacement and out-of-order publication. Eye completion can include configuration redraws; staging completion is unobserved. Not unique or optical display FPS."
+      },
+      "gpu_clock_samples_mhz": [
+        690.0,
+        690.0,
+        690.0
+      ],
+      "battery_temperature_samples_c": [
+        43.0,
+        43.0,
+        43.0
+      ],
+      "thermal_status_samples": [
+        0,
+        0,
+        0
+      ],
+      "eye_acquire_wait_p95_ms": 4.398229599999999,
+      "estimated_vsync_queue_p50_ms": 32.093376,
+      "observer_completion_definition": "Client CPU wall time: acquire/wait, renderer call, release. Async completion is wall time until a later nonblocking fence poll, quantized by polling; none of these are GPU timer-query durations.",
+      "native_imports_confirmed": true,
+      "fallbacks": false
+    },
+    {
+      "status": "measured",
+      "fresh_submissions_fps": 112.02409115421037,
+      "completed_direct_copies_fps": 112.66244630619643,
+      "p1_nominal_fps": 59.984167,
+      "timestamp_gap_p95_ms": 16.6252517,
+      "decode_gpu_p50_ms": 4.9842186,
+      "decode_completion_p50_ms": 6.972084,
+      "eye_cpu_p50_ms": 6.0442195,
+      "conversion_p50_ms": 0.6890625,
+      "estimated_latency_p50_ms": 66.2744,
+      "network_residual_p50_ms": 4.285023,
+      "encode_p50_ms": 1.5315,
+      "video_payload_p50_mbps": 1005.8958,
+      "experiment": {
+        "release_fd": 0,
+        "eye_gpu_probe": 0,
+        "repeat_render": 0,
+        "fused_haar": 0,
+        "batch": 0,
+        "precision": 1,
+        "compute_conversion": 0,
+        "direct_eye_copy": 1,
+        "direct_flip_y": 1,
+        "async_eye_copy": 0,
+        "decode_handoff": 0,
+        "copy_wait_us": 0,
+        "runtime_display_time": 0,
+        "raw_srgb_copy": 0,
+        "fragment_min_usage": 1,
+        "optimal_ahb_usage": 1,
+        "image_cache": 0,
+        "frame_wait_us": 0,
+        "pre_wait_poll": 0
+      },
+      "limitations": "Short stationary screen; dynamic clocks; submissions/completions are not optical FPS or motion-to-photon.",
+      "case": "restore",
+      "source_coverage_verified": true,
+      "capture_seconds": 15,
+      "runtime_hz": 120,
+      "encoded_eye": [
+        2080,
+        2208
+      ],
+      "game_source_eye": [
+        2544,
+        2704
+      ],
+      "counter_window": {
+        "samples": 15,
+        "interval_s": 14.237219699993148,
+        "counter_deltas": {
+          "complete": 1707,
+          "partial": 0,
+          "skipped": 1,
+          "dropped": 0,
+          "superseded": 105,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1604,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1604,
+          "pending_eye_copy_deferrals": 0
+        },
+        "counter_rates_per_s": {
+          "complete": 119.89700489069658,
+          "partial": 0.0,
+          "skipped": 0.07023843285922471,
+          "dropped": 0.0,
+          "superseded": 7.375035450218594,
+          "stale_packets": 0.0,
+          "decode_failures": 0.0,
+          "direct_eye_copies": 112.66244630619643,
+          "staging_eye_copies": 0.0,
+          "completed_eye_copies": 112.66244630619643,
+          "pending_eye_copy_deferrals": 0.0
+        },
+        "definition": "Matching HeadsetTelemetry endpoints. Complete is producer decode completion; superseded includes pending replacement and out-of-order publication. Eye completion can include configuration redraws; staging completion is unobserved. Not unique or optical display FPS."
+      },
+      "gpu_clock_samples_mhz": [
+        599.0,
+        599.0,
+        640.0
+      ],
+      "battery_temperature_samples_c": [
+        43.0,
+        43.0,
+        43.0
+      ],
+      "thermal_status_samples": [
+        0,
+        0,
+        0
+      ],
+      "eye_acquire_wait_p95_ms": 1.114153425,
+      "estimated_vsync_queue_p50_ms": 25.7973,
+      "observer_completion_definition": "Client CPU wall time: acquire/wait, renderer call, release. Async completion is wall time until a later nonblocking fence poll, quantized by polling; none of these are GPU timer-query durations."
+    }
+  ],
+  "decision": "Default off. Lower CPU copy time did not improve fresh copies or superseding. Do not release/promote as a performance gain.",
+  "excluded_partial_run": "Initial pair aborted by broad active=false validator matching Q3PW_COLOR_COPY and lacking final source interval. Native fence failure was not observed; excluded from accepted comparison.",
+  "limitations": [
+    "Three short stationary screens at dynamic clocks; no fixed-clock causal attribution or sustained acceptance.",
+    "Source game textures were2544x2704 despite native settings; SteamVR percentages affect game resolution.",
+    "GLES observed completion is CPU next-poll time, not precise GPU copy duration.",
+    "Estimated ALVR latency/nominal p1 are not optical motion-to-photon or displayed FPS.",
+    "Screenshot eyes/orientation looked correct; no human in-headset acceptance."
+  ]
+}

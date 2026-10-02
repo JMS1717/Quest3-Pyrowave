@@ -119,3 +119,9 @@ fresh FPS/p1, superseding, CPU wait, GPU time, latency and thermal behavior. Fol
 screening with sustained and in-headset acceptance. Preserve the known-good
 synchronous runtime throughout. Implement the API-level model independently;
 Nightfall is GPL-3.0 and this review does not import its code or binaries.
+
+The independently implemented `.26` release-FD step now has reviewed matching
+builds and passing queued-read/reuse GPU checks. Its first complete off/on/off
+screen reduced CPU copy cost, but fresh FPS fell to ~98 versus ~103/~112 controls
+and superseding increased. It remains off by default. See the
+[recorded outcome](RELEASE-FENCE-EXPERIMENT.md#recorded-outcome-on-quest-3).

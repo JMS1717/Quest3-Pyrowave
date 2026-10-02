@@ -1,0 +1,35 @@
+{
+  "run_id": 37027807642,
+  "head_sha": "bf7b5f7640bf9f05548c1dea85f11343f8e9f753",
+  "version": "20.13.0-quest3.pyro.26",
+  "android_hashes_and_cert_verified": true,
+  "native_libraries_match_APK": true,
+  "pyrowave_and_cpp_identical_to_21": true,
+  "release_fence_probe_present": true,
+  "native_release_API_exports_verified": true,
+  "server_build_pending": false,
+  "all_jobs_passed": true,
+  "windows_hashes_and_embedded_version_verified": true,
+  "schema_version": 1,
+  "review_date": "2026-10-02",
+  "build_url": "https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37027807642",
+  "default_off": true,
+  "limitations": [
+    "Cloud build and ownership/readback checks are not sustained VR acceptance.",
+    "Matching .25 rollback pair preserved privately."
+  ],
+  "android_sha256": {
+    "libc++_shared.so": "f9992c4ba6b7c5a716e3a202fceb1ce029d6a2b0605838ac6b3219f489dd7970",
+    "libpyroclient.so": "a28430425d192b94610683e9accf233b9b752e47febae5844cc81001297ebe7a",
+    "libpyrowave-shared.so": "9c5ba02ba372745f23289a5ebd9555a6b2a21a9672a3ad545143c26889c09848",
+    "LICENSES.zip": "2eba96aaf268939a421422b4a141e5300d13f17935a7db46e5ae80f45fe96ac9",
+    "pyroclient_test": "e5b6fc64e4318954afbbbc5da1b926ba44ee4669031fc996d6e5a60005ea64d2",
+    "pyrowave_android": "0d940d943a7eb05e9c0b6335f85ac41dd308f824042fafa46a78afcff6cd31d9",
+    "Quest3-Pyrowave-dev.apk": "b6d2562ea6213240c492d48ab0b2735c1bc8d18db26e7d2865922c6f804321d5",
+    "release_fence_gpu_test": "657cf6e3a64863a501ed8d3cb50b373188af32d0c1ffc9d1523a784868ade1b8",
+    "udprecv-android": "b8e092ec3dcd0a2d2640d1296e8abe0d4f0537c4cbb59f882329620c3a8aac05"
+  },
+  "windows_sha256": {
+    "Quest3-Pyrowave-Windows.zip": "0fc2ca1896f0b6bfbd6be6c1163cbc7609a922466740be6b8141760d6651c1af"
+  }
+}

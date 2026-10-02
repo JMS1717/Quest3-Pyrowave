@@ -136,8 +136,9 @@ display-scaling experiment and was rejected on the tested setup.
 
 Current synchronization research examines a
 [Nightfall-inspired native-fence handoff](docs/NIGHTFALL-SYNC-REVIEW.md).
-A default-off release-fence experiment is being prepared and is **not live
-validated**. It is not part of the published preview release.
+The `.26` release-fence experiment passed GPU reuse checks and reduced CPU copy
+time, but **did not improve delivered FPS** in a short live comparison. It stays
+off by default. [Findings](docs/RELEASE-FENCE-EXPERIMENT.md#recorded-outcome-on-quest-3).
 
 [All reviewed results](results/) · [Development history](docs/DEVELOPMENT-HISTORY.md)
 
