@@ -166,6 +166,9 @@ intact. [Installation and rollback](docs/BUILD.md#install-and-rollback).
   payload, fresh FPS/p1, decode/completion, latency and thermals.
 - **Understand the code:** [architecture](docs/ARCHITECTURE.md),
   [decode pipeline](docs/DECODE-PIPELINE.md), [Vulkan presentation](docs/VULKAN-PRESENTATION.md).
+- **Development quality option:** [light peripheral encoding](docs/LIGHT-FOVEATION.md)
+  keeps the central region sharp and reduces encoded pixels. The `.28` candidate
+  is optional, off by default and awaiting live/visual acceptance.
 - **Report a problem:** include release/build version, PC GPU/driver, connection
   type, resolution, refresh, bitrate and the visible symptom. Remove device IDs,
   private network information and secrets from logs before sharing.

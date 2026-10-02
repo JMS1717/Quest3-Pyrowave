@@ -10,6 +10,8 @@ include third-party code, which stays under its own license:
 
 - patches/alvr-*.patch modify ALVR (https://github.com/alvr-org/ALVR), MIT License,
   Copyright (c) 2018-2019 polygraphene, Copyright (c) 2020-2024 alvr-org.
+- tools/foveation/light.glsl and tools/quest3/foveation.py adapt ALVR's MIT-licensed
+  axis-aligned foveated mapping and its inverse; the same upstream copyrights apply.
 - patches/pyrowave-*.patch modify PyroWave (https://github.com/Themaister/pyrowave), MIT License,
   Copyright (c) Hans-Kristian Arntzen. Builds also use Granite
   (https://github.com/Themaister/Granite), MIT License, Copyright (c) Hans-Kristian Arntzen.

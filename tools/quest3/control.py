@@ -64,6 +64,21 @@ def set_values(values):
     request({'SetValues':[{'path':[{'Name':s} for s in path.split('.')],'value':value}
         for path,value in values.items()]})
 
+def foveation(mode):
+    if mode not in ('off', 'light'):
+        raise ValueError('Use off or light')
+    before = session()
+    pyro = before['session_settings']['video']['pyrowave']
+    if 'light_foveated_encoding' not in pyro:
+        raise ValueError('Light encoding requires the matching .28 or newer development pair')
+    key = 'session_settings.video.pyrowave.light_foveated_encoding'
+    set_values({key: mode == 'light'})
+    if session()['session_settings']['video']['pyrowave']['light_foveated_encoding'] != (mode == 'light'):
+        raise RuntimeError('Light encoding setting rejected')
+    return {'mode': mode, 'previous_enabled': pyro['light_foveated_encoding'],
+            'settings_verified': True, 'steamvr_restart_required': True,
+            'perceptual_acceptance': False, 'sustained_performance_verified': False}
+
 def resolution(render_eye=None, encode_eye=None, profile=None):
     if profile is not None:
         if render_eye is not None or encode_eye is not None:
@@ -164,6 +179,7 @@ def main():
     r.add_argument('--render-eye',type=int,nargs=2,metavar=('WIDTH','HEIGHT'))
     r.add_argument('--encode-eye',type=int,nargs=2,metavar=('WIDTH','HEIGHT'))
     r.add_argument('--profile',choices=tuple(profiles()))
+    f=sub.add_parser('foveation');f.add_argument('--mode',choices=['off','light'],required=True)
     u=sub.add_parser('usb');g=u.add_mutually_exclusive_group(required=True)
     g.add_argument('--enable',action='store_true');g.add_argument('--disable',action='store_true')
     c=sub.add_parser('apply');c.add_argument('--codec',choices=['PyroWave','H264','Hevc','AV1'],default='PyroWave')
@@ -174,6 +190,7 @@ def main():
     c.add_argument('--transport',choices=['Tcp','Udp'],default='Tcp');a=parser.parse_args()
     if a.cmd=='restart':restart(a.steamvr,a.streamer);return
     if a.cmd=='resolution':print(json.dumps(resolution(a.render_eye,a.encode_eye,a.profile)));return
+    if a.cmd=='foveation':print(json.dumps(foveation(a.mode)));return
     if a.cmd=='usb':usb(a.enable);print('USB mode enabled; restart SteamVR if transport changed' if a.enable else 'USB mode disabled');return
     if a.cmd=='apply':print(json.dumps(apply(a.codec,a.mbps,a.hz,a.decode_path,json.loads(Path(a.capabilities).read_text()),a.chroma,a.transport,a.wavelet)));return
     s=session();v=s['session_settings']['video'];clients=s.get('client_connections',{})

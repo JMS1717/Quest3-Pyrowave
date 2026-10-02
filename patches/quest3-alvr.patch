@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7b..73f2a26 100644
+index 7cead7b..68e3db9 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -138,7 +138,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -147,7 +147,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -156,7 +156,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -165,7 +165,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -174,7 +174,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_common",
   "jni",
@@ -183,7 +183,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -192,7 +192,7 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -201,12 +201,12 @@ index 7cead7b..73f2a26 100644
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..bae0997 100644
+index ae00ce8..c40e18a 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..bae0997 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.27"
++version = "20.13.0-quest3.pyro.28"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -2534,7 +2534,7 @@ index 7765bb4..b102615 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..c1e923b 100644
+index a0fd36f..04077b3 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -4,6 +4,8 @@ mod graphics;
@@ -2666,7 +2666,7 @@ index a0fd36f..c1e923b 100644
 -            refresh_rates,
 -            foveated_encoding: galaxy_xr || platform != Platform::Unknown,
 +            refresh_rates: refresh_rates.clone(),
-+            foveated_encoding: false,
++            foveated_encoding: platform == Platform::Quest3,
              encoder_high_profile: galaxy_xr || platform != Platform::Unknown,
              encoder_10_bits: galaxy_xr || platform != Platform::Unknown,
              encoder_av1: matches!(
@@ -3405,10 +3405,10 @@ index 0000000..766b412
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..362dbf1 100644
+index b87dfe9..4fad0e9 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
-@@ -59,17 +59,9 @@ impl ParsedStreamConfig {
+@@ -59,17 +59,12 @@ impl ParsedStreamConfig {
              encoding_gamma: config.negotiated_config.encoding_gamma,
              enable_hdr: config.negotiated_config.enable_hdr,
              passthrough: config.settings.video.passthrough.as_option().cloned(),
@@ -3423,13 +3423,16 @@ index b87dfe9..362dbf1 100644
 -                .clientside_foveation
 -                .as_option()
 -                .cloned(),
-+            // Match the server full-frame path, including sessions with stale settings.
-+            foveated_encoding_config: None,
++            // Reconstruct only the fixed profile explicitly negotiated by our
++            // matching server. Never revive arbitrary stale generic FFE settings.
++            foveated_encoding_config: (config.negotiated_config.enable_foveated_encoding
++                && config.settings.video.pyrowave.light_foveated_encoding)
++                .then(alvr_session::pyrowave_light_foveation),
 +            clientside_foveation_config: None,
              upscaling: config.settings.video.upscaling.as_option().cloned(),
              force_software_decoder: config.settings.video.force_software_decoder,
              max_buffering_frames: config.settings.video.max_buffering_frames,
-@@ -88,16 +80,28 @@ pub struct StreamContext {
+@@ -88,16 +83,28 @@ pub struct StreamContext {
      view_reference_space: Arc<xr::Space>,
      swapchains: [xr::Swapchain<xr::OpenGlEs>; 2],
      last_good_view_params: [ViewParams; 2],
@@ -3461,7 +3464,7 @@ index b87dfe9..362dbf1 100644
  }
  
  impl StreamContext {
-@@ -115,12 +119,6 @@ impl StreamContext {
+@@ -115,12 +122,6 @@ impl StreamContext {
  
          let xr_exts = xr_session.instance().exts();
  
@@ -3474,7 +3477,7 @@ index b87dfe9..362dbf1 100644
          let foveation_profile = if let Some(config) = &config.clientside_foveation_config {
              if xr_exts.fb_swapchain_update_state.is_some()
                  && xr_exts.fb_foveation.is_some()
-@@ -228,6 +226,10 @@ impl StreamContext {
+@@ -228,6 +229,10 @@ impl StreamContext {
              view_reference_space,
              swapchains,
              last_good_view_params: [ViewParams::default(); 2],
@@ -3485,7 +3488,7 @@ index b87dfe9..362dbf1 100644
              input_thread: None,
              input_thread_running,
              config,
-@@ -235,8 +237,26 @@ impl StreamContext {
+@@ -235,8 +240,26 @@ impl StreamContext {
              renderer,
              decoder: None,
              pending_frame: None,
@@ -3512,7 +3515,7 @@ index b87dfe9..362dbf1 100644
          this.update_reference_space();
  
          this
-@@ -310,6 +330,23 @@ impl StreamContext {
+@@ -310,6 +333,23 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
@@ -3536,7 +3539,7 @@ index b87dfe9..362dbf1 100644
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +375,42 @@ impl StreamContext {
+@@ -338,12 +378,42 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -3581,7 +3584,7 @@ index b87dfe9..362dbf1 100644
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +422,25 @@ impl StreamContext {
+@@ -355,8 +425,25 @@ impl StreamContext {
          }
      }
  
@@ -3607,7 +3610,7 @@ index b87dfe9..362dbf1 100644
      }
  
      pub fn render(
-@@ -364,15 +448,96 @@ impl StreamContext {
+@@ -364,15 +451,96 @@ impl StreamContext {
          frame_interval: Duration,
          vsync_time: Duration,
      ) -> (ProjectionLayerBuilder, Duration) {
@@ -3706,7 +3709,7 @@ index b87dfe9..362dbf1 100644
              }
          }
  
-@@ -401,37 +566,80 @@ impl StreamContext {
+@@ -401,37 +569,80 @@ impl StreamContext {
              ]);
          }
  
@@ -3817,7 +3820,7 @@ index b87dfe9..362dbf1 100644
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +701,8 @@ impl StreamContext {
+@@ -493,6 +704,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
@@ -4218,10 +4221,10 @@ index 3be9319..d3a1d7c 100644
          assert_eq!(r["window"]["frames"], 900);
 diff --git a/alvr/graphics/resources/direct_eye_fragment.glsl b/alvr/graphics/resources/direct_eye_fragment.glsl
 new file mode 100644
-index 0000000..986cf17
+index 0000000..901d8fa
 --- /dev/null
 +++ b/alvr/graphics/resources/direct_eye_fragment.glsl
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,29 @@
 +#version 300 es
 +#extension GL_OES_EGL_image_external_essl3 : require
 +precision highp float;
@@ -4231,8 +4234,13 @@ index 0000000..986cf17
 +uniform float encoding_gamma;
 +in vec2 uv;
 +out vec4 out_color;
++// Q3PW_FOVEATION_FUNCTION
 +void main() {
-+    vec3 color = texture(tex, uv).rgb;
++    vec2 sample_uv = uv;
++#ifdef Q3PW_FFE
++    sample_uv = light_foveated_uv(uv);
++#endif
++    vec3 color = texture(tex, sample_uv).rgb;
 +    if (fix_limited_range != 0)
 +        color = vec3(16.0 / 255.0) + (219.0 / 255.0) * color;
 +    if (srgb_correction != 0) {
@@ -4284,10 +4292,10 @@ index 0000000..bc6bee0
 +}
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000..d6d0379
+index 0000000..9abe01d
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,448 @@
+@@ -0,0 +1,462 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -4334,6 +4342,7 @@ index 0000000..d6d0379
 +    pub srgb_target: bool,
 +    pub fix_limited_range: bool,
 +    pub encoding_gamma: f32,
++    pub foveation: Option<([f32; 6], [f32; 16], UVec2)>,
 +}
 +
 +pub struct DirectEyeRenderer {
@@ -4363,7 +4372,7 @@ index 0000000..d6d0379
 +    release_last_log: RefCell<Instant>,
 +}
 +
-+unsafe fn compile_program(gl: &gl::Context) -> Result<gl::Program, String> {
++unsafe fn compile_program(gl: &gl::Context, foveation: bool) -> Result<gl::Program, String> {
 +    let program = gl.create_program()?;
 +    let mut shaders = Vec::new();
 +    let result = (|| {
@@ -4373,7 +4382,11 @@ index 0000000..d6d0379
 +        ] {
 +            let shader = gl.create_shader(kind)?;
 +            shaders.push(shader);
-+            gl.shader_source(shader, source);
++            let source = if kind == gl::FRAGMENT_SHADER && foveation {
++                source.replace("#version 300 es", "#version 300 es\n#define Q3PW_FFE")
++                    .replace("// Q3PW_FOVEATION_FUNCTION", include_str!("../resources/light_foveation.glsl"))
++            } else { source.to_owned() };
++            gl.shader_source(shader, &source);
 +            gl.compile_shader(shader);
 +            if !gl.get_shader_compile_status(shader) {
 +                return Err(gl.get_shader_info_log(shader));
@@ -4407,7 +4420,7 @@ index 0000000..d6d0379
 +            import_diagnostic(4, format!("[Q3PW_COLOR_COPY] requested={} active={} srgb_target={} correction={} gamma={}",
 +                raw_srgb_requested, bypass_srgb, config.srgb_target,
 +                config.srgb_correction, config.encoding_gamma));
-+            let program = compile_program(gl)?;
++            let program = compile_program(gl, config.foveation.is_some())?;
 +            let source_texture = match gl.create_texture() {
 +                Ok(texture) => texture,
 +                Err(e) => { gl.delete_program(program); return Err(e); }
@@ -4431,6 +4444,15 @@ index 0000000..d6d0379
 +                gl.uniform_1_i32(Some(&location("fix_limited_range")?), config.fix_limited_range as i32);
 +                gl.uniform_1_i32(Some(&location("srgb_correction")?), (config.srgb_correction && !bypass_srgb) as i32);
 +                gl.uniform_1_f32(Some(&location("encoding_gamma")?), if bypass_srgb { 0.0 } else { config.encoding_gamma });
++                if let Some((values, params, encoded)) = &config.foveation {
++                    gl.uniform_2_f32(Some(&location("ffe_view_ratio")?), values[0], values[1]);
++                    gl.uniform_2_f32(Some(&location("ffe_edge_ratio")?), values[2], values[3]);
++                    gl.uniform_2_f32(Some(&location("ffe_c2")?), values[4], values[5]);
++                    gl.uniform_4_f32_slice(Some(&location("ffe_p[0]")?), params);
++                    gl.uniform_2_f32(Some(&location("ffe_half_texel")?), 0.25 / encoded.x as f32, 0.5 / encoded.y as f32);
++                    import_diagnostic(4, format!("[Q3PW_LIGHT_FFE] direct=true expanded_eye={}x{} encoded_eye={}x{} center=0.8 edge=1.5 fixed=true",
++                        config.resolution.x, config.resolution.y, encoded.x, encoded.y));
++                }
 +                for eye in 0..2 {
 +                    if config.textures[eye].is_empty() {
 +                        return Err("Direct eye copy empty swapchain".into());
@@ -5446,7 +5468,7 @@ index febd2c3..779de33 100644
          );
      }
 diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
-index 737b7d0..4c4c8ed 100644
+index 737b7d0..7f0f410 100644
 --- a/alvr/graphics/src/stream.rs
 +++ b/alvr/graphics/src/stream.rs
 @@ -1,10 +1,10 @@
@@ -5475,22 +5497,30 @@ index 737b7d0..4c4c8ed 100644
  }
  
  impl StreamRenderer {
-@@ -90,6 +96,14 @@ impl StreamRenderer {
+@@ -90,6 +96,22 @@ impl StreamRenderer {
      ) -> Self {
          let device = &context.device;
  
 +        let direct_eye_config = (base_view_resolution == target_view_resolution
-+            && foveated_encoding.is_none() && upscaling.is_none()
++            && (foveated_encoding.is_none()
++                || foveated_encoding.as_ref() == Some(&alvr_session::pyrowave_light_foveation()))
++            && upscaling.is_none()
 +            && matches!(target_format, glow::SRGB8_ALPHA8 | glow::RGBA8))
 +            .then(|| DirectEyeConfig { textures: swapchain_textures.clone(),
 +                resolution: target_view_resolution, srgb_correction: enable_srgb_correction,
 +                srgb_target: target_format == glow::SRGB8_ALPHA8,
-+                fix_limited_range, encoding_gamma });
++                fix_limited_range, encoding_gamma,
++                foveation: foveated_encoding.as_ref().map(|config| {
++                    let (encoded, constants) = foveated_encoding_shader_constants(base_view_resolution, config.clone());
++                    let static_values = ["VIEW_WIDTH_RATIO", "VIEW_HEIGHT_RATIO", "EDGE_X_RATIO", "EDGE_Y_RATIO", "C2_X", "C2_Y"]
++                        .map(|key| constants[key] as f32);
++                    (static_values, foveated_encoding_dynamic_params(base_view_resolution, config.clone(), glam::Vec2::ZERO), encoded)
++                }) });
 +
          let target_format = super::gl_format_to_wgpu(target_format);
  
          let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-@@ -298,9 +312,65 @@ impl StreamRenderer {
+@@ -298,9 +320,65 @@ impl StreamRenderer {
              views_objects: view_objects.try_into().unwrap(),
              ffe_params_buffer,
              foveated_encoding: foveated_encoding.map(|c| (base_view_resolution, c)),
@@ -5556,7 +5586,7 @@ index 737b7d0..4c4c8ed 100644
      /// Move the full-resolution centre to match the server's, for the frame about to be drawn.
      ///
      /// Per eye: the horizontal frusta are asymmetric and mirrored, so one shared shift is only
-@@ -333,9 +403,30 @@ impl StreamRenderer {
+@@ -333,9 +411,30 @@ impl StreamRenderer {
          view_params: [StreamViewParams; 2],
          passthrough: Option<&PassthroughMode>,
      ) {
@@ -5822,7 +5852,7 @@ index 81f2f8e..869fa77 100644
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da..1054e0f 100644
+index fc176da..e6686ad 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -53,7 +53,8 @@ pub struct VideoPacket {
@@ -5835,7 +5865,7 @@ index fc176da..1054e0f 100644
  }
  
  fn is_streaming(client_hostname: &str) -> bool {
-@@ -133,25 +134,15 @@ fn openvr_config_with_env(
+@@ -133,25 +134,18 @@ fn openvr_config_with_env(
          })
          .unwrap_or(false);
  
@@ -5858,19 +5888,22 @@ index fc176da..1054e0f 100644
 -    } else {
 -        false
 -    };
-+    // Quest3-Pyrowave deliberately bypasses the inherited foveated remapping.
-+    // Stale sessions, force_enable and environment overrides must not re-enable it.
-+    let enable_foveated_encoding = false;
-+    let foveation_center_size_x = 0.0;
-+    let foveation_center_size_y = 0.0;
++    // Explicit fixed light mode only; inherited force-enable and gaze overrides
++    // cannot re-enable the old arbitrary warp or alter this profile.
++    let light = alvr_session::pyrowave_light_foveation_enabled(settings.video.preferred_codec,
++        settings.video.pyrowave.light_foveated_encoding, true)
++        .then(alvr_session::pyrowave_light_foveation);
++    let enable_foveated_encoding = light.is_some();
++    let foveation_center_size_x = light.as_ref().map_or(0.0, |c| c.center_size_x);
++    let foveation_center_size_y = light.as_ref().map_or(0.0, |c| c.center_size_y);
 +    let foveation_center_shift_x = 0.0;
 +    let foveation_center_shift_y = 0.0;
-+    let foveation_edge_ratio_x = 1.0;
-+    let foveation_edge_ratio_y = 1.0;
++    let foveation_edge_ratio_x = light.as_ref().map_or(1.0, |c| c.edge_ratio_x);
++    let foveation_edge_ratio_y = light.as_ref().map_or(1.0, |c| c.edge_ratio_y);
  
      let mut brightness = 0.0;
      let mut contrast = 0.0;
-@@ -240,7 +231,9 @@ fn openvr_config_with_env(
+@@ -240,7 +234,9 @@ fn openvr_config_with_env(
          pyrowave_enabled: pyrowave.enabled,
          pyrowave_udp: pyrowave.udp,
          pyrowave_wavelet_53: pyrowave.wavelet_53,
@@ -5880,7 +5913,7 @@ index fc176da..1054e0f 100644
          _controller_profile,
          _server_impl_debug: settings.extra.logging.debug_groups.server_impl,
          _client_impl_debug: settings.extra.logging.debug_groups.client_impl,
-@@ -629,6 +622,14 @@ fn connection_pipeline(
+@@ -629,6 +625,14 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -5895,7 +5928,7 @@ index fc176da..1054e0f 100644
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +650,7 @@ fn connection_pipeline(
+@@ -649,18 +653,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -5911,11 +5944,13 @@ index fc176da..1054e0f 100644
 -        } else {
 -            false
 -        };
-+    let enable_foveated_encoding = false;
++    let enable_foveated_encoding = alvr_session::pyrowave_light_foveation_enabled(
++        initial_settings.video.preferred_codec, initial_settings.video.pyrowave.light_foveated_encoding,
++        streaming_caps.supports_foveated_encoding);
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -802,6 +792,10 @@ fn connection_pipeline(
+@@ -802,6 +797,10 @@ fn connection_pipeline(
          proto_socket.split(STREAMING_RECV_TIMEOUT).to_con()?;
  
      let mut new_openvr_config = contruct_openvr_config(session_manager_lock.session());
@@ -5926,7 +5961,7 @@ index fc176da..1054e0f 100644
      new_openvr_config.eye_resolution_width = stream_view_resolution.x;
      new_openvr_config.eye_resolution_height = stream_view_resolution.y;
      new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
-@@ -869,10 +863,11 @@ fn connection_pipeline(
+@@ -869,10 +868,11 @@ fn connection_pipeline(
  
      // PyroWave over UDP: a plain socket to the client's address. The same resolution fills
      // openvr_config for the C++ encoder, so the two sides cannot disagree.
@@ -5942,7 +5977,7 @@ index fc176da..1054e0f 100644
      if pyrowave.enabled {
          info!("{pyrowave}");
      }
-@@ -1102,7 +1097,10 @@ fn connection_pipeline(
+@@ -1102,7 +1102,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -5954,7 +5989,7 @@ index fc176da..1054e0f 100644
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1113,7 @@ fn connection_pipeline(
+@@ -1115,6 +1118,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -5962,7 +5997,7 @@ index fc176da..1054e0f 100644
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1130,14 @@ fn connection_pipeline(
+@@ -1131,6 +1135,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -5977,7 +6012,7 @@ index fc176da..1054e0f 100644
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1299,6 +1306,9 @@ fn connection_pipeline(
+@@ -1299,6 +1311,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -5987,7 +6022,7 @@ index fc176da..1054e0f 100644
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1552,9 +1562,10 @@ mod beta_tests {
+@@ -1552,9 +1567,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -6298,6 +6333,21 @@ index 7bed823..c3b4f9e 100644
      int m_pyrowaveDecodePath = 0; // 0 auto, 1 fragment, 2 compute
      int m_h264Profile;
      bool m_use10bitEncoder;
+diff --git a/alvr/server_openvr/cpp/alvr_server/shader/CompressAxisAlignedPixelShader.hlsl b/alvr/server_openvr/cpp/alvr_server/shader/CompressAxisAlignedPixelShader.hlsl
+index e77a8ab..a41aea8 100644
+--- a/alvr/server_openvr/cpp/alvr_server/shader/CompressAxisAlignedPixelShader.hlsl
++++ b/alvr/server_openvr/cpp/alvr_server/shader/CompressAxisAlignedPixelShader.hlsl
+@@ -25,8 +25,8 @@ float4 main(float2 uv : TEXCOORD0) : SV_Target {
+ 	float2 loBound = c0 * (shift + 1.) / c2;
+ 	float2 hiBound = c0 * (shift - 1.) / c2 + 1.;
+ 	float2 underBound = float2(eyeUV.x < loBound.x, eyeUV.y < loBound.y);
+-	float2 inBound = float2(loBound.x < eyeUV.x && eyeUV.x < hiBound.x,
+-							loBound.y < eyeUV.y && eyeUV.y < hiBound.y);
++	float2 inBound = float2(loBound.x <= eyeUV.x && eyeUV.x <= hiBound.x,
++							loBound.y <= eyeUV.y && eyeUV.y <= hiBound.y);
+ 	float2 overBound = float2(eyeUV.x > hiBound.x, eyeUV.y > hiBound.y);
+ 
+ 	float2 center = eyeUV * c2 / edgeRatio + c1;
 diff --git a/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp b/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp
 index 5aae602..2f68f66 100644
 --- a/alvr/server_openvr/cpp/platform/win32/CEncoder.cpp
@@ -6698,8 +6748,20 @@ index a0356d3..230c751 100644
  class VideoEncoderPyroWave : public VideoEncoder {
  public:
      VideoEncoderPyroWave(
+diff --git a/alvr/server_openvr/src/lib.rs b/alvr/server_openvr/src/lib.rs
+index 861f726..713a470 100644
+--- a/alvr/server_openvr/src/lib.rs
++++ b/alvr/server_openvr/src/lib.rs
+@@ -50,6 +50,7 @@ use std::{
+ /// present, overrides it. Read once at first use, which is after the driver loaded the session:
+ /// the setting is flagged steamvr-restart.
+ static GAZE_FOVEATION_ENABLED: Lazy<bool> = Lazy::new(|| {
++    if alvr_server_core::settings().video.pyrowave.light_foveated_encoding { return false; }
+     alvr_session::beta::pyrowave_effective(
+         &alvr_server_core::settings(),
+         &alvr_session::beta::process_env,
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
-index 84100dc..c98098d 100644
+index 84100dc..65236d3 100644
 --- a/alvr/session/src/beta.rs
 +++ b/alvr/session/src/beta.rs
 @@ -3,25 +3,94 @@
@@ -6843,7 +6905,7 @@ index 84100dc..c98098d 100644
  /// socket values, so switching profiles never leaves one of them at a tester's experiment.
  fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::Value)> {
      let mut list = vec![
-@@ -56,48 +131,145 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
+@@ -56,48 +131,146 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
          assign("video.bitrate.mode.variant", "ConstantMbps".into()),
          assign("video.bitrate.mode.ConstantMbps", mbps.into()),
          assign("video.preferred_fps", json::json!(fps)),
@@ -6855,6 +6917,7 @@ index 84100dc..c98098d 100644
 -        assign("video.foveated_encoding.content.edge_ratio_x", json::json!(3.0)),
 -        assign("video.foveated_encoding.content.edge_ratio_y", json::json!(4.0)),
 -        assign("video.foveated_encoding.content.follow_gaze", true.into()),
++        assign("video.pyrowave.light_foveated_encoding", false.into()),
 +        assign("video.foveated_encoding.enabled", false.into()),
 +        assign("video.clientside_foveation.enabled", false.into()),
 +        assign(
@@ -7021,7 +7084,7 @@ index 84100dc..c98098d 100644
  }
  
  #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-@@ -186,8 +358,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
+@@ -186,8 +359,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
  #[derive(Clone, Debug, PartialEq)]
  pub struct PyroWaveEffective {
      pub enabled: bool,
@@ -7032,7 +7095,7 @@ index 84100dc..c98098d 100644
      pub decode_path: PyroWaveDecodePath,
      pub follow_gaze: bool,
      pub overrides: Vec<&'static str>,
-@@ -211,30 +385,24 @@ pub fn pyrowave_effective(
+@@ -211,30 +386,24 @@ pub fn pyrowave_effective(
          value
      };
  
@@ -7071,7 +7134,7 @@ index 84100dc..c98098d 100644
          decode_path: video.pyrowave.decode_path,
          follow_gaze,
          overrides,
-@@ -255,10 +423,11 @@ impl fmt::Display for PyroWaveEffective {
+@@ -255,10 +424,11 @@ impl fmt::Display for PyroWaveEffective {
          };
          write!(
              f,
@@ -7085,7 +7148,7 @@ index 84100dc..c98098d 100644
              if self.follow_gaze { "on" } else { "off" },
              if self.overrides.is_empty() {
                  "none".to_owned()
-@@ -279,7 +448,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
+@@ -279,7 +449,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
  }
  
  fn at<'a>(root: &'a json::Value, path: &str) -> Option<&'a json::Value> {
@@ -7377,7 +7440,7 @@ index d7d0dbb..d382c8f 100644
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99..70ed820 100644
+index 1009e99..2e69a5b 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -7437,10 +7500,15 @@ index 1009e99..70ed820 100644
      Auto = 0,
      Compute = 2,
      Fragment = 1,
-@@ -626,21 +625,26 @@ pub enum PyroWaveDecodePath {
+@@ -626,26 +625,48 @@ pub enum PyroWaveDecodePath {
  
  #[derive(SettingsSchema, Serialize, Deserialize, Clone, PartialEq, Debug)]
  pub struct PyroWaveConfig {
++    #[serde(default)]
++    #[schema(strings(display_name = "Light peripheral encoding (experimental)", help = "Fixed 80% center width/height, gentle 1.5x edge compression. Reduces encoded pixels; reconstructed view stays full size. Quest 3 matched client required. Compare quality and pacing; restart SteamVR. Off preserves full-frame encoding."))]
++    #[schema(flag = "steamvr-restart")]
++    pub light_foveated_encoding: bool,
++
 +    #[serde(default)]
 +    #[schema(strings(display_name = "Full chroma (4:4:4)", help = "Off: 4:2:0, half-width and half-height chroma with full-resolution luma. On: 4:4:4. Restart SteamVR after changing this."))]
 +    #[schema(flag = "steamvr-restart")]
@@ -7467,7 +7535,24 @@ index 1009e99..70ed820 100644
      ))]
      #[schema(flag = "steamvr-restart")]
      pub decode_path: PyroWaveDecodePath,
-@@ -799,23 +803,20 @@ pub struct VideoConfig {
+ }
+ 
++/// Only this fixed, mild profile is exposed by Quest3-Pyrowave. Generic stale
++/// foveation/force-enable/gaze/environment settings cannot modify its geometry.
++pub fn pyrowave_light_foveation_enabled(codec: CodecType, requested: bool, supported: bool) -> bool {
++    codec == CodecType::PyroWave && requested && supported
++}
++
++pub fn pyrowave_light_foveation() -> FoveatedEncodingConfig {
++    FoveatedEncodingConfig { force_enable: false, center_size_x: 0.8, center_size_y: 0.8,
++        center_shift_x: 0.0, center_shift_y: 0.0, edge_ratio_x: 1.5, edge_ratio_y: 1.5,
++        follow_gaze: false }
++}
++
+ #[repr(u8)]
+ #[derive(SettingsSchema, Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
+ #[schema(gui = "button_group")]
+@@ -799,23 +820,20 @@ pub struct VideoConfig {
      pub bitrate: BitrateConfig,
  
      #[schema(strings(
@@ -7496,7 +7581,7 @@ index 1009e99..70ed820 100644
      pub foveated_encoding: Switch<FoveatedEncodingConfig>,
  
      #[schema(flag = "steamvr-restart")]
-@@ -1663,15 +1664,15 @@ pub struct Settings {
+@@ -1663,15 +1681,15 @@ pub struct Settings {
  }
  
  pub fn session_settings_default() -> SettingsDefault {
@@ -7515,7 +7600,7 @@ index 1009e99..70ed820 100644
              },
          },
      };
-@@ -1742,7 +1743,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1742,7 +1760,7 @@ pub fn session_settings_default() -> SettingsDefault {
              adapter_index: 0,
              transcoding_view_resolution: view_resolution.clone(),
              emulated_headset_view_resolution: view_resolution,
@@ -7524,10 +7609,11 @@ index 1009e99..70ed820 100644
              max_buffering_frames: 1.5,
              buffering_history_weight: 0.90,
              enforce_server_frame_pacing: true,
-@@ -1796,14 +1797,15 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1796,14 +1814,16 @@ pub fn session_settings_default() -> SettingsDefault {
                  variant: CodecTypeDefaultVariant::PyroWave,
              },
              pyrowave: PyroWaveConfigDefault {
++                light_foveated_encoding: false,
 +                chroma_444: false,
                  transport: PyroWaveTransportDefault {
 -                    variant: PyroWaveTransportDefaultVariant::Udp,
@@ -7542,7 +7628,7 @@ index 1009e99..70ed820 100644
                  },
              },
              encoder_config: EncoderConfigDefault {
-@@ -1901,7 +1903,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1901,7 +1921,7 @@ pub fn session_settings_default() -> SettingsDefault {
                  }
              },
              foveated_encoding: SwitchDefault {
@@ -7551,7 +7637,7 @@ index 1009e99..70ed820 100644
                  content: FoveatedEncodingConfigDefault {
                      force_enable: false,
                      center_size_x: 0.20,
-@@ -1910,7 +1912,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1910,7 +1930,7 @@ pub fn session_settings_default() -> SettingsDefault {
                      center_shift_y: 0.0,
                      edge_ratio_x: 3.,
                      edge_ratio_y: 4.,
@@ -7560,7 +7646,7 @@ index 1009e99..70ed820 100644
                  },
              },
              clientside_foveation: SwitchDefault {
-@@ -2066,7 +2068,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2066,7 +2086,7 @@ pub fn session_settings_default() -> SettingsDefault {
                                  content: vec![],
                              },
                          },
@@ -7569,7 +7655,7 @@ index 1009e99..70ed820 100644
                      },
                      extra_openvr_props: default_custom_openvr_props,
                      button_mappings: OptionalDefault {
-@@ -2179,16 +2181,12 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2179,16 +2199,12 @@ pub fn session_settings_default() -> SettingsDefault {
                  content: DiscoveryConfigDefault {
                      // Beta: no pairing step. The pre-release protocol ID already keeps stock
                      // ALVR clients out; turn this off to approve each headset by hand.
@@ -7589,7 +7675,7 @@ index 1009e99..70ed820 100644
              },
              wired_client_autolaunch: true,
              web_server_port: 8082,
-@@ -2211,7 +2209,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2211,7 +2227,7 @@ pub fn session_settings_default() -> SettingsDefault {
              server_recv_buffer_bytes: socket_buffer.clone(),
              client_send_buffer_bytes: socket_buffer.clone(),
              client_recv_buffer_bytes: socket_buffer,
@@ -7598,7 +7684,7 @@ index 1009e99..70ed820 100644
              avoid_video_glitching: true,
              minimum_idr_interval_ms: 100,
              enable_on_connect_script: false,
-@@ -2262,7 +2260,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2262,7 +2278,7 @@ pub fn session_settings_default() -> SettingsDefault {
              },
              steamvr_launcher: SteamvrLauncherDefault {
                  driver_launch_action: DriverLaunchActionDefault {
@@ -7607,3 +7693,34 @@ index 1009e99..70ed820 100644
                  },
                  open_close_steamvr_with_dashboard: false,
              },
+@@ -2287,3 +2303,30 @@ pub fn session_settings_default() -> SettingsDefault {
+         },
+     }
+ }
++
++#[cfg(test)]
++mod light_foveation_tests {
++    use super::*;
++    #[test]
++    fn fixed_light_profile_is_explicit_and_never_gaze_driven() {
++        assert!(!crate::SessionConfig::default().to_settings().video.pyrowave.light_foveated_encoding);
++        let config = pyrowave_light_foveation();
++        assert_eq!((config.center_size_x, config.center_size_y), (0.8, 0.8));
++        assert_eq!((config.edge_ratio_x, config.edge_ratio_y), (1.5, 1.5));
++        assert_eq!((config.center_shift_x, config.center_shift_y), (0.0, 0.0));
++        assert!(!config.follow_gaze && !config.force_enable);
++        assert!(pyrowave_light_foveation_enabled(CodecType::PyroWave, true, true));
++        assert!(!pyrowave_light_foveation_enabled(CodecType::PyroWave, false, true));
++        assert!(!pyrowave_light_foveation_enabled(CodecType::PyroWave, true, false));
++        for codec in [CodecType::H264, CodecType::Hevc, CodecType::AV1] {
++            assert!(!pyrowave_light_foveation_enabled(codec, true, true));
++        }
++    }
++    #[test]
++    fn old_pyrowave_config_deserializes_with_light_disabled() {
++        let old: PyroWaveConfig = serde_json::from_value(serde_json::json!({
++            "chroma_444":false, "transport":"Tcp", "wavelet":"Haar", "decode_path":"Compute"
++        })).unwrap();
++        assert!(!old.light_foveated_encoding);
++    }
++}

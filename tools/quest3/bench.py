@@ -202,11 +202,13 @@ def active_settings():
         'requested_hz':v['preferred_fps'], 'decode_path':v['pyrowave']['decode_path']['variant'],
         'wavelet':v['pyrowave']['wavelet']['variant'],
         'chroma':'444' if v['pyrowave'].get('chroma_444',False) else '420',
+        'light_foveated_encoding':v['pyrowave'].get('light_foveated_encoding',False),
         'transport':v['pyrowave']['transport']['variant'], 'stream_protocol':s['session_settings']['connection']['stream_protocol']['variant'],
         'configured_view_resolution':v['transcoding_view_resolution'],
         'configured_render_view_resolution':v.get('emulated_headset_view_resolution'),
         'openvr':{k:o.get(k) for k in ('refresh_rate','eye_resolution_width','eye_resolution_height',
-            'target_eye_resolution_width','target_eye_resolution_height','pyrowave_enabled','pyrowave_decode_path','pyrowave_wavelet_53','pyrowave_wavelet_haar','pyrowave_udp','pyrowave_chroma_444','enable_foveated_encoding')}}
+            'target_eye_resolution_width','target_eye_resolution_height','pyrowave_enabled','pyrowave_decode_path','pyrowave_wavelet_53','pyrowave_wavelet_haar','pyrowave_udp','pyrowave_chroma_444','enable_foveated_encoding',
+            'foveation_center_size_x','foveation_center_size_y','foveation_center_shift_x','foveation_center_shift_y','foveation_edge_ratio_x','foveation_edge_ratio_y')}}
 
 def runtime_evidence(adb):
     log=adb_run(adb,'logcat','-d','-t','20000')

@@ -29,6 +29,9 @@ jobs:
           sudo apt-get install -y --no-install-recommends libegl-dev libgles-dev libegl-mesa0 libgl1-mesa-dri
           g++ -std=c++17 -O2 -Wall -Wextra -Werror tools/pyroclient/gpu_readback_gles.cpp tools/pyroclient/gpu_readback_test.cpp -lEGL -lGLESv2 -o /tmp/readback-test
           /tmp/readback-test
+          python3 -m tools.foveation.gpu_fixture /tmp/light-foveation-reference.txt
+          g++ -std=c++17 -O2 -Wall -Wextra -Werror tools/pyroclient/gpu_readback_gles.cpp tools/foveation/gpu_test.cpp -lEGL -lGLESv2 -o /tmp/light-foveation-test
+          /tmp/light-foveation-test tools/foveation/light.glsl /tmp/light-foveation-reference.txt
   client:
     runs-on: ubuntu-24.04
     needs: tests

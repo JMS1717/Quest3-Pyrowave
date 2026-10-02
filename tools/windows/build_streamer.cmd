@@ -13,6 +13,7 @@ if not exist "%PYRO_DLL%" ( echo build pyrowave interop first & exit /b 1 )
 rem xtask's nested cargo calls inherit the pinned toolchain from here
 set "RUSTUP_TOOLCHAIN=1.97.1"
 cd /d "%ALVR%"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0compile_foveation_shader.ps1" -Alvr "%ALVR%" || exit /b 1
 cargo xtask build-streamer --release || exit /b 1
 copy /y "%PYRO_DLL%" build\alvr_streamer_windows\bin\win64\ >nul || exit /b 1
 dir /b build\alvr_streamer_windows build\alvr_streamer_windows\bin\win64
