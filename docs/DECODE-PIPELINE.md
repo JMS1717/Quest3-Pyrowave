@@ -287,15 +287,22 @@ and completing commands before swapchain destruction ([rendering specification](
 Destroying an EGLImage handle leaves existing texture siblings valid; their storage
 and access still require synchronization ([EGL_KHR_image_base](https://registry.khronos.org/EGL/extensions/KHR/EGL_KHR_image_base.txt)).
 
-New counters distinguish queued copies, completed copies and pending-copy deferrals.
+New counters distinguish queued copies, completed direct copies and pending-copy deferrals.
 Completion wall time is observed at a later poll and is quantized by polling; it
 is neither a GPU timestamp nor optical latency. Benchmark summaries expose the
 completion rate and reject a nominal FPS pass when completion falls behind.
-Copies include configuration-forced redraws and therefore are not themselves a
+Staging GPU completion remains unobserved and is reported as unavailable. Direct
+copies include configuration-forced redraws and therefore are not themselves a
 unique fresh-frame counter. Matching `.16` APK/server builds are required because
 the telemetry packet layout changes. This candidate has no live acceptance yet.
 
 Dashboard startup now retries a transient bind failure for at most five seconds
 and reports an error instead of panicking. It does not reuse another listener's
-address. The separately observed ADB socket inheritance defect still needs a
-source-level fix; private unattended recovery remains bounded.
+address. Windows bootstraps ADB using `CreateProcessW` with handle inheritance
+disabled before device enumeration, so a new daemon cannot retain its parent's
+SteamVR listener sockets. ALVR teardown also leaves the shared ADB daemon running.
+The Windows regression suite checks child exit status and that a deliberately
+inheritable parent handle does not reach the bootstrap child. This addresses the
+observed failure mechanism; an actual SteamVR restart is still needed for live
+acceptance. See the [pinned Rust process implementation](https://github.com/rust-lang/rust/blob/1.97.1/library/std/src/sys/process/windows.rs)
+and [Windows process API](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw).

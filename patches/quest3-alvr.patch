@@ -1,8 +1,8 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7b..2300f15 100644
+index 7cead7b..34864d5 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
-@@ -182,7 +182,7 @@ dependencies = [
+@@ -182,19 +182,20 @@ dependencies = [
  
  [[package]]
  name = "alvr_adb"
@@ -11,7 +11,12 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
-@@ -194,7 +194,7 @@ dependencies = [
+  "alvr_system_info",
+  "anyhow",
+  "ureq",
++ "windows-sys 0.59.0",
+  "zip",
+ ]
  
  [[package]]
  name = "alvr_audio"
@@ -20,7 +25,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_common",
   "alvr_session",
-@@ -210,7 +210,7 @@ dependencies = [
+@@ -210,7 +211,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_client_core"
@@ -29,7 +34,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_audio",
   "alvr_common",
-@@ -234,7 +234,7 @@ dependencies = [
+@@ -234,7 +235,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_client_mock"
@@ -38,7 +43,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_client_core",
   "alvr_common",
-@@ -247,7 +247,7 @@ dependencies = [
+@@ -247,7 +248,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_client_openxr"
@@ -47,7 +52,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_client_core",
   "alvr_common",
-@@ -264,7 +264,7 @@ dependencies = [
+@@ -264,7 +265,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_common"
@@ -56,7 +61,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "anyhow",
   "backtrace",
-@@ -281,7 +281,7 @@ dependencies = [
+@@ -281,7 +282,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_dashboard"
@@ -65,7 +70,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_adb",
   "alvr_common",
-@@ -313,7 +313,7 @@ dependencies = [
+@@ -313,7 +314,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_events"
@@ -74,7 +79,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_common",
   "alvr_packets",
-@@ -324,7 +324,7 @@ dependencies = [
+@@ -324,7 +325,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_filesystem"
@@ -83,7 +88,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "dirs",
   "once_cell",
-@@ -332,7 +332,7 @@ dependencies = [
+@@ -332,7 +333,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_graphics"
@@ -92,7 +97,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_common",
   "alvr_session",
-@@ -346,7 +346,7 @@ dependencies = [
+@@ -346,7 +347,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_gui_common"
@@ -101,7 +106,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_common",
   "egui",
-@@ -354,7 +354,7 @@ dependencies = [
+@@ -354,7 +355,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_launcher"
@@ -110,7 +115,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_adb",
   "alvr_common",
-@@ -377,7 +377,7 @@ dependencies = [
+@@ -377,7 +378,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_packets"
@@ -119,7 +124,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_common",
   "alvr_session",
-@@ -388,7 +388,7 @@ dependencies = [
+@@ -388,7 +389,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_server_core"
@@ -128,7 +133,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_adb",
   "alvr_audio",
-@@ -422,7 +422,7 @@ dependencies = [
+@@ -422,7 +423,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_server_io"
@@ -137,7 +142,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_common",
   "alvr_events",
-@@ -438,7 +438,7 @@ dependencies = [
+@@ -438,7 +439,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_server_openvr"
@@ -146,7 +151,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
-@@ -455,7 +455,7 @@ dependencies = [
+@@ -455,7 +456,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_session"
@@ -155,7 +160,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
-@@ -469,7 +469,7 @@ dependencies = [
+@@ -469,7 +470,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_sockets"
@@ -164,7 +169,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_common",
   "alvr_session",
-@@ -482,7 +482,7 @@ dependencies = [
+@@ -482,7 +483,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_system_info"
@@ -173,7 +178,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_common",
   "jni",
-@@ -496,7 +496,7 @@ dependencies = [
+@@ -496,7 +497,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_vrcompositor_wrapper"
@@ -182,7 +187,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
-@@ -506,7 +506,7 @@ dependencies = [
+@@ -506,7 +507,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_vulkan_layer"
@@ -191,7 +196,7 @@ index 7cead7b..2300f15 100644
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
-@@ -518,7 +518,7 @@ dependencies = [
+@@ -518,7 +519,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_xtask"
@@ -213,6 +218,192 @@ index ae00ce8..8aa8b1b 100644
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
+diff --git a/alvr/adb/Cargo.toml b/alvr/adb/Cargo.toml
+index 2c7f4c0..54dbd8b 100644
+--- a/alvr/adb/Cargo.toml
++++ b/alvr/adb/Cargo.toml
+@@ -14,3 +14,6 @@ alvr_system_info.workspace = true
+ anyhow = "1"
+ ureq = "3"
+ zip = "2"
++
++[target.'cfg(windows)'.dependencies]
++windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Security", "Win32_System_Threading"] }
+diff --git a/alvr/adb/src/commands.rs b/alvr/adb/src/commands.rs
+index a5a4468..cf5a9e3 100644
+--- a/alvr/adb/src/commands.rs
++++ b/alvr/adb/src/commands.rs
+@@ -195,6 +195,9 @@ pub fn start_application(adb_path: &str, device_serial: &str, application_id: &s
+ // Devices
+ 
+ pub fn list_devices(adb_path: &str) -> Result<Vec<Device>> {
++    #[cfg(windows)]
++    crate::windows_launcher::start_server(adb_path)
++        .context("Failed to bootstrap ADB without inherited VR socket handles")?;
+     let output = get_command(adb_path, &["devices", "-l"])
+         .output()
+         .context("Failed to list ADB devices")?;
+diff --git a/alvr/adb/src/lib.rs b/alvr/adb/src/lib.rs
+index 64660b1..107f43d 100644
+--- a/alvr/adb/src/lib.rs
++++ b/alvr/adb/src/lib.rs
+@@ -1,8 +1,10 @@
+ pub mod commands;
++#[cfg(windows)]
++mod windows_launcher;
+ mod parse;
+ 
+ use alvr_common::anyhow::Result;
+-use alvr_common::{dbg_connection, error};
++use alvr_common::dbg_connection;
+ use alvr_system_info::{
+     ClientFlavor, PACKAGE_NAME_GITHUB_DEV, PACKAGE_NAME_GITHUB_STABLE, PACKAGE_NAME_STORE,
+ };
+@@ -86,14 +88,9 @@ impl WiredConnection {
+     }
+ }
+ 
+-impl Drop for WiredConnection {
+-    fn drop(&mut self) {
+-        dbg_connection!("wired_connection: Killing ADB server");
+-        if let Err(e) = commands::kill_server(&self.adb_path) {
+-            error!("{e:?}");
+-        }
+-    }
+-}
++// The ADB daemon is shared with other clients. Do not kill it on ALVR
++// teardown: that disrupts other devices and forces a new daemon to be spawned
++// from a later SteamVR process, potentially retaining inherited listener sockets.
+ 
+ pub fn get_process_name(
+     adb_path: &str,
+diff --git a/alvr/adb/src/windows_launcher.rs b/alvr/adb/src/windows_launcher.rs
+new file mode 100644
+index 0000000..6ad2528
+--- /dev/null
++++ b/alvr/adb/src/windows_launcher.rs
+@@ -0,0 +1,121 @@
++//! Start the ADB daemon without inheriting SteamVR/dashboard socket handles.
++//! Stable Rust Command currently inherits arbitrary inheritable handles; changing
++//! stdout alone does not restrict that list. This bootstrap needs no stdio.
++use std::{ffi::OsStr, io, mem::size_of, os::windows::ffi::OsStrExt, ptr};
++use windows_sys::Win32::{
++    Foundation::{CloseHandle, HANDLE, WAIT_OBJECT_0, WAIT_TIMEOUT},
++    System::Threading::{CreateProcessW, GetExitCodeProcess, TerminateProcess,
++        WaitForSingleObject, CREATE_NO_WINDOW, PROCESS_INFORMATION, STARTUPINFOW},
++};
++
++struct ProcessHandles(PROCESS_INFORMATION);
++impl Drop for ProcessHandles {
++    fn drop(&mut self) {
++        unsafe {
++            CloseHandle(self.0.hThread);
++            CloseHandle(self.0.hProcess);
++        }
++    }
++}
++
++fn wide(value: &OsStr) -> io::Result<Vec<u16>> {
++    let mut result: Vec<_> = value.encode_wide().collect();
++    if result.contains(&0) {
++        return Err(io::Error::new(io::ErrorKind::InvalidInput, "NUL in process argument"));
++    }
++    result.push(0);
++    Ok(result)
++}
++
++fn run_no_inherit(program: &OsStr, command_line: &OsStr) -> io::Result<u32> {
++    let program = wide(program)?;
++    let mut command_line = wide(command_line)?;
++    let mut startup: STARTUPINFOW = unsafe { std::mem::zeroed() };
++    startup.cb = size_of::<STARTUPINFOW>() as u32;
++    let mut process = unsafe { std::mem::zeroed() };
++    unsafe {
++        if CreateProcessW(program.as_ptr(), command_line.as_mut_ptr(), ptr::null(),
++            ptr::null(), 0, CREATE_NO_WINDOW, ptr::null(), ptr::null(),
++            &startup, &mut process) == 0 {
++            return Err(io::Error::last_os_error());
++        }
++        let process = ProcessHandles(process);
++        match WaitForSingleObject(process.0.hProcess, 30_000) {
++            WAIT_OBJECT_0 => {},
++            WAIT_TIMEOUT => {
++                // Only the bootstrap process we just created. Do not kill an
++                // existing ADB daemon, SteamVR process, or unrelated application.
++                TerminateProcess(process.0.hProcess, 1);
++                return Err(io::Error::new(io::ErrorKind::TimedOut, "ADB bootstrap timed out"));
++            }
++            _ => return Err(io::Error::last_os_error()),
++        }
++        let mut exit_code = 0;
++        if GetExitCodeProcess(process.0.hProcess, &mut exit_code) == 0 {
++            return Err(io::Error::last_os_error());
++        }
++        Ok(exit_code)
++    }
++}
++
++pub fn start_server(adb_path: &str) -> io::Result<()> {
++    if adb_path.contains('"') {
++        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Quote in ADB executable path"));
++    }
++    let command_line = format!("\"{adb_path}\" start-server");
++    match run_no_inherit(OsStr::new(adb_path), OsStr::new(&command_line))? {
++        0 => Ok(()),
++        code => Err(io::Error::other(format!("ADB bootstrap exited with {code}"))),
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use windows_sys::Win32::{Foundation::{GetHandleInformation, HANDLE_FLAG_INHERIT},
++        Security::SECURITY_ATTRIBUTES, System::Threading::CreateEventW};
++
++    #[test]
++    fn bootstrap_preserves_exit_status_and_rejects_bad_paths() {
++        assert_eq!(run_no_inherit(OsStr::new("cmd.exe"), OsStr::new("cmd.exe /C exit 7")).unwrap(), 7);
++        assert!(start_server("bad\0path").is_err());
++        assert!(start_server("bad\"path").is_err());
++    }
++
++    #[test]
++    fn bootstrap_does_not_inherit_a_parent_handle() {
++        let mut attributes: SECURITY_ATTRIBUTES = unsafe { std::mem::zeroed() };
++        attributes.nLength = size_of::<SECURITY_ATTRIBUTES>() as u32;
++        attributes.bInheritHandle = 1;
++        let event = unsafe { CreateEventW(&attributes, 1, 0, ptr::null()) };
++        assert!(!event.is_null());
++        struct Event(HANDLE);
++        impl Drop for Event { fn drop(&mut self) { unsafe { CloseHandle(self.0); } } }
++        let event = Event(event);
++        let mut flags = 0;
++        assert_ne!(unsafe { GetHandleInformation(event.0, &mut flags) }, 0);
++        assert_ne!(flags & HANDLE_FLAG_INHERIT, 0);
++        // The ignored child probe runs in this same test binary. Env mutation is
++        // unnecessary: embed the handle in its exact test-filter argument.
++        let exe = std::env::current_exe().unwrap();
++        let filter = format!("windows_launcher::tests::child_handle_probe_{:x}", event.0 as usize);
++        // Rust test harness has no dynamic test names, so pass a marker argument
++        // after --; child probe reads argv and checks this parent handle value.
++        let command = format!("\"{}\" child_handle_probe --ignored --nocapture -- {}", exe.display(), filter);
++        // A distinct status proves the child probe actually ran, rather than
++        // accepting a harness invocation that matched no tests.
++        assert_eq!(run_no_inherit(exe.as_os_str(), OsStr::new(&command)).unwrap(), 57);
++    }
++
++    #[test]
++    #[ignore]
++    fn child_handle_probe() {
++        let marker = std::env::args().find(|a| a.starts_with("windows_launcher::tests::child_handle_probe_"))
++            .expect("parent handle marker");
++        let handle = usize::from_str_radix(marker.rsplit('_').next().unwrap(), 16).unwrap() as HANDLE;
++        let mut flags = 0;
++        assert_eq!(unsafe { GetHandleInformation(handle, &mut flags) }, 0,
++            "Parent inheritable handle leaked into isolated bootstrap");
++        std::process::exit(57);
++    }
++}
 diff --git a/alvr/client_core/src/connection.rs b/alvr/client_core/src/connection.rs
 index 1ed4333..996268d 100644
 --- a/alvr/client_core/src/connection.rs
@@ -2875,7 +3066,7 @@ index 0000000..766b412
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..60fa26e 100644
+index b87dfe9..4c19956 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -59,17 +59,9 @@ impl ParsedStreamConfig {
@@ -3100,7 +3291,7 @@ index b87dfe9..60fa26e 100644
 +                video_decoder::telemetry::record_eye_copy(acquire_wait_ms, eye_render_ms,
 +                    release_start.elapsed().as_secs_f32() * 1000.0,
 +                    self.renderer.last_copy_was_direct());
-+                if !self.renderer.import_copy_pending() {
++                if self.renderer.last_copy_was_direct() && !self.renderer.import_copy_pending() {
 +                    video_decoder::telemetry::record_eye_completion(None);
 +                }
 +            }
@@ -4193,10 +4384,10 @@ index 737b7d0..78fe604 100644
  
          let mut encoder = self
 diff --git a/alvr/packets/src/lib.rs b/alvr/packets/src/lib.rs
-index 6b4ac58..94908b0 100644
+index 6b4ac58..5706052 100644
 --- a/alvr/packets/src/lib.rs
 +++ b/alvr/packets/src/lib.rs
-@@ -290,6 +290,21 @@ pub struct PyroWaveDecodeStats {
+@@ -290,6 +290,22 @@ pub struct PyroWaveDecodeStats {
      pub encoded_height: u32,
      pub gpu_decode_ms: Vec<f32>,
      pub fence_ms: Vec<f32>,
@@ -4209,7 +4400,8 @@ index 6b4ac58..94908b0 100644
 +    pub eye_release_ms: Vec<f32>,
 +    pub direct_eye_copies: u64,
 +    pub staging_eye_copies: u64,
-+    /// GPU-complete copies, not queued render calls or optical display frames.
++    /// GPU-complete direct copies only; staging completion is unobserved.
++    /// Not queued render calls or optical display frames.
 +    pub completed_eye_copies: u64,
 +    pub pending_eye_copy_deferrals: u64,
 +    /// Wall time until a nonblocking poll observed completion; polling quantizes
@@ -4218,7 +4410,7 @@ index 6b4ac58..94908b0 100644
  }
  
  /// What the beta test report needs from the headset that per-frame statistics do not carry.
-@@ -457,6 +472,30 @@ pub struct RealTimeConfig {
+@@ -457,6 +473,30 @@ pub struct RealTimeConfig {
      pub passthrough: Option<PassthroughMode>,
  }
  
@@ -4249,7 +4441,7 @@ index 6b4ac58..94908b0 100644
  pub fn encode_real_time_config(config: &RealTimeConfig) -> Result<ServerControlPacket> {
      Ok(ServerControlPacket::ReservedBuffer(bincode::serialize(
          config,
-@@ -477,15 +516,15 @@ pub struct ViewParams {
+@@ -477,15 +517,15 @@ pub struct ViewParams {
  
  // ---- PyroWave over UDP ----
  //
@@ -4269,7 +4461,7 @@ index 6b4ac58..94908b0 100644
  /// Datagram payload budget below a 1500-byte MTU with IPv4/UDP headers and ours.
  pub const PYROWAVE_UDP_PAYLOAD: usize = 1400 - PYROWAVE_UDP_HEADER_LEN;
  
-@@ -586,6 +625,14 @@ mod beta_telemetry_tests {
+@@ -586,6 +626,14 @@ mod beta_telemetry_tests {
                  partial: 3,
                  gpu_decode_ms: vec![3.2, 3.4],
                  fence_ms: vec![4.9, 5.1],

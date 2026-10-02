@@ -80,12 +80,16 @@ class BenchTests(unittest.TestCase):
             for t in (0,1/120,2/120)]
         events += [{'capture_elapsed_s':t,'event':{'event_type':{
             'id':'HeadsetTelemetry','data':{'pyrowave':{'completed_eye_copies':n,
+                'direct_eye_copies':n+20,'staging_eye_copies':0,
                 'pending_eye_copy_deferrals':d,'eye_completion_observed_ms':[8.5]}}}}}
             for t,n,d in [(0,10,1),(1,110,21)]]
         r=summarise(events,120)
         self.assertEqual(r['completed_eye_copy_rate_fps'],100)
         self.assertEqual(r['eye_copy_counter_deltas']['pending_eye_copy_deferrals'],20)
         self.assertFalse(r['sustained_requested_fps'])
+        events[-1]['event']['event_type']['data']['pyrowave']['staging_eye_copies']=1
+        self.assertIsNone(summarise(events)['completed_eye_copy_rate_fps'])
+        events[-1]['event']['event_type']['data']['pyrowave']['staging_eye_copies']=0
         events[-1]['event']['event_type']['data']['pyrowave']['completed_eye_copies']=9
         self.assertIsNone(summarise(events)['completed_eye_copy_rate_fps'])
 

@@ -126,13 +126,14 @@ def summarise(events, requested_hz=None):
         monotonic=valid and all(b>=a for a,b in zip(values,values[1:]))
         result['eye_copy_counter_deltas'][field]=values[-1]-values[0] if monotonic else None
     result['completed_eye_copy_rate_fps']=None
-    if len(pyro_times)>1:
+    if (len(pyro_times)>1 and (result['eye_copy_counter_deltas']['direct_eye_copies'] or 0)>0
+            and result['eye_copy_counter_deltas']['staging_eye_copies']==0):
         counters=[c for _,c in pyro_times]
         valid=all(isinstance(c,int) and not isinstance(c,bool) and c>=0 for c in counters)
         span=pyro_times[-1][0]-pyro_times[0][0]
         if valid and span>0 and all(b>=a for a,b in zip(counters,counters[1:])):
             result['completed_eye_copy_rate_fps']=(counters[-1]-counters[0])/span
-    result['completion_rate_definition']='GPU-complete eye copies per telemetry-time span; includes configuration-forced redraws. Not an optical display or unique fresh-frame counter.'
+    result['completion_rate_definition']='GPU-complete direct eye copies per telemetry-time span, only for exclusively direct windows; staging completion is unobserved. Includes configuration-forced redraws. Not optical display or unique fresh-frame FPS.'
     if requested_hz and graphs:
         fps=result['metrics']['client_fps']
         submitted=result['submitted_frame_rate_fps']
