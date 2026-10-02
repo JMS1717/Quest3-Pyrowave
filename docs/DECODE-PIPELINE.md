@@ -528,3 +528,17 @@ The optional `stereo_scene --pulse` counter updates a small texture region at 10
 With three cached imports, both eyes visibly advanced through ticks 324, 371 and
 419. This verifies new pixels through the consumer path, and does not measure
 optical FPS or motion-to-photon latency.
+
+Later .21 comparisons kept recommended allocation enabled for all three cases.
+With import caching off / on / off, fresh submission rates were 112.19 / 112.16 /
+112.93 FPS. With asynchronous copying off / on / off, they were 102.91 / 101.67 /
+111.86 FPS; GPU clocks were 690 / 640 / 690 MHz. Neither comparison establishes a
+caching or asynchronous-copy benefit. The first comparison is encouraging for the
+allocation path, but its short stationary captures do not establish sustained 120 FPS.
+All screenshots had correct eye labels, upright text and comparable chart colors.
+
+The matching .22 APK/server passed all cloud checks. Its proposed 500 microsecond
+latest-frame wait was **not tested**: the overnight deadline guard stopped the group
+after its baseline. That incomplete group is excluded from matched performance
+results. The wait defaults to zero. Original headset properties and proximity/sleep
+behavior were restored at the end of the hardware window with no recorded errors.

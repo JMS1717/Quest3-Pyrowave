@@ -12,6 +12,14 @@ The latest [alpha.7 preview](docs/RELEASE-alpha.7.md) packages matching .15 bina
 
 The latest .16 native USB screens delivered **106.5 / 106.4 fresh FPS** with synchronous direct copy. Asynchronous copy fell to **88.3** and increased estimated latency, so it stays off; FP16 math and compute color conversion also showed no benefit. See [October 2 findings](results/ASYNC-AND-CONVERSION-LIVE-2026-10-02.json). The .17 scheduling experiments are opt-in, unvalidated candidates; [details and measurement limits](docs/DECODE-PIPELINE.md).
 
+Later .21 allocation experiments reached **112–113 fresh FPS** at 2080×2208 per eye,
+120 Hz requested, 4:2:0 and 1000 Mbps over USB/ADB TCP. Caching and asynchronous copying
+did not establish an improvement. These short stationary screens still fall short of
+sustained native 120 FPS. [Full results and limitations](results/OUTPUT-BRIDGE-LIVE-2026-10-02.json).
+The matching .22 APK/server [passed all cloud checks](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/36976871902);
+its optional frame-wait experiment remains untested and off by default. Alpha.7 remains
+the published preview; newer Actions artifacts are experimental.
+
 Reviewed initial evidence is in [results](results/INITIAL-EVIDENCE.md). Those earlier foveated results do not validate the current full-frame build. High bitrate
 presets are experiment targets, not promises of usable throughput or quality.
 

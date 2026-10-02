@@ -1,7 +1,7 @@
-// On-device check of libpyroclient: decode a .wave through the library N times and dump the RGBA
-// buffer, so the library is scored against the reference before ALVR ever loads it.
-//   pyroclient_test <in.wave> <out.rgba> [iterations]
-// out.rgba is width*height*4 bytes; convert with ffmpeg -f rawvideo -pix_fmt rgba -s WxH.
+// On-device timing/ownership check of libpyroclient. Use '-' to omit pixel readback.
+//   pyroclient_test <in.wave> <-|out.rgba> [iterations]
+// CPU dumps require CPU_READ usage in the allocation; a successful lock alone does not
+// establish valid readback from a GPU-only buffer. Live output is normally GPU-only.
 #include "pyroclient.h"
 #include <android/hardware_buffer.h>
 #include <cstdio>
@@ -29,7 +29,7 @@ static bool load(const char *path, Wave &w) {
 }
 
 int main(int argc, char **argv) {
-    if (argc < 3) { fprintf(stderr, "usage: %s <in.wave> <out.rgba> [iterations] [auto|compute|fragment] [warmup_frames] [protect_first_buffer=0|1]\n", argv[0]); return 1; }
+    if (argc < 3) { fprintf(stderr, "usage: %s <in.wave> <-|out.rgba> [iterations] [auto|compute|fragment] [warmup_frames] [protect_first_buffer=0|1]\n", argv[0]); return 1; }
     Wave w;
     if (!load(argv[1], w)) return 1;
     const int iters = argc > 3 ? atoi(argv[3]) : 1;
@@ -88,19 +88,41 @@ int main(int argc, char **argv) {
     printf("{\"requested_decode_path\":\"%s\",\"iterations\":%d,\"complete\":%d,\"decode_best_ms\":%.6f,\"convert_best_ms\":%.6f,\"fence_p50_ms\":%.6f,\"fence_p99_ms\":%.6f,\"fence_mean_ms\":%.6f,\"fence_max_ms\":%.6f,\"warmup_frames\":%d,\"warmup_max_fence_ms\":%.6f,\"gpu_decode_p50_ms\":%.6f,\"gpu_decode_p99_ms\":%.6f,\"convert_p50_ms\":%.6f,\"record_p50_ms\":%.6f,\"wait_p50_ms\":%.6f}\n",
         argc > 4 ? argv[4] : "auto", iters, completes, bestDec, bestConv, totals[totals.size()/2], totals[(totals.size()-1)*99/100],sumTot/iters,totals.back(),warmup,warmupMax,decodes[decodes.size()/2],decodes[(decodes.size()-1)*99/100],converts[converts.size()/2],records[records.size()/2],waits[waits.size()/2]);
 
+    if (!strcmp(argv[2], "-")) {
+        printf("pixel readback skipped; timings do not establish image correctness\n");
+        pyroclient_destroy(c);
+        return completes == iters ? 0 : 1;
+    }
     AHardwareBuffer_Desc d = {};
     AHardwareBuffer_describe(ahb, &d);
+    const uint64_t cpu_read = d.usage & AHARDWAREBUFFER_USAGE_CPU_READ_MASK;
+    if (cpu_read != AHARDWAREBUFFER_USAGE_CPU_READ_RARELY &&
+        cpu_read != AHARDWAREBUFFER_USAGE_CPU_READ_OFTEN) {
+        fprintf(stderr, "CPU dump refused: allocation has no CPU_READ usage. Use '-' for timing only; validate pixels through a GPU consumer.\n");
+        pyroclient_destroy(c);
+        return 2;
+    }
     void *mapped = nullptr;
-    if (AHardwareBuffer_lock(ahb, AHARDWAREBUFFER_USAGE_CPU_READ_OFTEN, -1, nullptr, &mapped) != 0 || !mapped) {
-        fprintf(stderr, "AHardwareBuffer_lock failed (the buffer has no CPU usage; that is fine for GLES, not for this dump)\n");
+    if (AHardwareBuffer_lock(ahb, cpu_read, -1, nullptr, &mapped) != 0 || !mapped) {
+        fprintf(stderr, "AHardwareBuffer_lock failed\n");
+        pyroclient_destroy(c);
         return 2;
     }
     FILE *out = fopen(argv[2], "wb");
-    for (unsigned y = 0; y < d.height; y++)
-        fwrite((const unsigned char *)mapped + (size_t)y * d.stride * 4, 1, (size_t)d.width * 4, out);
-    fclose(out);
+    bool wrote = out != nullptr;
+    if (out) {
+        for (unsigned y = 0; y < d.height; y++) {
+            if (fwrite((const unsigned char *)mapped + (size_t)y * d.stride * 4, 1,
+                       (size_t)d.width * 4, out) != (size_t)d.width * 4) {
+                wrote = false;
+                break;
+            }
+        }
+        if (fclose(out) != 0) wrote = false;
+    }
     AHardwareBuffer_unlock(ahb, nullptr);
-    printf("wrote %s (%ux%u rgba, stride %u)\n", argv[2], d.width, d.height, d.stride);
+    if (wrote) printf("wrote %s (%ux%u rgba, stride %u)\n", argv[2], d.width, d.height, d.stride);
+    else fprintf(stderr, "pixel dump could not be written completely\n");
     pyroclient_destroy(c);
-    return 0;
+    return wrote && completes == iters ? 0 : 1;
 }

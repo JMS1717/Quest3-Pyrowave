@@ -44,8 +44,22 @@ samplers; that is not the conversion.
 ```
 ./build.sh                    # libpyroclient.so (bundled into the APK) + pyroclient_test
 pyroclient_test in.wave out.rgba [iterations]     # on the headset, LD_LIBRARY_PATH to the .so dir
+pyroclient_test in.wave - 80 fragment 10 1        # timing/guarded-buffer screen, no CPU dump
 ```
 
 `tools/build_alvr_2013.sh` builds this and stages `libpyroclient.so` + `libpyrowave-shared.so`
 into the ALVR clone's `deps/android_openxr/arm64-v8a`, which cargo-apk packages and which
 `client_core/build.rs` links against.
+
+The production output allocation is GPU-only. The probe now refuses CPU pixel dumps
+unless the actual allocation includes CPU_READ usage, even if the driver would accept
+`AHardwareBuffer_lock`. Such unsupported locks produced misleading dumps with the
+recommended allocation experiment. Use `-` to measure timing and protected-buffer
+reuse; it does not establish image correctness. Validate production pixels through
+the actual GLES/OpenXR consumer or a proper GPU reference readback. Adding CPU usage
+to the allocation would change the path under test and its performance.
+See the [Android allocation and lock requirements](https://developer.android.com/ndk/reference/group/a-hardware-buffer#ahardwarebuffer_lock).
+
+The Galaxy XR scores above are historical upstream results, not current Quest 3
+quality acceptance. Quest measurements and readback limitations are recorded in
+[the decode pipeline](../../docs/DECODE-PIPELINE.md).
