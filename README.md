@@ -125,6 +125,7 @@ only and preserves bitrate, refresh, chroma and decoder settings.
 | Later short captures varied, rather than consistently matching the best run | Frame selection: ~97-110 FPS; `.25` timer calibration: ~99-108 FPS. Dynamic clocks and thermal state matter. [Selection](results/FRAME-SELECTION-LIVE-2026-10-02.json), [timer](results/EYE-GPU-LIVE-2026-10-02.json) |
 | 4:4:4 cost performance in the matched chroma comparison | About 100 fresh FPS at 1000 Mbps/420 versus 66 at 2000 Mbps/444. **4:2:0 remains the default.** [Decision](docs/CHROMA.md) |
 | Optional light encoding reduced GPU decode p50 to **3.91 ms** versus **4.49 / 4.46 ms** controls | `.28`, same 1000 Mbps/native expanded view; short screens only, CPU eye time rose. [Mapping, tradeoffs and results](docs/LIGHT-FOVEATION.md) |
+| PC source **3072x3216** streamed with Quest decode still **2080x2208 per eye** | `.28`, 4:2:0/no foveation; **105 / 109 / 112 fresh FPS** in native/larger/native short screens. Separation verified; no sustained 120 or repeatable quality/latency win. [Controls and findings](docs/RENDER-ENCODE-RESOLUTION.md#first-controlled-quest-3-screen) |
 | The Vulkan -> AHB -> GLES bridge preserved RGB bytes in tested allocation modes | Small and native stereo readbacks; relative preservation, not an absolute color/quality certification. [Readbacks](results/GPU-READBACK-QUEST-2026-10-02.json) |
 
 These are **short stationary screening measurements**, not sustained gameplay

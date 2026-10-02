@@ -1,0 +1,201 @@
+{
+  "schema": 1,
+  "date": "2026-10-02",
+  "native_source_commit": "2b87fc717764c7588d1b511e062f1d4e6df682ea",
+  "tooling_source_commit": "2f6f0878484aae8904f47a8a964505e29d5befab",
+  "tooling_ci_url": "https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37048719733",
+  "configuration": {
+    "runtime_hz": 120,
+    "codec": "PyroWave",
+    "wavelet": "Haar",
+    "decode_path": "Compute",
+    "chroma": "420",
+    "foveation": false,
+    "target_payload_mbps": 1000,
+    "transport": "USB ADB TCP",
+    "direct_eye_copy": true,
+    "release_fd": false,
+    "overlay": true
+  },
+  "screen_seconds_per_cell": 15,
+  "normalized_chart": true,
+  "explicit_source_size": true,
+  "same_projections": true,
+  "control_reference_hashes_identical": true,
+  "cells": [
+    {
+      "cell": "baseline",
+      "actual_source_eye": [
+        2080,
+        2208
+      ],
+      "steamvr_recommended_eye": [
+        2544,
+        2704
+      ],
+      "negotiated_render_eye": [
+        2080,
+        2208
+      ],
+      "encoded_eye": [
+        2080,
+        2208
+      ],
+      "source_interval_verified": true,
+      "same_client_pid_during_capture": true,
+      "runtime_120_confirmed": true,
+      "metrics": {
+        "fresh_submissions_fps": 104.66569816000916,
+        "completed_direct_copies_fps": 104.85425546201954,
+        "p1_nominal_fps": 59.9832941,
+        "timestamp_gap_p95_ms": 16.69077735,
+        "decode_gpu_p50_ms": 5.1459113,
+        "decode_completion_p50_ms": 6.587631,
+        "eye_cpu_p50_ms": 1.438281,
+        "estimated_latency_p50_ms": 56.111242999999995,
+        "encode_p50_ms": 2.6498,
+        "video_payload_p50_mbps": 1006.14483
+      },
+      "sampled_health": [
+        {
+          "battery_temperature_c": 40.0,
+          "thermal_status": 0,
+          "gpu_clock_hz": 690000000
+        },
+        {
+          "battery_temperature_c": 40.0,
+          "thermal_status": 0,
+          "gpu_clock_hz": 690000000
+        },
+        {
+          "battery_temperature_c": 40.0,
+          "thermal_status": 0,
+          "gpu_clock_hz": 690000000
+        }
+      ],
+      "requested_rate_screen_passed": false,
+      "sustained_requested_fps": false
+    },
+    {
+      "cell": "supersampled",
+      "actual_source_eye": [
+        3072,
+        3216
+      ],
+      "steamvr_recommended_eye": [
+        2544,
+        2704
+      ],
+      "negotiated_render_eye": [
+        3072,
+        3232
+      ],
+      "encoded_eye": [
+        2080,
+        2208
+      ],
+      "source_interval_verified": true,
+      "same_client_pid_during_capture": true,
+      "runtime_120_confirmed": true,
+      "metrics": {
+        "fresh_submissions_fps": 109.32627038455159,
+        "completed_direct_copies_fps": 109.8792857758739,
+        "p1_nominal_fps": 59.984539579999996,
+        "timestamp_gap_p95_ms": 16.663199,
+        "decode_gpu_p50_ms": 5.186771,
+        "decode_completion_p50_ms": 6.670678,
+        "eye_cpu_p50_ms": 1.431459,
+        "estimated_latency_p50_ms": 54.675404,
+        "encode_p50_ms": 1.5642,
+        "video_payload_p50_mbps": 997.7199
+      },
+      "sampled_health": [
+        {
+          "battery_temperature_c": 40.0,
+          "thermal_status": 0,
+          "gpu_clock_hz": 690000000
+        },
+        {
+          "battery_temperature_c": 40.0,
+          "thermal_status": 0,
+          "gpu_clock_hz": 690000000
+        },
+        {
+          "battery_temperature_c": 40.0,
+          "thermal_status": 0,
+          "gpu_clock_hz": 690000000
+        }
+      ],
+      "requested_rate_screen_passed": false,
+      "sustained_requested_fps": false
+    },
+    {
+      "cell": "restore",
+      "actual_source_eye": [
+        2080,
+        2208
+      ],
+      "steamvr_recommended_eye": [
+        3280,
+        3448
+      ],
+      "negotiated_render_eye": [
+        2080,
+        2208
+      ],
+      "encoded_eye": [
+        2080,
+        2208
+      ],
+      "source_interval_verified": true,
+      "same_client_pid_during_capture": true,
+      "runtime_120_confirmed": true,
+      "metrics": {
+        "fresh_submissions_fps": 111.66124929723976,
+        "completed_direct_copies_fps": 111.77142311229238,
+        "p1_nominal_fps": 59.98705412,
+        "timestamp_gap_p95_ms": 16.649363,
+        "decode_gpu_p50_ms": 4.377969,
+        "decode_completion_p50_ms": 5.914376,
+        "eye_cpu_p50_ms": 1.858203,
+        "estimated_latency_p50_ms": 43.563128,
+        "encode_p50_ms": 1.487,
+        "video_payload_p50_mbps": 1001.21254
+      },
+      "sampled_health": [
+        {
+          "battery_temperature_c": 41.0,
+          "thermal_status": 0,
+          "gpu_clock_hz": 690000000
+        },
+        {
+          "battery_temperature_c": 41.0,
+          "thermal_status": 0,
+          "gpu_clock_hz": 690000000
+        },
+        {
+          "battery_temperature_c": 41.0,
+          "thermal_status": 0,
+          "gpu_clock_hz": 690000000
+        }
+      ],
+      "requested_rate_screen_passed": false,
+      "sustained_requested_fps": false
+    }
+  ],
+  "excluded_attempts": [
+    {
+      "group": "initial_geometry_screen",
+      "reason": "Scene was initialized before the client settled; stale recommendation and temporary symmetric FOV changed controls. Excluded from performance/quality comparison."
+    }
+  ],
+  "screenshot_review": "Both eyes upright, correct labels and comparable chart placement; no gross corruption. Fine stripes change under downsampling. Screenshots do not establish an in-headset quality uplift.",
+  "decision": "Geometry separation works with a real larger PC source and unchanged Quest decode size. Keep native source default; larger source is optional. No repeatable latency/FPS gain or sustained 120 acceptance established.",
+  "limitations": [
+    "Only one 15-second A/B/A group; dynamic clocks, warming battery and pipeline-state differences confound timing.",
+    "Sparse clock/battery/Android thermal samples are not continuous GPU load or silicon thermometry.",
+    "Normalized font/stroke rounding and slightly different source aspect ratios limit pixel-perfect image comparison.",
+    "Estimated pipeline latency is not optical motion-to-photon.",
+    "Source chart is stationary and does not establish demanding gameplay performance."
+  ]
+}

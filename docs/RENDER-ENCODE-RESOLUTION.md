@@ -130,7 +130,46 @@ payload and content-dependent codec cost can still change. Compare game/server
 FPS, compositor/encoder time, delivered fresh FPS/p1, GPU decode/completion,
 pipeline latency and thermals; visually compare text, HUD edges and fine detail.
 Higher PC workload can erase a quality benefit by missing display deadlines.
-No quality or performance improvement is claimed until matched live comparisons.
+No quality or performance improvement should be inferred from geometry alone.
+
+## First controlled Quest 3 screen
+
+The matching `.28` pair now has a completed 15-second native/larger-source/native
+group using explicit **2080x2208 / 3072x3216 / 2080x2208 PC textures** and the
+normalized chart. Client streaming settled before each source initialized;
+projections matched, native control reference hashes matched, and all source
+intervals covered capture. Decode stayed **2080x2208 per eye** in every cell,
+with runtime 120 Hz, 4:2:0, no foveation and 1000 Mbps USB/TCP.
+[Sanitized measurements and provenance](../results/RENDER-ENCODE-LIVE-2026-10-02.json).
+
+| Metric | Native control | Larger source | Native return |
+| --- | ---: | ---: | ---: |
+| Delivered fresh FPS | 104.67 | 109.33 | 111.66 |
+| Completed eye copies/s | 104.85 | 109.88 | 111.77 |
+| Nominal FPS p1 | ~60 | ~60 | ~60 |
+| Frame timestamp gap p95, ms | 16.69 | 16.66 | 16.65 |
+| GPU decode p50, ms | 5.15 | 5.19 | 4.38 |
+| Decode completion p50, ms | 6.59 | 6.67 | 5.91 |
+| Encoder p50, ms | 2.65 | 1.56 | 1.49 |
+| Estimated pipeline latency p50, ms | 56.11 | 54.68 | 43.56 |
+| Actual video payload p50, Mbps | 1006.14 | 997.72 | 1001.21 |
+
+The larger actual source has about 2.15x the input pixels; its aligned SteamVR
+recommendation remains 3072x3232. Geometry separation works without adding
+Quest decode pixels. This screen establishes **neither sustained 120 fresh FPS
+nor a repeatable latency/quality win**. Battery samples were 40 / 40 / 41 C,
+Android thermal status 0, and all nine sparse GPU clock samples 690 MHz; these
+are not continuous clock/load or silicon-temperature measurements. The return
+control changed substantially, so differences cannot be attributed solely to
+render resolution. Screenshot review found upright matching eyes and comparable
+chart placement; fine stripes changed with downsampling, without establishing
+a noticeable in-headset quality uplift. Native source remains the default.
+
+An earlier attempt is excluded: the source initialized during reconnection,
+received stale recommended sizes/default symmetric FOV, and changed between
+control cells. Those results are not performance or quality evidence. The new
+fixed-source/normalized controls and CPU raster regressions address that fixture
+problem; further reverse-order and sustained testing remains necessary.
 
 To restore the existing native geometry use `--profile native2080`, restart and
 reconnect. For an exact restoration of prior Scale/optional-height configuration,
