@@ -20,6 +20,11 @@ The matching .22 APK/server [passed all cloud checks](https://github.com/JMS1717
 its optional frame-wait experiment remains untested and off by default. Alpha.7 remains
 the published preview; newer Actions artifacts are experimental.
 
+Saved stage counters now show about **120 completed decodes/s but 112–113 completed
+eye copies/s**; superseded outputs account for the difference within one frame.
+The .23 nonblocking pre-wait selection is an opt-in source candidate, off by default
+and not tested on Quest. [Count analysis and limits](results/OUTPUT-SLOT-LOSS-2026-10-02.json).
+
 Reviewed initial evidence is in [results](results/INITIAL-EVIDENCE.md). Those earlier foveated results do not validate the current full-frame build. High bitrate
 presets are experiment targets, not promises of usable throughput or quality.
 

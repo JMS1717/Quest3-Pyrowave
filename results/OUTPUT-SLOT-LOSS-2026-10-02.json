@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "status": "retrospective_saved_capture_analysis_not_new_hardware_test",
+  "binary_version": "20.13.0-quest3.pyro.21",
+  "binary_sha": "edfaccf317deab7de0fe022220e6ea2ac3847177",
+  "ci_run": 36974971200,
+  "configuration": {
+    "encoded_per_eye": [
+      2080,
+      2208
+    ],
+    "requested_hz": 120,
+    "chroma": "4:2:0",
+    "foveated_encoding": false,
+    "target_mbps": 1000,
+    "transport": "USB/ADB TCP",
+    "decode": "Haar compute",
+    "conversion": "fragment",
+    "direct_copy": true,
+    "async_copy": false
+  },
+  "cases": [
+    {
+      "case": "baseline",
+      "source_coverage_verified": true,
+      "cache_enabled": false,
+      "capture_seconds": 15,
+      "counter_window": {
+        "samples": 13,
+        "interval_s": 14.050643900001887,
+        "counter_deltas": {
+          "complete": 1686,
+          "partial": 0,
+          "skipped": 0,
+          "dropped": 0,
+          "superseded": 104,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1583,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1583,
+          "pending_eye_copy_deferrals": 0
+        },
+        "counter_rates_per_s": {
+          "complete": 119.99450075023064,
+          "partial": 0.0,
+          "skipped": 0.0,
+          "dropped": 0.0,
+          "superseded": 7.401796013062863,
+          "stale_packets": 0.0,
+          "decode_failures": 0.0,
+          "direct_eye_copies": 112.66387585267799,
+          "staging_eye_copies": 0.0,
+          "completed_eye_copies": 112.66387585267799,
+          "pending_eye_copy_deferrals": 0.0
+        },
+        "definition": "Matching HeadsetTelemetry endpoints. Complete is producer decode completion; superseded includes pending replacement and out-of-order publication. Eye completion can include configuration redraws; staging completion is unobserved. Not unique or optical display FPS."
+      },
+      "complete_minus_superseded_minus_completed_eye_copies": -1,
+      "submitted_frame_rate_fps": 112.18568216425307
+    },
+    {
+      "case": "experiment",
+      "source_coverage_verified": true,
+      "cache_enabled": true,
+      "capture_seconds": 15,
+      "counter_window": {
+        "samples": 13,
+        "interval_s": 13.714814900005877,
+        "counter_deltas": {
+          "complete": 1643,
+          "partial": 0,
+          "skipped": 3,
+          "dropped": 0,
+          "superseded": 105,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1538,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1538,
+          "pending_eye_copy_deferrals": 0
+        },
+        "counter_rates_per_s": {
+          "complete": 119.79746077355342,
+          "partial": 0.0,
+          "skipped": 0.2187415595378334,
+          "dropped": 0.0,
+          "superseded": 7.655954583824169,
+          "stale_packets": 0.0,
+          "decode_failures": 0.0,
+          "direct_eye_copies": 112.14150618972926,
+          "staging_eye_copies": 0.0,
+          "completed_eye_copies": 112.14150618972926,
+          "pending_eye_copy_deferrals": 0.0
+        },
+        "definition": "Matching HeadsetTelemetry endpoints. Complete is producer decode completion; superseded includes pending replacement and out-of-order publication. Eye completion can include configuration redraws; staging completion is unobserved. Not unique or optical display FPS."
+      },
+      "complete_minus_superseded_minus_completed_eye_copies": 0,
+      "submitted_frame_rate_fps": 112.15792283631485
+    },
+    {
+      "case": "restore",
+      "source_coverage_verified": true,
+      "cache_enabled": false,
+      "capture_seconds": 15,
+      "counter_window": {
+        "samples": 13,
+        "interval_s": 13.574717299998156,
+        "counter_deltas": {
+          "complete": 1629,
+          "partial": 0,
+          "skipped": 0,
+          "dropped": 0,
+          "superseded": 92,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1537,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1537,
+          "pending_eye_copy_deferrals": 0
+        },
+        "counter_rates_per_s": {
+          "complete": 120.00249905758416,
+          "partial": 0.0,
+          "skipped": 0.0,
+          "dropped": 0.0,
+          "superseded": 6.777305041926177,
+          "stale_packets": 0.0,
+          "decode_failures": 0.0,
+          "direct_eye_copies": 113.22519401565798,
+          "staging_eye_copies": 0.0,
+          "completed_eye_copies": 113.22519401565798,
+          "pending_eye_copy_deferrals": 0.0
+        },
+        "definition": "Matching HeadsetTelemetry endpoints. Complete is producer decode completion; superseded includes pending replacement and out-of-order publication. Eye completion can include configuration redraws; staging completion is unobserved. Not unique or optical display FPS."
+      },
+      "complete_minus_superseded_minus_completed_eye_copies": 0,
+      "submitted_frame_rate_fps": 112.92970301983354
+    }
+  ],
+  "finding": "Producer completed about 120 frames/s while direct eye copies completed about 112-113/s. Complete minus superseded matches eye completion within one frame in every saved case. This localizes counted loss after decode to the bounded output publication/consumption path; it does not prove that xrWaitFrame phase is the cause.",
+  "limitations": [
+    "Counters are sampled separately; endpoints may differ by one frame.",
+    "Superseded counts both pending replacement and out-of-order publication rejection; it is not exclusively an overwrite counter.",
+    "Short stationary captures do not establish sustained performance, gameplay or optical display FPS.",
+    "No per-completion timestamps for overwritten frames were recorded. Phase causality remains a hypothesis.",
+    "GPU clock changed with caching; this retrospective count analysis is not a controlled cache speed comparison."
+  ],
+  "next_experiment": {
+    "version": "20.13.0-quest3.pyro.23",
+    "property": "debug.q3pw.pre_wait_poll",
+    "default": 0,
+    "status": "source_candidate_not_deployed_or_live_validated",
+    "behavior": "Optionally take one already complete, protected Quest3 PyroWave frame before xrWaitFrame; never sleep or wait for decoding in this poll. Keep existing three-buffer protection and post-wait fallback.",
+    "tradeoff": "May reduce replacement while holding an older frame through the runtime wait. Require matched freshness, pacing and latency checks before promotion."
+  }
+}

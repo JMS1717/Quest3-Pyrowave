@@ -206,7 +206,7 @@ index 7cead7b..f16efe8 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..9dd27d2 100644
+index ae00ce8..df60e08 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..9dd27d2 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.22"
++version = "20.13.0-quest3.pyro.23"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -2445,7 +2445,7 @@ index 7765bb4..b102615 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..60a317c 100644
+index a0fd36f..a1c460b 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -4,6 +4,8 @@ mod graphics;
@@ -2676,12 +2676,14 @@ index a0fd36f..60a317c 100644
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -565,10 +652,17 @@ pub fn entry_point() {
+@@ -565,10 +652,19 @@ pub fn entry_point() {
              // Frame in hand before the runtime picks the display slot (stream.rs poll_frame).
              if early_poll {
                  if let Some(stream) = &mut stream_context {
 -                    stream.poll_frame(poll_interval);
-+                    if !stream.uses_latest_frame_polling() {
++                    if stream.uses_latest_frame_polling() {
++                        stream.poll_latest_before_wait();
++                    } else {
 +                        stream.poll_frame(poll_interval);
 +                    }
                  }
@@ -2695,7 +2697,7 @@ index a0fd36f..60a317c 100644
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -579,9 +673,45 @@ pub fn entry_point() {
+@@ -579,9 +675,45 @@ pub fn entry_point() {
              let frame_interval =
                  Duration::from_nanos(frame_state.predicted_display_period.as_nanos() as _);
              poll_interval = frame_interval;
@@ -2742,7 +2744,7 @@ index a0fd36f..60a317c 100644
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +735,15 @@ pub fn entry_point() {
+@@ -605,15 +737,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -2767,7 +2769,7 @@ index a0fd36f..60a317c 100644
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,9 +751,10 @@ pub fn entry_point() {
+@@ -621,9 +753,10 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -2779,7 +2781,7 @@ index a0fd36f..60a317c 100644
              let vsync_time =
                  Duration::from_nanos(frame_state.predicted_display_time.as_nanos() as _);
  
-@@ -654,22 +785,45 @@ pub fn entry_point() {
+@@ -654,22 +787,45 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
@@ -2833,7 +2835,7 @@ index a0fd36f..60a317c 100644
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +852,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +854,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
@@ -3226,7 +3228,7 @@ index 0000000..766b412
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..0534e9b 100644
+index b87dfe9..eb04019 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -59,17 +59,9 @@ impl ParsedStreamConfig {
@@ -3250,7 +3252,7 @@ index b87dfe9..0534e9b 100644
              upscaling: config.settings.video.upscaling.as_option().cloned(),
              force_software_decoder: config.settings.video.force_software_decoder,
              max_buffering_frames: config.settings.video.max_buffering_frames,
-@@ -88,6 +80,8 @@ pub struct StreamContext {
+@@ -88,16 +80,25 @@ pub struct StreamContext {
      view_reference_space: Arc<xr::Space>,
      swapchains: [xr::Swapchain<xr::OpenGlEs>; 2],
      last_good_view_params: [ViewParams; 2],
@@ -3259,17 +3261,27 @@ index b87dfe9..0534e9b 100644
      input_thread: Option<JoinHandle<()>>,
      input_thread_running: Arc<RelaxedAtomic>,
      config: ParsedStreamConfig,
-@@ -98,6 +92,9 @@ pub struct StreamContext {
-     /// the earliest slot after the frame is in hand rather than one chosen before the wait for
-     /// it (see `poll_frame`).
+     target_view_resolution: UVec2,
+     renderer: StreamRenderer,
+     decoder: Option<(VideoDecoderConfig, VideoDecoderSource)>,
+-    /// A decoded frame taken *before* xrWaitFrame, so the runtime's predicted display time is
+-    /// the earliest slot after the frame is in hand rather than one chosen before the wait for
+-    /// it (see `poll_frame`).
++    /// A decoded frame selected before xrWaitFrame. Legacy decoders may block while
++    /// selecting; the opt-in Quest3 PyroWave pre-wait poll only takes a ready frame.
++    /// Its existing native-buffer lease remains protected until the eye copy is ready.
      pending_frame: Option<(Duration, *mut std::ffi::c_void)>,
 +    frame_wait_budget: Duration,
 +    frame_wait_stats: [u64; 4], // waits, ready hits, total microseconds, max microseconds
 +    frame_wait_last_log: Instant,
++    pre_wait_poll: bool,
++    pending_frame_selected_at: Option<Instant>,
++    pre_wait_stats: [u64; 5], // polls, hits, consumed held frames, total hold us, max hold us
++    pre_wait_last_log: Instant,
  }
  
  impl StreamContext {
-@@ -115,12 +112,6 @@ impl StreamContext {
+@@ -115,12 +116,6 @@ impl StreamContext {
  
          let xr_exts = xr_session.instance().exts();
  
@@ -3282,7 +3294,7 @@ index b87dfe9..0534e9b 100644
          let foveation_profile = if let Some(config) = &config.clientside_foveation_config {
              if xr_exts.fb_swapchain_update_state.is_some()
                  && xr_exts.fb_foveation.is_some()
-@@ -228,6 +219,10 @@ impl StreamContext {
+@@ -228,6 +223,10 @@ impl StreamContext {
              view_reference_space,
              swapchains,
              last_good_view_params: [ViewParams::default(); 2],
@@ -3293,7 +3305,7 @@ index b87dfe9..0534e9b 100644
              input_thread: None,
              input_thread_running,
              config,
-@@ -235,6 +230,11 @@ impl StreamContext {
+@@ -235,8 +234,23 @@ impl StreamContext {
              renderer,
              decoder: None,
              pending_frame: None,
@@ -3302,14 +3314,29 @@ index b87dfe9..0534e9b 100644
 +                    .parse::<u64>().unwrap_or(0).min(1000)),
 +            frame_wait_stats: [0; 4],
 +            frame_wait_last_log: Instant::now(),
++            pre_wait_poll: crate::extra_extensions::perf_settings::system_property(
++                "debug.q3pw.pre_wait_poll",
++            ) == "1",
++            pending_frame_selected_at: None,
++            pre_wait_stats: [0; 5],
++            pre_wait_last_log: Instant::now(),
          };
  
++        alvr_graphics::log_quest_experiment(format!(
++            "[Q3PW_PRE_WAIT] requested={} (requires Quest3 PyroWave and early_poll)",
++            this.pre_wait_poll,
++        ));
          this.update_reference_space();
-@@ -310,6 +310,19 @@ impl StreamContext {
+ 
+         this
+@@ -310,6 +324,22 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
 +            self.pending_frame = None;
++            self.pending_frame_selected_at = None;
++            self.pre_wait_stats = [0; 5];
++            self.pre_wait_last_log = Instant::now();
 +            self.released_eye_images_valid = false;
 +            self.renderer.set_import_copy_sync(codec == CodecType::PyroWave);
 +            self.renderer.set_direct_eye_copy(
@@ -3325,7 +3352,7 @@ index b87dfe9..0534e9b 100644
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +351,22 @@ impl StreamContext {
+@@ -338,12 +368,42 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -3335,6 +3362,26 @@ index b87dfe9..0534e9b 100644
 +                .decoder
 +                .as_ref()
 +                .is_some_and(|(config, _)| config.codec == CodecType::PyroWave)
++    }
++
++    /// Opt-in nonblocking selection before xrWaitFrame. Holding this frame protects its
++    /// existing source lease while the producer may replace the one pending slot. It can
++    /// also hold an older frame through the runtime wait, so latency needs live comparison.
++    /// Never enable the blocking producer handoff to emulate this selection policy.
++    pub fn poll_latest_before_wait(&mut self) {
++        if !self.pre_wait_poll || !self.uses_latest_frame_polling()
++            || self.pending_frame.is_some() || !self.poll_eye_copy()
++        {
++            return;
++        }
++        self.pre_wait_stats[0] += 1;
++        if let Some((_, source)) = &mut self.decoder {
++            if let Some(frame) = source.get_frame() {
++                self.pending_frame = Some(frame);
++                self.pending_frame_selected_at = Some(Instant::now());
++                self.pre_wait_stats[1] += 1;
++            }
++        }
 +    }
 +
      pub fn poll_frame(&mut self, frame_interval: Duration) {
@@ -3350,7 +3397,7 @@ index b87dfe9..0534e9b 100644
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +378,25 @@ impl StreamContext {
+@@ -355,8 +415,25 @@ impl StreamContext {
          }
      }
  
@@ -3376,15 +3423,36 @@ index b87dfe9..0534e9b 100644
      }
  
      pub fn render(
-@@ -368,11 +408,48 @@ impl StreamContext {
+@@ -368,11 +445,69 @@ impl StreamContext {
              + Duration::from_secs_f32(
                  frame_interval.as_secs_f32() * DECODER_MAX_TIMEOUT_MULTIPLIER,
              );
 -        let mut frame_result = self.pending_frame.take();
 +        let copy_ready = self.poll_eye_copy();
 +        let mut frame_result = if copy_ready { self.pending_frame.take() } else { None };
++        if frame_result.is_some() {
++            if let Some(selected_at) = self.pending_frame_selected_at.take() {
++                let hold_us = selected_at.elapsed().as_micros() as u64;
++                self.pre_wait_stats[2] += 1;
++                self.pre_wait_stats[3] += hold_us;
++                self.pre_wait_stats[4] = self.pre_wait_stats[4].max(hold_us);
++            }
++        }
++        if self.pre_wait_poll && self.pre_wait_stats[0] > 0
++            && self.pre_wait_last_log.elapsed() >= Duration::from_secs(1)
++        {
++            alvr_graphics::log_quest_experiment(format!(
++                "[Q3PW_PRE_WAIT] polls={} hits={} consumed={} hold_mean_us={:.1} hold_max_us={}",
++                self.pre_wait_stats[0], self.pre_wait_stats[1], self.pre_wait_stats[2],
++                self.pre_wait_stats[3] as f64 / self.pre_wait_stats[2].max(1) as f64,
++                self.pre_wait_stats[4],
++            ));
++            self.pre_wait_stats = [0; 5];
++            self.pre_wait_last_log = Instant::now();
++        }
 +        // Quest PyroWave already has a bounded latest-frame queue on its GPU worker.
-+        // Take the newest ready frame after xrWaitFrame without delaying that display slot.
++        // Unless the opt-in pre-wait selection already holds a protected frame, take the
++        // newest ready frame after xrWaitFrame without delaying that display slot.
 +        // When decode falls behind, repeat the last layer and let the runtime reproject it.
 +        let latest_only = self.uses_latest_frame_polling();
 +        let latest_wait_budget = self.frame_wait_budget.min(frame_interval / 8);
@@ -3427,7 +3495,7 @@ index b87dfe9..0534e9b 100644
              }
          }
  
-@@ -401,37 +478,67 @@ impl StreamContext {
+@@ -401,37 +536,67 @@ impl StreamContext {
              ]);
          }
  
@@ -3477,9 +3545,7 @@ index b87dfe9..0534e9b 100644
 +            self.swapchains[1]
 +                .wait_image(xr::Duration::INFINITE)
 +                .unwrap();
- 
--        self.swapchains[0].release_image().unwrap();
--        self.swapchains[1].release_image().unwrap();
++
 +            let render_start = Instant::now();
 +            let acquire_wait_ms = acquire_start.elapsed().as_secs_f32() * 1000.0;
 +
@@ -3501,7 +3567,9 @@ index b87dfe9..0534e9b 100644
 +                    self.config.passthrough.as_ref(),
 +                )
 +            };
-+
+ 
+-        self.swapchains[0].release_image().unwrap();
+-        self.swapchains[1].release_image().unwrap();
 +            if !buffer_ptr.is_null() {
 +                if let Some((_, source)) = &self.decoder {
 +                    source.notify_frame_copy_submitted();
@@ -3525,7 +3593,7 @@ index b87dfe9..0534e9b 100644
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +600,8 @@ impl StreamContext {
+@@ -493,6 +658,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {

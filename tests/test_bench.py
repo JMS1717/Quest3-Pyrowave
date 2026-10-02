@@ -1,5 +1,5 @@
 import unittest
-from tools.quest3.bench import parse_capabilities,plan,summarise,distribution
+from tools.quest3.bench import parse_capabilities,plan,summarise,distribution,pyrowave_counter_window
 
 class BenchTests(unittest.TestCase):
     def test_unprobed_rates_are_not_declared_unsupported(self):
@@ -92,5 +92,30 @@ class BenchTests(unittest.TestCase):
         events[-1]['event']['event_type']['data']['pyrowave']['staging_eye_copies']=0
         events[-1]['event']['event_type']['data']['pyrowave']['completed_eye_copies']=9
         self.assertIsNone(summarise(events)['completed_eye_copy_rate_fps'])
+
+    def test_producer_and_consumer_rates_have_matching_endpoints(self):
+        samples=[(t,{'complete':c,'superseded':s,'completed_eye_copies':e,
+            'decode_failures':0}) for t,c,s,e in [(5,500,20,480),(6,620,27,593),(7,740,34,706)]]
+        w=pyrowave_counter_window(samples)
+        self.assertEqual(w['interval_s'],2)
+        self.assertEqual(w['counter_deltas']['complete'],240)
+        self.assertEqual(w['counter_rates_per_s']['complete'],120)
+        self.assertEqual(w['counter_rates_per_s']['superseded'],7)
+        self.assertEqual(w['counter_rates_per_s']['completed_eye_copies'],113)
+        self.assertEqual(w['counter_deltas']['decode_failures'],0)
+        self.assertIsNone(w['counter_deltas']['partial'])
+        # A reset in the middle must not look valid after the counter catches up.
+        samples[1][1]['complete']=1
+        self.assertIsNone(pyrowave_counter_window(samples)['counter_deltas']['complete'])
+
+    def test_invalid_telemetry_times_cannot_be_silently_excluded(self):
+        for middle in (None,True,float('nan'),-1,0,3):
+            samples=[(0,{'complete':0}),(middle,{'complete':120}),(2,{'complete':240})]
+            w=pyrowave_counter_window(samples)
+            self.assertEqual(w['counter_deltas']['complete'],240)
+            self.assertIsNone(w['interval_s'])
+            self.assertIsNone(w['counter_rates_per_s']['complete'])
+        w=pyrowave_counter_window([(0,{'complete':False}),(1,{'complete':120})])
+        self.assertIsNone(w['counter_deltas']['complete'])
 
 if __name__=='__main__':unittest.main()

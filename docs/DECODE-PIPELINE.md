@@ -567,3 +567,45 @@ latest-frame wait was **not tested**: the overnight deadline guard stopped the g
 after its baseline. That incomplete group is excluded from matched performance
 results. The wait defaults to zero. Original headset properties and proximity/sleep
 behavior were restored at the end of the hardware window with no recorded errors.
+
+
+## Experimental nonblocking pre-wait selection (.23)
+
+[Retrospective output-slot analysis](../results/OUTPUT-SLOT-LOSS-2026-10-02.json)
+uses identical telemetry endpoints for producer completion, superseded output and
+eye-copy completion. The three saved allocation/cache screens completed about
+120 decodes/s but only 112–113 direct eye copies/s. In two cases, decode completion
+minus superseded output exactly equals eye completion; the third differs by one
+frame. Missing data or a counter reset invalidates that counter's delta, and any
+invalid/non-increasing telemetry timestamp invalidates all window rates. The
+benchmark report now includes these stage counters automatically.
+
+This points to completed-frame publication/selection as the next bottleneck to
+investigate. It does not prove that waiting for OpenXR is the cause. Superseded
+also includes out-of-order publication rejection; completion counters are neither
+optical FPS nor unique presentations. No new hardware test produced this finding.
+
+`debug.q3pw.pre_wait_poll=1` enables a **nonblocking**, Quest3 PyroWave-only poll
+before `xrWaitFrame`, provided `debug.xrwired.early_poll` is not zero. The default
+is off. If an already complete frame is available and the previous eye copy is
+ready, the poll takes it once and retains its existing buffer lease through the
+runtime wait. There is no sleep, decoder wait, producer handoff, new queue or
+buffer-ring expansion. When that poll is empty, the existing post-wait selection
+and optional `.22` wait budget still apply. Decoder reconfiguration clears the
+held frame and its timing state before replacing the decoder.
+
+`[Q3PW_PRE_WAIT]` reports the requested flag, actual eligible polls/hits, consumed
+held frames, and CPU-wall mean/maximum hold time. A requested flag alone does not
+prove activation. Frames held across a skipped render remain lease-protected;
+that interval is included when eventually consumed. Holding an older frame can
+increase latency even if fewer outputs are replaced. Keep this off pending
+matching artifact verification and live comparison; no FPS improvement is claimed.
+
+For the next authorized window, first finish the GPU reference readback gate for
+the recommended allocation. Then compare **off / on / off** for 15 seconds each,
+with 3 seconds settling, the same chart, native geometry, 120-Hz runtime acceptance,
+1000-Mbps 4:2:0, no foveation and the same thermal state. Keep `frame_wait_us=0`,
+`decode_handoff=0`, `async_eye_copy=0` and `image_cache=0` to isolate selection.
+Confirm eligible polls/hits and actual direct-copy counters. Reject image errors,
+fresh-FPS/p1 or latency regression; only a repeated improvement justifies a longer
+sustained run. Do not deploy outside a newly authorized hardware window.

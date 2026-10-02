@@ -67,8 +67,39 @@ def distribution(values):
     return {'n':len(v), 'p01':percentile(.01), 'p50':percentile(.5),
             'p95':percentile(.95), 'p99':percentile(.99), 'max':v[-1]}
 
+PYROWAVE_COUNTERS = (
+    'complete', 'partial', 'skipped', 'dropped', 'superseded', 'stale_packets',
+    'decode_failures', 'direct_eye_copies', 'staging_eye_copies',
+    'completed_eye_copies', 'pending_eye_copy_deferrals',
+)
+
+
+def pyrowave_counter_window(samples):
+    """Use the same endpoints for every producer/consumer counter and rate.
+
+    Missing or reset counters remain unknown. An invalid/non-increasing timestamp
+    anywhere in this window invalidates every rate, without hiding counter deltas.
+    These counters do not measure unique optical presentations.
+    """
+    deltas={}
+    for field in PYROWAVE_COUNTERS:
+        values=[data.get(field) for _,data in samples]
+        valid=len(values)>1 and all(isinstance(v,int) and not isinstance(v,bool) and v>=0 for v in values)
+        monotonic=valid and all(b>=a for a,b in zip(values,values[1:]))
+        deltas[field]=values[-1]-values[0] if monotonic else None
+    times=[elapsed for elapsed,_ in samples]
+    valid_times=len(times)>1 and all(isinstance(t,(int,float)) and not isinstance(t,bool)
+        and math.isfinite(t) and t>=0 for t in times)
+    increasing=valid_times and all(b>a for a,b in zip(times,times[1:]))
+    span=times[-1]-times[0] if increasing else None
+    return {'samples':len(samples), 'interval_s':span, 'counter_deltas':deltas,
+        'counter_rates_per_s':{name:delta/span if span is not None and delta is not None else None
+            for name,delta in deltas.items()},
+        'definition':'Matching HeadsetTelemetry endpoints. Complete is producer decode completion; superseded includes pending replacement and out-of-order publication. Eye completion can include configuration redraws; staging completion is unobserved. Not unique or optical display FPS.'}
+
+
 def summarise(events, requested_hz=None):
-    graphs=[]; summaries=[]; telemetry=[]; graph_times=[]; pyro_times=[]
+    graphs=[]; summaries=[]; telemetry=[]; graph_times=[]; pyro_samples=[]
     for item in events:
         event=item.get('event',item).get('event_type',{})
         data=event.get('data',{})
@@ -81,8 +112,8 @@ def summarise(events, requested_hz=None):
         if event.get('id')=='HeadsetTelemetry':
             telemetry.append(data)
             elapsed=item.get('capture_elapsed_s')
-            if data.get('pyrowave') and isinstance(elapsed,(int,float)) and math.isfinite(elapsed):
-                pyro_times.append((elapsed,data['pyrowave'].get('completed_eye_copies')))
+            if data.get('pyrowave'):
+                pyro_samples.append((elapsed,data['pyrowave']))
     result={'schema_version':1,'status':'measured' if graphs else 'no_stream_frames', 'frames':len(graphs),
             'requested_hz':requested_hz, 'metrics':{}, 'headset_telemetry':telemetry,
             'optical_motion_to_photon_ms':None,
@@ -117,22 +148,14 @@ def summarise(events, requested_hz=None):
         result[field]=distribution([v for t in telemetry if t.get('pyrowave')
             for v in t['pyrowave'].get(field,[])])
     result['eye_timing_definition']='Client CPU wall time: acquire/wait, renderer call, release. Async completion is wall time until a later nonblocking fence poll, quantized by polling; none of these are GPU timer-query durations.'
-    result['eye_copy_counter_deltas']={}
-    pyro=[t['pyrowave'] for t in telemetry if t.get('pyrowave')]
-    for field in ('direct_eye_copies', 'staging_eye_copies', 'completed_eye_copies', 'pending_eye_copy_deferrals'):
-        values=[t.get(field) for t in pyro]
-        # Missing/reset counters cannot establish which path ran in this window.
-        valid=len(values)>1 and all(isinstance(v,int) and not isinstance(v,bool) and v>=0 for v in values)
-        monotonic=valid and all(b>=a for a,b in zip(values,values[1:]))
-        result['eye_copy_counter_deltas'][field]=values[-1]-values[0] if monotonic else None
+    window=pyrowave_counter_window(pyro_samples)
+    result['pyrowave_counter_window']=window
+    result['eye_copy_counter_deltas']={field:window['counter_deltas'][field] for field in (
+        'direct_eye_copies', 'staging_eye_copies', 'completed_eye_copies', 'pending_eye_copy_deferrals')}
     result['completed_eye_copy_rate_fps']=None
-    if (len(pyro_times)>1 and (result['eye_copy_counter_deltas']['direct_eye_copies'] or 0)>0
+    if ((result['eye_copy_counter_deltas']['direct_eye_copies'] or 0)>0
             and result['eye_copy_counter_deltas']['staging_eye_copies']==0):
-        counters=[c for _,c in pyro_times]
-        valid=all(isinstance(c,int) and not isinstance(c,bool) and c>=0 for c in counters)
-        span=pyro_times[-1][0]-pyro_times[0][0]
-        if valid and span>0 and all(b>=a for a,b in zip(counters,counters[1:])):
-            result['completed_eye_copy_rate_fps']=(counters[-1]-counters[0])/span
+        result['completed_eye_copy_rate_fps']=window['counter_rates_per_s']['completed_eye_copies']
     result['completion_rate_definition']='GPU-complete direct eye copies per telemetry-time span, only for exclusively direct windows; staging completion is unobserved. Includes configuration-forced redraws. Not optical display or unique fresh-frame FPS.'
     if requested_hz and graphs:
         fps=result['metrics']['client_fps']
