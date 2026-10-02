@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-02",
+  "build_version": "20.13.0-quest3.pyro.29",
+  "build_source_sha": "b0c9753ce5d0b04d8df24f4187f9e03d4abdc358",
+  "build_run_url": "https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37052671109",
+  "scope": "Sequential short idle/Home usability screen; not a game benchmark",
+  "screen_seconds_per_rate": 5,
+  "configuration": {
+    "render_eye_requested": [
+      3072,
+      3216
+    ],
+    "render_eye_aligned": [
+      3072,
+      3232
+    ],
+    "encode_eye": [
+      2080,
+      2208
+    ],
+    "runtime_hz_confirmed": 120,
+    "transport": "USB/ADB TCP",
+    "wavelet": "Haar",
+    "decode": "Compute",
+    "chroma": "420",
+    "foveated_encoding": false,
+    "client_upscaling": false,
+    "ready_fd": false,
+    "release_fd": false,
+    "async_eye_copy": false,
+    "pc_sharpening_during_bitrate_screen": false
+  },
+  "rows": [
+    {
+      "target_mbps": 1000,
+      "events": 530,
+      "actual_payload_mbps_median": 1001.91048,
+      "client_cadence_fps_median": 119.99848,
+      "server_cadence_fps_median": 120.23349,
+      "estimated_pipeline_ms_median": 47.134437500000004,
+      "alvr_decoder_component_ms_median": 8.3765375,
+      "alvr_network_component_ms_median": 4.612906
+    },
+    {
+      "target_mbps": 2000,
+      "events": 520,
+      "actual_payload_mbps_median": 2010.91655,
+      "client_cadence_fps_median": 119.99773,
+      "server_cadence_fps_median": 120.66074499999999,
+      "estimated_pipeline_ms_median": 58.1353045,
+      "alvr_decoder_component_ms_median": 11.843829,
+      "alvr_network_component_ms_median": 9.314138499999999
+    }
+  ],
+  "selected_mbps": 1000,
+  "estimated_pipeline_increase_ms": 11.000866999999992,
+  "manual_playtest_changes": {
+    "overlay_forced_visibility_cleared": true,
+    "windows_openxr_runtime": "SteamVR",
+    "pc_sharpening": 0.2,
+    "brightness": 0,
+    "contrast": 0,
+    "saturation": 0,
+    "gamma": 1,
+    "owner_visual_feedback": "positive; qualitative, one session"
+  },
+  "limitations": [
+    "Client cadence is not delivered fresh game FPS or optical FPS.",
+    "No optical motion-to-photon measurement.",
+    "No fixed-clock or continuous thermal control, reverse-order repeat or sustained run.",
+    "No verified actual game texture size or source-frame coverage.",
+    "OpenXR routing repair and positive feedback do not establish broad game compatibility.",
+    "PC sharpening was enabled later and is not evaluated by the bitrate comparison.",
+    "Earlier actual72Hz check excluded; experimental ready-fence path not evaluated.",
+    "No validated quality or latency advantage over Virtual Desktop."
+  ]
+}

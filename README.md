@@ -17,6 +17,11 @@ USB or Wi-Fi, tune the stream, and measure where every millisecond goes.
  · [**Benchmarking**](docs/BENCHMARKING.md)
  · [**Report a problem**](https://github.com/JMS1717/Quest3-Pyrowave/issues)
 
+[Latest manual playtest and setup fixes](docs/PLAYTEST-2026-10-02.md): optional
+larger PC source, mild sharpening, the overlay override fix and the OpenXR game
+launch fix. The tested development pair is `.29`; the published preview remains
+alpha.7. These notes do not establish sustained fresh 120 FPS.
+
 > **Research preview, not a finished Virtual Desktop replacement.** Real SteamVR
 > video, audio and tracking work in tested setups. Sustained 120 fresh FPS at
 > native resolution, broad gameplay compatibility and lower latency than Virtual
@@ -152,8 +157,10 @@ off by default. [Findings](docs/RELEASE-FENCE-EXPERIMENT.md#recorded-outcome-on-
 | Quest connects but video is black/corrupt | Verify matching APK/server versions, PyroWave selection and no foveation; preserve logs and report exact settings |
 | USB is connected but streaming still uses Wi-Fi | Confirm the wired peer is `127.0.0.1` and ADB forwards are active; see [USB verification](docs/USB.md) |
 | SteamVR uses the wrong headset/driver | Enable ALVR for this project. When returning to Virtual Desktop, disable ALVR in SteamVR **Manage Add-ons** |
+| OpenXR game closes or never enters the headset | Select SteamVR's OpenXR runtime and relaunch the game; [check the runtime and preserve VD rollback](docs/OPENXR.md) |
 | FPS is lower than selected refresh | Read delivered FPS and decode/completion times in the overlay. Increasing bitrate alone cannot remove decoder/compositor stalls |
-| Overlay or controllers look wrong | Use the both-thumbstick chord and select Quest 3 Touch Plus; older sessions may retain earlier controller settings |
+| Overlay won't hide | Clear any forced-visible benchmark override, then use the both-thumbstick chord; [instructions](docs/OVERLAY.md) |
+| Controllers look wrong | Select Quest 3 Touch Plus; older sessions may retain earlier controller settings |
 
 Keep your previous **matching APK/server pair** for rollback. Stop SteamVR before
 changing driver installations. Keep Virtual Desktop installed and its registration

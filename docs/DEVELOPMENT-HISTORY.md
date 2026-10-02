@@ -1,5 +1,12 @@
 # Development history - archived README
 
+**Latest manual handoff:** matching `.29` was installed with experimental fence
+modes off. The owner reported positive visual feedback after fixing the forced
+overlay override, adding optional mild PC sharpening and selecting SteamVR's
+OpenXR runtime for Pavlov. A brief 2000 Mbps screen increased estimated latency,
+so 1000 Mbps was restored. [Recipe, results and limits](PLAYTEST-2026-10-02.md).
+This feedback does not establish sustained fresh 120 FPS or broad game acceptance.
+
 [Independent SteamVR render / PyroWave encode resolution](RENDER-ENCODE-RESOLUTION.md)
 supports an opt-in larger PC source while keeping Quest decode at 2080x2208 per eye.
 The [Nightfall native-fence review](NIGHTFALL-SYNC-REVIEW.md) identifies a
