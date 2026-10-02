@@ -55,6 +55,7 @@ def main():
     parser.add_argument('--out', required=True)
     parser.add_argument('--seconds', type=float, default=30)
     parser.add_argument('--quality', action='store_true', help='Add fine colored HUD text and saturated edge diagnostics')
+    parser.add_argument('--pulse', action='store_true', help='Add a changing 10 Hz counter to detect stale imported pixels; separate from FPS measurement')
     parser.add_argument('--stop-file', type=Path, help='End gracefully when this file appears; duration remains a hard limit')
     args = parser.parse_args()
     if not 1 <= args.seconds <= 600:
@@ -75,6 +76,7 @@ def main():
         compositor = openvr.VRCompositor()
         width, height = system.getRecommendedRenderTargetSize()
         textures = []
+        pulse_textures = []
         projections = []
         for eye, label, color in [(openvr.Eye_Left, 'LEFT', (32, 32, 200)),
                                   (openvr.Eye_Right, 'RIGHT', (200, 64, 32))]:
@@ -93,15 +95,34 @@ def main():
             vr_texture.eType = openvr.TextureType_OpenGL
             vr_texture.eColorSpace = openvr.ColorSpace_Gamma
             textures.append((eye, vr_texture))
+            left, right, top, bottom = projection
+            cx = int(width * -left / (right - left))
+            cy = int(height * -top / (bottom - top))
+            pulse_textures.append((texture, max(0, min(width - 512, cx - 256)),
+                                   max(0, min(height - 112, cy - 950))))
         GL.glFinish()
         bounds = openvr.VRTextureBounds_t()
         bounds.uMin, bounds.uMax, bounds.vMin, bounds.vMax = 0, 1, 1, 0
         poses = (openvr.TrackedDevicePose_t * openvr.k_unMaxTrackedDeviceCount)()
         frames = 0; start = time.monotonic(); started_unix_ns = time.time_ns()
+        pulse_tick = -1; pulse_events = []
         (root / 'ready.json').write_text(json.dumps({'started_unix_ns':started_unix_ns,
-            'source_eye_size':[width,height], 'quality_chart':args.quality}),encoding='utf-8')
+            'source_eye_size':[width,height], 'quality_chart':args.quality,
+            'pulse':args.pulse}),encoding='utf-8')
         while time.monotonic() - start < args.seconds and not (args.stop_file and args.stop_file.exists()):
             compositor.waitGetPoses(poses, None)
+            if args.pulse:
+                tick = int((time.monotonic() - start) * 10)
+                if tick != pulse_tick:
+                    pulse_tick = tick
+                    patch = np.full((112, 512, 3), (0, 96, 160 if tick % 20 < 10 else 0), dtype=np.uint8)
+                    cv2.putText(patch, f'T{tick:06d}', (20, 78), cv2.FONT_HERSHEY_SIMPLEX,
+                                2, (255, 255, 255), 4, cv2.LINE_8)
+                    for texture, x, y in pulse_textures:
+                        GL.glBindTexture(GL.GL_TEXTURE_2D, texture)
+                        GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, x, y, 512, 112,
+                                          GL.GL_RGB, GL.GL_UNSIGNED_BYTE, patch)
+                    pulse_events.append({'tick':tick, 'uploaded_unix_ns':time.time_ns()})
             for eye, texture in textures:
                 compositor.submit(eye, texture, bounds)
             GL.glFlush(); frames += 1
@@ -109,6 +130,7 @@ def main():
                   'source_eye_size': [width, height], 'projections': projections,
                   'started_unix_ns':started_unix_ns,'ended_unix_ns':time.time_ns(),
                   'left_label': 'LEFT', 'right_label': 'RIGHT', 'quality_chart':args.quality,
+                  'pulse': args.pulse, 'pulse_events':pulse_events,
                   'stop_reason': 'stop_file' if args.stop_file and args.stop_file.exists() else 'duration',
                   'note': 'Submission count is not decoded or displayed frame rate.'}
         (root / 'scene.json').write_text(json.dumps(result, indent=2))
