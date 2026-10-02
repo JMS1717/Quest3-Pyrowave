@@ -447,8 +447,9 @@ in driver image usage, with no claim that it enables compression or improves FPS
 See [Vulkan image usage](https://docs.vulkan.org/refpages/latest/refpages/source/VkImageUsageFlagBits.html)
 and [descriptor writes](https://docs.vulkan.org/refpages/latest/refpages/source/VkWriteDescriptorSet.html).
 
-The color-copy activation log now uses the release-visible warning level, so future
-comparisons can distinguish requesting that mode from actually activating it.
+Warning-level color-copy logs were still filtered by the active Error-only mirrored
+logging configuration. In .21, native initialization diagnostics bypass that filter
+and distinguish requesting a mode from actually activating it.
 
 In .20, `debug.q3pw.optimal_ahb_usage=1` additionally requests driver-recommended
 AHB allocation flags, and requires the minimal fragment path above. The recommendation
@@ -508,3 +509,22 @@ a frame is already available. Test it with measured spare copy time, and reject 
 if the extra polling harms pacing or latency; there is no default promotion or
 performance claim. Setup/timing diagnostics use native Android logging so Error-only
 mirrored logging cannot hide actual activation.
+
+
+The [output bridge live screens](../results/OUTPUT-BRIDGE-LIVE-2026-10-02.json)
+record .19 usage/color, .20 allocation/runtime timing, and .21 cache comparisons.
+The allocation path shortened conversion to about 0.67 ms and estimated latency
+to 57.8 ms in its first live screen, but fresh FPS averaged 102.3 versus controls
+108.1 and 107.3, with differing clocks. Runtime timing and caching have not
+established a sustained native120 gain. All experimental defaults remain off.
+
+GPU-only recommended AHB allocations produced invalid-looking CPU dumps despite
+a successful CPU lock. No CPU-readable allocation usage was requested. Their
+actual GLES/OpenXR screenshots displayed correct eyes, upright text and comparable
+colors; a proper GPU reference readback remains needed for absolute pixel scoring.
+Do not promote standalone timing results based on that CPU dump.
+
+The optional `stereo_scene --pulse` counter updates a small texture region at 10 Hz.
+With three cached imports, both eyes visibly advanced through ticks 324, 371 and
+419. This verifies new pixels through the consumer path, and does not measure
+optical FPS or motion-to-photon latency.
