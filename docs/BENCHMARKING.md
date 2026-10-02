@@ -117,3 +117,8 @@ correctness. Compare matched scenes and keep restarts outside the capture window
 Do not run concurrent trials. These short windows can reject a regression quickly;
 they cannot establish sustained FPS or thermal behavior. Use longer explicit
 `--seconds` runs only when a candidate reaches the target and merits acceptance.
+
+
+---
+
+[![Support Quest3-Pyrowave](https://img.shields.io/badge/Support_Quest3--Pyrowave-PayPal-0070BA?logo=paypal&logoColor=white)](https://www.paypal.com/paypalme/jasonselsley)

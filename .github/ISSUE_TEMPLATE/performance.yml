@@ -1,0 +1,28 @@
+name: Benchmark or performance finding
+description: Share a reproducible comparison with measured fresh FPS.
+title: "[Performance] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Follow docs/BENCHMARKING.md. Short screens can reject regressions; sustained performance needs longer runs. Sanitize captures before uploading.
+  - type: input
+    id: build
+    attributes:
+      label: Matching build / commit
+    validations:
+      required: true
+  - type: textarea
+    id: comparison
+    attributes:
+      label: Setup and comparison
+      description: PC GPU/driver, connection, scene, render/encode size, refresh, actual payload, decoder/chroma and duration. What single variable changed?
+    validations:
+      required: true
+  - type: textarea
+    id: metrics
+    attributes:
+      label: Results and limitations
+      description: Fresh FPS, pacing/p1, decode/completion, latency, temperature and clocks. Include repeats and controls; label missing measurements.
+    validations:
+      required: true

@@ -136,3 +136,8 @@ again. Caches exclude signing keys, Cargo credentials, headset captures and sess
 configuration. The first run populates the cache; speed gains require a later run.
 For a clean comparison, bump the workflow cache generation or remove its cache
 steps and dispatch a new build. Artifacts remain tied to their exact CI commit.
+
+
+---
+
+[![Support Quest3-Pyrowave](https://img.shields.io/badge/Support_Quest3--Pyrowave-PayPal-0070BA?logo=paypal&logoColor=white)](https://www.paypal.com/paypalme/jasonselsley)

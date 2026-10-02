@@ -1,0 +1,34 @@
+name: Streaming or setup problem
+description: Report video, USB, dashboard, tracking or controller problems.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the README troubleshooting table first. Remove device serials, private network details and secrets from shared logs.
+  - type: input
+    id: build
+    attributes:
+      label: Matching APK and Windows build
+      placeholder: "alpha.7 / .15, or Actions run and commit"
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: PC and connection
+      description: GPU, driver, Windows version, Quest OS and USB or Wi-Fi connection.
+    validations:
+      required: true
+  - type: textarea
+    id: settings
+    attributes:
+      label: Stream settings
+      description: Render and encoded resolution per eye, refresh, bitrate/Auto, wavelet, chroma and experimental toggles.
+  - type: textarea
+    id: symptom
+    attributes:
+      label: What happens?
+      description: Include steps to reproduce, expected behavior and sanitized logs or overlay screenshots if available.
+    validations:
+      required: true
