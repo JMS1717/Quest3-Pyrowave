@@ -543,6 +543,12 @@ Cloud software-GLES tests cannot validate Quest Vulkan-to-EGL interop or the
 recommended allocation; those checks await a new hardware window. This adds a
 correctness tool, not a new FPS or latency result.
 
+The [cloud readback validation](../results/GPU-READBACK-CI-2026-10-02.json)
+passed exact RGB/alpha, row flip, changing-image, pack-state and bounds checks on
+Mesa llvmpipe. Android and Windows builds/regressions passed, and matching artifact
+hashes/signing were reviewed. The production native decoder libraries match the
+previous .21/.22 pair. The new probe has not been run on Quest.
+
 The optional `stereo_scene --pulse` counter updates a small texture region at 10 Hz.
 With three cached imports, both eyes visibly advanced through ticks 324, 371 and
 419. This verifies new pixels through the consumer path, and does not measure

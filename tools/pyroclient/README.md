@@ -85,6 +85,9 @@ explicit row flip, odd widths, changing pixels, pack-state isolation and bounds.
 Android compile checks cover the AHB wrapper. Actual Quest Vulkan-to-EGL visibility,
 recommended allocation layout and independent color reference acceptance remain pending
 hardware testing. This diagnostic is not a sustained streaming or optical-latency test.
+See [recorded cloud checks and artifact hashes](../../results/GPU-READBACK-CI-2026-10-02.json),
+[Android EGL image import](https://registry.khronos.org/EGL/extensions/ANDROID/EGL_ANDROID_image_native_buffer.txt)
+and [external-image ESSL3 sampling](https://registry.khronos.org/OpenGL/extensions/OES/OES_EGL_image_external_essl3.txt).
 
 The Galaxy XR scores above are historical upstream results, not current Quest 3
 quality acceptance. Quest measurements and readback limitations are recorded in

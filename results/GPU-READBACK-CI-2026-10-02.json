@@ -1,0 +1,45 @@
+{
+  "source_sha": "846a4a5aa9cb5c523ee5405cb85d668091082038",
+  "binary_version": "20.13.0-quest3.pyro.22",
+  "ci_run": "https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/36984690262",
+  "all_jobs_passed": true,
+  "software_renderer": "llvmpipe (LLVM 20.1.2, 256 bits)",
+  "software_tests": {
+    "external_EGL_image_RGBA8_identity": true,
+    "explicit_y_flip": true,
+    "rgb_and_alpha_exact": true,
+    "odd_extents": [
+      [
+        7,
+        5
+      ],
+      [
+        17,
+        9
+      ]
+    ],
+    "new_pixels_through_same_image": true,
+    "pixel_pack_buffer_and_stride_isolation": true,
+    "zero_overflow_oversize_missing_image_rejected": true
+  },
+  "python_checks_passed": 28,
+  "android_wrapper_compiled": true,
+  "matching_pair_reviewed": true,
+  "production_native_libraries_identical_to_21": true,
+  "apk_certificate_sha256": "2f2c5b3bb99cd69edc58cc53fbac30325426e410b3fecafc76fe447549886779",
+  "artifact_sha256": {
+    "Quest3-Pyrowave-dev.apk": "7359ace3de4ceb35cb36348d0c8177858ccb6b985a8a4e3e4cf08290d14cff1b",
+    "pyroclient_test": "547da209d7bdfa2f5cd7e11503f6ccf8969c6e5d39dd60593b324cab199ef2f8",
+    "libpyroclient.so": "ef5c82902a7e9cd8422416e5011774259813be4bb58bf76cf9a9b0d6e1a0e3bf",
+    "Quest3-Pyrowave-Windows.zip": "766f55cf668f1b371bc5967fec16da93fcc12bd4984a30961f7c9c2df694767c"
+  },
+  "deployment_performed": false,
+  "Quest_GPU_consumer_validation_performed": false,
+  "native120_sustained_acceptance": false,
+  "limitations": [
+    "Software GLES tests cover the consumer shader/readback and state handling, not Quest Vulkan-to-EGL ownership, visibility or allocation layout.",
+    "The production decoder library and ALVR renderer were not changed. The new probe is separate and reads only after its timing loop.",
+    "The metadata checksum links pixels to a completed consumer record, not to an independent reference or in-headset quality judgment.",
+    "No new hardware FPS, pacing, thermal, latency or optical motion-to-photon measurements."
+  ]
+}
