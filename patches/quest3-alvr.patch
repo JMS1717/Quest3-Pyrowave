@@ -3941,10 +3941,10 @@ index 0000000..bc6bee0
 +}
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000..9c83c45
+index 0000000..b2f117f
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,350 @@
+@@ -0,0 +1,366 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -3958,6 +3958,22 @@ index 0000000..9c83c45
 +extern "C" {
 +    fn AHardwareBuffer_acquire(buffer: *const c_void);
 +    fn AHardwareBuffer_release(buffer: *const c_void);
++    fn __android_log_write(priority: i32, tag: *const std::ffi::c_char,
++                           text: *const std::ffi::c_char) -> i32;
++}
++
++// Initialization diagnostics bypass the mirrored-log severity filter. No per-frame
++// logging or device/pointer identifiers; this confirms effective experimental paths.
++fn import_diagnostic(priority: i32, message: String) {
++    #[cfg(target_os = "android")]
++    if let Ok(message) = std::ffi::CString::new(message) {
++        unsafe { __android_log_write(priority, b"q3pw_copy\0".as_ptr().cast(), message.as_ptr()); }
++    }
++    #[cfg(not(target_os = "android"))]
++    {
++        let _ = priority;
++        alvr_common::info!("{message}");
++    }
 +}
 +
 +struct CachedImport {
@@ -4034,9 +4050,9 @@ index 0000000..9c83c45
 +            let bypass_srgb = raw_srgb_requested && config.srgb_target
 +                && config.srgb_correction && config.encoding_gamma == 1.0
 +                && gl.supported_extensions().contains("GL_EXT_sRGB_write_control");
-+            alvr_common::warn!("[Q3PW_COLOR_COPY] requested={} active={} srgb_target={} correction={} gamma={}",
++            import_diagnostic(4, format!("[Q3PW_COLOR_COPY] requested={} active={} srgb_target={} correction={} gamma={}",
 +                raw_srgb_requested, bypass_srgb, config.srgb_target,
-+                config.srgb_correction, config.encoding_gamma);
++                config.srgb_correction, config.encoding_gamma));
 +            let program = compile_program(gl)?;
 +            let source_texture = match gl.create_texture() {
 +                Ok(texture) => texture,
@@ -4115,7 +4131,7 @@ index 0000000..9c83c45
 +            // Bounded fallback keeps retained storage below eight ring entries.
 +            if cache.len() >= 8 {
 +                self.image_cache_enabled.set(false);
-+                alvr_common::warn!("[Q3PW_IMAGE_CACHE] capacity reached; legacy import fallback");
++                import_diagnostic(5, format!("[Q3PW_IMAGE_CACHE] capacity reached; legacy import fallback"));
 +                return None;
 +            }
 +            let gl = &self.context.gl_context;
@@ -4125,7 +4141,7 @@ index 0000000..9c83c45
 +            if client.is_null() {
 +                AHardwareBuffer_release(buffer);
 +                self.image_cache_enabled.set(false);
-+                alvr_common::warn!("[Q3PW_IMAGE_CACHE] no native client buffer; legacy fallback");
++                import_diagnostic(5, format!("[Q3PW_IMAGE_CACHE] no native client buffer; legacy fallback"));
 +                return None;
 +            }
 +            // EGL_IMAGE_PRESERVED_KHR: the first imported frame must survive.
@@ -4135,7 +4151,7 @@ index 0000000..9c83c45
 +            if image.is_null() {
 +                AHardwareBuffer_release(buffer);
 +                self.image_cache_enabled.set(false);
-+                alvr_common::warn!("[Q3PW_IMAGE_CACHE] image creation failed; legacy fallback");
++                import_diagnostic(5, format!("[Q3PW_IMAGE_CACHE] image creation failed; legacy fallback"));
 +                return None;
 +            }
 +            let texture = match gl.create_texture() {
@@ -4144,7 +4160,7 @@ index 0000000..9c83c45
 +                    (self.context.destroy_image)(self.context.egl_display.as_ptr(), image);
 +                    AHardwareBuffer_release(buffer);
 +                    self.image_cache_enabled.set(false);
-+                    alvr_common::warn!("[Q3PW_IMAGE_CACHE] texture creation failed: {error}; legacy fallback");
++                    import_diagnostic(5, format!("[Q3PW_IMAGE_CACHE] texture creation failed: {error}; legacy fallback"));
 +                    return None;
 +                }
 +            };
@@ -4156,11 +4172,11 @@ index 0000000..9c83c45
 +                (self.context.destroy_image)(self.context.egl_display.as_ptr(), image);
 +                AHardwareBuffer_release(buffer);
 +                self.image_cache_enabled.set(false);
-+                alvr_common::warn!("[Q3PW_IMAGE_CACHE] texture import failed={error}; legacy fallback");
++                import_diagnostic(5, format!("[Q3PW_IMAGE_CACHE] texture import failed={error}; legacy fallback"));
 +                return None;
 +            }
 +            cache.push(CachedImport { buffer, image, texture });
-+            alvr_common::warn!("[Q3PW_IMAGE_CACHE] imported slots={}", cache.len());
++            import_diagnostic(4, format!("[Q3PW_IMAGE_CACHE] imported slots={}", cache.len()));
 +            Some(texture)
 +        }
 +        #[cfg(not(target_os = "android"))]
