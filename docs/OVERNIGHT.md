@@ -1,10 +1,12 @@
 # Unattended Quest 3 development
 
-**Current status: resumed under the owner's explicit overnight authorization.**
-Hardware access and automatic own-app recovery were verified again after the
-Virtual Desktop pause. Independent restoration enforces a bounded five-hour session;
-credit checks follow the owner's requested sparse schedule. Private budget/account
-state is kept outside the repository. An earlier pause remains documented for rollback.
+**Current status: the bounded overnight hardware window has finished.**
+Original headset properties, physical proximity behavior and wired autolaunch were
+restored at 07:32:09 UTC on October 2 with no recorded errors. Hardware testing and
+its recovery workers have stopped; source analysis and cloud verification can
+continue. A new hardware window needs the owner's authorization. The following
+records the completed setup and the procedure for future authorized sessions.
+Private budget/account state remains outside the repository.
 
 The owner authorized overnight headset testing on October 1, 2026. This supersedes
 the older offline-only instruction for this session; it does not grant other users
@@ -78,6 +80,13 @@ A disconnected cable or unrecoverable
 headset failure can prevent further live tests; source work and cloud builds can
 continue. In-headset quality judgment and optical motion-to-photon latency still
 require later human/hardware acceptance.
+
+The final .22 frame-wait comparison was rejected by the deadline guard after its
+baseline, so its candidate was never tested. Incomplete groups are excluded from
+matched performance conclusions. Future controllers reserve the remaining child
+timeouts and cleanup time before each stage; every cleanup device command must
+also check the current window status/deadline. A late cleanup must not overwrite
+the independent restorer's original properties or relaunch the app after expiry.
 
 ## Stretch target and next bottlenecks
 
