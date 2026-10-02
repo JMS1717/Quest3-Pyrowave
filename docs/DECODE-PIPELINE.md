@@ -431,3 +431,21 @@ message was filtered from the release log, so this run records the **requested
 toggle**, not proof of effective activation. No performance gain or sustained
 native 120 FPS is established. Scoped runtime GPU load remained near 0.98.
 See [sanitized requested-toggle observations](../results/COLOR-COPY-LIVE-2026-10-02.json).
+# Experimental fragment output usage (.19)
+
+`debug.q3pw.fragment_min_usage=1` requests a sampled/color-attachment-only Vulkan
+image for the existing fragment conversion path. The default is off. Importability,
+dimensions and sample count are checked first; an unsupported combination or failed
+image creation falls back to the legacy usage. Allocation/import errors retain the
+existing cleanup and decoder failure behavior. Each actual slot usage is logged.
+
+The fragment shader uses three sampled plane descriptors and writes a color attachment;
+it no longer receives the unused storage-output descriptor. Compute conversion retains
+that descriptor and its original output usage. AHB allocation flags, pixel math,
+barriers, ownership transfers and buffer leases are unchanged. This is an experiment
+in driver image usage, with no claim that it enables compression or improves FPS.
+See [Vulkan image usage](https://docs.vulkan.org/refpages/latest/refpages/source/VkImageUsageFlagBits.html)
+and [descriptor writes](https://docs.vulkan.org/refpages/latest/refpages/source/VkWriteDescriptorSet.html).
+
+The color-copy activation log now uses the release-visible warning level, so future
+comparisons can distinguish requesting that mode from actually activating it.

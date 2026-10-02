@@ -117,6 +117,7 @@ struct pyroclient {
     VkPipeline fragment_pipeline = VK_NULL_HANDLE;
     VkRenderPass convert_render_pass = VK_NULL_HANDLE;
     bool fragment_convert = false;
+    bool fragment_min_usage = false; // optional sampled/color-only imported output
     VkDescriptorPool desc_pool = VK_NULL_HANDLE;
     bool storage_on_ahb = false;   // convert writes the AHB image directly
     Plane scratch;                 // else convert writes here and a copy follows
@@ -401,7 +402,7 @@ bool pyroclient::create_fragment_convert() {
 }
 
 static bool write_set(VkDevice device, VkSampler sampler, const Plane planes[3], VkImageView out,
-                      VkDescriptorSet set) {
+                      VkDescriptorSet set, bool storage_output = true) {
     VkDescriptorImageInfo pi[3] = {};
     VkWriteDescriptorSet w[4] = {};
     for (int i = 0; i < 3; i++) {
@@ -413,7 +414,9 @@ static bool write_set(VkDevice device, VkSampler sampler, const Plane planes[3],
     VkDescriptorImageInfo oi = {}; oi.imageView = out; oi.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
     w[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET; w[3].dstSet = set; w[3].dstBinding = 3;
     w[3].descriptorCount = 1; w[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE; w[3].pImageInfo = &oi;
-    vkUpdateDescriptorSets(device, 4, w, 0, nullptr);
+    // The fragment shader only reads bindings 0..2; its output is a color attachment.
+    // Do not write an unused storage descriptor for an image without STORAGE usage.
+    vkUpdateDescriptorSets(device, storage_output ? 4 : 3, w, 0, nullptr);
     return true;
 }
 
@@ -439,11 +442,21 @@ bool pyroclient::create_slot(Slot &s) {
     ii.imageType = VK_IMAGE_TYPE_2D; ii.format = VK_FORMAT_R8G8B8A8_UNORM;
     ii.extent = { width, height, 1 }; ii.mipLevels = 1; ii.arrayLayers = 1;
     ii.samples = VK_SAMPLE_COUNT_1_BIT; ii.tiling = VK_IMAGE_TILING_OPTIMAL;
-    ii.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
+    const VkImageUsageFlags legacy_usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
         | (storage_on_ahb ? VK_IMAGE_USAGE_STORAGE_BIT : 0)
         | (fragment_convert ? VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT : 0);
+    ii.usage = fragment_min_usage
+        ? VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT : legacy_usage;
     ii.sharingMode = VK_SHARING_MODE_EXCLUSIVE; ii.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    VK_TRY(vkCreateImage(device, &ii, nullptr, &s.image));
+    VkResult image_result = vkCreateImage(device, &ii, nullptr, &s.image);
+    if (image_result != VK_SUCCESS && fragment_min_usage) {
+        LOGI("[Q3PW_FRAGMENT_USAGE] minimal create failed=%d; retry legacy", int(image_result));
+        fragment_min_usage = false;
+        ii.usage = legacy_usage;
+        image_result = vkCreateImage(device, &ii, nullptr, &s.image);
+    }
+    if (image_result != VK_SUCCESS) { LOGE("vkCreateImage output failed: %d", int(image_result)); return false; }
+    LOGI("[Q3PW_FRAGMENT_USAGE] slot usage=0x%x minimal=%d", unsigned(ii.usage), fragment_min_usage);
 
     VkImportAndroidHardwareBufferInfoANDROID imp = { VK_STRUCTURE_TYPE_IMPORT_ANDROID_HARDWARE_BUFFER_INFO_ANDROID };
     imp.buffer = s.ahb;
@@ -471,7 +484,7 @@ bool pyroclient::create_slot(Slot &s) {
         VkDescriptorSetAllocateInfo sa = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
         sa.descriptorPool = desc_pool; sa.descriptorSetCount = 1; sa.pSetLayouts = &set_layout;
         VK_TRY(vkAllocateDescriptorSets(device, &sa, &s.set));
-        write_set(device, sampler, planes, s.view, s.set);
+        write_set(device, sampler, planes, s.view, s.set, !fragment_convert);
     }
     return true;
 }
@@ -686,6 +699,20 @@ extern "C" pyroclient *pyroclient_create_ex(uint32_t width, uint32_t height, int
             }
         }
         LOGI("RGBA conversion: %s", c->fragment_convert ? "fragment" : "compute fallback");
+        char minimal_prop[PROP_VALUE_MAX] = {};
+        const bool requested = __system_property_get("debug.q3pw.fragment_min_usage", minimal_prop) > 0
+            && !strcmp(minimal_prop, "1");
+        if (requested && c->fragment_convert) {
+            fi.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+            const VkResult supported = vkGetPhysicalDeviceImageFormatProperties2(c->gpu, &fi, &p2);
+            c->fragment_min_usage = supported == VK_SUCCESS &&
+                (ep.externalMemoryProperties.externalMemoryFeatures & VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT) &&
+                p2.imageFormatProperties.maxExtent.width >= width &&
+                p2.imageFormatProperties.maxExtent.height >= height &&
+                (p2.imageFormatProperties.sampleCounts & VK_SAMPLE_COUNT_1_BIT);
+        }
+        LOGI("[Q3PW_FRAGMENT_USAGE] requested=%d supported=%d fragment=%d", requested,
+             c->fragment_min_usage, c->fragment_convert);
     }
     if (!c->storage_on_ahb) {
         if (!create_plain_image(c->gpu, c->device, VK_FORMAT_R8G8B8A8_UNORM, width, height,
