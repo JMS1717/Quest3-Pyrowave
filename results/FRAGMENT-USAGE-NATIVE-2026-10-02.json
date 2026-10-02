@@ -1,0 +1,304 @@
+{
+  "version": "20.13.0-quest3.pyro.19",
+  "binary_sha": "ec6857bd179a0979a96602cccc872d25414c8ccf",
+  "ci_run": "https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/36972496237",
+  "method": "Sequential stationary standalone native probes, 80 measured frames plus 10 warmup per case, protected first/previous buffers; Haar compute decode with fragment conversion except explicit compute fallback. Generic AHB flags unchanged. Fixed encoded fixtures, not the 1000 Mbps live stream.",
+  "limitations": [
+    "Short probes, not sustained VR or optical FPS/latency.",
+    "Identical RGBA readback establishes equivalence to this baseline, not independent absolute color accuracy.",
+    "No imported GLES/OpenXR sampling occurs in this standalone check.",
+    "Output usage is opt-in and remains off by default."
+  ],
+  "pixel_comparisons": [
+    {
+      "pattern": "asymmetric",
+      "label": "minimal",
+      "bytes": 655360,
+      "exact": true,
+      "changed_bytes": 0,
+      "max_code_difference": 0
+    },
+    {
+      "pattern": "asymmetric",
+      "label": "restore",
+      "bytes": 655360,
+      "exact": true,
+      "changed_bytes": 0,
+      "max_code_difference": 0
+    },
+    {
+      "pattern": "native-asymmetric",
+      "label": "minimal",
+      "bytes": 36741120,
+      "exact": true,
+      "changed_bytes": 0,
+      "max_code_difference": 0
+    },
+    {
+      "pattern": "native-asymmetric",
+      "label": "restore",
+      "bytes": 36741120,
+      "exact": true,
+      "changed_bytes": 0,
+      "max_code_difference": 0
+    }
+  ],
+  "cases": [
+    {
+      "fixture": "asymmetric",
+      "encoded_frame_size": [
+        512,
+        320
+      ],
+      "case": "baseline",
+      "minimal_requested": 0,
+      "minimal_effective": false,
+      "compute_conversion": 0,
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 80,
+        "complete": 80,
+        "decode_best_ms": 0.422865,
+        "convert_best_ms": 0.026042,
+        "fence_p50_ms": 1.904739,
+        "fence_p99_ms": 4.42625,
+        "fence_mean_ms": 1.957302,
+        "fence_max_ms": 4.567657,
+        "warmup_frames": 10,
+        "warmup_max_fence_ms": 216.234761,
+        "gpu_decode_p50_ms": 0.443646,
+        "gpu_decode_p99_ms": 1.63349,
+        "convert_p50_ms": 0.028802,
+        "record_p50_ms": 0.291875,
+        "wait_p50_ms": 1.492761
+      },
+      "gpu_clock_start_hz": 690000000,
+      "gpu_clock_end_hz": 690000000,
+      "rgba_readback_available": true
+    },
+    {
+      "fixture": "asymmetric",
+      "encoded_frame_size": [
+        512,
+        320
+      ],
+      "case": "minimal",
+      "minimal_requested": 1,
+      "minimal_effective": true,
+      "compute_conversion": 0,
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 80,
+        "complete": 80,
+        "decode_best_ms": 0.419792,
+        "convert_best_ms": 0.025677,
+        "fence_p50_ms": 1.0525,
+        "fence_p99_ms": 2.06948,
+        "fence_mean_ms": 1.217488,
+        "fence_max_ms": 2.133646,
+        "warmup_frames": 10,
+        "warmup_max_fence_ms": 258.219401,
+        "gpu_decode_p50_ms": 0.428437,
+        "gpu_decode_p99_ms": 1.593125,
+        "convert_p50_ms": 0.027083,
+        "record_p50_ms": 0.256667,
+        "wait_p50_ms": 0.678698
+      },
+      "gpu_clock_start_hz": 690000000,
+      "gpu_clock_end_hz": 690000000,
+      "rgba_readback_available": true
+    },
+    {
+      "fixture": "asymmetric",
+      "encoded_frame_size": [
+        512,
+        320
+      ],
+      "case": "compute-fallback",
+      "minimal_requested": 1,
+      "minimal_effective": false,
+      "compute_conversion": 1,
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 80,
+        "complete": 80,
+        "decode_best_ms": 0.420521,
+        "convert_best_ms": 0.061042,
+        "fence_p50_ms": 1.053698,
+        "fence_p99_ms": 2.43474,
+        "fence_mean_ms": 1.223675,
+        "fence_max_ms": 2.481406,
+        "warmup_frames": 10,
+        "warmup_max_fence_ms": 253.532629,
+        "gpu_decode_p50_ms": 0.430312,
+        "gpu_decode_p99_ms": 1.588646,
+        "convert_p50_ms": 0.061458,
+        "record_p50_ms": 0.232865,
+        "wait_p50_ms": 0.742604
+      },
+      "gpu_clock_start_hz": 690000000,
+      "gpu_clock_end_hz": 690000000,
+      "rgba_readback_available": true
+    },
+    {
+      "fixture": "asymmetric",
+      "encoded_frame_size": [
+        512,
+        320
+      ],
+      "case": "restore",
+      "minimal_requested": 0,
+      "minimal_effective": false,
+      "compute_conversion": 0,
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 80,
+        "complete": 80,
+        "decode_best_ms": 0.419323,
+        "convert_best_ms": 0.025729,
+        "fence_p50_ms": 1.018958,
+        "fence_p99_ms": 2.045261,
+        "fence_mean_ms": 1.165552,
+        "fence_max_ms": 2.094115,
+        "warmup_frames": 10,
+        "warmup_max_fence_ms": 247.261222,
+        "gpu_decode_p50_ms": 0.428958,
+        "gpu_decode_p99_ms": 1.609479,
+        "convert_p50_ms": 0.027552,
+        "record_p50_ms": 0.243542,
+        "wait_p50_ms": 0.674531
+      },
+      "gpu_clock_start_hz": 690000000,
+      "gpu_clock_end_hz": 690000000,
+      "rgba_readback_available": true
+    },
+    {
+      "fixture": "native-asymmetric",
+      "encoded_frame_size": [
+        4160,
+        2208
+      ],
+      "case": "baseline",
+      "minimal_requested": 0,
+      "minimal_effective": false,
+      "compute_conversion": 0,
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 80,
+        "complete": 80,
+        "decode_best_ms": 4.981458,
+        "convert_best_ms": 1.86625,
+        "fence_p50_ms": 9.790365,
+        "fence_p99_ms": 11.37974,
+        "fence_mean_ms": 9.732145,
+        "fence_max_ms": 11.447397,
+        "warmup_frames": 10,
+        "warmup_max_fence_ms": 264.69237,
+        "gpu_decode_p50_ms": 5.63526,
+        "gpu_decode_p99_ms": 6.808021,
+        "convert_p50_ms": 2.700104,
+        "record_p50_ms": 0.721562,
+        "wait_p50_ms": 9.021407
+      },
+      "gpu_clock_start_hz": 690000000,
+      "gpu_clock_end_hz": 690000000,
+      "rgba_readback_available": true
+    },
+    {
+      "fixture": "native-asymmetric",
+      "encoded_frame_size": [
+        4160,
+        2208
+      ],
+      "case": "minimal",
+      "minimal_requested": 1,
+      "minimal_effective": true,
+      "compute_conversion": 0,
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 80,
+        "complete": 80,
+        "decode_best_ms": 4.445104,
+        "convert_best_ms": 1.864531,
+        "fence_p50_ms": 9.738335,
+        "fence_p99_ms": 10.704324,
+        "fence_mean_ms": 9.723057,
+        "fence_max_ms": 11.721251,
+        "warmup_frames": 10,
+        "warmup_max_fence_ms": 257.738567,
+        "gpu_decode_p50_ms": 5.64,
+        "gpu_decode_p99_ms": 6.827604,
+        "convert_p50_ms": 2.848646,
+        "record_p50_ms": 0.746563,
+        "wait_p50_ms": 8.929011
+      },
+      "gpu_clock_start_hz": 690000000,
+      "gpu_clock_end_hz": 690000000,
+      "rgba_readback_available": true
+    },
+    {
+      "fixture": "native-asymmetric",
+      "encoded_frame_size": [
+        4160,
+        2208
+      ],
+      "case": "compute-fallback",
+      "minimal_requested": 1,
+      "minimal_effective": false,
+      "compute_conversion": 1,
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 80,
+        "complete": 80,
+        "decode_best_ms": 4.199375,
+        "convert_best_ms": 3.12599,
+        "fence_p50_ms": 11.00948,
+        "fence_p99_ms": 12.439689,
+        "fence_mean_ms": 11.182459,
+        "fence_max_ms": 12.45172,
+        "warmup_frames": 10,
+        "warmup_max_fence_ms": 266.205964,
+        "gpu_decode_p50_ms": 5.657969,
+        "gpu_decode_p99_ms": 6.724583,
+        "convert_p50_ms": 4.232187,
+        "record_p50_ms": 0.736511,
+        "wait_p50_ms": 10.361511
+      },
+      "gpu_clock_start_hz": 690000000,
+      "gpu_clock_end_hz": 690000000,
+      "rgba_readback_available": true
+    },
+    {
+      "fixture": "native-asymmetric",
+      "encoded_frame_size": [
+        4160,
+        2208
+      ],
+      "case": "restore",
+      "minimal_requested": 0,
+      "minimal_effective": false,
+      "compute_conversion": 0,
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 80,
+        "complete": 80,
+        "decode_best_ms": 4.763125,
+        "convert_best_ms": 1.850417,
+        "fence_p50_ms": 9.80672,
+        "fence_p99_ms": 11.151303,
+        "fence_mean_ms": 9.819126,
+        "fence_max_ms": 11.415835,
+        "warmup_frames": 10,
+        "warmup_max_fence_ms": 262.486953,
+        "gpu_decode_p50_ms": 5.663958,
+        "gpu_decode_p99_ms": 6.784427,
+        "convert_p50_ms": 2.897604,
+        "record_p50_ms": 0.818437,
+        "wait_p50_ms": 8.963386
+      },
+      "gpu_clock_start_hz": 690000000,
+      "gpu_clock_end_hz": 690000000,
+      "rgba_readback_available": true
+    }
+  ]
+}

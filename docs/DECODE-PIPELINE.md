@@ -465,3 +465,14 @@ broad Vulkan compatibility even when the imported image has narrower usage. A re
 recommendation may still equal standard flags; activation alone proves no layout,
 compression or performance benefit. See [optimal Android hardware buffer usage](https://docs.vulkan.org/spec/latest/chapters/memory.html#memory-external-android-hardware-buffer-optimal-usages)
 and [the usage query](https://docs.vulkan.org/refpages/latest/refpages/source/VkAndroidHardwareBufferUsageANDROID.html).
+
+
+The .19 standalone [usage screen](../results/FRAGMENT-USAGE-NATIVE-2026-10-02.json)
+confirmed minimal fragment output usage and correct compute fallback. Minimal and
+restored RGBA readbacks were byte-identical to the baseline at both small and native
+4160×2208 encoded resolution. All 80 measured frames completed in each case, with
+protected output buffers. Native completion medians were 9.790 / 9.738 / 9.807 ms
+for baseline / minimal / restore at 690 MHz. This is effectively flat; the experimental
+flag stays off. These fixed encoded fixtures differ from the live 1000 Mbps workload
+and do not establish live FPS, GLES interop correctness, sustained performance or
+absolute reference color accuracy.
