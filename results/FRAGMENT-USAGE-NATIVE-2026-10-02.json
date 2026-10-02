@@ -5,7 +5,7 @@
   "method": "Sequential stationary standalone native probes, 80 measured frames plus 10 warmup per case, protected first/previous buffers; Haar compute decode with fragment conversion except explicit compute fallback. Generic AHB flags unchanged. Fixed encoded fixtures, not the 1000 Mbps live stream.",
   "limitations": [
     "Short probes, not sustained VR or optical FPS/latency.",
-    "Identical RGBA readback establishes equivalence to this baseline, not independent absolute color accuracy.",
+    "The historical CPU dumps were byte-identical, but production AHB allocations did not request CPU_READ usage. These unsupported readbacks do not establish valid pixel equivalence or absolute correctness; timing and protected-buffer counts remain separate evidence.",
     "No imported GLES/OpenXR sampling occurs in this standalone check.",
     "Output usage is opt-in and remains off by default."
   ],
@@ -16,7 +16,8 @@
       "bytes": 655360,
       "exact": true,
       "changed_bytes": 0,
-      "max_code_difference": 0
+      "max_code_difference": 0,
+      "readback_valid": false
     },
     {
       "pattern": "asymmetric",
@@ -24,7 +25,8 @@
       "bytes": 655360,
       "exact": true,
       "changed_bytes": 0,
-      "max_code_difference": 0
+      "max_code_difference": 0,
+      "readback_valid": false
     },
     {
       "pattern": "native-asymmetric",
@@ -32,7 +34,8 @@
       "bytes": 36741120,
       "exact": true,
       "changed_bytes": 0,
-      "max_code_difference": 0
+      "max_code_difference": 0,
+      "readback_valid": false
     },
     {
       "pattern": "native-asymmetric",
@@ -40,7 +43,8 @@
       "bytes": 36741120,
       "exact": true,
       "changed_bytes": 0,
-      "max_code_difference": 0
+      "max_code_difference": 0,
+      "readback_valid": false
     }
   ],
   "cases": [
@@ -74,7 +78,8 @@
       },
       "gpu_clock_start_hz": 690000000,
       "gpu_clock_end_hz": 690000000,
-      "rgba_readback_available": true
+      "rgba_readback_available": true,
+      "rgba_readback_valid": false
     },
     {
       "fixture": "asymmetric",
@@ -106,7 +111,8 @@
       },
       "gpu_clock_start_hz": 690000000,
       "gpu_clock_end_hz": 690000000,
-      "rgba_readback_available": true
+      "rgba_readback_available": true,
+      "rgba_readback_valid": false
     },
     {
       "fixture": "asymmetric",
@@ -138,7 +144,8 @@
       },
       "gpu_clock_start_hz": 690000000,
       "gpu_clock_end_hz": 690000000,
-      "rgba_readback_available": true
+      "rgba_readback_available": true,
+      "rgba_readback_valid": false
     },
     {
       "fixture": "asymmetric",
@@ -170,7 +177,8 @@
       },
       "gpu_clock_start_hz": 690000000,
       "gpu_clock_end_hz": 690000000,
-      "rgba_readback_available": true
+      "rgba_readback_available": true,
+      "rgba_readback_valid": false
     },
     {
       "fixture": "native-asymmetric",
@@ -202,7 +210,8 @@
       },
       "gpu_clock_start_hz": 690000000,
       "gpu_clock_end_hz": 690000000,
-      "rgba_readback_available": true
+      "rgba_readback_available": true,
+      "rgba_readback_valid": false
     },
     {
       "fixture": "native-asymmetric",
@@ -234,7 +243,8 @@
       },
       "gpu_clock_start_hz": 690000000,
       "gpu_clock_end_hz": 690000000,
-      "rgba_readback_available": true
+      "rgba_readback_available": true,
+      "rgba_readback_valid": false
     },
     {
       "fixture": "native-asymmetric",
@@ -266,7 +276,8 @@
       },
       "gpu_clock_start_hz": 690000000,
       "gpu_clock_end_hz": 690000000,
-      "rgba_readback_available": true
+      "rgba_readback_available": true,
+      "rgba_readback_valid": false
     },
     {
       "fixture": "native-asymmetric",
@@ -298,7 +309,9 @@
       },
       "gpu_clock_start_hz": 690000000,
       "gpu_clock_end_hz": 690000000,
-      "rgba_readback_available": true
+      "rgba_readback_available": true,
+      "rgba_readback_valid": false
     }
-  ]
+  ],
+  "readback_correction": "Recorded October 2 after the recommended-allocation investigation: AHardwareBuffer_lock success cannot validate access incompatible with allocation usage. The updated probe refuses such dumps and provides a timing-only mode."
 }
