@@ -16,6 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 -m unittest discover -s tests -v
+      - name: Release-fence ownership and generation regression
+        run: g++ -std=c++17 -Wall -Wextra -Werror -pthread tools/pyroclient/release_fence_registry_test.cpp -o /tmp/release-fence-test && /tmp/release-fence-test
       - run: g++ -std=c++17 -Wall -Werror tools/pyroclient/decode_path_test.cpp -o /tmp/decode-path && /tmp/decode-path
       - name: Software GLES readback correctness (no Quest hardware)
         env:

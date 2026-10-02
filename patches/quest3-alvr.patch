@@ -206,7 +206,7 @@ index 7cead7b..f16efe8 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..3339e25 100644
+index ae00ce8..7a73edb 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..3339e25 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.25"
++version = "20.13.0-quest3.pyro.26"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -668,7 +668,7 @@ index f764033..d636442 100644
                          decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
                      }
 diff --git a/alvr/client_core/src/video_decoder/mod.rs b/alvr/client_core/src/video_decoder/mod.rs
-index 4d2e699..30cdb62 100644
+index 4d2e699..ab78fee 100644
 --- a/alvr/client_core/src/video_decoder/mod.rs
 +++ b/alvr/client_core/src/video_decoder/mod.rs
 @@ -4,6 +4,8 @@ mod android;
@@ -732,7 +732,7 @@ index 4d2e699..30cdb62 100644
      if complete {
          FrameDecision::DecodeComplete
      } else if age < deadline {
-@@ -130,25 +148,100 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
+@@ -130,25 +148,115 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
      let mean = samples.iter().sum::<f32>() / n as f32;
      format!(
          "min {:.2} mean {:.2} p50 {:.2} p95 {:.2} p99 {:.2} max {:.2}",
@@ -764,6 +764,8 @@ index 4d2e699..30cdb62 100644
 +    /// The render loop can hold a dequeued buffer across xrWaitFrame. Keep it out
 +    /// of the producer's write rotation until a subsequent frame is dequeued.
 +    leased: usize,
++    pending_release_token: u64,
++    leased_release_token: u64,
  }
  
  impl FrameSlot {
@@ -795,7 +797,13 @@ index 4d2e699..30cdb62 100644
 +    pub fn publish_ordered(&self, timestamp: Duration, buffer: usize, order: u64) -> bool {
 +        self.publish_with_order(timestamp, buffer, Some(order))
 +    }
++    pub fn publish_fenced(&self, timestamp: Duration, buffer: usize, order: u64, token: u64) -> bool {
++        self.publish_inner(timestamp, buffer, Some(order), token)
++    }
 +    fn publish_with_order(&self, timestamp: Duration, buffer: usize, order: Option<u64>) -> bool {
++        self.publish_inner(timestamp, buffer, order, 0)
++    }
++    fn publish_inner(&self, timestamp: Duration, buffer: usize, order: Option<u64>, token: u64) -> bool {
 +        let mut state = self.inner.lock();
 +        // Use ingress order: multiple game frames can share a tracking timestamp.
 +        // Keep the watermark after take() to reject late independent completions.
@@ -809,6 +817,7 @@ index 4d2e699..30cdb62 100644
 +        if state.pending.replace((timestamp, buffer)).is_some() {
 +            state.superseded += 1;
 +        }
++        state.pending_release_token = token;
 +        true
 +    }
 +    pub fn superseded(&self) -> u64 {
@@ -819,6 +828,8 @@ index 4d2e699..30cdb62 100644
 +        let mut state = self.inner.lock();
 +        let frame = state.pending.take()?;
 +        state.leased = frame.1;
++        state.leased_release_token = state.pending_release_token;
++        state.pending_release_token = 0;
 +        state.awaiting_copy_submit = state.handoff_enabled;
 +        Some(frame)
 +    }
@@ -827,6 +838,10 @@ index 4d2e699..30cdb62 100644
 +    pub fn protected_buffers(&self) -> [usize; 2] {
 +        let state = self.inner.lock();
 +        [state.leased, state.pending.map_or(0, |(_, buffer)| buffer)]
++    }
++    pub fn leased_release_token(&self, buffer: usize) -> u64 {
++        let state = self.inner.lock();
++        if state.leased == buffer { state.leased_release_token } else { 0 }
      }
  }
  
@@ -838,10 +853,27 @@ index 4d2e699..30cdb62 100644
  #[derive(Clone, Default, PartialEq)]
  pub struct VideoDecoderConfig {
      pub codec: CodecType,
-@@ -203,6 +296,14 @@ pub struct VideoDecoderSource {
+@@ -203,6 +311,31 @@ pub struct VideoDecoderSource {
  }
  
  impl VideoDecoderSource {
++    /// TCP-only experimental native release-fence handoff. Zero means unsupported.
++    pub fn release_token(&self, buffer: *mut std::ffi::c_void) -> u64 {
++        #[cfg(target_os = "android")]
++        if let SourceInner::PyroWave(source) = &self.inner { return source.release_token(buffer); }
++        let _ = buffer;
++        0
++    }
++    /// Always consumes fd, even for an unsupported/stale source.
++    pub fn attach_release_fd(&self, buffer: *mut std::ffi::c_void, token: u64, fd: i32) -> bool {
++        #[cfg(target_os = "android")]
++        {
++            if let SourceInner::PyroWave(source) = &self.inner { return source.attach_release_fd(buffer, token, fd); }
++            if fd >= 0 { unsafe { libc::close(fd); } }
++        }
++        let _ = (buffer, token, fd);
++        false
++    }
 +    /// Called after submitting the fresh frame's rendering commands, never for repeats.
 +    pub fn notify_frame_copy_submitted(&self) {
 +        #[cfg(target_os = "android")]
@@ -853,7 +885,7 @@ index 4d2e699..30cdb62 100644
      /// If a frame is available, return the timestamp and the AHardwareBuffer.
      pub fn get_frame(&mut self) -> Option<(Duration, *mut std::ffi::c_void)> {
          #[cfg(target_os = "android")]
-@@ -229,7 +330,9 @@ fn logcat_info(tag: &str, message: &str) {
+@@ -229,7 +362,9 @@ fn logcat_info(tag: &str, message: &str) {
      }
      let tag = std::ffi::CString::new(tag).unwrap_or_default();
      let text = std::ffi::CString::new(message).unwrap_or_default();
@@ -864,7 +896,7 @@ index 4d2e699..30cdb62 100644
  }
  
  // report_frame_decoded: (target_timestamp: Duration) -> ()
-@@ -249,7 +352,9 @@ pub fn create_decoder(
+@@ -249,7 +384,9 @@ pub fn create_decoder(
              }
          }
          if config.codec == CodecType::PyroWave
@@ -875,7 +907,30 @@ index 4d2e699..30cdb62 100644
          {
              let (sink, source) = pyrowave_udp::video_decoder_split(
                  config.clone(),
-@@ -312,53 +417,97 @@ mod tests {
+@@ -304,6 +441,22 @@ pub fn create_decoder(
+ mod tests {
+     use super::*;
+ 
++    #[test]
++    fn release_token_stays_with_the_lease_across_superseding() {
++        let slot = FrameSlot::default();
++        assert!(slot.publish_fenced(Duration::ZERO, 0x10, 1, 41));
++        assert_eq!(slot.leased_release_token(0x10), 0);
++        slot.take();
++        assert_eq!(slot.leased_release_token(0x10), 41);
++        assert!(slot.publish_fenced(Duration::ZERO, 0x20, 2, 42));
++        assert!(slot.publish_fenced(Duration::ZERO, 0x30, 3, 43));
++        assert!(!slot.publish_fenced(Duration::ZERO, 0x20, 2, 99));
++        assert_eq!(slot.leased_release_token(0x10), 41);
++        slot.take();
++        assert_eq!(slot.leased_release_token(0x10), 0);
++        assert_eq!(slot.leased_release_token(0x30), 43);
++    }
++
+     #[test]
+     fn config_round_trips_the_encoder_blob() {
+         let mut buf = Vec::new();
+@@ -312,53 +465,97 @@ mod tests {
          buf.push(1);
          buf.push(0);
          let c = parse_pyrowave_config(&buf).unwrap();
@@ -986,7 +1041,7 @@ index 4d2e699..30cdb62 100644
          assert_eq!(dist(&mut Vec::new()), "-");
      }
  
-@@ -392,4 +541,84 @@ mod tests {
+@@ -392,4 +589,84 @@ mod tests {
          assert_eq!(slot.take(), Some((Duration::from_millis(2), 0x20)));
          assert!(slot.take().is_none());
      }
@@ -1072,7 +1127,7 @@ index 4d2e699..30cdb62 100644
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601..3c90e40 100644
+index 2e22601..8593ff3 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -1099,7 +1154,7 @@ index 2e22601..3c90e40 100644
      },
      thread::{self, JoinHandle},
      time::Duration,
-@@ -33,36 +33,53 @@ struct FrameInfo {
+@@ -33,36 +33,55 @@ struct FrameInfo {
      convert_ms: f64,
      total_ms: f64,
      complete: i32,
@@ -1129,6 +1184,8 @@ index 2e22601..3c90e40 100644
 +        protected_b: *mut c_void,
      ) -> i32;
      fn pyroclient_destroy(c: *mut PyroClient);
++    fn pyroclient_output_release_token(buffer: *mut c_void) -> u64;
++    fn pyroclient_attach_release_fd(buffer: *mut c_void, token: u64, fd: i32) -> i32;
  }
  
  /// One pending frame, latest wins. Intra-only, so skipping a frame costs nothing downstream.
@@ -1157,7 +1214,7 @@ index 2e22601..3c90e40 100644
          self.pending.ready.notify_one();
          Ok(true)
      }
-@@ -71,13 +88,19 @@ impl VideoDecoderSink {
+@@ -71,13 +90,25 @@ impl VideoDecoderSink {
  pub struct VideoDecoderSource {
      running: Arc<AtomicBool>,
      pending: Arc<Pending>,
@@ -1167,6 +1224,12 @@ index 2e22601..3c90e40 100644
  }
  
  impl VideoDecoderSource {
++    pub fn release_token(&self, buffer: *mut c_void) -> u64 {
++        self.decoded.leased_release_token(buffer as usize)
++    }
++    pub fn attach_release_fd(&self, buffer: *mut c_void, token: u64, fd: i32) -> bool {
++        unsafe { pyroclient_attach_release_fd(buffer, token, fd) == 1 }
++    }
 +    pub fn notify_frame_copy_submitted(&self) {
 +        self.decoded.notify_copy_submitted();
 +    }
@@ -1179,7 +1242,7 @@ index 2e22601..3c90e40 100644
      }
  }
  
-@@ -85,7 +108,7 @@ impl Drop for VideoDecoderSource {
+@@ -85,7 +116,7 @@ impl Drop for VideoDecoderSource {
      fn drop(&mut self) {
          self.running.store(false, Ordering::Relaxed);
          self.pending.ready.notify_all();
@@ -1188,7 +1251,7 @@ index 2e22601..3c90e40 100644
              t.join().ok();
          }
      }
-@@ -99,14 +122,40 @@ pub fn video_decoder_split(
+@@ -99,14 +130,42 @@ pub fn video_decoder_split(
      let pending = Arc::new(Pending {
          frame: Mutex::new(None),
          ready: Condvar::new(),
@@ -1216,6 +1279,8 @@ index 2e22601..3c90e40 100644
 +        )
 +    };
 +    let handoff = workers == 1 && &property[..property_len.max(0) as usize] == b"1";
++    let property_len = unsafe { libc::__system_property_get(c"debug.q3pw.release_fd".as_ptr(), property.as_mut_ptr().cast()) };
++    let release_requested = &property[..property_len.max(0) as usize] == b"1";
 +    if handoff { decoded.enable_copy_handoff(); }
 +    alvr_common::info!("[Q3PW_WORKERS] TCP independent decoders={workers} copy_handoff={handoff}");
 +    let report_frame_decoded = Arc::new(report_frame_decoded);
@@ -1231,7 +1296,7 @@ index 2e22601..3c90e40 100644
          move || {
              // Created here so every Vulkan call the library makes stays on this thread.
              let client = unsafe {
-@@ -129,63 +178,89 @@ pub fn video_decoder_split(
+@@ -129,63 +188,90 @@ pub fn video_decoder_split(
                  return;
              }
              let mut frames: u64 = 0;
@@ -1288,7 +1353,8 @@ index 2e22601..3c90e40 100644
                  }
 -                decoded.publish(timestamp, out as usize);
 -                report_frame_decoded(Ok(timestamp));
-+                if decoded.publish_ordered(timestamp, out as usize, order) {
++                let token = if release_requested { unsafe { pyroclient_output_release_token(out) } } else { 0 };
++                if decoded.publish_fenced(timestamp, out as usize, order, token) {
 +                    report_frame_decoded(Ok(timestamp));
 +                }
                  frames += 1;
@@ -3308,7 +3374,7 @@ index 0000000..766b412
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..eb04019 100644
+index b87dfe9..37e157c 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -59,17 +59,9 @@ impl ParsedStreamConfig {
@@ -3483,7 +3549,7 @@ index b87dfe9..eb04019 100644
  
 +    fn poll_eye_copy(&self) -> bool {
 +        let (ready, completed_ms) = self.renderer.poll_import_copy();
-+        if let Some(ms) = completed_ms {
++        for ms in completed_ms {
 +            video_decoder::telemetry::record_eye_completion(Some(ms));
 +        }
 +        if !ready { video_decoder::telemetry::record_eye_deferral(); }
@@ -3575,7 +3641,7 @@ index b87dfe9..eb04019 100644
              }
          }
  
-@@ -401,37 +536,67 @@ impl StreamContext {
+@@ -401,37 +536,80 @@ impl StreamContext {
              ]);
          }
  
@@ -3625,9 +3691,16 @@ index b87dfe9..eb04019 100644
 +            self.swapchains[1]
 +                .wait_image(xr::Duration::INFINITE)
 +                .unwrap();
-+
+ 
+-        self.swapchains[0].release_image().unwrap();
+-        self.swapchains[1].release_image().unwrap();
 +            let render_start = Instant::now();
 +            let acquire_wait_ms = acquire_start.elapsed().as_secs_f32() * 1000.0;
++
++            let release_token = if self.renderer.release_export_requested() {
++                self.decoder.as_ref().map_or(0, |(_, source)| source.release_token(buffer_ptr))
++            } else { 0 };
++            self.renderer.set_source_release_token(release_token);
 +
 +            unsafe {
 +                self.renderer.render(
@@ -3647,10 +3720,16 @@ index b87dfe9..eb04019 100644
 +                    self.config.passthrough.as_ref(),
 +                )
 +            };
- 
--        self.swapchains[0].release_image().unwrap();
--        self.swapchains[1].release_image().unwrap();
++
 +            if !buffer_ptr.is_null() {
++                if let Some(fence) = self.renderer.take_release_fence() {
++                    let buffer = fence.buffer as *mut std::ffi::c_void;
++                    let token = fence.token;
++                    let attached = if let Some((_, source)) = &self.decoder {
++                        source.attach_release_fd(buffer, token, fence.into_raw_fd())
++                    } else { drop(fence); false };
++                    if !attached { self.renderer.reject_release_fence(); }
++                }
 +                if let Some((_, source)) = &self.decoder {
 +                    source.notify_frame_copy_submitted();
 +                }
@@ -3673,7 +3752,7 @@ index b87dfe9..eb04019 100644
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +658,8 @@ impl StreamContext {
+@@ -493,6 +671,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
@@ -4140,10 +4219,10 @@ index 0000000..bc6bee0
 +}
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000..38ae289
+index 0000000..d6d0379
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,376 @@
+@@ -0,0 +1,448 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -4151,6 +4230,8 @@ index 0000000..38ae289
 +use alvr_common::glam::UVec2;
 +use glow::{self as gl, HasContext};
 +use std::{cell::{Cell, RefCell}, ffi::c_void, num::NonZeroU32, rc::Rc, time::Instant};
++use std::collections::VecDeque;
++use super::native_release::{NativeRelease, ReleaseFence};
 +
 +#[cfg(target_os = "android")]
 +#[link(name = "android")]
@@ -4207,6 +4288,14 @@ index 0000000..38ae289
 +    image_cache: RefCell<Vec<CachedImport>>,
 +    pending: RefCell<Option<(gl::Fence, Instant)>>,
 +    timer: RefCell<Option<super::eye_timer::EyeTimer>>,
++    native_release: Option<NativeRelease>,
++    release_active: Cell<bool>,
++    source_release_token: Cell<u64>,
++    release_fd: RefCell<Option<ReleaseFence>>,
++    release_observers: RefCell<VecDeque<(gl::Fence, Instant)>>,
++    release_exported: Cell<u64>,
++    release_observed: Cell<u64>,
++    release_last_log: RefCell<Instant>,
 +}
 +
 +unsafe fn compile_program(gl: &gl::Context) -> Result<gl::Program, String> {
@@ -4301,11 +4390,15 @@ index 0000000..38ae289
 +            match setup {
 +                Ok((view_idx, flip_y)) => {
 +                    let timer = RefCell::new(super::eye_timer::EyeTimer::new(&context));
++                    let native_release = NativeRelease::new(&context);
 +                    Ok(Self { context, program, source_texture,
 +                    vertex_array, framebuffers, resolution: config.resolution,
 +                    view_idx, flip_y, flip, asynchronous: Cell::new(asynchronous),
 +                    image_cache_enabled: Cell::new(image_cache_requested && cfg!(target_os = "android")),
 +                    timer,
++                    native_release, release_active: Cell::new(true), source_release_token: Cell::new(0),
++                    release_fd: RefCell::new(None), release_observers: RefCell::new(VecDeque::new()),
++                    release_exported: Cell::new(0), release_observed: Cell::new(0), release_last_log: RefCell::new(Instant::now()),
 +                    image_cache: RefCell::new(Vec::new()), pending: RefCell::new(None), copy_wait_ns: copy_wait_us.clamp(0, 2000) * 1000, bypass_srgb })
 +                },
 +                Err(e) => {
@@ -4390,14 +4483,43 @@ index 0000000..38ae289
 +    /// Returns readiness and, once per completed async copy, observed wall time.
 +    /// TIMEOUT retains the texture binding AND decoder consumer lease. Never
 +    /// dequeue/rebind another source until this returns ready.
-+    pub fn poll_copy(&self) -> (bool, Option<f32>) {
++    pub fn poll_copy(&self) -> (bool, Vec<f32>) {
++        let mut observed = Vec::new();
++        if !self.release_observers.borrow().is_empty() {
++            self.context.make_current();
++            let gl = &self.context.gl_context;
++            let mut queue = self.release_observers.borrow_mut();
++            unsafe {
++                while let Some((fence, started)) = queue.front() {
++                    match gl.client_wait_sync(*fence, 0, 0) {
++                        gl::TIMEOUT_EXPIRED => break,
++                        gl::ALREADY_SIGNALED | gl::CONDITION_SATISFIED => {
++                            observed.push(started.elapsed().as_secs_f32() * 1000.0);
++                            gl.delete_sync(*fence); queue.pop_front();
++                        },
++                        _ => {
++                            gl.finish(); self.release_active.set(false);
++                            for (fence, _) in queue.drain(..) { gl.delete_sync(fence); }
++                            import_diagnostic(6, "[Q3PW_RELEASE_FD] observer failure; synchronous fallback, failed completions unknown".into());
++                            break;
++                        }
++                    }
++                }
++            }
++        }
++        self.release_observed.set(self.release_observed.get() + observed.len() as u64);
++        if self.native_release.is_some() && self.release_last_log.borrow().elapsed().as_secs() >= 1 {
++            import_diagnostic(4, format!("[Q3PW_RELEASE_FD] GLES exports={} observed={} pending={} active={}",
++                self.release_exported.get(), self.release_observed.get(), self.release_observers.borrow().len(), self.release_active.get()));
++            *self.release_last_log.borrow_mut() = Instant::now();
++        }
 +        let mut pending = self.pending.borrow_mut();
-+        let Some((fence, started)) = pending.as_ref() else { return (true, None); };
++        let Some((fence, started)) = pending.as_ref() else { return (true, observed); };
 +        self.context.make_current();
 +        let gl = &self.context.gl_context;
 +        unsafe {
 +            match gl.client_wait_sync(*fence, 0, self.copy_wait_ns) {
-+                gl::TIMEOUT_EXPIRED => return (false, None),
++                gl::TIMEOUT_EXPIRED => return (false, observed),
 +                gl::ALREADY_SIGNALED | gl::CONDITION_SATISFIED => {},
 +                _ => {
 +                    // A failed wait must not release memory the GPU may read.
@@ -4409,14 +4531,15 @@ index 0000000..38ae289
 +            let elapsed = started.elapsed().as_secs_f32() * 1000.0;
 +            gl.delete_sync(*fence);
 +            *pending = None;
-+            (true, Some(elapsed))
++            observed.push(elapsed);
++            (true, observed)
 +        }
 +    }
 +
 +    /// Required before replacing a decoder, rebinding its source, destroying
 +    /// borrowed OpenXR images, or falling back to another rendering path.
 +    pub fn drain_copy(&self) {
-+        if self.pending.borrow().is_none() { return; }
++        if self.pending.borrow().is_none() && self.release_observers.borrow().is_empty() && self.release_fd.borrow().is_none() { return; }
 +        self.context.make_current();
 +        unsafe {
 +            let gl = &self.context.gl_context;
@@ -4424,16 +4547,26 @@ index 0000000..38ae289
 +            if let Some((fence, _)) = self.pending.borrow_mut().take() {
 +                gl.delete_sync(fence);
 +            }
++            for (fence, _) in self.release_observers.borrow_mut().drain(..) { gl.delete_sync(fence); }
++            self.release_fd.borrow_mut().take();
 +        }
 +    }
 +
-+    pub fn copy_pending(&self) -> bool { self.pending.borrow().is_some() }
++    pub fn copy_pending(&self) -> bool { self.pending.borrow().is_some() || !self.release_observers.borrow().is_empty() }
++    pub fn set_source_release_token(&self, token: u64) { self.source_release_token.set(token); }
++    pub fn take_release_fence(&self) -> Option<ReleaseFence> { self.release_fd.borrow_mut().take() }
++    pub fn release_export_requested(&self) -> bool { self.native_release.is_some() && self.release_active.get() }
++    pub fn reject_release_fence(&self) {
++        self.drain_copy(); self.release_active.set(false);
++        import_diagnostic(6, "[Q3PW_RELEASE_FD] attachment rejected; synchronous fallback".into());
++    }
 +
 +    /// The caller has acquired/waited both indices and retains the PyroWave
 +    /// source lease until poll_copy completes. These textures are borrowed;
 +    /// this object owns ONLY its FBOs/program/external texture/VAO.
 +    pub unsafe fn render(&self, buffer: *mut c_void, indices: [u32; 2]) {
-+        self.drain_copy();
++        if self.pending.borrow().is_some() { self.drain_copy(); }
++        if self.release_fd.borrow().is_some() { self.reject_release_fence(); }
 +        self.context.make_current();
 +        let gl = &self.context.gl_context;
 +        let started = Instant::now();
@@ -4473,7 +4606,25 @@ index 0000000..38ae289
 +            // Restore the legacy state for WGPU/lobby/overlay users. This
 +            // does not change the already-recorded eye draws or their lease.
 +            if self.bypass_srgb { gl.enable(0x8DB9); }
-+            if self.asynchronous.get() {
++            if self.release_export_requested() && self.source_release_token.get() != 0 {
++                // Bound telemetry observers. A busy ring falls back instead of creating
++                // an unbounded completion queue or reporting submission as completion.
++                let exported = (self.release_observers.borrow().len() < 3)
++                    .then(|| self.native_release.as_ref().unwrap().export(&self.context, buffer as usize, self.source_release_token.get())).flatten();
++                if let Some(fd) = exported {
++                    match gl.fence_sync(gl::SYNC_GPU_COMMANDS_COMPLETE, 0) {
++                        Ok(fence) if !fence.0.is_null() => {
++                            self.release_observers.borrow_mut().push_back((fence, started));
++                            self.release_exported.set(self.release_exported.get() + 1);
++                            *self.release_fd.borrow_mut() = Some(fd);
++                            gl.flush();
++                        },
++                        _ => { drop(fd); self.reject_release_fence(); gl.finish(); }
++                    }
++                } else {
++                    self.reject_release_fence(); gl.finish();
++                }
++            } else if self.asynchronous.get() {
 +                match gl.fence_sync(gl::SYNC_GPU_COMMANDS_COMPLETE, 0) {
 +                    Ok(fence) if !fence.0.is_null() => {
 +                        *self.pending.borrow_mut() = Some((fence, started));
@@ -4819,12 +4970,13 @@ index 0000000..832dd35
 +    }
 +}
 diff --git a/alvr/graphics/src/lib.rs b/alvr/graphics/src/lib.rs
-index 3485570..7152f85 100644
+index 3485570..50472ab 100644
 --- a/alvr/graphics/src/lib.rs
 +++ b/alvr/graphics/src/lib.rs
-@@ -1,8 +1,12 @@
+@@ -1,9 +1,15 @@
 +mod direct_eye;
 +mod eye_timer;
++mod native_release;
  mod lobby;
 +mod performance;
  mod staging;
@@ -4833,9 +4985,11 @@ index 3485570..7152f85 100644
  pub use lobby::*;
 +pub use performance::*;
  pub use stream::*;
++pub use native_release::ReleaseFence;
  
  use alvr_common::{
-@@ -18,6 +22,11 @@ use wgpu::{
+     glam::{Mat4, UVec2, Vec4},
+@@ -18,6 +24,11 @@ use wgpu::{
      TextureFormat, TextureUsages, TextureView,
  };
  
@@ -4847,7 +5001,7 @@ index 3485570..7152f85 100644
  pub const SDR_FORMAT: TextureFormat = TextureFormat::Rgba8Unorm;
  pub const SDR_FORMAT_GL: u32 = gl::RGBA8;
  pub const GL_TEXTURE_EXTERNAL_OES: u32 = 0x8D65;
-@@ -209,6 +218,19 @@ pub struct GraphicsContext {
+@@ -209,6 +220,19 @@ pub struct GraphicsContext {
  }
  
  impl GraphicsContext {
@@ -4867,6 +5021,137 @@ index 3485570..7152f85 100644
      #[cfg(not(windows))]
      pub fn new_gl() -> Self {
          use std::mem;
+diff --git a/alvr/graphics/src/native_release.rs b/alvr/graphics/src/native_release.rs
+new file mode 100644
+index 0000000..ce59222
+--- /dev/null
++++ b/alvr/graphics/src/native_release.rs
+@@ -0,0 +1,125 @@
++//! Optional EGL native release fence; no ready-fence import or CPU wait here.
++use super::{direct_eye::import_diagnostic, GraphicsContext};
++use glow::HasContext;
++use std::ffi::{c_void, CStr};
++
++type Create = unsafe extern "C" fn(*mut c_void, u32, *const i32) -> *mut c_void;
++type Destroy = unsafe extern "C" fn(*mut c_void, *mut c_void) -> u32;
++type Duplicate = unsafe extern "C" fn(*mut c_void, *mut c_void) -> i32;
++type Query = unsafe extern "C" fn(*mut c_void, i32) -> *const std::ffi::c_char;
++
++pub struct ReleaseFence {
++    pub buffer: usize,
++    pub token: u64,
++    fd: i32,
++}
++impl ReleaseFence {
++    /// Transfer ownership exactly once. Receiver must consume on failure too.
++    pub fn into_raw_fd(mut self) -> i32 {
++        let fd = self.fd;
++        self.fd = -1;
++        fd
++    }
++}
++impl Drop for ReleaseFence {
++    fn drop(&mut self) {
++        #[cfg(target_os = "android")]
++        if self.fd >= 0 {
++            extern "C" {
++                fn close(fd: i32) -> i32;
++            }
++            unsafe {
++                close(self.fd);
++            }
++        }
++    }
++}
++
++pub(super) struct NativeRelease {
++    create: Create,
++    destroy: Destroy,
++    duplicate: Duplicate,
++}
++
++fn requested() -> bool {
++    #[cfg(target_os = "android")]
++    unsafe {
++        extern "C" {
++            fn __system_property_get(
++                name: *const std::ffi::c_char,
++                value: *mut std::ffi::c_char,
++            ) -> i32;
++        }
++        let mut value = [0; 92];
++        return __system_property_get(c"debug.q3pw.release_fd".as_ptr(), value.as_mut_ptr()) == 1
++            && value[0] == b'1' as std::ffi::c_char;
++    }
++    #[cfg(not(target_os = "android"))]
++    {
++        false
++    }
++}
++
++impl NativeRelease {
++    pub(super) unsafe fn new(context: &GraphicsContext) -> Option<Self> {
++        if !requested() {
++            return None;
++        }
++        let addresses = [
++            "eglQueryString",
++            "eglCreateSyncKHR",
++            "eglDestroySyncKHR",
++            "eglDupNativeFenceFDANDROID",
++        ]
++        .map(|name| context.gl_proc_address(name));
++        if addresses.iter().any(|address| address.is_null()) {
++            import_diagnostic(
++                5,
++                "[Q3PW_RELEASE_FD] EGL active=0 reason=entry_points".into(),
++            );
++            return None;
++        }
++        let query: Query = std::mem::transmute(addresses[0]);
++        let extensions = query(context.egl_display.as_ptr(), 0x3055);
++        if extensions.is_null()
++            || !CStr::from_ptr(extensions)
++                .to_string_lossy()
++                .split_whitespace()
++                .any(|extension| extension == "EGL_ANDROID_native_fence_sync")
++        {
++            import_diagnostic(5, "[Q3PW_RELEASE_FD] EGL active=0 reason=extension".into());
++            return None;
++        }
++        import_diagnostic(
++            4,
++            "[Q3PW_RELEASE_FD] EGL export available; per-frame native token required".into(),
++        );
++        Some(Self {
++            create: std::mem::transmute(addresses[1]),
++            destroy: std::mem::transmute(addresses[2]),
++            duplicate: std::mem::transmute(addresses[3]),
++        })
++    }
++    pub(super) unsafe fn export(
++        &self,
++        context: &GraphicsContext,
++        buffer: usize,
++        token: u64,
++    ) -> Option<ReleaseFence> {
++        let display = context.egl_display.as_ptr();
++        // No FD attribute: fence covers all prior GLES commands, including both eyes.
++        let attributes = [0x3038]; // EGL_NONE
++        let sync = (self.create)(display, 0x3144, attributes.as_ptr());
++        if sync.is_null() {
++            return None;
++        }
++        context.gl_context.flush();
++        let fd = (self.duplicate)(display, sync);
++        let destroyed = (self.destroy)(display, sync);
++        let fence = (fd >= 0).then_some(ReleaseFence { buffer, token, fd });
++        if destroyed == 0 {
++            return None;
++        } // Owned fence closes through Drop.
++        fence
++    }
++}
 diff --git a/alvr/graphics/src/performance.rs b/alvr/graphics/src/performance.rs
 new file mode 100644
 index 0000000..31f33b6
@@ -5096,7 +5381,7 @@ index febd2c3..779de33 100644
          );
      }
 diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
-index 737b7d0..8868d88 100644
+index 737b7d0..4c4c8ed 100644
 --- a/alvr/graphics/src/stream.rs
 +++ b/alvr/graphics/src/stream.rs
 @@ -1,10 +1,10 @@
@@ -5140,7 +5425,7 @@ index 737b7d0..8868d88 100644
          let target_format = super::gl_format_to_wgpu(target_format);
  
          let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-@@ -298,9 +312,53 @@ impl StreamRenderer {
+@@ -298,9 +312,65 @@ impl StreamRenderer {
              views_objects: view_objects.try_into().unwrap(),
              ffe_params_buffer,
              foveated_encoding: foveated_encoding.map(|c| (base_view_resolution, c)),
@@ -5179,8 +5464,20 @@ index 737b7d0..8868d88 100644
  
 +    pub fn last_copy_was_direct(&self) -> bool { self.last_copy_direct.get() }
 +
-+    pub fn poll_import_copy(&self) -> (bool, Option<f32>) {
-+        self.direct_eye_renderer.as_ref().map_or((true, None), |r| r.poll_copy())
++    pub fn poll_import_copy(&self) -> (bool, Vec<f32>) {
++        self.direct_eye_renderer.as_ref().map_or((true, Vec::new()), |r| r.poll_copy())
++    }
++    pub fn release_export_requested(&self) -> bool {
++        self.direct_eye_enabled && self.direct_eye_renderer.as_ref().is_some_and(|r| r.release_export_requested())
++    }
++    pub fn set_source_release_token(&self, token: u64) {
++        if let Some(r) = &self.direct_eye_renderer { r.set_source_release_token(token); }
++    }
++    pub fn take_release_fence(&self) -> Option<super::ReleaseFence> {
++        self.direct_eye_renderer.as_ref().and_then(|r| r.take_release_fence())
++    }
++    pub fn reject_release_fence(&self) {
++        if let Some(r) = &self.direct_eye_renderer { r.reject_release_fence(); }
 +    }
 +
 +    pub fn import_copy_pending(&self) -> bool {
@@ -5194,7 +5491,7 @@ index 737b7d0..8868d88 100644
      /// Move the full-resolution centre to match the server's, for the frame about to be drawn.
      ///
      /// Per eye: the horizontal frusta are asymmetric and mirrored, so one shared shift is only
-@@ -333,9 +391,30 @@ impl StreamRenderer {
+@@ -333,9 +403,30 @@ impl StreamRenderer {
          view_params: [StreamViewParams; 2],
          passthrough: Option<&PassthroughMode>,
      ) {

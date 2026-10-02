@@ -4,6 +4,9 @@ Source review on 2026-10-02; no new native synchronization code or hardware
 benchmark was deployed by this review. Keep the current matching .25 path and
 4:2:0 default until a separate opt-in experiment passes correctness and pacing.
 
+Follow-up: the [.26 release-fence candidate](RELEASE-FENCE-EXPERIMENT.md) implements
+the first step below, default off. This is source work, not a validated live gain.
+
 Reviewed Nightfall main at `e111b5c0825ad27be28d6584007c60cac2b017ea` (merge of
 PR #47), especially:
 

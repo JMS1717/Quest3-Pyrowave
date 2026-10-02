@@ -58,6 +58,13 @@ int pyroclient_decode(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_inf
 int pyroclient_decode_guarded(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info,
                              AHardwareBuffer *protected_a, AHardwareBuffer *protected_b);
 
+// Optional GLES release-fence handoff. Decode remains synchronous. Nonzero token
+// identifies a completed frame whose native context supports SYNC_FD import.
+uint64_t pyroclient_output_release_token(AHardwareBuffer *buffer);
+// Always consumes fd (including rejection). Return 1 only when registered to the
+// matching frame; caller must synchronously finish GLES before dropping a rejected lease.
+int pyroclient_attach_release_fd(AHardwareBuffer *buffer, uint64_t token, int fd);
+
 // Throw away whatever is queued (e.g. a frame whose deadline passed).
 void pyroclient_clear(pyroclient *c);
 

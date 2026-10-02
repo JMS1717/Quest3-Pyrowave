@@ -2,6 +2,7 @@
 // the Adreno 740; the harness stays as the record and the scoring tool.
 #include "pyroclient.h"
 #include "decode_path.h"
+#include "release_fence_registry.h"
 
 #include <android/hardware_buffer.h>
 #include <android/log.h>
@@ -14,6 +15,9 @@
 #include <cstring>
 #include <cstdlib>
 #include <vector>
+#include <unistd.h>
+#include <poll.h>
+#include <cerrno>
 
 #include "pyrowave.h"
 #include "ycbcr_to_rgba_spv.h"
@@ -43,6 +47,8 @@
 
 namespace {
 
+ReleaseFenceRegistry release_registry([](int fd) { close(fd); });
+
 struct Plane {
     VkImage image = VK_NULL_HANDLE;
     VkDeviceMemory memory = VK_NULL_HANDLE;
@@ -61,6 +67,8 @@ struct Slot {
     VkDescriptorSet set = VK_NULL_HANDLE;
     VkFramebuffer framebuffer = VK_NULL_HANDLE;
     bool first_use = true;
+    VkSemaphore released = VK_NULL_HANDLE;
+    bool release_registered = false;
 };
 
 uint32_t find_memory_type(VkPhysicalDevice gpu, uint32_t bits, VkMemoryPropertyFlags want) {
@@ -99,10 +107,14 @@ struct pyroclient {
     VkPhysicalDeviceVulkan11Features f11{};
     VkPhysicalDeviceFeatures2 f2{};
     VkDeviceCreateInfo device_info{};
-    const char *device_extensions[2] = {
+    std::vector<const char *> device_extensions = {
         VK_ANDROID_EXTERNAL_MEMORY_ANDROID_HARDWARE_BUFFER_EXTENSION_NAME,
         VK_EXT_QUEUE_FAMILY_FOREIGN_EXTENSION_NAME,
     };
+    bool release_fences = false;
+    bool release_poisoned = false;
+    uint64_t release_imports = 0;
+    PFN_vkImportSemaphoreFdKHR import_semaphore_fd = nullptr;
 
     pyrowave_device pyro = nullptr;
     pyrowave_decoder decoder = nullptr;
@@ -184,10 +196,33 @@ bool pyroclient::create_device() {
     device_info.pNext = &f2;
     device_info.queueCreateInfoCount = 1;
     device_info.pQueueCreateInfos = &queue_info;
-    device_info.enabledExtensionCount = 2;
-    device_info.ppEnabledExtensionNames = device_extensions;
+    char release_prop[PROP_VALUE_MAX] = {};
+    if (__system_property_get("debug.q3pw.release_fd", release_prop) > 0 && !strcmp(release_prop, "1")) {
+        uint32_t count = 0;
+        vkEnumerateDeviceExtensionProperties(gpu, nullptr, &count, nullptr);
+        std::vector<VkExtensionProperties> extensions(count);
+        vkEnumerateDeviceExtensionProperties(gpu, nullptr, &count, extensions.data());
+        for (const auto &extension : extensions) {
+            if (!strcmp(extension.extensionName, VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME)) {
+                VkPhysicalDeviceExternalSemaphoreInfo external = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_SEMAPHORE_INFO };
+                external.handleType = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_SYNC_FD_BIT;
+                VkExternalSemaphoreProperties props = { VK_STRUCTURE_TYPE_EXTERNAL_SEMAPHORE_PROPERTIES };
+                vkGetPhysicalDeviceExternalSemaphoreProperties(gpu, &external, &props);
+                release_fences = (props.externalSemaphoreFeatures & VK_EXTERNAL_SEMAPHORE_FEATURE_IMPORTABLE_BIT) != 0;
+                if (release_fences) device_extensions.push_back(VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME);
+                break;
+            }
+        }
+        LOGI("[Q3PW_RELEASE_FD] Vulkan requested=1 importable=%d", release_fences);
+    }
+    device_info.enabledExtensionCount = uint32_t(device_extensions.size());
+    device_info.ppEnabledExtensionNames = device_extensions.data();
     VK_TRY(vkCreateDevice(gpu, &device_info, nullptr, &device));
     vkGetDeviceQueue(device, family, 0, &queue);
+    if (release_fences) {
+        import_semaphore_fd = reinterpret_cast<PFN_vkImportSemaphoreFdKHR>(vkGetDeviceProcAddr(device, "vkImportSemaphoreFdKHR"));
+        if (!import_semaphore_fd) { release_fences = false; LOGE("[Q3PW_RELEASE_FD] Vulkan import entry point unavailable"); }
+    }
 
     // Experiment 2: debug.xrwired.pyro_precision = 0|1|2 selects PyroWave's math /
     // storage precision (0 = FP16 math, all levels R16F; 1 = FP32 math, 2 levels R16F; 2 = FP32).
@@ -509,6 +544,12 @@ bool pyroclient::create_slot(Slot &s) {
         VK_TRY(vkAllocateDescriptorSets(device, &sa, &s.set));
         write_set(device, sampler, planes, s.view, s.set, !fragment_convert);
     }
+    if (release_fences) {
+        VkSemaphoreCreateInfo semaphore = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+        VK_TRY(vkCreateSemaphore(device, &semaphore, nullptr, &s.released));
+        s.release_registered = release_registry.add(s.ahb);
+        if (!s.release_registered) { LOGE("release registry duplicate buffer"); return false; }
+    }
     return true;
 }
 
@@ -524,7 +565,35 @@ static void image_barrier(VkCommandBuffer cmd, VkImage img, VkImageLayout from, 
 }
 
 bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info) {
+    if (release_poisoned) return false;
     const auto t0 = std::chrono::steady_clock::now();
+    bool wait_released = false;
+    if (s.release_registered) {
+        int fd = release_registry.begin_reuse(s.ahb);
+        if (fd >= 0) {
+            VkImportSemaphoreFdInfoKHR imported = { VK_STRUCTURE_TYPE_IMPORT_SEMAPHORE_FD_INFO_KHR };
+            imported.semaphore = s.released;
+            imported.flags = VK_SEMAPHORE_IMPORT_TEMPORARY_BIT;
+            imported.handleType = VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_SYNC_FD_BIT;
+            imported.fd = fd;
+            if (import_semaphore_fd(device, &imported) == VK_SUCCESS) {
+                wait_released = true; // Vulkan owns fd now; temporary payload resets after wait.
+                if (++release_imports % 120 == 0)
+                    LOGI("[Q3PW_RELEASE_FD] Vulkan imports=%llu gpu_wait=1", (unsigned long long)release_imports);
+            } else {
+                // Import failure must never turn an unfinished consumer into a free slot.
+                const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+                pollfd p = { fd, POLLIN, 0 };
+                int result;
+                do { result = poll(&p, 1, 10); }
+                while ((result == 0 || (result < 0 && errno == EINTR)) && std::chrono::steady_clock::now() < deadline);
+                bool ready = result > 0 && (p.revents & POLLIN) && !(p.revents & (POLLERR | POLLNVAL));
+                close(fd);
+                LOGE("[Q3PW_RELEASE_FD] import failure CPU fallback ready=%d", ready);
+                if (!ready) { release_poisoned = true; return false; }
+            }
+        }
+    }
     VK_TRY(vkResetFences(device, 1, &fence));
     VK_TRY(vkResetCommandBuffer(cmd, 0));
     VkCommandBufferBeginInfo bi = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -608,6 +677,13 @@ bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info) {
 
     VK_TRY(vkEndCommandBuffer(cmd));
     VkSubmitInfo si = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+    // Wait before the FOREIGN acquire barrier as well as any writes. Preserve
+    // the existing image-family/layout transitions; a semaphore does not replace them.
+    VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    if (wait_released) {
+        si.waitSemaphoreCount = 1; si.pWaitSemaphores = &s.released;
+        si.pWaitDstStageMask = &wait_stage;
+    }
     si.commandBufferCount = 1; si.pCommandBuffers = &cmd;
     const auto t_submit = std::chrono::steady_clock::now();
     VK_TRY(vkQueueSubmit(queue, 1, &si, fence));
@@ -632,6 +708,8 @@ void pyroclient::destroy() {
     if (device) vkDeviceWaitIdle(device);
     if (decoder) pyrowave_decoder_destroy(decoder);
     for (Slot &s : ring) {
+        if (s.release_registered) release_registry.remove(s.ahb);
+        if (s.released) vkDestroySemaphore(device, s.released, nullptr);
         if (s.framebuffer) vkDestroyFramebuffer(device, s.framebuffer, nullptr);
         if (s.view) vkDestroyImageView(device, s.view, nullptr);
         if (s.image) vkDestroyImage(device, s.image, nullptr);
@@ -794,11 +872,24 @@ extern "C" int pyroclient_decode_guarded(pyroclient *c, AHardwareBuffer **out, p
     }
     Slot &s = c->ring[c->next_slot];
     c->next_slot = (c->next_slot + 1) % (uint32_t)c->ring.size();
-    if (!c->record_and_submit(s, info)) return -2;
+    if (!c->record_and_submit(s, info)) {
+        if (c->release_fences) c->release_poisoned = true;
+        return -2;
+    }
+    if (s.release_registered && !release_registry.publish(s.ahb)) {
+        c->release_poisoned = true; return -5;
+    }
     *out = s.ahb;
     return 0;
 }
 
 extern "C" void pyroclient_clear(pyroclient *c) { if (c) pyrowave_decoder_clear(c->decoder); }
+
+extern "C" uint64_t pyroclient_output_release_token(AHardwareBuffer *buffer) {
+    return release_registry.token(buffer);
+}
+extern "C" int pyroclient_attach_release_fd(AHardwareBuffer *buffer, uint64_t token, int fd) {
+    return release_registry.attach(buffer, token, fd) ? 1 : 0;
+}
 
 extern "C" void pyroclient_destroy(pyroclient *c) { if (!c) return; c->destroy(); delete c; }
