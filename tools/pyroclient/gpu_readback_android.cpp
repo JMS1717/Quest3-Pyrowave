@@ -17,7 +17,8 @@ struct ImageReference {
 }
 
 bool readback_android_buffer(AHardwareBuffer *buffer, bool flip_y,
-                              std::vector<unsigned char> &rgba, std::string &error) {
+                              std::vector<unsigned char> &rgba, std::string &error,
+                              const q3pw::BeforeReadback &before, uint32_t draw_repeats) {
     rgba.clear();
     error.clear();
     if (!buffer) { error = "No completed decoder buffer"; return false; }
@@ -56,5 +57,5 @@ bool readback_android_buffer(AHardwareBuffer *buffer, bool flip_y,
     // readback finishes GLES work and removes its sibling texture before imported
     // image/context/reference destruction. No CPU flags or locks on the source.
     return q3pw::readback_egl_image(image, description.width, description.height,
-                                   flip_y, rgba, error);
+                                   flip_y, rgba, error, before, draw_repeats);
 }

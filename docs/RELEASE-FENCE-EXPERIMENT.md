@@ -60,6 +60,22 @@ Check epoch/PID-scoped diagnostics:
 - Matching producer/consumer telemetry endpoints, fresh FPS/p1, superseding,
   CPU eye-render time, GPU decode/completion, latency and thermals.
 
+The cloud Android artifact includes a separate `release_fence_gpu_test` diagnostic:
+
+```text
+release_fence_gpu_test A.wave B.wave haar 3 16
+```
+
+Use distinct valid Haar-encoded frames with identical dimensions/chroma/range and
+the saved-property guards below. It records synchronous reference pixels, queues
+GLES reads of A, exports/attaches their release FD, and cycles all three Vulkan
+slots to overwrite the source with B **before** the outer GLES CPU completion/readback.
+Both captured A and later B must match their references exactly. The diagnostic
+reports FD attachments, verified source reuse and how many exports were still
+unsignaled. It does not force a fixed GPU delay, prove the FD is the only driver
+dependency, reproduce OpenXR scheduling or establish absolute image quality.
+This extra diagnostic is not linked into the production renderer/library.
+
 Use saved original properties, a device-pinned ADB wrapper and existing thermal,
 process-identity and experiment-lock guards. Enable only after matching artifacts
 are reviewed. Both the graphics constructor and native decoder read the property

@@ -74,6 +74,19 @@ int main() {
         read = q3pw::readback_egl_image(image, width, height, false, actual, error);
         if (!read) std::fprintf(stderr, "%s\n", error.c_str());
         ok &= check(read && actual == original, "changing pixels visible through the same EGL image");
+        int hooks = 0;
+        const auto before = [&](EGLDisplay display, std::string &) {
+            ++hooks;
+            return display == context.display();
+        };
+        read = q3pw::readback_egl_image(image, width, height, false, actual, error, before, 2);
+        ok &= check(read && hooks == 1 && actual == original, "hook after queued repeated draws preserves pixels");
+        const auto reject = [](EGLDisplay, std::string &reason) { reason = "expected rejection"; return false; };
+        ok &= check(!q3pw::readback_egl_image(image, width, height, false, actual, error, reject)
+                    && actual.empty() && error == "expected rejection", "hook failure cannot return stale pixels");
+        ok &= check(!q3pw::readback_egl_image(image, width, height, false, actual, error, before, 0)
+                    && hooks == 1, "zero queued draws rejected before hook");
+        ok &= check(!q3pw::readback_egl_image(image, width, height, false, actual, error, before, 129), "draw queue is bounded");
         ok &= check(!q3pw::readback_egl_image(image, 0, height, false, actual, error) && actual.empty(), "zero extent rejected without stale output");
         ok &= check(!q3pw::readback_egl_image(image, std::numeric_limits<uint32_t>::max(), height, false, actual, error), "overflow extent rejected");
         ok &= check(!q3pw::readback_egl_image(image, 8192, 8193, false, actual, error), "more than 256MiB rejected");

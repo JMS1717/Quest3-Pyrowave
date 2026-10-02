@@ -578,7 +578,7 @@ bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info) {
             imported.fd = fd;
             if (import_semaphore_fd(device, &imported) == VK_SUCCESS) {
                 wait_released = true; // Vulkan owns fd now; temporary payload resets after wait.
-                if (++release_imports % 120 == 0)
+                if (++release_imports <= 3 || release_imports % 120 == 0)
                     LOGI("[Q3PW_RELEASE_FD] Vulkan imports=%llu gpu_wait=1", (unsigned long long)release_imports);
             } else {
                 // Import failure must never turn an unfinished consumer into a free slot.

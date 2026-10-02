@@ -122,10 +122,11 @@ static bool shader(GLuint &id, GLenum kind, const char *source, std::string &err
 
 bool readback_egl_image(EGLImageKHR image, uint32_t width, uint32_t height,
                         bool flip_y, std::vector<unsigned char> &rgba,
-                        std::string &error) {
+                        std::string &error, const BeforeReadback &before,
+                        uint32_t draw_repeats) {
     rgba.clear();
     error.clear();
-    if (image == EGL_NO_IMAGE_KHR || !width || !height ||
+    if (image == EGL_NO_IMAGE_KHR || !width || !height || !draw_repeats || draw_repeats > 128 ||
         width > uint32_t(std::numeric_limits<GLsizei>::max()) ||
         height > uint32_t(std::numeric_limits<GLsizei>::max()) ||
         uint64_t(width) * height * 4 > 256ull * 1024 * 1024) {
@@ -216,8 +217,9 @@ void main() {
     if (source_location < 0 || flip_location < 0) { error = "Missing readback uniform"; return false; }
     glUniform1i(source_location, 0);
     glUniform1i(flip_location, flip_y);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    for (uint32_t i = 0; i < draw_repeats; ++i) glDrawArrays(GL_TRIANGLES, 0, 3);
     if (!gl_ok("readback draw", error)) return false;
+    if (before && !before(eglGetCurrentDisplay(), error)) return false;
     glFinish();
     glReadBuffer(GL_COLOR_ATTACHMENT0);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
