@@ -206,7 +206,7 @@ index 7cead7b..f16efe8 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..df60e08 100644
+index ae00ce8..5601b29 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..df60e08 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.23"
++version = "20.13.0-quest3.pyro.24"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -551,10 +551,10 @@ index 90a7c0a..041310e 100644
  
 diff --git a/alvr/client_core/src/performance.rs b/alvr/client_core/src/performance.rs
 new file mode 100644
-index 0000000..5e9bb7c
+index 0000000..0cd84ff
 --- /dev/null
 +++ b/alvr/client_core/src/performance.rs
-@@ -0,0 +1,62 @@
+@@ -0,0 +1,85 @@
 +//! Client overlay controls; independent of graphics so the chord can be regression tested.
 +pub struct OverlayToggle {
 +    pub visible: bool,
@@ -590,9 +590,32 @@ index 0000000..5e9bb7c
 +    }
 +}
 +
++/// Diagnostic override. Clearing it restores the controller's session state.
++pub fn overlay_visibility(property: &str, controller_visible: bool) -> bool {
++    match property.trim() {
++        "0" => false,
++        "1" => true,
++        _ => controller_visible,
++    }
++}
++
 +#[cfg(test)]
 +mod tests {
 +    use super::*;
++    #[test]
++    fn overlay_override_has_priority_without_changing_controller_state() {
++        let mut toggle = OverlayToggle::default();
++        assert!(!overlay_visibility("0", toggle.visible));
++        toggle.update(true, true);
++        assert!(!toggle.visible);
++        assert!(overlay_visibility("1\n", toggle.visible));
++        assert!(!overlay_visibility("", toggle.visible));
++        toggle.update(false, false);
++        toggle.update(true, true);
++        assert!(!overlay_visibility(" 0 ", toggle.visible));
++        assert!(overlay_visibility("", toggle.visible));
++        assert!(overlay_visibility("invalid", toggle.visible));
++    }
 +    #[test]
 +    fn both_sticks_toggle_once_and_both_must_be_released_to_rearm() {
 +        let mut toggle = OverlayToggle::default();
@@ -2445,7 +2468,7 @@ index 7765bb4..b102615 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..a1c460b 100644
+index a0fd36f..082190d 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -4,6 +4,8 @@ mod graphics;
@@ -2466,7 +2489,7 @@ index a0fd36f..a1c460b 100644
  use stream::StreamContext;
  
  fn from_xr_vec3(v: xr::Vector3f) -> Vec3 {
-@@ -137,6 +139,14 @@ pub fn entry_point() {
+@@ -137,6 +139,16 @@ pub fn entry_point() {
      alvr_client_core::init_logging();
  
      let platform = alvr_system_info::platform();
@@ -2477,11 +2500,13 @@ index a0fd36f..a1c460b 100644
 +    let mut loop_samples: u32 = 0;
 +    let mut loop_wait_sum: f64 = 0.0;
 +    let mut loop_end_sum: f64 = 0.0;
++    let mut loop_overlay_sum: f64 = 0.0;
++    let mut loop_overlay_max: f64 = 0.0;
 +
      #[cfg(target_os = "android")]
      let galaxy_xr = alvr_system_info::model_name() == "SM-I610";
      #[cfg(not(target_os = "android"))]
-@@ -291,11 +301,21 @@ pub fn entry_point() {
+@@ -291,11 +303,21 @@ pub fn entry_point() {
          // logcat once connected; the harness checks the DynamicPolicyManager vote against it.
          if exts.ext_performance_settings {
              match extra_extensions::perf_settings::level_from_property() {
@@ -2508,7 +2533,7 @@ index a0fd36f..a1c460b 100644
              }
          } else {
              alvr_common::error!("[PERF] XR_EXT_performance_settings not advertised");
-@@ -313,19 +333,37 @@ pub fn entry_point() {
+@@ -313,19 +335,37 @@ pub fn entry_point() {
              views_config[0].recommended_image_rect_height,
          );
  
@@ -2550,7 +2575,7 @@ index a0fd36f..a1c460b 100644
  
          // Whether anything is correcting for the ~26 ms the runtime predicts ahead. If the
          // compositor does not timewarp and ALVR does not either -- 20.13.0 hardcodes
-@@ -354,8 +392,10 @@ pub fn entry_point() {
+@@ -354,8 +394,10 @@ pub fn entry_point() {
              exts.fb_foveation,
              advertised_extension_names.len(),
          );
@@ -2563,7 +2588,7 @@ index a0fd36f..a1c460b 100644
  
          if exts.fb_color_space {
              xr_session
-@@ -365,8 +405,8 @@ pub fn entry_point() {
+@@ -365,8 +407,8 @@ pub fn entry_point() {
  
          let capabilities = ClientCapabilities {
              default_view_resolution,
@@ -2574,7 +2599,7 @@ index a0fd36f..a1c460b 100644
              encoder_high_profile: galaxy_xr || platform != Platform::Unknown,
              encoder_10_bits: galaxy_xr || platform != Platform::Unknown,
              encoder_av1: matches!(
-@@ -392,9 +432,16 @@ pub fn entry_point() {
+@@ -392,9 +434,16 @@ pub fn entry_point() {
              Rc::clone(&graphics_context),
              Arc::clone(&interaction_context),
              platform,
@@ -2592,7 +2617,7 @@ index a0fd36f..a1c460b 100644
          let lobby_body_tracking_config = BodyTrackingSourcesConfig {
              body_tracking_fb: Switch::Disabled,
              body_tracking_bd: Switch::Enabled(BodyTrackingBDConfig::BodyTracking {
-@@ -412,11 +459,16 @@ pub fn entry_point() {
+@@ -412,11 +461,16 @@ pub fn entry_point() {
              .select_sources(&lobby_interaction_sources);
  
          let mut session_running = false;
@@ -2610,7 +2635,7 @@ index a0fd36f..a1c460b 100644
          // Budget for the pre-xrWaitFrame poll: the previous frame's period, 72 Hz until known.
          let mut poll_interval = Duration::from_micros(13_889);
          'render_loop: loop {
-@@ -432,7 +484,17 @@ pub fn entry_point() {
+@@ -432,7 +486,17 @@ pub fn entry_point() {
                                  .begin(xr::ViewConfigurationType::PRIMARY_STEREO)
                                  .unwrap();
  
@@ -2629,7 +2654,7 @@ index a0fd36f..a1c460b 100644
  
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
  
-@@ -440,6 +502,7 @@ pub fn entry_point() {
+@@ -440,6 +504,7 @@ pub fn entry_point() {
                          }
                          xr::SessionState::STOPPING => {
                              session_running = false;
@@ -2637,7 +2662,7 @@ index a0fd36f..a1c460b 100644
  
                              passthrough_layer = None;
  
-@@ -494,7 +557,29 @@ pub fn entry_point() {
+@@ -494,7 +559,29 @@ pub fn entry_point() {
                          lobby.update_hud_message(&message);
                      }
                      ClientCoreEvent::StreamingStarted(config) => {
@@ -2667,7 +2692,7 @@ index a0fd36f..a1c460b 100644
  
                          let context = StreamContext::new(
                              Arc::clone(&core_context),
-@@ -512,6 +597,8 @@ pub fn entry_point() {
+@@ -512,6 +599,8 @@ pub fn entry_point() {
                          stream_context = Some(context);
                      }
                      ClientCoreEvent::StreamingStopped => {
@@ -2676,7 +2701,7 @@ index a0fd36f..a1c460b 100644
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -565,10 +652,19 @@ pub fn entry_point() {
+@@ -565,10 +654,19 @@ pub fn entry_point() {
              // Frame in hand before the runtime picks the display slot (stream.rs poll_frame).
              if early_poll {
                  if let Some(stream) = &mut stream_context {
@@ -2697,7 +2722,7 @@ index a0fd36f..a1c460b 100644
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -579,9 +675,45 @@ pub fn entry_point() {
+@@ -579,9 +677,45 @@ pub fn entry_point() {
              let frame_interval =
                  Duration::from_nanos(frame_state.predicted_display_period.as_nanos() as _);
              poll_interval = frame_interval;
@@ -2744,7 +2769,7 @@ index a0fd36f..a1c460b 100644
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +737,15 @@ pub fn entry_point() {
+@@ -605,15 +739,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -2769,7 +2794,7 @@ index a0fd36f..a1c460b 100644
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,9 +753,10 @@ pub fn entry_point() {
+@@ -621,9 +755,10 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -2781,16 +2806,22 @@ index a0fd36f..a1c460b 100644
              let vsync_time =
                  Duration::from_nanos(frame_state.predicted_display_time.as_nanos() as _);
  
-@@ -654,22 +787,45 @@ pub fn entry_point() {
+@@ -654,22 +789,53 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
 -            // todo: allow rendering lobby and stream layers at the same time and add cross fade
++            let overlay_started = loop_probe.then(Instant::now);
 +            if let Some(overlay) = &mut performance_overlay {
 +                if let Err(error) = overlay.update(&core_context) {
 +                    error!("Performance overlay disabled after render failure: {error:?}");
 +                    performance_overlay = None;
 +                }
++            }
++            if let Some(started) = overlay_started {
++                let ms = started.elapsed().as_secs_f64() * 1000.0;
++                loop_overlay_sum += ms;
++                loop_overlay_max = loop_overlay_max.max(ms);
 +            }
 +            let streaming = stream_context.is_some();
 +            // Render the video independently of the client-local performance quad.
@@ -2826,16 +2857,18 @@ index a0fd36f..a1c460b 100644
 +                loop_end_sum += started.elapsed().as_secs_f64() * 1000.0;
 +                let time_delta_ms = (end_time.as_nanos() - to_xr_time(display_time).as_nanos()) as f64 / 1e6;
 +                if loop_samples >= 120 {
-+                    error!("[Q3PW_LOOP] samples={} wait_mean_ms={:.3} end_mean_ms={:.3} runtime_display_time={} end_minus_source_ms={:.3}",
++                    error!("[Q3PW_LOOP] samples={} wait_mean_ms={:.3} end_mean_ms={:.3} runtime_display_time={} end_minus_source_ms={:.3} overlay_mean_cpu_ms={:.3} overlay_max_cpu_ms={:.3}",
 +                        loop_samples, loop_wait_sum / loop_samples as f64,
-+                        loop_end_sum / loop_samples as f64, use_runtime_display_time, time_delta_ms);
++                        loop_end_sum / loop_samples as f64, use_runtime_display_time, time_delta_ms,
++                        loop_overlay_sum / loop_samples as f64, loop_overlay_max);
 +                    loop_samples = 0; loop_wait_sum = 0.0; loop_end_sum = 0.0;
++                    loop_overlay_sum = 0.0; loop_overlay_max = 0.0;
 +                }
 +            }
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +854,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +864,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
@@ -2848,13 +2881,13 @@ index a0fd36f..a1c460b 100644
  
 diff --git a/alvr/client_openxr/src/performance.rs b/alvr/client_openxr/src/performance.rs
 new file mode 100644
-index 0000000..688a94f
+index 0000000..869319d
 --- /dev/null
 +++ b/alvr/client_openxr/src/performance.rs
-@@ -0,0 +1,257 @@
+@@ -0,0 +1,304 @@
 +use crate::interaction::{ButtonAction, InteractionContext};
 +use alvr_client_core::{
-+    performance::{metric, OverlayToggle},
++    performance::{metric, overlay_visibility, OverlayToggle},
 +    ClientCoreContext,
 +};
 +use alvr_common::{
@@ -2880,6 +2913,10 @@ index 0000000..688a94f
 +    renderer: PerformanceRenderer,
 +    toggle: OverlayToggle,
 +    next_update: Instant,
++    next_property_poll: Instant,
++    visibility_property: String,
++    visible: bool,
++    probe: bool,
 +    header: String,
 +}
 +
@@ -2918,6 +2955,11 @@ index 0000000..688a94f
 +            renderer,
 +            toggle: OverlayToggle::default(),
 +            next_update: Instant::now(),
++            next_property_poll: Instant::now(),
++            visibility_property: String::new(),
++            visible: true,
++            probe: crate::extra_extensions::perf_settings::system_property("debug.q3pw.loop_probe")
++                == "1",
 +            header: "Connecting".into(),
 +        })
 +    }
@@ -2969,27 +3011,65 @@ index 0000000..688a94f
 +                false
 +            }
 +        };
-+        let was_visible = self.toggle.visible;
++        let was_visible = self.visible;
 +        self.toggle.update(
 +            pressed(*LEFT_THUMBSTICK_CLICK_ID),
 +            pressed(*RIGHT_THUMBSTICK_CLICK_ID),
 +        );
 +        drop(interactions);
-+        if was_visible != self.toggle.visible {
-+            alvr_common::info!("[Q3PW_OVERLAY] visible={}", self.toggle.visible);
++        if Instant::now() >= self.next_property_poll {
++            let property = crate::extra_extensions::perf_settings::system_property(
++                "debug.q3pw.overlay_visible",
++            );
++            if property != self.visibility_property {
++                alvr_common::error!(
++                    "[Q3PW_OVERLAY_CONTROL] mode={}",
++                    match property.trim() {
++                        "0" => "forced_hidden",
++                        "1" => "forced_visible",
++                        _ => "controllers",
++                    }
++                );
++            }
++            self.visibility_property = property;
++            self.next_property_poll = Instant::now() + Duration::from_millis(500);
 +        }
-+        if !was_visible && self.toggle.visible {
++        self.visible = overlay_visibility(&self.visibility_property, self.toggle.visible);
++        if was_visible != self.visible {
++            alvr_common::error!(
++                "[Q3PW_OVERLAY] visible={} forced={}",
++                self.visible,
++                matches!(self.visibility_property.trim(), "0" | "1")
++            );
++        }
++        if !was_visible && self.visible {
 +            self.next_update = Instant::now();
 +        }
-+        if !self.toggle.visible || Instant::now() < self.next_update {
++        if !self.visible || Instant::now() < self.next_update {
 +            return Ok(());
 +        }
++        let text_started = self.probe.then(Instant::now);
 +        let text = self.text(core.performance_snapshot());
++        let text_ms = text_started
++            .map(|t| t.elapsed().as_secs_f64() * 1000.0)
++            .unwrap_or(0.0);
++        let acquire_started = self.probe.then(Instant::now);
 +        self.context.make_current();
 +        let image = self.swapchain.acquire_image()?;
 +        self.swapchain.wait_image(xr::Duration::INFINITE)?;
++        let acquire_ms = acquire_started
++            .map(|t| t.elapsed().as_secs_f64() * 1000.0)
++            .unwrap_or(0.0);
++        let draw_started = self.probe.then(Instant::now);
 +        self.renderer.update(image as usize, &text);
++        let draw_ms = draw_started
++            .map(|t| t.elapsed().as_secs_f64() * 1000.0)
++            .unwrap_or(0.0);
++        let release_started = self.probe.then(Instant::now);
 +        self.swapchain.release_image()?;
++        if let Some(t) = release_started {
++            alvr_common::error!("[Q3PW_OVERLAY_DRAW] text_cpu_ms={text_ms:.3} acquire_wait_cpu_ms={acquire_ms:.3} renderer_submit_cpu_ms={draw_ms:.3} release_cpu_ms={:.3}", t.elapsed().as_secs_f64() * 1000.0);
++        }
 +        self.next_update = Instant::now() + Duration::from_millis(500);
 +        Ok(())
 +    }
@@ -3066,7 +3146,7 @@ index 0000000..688a94f
 +    }
 +
 +    pub fn layer(&self) -> Option<xr::CompositionLayerQuad<'_, xr::OpenGlEs>> {
-+        self.toggle.visible.then(|| {
++        self.visible.then(|| {
 +            xr::CompositionLayerQuad::new()
 +                .layer_flags(
 +                    xr::CompositionLayerFlags::BLEND_TEXTURE_SOURCE_ALPHA

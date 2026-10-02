@@ -9,6 +9,24 @@ release both sticks before the next toggle. It works without the PC dashboard.
 Controller actions still reach the game, so a game binding to these buttons can also fire.
 The toggle lasts for the current app/session; reopening the app defaults to on.
 
+Experimental `.24` adds `debug.q3pw.overlay_visible` for unattended comparisons:
+`0` forces hidden, `1` forces visible, and empty/other values use the controller
+state. The app polls this property at most twice per second, including while hidden;
+it takes effect without restarting the app or stream. The controller chord still
+updates its session state underneath an override, which wins while set. Clearing
+the property restores that controller state. The normal unset default stays on.
+Snapshot and restore the original property along with the rest of a bounded test.
+
+With `debug.q3pw.loop_probe=1` set before launching `.24`, `[Q3PW_OVERLAY_DRAW]`
+records text construction, graphics-context/acquire/wait, renderer submission and
+release wall times for each redraw. `[Q3PW_LOOP]` also reports total overlay-update
+CPU-wall mean/maximum over its frame window. Renderer submission includes CPU
+font rasterization and command submission; it does **not** measure completed GPU
+work. Property mode and effective visibility changes have native diagnostic logs.
+No render ordering or GPU synchronization changes accompany these diagnostics.
+Matching Android/Windows builds and a same-session visible/hidden/visible comparison
+are required before attributing any pacing problem to the overlay.
+
 The panel shows codec/chroma, per-eye stream size, requested refresh, transport,
 actual/target bitrate, delivered client FPS, Game/host FPS, pipeline latency and
 game/encode/network/decode/queue/render/vsync stages, presented frames, packet loss,
