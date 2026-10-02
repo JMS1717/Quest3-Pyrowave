@@ -30,6 +30,16 @@ The matching `.24` pair passed all cloud checks, hashes, embedded version and
 signing review; [artifact evidence](../results/OVERLAY-CONTROL-CI-2026-10-02.json).
 It has not been installed or live-tested. No overlay performance gain is claimed.
 
+Summarize a saved `logcat -v epoch` from that client process without accessing a
+device: `python -m tools.quest3.overlay frame-loop.log --start START_UNIX_SECONDS
+--end END_UNIX_SECONDS --pid RECORDED_CLIENT_PID --out overlay-timing.json`.
+Use the actual frame-capture interval, not the later log-download time. The reader
+filters other processes/intervals, preserves control/visibility transitions, weights
+per-frame means by the recorded sample count, and reports missing timing as unknown.
+Loop records cover frame windows ending inside the interval and may overlap its
+start; compare settled cases and review the controls separately. It does not
+declare a visibility or performance pass. Share reviewed summaries, not raw logs.
+
 The panel shows codec/chroma, per-eye stream size, requested refresh, transport,
 actual/target bitrate, delivered client FPS, Game/host FPS, pipeline latency and
 game/encode/network/decode/queue/render/vsync stages, presented frames, packet loss,
