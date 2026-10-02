@@ -294,7 +294,56 @@ completion rate and reject a nominal FPS pass when completion falls behind.
 Staging GPU completion remains unobserved and is reported as unavailable. Direct
 copies include configuration-forced redraws and therefore are not themselves a
 unique fresh-frame counter. Matching `.16` APK/server builds are required because
-the telemetry packet layout changes. This candidate has no live acceptance yet.
+the telemetry packet layout changes.
+
+The October 2 native-resolution USB screens rejected asynchronous copy as a
+performance default. With 4:2:0, Haar Compute reconstruction, fragment conversion,
+one decoder and a 1000 Mbps target at requested/confirmed 120 Hz:
+
+| 15-second screen | Fresh submissions/s | Completed copies/s | Eye CPU ms | Decode completion ms | Estimated pipeline latency ms |
+|---|---:|---:|---:|---:|---:|
+| Synchronous control 1 | 106.47 | 106.79 | 8.31 | 8.29 | 69.22 |
+| Asynchronous copy | 88.33 | 87.49* | 0.62 | 9.17 | 85.51 |
+| Synchronous control 2 | 106.40 | 106.31 | 8.38 | 8.36 | 67.44 |
+
+The reduced CPU wait moved contention elsewhere; it did not improve delivery.
+The asynchronous path deferred 402 frame attempts. `async_eye_copy` remains off.
+Fragment/compute/fragment conversion screens delivered 96.87/93.42/100.82 fresh
+submissions/s. FP16 math delivered 103.11 versus the preceding FP32 control's
+106.40, without a useful gain. Keep fragment conversion and FP32 math.
+
+These are short stationary chart screens, with dynamic 640/690 MHz GPU clocks
+and battery temperatures 43–45 °C. They do not establish endurance, optical FPS,
+motion-to-photon latency or human quality acceptance. The p1 nominal rate stayed
+near 60 FPS. See [sanitized distributions and scene coverage](../results/ASYNC-AND-CONVERSION-LIVE-2026-10-02.json).
+
+*The .16 server sends unchanged presentation settings every second. The client
+unnecessarily drained its fence on each update without counting that completion,
+so this asynchronous completion rate is a lower bound. The .17 candidate skips
+unchanged settings and counts pending copies drained for actual changes. That
+counter defect does not explain the measured fresh-FPS/latency regression.
+
+## Scheduling experiments (.17, unvalidated)
+
+The matching .17 candidate adds three independently opt-in experiments. Defaults
+retain the working synchronous behavior; restart the client after changing properties.
+
+- `debug.q3pw.copy_wait_us`: asynchronous fence polling may wait 0–2000 microseconds;
+  default 0. It still protects the consumer buffer until actual completion.
+- `debug.q3pw.decode_handoff=1`: one TCP decoder waits until the consumer submits
+  rendering commands for its fresh output before starting the next decode. Encoded
+  input remains a bounded latest-frame slot. This controls scheduling, not buffer
+  lifetime; the current consumer lease remains protected. Shutdown checks occur
+  every 10 ms, and the option is ignored with two workers.
+- `debug.q3pw.runtime_display_time=1`: streamed layers use `xrWaitFrame`'s predicted
+  display time. Default keeps existing ALVR behavior. Require both pacing evidence
+  and moving-head acceptance before promotion. `debug.q3pw.loop_probe=1` records
+  mean CPU time in `xrWaitFrame` and `xrEndFrame` every 120 loop samples; it adds no
+  per-frame runtime time query and does not measure optical latency.
+
+Tests cover producer blocking through dequeue until copy submission, protected
+buffer retention and shutdown without a rendering acknowledgement. These candidates
+have not been deployed or live-tested. Sustained native 120 FPS remains unmet.
 
 Dashboard startup now retries a transient bind failure for at most five seconds
 and reports an error instead of panicking. It does not reuse another listener's
