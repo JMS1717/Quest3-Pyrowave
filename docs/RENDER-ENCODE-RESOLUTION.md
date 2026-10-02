@@ -88,6 +88,27 @@ Keep scene, camera, source animation, SteamVR global/per-app percentages, refres
 bitrate, wavelet, chroma, decoder properties, overlay and thermal state constant.
 Ensure source-frame coverage; do not compare a live scene to idle SteamVR.
 
+For the diagnostic chart, start the source **after** the client has reconnected
+and settled. Querying OpenVR during reconnect can return an old recommended size
+or the driver's temporary symmetric FOV. Pin the actual texture size and use
+the normalized chart so text/panels occupy comparable projected space:
+
+```powershell
+# Native control cell (run separately after reconnect)
+python -m tools.quest3.stereo_scene --quality --normalized-chart --source-eye 2080 2208 --seconds 120 --out results/local/render-native-source
+# Larger-source cell (run separately after selecting the profile and reconnecting)
+python -m tools.quest3.stereo_scene --quality --normalized-chart --source-eye 3072 3216 --seconds 120 --out results/local/render-super-source
+```
+
+Keep capture wholly inside the scene's ready/start/end interval. Archive its
+`source_eye_size`, `steamvr_recommended_eye_size`, projections and chart metadata.
+Verify both control cells have identical projections and reference-image hashes;
+the larger source should keep the same projections but have different raster
+dimensions. Reject a group with stale/default FOV or changed control content.
+Normalized primitives are rasterized at each source size, rather than enlarging
+a finished bitmap; glyph stroke rounding and aspect differences still limit a
+pixel-perfect quality comparison. Existing pixel-sized charts remain the default.
+
 ```powershell
 python -m tools.quest3.bench capture --hz 120 --seconds 15 --adb adb --out results/local/source-native-r1
 # Select the larger-source profile and restart/reconnect before this capture.
