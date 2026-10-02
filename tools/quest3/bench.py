@@ -68,7 +68,7 @@ def distribution(values):
             'p95':percentile(.95), 'p99':percentile(.99), 'max':v[-1]}
 
 def summarise(events, requested_hz=None):
-    graphs=[]; summaries=[]; telemetry=[]; graph_times=[]
+    graphs=[]; summaries=[]; telemetry=[]; graph_times=[]; pyro_times=[]
     for item in events:
         event=item.get('event',item).get('event_type',{})
         data=event.get('data',{})
@@ -78,7 +78,11 @@ def summarise(events, requested_hz=None):
             if isinstance(elapsed,(int,float)) and math.isfinite(elapsed):
                 graph_times.append(elapsed)
         if event.get('id')=='StatisticsSummary': summaries.append(data)
-        if event.get('id')=='HeadsetTelemetry': telemetry.append(data)
+        if event.get('id')=='HeadsetTelemetry':
+            telemetry.append(data)
+            elapsed=item.get('capture_elapsed_s')
+            if data.get('pyrowave') and isinstance(elapsed,(int,float)) and math.isfinite(elapsed):
+                pyro_times.append((elapsed,data['pyrowave'].get('completed_eye_copies')))
     result={'schema_version':1,'status':'measured' if graphs else 'no_stream_frames', 'frames':len(graphs),
             'requested_hz':requested_hz, 'metrics':{}, 'headset_telemetry':telemetry,
             'optical_motion_to_photon_ms':None,
@@ -90,7 +94,7 @@ def summarise(events, requested_hz=None):
     # median instantaneous FPS can hide. This is not an optical/display counter.
     span=graph_times[-1]-graph_times[0] if len(graph_times)>1 else 0
     result['submitted_frame_rate_fps']=(len(graph_times)-1)/span if span>0 else None
-    result['submission_rate_definition']='GraphStatistics events per capture-time span; includes only submitted video frames, not repeated OpenXR layers.'
+    result['submission_rate_definition']='GraphStatistics events per capture-time span; submitted video frames, not repeated OpenXR layers. With async copies this is submission, not GPU completion or optical display FPS.'
     result['metrics']['client_fps']=distribution([g.get('client_fps') for g in graphs])
     result['metrics']['server_fps']=distribution([g.get('server_fps') for g in graphs])
     result['metrics']['video_mbps']=distribution([g.get('bitrate_bps',0)/1e6 for g in graphs])
@@ -109,23 +113,34 @@ def summarise(events, requested_hz=None):
     for field in ('convert_ms','record_ms','wait_ms'):
         result['native_'+field]=distribution([v for t in telemetry if t.get('pyrowave')
             for v in t['pyrowave'].get(field,[])])
-    for field in ('eye_acquire_wait_ms', 'eye_render_ms', 'eye_release_ms'):
+    for field in ('eye_acquire_wait_ms', 'eye_render_ms', 'eye_release_ms', 'eye_completion_observed_ms'):
         result[field]=distribution([v for t in telemetry if t.get('pyrowave')
             for v in t['pyrowave'].get(field,[])])
-    result['eye_timing_definition']='Client CPU wall time: OpenXR acquire/wait, renderer call (including its copy fence), and OpenXR release. These are not GPU timer-query durations.'
+    result['eye_timing_definition']='Client CPU wall time: acquire/wait, renderer call, release. Async completion is wall time until a later nonblocking fence poll, quantized by polling; none of these are GPU timer-query durations.'
     result['eye_copy_counter_deltas']={}
     pyro=[t['pyrowave'] for t in telemetry if t.get('pyrowave')]
-    for field in ('direct_eye_copies', 'staging_eye_copies'):
+    for field in ('direct_eye_copies', 'staging_eye_copies', 'completed_eye_copies', 'pending_eye_copy_deferrals'):
         values=[t.get(field) for t in pyro]
         # Missing/reset counters cannot establish which path ran in this window.
         valid=len(values)>1 and all(isinstance(v,int) and not isinstance(v,bool) and v>=0 for v in values)
         monotonic=valid and all(b>=a for a,b in zip(values,values[1:]))
         result['eye_copy_counter_deltas'][field]=values[-1]-values[0] if monotonic else None
+    result['completed_eye_copy_rate_fps']=None
+    if len(pyro_times)>1:
+        counters=[c for _,c in pyro_times]
+        valid=all(isinstance(c,int) and not isinstance(c,bool) and c>=0 for c in counters)
+        span=pyro_times[-1][0]-pyro_times[0][0]
+        if valid and span>0 and all(b>=a for a,b in zip(counters,counters[1:])):
+            result['completed_eye_copy_rate_fps']=(counters[-1]-counters[0])/span
+    result['completion_rate_definition']='GPU-complete eye copies per telemetry-time span; includes configuration-forced redraws. Not an optical display or unique fresh-frame counter.'
     if requested_hz and graphs:
         fps=result['metrics']['client_fps']
         submitted=result['submitted_frame_rate_fps']
         result['sustained_requested_fps']=(fps is not None and submitted is not None
             and fps['p01']>=requested_hz*.98 and submitted>=requested_hz*.98)
+        completed=result['completed_eye_copy_rate_fps']
+        if completed is not None:
+            result['sustained_requested_fps'] &= completed>=requested_hz*.98
     return result
 
 def adb_run(adb, *args):

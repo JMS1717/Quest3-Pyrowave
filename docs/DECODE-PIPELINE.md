@@ -268,4 +268,34 @@ remain unverified. p1 nominal FPS remained about 60 and p95 timestamp gaps about
 display or motion-to-photon measurements. **Sustained fresh 120 FPS remains unmet.**
 See the [sanitized full distributions](../results/DIRECT-EYE-LIVE-2026-10-01.json).
 Direct copy stays optional/off by default, and 4:2:0 remains the default.
-The owner paused hardware work for Virtual Desktop; resume only with explicit permission.
+The owner subsequently resumed unattended hardware iteration; earlier measurements
+remain screening evidence rather than acceptance.
+
+## Guarded asynchronous copy candidate (.16)
+
+`debug.q3pw.async_eye_copy=1` enables a single in-flight GL fence with direct copy.
+Both properties are off by default. The client flushes submitted writes before
+releasing OpenXR images, polls completion without waiting, and repeats the last
+released layer while the copy is pending. It does not dequeue another decoder
+buffer or replace its texture binding until completion, preserving the Vulkan
+output consumer lease. Decoder replacement, presentation changes, fallback and
+teardown drain pending work before source storage or swapchains can disappear.
+Fence failure falls back to synchronous completion.
+
+This follows OpenXR's distinction between submitting image writes before release
+and completing commands before swapchain destruction ([rendering specification](https://github.com/KhronosGroup/OpenXR-Docs/blob/main/specification/sources/chapters/rendering.adoc)).
+Destroying an EGLImage handle leaves existing texture siblings valid; their storage
+and access still require synchronization ([EGL_KHR_image_base](https://registry.khronos.org/EGL/extensions/KHR/EGL_KHR_image_base.txt)).
+
+New counters distinguish queued copies, completed copies and pending-copy deferrals.
+Completion wall time is observed at a later poll and is quantized by polling; it
+is neither a GPU timestamp nor optical latency. Benchmark summaries expose the
+completion rate and reject a nominal FPS pass when completion falls behind.
+Copies include configuration-forced redraws and therefore are not themselves a
+unique fresh-frame counter. Matching `.16` APK/server builds are required because
+the telemetry packet layout changes. This candidate has no live acceptance yet.
+
+Dashboard startup now retries a transient bind failure for at most five seconds
+and reports an error instead of panicking. It does not reuse another listener's
+address. The separately observed ADB socket inheritance defect still needs a
+source-level fix; private unattended recovery remains bounded.
