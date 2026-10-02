@@ -476,3 +476,20 @@ for baseline / minimal / restore at 690 MHz. This is effectively flat; the exper
 flag stays off. These fixed encoded fixtures differ from the live 1000 Mbps workload
 and do not establish live FPS, GLES interop correctness, sustained performance or
 absolute reference color accuracy.
+## Experimental EGL import cache (.21)
+
+`debug.q3pw.image_cache=1` requests an Android-only cache of at most eight imported
+AHBs and their external textures. It defaults off. A retained AHB reference prevents
+pointer reuse for a different allocation; each texture/image is imported once, with
+`EGL_IMAGE_PRESERVED_KHR`, and then sampled after the existing Vulkan completion and
+consumer-lease checks. This does not cache frame pixels or permit concurrent writes.
+Existing import/copy completion fences remain required.
+
+Failed imports or a full cache stop adding entries and use the legacy import for
+uncached buffers; existing valid entries remain usable. On renderer destruction,
+sampling completes before textures, EGL images and retained AHB references are
+released. Cache creation logs its slot count. There is no performance claim before
+matching artifact and live image/pacing checks.
+
+See [EGL image lifetime and siblings](https://registry.khronos.org/EGL/extensions/KHR/EGL_KHR_image_base.txt)
+and [Android hardware buffer references](https://developer.android.com/ndk/reference/group/a-hardware-buffer).
