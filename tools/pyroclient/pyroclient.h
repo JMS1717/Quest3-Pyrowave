@@ -43,6 +43,12 @@ pyroclient *pyroclient_create(uint32_t width, uint32_t height, int chroma444, in
 // heuristic), 1 fragment, 2 compute. debug.xrwired.decode_path overrides it; see decode_path.h.
 pyroclient *pyroclient_create_ex(uint32_t width, uint32_t height, int chroma444, int full_range, uint32_t ring, int wavelet, int decode_path);
 
+// As pyroclient_create_ex; low_queue_priority=1 asks for a LOW global-priority decode queue
+// (VK_KHR/EXT_global_priority) so higher-priority GLES work preempts decode. It falls back to
+// the default priority when unsupported or rejected; logcat reports [Q3PW_PRIORITY].
+pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t height, int chroma444, int full_range, uint32_t ring,
+                                          int wavelet, int decode_path, int low_queue_priority);
+
 // Feed bitstream. A whole frame or one network packet; PyroWave sequences frames itself.
 // Returns 1 when the current frame is complete and ready to decode, 0 otherwise, <0 on error.
 int pyroclient_push_packet(pyroclient *c, const void *data, size_t size);

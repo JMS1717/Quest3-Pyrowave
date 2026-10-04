@@ -89,6 +89,7 @@ struct pyroclient {
     bool haar = false;
     bool legall53 = false;      // Experiment 2: CDF 5/3 instead of 9/7 (compute path only)
     int decode_path_hint = 0;   // dashboard setting: 0 auto, 1 fragment, 2 compute
+    bool low_queue_priority = false;
 
     VkInstance instance = VK_NULL_HANDLE;
     VkPhysicalDevice gpu = VK_NULL_HANDLE;
@@ -227,10 +228,9 @@ bool pyroclient::create_device() {
         if (release_requested) LOGI("[Q3PW_RELEASE_FD] Vulkan requested=1 importable=%d", release_fences);
         if (ready_requested) LOGI("[Q3PW_READY_FD] Vulkan requested=1 exportable=%d max_inflight=1", ready_fences);
     }
-    // debug.q3pw.decode_priority=low: a LOW global-priority decode queue lets the
-    // medium-priority GLES eye copy preempt decode instead of queueing behind it.
-    char priority_prop[PROP_VALUE_MAX] = {};
-    const bool low_priority_requested = __system_property_get("debug.q3pw.decode_priority", priority_prop) > 0 && !strcmp(priority_prop, "low");
+    // A LOW global-priority decode queue lets the medium-priority GLES eye copy
+    // preempt decode instead of queueing behind it.
+    const bool low_priority_requested = low_queue_priority;
     const char *priority_extension = nullptr;
     if (low_priority_requested) {
         uint32_t count = 0;
@@ -261,9 +261,8 @@ bool pyroclient::create_device() {
         created = vkCreateDevice(gpu, &device_info, nullptr, &device);
     }
     VK_TRY(created);
-    if (low_priority_requested)
-        LOGI("[Q3PW_PRIORITY] decode queue requested=low applied=%d extension=%s", priority_extension != nullptr,
-             priority_extension ? priority_extension : "none");
+    LOGI("[Q3PW_PRIORITY] decode queue requested=%s applied=%d extension=%s", low_priority_requested ? "low" : "default",
+         priority_extension != nullptr, priority_extension ? priority_extension : "none");
     vkGetDeviceQueue(device, family, 0, &queue);
     if (release_fences) {
         import_semaphore_fd = reinterpret_cast<PFN_vkImportSemaphoreFdKHR>(vkGetDeviceProcAddr(device, "vkImportSemaphoreFdKHR"));
@@ -846,6 +845,10 @@ extern "C" pyroclient *pyroclient_create(uint32_t width, uint32_t height, int ch
 }
 
 extern "C" pyroclient *pyroclient_create_ex(uint32_t width, uint32_t height, int chroma444, int full_range, uint32_t ring_size, int wavelet, int decode_path) {
+    return pyroclient_create_prioritized(width, height, chroma444, full_range, ring_size, wavelet, decode_path, 0);
+}
+
+extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t height, int chroma444, int full_range, uint32_t ring_size, int wavelet, int decode_path, int low_queue_priority) {
     if (!width || !height || (!chroma444 && ((width | height) & 1))) { LOGE("bad geometry %ux%u", width, height); return nullptr; }
     if (wavelet != 97 && wavelet != 53 && wavelet != 2) { LOGE("bad wavelet %d (97, 53 or 2=Haar)", wavelet); return nullptr; }
     char fused_prop[PROP_VALUE_MAX] = {};
@@ -868,6 +871,7 @@ extern "C" pyroclient *pyroclient_create_ex(uint32_t width, uint32_t height, int
     c->legall53 = wavelet == 53;
     c->haar = wavelet == 2;
     c->decode_path_hint = decode_path;
+    c->low_queue_priority = low_queue_priority != 0;
     c->ring.resize(ring_size < 2 ? 2 : ring_size);
     if (!c->create_device() || !c->create_planes() || !c->create_convert()) { c->destroy(); delete c; return nullptr; }
 
