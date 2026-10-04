@@ -44,10 +44,13 @@ property keeps the default. Save and restore the original property value.
 
 First run the packaged `ready_fence_gpu_test A.wave B.wave` on distinct complete
 Haar/compute frames, including native 4160×2208 stereo. It uses persistent EGL
-imports, requires an initially unsignaled native fence, queues the server wait
-before sampling, compares six outputs across all three slots with synchronous
-references, rejects packet/second-submission reuse while pending, checks that
-clear does not corrupt the pending pixels and exercises outstanding-work teardown.
+imports, queues the server wait before sampling, compares twelve outputs (four
+per slot) with synchronous references, rejects packet/second-submission reuse
+while pending, checks that clear does not corrupt the pending pixels and
+exercises outstanding-work teardown. References are seeded B,A,B so every fenced
+A/B write replaces different pixels; an unordered read cannot match. At least one
+of those discriminating reads must start with an unsignaled native fence. The
+earlier `e32596f` probe seeded A,B,A, so its first three reads could pass stale.
 This is GPU correctness evidence, not a latency or optical measurement. CPU
 mock/poll/ownership tests in CI do not substitute for the device probe.
 

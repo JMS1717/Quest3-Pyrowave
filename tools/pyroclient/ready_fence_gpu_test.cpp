@@ -56,11 +56,14 @@ int main(int argc,char **argv) {
     auto wait=reinterpret_cast<PFNEGLWAITSYNCKHRPROC>(eglGetProcAddress("eglWaitSyncKHR"));
     if (!native||!image_create||!image_destroy||!create||!destroy||!wait) {error="EGL entry points unavailable";return fail();}
     std::vector<std::unique_ptr<Image>> images;
+    std::vector<int> slot_content; // 0=A, 1=B; tracks what a stale read would return.
     std::vector<unsigned char> ref_a,ref_b,actual;
     // Initialize every EGL import and the same persistent GLES context before
     // early submission, avoiding expensive context creation in the fenced path.
+    // B,A,B makes every fenced A,B,A,... write replace different pixels, so a
+    // read that is not ordered after the decode cannot match its reference.
     for (int i=0;i<3;++i) {
-        const Wave &w=i==1?b:a;
+        const Wave &w=i==1?a:b;
         AHardwareBuffer *buffer=nullptr; pyroclient_frame_info info{};
         if (!push(w)||pyroclient_decode(raw,&buffer,&info)!=0||!buffer||!info.complete) {error="Synchronous reference decode failed";return fail();}
         const EGLint attrs[]={EGL_IMAGE_PRESERVED_KHR,EGL_TRUE,EGL_NONE};
@@ -69,12 +72,14 @@ int main(int argc,char **argv) {
         AHardwareBuffer_acquire(buffer);
         auto image=std::unique_ptr<Image>(new Image{context.display(),img,image_destroy,buffer});
         if (!q3pw::readback_egl_image(img,width,height,false,actual,error)) return fail();
-        if (i==1) ref_b=actual; else if (i==0) ref_a=actual; else if (actual!=ref_a) {error="Reference slots differ";return fail();}
+        if (i==1) ref_a=actual; else if (i==0) ref_b=actual; else if (actual!=ref_b) {error="Reference slots differ";return fail();}
         images.push_back(std::move(image));
+        slot_content.push_back(i==1?0:1);
     }
     if (ref_a==ref_b) {error="Distinct reference images required";return fail();}
-    int unsignaled=0,completed=0,guard_rejections=0;
-    for (int i=0;i<6;++i) {
+    constexpr int kFenced=12;
+    int unsignaled=0,completed=0,guard_rejections=0,discriminating=0,discriminating_unsignaled=0;
+    for (int i=0;i<kFenced;++i) {
         const Wave &w=i%2?b:a;
         AHardwareBuffer *buffer=nullptr; pyroclient_frame_info info{}; int fd=-1;
         if (!push(w)||pyroclient_submit_guarded(raw,&buffer,&info,nullptr,nullptr,&fd)!=0||!buffer||fd<0) {
@@ -98,10 +103,12 @@ int main(int argc,char **argv) {
         const bool ordered=wait(context.display(),sync,0)==EGL_TRUE;
         const bool destroyed=destroy(context.display(),sync)==EGL_TRUE;
         if (!ordered||!destroyed) {error="GPU wait/destroy failed";return fail();}
-        Image *image=nullptr;
-        for (const auto &candidate:images) if(candidate->buffer==buffer) image=candidate.get();
-        if (!image) {error="Output outside three-slot ring";return fail();}
-        if (!q3pw::readback_egl_image(image->image,width,height,false,actual,error)) return fail();
+        size_t slot=images.size();
+        for (size_t k=0;k<images.size();++k) if(images[k]->buffer==buffer) slot=k;
+        if (slot==images.size()) {error="Output outside three-slot ring";return fail();}
+        if (slot_content[slot]!=i%2) {++discriminating; if (ready==0) ++discriminating_unsignaled;}
+        slot_content[slot]=i%2;
+        if (!q3pw::readback_egl_image(images[slot]->image,width,height,false,actual,error)) return fail();
         if (actual!=(i%2?ref_b:ref_a)) {error="Fenced pixels differ from synchronous reference";return fail();}
         // Decoder::decode clears packet readiness after recording; it is not a
         // completion signal. The native fence and original complete-frame info,
@@ -110,12 +117,15 @@ int main(int argc,char **argv) {
             || !std::isfinite(info.decode_ms) || info.decode_ms<=0) {error="Verified fence/timing completion failed";return fail();}
         ++completed;
     }
-    if (!unsignaled) {error="No initially unsignaled native fence observed; queued handoff not exercised";return fail();}
+    if (discriminating!=kFenced) {error="A fenced read could match stale slot contents";return fail();}
+    if (!discriminating_unsignaled) {error="No initially unsignaled native fence observed; queued handoff not exercised";return fail();}
     // Explicit pending teardown must drain safely without another decode/clear.
     AHardwareBuffer *last=nullptr; int fd=-1;
     if (!push(a)||pyroclient_submit_guarded(raw,&last,nullptr,nullptr,nullptr,&fd)!=0||fd<0) {if(fd>=0)close(fd);error="Pending teardown submission failed";return fail();}
     close(fd); images.clear(); client.reset();
     printf("{\"probe\":\"ready_fd_gpu_handoff\",\"width\":%d,\"height\":%d,\"completed\":%d,\"unsignaled_at_export\":%d,"
-           "\"guard_rejections\":%d,\"exact_pixels\":true,\"pending_teardown\":true,\"max_inflight\":1}\n",width,height,completed,unsignaled,guard_rejections);
+           "\"discriminating\":%d,\"discriminating_unsignaled\":%d,"
+           "\"guard_rejections\":%d,\"exact_pixels\":true,\"pending_teardown\":true,\"max_inflight\":1}\n",
+           width,height,completed,unsignaled,discriminating,discriminating_unsignaled,guard_rejections);
     return 0;
 }
