@@ -2892,7 +2892,7 @@ index 7765bb4..b102615 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..04077b3 100644
+index a0fd36f..eb90e70 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -4,6 +4,8 @@ mod graphics;
@@ -2913,7 +2913,34 @@ index a0fd36f..04077b3 100644
  use stream::StreamContext;
  
  fn from_xr_vec3(v: xr::Vector3f) -> Vec3 {
-@@ -137,6 +139,21 @@ pub fn entry_point() {
+@@ -117,6 +119,26 @@ fn default_view() -> xr::View {
+ }
+ 
+ // This exists to circumvent dead-code analysis
++/// `debug.q3pw.layer_filter`: '+'-separated `sharpen`, `sharpen_hq`, `supersample`,
++/// `supersample_hq` and `auto`, applied by the compositor to the projection layer.
++/// `auto` must not be the only bit (XR_META_automatic_layer_filter).
++fn layer_filter_flags(request: &str, supported: bool, auto_supported: bool) -> xr::sys::CompositionLayerSettingsFlagsFB {
++    use xr::sys::CompositionLayerSettingsFlagsFB as Flags;
++    if !supported { return Flags::EMPTY; }
++    let mut flags = Flags::EMPTY;
++    for name in request.split('+').map(str::trim) {
++        flags |= match name {
++            "sharpen" => Flags::NORMAL_SHARPENING,
++            "sharpen_hq" => Flags::QUALITY_SHARPENING,
++            "supersample" => Flags::NORMAL_SUPER_SAMPLING,
++            "supersample_hq" => Flags::QUALITY_SUPER_SAMPLING,
++            "auto" if auto_supported => Flags::AUTO_LAYER_FILTER,
++            _ => Flags::EMPTY,
++        };
++    }
++    if flags.into_raw() == Flags::AUTO_LAYER_FILTER.into_raw() { Flags::EMPTY } else { flags }
++}
++
+ fn create_session(
+     xr_instance: &xr::Instance,
+     xr_system: xr::SystemId,
+@@ -137,6 +159,21 @@ pub fn entry_point() {
      alvr_client_core::init_logging();
  
      let platform = alvr_system_info::platform();
@@ -2935,7 +2962,26 @@ index a0fd36f..04077b3 100644
      #[cfg(target_os = "android")]
      let galaxy_xr = alvr_system_info::model_name() == "SM-I610";
      #[cfg(not(target_os = "android"))]
-@@ -291,11 +308,21 @@ pub fn entry_point() {
+@@ -198,6 +235,8 @@ pub fn entry_point() {
+     exts.ext_local_floor = available_extensions.ext_local_floor;
+     exts.fb_body_tracking = available_extensions.fb_body_tracking;
+     exts.fb_color_space = available_extensions.fb_color_space;
++    exts.fb_composition_layer_settings = available_extensions.fb_composition_layer_settings;
++    exts.meta_automatic_layer_filter = available_extensions.meta_automatic_layer_filter;
+     exts.fb_display_refresh_rate = available_extensions.fb_display_refresh_rate;
+     exts.fb_eye_tracking_social = available_extensions.fb_eye_tracking_social;
+     exts.fb_face_tracking2 = available_extensions.fb_face_tracking2;
+@@ -287,15 +326,31 @@ pub fn entry_point() {
+         let early_poll = extra_extensions::perf_settings::early_poll_enabled();
+         alvr_common::error!("[EARLYPOLL] decoded frame polled before xrWaitFrame: {early_poll}");
+ 
++        let layer_filter_request = extra_extensions::perf_settings::system_property("debug.q3pw.layer_filter");
++        let layer_filter = layer_filter_flags(&layer_filter_request, exts.fb_composition_layer_settings,
++            exts.meta_automatic_layer_filter);
++        alvr_common::error!("[Q3PW_LAYER_FILTER] requested={layer_filter_request:?} supported={} auto_supported={} flags=0x{:x}",
++            exts.fb_composition_layer_settings, exts.meta_automatic_layer_filter, layer_filter.into_raw());
++
+         // [PERF] lift the client off the runtime's default POWER_SAVING vote. error! so it reaches
          // logcat once connected; the harness checks the DynamicPolicyManager vote against it.
          if exts.ext_performance_settings {
              match extra_extensions::perf_settings::level_from_property() {
@@ -2962,7 +3008,7 @@ index a0fd36f..04077b3 100644
              }
          } else {
              alvr_common::error!("[PERF] XR_EXT_performance_settings not advertised");
-@@ -313,19 +340,37 @@ pub fn entry_point() {
+@@ -313,19 +368,37 @@ pub fn entry_point() {
              views_config[0].recommended_image_rect_height,
          );
  
@@ -3004,7 +3050,7 @@ index a0fd36f..04077b3 100644
  
          // Whether anything is correcting for the ~26 ms the runtime predicts ahead. If the
          // compositor does not timewarp and ALVR does not either -- 20.13.0 hardcodes
-@@ -354,8 +399,10 @@ pub fn entry_point() {
+@@ -354,8 +427,10 @@ pub fn entry_point() {
              exts.fb_foveation,
              advertised_extension_names.len(),
          );
@@ -3017,7 +3063,7 @@ index a0fd36f..04077b3 100644
  
          if exts.fb_color_space {
              xr_session
-@@ -365,8 +412,8 @@ pub fn entry_point() {
+@@ -365,8 +440,8 @@ pub fn entry_point() {
  
          let capabilities = ClientCapabilities {
              default_view_resolution,
@@ -3028,7 +3074,7 @@ index a0fd36f..04077b3 100644
              encoder_high_profile: galaxy_xr || platform != Platform::Unknown,
              encoder_10_bits: galaxy_xr || platform != Platform::Unknown,
              encoder_av1: matches!(
-@@ -392,9 +439,16 @@ pub fn entry_point() {
+@@ -392,9 +467,16 @@ pub fn entry_point() {
              Rc::clone(&graphics_context),
              Arc::clone(&interaction_context),
              platform,
@@ -3046,7 +3092,7 @@ index a0fd36f..04077b3 100644
          let lobby_body_tracking_config = BodyTrackingSourcesConfig {
              body_tracking_fb: Switch::Disabled,
              body_tracking_bd: Switch::Enabled(BodyTrackingBDConfig::BodyTracking {
-@@ -412,11 +466,16 @@ pub fn entry_point() {
+@@ -412,11 +494,16 @@ pub fn entry_point() {
              .select_sources(&lobby_interaction_sources);
  
          let mut session_running = false;
@@ -3064,7 +3110,7 @@ index a0fd36f..04077b3 100644
          // Budget for the pre-xrWaitFrame poll: the previous frame's period, 72 Hz until known.
          let mut poll_interval = Duration::from_micros(13_889);
          'render_loop: loop {
-@@ -432,7 +491,17 @@ pub fn entry_point() {
+@@ -432,7 +519,17 @@ pub fn entry_point() {
                                  .begin(xr::ViewConfigurationType::PRIMARY_STEREO)
                                  .unwrap();
  
@@ -3083,7 +3129,7 @@ index a0fd36f..04077b3 100644
  
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
  
-@@ -440,6 +509,7 @@ pub fn entry_point() {
+@@ -440,6 +537,7 @@ pub fn entry_point() {
                          }
                          xr::SessionState::STOPPING => {
                              session_running = false;
@@ -3091,7 +3137,7 @@ index a0fd36f..04077b3 100644
  
                              passthrough_layer = None;
  
-@@ -494,7 +564,29 @@ pub fn entry_point() {
+@@ -494,7 +592,29 @@ pub fn entry_point() {
                          lobby.update_hud_message(&message);
                      }
                      ClientCoreEvent::StreamingStarted(config) => {
@@ -3121,7 +3167,7 @@ index a0fd36f..04077b3 100644
  
                          let context = StreamContext::new(
                              Arc::clone(&core_context),
-@@ -512,6 +604,8 @@ pub fn entry_point() {
+@@ -512,6 +632,8 @@ pub fn entry_point() {
                          stream_context = Some(context);
                      }
                      ClientCoreEvent::StreamingStopped => {
@@ -3130,7 +3176,7 @@ index a0fd36f..04077b3 100644
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -562,13 +656,23 @@ pub fn entry_point() {
+@@ -562,13 +684,23 @@ pub fn entry_point() {
                  }
              }
  
@@ -3155,7 +3201,7 @@ index a0fd36f..04077b3 100644
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -576,12 +680,49 @@ pub fn entry_point() {
+@@ -576,12 +708,49 @@ pub fn entry_point() {
                      panic!();
                  }
              };
@@ -3206,7 +3252,7 @@ index a0fd36f..04077b3 100644
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +746,15 @@ pub fn entry_point() {
+@@ -605,15 +774,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -3231,7 +3277,7 @@ index a0fd36f..04077b3 100644
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,13 +762,16 @@ pub fn entry_point() {
+@@ -621,13 +790,16 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -3249,7 +3295,7 @@ index a0fd36f..04077b3 100644
  
              if !frame_state.should_render {
                  xr_frame_stream
-@@ -654,22 +798,65 @@ pub fn entry_point() {
+@@ -654,22 +826,76 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
@@ -3282,7 +3328,18 @@ index a0fd36f..04077b3 100644
 -                    &[&layer.build()]
 -                };
 +            let render_ms = render_started.map_or(0.0, |s| s.elapsed().as_secs_f64() * 1000.0);
-+            let projection = layer.build();
++            let mut layer_settings = xr::sys::CompositionLayerSettingsFB {
++                ty: xr::sys::CompositionLayerSettingsFB::TYPE,
++                next: std::ptr::null(),
++                layer_flags: layer_filter,
++            };
++            let projection = if layer_filter.is_empty() { layer.build() } else {
++                let mut raw = layer.build().into_raw();
++                layer_settings.next = raw.next;
++                raw.next = (&layer_settings as *const xr::sys::CompositionLayerSettingsFB).cast();
++                // layer_settings outlives the xrEndFrame call below.
++                unsafe { xr::CompositionLayerProjection::from_raw(raw) }
++            };
 +            let overlay_layer = performance_overlay.as_ref().and_then(|overlay| overlay.layer());
 +            let mut layers: Vec<&xr::CompositionLayerBase<_>> = Vec::with_capacity(3);
 +            if let Some(passthrough_layer) = &passthrough_layer { layers.push(passthrough_layer); }
@@ -3323,7 +3380,7 @@ index a0fd36f..04077b3 100644
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +885,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +924,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
