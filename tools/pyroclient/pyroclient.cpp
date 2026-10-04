@@ -101,6 +101,7 @@ struct pyroclient {
     VkApplicationInfo app_info{};
     VkInstanceCreateInfo instance_info{};
     float queue_priority = 1.0f;
+    VkDeviceQueueGlobalPriorityCreateInfoKHR queue_global_priority{};
     VkDeviceQueueCreateInfo queue_info{};
     VkPhysicalDeviceVulkan13Features f13{};
     VkPhysicalDeviceVulkan12Features f12{};
@@ -226,9 +227,43 @@ bool pyroclient::create_device() {
         if (release_requested) LOGI("[Q3PW_RELEASE_FD] Vulkan requested=1 importable=%d", release_fences);
         if (ready_requested) LOGI("[Q3PW_READY_FD] Vulkan requested=1 exportable=%d max_inflight=1", ready_fences);
     }
+    // debug.q3pw.decode_priority=low: a LOW global-priority decode queue lets the
+    // medium-priority GLES eye copy preempt decode instead of queueing behind it.
+    char priority_prop[PROP_VALUE_MAX] = {};
+    const bool low_priority_requested = __system_property_get("debug.q3pw.decode_priority", priority_prop) > 0 && !strcmp(priority_prop, "low");
+    const char *priority_extension = nullptr;
+    if (low_priority_requested) {
+        uint32_t count = 0;
+        vkEnumerateDeviceExtensionProperties(gpu, nullptr, &count, nullptr);
+        std::vector<VkExtensionProperties> extensions(count);
+        vkEnumerateDeviceExtensionProperties(gpu, nullptr, &count, extensions.data());
+        for (const auto &extension : extensions) {
+            if (!strcmp(extension.extensionName, VK_KHR_GLOBAL_PRIORITY_EXTENSION_NAME)) { priority_extension = VK_KHR_GLOBAL_PRIORITY_EXTENSION_NAME; break; }
+            if (!strcmp(extension.extensionName, VK_EXT_GLOBAL_PRIORITY_EXTENSION_NAME)) priority_extension = VK_EXT_GLOBAL_PRIORITY_EXTENSION_NAME;
+        }
+    }
+    if (priority_extension) {
+        queue_global_priority = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_GLOBAL_PRIORITY_CREATE_INFO_KHR };
+        queue_global_priority.globalPriority = VK_QUEUE_GLOBAL_PRIORITY_LOW_KHR;
+        queue_info.pNext = &queue_global_priority;
+        device_extensions.push_back(priority_extension);
+    }
     device_info.enabledExtensionCount = uint32_t(device_extensions.size());
     device_info.ppEnabledExtensionNames = device_extensions.data();
-    VK_TRY(vkCreateDevice(gpu, &device_info, nullptr, &device));
+    VkResult created = vkCreateDevice(gpu, &device_info, nullptr, &device);
+    if (created != VK_SUCCESS && priority_extension) {
+        LOGE("[Q3PW_PRIORITY] low-priority decode queue rejected (%d); default priority", created);
+        queue_info.pNext = nullptr;
+        device_extensions.pop_back();
+        device_info.enabledExtensionCount = uint32_t(device_extensions.size());
+        device_info.ppEnabledExtensionNames = device_extensions.data();
+        priority_extension = nullptr;
+        created = vkCreateDevice(gpu, &device_info, nullptr, &device);
+    }
+    VK_TRY(created);
+    if (low_priority_requested)
+        LOGI("[Q3PW_PRIORITY] decode queue requested=low applied=%d extension=%s", priority_extension != nullptr,
+             priority_extension ? priority_extension : "none");
     vkGetDeviceQueue(device, family, 0, &queue);
     if (release_fences) {
         import_semaphore_fd = reinterpret_cast<PFN_vkImportSemaphoreFdKHR>(vkGetDeviceProcAddr(device, "vkImportSemaphoreFdKHR"));
