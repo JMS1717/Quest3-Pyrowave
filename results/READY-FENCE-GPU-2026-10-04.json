@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-04",
+  "status": "device_gpu_correctness_probe_passed_not_performance",
+  "device": "Quest 3 (Adreno, Vulkan + GLES)",
+  "apk_installed": "20.13.0-quest3.pyro.29",
+  "apk_source_sha": "b0c9753ce5d0b04d8df24f4187f9e03d4abdc358",
+  "full_build_ci_run": 37052671109,
+  "probe_source_sha": "bd0de8702ded0a17711f268ece79598564464fcc",
+  "probe_ci_run": 37228039042,
+  "native_libraries_byte_identical_to_reviewed_apk": true,
+  "artifact_sha256": {
+    "ready_fence_gpu_test": "57a3fccfed3b5ef9c16a495a756b90b5e28dfe33c07d77f537259170696f6899",
+    "pyroclient_test": "e5b6fc64e4318954afbbbc5da1b926ba44ee4669031fc996d6e5a60005ea64d2",
+    "libpyroclient.so": "e6041732177d910a2fefb8599147c3e05165ca8d72b1245a7c794310118ab5a8",
+    "libpyrowave-shared.so": "9c5ba02ba372745f23289a5ebd9555a6b2a21a9672a3ad545143c26889c09848",
+    "libc++_shared.so": "f9992c4ba6b7c5a716e3a202fceb1ce029d6a2b0605838ac6b3219f489dd7970"
+  },
+  "procedure": "Standalone binaries in /data/local/tmp; debug.q3pw.ready_fd toggled for the probe only and restored with readback; no APK install, VR launch or SteamVR change.",
+  "cases": [
+    {
+      "pattern": "asymmetric",
+      "default_off_identical_to_tested_bridge": true,
+      "default_off_crc32": "c0e656fb",
+      "ready_fd": {
+        "probe": "ready_fd_gpu_handoff",
+        "width": 512,
+        "height": 320,
+        "completed": 12,
+        "unsignaled_at_export": 12,
+        "discriminating": 12,
+        "discriminating_unsignaled": 12,
+        "guard_rejections": 12,
+        "exact_pixels": true,
+        "pending_teardown": true,
+        "max_inflight": 1
+      },
+      "export_confirmed": true,
+      "thermal_status_after": 0,
+      "battery_temperature_c_after": 35.0
+    },
+    {
+      "pattern": "native-asymmetric",
+      "default_off_identical_to_tested_bridge": true,
+      "default_off_crc32": "aad9df7c",
+      "ready_fd": {
+        "probe": "ready_fd_gpu_handoff",
+        "width": 4160,
+        "height": 2208,
+        "completed": 12,
+        "unsignaled_at_export": 12,
+        "discriminating": 12,
+        "discriminating_unsignaled": 12,
+        "guard_rejections": 12,
+        "exact_pixels": true,
+        "pending_teardown": true,
+        "max_inflight": 1
+      },
+      "export_confirmed": true,
+      "thermal_status_after": 0,
+      "battery_temperature_c_after": 35.0
+    }
+  ],
+  "interpretation": "Early Vulkan SYNC_FD publication ordered every GLES read after the decode: 12 of 12 fenced reads per size overwrote different pixels, all started with an unsignaled fence, and all matched synchronous references exactly. Packet reuse and a second submission were rejected while pending; pending teardown completed.",
+  "limitations": [
+    "Correctness only: no frame rate, pacing, latency or optical measurement.",
+    "eglWaitSyncKHR success does not prove a GPU-side (rather than driver CPU) wait.",
+    "The earlier e32596f probe seeded references A,B,A so its first three reads could not detect stale pixels; it was never run on device."
+  ],
+  "performance_acceptance": false,
+  "optical_latency_measured": false
+}

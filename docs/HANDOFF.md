@@ -50,6 +50,13 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 ## Highest-value next experiment
 
+**Update 2026-10-04:** the corrected ready-fence GPU probe passed on Quest 3.
+Saved captures show lost frames come from publication landing 1–2 ms before the
+post-`xrWaitFrame` selection, not from transfer or decode spikes; see
+[fresh-frame loss](FRESHNESS.md). `.30` adds runtime-switchable wait and
+publication controls plus lateness telemetry for interleaved A/B in one session.
+The original `.29` notes follow.
+
 `.29` adds default-OFF `debug.q3pw.ready_fd=1`: publish the AHardwareBuffer and
 Vulkan SYNC_FD early so the renderer can enqueue a checked EGL GPU wait. It
 retains one in-flight decode, producer completion checks before codec/resource

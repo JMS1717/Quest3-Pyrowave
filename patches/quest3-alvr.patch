@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7b..68e3db9 100644
+index 7cead7b..18ad9d0 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -138,7 +138,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -147,7 +147,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -156,7 +156,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -165,7 +165,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -174,7 +174,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_common",
   "jni",
@@ -183,7 +183,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -192,7 +192,7 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -201,12 +201,12 @@ index 7cead7b..68e3db9 100644
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.28"
++version = "20.13.0-quest3.pyro.30"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..9f2f0a5 100644
+index ae00ce8..4c1df7f 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..9f2f0a5 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.29"
++version = "20.13.0-quest3.pyro.30"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -668,10 +668,10 @@ index f764033..d636442 100644
                          decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
                      }
 diff --git a/alvr/client_core/src/video_decoder/mod.rs b/alvr/client_core/src/video_decoder/mod.rs
-index 4d2e699..f929b8b 100644
+index 4d2e699..e18ff28 100644
 --- a/alvr/client_core/src/video_decoder/mod.rs
 +++ b/alvr/client_core/src/video_decoder/mod.rs
-@@ -1,9 +1,13 @@
+@@ -1,14 +1,18 @@
 +#[cfg(unix)]
 +mod ready_frames;
  #[cfg(target_os = "android")]
@@ -685,6 +685,12 @@ index 4d2e699..f929b8b 100644
  pub mod telemetry;
  
  use alvr_common::anyhow::Result;
+ use alvr_session::{CodecType, MediacodecProperty};
+-use std::time::Duration;
++use std::time::{Duration, Instant};
+ 
+ /// The DecoderConfig payload the server's PyroWave encoder sends in place of SPS/PPS:
+ /// u32 width, u32 height, u8 chroma444, u8 full_range, little endian.
 @@ -53,7 +57,10 @@ impl PyroWaveConfig {
  pub fn parse_pyrowave_config(buffer: &[u8]) -> Result<PyroWaveConfig> {
      use alvr_common::anyhow::bail;
@@ -737,7 +743,7 @@ index 4d2e699..f929b8b 100644
      if complete {
          FrameDecision::DecodeComplete
      } else if age < deadline {
-@@ -130,23 +150,136 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
+@@ -130,25 +150,211 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
      let mean = samples.iter().sum::<f32>() / n as f32;
      format!(
          "min {:.2} mean {:.2} p50 {:.2} p95 {:.2} p99 {:.2} max {:.2}",
@@ -751,6 +757,30 @@ index 4d2e699..f929b8b 100644
      )
  }
  
++/// Upper bucket edges in microseconds for [`Freshness`] histograms; the last bucket is open.
++pub const FRESHNESS_EDGES_US: [u64; 6] = [500, 1000, 2000, 3000, 4000, 8000];
++
++fn freshness_bucket(elapsed: Duration) -> usize {
++    let us = elapsed.as_micros() as u64;
++    FRESHNESS_EDGES_US.iter().position(|&edge| us < edge).unwrap_or(FRESHNESS_EDGES_US.len())
++}
++
++/// Publication timing relative to the render loop's selections, accumulated until read.
++/// `margin` buckets how long a taken frame waited after publication. `late` buckets how
++/// long after the first empty selection the next frame was published; such a frame is
++/// then either taken (`late_taken`) or replaced before any selection (`late_superseded`).
++#[derive(Clone, Debug, Default, PartialEq, Eq)]
++pub struct Freshness {
++    pub taken: u64,
++    pub empty: u64,
++    pub margin: [u64; 7],
++    pub late: [u64; 7],
++    pub late_taken: u64,
++    pub late_superseded: u64,
++    pub superseded: u64,
++    pub ready_active: bool,
++}
++
  /// The newest decoded frame, handed out once. Intra-only codecs can always skip to the newest.
  #[derive(Default)]
  pub struct FrameSlot {
@@ -773,6 +803,11 @@ index 4d2e699..f929b8b 100644
 +    leased_release_token: u64,
 +    #[cfg(unix)]
 +    ready_fds: ready_frames::ReadyFrames,
++    pending_published_at: Option<Instant>,
++    pending_was_late: bool,
++    empty_since: Option<Instant>,
++    in_flight: bool,
++    freshness: Freshness,
  }
  
  impl FrameSlot {
@@ -824,18 +859,29 @@ index 4d2e699..f929b8b 100644
 +    }
 +    fn publish_locked(state: &mut FrameSlotState, timestamp: Duration, buffer: usize,
 +                      order: Option<u64>, token: u64) -> bool {
++        state.in_flight = false;
 +        // Use ingress order: multiple game frames can share a tracking timestamp.
 +        // Keep the watermark after take() to reject late independent completions.
 +        if let Some(order) = order {
 +            if state.latest_order.is_some_and(|latest| order <= latest) {
 +                state.superseded += 1;
++                state.freshness.superseded += 1;
 +                return false;
 +            }
 +            state.latest_order = Some(order);
 +        }
++        let now = Instant::now();
++        let late = state.empty_since.take().map(|since| now.saturating_duration_since(since));
++        if let Some(late) = late {
++            state.freshness.late[freshness_bucket(late)] += 1;
++        }
 +        if state.pending.replace((timestamp, buffer)).is_some() {
 +            state.superseded += 1;
++            state.freshness.superseded += 1;
++            if state.pending_was_late { state.freshness.late_superseded += 1; }
 +        }
++        state.pending_published_at = Some(now);
++        state.pending_was_late = late.is_some();
 +        state.pending_release_token = token;
 +        #[cfg(unix)]
 +        { state.ready_fds.replace_pending(None); }
@@ -843,11 +889,44 @@ index 4d2e699..f929b8b 100644
 +    }
 +    pub fn superseded(&self) -> u64 {
 +        self.inner.lock().superseded
++    }
++    /// A producer has accepted a complete frame and will publish or reject it.
++    pub fn mark_in_flight(&self) {
++        self.inner.lock().in_flight = true;
++    }
++    pub fn clear_in_flight(&self) {
++        self.inner.lock().in_flight = false;
++    }
++    pub fn in_flight(&self) -> bool {
++        self.inner.lock().in_flight
++    }
++    pub fn set_ready_active(&self, active: bool) {
++        self.inner.lock().freshness.ready_active = active;
++    }
++    /// Return and reset the accumulated freshness counters.
++    pub fn take_freshness(&self) -> Freshness {
++        let mut state = self.inner.lock();
++        let ready_active = state.freshness.ready_active;
++        let out = std::mem::take(&mut state.freshness);
++        state.freshness.ready_active = ready_active;
++        out
      }
      pub fn take(&self) -> Option<(Duration, usize)> {
 -        self.inner.lock().take()
 +        let mut state = self.inner.lock();
-+        let frame = state.pending.take()?;
++        let Some(frame) = state.pending.take() else {
++            // Repeated polls within one wait count once: this marks an empty episode.
++            if state.empty_since.is_none() {
++                state.empty_since = Some(Instant::now());
++                state.freshness.empty += 1;
++            }
++            return None;
++        };
++        state.freshness.taken += 1;
++        if let Some(published) = state.pending_published_at.take() {
++            state.freshness.margin[freshness_bucket(published.elapsed())] += 1;
++        }
++        if std::mem::take(&mut state.pending_was_late) { state.freshness.late_taken += 1; }
 +        state.leased = frame.1;
 +        state.leased_release_token = state.pending_release_token;
 +        state.pending_release_token = 0;
@@ -865,21 +944,23 @@ index 4d2e699..f929b8b 100644
 +    pub fn leased_release_token(&self, buffer: usize) -> u64 {
 +        let state = self.inner.lock();
 +        if state.leased == buffer { state.leased_release_token } else { 0 }
-     }
++    }
 +    #[cfg(unix)]
 +    pub fn take_ready_fd(&self, buffer: usize) -> Option<std::os::fd::OwnedFd> {
 +        let mut state = self.inner.lock();
 +        if buffer != 0 && state.leased == buffer { state.ready_fds.consume(buffer) } else { None }
-+    }
-+}
-+
+     }
+ }
+ 
 +/// Bound the experimental independent TCP decoders; the default stays one worker.
 +pub fn pyrowave_worker_count(value: &str) -> usize {
 +    if value.trim() == "2" { 2 } else { 1 }
- }
- 
++}
++
  #[derive(Clone, Default, PartialEq)]
-@@ -203,6 +336,35 @@ pub struct VideoDecoderSource {
+ pub struct VideoDecoderConfig {
+     pub codec: CodecType,
+@@ -203,6 +409,53 @@ pub struct VideoDecoderSource {
  }
  
  impl VideoDecoderSource {
@@ -912,10 +993,28 @@ index 4d2e699..f929b8b 100644
 +        }
 +    }
 +
++    /// Quest PyroWave TCP only: a complete frame is being decoded and will be published soon.
++    pub fn decode_in_flight(&self) -> bool {
++        #[cfg(target_os = "android")]
++        if let SourceInner::PyroWave(source) = &self.inner {
++            return source.decode_in_flight();
++        }
++        false
++    }
++
++    /// Quest PyroWave TCP only: publication/selection timing since the previous call.
++    pub fn take_freshness(&self) -> Option<Freshness> {
++        #[cfg(target_os = "android")]
++        if let SourceInner::PyroWave(source) = &self.inner {
++            return Some(source.take_freshness());
++        }
++        None
++    }
++
      /// If a frame is available, return the timestamp and the AHardwareBuffer.
      pub fn get_frame(&mut self) -> Option<(Duration, *mut std::ffi::c_void)> {
          #[cfg(target_os = "android")]
-@@ -229,7 +391,9 @@ fn logcat_info(tag: &str, message: &str) {
+@@ -229,7 +482,9 @@ fn logcat_info(tag: &str, message: &str) {
      }
      let tag = std::ffi::CString::new(tag).unwrap_or_default();
      let text = std::ffi::CString::new(message).unwrap_or_default();
@@ -926,7 +1025,7 @@ index 4d2e699..f929b8b 100644
  }
  
  // report_frame_decoded: (target_timestamp: Duration) -> ()
-@@ -249,7 +413,9 @@ pub fn create_decoder(
+@@ -249,7 +504,9 @@ pub fn create_decoder(
              }
          }
          if config.codec == CodecType::PyroWave
@@ -937,7 +1036,7 @@ index 4d2e699..f929b8b 100644
          {
              let (sink, source) = pyrowave_udp::video_decoder_split(
                  config.clone(),
-@@ -304,6 +470,22 @@ pub fn create_decoder(
+@@ -304,6 +561,22 @@ pub fn create_decoder(
  mod tests {
      use super::*;
  
@@ -960,7 +1059,7 @@ index 4d2e699..f929b8b 100644
      #[test]
      fn config_round_trips_the_encoder_blob() {
          let mut buf = Vec::new();
-@@ -312,53 +494,97 @@ mod tests {
+@@ -312,53 +585,97 @@ mod tests {
          buf.push(1);
          buf.push(0);
          let c = parse_pyrowave_config(&buf).unwrap();
@@ -1071,7 +1170,7 @@ index 4d2e699..f929b8b 100644
          assert_eq!(dist(&mut Vec::new()), "-");
      }
  
-@@ -392,4 +618,84 @@ mod tests {
+@@ -392,4 +709,134 @@ mod tests {
          assert_eq!(slot.take(), Some((Duration::from_millis(2), 0x20)));
          assert!(slot.take().is_none());
      }
@@ -1089,6 +1188,56 @@ index 4d2e699..f929b8b 100644
 +        assert_eq!(slot.superseded(), 3);
 +        assert!(slot.publish_ordered(Duration::from_millis(3), 0x40, 4));
 +        assert_eq!(slot.take(), Some((Duration::from_millis(3), 0x40)));
++    }
++
++    #[test]
++    fn freshness_separates_late_publication_from_waiting_frames() {
++        let slot = FrameSlot::default();
++        slot.publish_ordered(Duration::from_millis(1), 0x10, 1);
++        assert!(slot.take().is_some());
++        // Repeated polls inside one selection wait form a single empty episode.
++        assert!(slot.take().is_none());
++        assert!(slot.take().is_none());
++        std::thread::sleep(Duration::from_millis(2));
++        slot.mark_in_flight();
++        assert!(slot.in_flight());
++        slot.publish_ordered(Duration::from_millis(2), 0x20, 2);
++        assert!(!slot.in_flight());
++        assert!(slot.take().is_some());
++        let f = slot.take_freshness();
++        assert_eq!((f.taken, f.empty, f.late_taken, f.late_superseded), (2, 1, 1, 0));
++        assert_eq!(f.margin.iter().sum::<u64>(), 2);
++        assert_eq!(f.margin[0], 2, "both frames were taken immediately");
++        assert_eq!(f.late.iter().sum::<u64>(), 1);
++        assert_eq!(f.late[0] + f.late[1], 0, "published at least 2 ms after the empty poll");
++        assert_eq!(slot.take_freshness(), Freshness::default(), "reading resets the counters");
++    }
++
++    #[test]
++    fn freshness_counts_a_late_frame_replaced_before_selection() {
++        let slot = FrameSlot::default();
++        assert!(slot.take().is_none());
++        slot.publish_ordered(Duration::from_millis(1), 0x10, 1);
++        slot.publish_ordered(Duration::from_millis(2), 0x20, 2);
++        assert_eq!(slot.take(), Some((Duration::from_millis(2), 0x20)));
++        let f = slot.take_freshness();
++        assert_eq!((f.empty, f.late_taken, f.late_superseded, f.superseded), (1, 0, 1, 1));
++        assert_eq!(f.late.iter().sum::<u64>(), 1);
++    }
++
++    #[test]
++    fn rejected_completion_clears_in_flight_and_ready_state_persists_across_reads() {
++        let slot = FrameSlot::default();
++        slot.set_ready_active(true);
++        slot.publish_ordered(Duration::from_millis(3), 0x30, 3);
++        slot.mark_in_flight();
++        assert!(!slot.publish_ordered(Duration::from_millis(2), 0x20, 2));
++        assert!(!slot.in_flight());
++        assert!(slot.take_freshness().ready_active);
++        assert!(slot.take_freshness().ready_active);
++        assert_eq!(freshness_bucket(Duration::from_micros(499)), 0);
++        assert_eq!(freshness_bucket(Duration::from_micros(500)), 1);
++        assert_eq!(freshness_bucket(Duration::from_millis(9)), FRESHNESS_EDGES_US.len());
 +    }
 +
 +    #[test]
@@ -1157,7 +1306,7 @@ index 4d2e699..f929b8b 100644
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601..53ca49f 100644
+index 2e22601..eaa5c0f 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -1173,7 +1322,7 @@ index 2e22601..53ca49f 100644
  use super::{parse_pyrowave_config, FrameSlot, VideoDecoderConfig};
  use alvr_common::{
      anyhow::{bail, Result},
-@@ -14,11 +14,12 @@ use alvr_common::{
+@@ -14,13 +14,25 @@ use alvr_common::{
  use std::{
      ffi::c_void,
      sync::{
@@ -1183,12 +1332,26 @@ index 2e22601..53ca49f 100644
 +        Arc, Once,
      },
      thread::{self, JoinHandle},
-     time::Duration,
+-    time::Duration,
++    time::{Duration, Instant},
 +    os::fd::{FromRawFd, OwnedFd},
  };
  
++/// `debug.q3pw.ready_fd_active`, polled about once per second when ready publication
++/// was enabled at startup: `0` uses synchronous publication on the same decoder, so an
++/// A/B comparison can alternate within one session. Anything else keeps early publication.
++fn ready_active_property() -> bool {
++    let mut value = [0u8; 92];
++    let len = unsafe {
++        libc::__system_property_get(c"debug.q3pw.ready_fd_active".as_ptr(), value.as_mut_ptr().cast())
++    };
++    &value[..len.max(0) as usize] != b"0"
++}
++
  #[repr(C)]
-@@ -33,36 +34,58 @@ struct FrameInfo {
+ struct PyroClient {
+     _private: [u8; 0],
+@@ -33,36 +45,58 @@ struct FrameInfo {
      convert_ms: f64,
      total_ms: f64,
      complete: i32,
@@ -1251,7 +1414,7 @@ index 2e22601..53ca49f 100644
          self.pending.ready.notify_one();
          Ok(true)
      }
-@@ -71,13 +94,28 @@ impl VideoDecoderSink {
+@@ -71,13 +105,34 @@ impl VideoDecoderSink {
  pub struct VideoDecoderSource {
      running: Arc<AtomicBool>,
      pending: Arc<Pending>,
@@ -1273,6 +1436,12 @@ index 2e22601..53ca49f 100644
 +    pub fn notify_frame_copy_submitted(&self) {
 +        self.decoded.notify_copy_submitted();
 +    }
++    pub fn decode_in_flight(&self) -> bool {
++        self.decoded.in_flight()
++    }
++    pub fn take_freshness(&self) -> super::Freshness {
++        self.decoded.take_freshness()
++    }
 +
      pub fn dequeue_frame(&mut self) -> Option<(Duration, *mut c_void)> {
 -        self.decoded.take().map(|(ts, ptr)| (ts, ptr as *mut c_void))
@@ -1282,7 +1451,7 @@ index 2e22601..53ca49f 100644
      }
  }
  
-@@ -85,7 +123,7 @@ impl Drop for VideoDecoderSource {
+@@ -85,7 +140,7 @@ impl Drop for VideoDecoderSource {
      fn drop(&mut self) {
          self.running.store(false, Ordering::Relaxed);
          self.pending.ready.notify_all();
@@ -1291,7 +1460,7 @@ index 2e22601..53ca49f 100644
              t.join().ok();
          }
      }
-@@ -99,14 +137,50 @@ pub fn video_decoder_split(
+@@ -99,14 +154,50 @@ pub fn video_decoder_split(
      let pending = Arc::new(Pending {
          frame: Mutex::new(None),
          ready: Condvar::new(),
@@ -1344,7 +1513,7 @@ index 2e22601..53ca49f 100644
          move || {
              // Created here so every Vulkan call the library makes stays on this thread.
              let client = unsafe {
-@@ -129,63 +203,118 @@ pub fn video_decoder_split(
+@@ -129,63 +220,133 @@ pub fn video_decoder_split(
                  return;
              }
              let mut frames: u64 = 0;
@@ -1353,6 +1522,9 @@ index 2e22601..53ca49f 100644
 -            super::telemetry::start(cfg.width, cfg.height);
 +            let mut submitted_early = 0u64;
 +            let mut completed_early = 0u64;
++            let mut ready_active = ready_requested && ready_active_property();
++            let mut ready_checked = Instant::now();
++            decoded.set_ready_active(ready_active);
 +            telemetry_started.call_once(|| super::telemetry::start(cfg.width, cfg.height));
              while running.load(Ordering::Relaxed) {
 +                if !decoded.wait_producer_ready(|| running.load(Ordering::Relaxed)) { break; }
@@ -1370,6 +1542,16 @@ index 2e22601..53ca49f 100644
 +                let Some((timestamp, data, order)) = next else {
                      continue;
                  };
++                decoded.mark_in_flight();
++                if ready_requested && ready_checked.elapsed() >= Duration::from_secs(1) {
++                    ready_checked = Instant::now();
++                    let active = ready_active_property();
++                    if active != ready_active {
++                        ready_active = active;
++                        decoded.set_ready_active(active);
++                        alvr_common::info!("[Q3PW_READY_FD] active={active}");
++                    }
++                }
 +                // TCP restores one whole codec frame. Do not carry any rejected frame's
 +                // state into the next submission, including sequence-counter wraparound.
 +                unsafe { pyroclient_clear(client) };
@@ -1378,6 +1560,7 @@ index 2e22601..53ca49f 100644
 -                    warn!("PyroWave: push_packet failed ({pushed})");
 +                if pushed != 1 {
 +                    warn!("PyroWave: complete TCP frame rejected by codec ({pushed})");
++                    decoded.clear_in_flight();
 +                    totals.lock().1 += 1;
                      continue;
                  }
@@ -1388,7 +1571,7 @@ index 2e22601..53ca49f 100644
 +                let protected = decoded.protected_buffers();
 +                let mut ready_fd = -1;
 +                let rc = unsafe {
-+                    if ready_requested { pyroclient_submit_guarded(client, &mut out, &mut info,
++                    if ready_active { pyroclient_submit_guarded(client, &mut out, &mut info,
 +                        protected[0] as *mut c_void, protected[1] as *mut c_void, &mut ready_fd) }
 +                    else { pyroclient_decode_guarded(
 +                        client,
@@ -1403,6 +1586,7 @@ index 2e22601..53ca49f 100644
 +                if rc != 0 || out.is_null() || info.complete == 0 {
                      warn!("PyroWave: decode failed ({rc})");
 -                    failures += 1;
++                    decoded.clear_in_flight();
 +                    totals.lock().1 += 1;
 +                    if matches!(rc, -2 | -5 | -6) {
 +                        report_frame_decoded(Err(alvr_common::anyhow::anyhow!("PyroWave native submission failed; decoder stopped ({rc})")));
@@ -3481,7 +3665,7 @@ index 0000000..766b412
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..17dde56 100644
+index b87dfe9..a11aadf 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -59,17 +59,12 @@ impl ParsedStreamConfig {
@@ -3508,7 +3692,7 @@ index b87dfe9..17dde56 100644
              upscaling: config.settings.video.upscaling.as_option().cloned(),
              force_software_decoder: config.settings.video.force_software_decoder,
              max_buffering_frames: config.settings.video.max_buffering_frames,
-@@ -88,16 +83,28 @@ pub struct StreamContext {
+@@ -88,16 +83,38 @@ pub struct StreamContext {
      view_reference_space: Arc<xr::Space>,
      swapchains: [xr::Swapchain<xr::OpenGlEs>; 2],
      last_good_view_params: [ViewParams; 2],
@@ -3537,10 +3721,20 @@ index b87dfe9..17dde56 100644
 +    selection_probe: bool,
 +    // held/immediate/late/empty/copy-pending/no-decoder outcomes, total/max CPU us
 +    selection_stats: [u64; 8],
++    fresh_probe: bool,
++    fresh_last: Instant,
++}
++
++/// `debug.q3pw.frame_wait_us`, re-read about once per second so A/B blocks can
++/// alternate within one session. The render loop further caps it at half a frame.
++fn frame_wait_budget_property() -> Duration {
++    Duration::from_micros(
++        crate::extra_extensions::perf_settings::system_property("debug.q3pw.frame_wait_us")
++            .trim().parse::<u64>().unwrap_or(0).min(4000))
  }
  
  impl StreamContext {
-@@ -115,12 +122,6 @@ impl StreamContext {
+@@ -115,12 +132,6 @@ impl StreamContext {
  
          let xr_exts = xr_session.instance().exts();
  
@@ -3553,7 +3747,7 @@ index b87dfe9..17dde56 100644
          let foveation_profile = if let Some(config) = &config.clientside_foveation_config {
              if xr_exts.fb_swapchain_update_state.is_some()
                  && xr_exts.fb_foveation.is_some()
-@@ -228,6 +229,10 @@ impl StreamContext {
+@@ -228,6 +239,10 @@ impl StreamContext {
              view_reference_space,
              swapchains,
              last_good_view_params: [ViewParams::default(); 2],
@@ -3564,13 +3758,11 @@ index b87dfe9..17dde56 100644
              input_thread: None,
              input_thread_running,
              config,
-@@ -235,8 +240,26 @@ impl StreamContext {
+@@ -235,8 +250,27 @@ impl StreamContext {
              renderer,
              decoder: None,
              pending_frame: None,
-+            frame_wait_budget: Duration::from_micros(
-+                crate::extra_extensions::perf_settings::system_property("debug.q3pw.frame_wait_us")
-+                    .parse::<u64>().unwrap_or(0).min(1000)),
++            frame_wait_budget: frame_wait_budget_property(),
 +            frame_wait_stats: [0; 4],
 +            frame_wait_last_log: Instant::now(),
 +            pre_wait_poll: crate::extra_extensions::perf_settings::system_property(
@@ -3582,6 +3774,9 @@ index b87dfe9..17dde56 100644
 +            selection_probe: platform == Platform::Quest3
 +                && crate::extra_extensions::perf_settings::system_property("debug.q3pw.loop_probe") == "1",
 +            selection_stats: [0; 8],
++            fresh_probe: platform == Platform::Quest3
++                && crate::extra_extensions::perf_settings::system_property("debug.q3pw.fresh_probe") == "1",
++            fresh_last: Instant::now(),
          };
  
 +        alvr_graphics::log_quest_experiment(format!(
@@ -3591,7 +3786,7 @@ index b87dfe9..17dde56 100644
          this.update_reference_space();
  
          this
-@@ -310,6 +333,23 @@ impl StreamContext {
+@@ -310,6 +344,23 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
@@ -3615,7 +3810,7 @@ index b87dfe9..17dde56 100644
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +378,42 @@ impl StreamContext {
+@@ -338,12 +389,42 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -3660,7 +3855,7 @@ index b87dfe9..17dde56 100644
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +425,25 @@ impl StreamContext {
+@@ -355,8 +436,25 @@ impl StreamContext {
          }
      }
  
@@ -3686,7 +3881,7 @@ index b87dfe9..17dde56 100644
      }
  
      pub fn render(
-@@ -364,15 +451,109 @@ impl StreamContext {
+@@ -364,15 +462,128 @@ impl StreamContext {
          frame_interval: Duration,
          vsync_time: Duration,
      ) -> (ProjectionLayerBuilder, Duration) {
@@ -3725,7 +3920,21 @@ index b87dfe9..17dde56 100644
 +        // newest ready frame after xrWaitFrame without delaying that display slot.
 +        // When decode falls behind, repeat the last layer and let the runtime reproject it.
 +        let latest_only = self.uses_latest_frame_polling();
-+        let latest_wait_budget = self.frame_wait_budget.min(frame_interval / 8);
++        if self.fresh_last.elapsed() >= Duration::from_secs(1) {
++            self.fresh_last = Instant::now();
++            self.frame_wait_budget = frame_wait_budget_property();
++            if let Some(f) = self.decoder.as_ref().filter(|_| self.fresh_probe)
++                .and_then(|(_, source)| source.take_freshness())
++            {
++                alvr_graphics::log_quest_experiment(format!(
++                    "[Q3PW_FRESH] wait_us={} ready={} taken={} empty={} late_taken={} late_superseded={} \
++                     superseded={} margin={:?} late={:?} edges_us={:?}",
++                    self.frame_wait_budget.as_micros(), f.ready_active as u8, f.taken, f.empty,
++                    f.late_taken, f.late_superseded, f.superseded, f.margin, f.late,
++                    video_decoder::FRESHNESS_EDGES_US));
++            }
++        }
++        let latest_wait_budget = self.frame_wait_budget.min(frame_interval / 2);
 +        let mut latest_wait_observed = None;
          if let Some((_, source)) = &mut self.decoder {
 -            while frame_result.is_none() && Instant::now() < frame_poll_deadline {
@@ -3734,13 +3943,18 @@ index b87dfe9..17dde56 100644
 +                immediate_ready = frame_result.is_some();
 +            }
 +            // An optimized decoder can finish just after the nonblocking poll.
-+            // Wait only for an empty ready queue, never while an eye copy holds a
-+            // lease. Default zero preserves the existing immediate-repeat path.
++            // Wait only for an empty ready queue while a decode is in flight, never
++            // while an eye copy holds a lease. Default zero preserves the existing
++            // immediate-repeat path.
 +            if copy_ready && latest_only && frame_result.is_none() && !latest_wait_budget.is_zero() {
 +                let started = Instant::now();
 +                let deadline = started + latest_wait_budget;
-+                while frame_result.is_none() && Instant::now() < deadline {
++                while frame_result.is_none() && Instant::now() < deadline && source.decode_in_flight() {
 +                    thread::sleep(Duration::from_micros(50));
++                    frame_result = source.get_frame();
++                }
++                // Publication clears the in-flight flag; take a frame published after the last poll.
++                if frame_result.is_none() {
 +                    frame_result = source.get_frame();
 +                }
 +                latest_wait_observed = Some((started.elapsed().as_micros() as u64, frame_result.is_some()));
@@ -3798,7 +4012,7 @@ index b87dfe9..17dde56 100644
              }
          }
  
-@@ -401,37 +582,80 @@ impl StreamContext {
+@@ -401,37 +612,80 @@ impl StreamContext {
              ]);
          }
  
@@ -3909,7 +4123,7 @@ index b87dfe9..17dde56 100644
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +717,8 @@ impl StreamContext {
+@@ -493,6 +747,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {

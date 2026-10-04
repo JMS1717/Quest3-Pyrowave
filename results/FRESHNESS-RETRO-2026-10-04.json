@@ -1,0 +1,310 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-04",
+  "status": "retrospective_saved_capture_analysis_not_new_hardware_test",
+  "binary_version": "20.13.0-quest3.pyro.28",
+  "binary_sha": "2b87fc717764c7588d1b511e062f1d4e6df682ea",
+  "tool": "tools/quest3/freshness.py gaps --hz 120",
+  "configuration": {
+    "encoded_per_eye": [
+      2080,
+      2208
+    ],
+    "requested_and_runtime_hz": 120,
+    "chroma": "4:2:0",
+    "target_mbps": 1000,
+    "transport": "USB/ADB TCP",
+    "decode": "Haar/Vulkan compute",
+    "server_phase_lock": false,
+    "frame_wait_us": 0
+  },
+  "cases": [
+    {
+      "group": "geometry",
+      "case": "native 2080x2208 source",
+      "status": "parsed",
+      "frames": 1571,
+      "span_s": 14.991675243,
+      "displayed_target_fps": 104.72478722703612,
+      "lost_target_frames_per_s": 15.275144124198262,
+      "step_histogram": {
+        "1": 1358,
+        "2": 197,
+        "3": 13,
+        "4": 2
+      },
+      "percentiles_ms": {
+        "network_s": [
+          3.83406,
+          4.3864849999999995,
+          6.016958
+        ],
+        "decoder_s": [
+          6.230365,
+          7.191147,
+          8.152709
+        ],
+        "decoder_queue_s": [
+          0.200938,
+          1.29448,
+          5.633907
+        ]
+      },
+      "median_ms_before_and_after_gaps": {
+        "network_s": [
+          4.4711625,
+          4.483588
+        ],
+        "decoder_s": [
+          7.126459,
+          7.057058
+        ],
+        "decoder_queue_s": [
+          1.1869535,
+          1.4142715
+        ]
+      }
+    },
+    {
+      "group": "geometry",
+      "case": "3072x3216 source",
+      "status": "parsed",
+      "frames": 1639,
+      "span_s": 14.974995085,
+      "displayed_target_fps": 109.38233974051418,
+      "lost_target_frames_per_s": 10.818033600710194,
+      "step_histogram": {
+        "0": 2,
+        "1": 1480,
+        "2": 150,
+        "3": 6
+      },
+      "percentiles_ms": {
+        "network_s": [
+          3.736822,
+          4.080058,
+          5.40201
+        ],
+        "decoder_s": [
+          6.205157,
+          7.236928,
+          8.152136
+        ],
+        "decoder_queue_s": [
+          0.28406299999999995,
+          1.282032,
+          5.655625
+        ]
+      },
+      "median_ms_before_and_after_gaps": {
+        "network_s": [
+          4.0629855,
+          4.0901865
+        ],
+        "decoder_s": [
+          7.1810165,
+          7.1987765
+        ],
+        "decoder_queue_s": [
+          1.2686985000000002,
+          1.2944529999999999
+        ]
+      }
+    },
+    {
+      "group": "geometry",
+      "case": "native 2080x2208 source",
+      "status": "parsed",
+      "frames": 1677,
+      "span_s": 15.019454204,
+      "displayed_target_fps": 111.58860882931721,
+      "lost_target_frames_per_s": 8.389119756857976,
+      "step_histogram": {
+        "1": 1555,
+        "2": 116,
+        "3": 5
+      },
+      "percentiles_ms": {
+        "network_s": [
+          3.7517,
+          4.2943620000000005,
+          5.701554
+        ],
+        "decoder_s": [
+          5.830261,
+          6.510730000000001,
+          7.472553
+        ],
+        "decoder_queue_s": [
+          0.496771,
+          1.7294800000000001,
+          6.251093999999999
+        ]
+      },
+      "median_ms_before_and_after_gaps": {
+        "network_s": [
+          4.346614000000001,
+          4.374979000000001
+        ],
+        "decoder_s": [
+          6.465157,
+          6.3321879999999995
+        ],
+        "decoder_queue_s": [
+          2.29125,
+          1.544271
+        ]
+      }
+    },
+    {
+      "group": "light_foveation",
+      "case": "full frame",
+      "status": "parsed",
+      "frames": 1503,
+      "span_s": 14.991622483,
+      "displayed_target_fps": 100.18928916487978,
+      "lost_target_frames_per_s": 19.811064501976894,
+      "step_histogram": {
+        "1": 1246,
+        "2": 215,
+        "3": 41
+      },
+      "percentiles_ms": {
+        "network_s": [
+          3.775413,
+          4.199532,
+          5.902506
+        ],
+        "decoder_s": [
+          6.204688,
+          6.807709,
+          8.170001
+        ],
+        "decoder_queue_s": [
+          0.200104,
+          1.771771,
+          7.347241
+        ]
+      },
+      "median_ms_before_and_after_gaps": {
+        "network_s": [
+          4.158912,
+          4.1748650000000005
+        ],
+        "decoder_s": [
+          6.840859999999999,
+          6.852605
+        ],
+        "decoder_queue_s": [
+          1.152292,
+          1.43651
+        ]
+      }
+    },
+    {
+      "group": "light_foveation",
+      "case": "light foveated encoding",
+      "status": "parsed",
+      "frames": 1606,
+      "span_s": 14.991755295,
+      "displayed_target_fps": 107.05884457274287,
+      "lost_target_frames_per_s": 12.940446010661756,
+      "step_histogram": {
+        "1": 1441,
+        "2": 134,
+        "3": 30
+      },
+      "percentiles_ms": {
+        "network_s": [
+          3.661278,
+          4.067343,
+          5.962753
+        ],
+        "decoder_s": [
+          5.266928,
+          5.992240000000001,
+          6.913073
+        ],
+        "decoder_queue_s": [
+          0.545208,
+          2.059375,
+          6.64672
+        ]
+      },
+      "median_ms_before_and_after_gaps": {
+        "network_s": [
+          4.0364495,
+          4.0039370000000005
+        ],
+        "decoder_s": [
+          6.059297000000001,
+          5.9790895
+        ],
+        "decoder_queue_s": [
+          1.620417,
+          1.7597395
+        ]
+      }
+    },
+    {
+      "group": "light_foveation",
+      "case": "full frame",
+      "status": "parsed",
+      "frames": 1588,
+      "span_s": 14.986224774,
+      "displayed_target_fps": 105.89725057062593,
+      "lost_target_frames_per_s": 14.146324587884498,
+      "step_histogram": {
+        "0": 1,
+        "1": 1407,
+        "2": 148,
+        "3": 29,
+        "4": 2
+      },
+      "percentiles_ms": {
+        "network_s": [
+          3.7582359999999997,
+          4.107534,
+          5.142616
+        ],
+        "decoder_s": [
+          5.926042000000001,
+          6.601979,
+          7.436615
+        ],
+        "decoder_queue_s": [
+          0.276614,
+          1.648073,
+          6.544531999999999
+        ]
+      },
+      "median_ms_before_and_after_gaps": {
+        "network_s": [
+          4.165434,
+          4.102878
+        ],
+        "decoder_s": [
+          6.565626,
+          6.532813
+        ],
+        "decoder_queue_s": [
+          1.326823,
+          1.320938
+        ]
+      }
+    }
+  ],
+  "findings": [
+    "Displayed target FPS reproduces the published fresh FPS of each screen (for example 104.72 vs 104.67).",
+    "Network and decoder time of the displayed frames just before and after each gap equal the typical values, so loss is not explained by transfer or decode spikes.",
+    "Displayed frames waited only about 1.3-2.1 ms (median) between publication and selection, with the 5th percentile at 0.2-0.6 ms, and this margin stayed flat within each capture.",
+    "With about +/-1.5 ms of network plus decode jitter, frames published just after the post-xrWaitFrame selection produce one empty selection and one superseded frame, matching the .27 counts (199 empty selections in 15 s vs about 12 superseded/s)."
+  ],
+  "limitations": [
+    "Frames that were never selected report no statistics, so lateness of lost frames is inferred, not measured; .30 adds direct lateness telemetry.",
+    "Why the margin stays near the selection edge in every capture is not established. Server phase lock was off.",
+    "Short stationary captures; not sustained, gameplay or optical measurements."
+  ],
+  "performance_acceptance": false,
+  "optical_latency_measured": false
+}

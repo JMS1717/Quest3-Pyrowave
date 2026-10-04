@@ -61,7 +61,15 @@ Its artifact contains no APK/server: all three native library hashes must match
 the reviewed APK exactly before using a probe with that pair. Runtime/native API
 changes still require the full matching build workflow.
 
-Then use a short 15-second OFF/ON/OFF screen with the same actual source texture
+**Recorded outcome (2026-10-04):** the corrected probe from `bd0de87` (native
+libraries byte-identical to the reviewed `.29` APK) passed on Quest 3 at
+512×320 and native 4160×2208: 12 of 12 discriminating reads per size started
+with an unsignaled fence and matched exactly; default-off output was unchanged.
+See [results](../results/READY-FENCE-GPU-2026-10-04.json). Correctness only.
+
+Then compare publication modes. `.30` can switch `debug.q3pw.ready_fd_active`
+within one session, so interleaved blocks replace restart-based screens; see
+[fresh-frame loss](FRESHNESS.md). Use the same actual source texture
 size, normalized chart, projection, encode geometry, bitrate, runtime rate,
 overlay and thermal guards. Verify current PID, source coverage and all gates.
 Compare fresh FPS, p1/gap distribution, native decode and verified completion
