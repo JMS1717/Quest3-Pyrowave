@@ -1,0 +1,595 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-04",
+  "version": "20.13.0-quest3.pyro.30",
+  "source_sha": "c36edfe09e71cef4674292f436f2037040952af5",
+  "ci_run": 37228815378,
+  "apk_sha256": "8062221e564d7eed8c7f2fae1519f683976af6a0e275af37e7b1fdb9b06b9324",
+  "windows_zip_sha256": "32aa6225701e62aa11d5cb4010b61bb37b3027e845134ff0ce2102734127368d",
+  "status": "interleaved_live_screens_bounded_wait_gain_replicated_ready_publication_rejected",
+  "setup": {
+    "encode_eye": [
+      2080,
+      2208
+    ],
+    "decode": "Haar/Vulkan compute",
+    "transport": "ALVR USB/ADB TCP",
+    "foveated_encoding": false,
+    "source": "tools.quest3.stereo_scene --quality --normalized-chart (stationary)",
+    "headset": "Quest 3, unworn; proximity held by power-manager automation; guardian paused; restored afterwards",
+    "controls": "debug.q3pw.frame_wait_us and debug.q3pw.ready_fd_active switched within one client process"
+  },
+  "sessions": [
+    {
+      "label": "mixed_wait_and_ready_publication",
+      "refresh_hz_requested_and_runtime": 120,
+      "runtime_rate_confirmed_by_client": true,
+      "target_mbps": 1000,
+      "chroma": "4:2:0",
+      "encoded_stereo_frames_observed": [
+        [
+          4160,
+          2208
+        ]
+      ],
+      "source_eye_explicit": [
+        2080,
+        2208
+      ],
+      "block_s": 5.0,
+      "cycles": 7,
+      "settle_s_excluded_per_block": 1.5,
+      "order": "rotated each cycle, reversed on odd cycles",
+      "ab_seconds": 210.0,
+      "battery_temperature_c_range": [
+        34.0,
+        37.0
+      ],
+      "thermal_status_range": [
+        0,
+        0
+      ],
+      "configurations": [
+        {
+          "wait_us_requested": 0,
+          "ready_active": false,
+          "blocks": 7,
+          "displayed_target_fps": 108.29,
+          "lost_target_frames_per_s": 11.8,
+          "block_fps_sem": 2.14,
+          "median_estimated_pipeline_latency_ms": 49.83,
+          "median_decoder_ms": 7.14,
+          "median_publication_to_selection_ms": 1.89,
+          "median_vsync_queue_ms": 24.15,
+          "fresh_windows": 26,
+          "taken_per_window": 109.31,
+          "superseded_per_window": 11.0,
+          "late_frames_taken_fraction": 0.516
+        },
+        {
+          "wait_us_requested": 0,
+          "ready_active": true,
+          "blocks": 7,
+          "displayed_target_fps": 87.25,
+          "lost_target_frames_per_s": 32.93,
+          "block_fps_sem": 1.4,
+          "median_estimated_pipeline_latency_ms": 44.33,
+          "median_decoder_ms": 7.2,
+          "median_publication_to_selection_ms": 2.86,
+          "median_vsync_queue_ms": 25.72,
+          "fresh_windows": 24,
+          "taken_per_window": 89.92,
+          "superseded_per_window": 30.67,
+          "late_frames_taken_fraction": 0.322
+        },
+        {
+          "wait_us_requested": 1500,
+          "ready_active": false,
+          "blocks": 7,
+          "displayed_target_fps": 114.65,
+          "lost_target_frames_per_s": 5.45,
+          "block_fps_sem": 0.65,
+          "median_estimated_pipeline_latency_ms": 41.57,
+          "median_decoder_ms": 7.23,
+          "median_publication_to_selection_ms": 1.4,
+          "median_vsync_queue_ms": 16.63,
+          "fresh_windows": 28,
+          "taken_per_window": 114.64,
+          "superseded_per_window": 5.64,
+          "late_frames_taken_fraction": 0.921
+        },
+        {
+          "wait_us_requested": 1500,
+          "ready_active": true,
+          "blocks": 7,
+          "displayed_target_fps": 107.27,
+          "lost_target_frames_per_s": 13.01,
+          "block_fps_sem": 3.06,
+          "median_estimated_pipeline_latency_ms": 36.11,
+          "median_decoder_ms": 7.13,
+          "median_publication_to_selection_ms": 1.98,
+          "median_vsync_queue_ms": 17.24,
+          "fresh_windows": 28,
+          "taken_per_window": 107.64,
+          "superseded_per_window": 12.89,
+          "late_frames_taken_fraction": 0.796
+        },
+        {
+          "wait_us_requested": 3000,
+          "ready_active": false,
+          "blocks": 7,
+          "displayed_target_fps": 116.07,
+          "lost_target_frames_per_s": 4.01,
+          "block_fps_sem": 0.55,
+          "median_estimated_pipeline_latency_ms": 41.33,
+          "median_decoder_ms": 7.21,
+          "median_publication_to_selection_ms": 1.35,
+          "median_vsync_queue_ms": 16.16,
+          "fresh_windows": 25,
+          "taken_per_window": 116.4,
+          "superseded_per_window": 4.04,
+          "late_frames_taken_fraction": 0.989
+        },
+        {
+          "wait_us_requested": 3000,
+          "ready_active": true,
+          "blocks": 7,
+          "displayed_target_fps": 107.25,
+          "lost_target_frames_per_s": 12.82,
+          "block_fps_sem": 3.83,
+          "median_estimated_pipeline_latency_ms": 36.13,
+          "median_decoder_ms": 7.19,
+          "median_publication_to_selection_ms": 1.96,
+          "median_vsync_queue_ms": 17.29,
+          "fresh_windows": 24,
+          "taken_per_window": 107.21,
+          "superseded_per_window": 13.42,
+          "late_frames_taken_fraction": 0.772
+        }
+      ],
+      "paired_comparisons": [
+        {
+          "baseline": {
+            "wait_us": 0,
+            "ready_active": false
+          },
+          "candidate": {
+            "wait_us": 1500,
+            "ready_active": false
+          },
+          "per_cycle_fps_delta": [
+            4.02,
+            10.68,
+            14.99,
+            10.39,
+            2.85,
+            1.53,
+            0.07
+          ],
+          "mean_delta_fps": 6.36,
+          "positive_cycles": 7,
+          "cycles": 7
+        },
+        {
+          "baseline": {
+            "wait_us": 0,
+            "ready_active": false
+          },
+          "candidate": {
+            "wait_us": 3000,
+            "ready_active": false
+          },
+          "per_cycle_fps_delta": [
+            5.47,
+            12.12,
+            15.56,
+            9.63,
+            1.82,
+            6.4,
+            3.48
+          ],
+          "mean_delta_fps": 7.78,
+          "positive_cycles": 7,
+          "cycles": 7
+        },
+        {
+          "baseline": {
+            "wait_us": 0,
+            "ready_active": false
+          },
+          "candidate": {
+            "wait_us": 0,
+            "ready_active": true
+          },
+          "per_cycle_fps_delta": [
+            -20.02,
+            -16.32,
+            -11.07,
+            -20.05,
+            -20.9,
+            -29.43,
+            -29.54
+          ],
+          "mean_delta_fps": -21.05,
+          "positive_cycles": 0,
+          "cycles": 7
+        },
+        {
+          "baseline": {
+            "wait_us": 3000,
+            "ready_active": false
+          },
+          "candidate": {
+            "wait_us": 3000,
+            "ready_active": true
+          },
+          "per_cycle_fps_delta": [
+            1.42,
+            -0.1,
+            -16.56,
+            1.34,
+            -18.63,
+            -25.31,
+            -3.78
+          ],
+          "mean_delta_fps": -8.8,
+          "positive_cycles": 2,
+          "cycles": 7
+        }
+      ],
+      "estimated_latency_states_ms_by_block": [
+        33.2,
+        33.3,
+        33.4,
+        36.0,
+        36.1,
+        36.2,
+        41.3,
+        41.5,
+        41.6,
+        41.7,
+        44.4,
+        44.5,
+        49.7,
+        49.9,
+        50.0,
+        52.7
+      ]
+    },
+    {
+      "label": "wait_budget_replication",
+      "refresh_hz_requested_and_runtime": 120,
+      "runtime_rate_confirmed_by_client": true,
+      "target_mbps": 1000,
+      "chroma": "4:2:0",
+      "encoded_stereo_frames_observed": [
+        [
+          4160,
+          2208
+        ]
+      ],
+      "source_eye_explicit": [
+        2080,
+        2208
+      ],
+      "block_s": 5.0,
+      "cycles": 10,
+      "settle_s_excluded_per_block": 1.5,
+      "order": "rotated each cycle, reversed on odd cycles",
+      "ab_seconds": 200.0,
+      "battery_temperature_c_range": [
+        37.0,
+        39.0
+      ],
+      "thermal_status_range": [
+        0,
+        0
+      ],
+      "configurations": [
+        {
+          "wait_us_requested": 0,
+          "ready_active": false,
+          "blocks": 10,
+          "displayed_target_fps": 107.19,
+          "lost_target_frames_per_s": 12.85,
+          "block_fps_sem": 1.16,
+          "median_estimated_pipeline_latency_ms": 48.56,
+          "median_decoder_ms": 7.93,
+          "median_publication_to_selection_ms": 1.43,
+          "median_vsync_queue_ms": 24.07,
+          "fresh_windows": 40,
+          "taken_per_window": 107.65,
+          "superseded_per_window": 12.57,
+          "late_frames_taken_fraction": 0.418
+        },
+        {
+          "wait_us_requested": 2000,
+          "ready_active": false,
+          "blocks": 10,
+          "displayed_target_fps": 110.06,
+          "lost_target_frames_per_s": 9.93,
+          "block_fps_sem": 0.28,
+          "median_estimated_pipeline_latency_ms": 48.56,
+          "median_decoder_ms": 7.99,
+          "median_publication_to_selection_ms": 1.43,
+          "median_vsync_queue_ms": 23.86,
+          "fresh_windows": 40,
+          "taken_per_window": 110.97,
+          "superseded_per_window": 9.53,
+          "late_frames_taken_fraction": 0.834
+        },
+        {
+          "wait_us_requested": 3000,
+          "ready_active": false,
+          "blocks": 10,
+          "displayed_target_fps": 111.45,
+          "lost_target_frames_per_s": 8.6,
+          "block_fps_sem": 0.81,
+          "median_estimated_pipeline_latency_ms": 48.52,
+          "median_decoder_ms": 7.96,
+          "median_publication_to_selection_ms": 1.39,
+          "median_vsync_queue_ms": 23.57,
+          "fresh_windows": 39,
+          "taken_per_window": 111.92,
+          "superseded_per_window": 8.69,
+          "late_frames_taken_fraction": 0.948
+        },
+        {
+          "wait_us_requested": 4000,
+          "ready_active": false,
+          "blocks": 10,
+          "displayed_target_fps": 113.17,
+          "lost_target_frames_per_s": 6.88,
+          "block_fps_sem": 0.84,
+          "median_estimated_pipeline_latency_ms": 48.47,
+          "median_decoder_ms": 7.96,
+          "median_publication_to_selection_ms": 1.31,
+          "median_vsync_queue_ms": 23.22,
+          "fresh_windows": 40,
+          "taken_per_window": 113.72,
+          "superseded_per_window": 6.62,
+          "late_frames_taken_fraction": 0.974
+        }
+      ],
+      "paired_comparisons": [
+        {
+          "baseline": {
+            "wait_us": 0,
+            "ready_active": false
+          },
+          "candidate": {
+            "wait_us": 2000,
+            "ready_active": false
+          },
+          "per_cycle_fps_delta": [
+            -1.19,
+            -2.08,
+            -1.44,
+            3.5,
+            8.06,
+            3.74,
+            3.13,
+            5.11,
+            5.16,
+            4.66
+          ],
+          "mean_delta_fps": 2.87,
+          "positive_cycles": 7,
+          "cycles": 10
+        },
+        {
+          "baseline": {
+            "wait_us": 0,
+            "ready_active": false
+          },
+          "candidate": {
+            "wait_us": 3000,
+            "ready_active": false
+          },
+          "per_cycle_fps_delta": [
+            2.65,
+            1.06,
+            3.17,
+            5.21,
+            7.18,
+            1.47,
+            4.54,
+            5.16,
+            6.32,
+            5.83
+          ],
+          "mean_delta_fps": 4.26,
+          "positive_cycles": 10,
+          "cycles": 10
+        },
+        {
+          "baseline": {
+            "wait_us": 0,
+            "ready_active": false
+          },
+          "candidate": {
+            "wait_us": 4000,
+            "ready_active": false
+          },
+          "per_cycle_fps_delta": [
+            4.57,
+            4.21,
+            4.31,
+            6.89,
+            9.47,
+            6.91,
+            3.7,
+            7.2,
+            4.87,
+            7.64
+          ],
+          "mean_delta_fps": 5.98,
+          "positive_cycles": 10,
+          "cycles": 10
+        },
+        {
+          "baseline": {
+            "wait_us": 3000,
+            "ready_active": false
+          },
+          "candidate": {
+            "wait_us": 4000,
+            "ready_active": false
+          },
+          "per_cycle_fps_delta": [
+            1.92,
+            3.16,
+            1.14,
+            1.68,
+            2.3,
+            5.44,
+            -0.84,
+            2.04,
+            -1.45,
+            1.81
+          ],
+          "mean_delta_fps": 1.72,
+          "positive_cycles": 8,
+          "cycles": 10
+        }
+      ],
+      "estimated_latency_states_ms_by_block": [
+        40.2,
+        40.3,
+        48.2,
+        48.3,
+        48.4,
+        48.5,
+        56.6,
+        56.8,
+        56.9
+      ]
+    },
+    {
+      "label": "owner_saved_settings_144hz",
+      "refresh_hz_requested_and_runtime": 144,
+      "runtime_rate_confirmed_by_client": true,
+      "target_mbps": 2000,
+      "chroma": "4:4:4",
+      "encoded_stereo_frames_observed": [
+        [
+          4160,
+          2208
+        ]
+      ],
+      "source_eye_explicit": [
+        3072,
+        3216
+      ],
+      "block_s": 5.0,
+      "cycles": 10,
+      "settle_s_excluded_per_block": 1.5,
+      "order": "rotated each cycle, reversed on odd cycles",
+      "ab_seconds": 100.0,
+      "battery_temperature_c_range": [
+        38.0,
+        40.0
+      ],
+      "thermal_status_range": [
+        0,
+        0
+      ],
+      "configurations": [
+        {
+          "wait_us_requested": 0,
+          "ready_active": false,
+          "blocks": 10,
+          "displayed_target_fps": 73.84,
+          "lost_target_frames_per_s": 70.21,
+          "block_fps_sem": 0.18,
+          "median_estimated_pipeline_latency_ms": 64.11,
+          "median_decoder_ms": 17.02,
+          "median_publication_to_selection_ms": 1.56,
+          "median_vsync_queue_ms": 12.53,
+          "fresh_windows": 41,
+          "taken_per_window": 74.2,
+          "superseded_per_window": 0.0,
+          "late_frames_taken_fraction": 1.0
+        },
+        {
+          "wait_us_requested": 4000,
+          "ready_active": false,
+          "blocks": 10,
+          "displayed_target_fps": 73.57,
+          "lost_target_frames_per_s": 70.38,
+          "block_fps_sem": 0.2,
+          "median_estimated_pipeline_latency_ms": 64.07,
+          "median_decoder_ms": 17.24,
+          "median_publication_to_selection_ms": 1.55,
+          "median_vsync_queue_ms": 12.62,
+          "fresh_windows": 39,
+          "taken_per_window": 74.0,
+          "superseded_per_window": 0.0,
+          "late_frames_taken_fraction": 1.0
+        }
+      ],
+      "paired_comparisons": [
+        {
+          "baseline": {
+            "wait_us": 0,
+            "ready_active": false
+          },
+          "candidate": {
+            "wait_us": 4000,
+            "ready_active": false
+          },
+          "per_cycle_fps_delta": [
+            -0.19,
+            0.53,
+            0.01,
+            0.34,
+            0.28,
+            -0.54,
+            -0.19,
+            -1.57,
+            -0.25,
+            -1.18
+          ],
+          "mean_delta_fps": -0.28,
+          "positive_cycles": 4,
+          "cycles": 10
+        }
+      ],
+      "estimated_latency_states_ms_by_block": [
+        60.7,
+        61.2,
+        61.5,
+        61.7,
+        62.0,
+        62.2,
+        62.4,
+        62.7,
+        63.0,
+        63.5,
+        63.8,
+        64.1,
+        64.6,
+        64.7,
+        64.8,
+        64.9,
+        65.1,
+        65.4,
+        66.2
+      ]
+    }
+  ],
+  "findings": [
+    "At 120 Hz / 1000 Mbps / 4:2:0, a bounded wait that runs only while a frame is decoding raised displayed target FPS in both sessions: 108.3 -> 114.7 / 116.1 (1500 / 3000 us) and 107.2 -> 110.1 / 111.4 / 113.2 (2000 / 3000 / 4000 us).",
+    "4000 us beat no wait in 10 of 10 paired cycles (mean +6.0 FPS); remaining loss is mostly frames whose packets had not arrived, which the wait deliberately ignores.",
+    "Estimated pipeline latency is quantized to display periods and drifts between states over tens of seconds independent of the wait; no latency difference attributable to the wait was observed.",
+    "Ready-FD early publication lowered displayed FPS in every comparison (108.3 -> 87.2 without wait) and pushed sessions into the higher vsync-queue state.",
+    "At the saved 144 Hz / 2000 Mbps / 4:4:4 settings, decode took 16-19 ms per frame: about 74 frames/s were displayed and about 70/s lost; the wait (capped at 3472 us) was neutral."
+  ],
+  "decision": ".31 makes the half-frame bounded wait the default (unset property = 4000 us, capped at half a frame; 0 disables). Ready-FD publication stays opt-in and is not recommended.",
+  "limitations": [
+    "Stationary procedural chart on an unworn headset; not gameplay, perceptual or sustained thermal validation.",
+    "Displayed target FPS counts frames that reached the client compositor; not optical display FPS.",
+    "Estimated pipeline latency is ALVR's statistic, not measured motion-to-photon latency.",
+    "Each session is a few minutes; battery was not charging over USB (46%)."
+  ]
+}

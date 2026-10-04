@@ -497,6 +497,11 @@ See [EGL image lifetime and siblings](https://registry.khronos.org/EGL/extension
 and [Android hardware buffer references](https://developer.android.com/ndk/reference/group/a-hardware-buffer).
 ## Experimental latest-frame wait (.22)
 
+**Superseded:** since `.30` the wait runs only while a frame is decoding, may use
+up to half a frame (max 4000 µs), and is re-read about once per second. `.31`
+defaults to 4000 µs after interleaved live gains; see [fresh-frame loss](FRESHNESS.md).
+The original `.22` description follows.
+
 `debug.q3pw.frame_wait_us` defaults to zero. Values up to 1000 request a short
 polling window when Quest PyroWave has no completed frame immediately after
 `xrWaitFrame`. The applied budget is capped at one eighth of the frame interval.

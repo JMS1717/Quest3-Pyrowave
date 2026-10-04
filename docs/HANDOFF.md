@@ -52,10 +52,18 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 **Update 2026-10-04:** the corrected ready-fence GPU probe passed on Quest 3.
 Saved captures show lost frames come from publication landing 1–2 ms before the
-post-`xrWaitFrame` selection, not from transfer or decode spikes; see
-[fresh-frame loss](FRESHNESS.md). `.30` adds runtime-switchable wait and
-publication controls plus lateness telemetry for interleaved A/B in one session.
-The original `.29` notes follow.
+post-`xrWaitFrame` selection, not from transfer or decode spikes. Interleaved
+live screens on `.30` showed a bounded wait while a frame is decoding raises
+displayed target FPS at 120 Hz / 1000 Mbps / 4:2:0 from about 107–108 to
+113–116. Ready-FD early publication lowered it. `.31` enables the wait by default
+(`debug.q3pw.frame_wait_us=0` disables). The saved 144 Hz / 2000 Mbps / 4:4:4
+profile is decode-bound at about 74 displayed FPS. See
+[fresh-frame loss](FRESHNESS.md).
+
+Next: the remaining loss is late packet arrival, not decode. Check server send
+pacing against the client's selection phase. Measure 144 Hz at 1000 Mbps /
+4:2:0, where decode (about 7 ms) is near the 6.9 ms period. Then validate in
+gameplay. The original `.29` notes follow.
 
 `.29` adds default-OFF `debug.q3pw.ready_fd=1`: publish the AHardwareBuffer and
 Vulkan SYNC_FD early so the renderer can enqueue a checked EGL GPU wait. It
