@@ -27,6 +27,9 @@ alpha.7. These notes do not establish sustained fresh 120 FPS.
 > native resolution, broad gameplay compatibility and lower latency than Virtual
 > Desktop are still goals. Start with the published matching APK/server pair.
 
+[Developer / AI handoff](docs/HANDOFF.md): current bottleneck, source layout,
+pending fence experiment, validation and continuation guide.
+
 ## What you get
 
 | Feature | What it does |

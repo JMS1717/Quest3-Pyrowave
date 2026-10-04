@@ -1,0 +1,175 @@
+# Engineering handoff: Quest3-Pyrowave
+
+Prepared October 4, 2026. Read [AGENTS.md](../AGENTS.md) first. Machine-specific
+state, raw captures, signing material and rollback snapshots stay outside this repo.
+
+## Objective and acceptance
+
+First achieve **2080 × 2208 per eye, 120 Hz, 4:2:0, no foveated encoding**, with
+PyroWave decoded directly on Quest 3 Adreno using Vulkan. Prioritize fresh frames,
+frame pacing, image correctness and latency over bitrate or headline refresh.
+The current bridge imports Vulkan AHardwareBuffers into GLES/OpenXR eye images;
+presentation is not entirely Vulkan.
+
+Later explore higher resolutions and runtime-supported 207/240 Hz. The owner's
+aspirational endpoint is 3072 × 3216 per eye at 207 Hz and 15–20 ms
+motion-to-photon. Neither that latency nor sustained native 120 fresh FPS has
+been established. Runtime acceptance, submitted frames, GPU completions and
+fresh displayed frames are different measurements.
+
+The owner permits improving the workflow, test duration and architecture when
+supported by evidence. Preserve correctness, rollback and honest measurements;
+the previous agent's process is not mandatory. A handoff does not automatically
+resume paused hardware work or unattended workers.
+
+## Current engineering state
+
+| Item | Evidence / limitation |
+| --- | --- |
+| Public release | [alpha.7](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.7), matching `.15` APK/server |
+| Development pair | Reviewed `.29`, built from `b0c9753`; installed during October 2 manual playtest. Recheck installation before hardware work |
+| User feedback | Positive manual playtest after overlay/OpenXR repairs; not sustained FPS, optical latency or broad game acceptance |
+| Best short native screens | About 112–113 fresh FPS; producer around 120 completions/s versus 112–113 eye copies/s |
+| Baseline recommendation | Haar/Compute, full-frame native encode, USB/TCP, 120 Hz request, 1000 Mbps, 4:2:0; experimental fence paths off |
+| 4:4:4 | Optional quality mode. Prior matched screens regressed performance; spare bandwidth does not make it free |
+| 2000 Mbps | Short idle/Home comparison increased estimated latency about 11 ms versus 1000; not a controlled gameplay/optical measurement |
+| High refresh | 144/207 requests accepted on tested OS; no sustained delivery claim. 240 rejected in tested configuration |
+
+See [manual playtest](PLAYTEST-2026-10-02.md), [decode findings](DECODE-PIPELINE.md),
+[chroma](CHROMA.md), [bitrate](BITRATE.md) and sanitized JSON under `results/`.
+The current local session can differ from this historical baseline. Refresh live
+state before testing; the private handoff includes a fresh disk snapshot.
+
+## Read these first
+
+1. [Ready-fence experiment](READY-FENCE-EXPERIMENT.md): pending `.29` candidate.
+2. [Nightfall synchronization review](NIGHTFALL-SYNC-REVIEW.md): ownership/lifetime audit.
+3. [Independent render/encode resolution](RENDER-ENCODE-RESOLUTION.md): already implemented.
+4. [Benchmarking](BENCHMARKING.md), [build](BUILD.md), [unattended safeguards](OVERNIGHT.md).
+5. [OpenXR routing](OPENXR.md), [overlay](OVERLAY.md), [light foveation](LIGHT-FOVEATION.md).
+
+## Highest-value next experiment
+
+`.29` adds default-OFF `debug.q3pw.ready_fd=1`: publish the AHardwareBuffer and
+Vulkan SYNC_FD early so the renderer can enqueue a checked EGL GPU wait. It
+retains one in-flight decode, producer completion checks before codec/resource
+reuse, and synchronous completion of both eye copies. It may remove a CPU
+handoff delay; it does not yet overlap multiple producer decodes.
+
+The first small GPU probe was **inconclusive**: its post-decode
+`pyroclient_is_ready` assertion confused packet readiness with GPU completion.
+The first fenced read matched the reference, but that does not prove the full
+lifecycle. Commit `e32596f` corrected the probe to use fence completion, GPU
+queries and exact readback. Its diagnostic build succeeded, with three native
+libraries matched byte-for-byte to the reviewed `.29` APK. **The corrected probe
+has not run on-device; the ON/OFF live comparison remains pending.** Preserve
+failed evidence instead of overwriting it.
+
+Suggested sequence, adaptable by the next developer:
+
+1. Audit source and corrected probe; establish installed binary hashes and a
+   recoverable baseline before touching hardware.
+2. Once hardware use is authorized and available, run corrected GPU correctness
+   checks under a new output label. Stop on corruption, timeout or lifetime failure.
+3. If correct, compare OFF/ON/OFF with identical geometry, chroma, source,
+   thermal conditions and overlay state. Count native completions, actual eye
+   copies, superseded frames, p1/gaps and estimated latency separately.
+4. Keep optional unless a repeatable benefit appears. Do not simultaneously
+   increase bitrate, enable 4:4:4 or change foveation.
+
+Future multi-flight work must cover slot-owned commands/fences/queries, shared
+YUV/codec/scratch resources, staging, descriptor lifetime, failures and teardown.
+**Granite defaults to two frame contexts; the AHardwareBuffer ring has three
+slots.** A third output slot does not extend staging lifetime. Do not delete a
+completion wait without bounded ownership and cross-submission dependencies.
+Nightfall is inspiration, not proof its model can be transplanted unchanged.
+
+## Source layout and reproducibility
+
+This publishable repo contains cumulative patches and canonical helpers. Local
+ALVR/PyroWave trees are reconstructed inputs, not additional publishable repos.
+[sources.lock.json](../sources.lock.json) pins upstream inputs.
+
+`sh tools/ci/fetch_sources.sh <new-destination>` reconstructs ALVR, PyroWave and
+Granite, applying research patches followed by Quest patches. Use a new
+destination; never overwrite existing reconstructed trees.
+
+| Change | Canonical location |
+| --- | --- |
+| Native decode / AHB bridge | `tools/pyroclient/pyroclient.cpp`, `.h`, fence helpers and GPU probes |
+| ALVR client, server, settings | `patches/quest3-alvr.patch` |
+| PyroWave integration changes | `patches/quest3-pyrowave.patch` |
+| Ready-FD helpers | `tools/fences/native_ready.rs`, `ready_wait.rs`, `ready_frames.rs` |
+| Light peripheral mapping | `tools/foveation/light.glsl` |
+| Benchmark/control tools | `tools/quest3/`, `tests/` |
+
+The fetch script copies the four canonical Rust/GLSL files into ALVR **after**
+patching. Edit repo originals and mirror them locally as needed; exclude duplicate
+copies when regenerating the cumulative patch.
+
+Local reconstructed trees contain a staged research baseline and unstaged Quest
+changes. Preserve both. Diff against the correct research baseline, include new
+files deliberately, and use Git's binary patch output to avoid PowerShell
+encoding changes. Validate reverse/forward application and fresh reconstruction
+before publishing. A change absent from canonical patches/helpers disappears in CI.
+
+Useful reconstructed paths: `alvr/client_core/src/video_decoder/`,
+`alvr/graphics/src/{stream,direct_eye}.rs`, `alvr/client_openxr/src/`,
+`alvr/server_openvr/cpp/platform/win32/{FrameRender,VideoEncoderPyroWave}.cpp`,
+`alvr/server_core/`, `alvr/session/src/`, and PyroWave decoder/Granite resources.
+
+## Settings and presentation traps
+
+- `emulated_headset_view_resolution` sets SteamVR recommended per-eye source
+  size (`target_eye_resolution_*`). `transcoding_view_resolution` sets stream
+  size (`eye_resolution_*`). Both align up to 32: 3072 × 3216 becomes 3072 × 3232.
+  Existing PC composition downsamples; separation needs no codec redesign.
+- Global/per-app/game scaling and cached recommendations change actual game
+  submission size. Verify textures; settings alone are insufficient.
+- Direct-eye compatibility concerns decoded and Quest eye sizes, not equality
+  between PC source and encode size.
+- Optional `.2` sharpening uses neutral color controls; it cannot recover
+  discarded detail and can produce halos.
+- Forced `debug.q3pw.overlay_visible=1` overrides controller toggling. Clear for
+  manual use. Click both thumbsticks and release both before rearming.
+- SteamVR OpenXR fixed a VDXR form-factor failure with ALVR active. Preserve
+  Virtual Desktop's service/driver and exact rollback.
+- Light foveation stays optional: its screen reduced pixels 11.594% and GPU
+  decode time but did not establish sustained/perceptual acceptance.
+
+## Efficient validation and publication
+
+Early performance screens can usually run 5–15 seconds after verified startup
+and source coverage. Promising results still need repeated sustained
+thermal/gameplay validation. Improve test design rather than rerunning everything.
+
+Use [CI](../.github/workflows/ci.yml) for heavy builds while the PC may be used:
+
+```text
+python -m unittest discover -s tests -v
+gh workflow run ci.yml --ref main -f tests_only=true
+gh workflow run ci.yml --ref main
+gh workflow run native-probes.yml --ref main
+```
+
+Choose checks appropriate to the change. The latest suite included 77 Python
+checks, three chart regressions, Rust/portable C++ ownership checks and software
+GLES mapping/readback. `tests_only` produces no installable pair; native-probes
+produces diagnostics, not a release. Native/protocol/shader edits need matching
+reviewed builds; check packaged library/shader hashes, version, certificate and
+provenance before deployment.
+
+Start the stereo fixture after the client settles. Use normalized charts with
+explicit source sizes; verify scene coverage, FOV, reference hashes, actual
+submitted size and current process/session provenance. Under early publication,
+generic ALVR decode/queue timings can reorder; use native timing and full-loop
+estimates. Optical motion-to-photon remains unmeasured.
+
+Overlay, eye timers, release-FD, frame wait/poll, scheduler, light-foveation and
+geometry screens are already documented. Rerun to answer a new question or
+resolve uncontrolled evidence, not to retrace history.
+
+Commit/push only to `JMS1717/Quest3-Pyrowave` as JMS1717 with the configured
+noreply email. Retain upstream credits/licenses and PayPal support links. Keep
+raw captures, sessions, serials, keys and rollback material private. Passing CI
+alone does not justify a release or a performance claim.

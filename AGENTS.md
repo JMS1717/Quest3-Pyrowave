@@ -29,3 +29,15 @@ device/health/worker checks, preserving original snapshots. Never silently exten
 a deadline explicitly set by the owner. On stop, lease failure or unrecoverable
 recovery, restore temporary settings with readback and physical proximity behavior.
 Do not repeatedly request manual headset action when authorized ADB recovery works.
+
+## Continuation and workflow freedom
+
+Read `docs/HANDOFF.md` when taking over development. The owner explicitly allows
+the next developer to improve test design, duration, build workflow and architecture.
+Preserve safety, reproducible evidence and rollback; previous scripts and experiment
+sequences are not mandatory. Short screens can reject candidates but cannot prove
+sustained FPS, thermal stability or optical latency.
+
+Machine-specific continuation material is outside the repo in the sibling `handoff`
+directory. Refresh actual state before hardware work; paused workers and historical
+credit/deadline snapshots must not be automatically reused or resumed.
