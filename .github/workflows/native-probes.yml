@@ -32,7 +32,7 @@ jobs:
       - name: Package diagnostics only
         run: |
           mkdir out
-          cp tools/pyroclient/ready_fence_gpu_test tools/pyroclient/release_fence_gpu_test tools/pyroclient/pyroclient_test tools/pyroclient/libpyroclient.so "$XRWIRED_INPUTS/research/pyrowave/build-android/libpyrowave-shared.so" out/
+          cp tools/pyroclient/planar_output_test tools/pyroclient/ready_fence_gpu_test tools/pyroclient/release_fence_gpu_test tools/pyroclient/pyroclient_test tools/pyroclient/libpyroclient.so "$XRWIRED_INPUTS/research/pyrowave/build-android/libpyrowave-shared.so" out/
           cp "$XRWIRED_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" out/
           printf '%s\n' "Diagnostic executables only; no APK/server. Compare all three library hashes against the reviewed matching APK before running. Source: $GITHUB_SHA" > out/DIAGNOSTICS.txt
           (cd out && sha256sum * > SHA256SUMS.txt)

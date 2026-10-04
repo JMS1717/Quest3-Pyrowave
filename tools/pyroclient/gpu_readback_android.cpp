@@ -25,9 +25,10 @@ bool readback_android_buffer(AHardwareBuffer *buffer, bool flip_y,
     BufferReference retained(buffer);
     AHardwareBuffer_Desc description{};
     AHardwareBuffer_describe(buffer, &description);
-    if (description.layers != 1 || description.format != AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM ||
+    if (description.layers != 1 || (description.format != AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM &&
+                                    description.format != AHARDWAREBUFFER_FORMAT_R8_UNORM) ||
         !(description.usage & AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE)) {
-        error = "Expected a single-layer GPU-sampled RGBA8 buffer";
+        error = "Expected a single-layer GPU-sampled RGBA8 or R8 buffer";
         return false;
     }
     q3pw::ReadbackContext context;
