@@ -1,7 +1,8 @@
 # Early publication with a Vulkan ready fence
 
-**Experimental, disabled by default. No performance gain or live acceptance is
-claimed.** The `.29` candidate tests whether publishing the output before the
+**Experimental, disabled by default, not recommended.** It is correct on the GPU,
+but interleaved live screens showed it lowers displayed FPS: 108.3 to 87.2 at
+120 Hz without a wait ([fresh-frame loss](FRESHNESS.md)). The `.29` candidate tests whether publishing the output before the
 producer's CPU fence wait lets the renderer select a frame it would otherwise
 miss. It preserves 4:2:0, full-frame geometry and existing presets.
 

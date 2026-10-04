@@ -1,12 +1,23 @@
 {
   "schema_version": 1,
   "date": "2026-10-04",
-  "version": "20.13.0-quest3.pyro.30",
-  "source_sha": "c36edfe09e71cef4674292f436f2037040952af5",
-  "ci_run": 37228815378,
-  "apk_sha256": "8062221e564d7eed8c7f2fae1519f683976af6a0e275af37e7b1fdb9b06b9324",
-  "windows_zip_sha256": "32aa6225701e62aa11d5cb4010b61bb37b3027e845134ff0ce2102734127368d",
-  "status": "interleaved_live_screens_bounded_wait_gain_replicated_ready_publication_rejected",
+  "builds": [
+    {
+      "version": "20.13.0-quest3.pyro.30",
+      "head_sha": "c36edfe09e71cef4674292f436f2037040952af5",
+      "run_id": 37228815378,
+      "apk_sha256": "8062221e564d7eed8c7f2fae1519f683976af6a0e275af37e7b1fdb9b06b9324",
+      "windows_zip_sha256": "32aa6225701e62aa11d5cb4010b61bb37b3027e845134ff0ce2102734127368d"
+    },
+    {
+      "version": "20.13.0-quest3.pyro.31",
+      "head_sha": "946940df4799e3ac2de23897045040674f830500",
+      "run_id": 37230967839,
+      "apk_sha256": "eee1aa9db0623f4b111984a10362adbe707374717384b6e445c9810e6ed9e625",
+      "windows_zip_sha256": "7e0cd6480d7c88ffc78ef6d504cfeda81fe8778f4c6bafb3a5d5b6abfbcef67a"
+    }
+  ],
+  "status": "bounded_wait_gain_replicated_and_default_verified_ready_publication_rejected",
   "setup": {
     "encode_eye": [
       2080,
@@ -22,6 +33,8 @@
   "sessions": [
     {
       "label": "mixed_wait_and_ready_publication",
+      "version": "20.13.0-quest3.pyro.30",
+      "source_sha": "c36edfe09e71cef4674292f436f2037040952af5",
       "refresh_hz_requested_and_runtime": 120,
       "runtime_rate_confirmed_by_client": true,
       "target_mbps": 1000,
@@ -258,6 +271,8 @@
     },
     {
       "label": "wait_budget_replication",
+      "version": "20.13.0-quest3.pyro.30",
+      "source_sha": "c36edfe09e71cef4674292f436f2037040952af5",
       "refresh_hz_requested_and_runtime": 120,
       "runtime_rate_confirmed_by_client": true,
       "target_mbps": 1000,
@@ -467,6 +482,8 @@
     },
     {
       "label": "owner_saved_settings_144hz",
+      "version": "20.13.0-quest3.pyro.30",
+      "source_sha": "c36edfe09e71cef4674292f436f2037040952af5",
       "refresh_hz_requested_and_runtime": 144,
       "runtime_rate_confirmed_by_client": true,
       "target_mbps": 2000,
@@ -576,6 +593,221 @@
         65.4,
         66.2
       ]
+    },
+    {
+      "label": "default_wait_verification_120hz",
+      "version": "20.13.0-quest3.pyro.31",
+      "source_sha": "946940df4799e3ac2de23897045040674f830500",
+      "refresh_hz_requested_and_runtime": 120,
+      "runtime_rate_confirmed_by_client": true,
+      "target_mbps": 1000,
+      "chroma": "4:2:0",
+      "encoded_stereo_frames_observed": [
+        [
+          4160,
+          2208
+        ]
+      ],
+      "source_eye_explicit": [
+        2080,
+        2208
+      ],
+      "block_s": 5.0,
+      "cycles": 10,
+      "settle_s_excluded_per_block": 1.5,
+      "order": "rotated each cycle, reversed on odd cycles",
+      "ab_seconds": 100.0,
+      "battery_temperature_c_range": [
+        32.0,
+        34.0
+      ],
+      "thermal_status_range": [
+        0,
+        0
+      ],
+      "configurations": [
+        {
+          "wait_us_requested": "unset (default 4000)",
+          "ready_active": false,
+          "blocks": 10,
+          "displayed_target_fps": 114.45,
+          "lost_target_frames_per_s": 5.64,
+          "block_fps_sem": 0.6,
+          "median_estimated_pipeline_latency_ms": 56.98,
+          "median_decoder_ms": 7.88,
+          "median_publication_to_selection_ms": 1.38,
+          "median_vsync_queue_ms": 24.09,
+          "fresh_windows": 40,
+          "taken_per_window": 115.2,
+          "superseded_per_window": 5.33,
+          "late_frames_taken_fraction": 0.984
+        },
+        {
+          "wait_us_requested": 0,
+          "ready_active": false,
+          "blocks": 10,
+          "displayed_target_fps": 110.36,
+          "lost_target_frames_per_s": 9.67,
+          "block_fps_sem": 0.93,
+          "median_estimated_pipeline_latency_ms": 57.01,
+          "median_decoder_ms": 7.9,
+          "median_publication_to_selection_ms": 1.44,
+          "median_vsync_queue_ms": 23.84,
+          "fresh_windows": 39,
+          "taken_per_window": 110.92,
+          "superseded_per_window": 9.41,
+          "late_frames_taken_fraction": 0.517
+        }
+      ],
+      "paired_comparisons": [
+        {
+          "baseline": {
+            "wait_us": 0,
+            "ready_active": false
+          },
+          "candidate": {
+            "wait_us": -1,
+            "ready_active": false
+          },
+          "per_cycle_fps_delta": [
+            2.88,
+            3.18,
+            5.57,
+            7.44,
+            3.46,
+            0.28,
+            2.53,
+            3.46,
+            4.56,
+            7.64
+          ],
+          "mean_delta_fps": 4.1,
+          "positive_cycles": 10,
+          "cycles": 10
+        }
+      ],
+      "estimated_latency_states_ms_by_block": [
+        40.5,
+        43.3,
+        48.7,
+        48.8,
+        56.9,
+        57.0,
+        57.1
+      ]
+    },
+    {
+      "label": "default_wait_144hz_420",
+      "version": "20.13.0-quest3.pyro.31",
+      "source_sha": "946940df4799e3ac2de23897045040674f830500",
+      "refresh_hz_requested_and_runtime": 144,
+      "runtime_rate_confirmed_by_client": true,
+      "target_mbps": 1000,
+      "chroma": "4:2:0",
+      "encoded_stereo_frames_observed": [
+        [
+          4160,
+          2208
+        ]
+      ],
+      "source_eye_explicit": [
+        2080,
+        2208
+      ],
+      "block_s": 5.0,
+      "cycles": 10,
+      "settle_s_excluded_per_block": 1.5,
+      "order": "rotated each cycle, reversed on odd cycles",
+      "ab_seconds": 100.0,
+      "battery_temperature_c_range": [
+        35.0,
+        37.0
+      ],
+      "thermal_status_range": [
+        0,
+        0
+      ],
+      "configurations": [
+        {
+          "wait_us_requested": "unset (default 4000)",
+          "ready_active": false,
+          "blocks": 10,
+          "displayed_target_fps": 133.92,
+          "lost_target_frames_per_s": 11.31,
+          "block_fps_sem": 1.01,
+          "median_estimated_pipeline_latency_ms": 46.5,
+          "median_decoder_ms": 10.07,
+          "median_publication_to_selection_ms": 2.05,
+          "median_vsync_queue_ms": 14.2,
+          "fresh_windows": 40,
+          "taken_per_window": 134.4,
+          "superseded_per_window": 3.05,
+          "late_frames_taken_fraction": 0.99
+        },
+        {
+          "wait_us_requested": 0,
+          "ready_active": false,
+          "blocks": 10,
+          "displayed_target_fps": 133.28,
+          "lost_target_frames_per_s": 11.93,
+          "block_fps_sem": 0.97,
+          "median_estimated_pipeline_latency_ms": 46.77,
+          "median_decoder_ms": 10.23,
+          "median_publication_to_selection_ms": 2.05,
+          "median_vsync_queue_ms": 14.16,
+          "fresh_windows": 39,
+          "taken_per_window": 134.23,
+          "superseded_per_window": 4.08,
+          "late_frames_taken_fraction": 0.734
+        }
+      ],
+      "paired_comparisons": [
+        {
+          "baseline": {
+            "wait_us": 0,
+            "ready_active": false
+          },
+          "candidate": {
+            "wait_us": -1,
+            "ready_active": false
+          },
+          "per_cycle_fps_delta": [
+            1.12,
+            -0.37,
+            -1.98,
+            0.84,
+            -1.05,
+            5.62,
+            -1.4,
+            1.17,
+            -0.59,
+            3.07
+          ],
+          "mean_delta_fps": 0.64,
+          "positive_cycles": 5,
+          "cycles": 10
+        }
+      ],
+      "estimated_latency_states_ms_by_block": [
+        44.5,
+        44.8,
+        45.1,
+        45.3,
+        45.5,
+        45.8,
+        46.0,
+        46.3,
+        46.5,
+        46.7,
+        46.8,
+        47.1,
+        47.3,
+        47.6,
+        47.8,
+        48.1,
+        48.4,
+        48.5
+      ]
     }
   ],
   "findings": [
@@ -583,9 +815,11 @@
     "4000 us beat no wait in 10 of 10 paired cycles (mean +6.0 FPS); remaining loss is mostly frames whose packets had not arrived, which the wait deliberately ignores.",
     "Estimated pipeline latency is quantized to display periods and drifts between states over tens of seconds independent of the wait; no latency difference attributable to the wait was observed.",
     "Ready-FD early publication lowered displayed FPS in every comparison (108.3 -> 87.2 without wait) and pushed sessions into the higher vsync-queue state.",
-    "At the saved 144 Hz / 2000 Mbps / 4:4:4 settings, decode took 16-19 ms per frame: about 74 frames/s were displayed and about 70/s lost; the wait (capped at 3472 us) was neutral."
+    "At the saved 144 Hz / 2000 Mbps / 4:4:4 settings, decode took 16-19 ms per frame: about 74 frames/s were displayed and about 70/s lost; the wait (capped at 3472 us) was neutral.",
+    "On .31 the unset default (logged as 4000 us) beat an explicit 0 in 10 of 10 paired cycles at 120 Hz / 1000 Mbps / 4:2:0: 110.4 -> 114.5 displayed FPS.",
+    "At 144 Hz / 1000 Mbps / 4:2:0, about 133-134 frames/s were displayed (11-12/s lost) with the wait neutral, versus about 74 at 2000 Mbps / 4:4:4."
   ],
-  "decision": ".31 makes the half-frame bounded wait the default (unset property = 4000 us, capped at half a frame; 0 disables). Ready-FD publication stays opt-in and is not recommended.",
+  "decision": ".31 makes the half-frame bounded wait the default (unset property = 4000 us, capped at half a frame; 0 disables). Verified on .31. Ready-FD publication stays opt-in and is not recommended.",
   "limitations": [
     "Stationary procedural chart on an unworn headset; not gameplay, perceptual or sustained thermal validation.",
     "Displayed target FPS counts frames that reached the client compositor; not optical display FPS.",

@@ -1,6 +1,11 @@
 # Development history - archived README
 
-**Latest manual handoff:** matching `.29` was installed with experimental fence
+**October 4:** interleaved live screens traced lost native frames to a 1–2 ms
+selection edge. `.31` enables a bounded wait while a frame is decoding: about
+114 vs 110 displayed target FPS at 120 Hz, verified on Quest 3. Ready-FD early
+publication was correct on GPU but lowered FPS live. [Details](FRESHNESS.md).
+
+**Previous manual handoff:** matching `.29` was installed with experimental fence
 modes off. The owner reported positive visual feedback after fixing the forced
 overlay override, adding optional mild PC sharpening and selecting SteamVR's
 OpenXR runtime for Pavlov. A brief 2000 Mbps screen increased estimated latency,

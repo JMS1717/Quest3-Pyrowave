@@ -66,8 +66,20 @@ the client.
   still passed.
 - **Saved 144 Hz / 2000 Mbps / 4:4:4** (3072 × 3216 source): decode took 16–19 ms
   per frame, so about 74 frames/s were displayed and about 70/s lost. The wait
-  (capped at 3472 µs) was neutral there. That configuration is decode-bound;
-  120 Hz / 1000 Mbps / 4:2:0 delivered about 107–116 displayed FPS.
+  (capped at 3472 µs) was neutral there. That configuration is decode-bound.
+
+## `.31` default verified
+
+| Session on `.31` | Displayed target FPS | Lost frames/s | Paired cycles |
+| --- | --- | --- | --- |
+| 120 Hz / 1000 Mbps / 4:2:0, property unset (logged 4000 µs) | 114.5 | 5.6 | 10/10 better, +4.1 |
+| 120 Hz / 1000 Mbps / 4:2:0, `frame_wait_us=0` | 110.4 | 9.7 | — |
+| 144 Hz / 1000 Mbps / 4:2:0, property unset | 133.9 | 11.3 | 5/10, +0.6 (neutral) |
+| 144 Hz / 1000 Mbps / 4:2:0, `frame_wait_us=0` | 133.3 | 11.9 | — |
+
+At 144 Hz the runtime rate was confirmed and 4:2:0 at 1000 Mbps displayed about
+134 frames/s, against about 74 with 2000 Mbps / 4:4:4. This is a short
+stationary screen, not sustained 144 Hz acceptance.
 
 ## Controls
 

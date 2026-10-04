@@ -27,13 +27,13 @@ resume paused hardware work or unattended workers.
 | Item | Evidence / limitation |
 | --- | --- |
 | Public release | [alpha.7](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.7), matching `.15` APK/server |
-| Development pair | Reviewed `.29`, built from `b0c9753`; installed during October 2 manual playtest. Recheck installation before hardware work |
+| Development pair | Reviewed `.31`, built from `946940d` (bounded frame wait on by default); installed October 4 after live verification. `.30`/`.29` pairs retained. Recheck installation before hardware work |
 | User feedback | Positive manual playtest after overlay/OpenXR repairs; not sustained FPS, optical latency or broad game acceptance |
-| Best short native screens | About 112–113 fresh FPS; producer around 120 completions/s versus 112–113 eye copies/s |
+| Best short native screens | `.31` interleaved: about 113–116 displayed target FPS at 120 Hz with the default wait versus 107–110 without ([fresh-frame loss](FRESHNESS.md)); stationary chart, not sustained gameplay |
 | Baseline recommendation | Haar/Compute, full-frame native encode, USB/TCP, 120 Hz request, 1000 Mbps, 4:2:0; experimental fence paths off |
 | 4:4:4 | Optional quality mode. Prior matched screens regressed performance; spare bandwidth does not make it free |
 | 2000 Mbps | Short idle/Home comparison increased estimated latency about 11 ms versus 1000; not a controlled gameplay/optical measurement |
-| High refresh | 144/207 requests accepted on tested OS; no sustained delivery claim. 240 rejected in tested configuration |
+| High refresh | 144/207 requests accepted on tested OS. Short 144 Hz screens: about 134 displayed FPS at 1000 Mbps / 4:2:0, about 74 at 2000 Mbps / 4:4:4 (decode-bound). No sustained delivery claim. 240 rejected in tested configuration |
 
 See [manual playtest](PLAYTEST-2026-10-02.md), [decode findings](DECODE-PIPELINE.md),
 [chroma](CHROMA.md), [bitrate](BITRATE.md) and sanitized JSON under `results/`.
@@ -42,11 +42,12 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 ## Read these first
 
-1. [Ready-fence experiment](READY-FENCE-EXPERIMENT.md): pending `.29` candidate.
-2. [Nightfall synchronization review](NIGHTFALL-SYNC-REVIEW.md): ownership/lifetime audit.
-3. [Independent render/encode resolution](RENDER-ENCODE-RESOLUTION.md): already implemented.
-4. [Benchmarking](BENCHMARKING.md), [build](BUILD.md), [unattended safeguards](OVERNIGHT.md).
-5. [OpenXR routing](OPENXR.md), [overlay](OVERLAY.md), [light foveation](LIGHT-FOVEATION.md).
+1. [Fresh-frame loss](FRESHNESS.md): measured cause, `.31` default wait, interleaved A/B method.
+2. [Ready-fence experiment](READY-FENCE-EXPERIMENT.md): correct on GPU, rejected live; opt-in only.
+3. [Nightfall synchronization review](NIGHTFALL-SYNC-REVIEW.md): ownership/lifetime audit.
+4. [Independent render/encode resolution](RENDER-ENCODE-RESOLUTION.md): already implemented.
+5. [Benchmarking](BENCHMARKING.md), [build](BUILD.md), [unattended safeguards](OVERNIGHT.md).
+6. [OpenXR routing](OPENXR.md), [overlay](OVERLAY.md), [light foveation](LIGHT-FOVEATION.md).
 
 ## Highest-value next experiment
 

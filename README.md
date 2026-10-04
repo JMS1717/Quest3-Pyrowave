@@ -19,8 +19,9 @@ USB or Wi-Fi, tune the stream, and measure where every millisecond goes.
 
 [Latest manual playtest and setup fixes](docs/PLAYTEST-2026-10-02.md): optional
 larger PC source, mild sharpening, the overlay override fix and the OpenXR game
-launch fix. The tested development pair is `.29`; the published preview remains
-alpha.7. These notes do not establish sustained fresh 120 FPS.
+launch fix. The tested development pair is `.31`, which waits up to half a frame
+for a frame that is still decoding ([measured gain](docs/FRESHNESS.md)); the
+published preview remains alpha.7. These notes do not establish sustained fresh 120 FPS.
 
 > **Research preview, not a finished Virtual Desktop replacement.** Real SteamVR
 > video, audio and tracking work in tested setups. Sustained 120 fresh FPS at
