@@ -1,0 +1,418 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-04",
+  "builds": [
+    {
+      "version": "20.13.0-quest3.pyro.32",
+      "head_sha": "f8f3c666a0ee2aedfa0cdeda33e2fcbb1e1aaa45",
+      "run_id": 37234198214,
+      "apk_sha256": "f48f6dac8e242d885e795431ea148e30acfedc60b1dbc95eb512ce2768b088fd",
+      "windows_zip_sha256": "882df2649d503b0354ac58c965e38b6bc96b039f69814cb693b51857acdf495a"
+    },
+    {
+      "version": "20.13.0-quest3.pyro.33",
+      "head_sha": "8fb4656c3949b9538b22286a9a2068b98fa0ed75",
+      "run_id": 37237220125,
+      "apk_sha256": "424c9232a43dc17f9d406828d585082e1f6d6babeb001c7a8f26c996c326076e",
+      "windows_zip_sha256": "7a6a7e8bf49ccd45a074a0aa44d27cfb9a43c5ad89de6864e66a3d2135375f7d"
+    }
+  ],
+  "setup": {
+    "encode_eye": [
+      2080,
+      2208
+    ],
+    "decode": "Haar/Vulkan compute",
+    "transport": "ALVR USB/ADB TCP",
+    "foveated_encoding": false,
+    "source": "tools.quest3.stereo_scene --quality --normalized-chart (stationary)",
+    "headset": "Quest 3, unworn; proximity held by power-manager automation; guardian paused; restored afterwards",
+    "gpu": "Adreno 740; KGSL preemption enabled; the GLES eye copy context runs at default (medium) priority"
+  },
+  "sessions": [
+    {
+      "label": "low_vs_default_120hz_420",
+      "version": "20.13.0-quest3.pyro.32",
+      "source_sha": "f8f3c666a0ee2aedfa0cdeda33e2fcbb1e1aaa45",
+      "refresh_hz": 120,
+      "stopped_early": false,
+      "target_mbps": 1000,
+      "chroma": "4:2:0",
+      "method": "client force-stopped and relaunched per block; 5 s settle excluded; 20 s measured",
+      "block_order": "ABBAABBAAB",
+      "completed_blocks": 10,
+      "arms": {
+        "A": "default priority (property unset on .32)",
+        "B": "LOW (debug.q3pw.decode_priority=low)"
+      },
+      "battery_temperature_c_range": [
+        32.0,
+        38.0
+      ],
+      "per_arm": {
+        "A": {
+          "blocks": 5,
+          "displayed_target_fps": 114.29,
+          "lost_target_frames_per_s": 5.77,
+          "median_estimated_pipeline_latency_ms": 56.33,
+          "median_decoder_queue_ms": 1.32,
+          "median_vsync_queue_ms": 24.24,
+          "gpu_decode_ms_p50_p90": [
+            5.65,
+            5.88
+          ],
+          "convert_ms_p50_p90": [
+            0.65,
+            1.4
+          ],
+          "eye_copy_cpu_ms_p50_p90": [
+            2.28,
+            7.51
+          ]
+        },
+        "B": {
+          "blocks": 5,
+          "displayed_target_fps": 117.68,
+          "lost_target_frames_per_s": 2.84,
+          "median_estimated_pipeline_latency_ms": 54.3,
+          "median_decoder_queue_ms": 3.95,
+          "median_vsync_queue_ms": 14.13,
+          "gpu_decode_ms_p50_p90": [
+            6.11,
+            6.92
+          ],
+          "convert_ms_p50_p90": [
+            0.61,
+            0.72
+          ],
+          "eye_copy_cpu_ms_p50_p90": [
+            1.58,
+            1.81
+          ]
+        }
+      },
+      "paired_adjacent_blocks": {
+        "difference": "B-A",
+        "pairs": 5,
+        "fps": {
+          "mean": 3.39,
+          "sem": 1.36,
+          "positive_pairs": 5
+        },
+        "lost": {
+          "mean": -2.93,
+          "sem": 1.14,
+          "positive_pairs": 0
+        },
+        "eye_render_p90": {
+          "mean": -5.59,
+          "sem": 0.15,
+          "positive_pairs": 0
+        }
+      },
+      "block_fps": [
+        [
+          "A",
+          116.2
+        ],
+        [
+          "B",
+          118.0
+        ],
+        [
+          "B",
+          116.9
+        ],
+        [
+          "A",
+          108.5
+        ],
+        [
+          "A",
+          116.1
+        ],
+        [
+          "B",
+          118.0
+        ],
+        [
+          "B",
+          117.7
+        ],
+        [
+          "A",
+          116.9
+        ],
+        [
+          "A",
+          113.8
+        ],
+        [
+          "B",
+          118.0
+        ]
+      ],
+      "priority_logged": [
+        "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+      ]
+    },
+    {
+      "label": "low_vs_default_144hz_420",
+      "version": "20.13.0-quest3.pyro.32",
+      "source_sha": "f8f3c666a0ee2aedfa0cdeda33e2fcbb1e1aaa45",
+      "refresh_hz": 144,
+      "stopped_early": true,
+      "target_mbps": 1000,
+      "chroma": "4:2:0",
+      "method": "client force-stopped and relaunched per block; 5 s settle excluded; 20 s measured",
+      "block_order": "ABBAABB",
+      "completed_blocks": 7,
+      "arms": {
+        "A": "default priority (property unset on .32)",
+        "B": "LOW (debug.q3pw.decode_priority=low)"
+      },
+      "battery_temperature_c_range": [
+        37.0,
+        40.0
+      ],
+      "per_arm": {
+        "A": {
+          "blocks": 3,
+          "displayed_target_fps": 134.95,
+          "lost_target_frames_per_s": 10.23,
+          "median_estimated_pipeline_latency_ms": 52.05,
+          "median_decoder_queue_ms": 2.06,
+          "median_vsync_queue_ms": 14.09,
+          "gpu_decode_ms_p50_p90": [
+            4.74,
+            5.44
+          ],
+          "convert_ms_p50_p90": [
+            0.63,
+            0.75
+          ],
+          "eye_copy_cpu_ms_p50_p90": [
+            5.83,
+            6.74
+          ]
+        },
+        "B": {
+          "blocks": 4,
+          "displayed_target_fps": 124.66,
+          "lost_target_frames_per_s": 20.2,
+          "median_estimated_pipeline_latency_ms": 45.42,
+          "median_decoder_queue_ms": 0.16,
+          "median_vsync_queue_ms": 12.82,
+          "gpu_decode_ms_p50_p90": [
+            5.49,
+            6.58
+          ],
+          "convert_ms_p50_p90": [
+            0.66,
+            1.38
+          ],
+          "eye_copy_cpu_ms_p50_p90": [
+            1.68,
+            2.25
+          ]
+        }
+      },
+      "paired_adjacent_blocks": {
+        "difference": "B-A",
+        "pairs": 3,
+        "fps": {
+          "mean": -10.3,
+          "sem": 1.24,
+          "positive_pairs": 0
+        },
+        "lost": {
+          "mean": 10.01,
+          "sem": 1.12,
+          "positive_pairs": 3
+        },
+        "eye_render_p90": {
+          "mean": -4.51,
+          "sem": 0.05,
+          "positive_pairs": 0
+        }
+      },
+      "block_fps": [
+        [
+          "A",
+          136.7
+        ],
+        [
+          "B",
+          124.0
+        ],
+        [
+          "B",
+          124.6
+        ],
+        [
+          "A",
+          133.5
+        ],
+        [
+          "A",
+          134.6
+        ],
+        [
+          "B",
+          125.4
+        ],
+        [
+          "B",
+          124.7
+        ]
+      ],
+      "priority_logged": [
+        "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+      ]
+    },
+    {
+      "label": "auto_policy_verification_120hz_420",
+      "version": "20.13.0-quest3.pyro.33",
+      "source_sha": "8fb4656c3949b9538b22286a9a2068b98fa0ed75",
+      "refresh_hz": 120,
+      "stopped_early": false,
+      "target_mbps": 1000,
+      "chroma": "4:2:0",
+      "method": "client force-stopped and relaunched per block; 5 s settle excluded; 20 s measured",
+      "block_order": "ABBAABBAAB",
+      "completed_blocks": 10,
+      "arms": {
+        "A": "auto (property unset on .33; policy chose LOW)",
+        "B": "forced default (debug.q3pw.decode_priority=default)"
+      },
+      "battery_temperature_c_range": [
+        31.0,
+        37.0
+      ],
+      "per_arm": {
+        "A": {
+          "blocks": 5,
+          "displayed_target_fps": 115.66,
+          "lost_target_frames_per_s": 4.75,
+          "median_estimated_pipeline_latency_ms": 52.18,
+          "median_decoder_queue_ms": 3.8,
+          "median_vsync_queue_ms": 14.21,
+          "gpu_decode_ms_p50_p90": [
+            6.11,
+            6.83
+          ],
+          "convert_ms_p50_p90": [
+            0.63,
+            0.95
+          ],
+          "eye_copy_cpu_ms_p50_p90": [
+            1.58,
+            1.87
+          ]
+        },
+        "B": {
+          "blocks": 5,
+          "displayed_target_fps": 110.59,
+          "lost_target_frames_per_s": 9.56,
+          "median_estimated_pipeline_latency_ms": 57.38,
+          "median_decoder_queue_ms": 1.29,
+          "median_vsync_queue_ms": 19.52,
+          "gpu_decode_ms_p50_p90": [
+            5.09,
+            5.89
+          ],
+          "convert_ms_p50_p90": [
+            0.65,
+            0.76
+          ],
+          "eye_copy_cpu_ms_p50_p90": [
+            2.3,
+            7.41
+          ]
+        }
+      },
+      "paired_adjacent_blocks": {
+        "difference": "B-A",
+        "pairs": 5,
+        "fps": {
+          "mean": -5.07,
+          "sem": 1.71,
+          "positive_pairs": 1
+        },
+        "lost": {
+          "mean": 4.81,
+          "sem": 1.8,
+          "positive_pairs": 4
+        },
+        "eye_render_p90": {
+          "mean": 5.49,
+          "sem": 0.11,
+          "positive_pairs": 5
+        }
+      },
+      "block_fps": [
+        [
+          "A",
+          107.4
+        ],
+        [
+          "B",
+          107.5
+        ],
+        [
+          "B",
+          109.1
+        ],
+        [
+          "A",
+          117.5
+        ],
+        [
+          "A",
+          118.1
+        ],
+        [
+          "B",
+          112.9
+        ],
+        [
+          "B",
+          115.1
+        ],
+        [
+          "A",
+          117.9
+        ],
+        [
+          "A",
+          117.4
+        ],
+        [
+          "B",
+          108.3
+        ]
+      ],
+      "priority_logged": [
+        "decode queue requested=default applied=0 extension=none",
+        "decode queue requested=low applied=1 extension=VK_KHR_global_priority",
+        "policy refresh_hz=120 chroma444=false low=false",
+        "policy refresh_hz=120 chroma444=false low=true"
+      ]
+    }
+  ],
+  "findings": [
+    "With equal priority the GLES eye copy queued behind the Vulkan decode: eye-copy CPU p90 was about 7.4-7.5 ms against well under 1 ms of copy work.",
+    "At 120 Hz / 1000 Mbps / 4:2:0 a LOW global-priority decode queue cut eye-copy CPU p90 to about 1.8-1.9 ms in every pair, raised displayed target FPS (114.3 -> 117.7 on .32, 5/5 pairs; 110.6 -> 115.7 on .33, 4/5 pairs) and halved lost target frames (5.8 -> 2.8 and 9.6 -> 4.8 per s).",
+    "LOW lengthens GPU decode (p90 about +1 ms) because decode is preempted; at 120 Hz there is headroom for that.",
+    "At 144 Hz / 1000 Mbps / 4:2:0 decode is throughput-bound and LOW lowered displayed target FPS 135.0 -> 124.7 (3/3 pairs; lost 10.2 -> 20.2 per s), so it is not used there.",
+    "Median estimated pipeline latency was lower with LOW in both 120 Hz sessions (56.3 -> 54.3 and 57.4 -> 52.2 ms), but the statistic is quantized and drifts between states; no latency claim is made."
+  ],
+  "decision": ".33 picks the decode queue priority at decoder creation: LOW for 4:2:0 at <=120 Hz, default otherwise; debug.q3pw.decode_priority=low|default overrides. Verified on .33 at 120 Hz.",
+  "limitations": [
+    "Stationary procedural chart on an unworn headset; not gameplay, perceptual or sustained thermal validation.",
+    "Displayed target FPS counts frames that reached the client compositor; not optical display FPS.",
+    "Estimated pipeline latency is ALVR's statistic, not measured motion-to-photon latency.",
+    "Not measured: 4:4:4, bitrates other than 1000 Mbps, or refresh rates other than 120 and 144 Hz; the policy treats <=120 Hz 4:2:0 as having headroom by extrapolation.",
+    "The 144 Hz session stopped after 7 of 10 blocks when one client relaunch did not reconnect; everything was restored."
+  ]
+}

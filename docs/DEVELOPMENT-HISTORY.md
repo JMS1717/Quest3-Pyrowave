@@ -1,5 +1,10 @@
 # Development history - archived README
 
+**October 4 (later):** the eye copy was waiting behind decode on the GPU. `.33`
+lowers decode queue priority at ≤120 Hz / 4:2:0: about 116 vs 111 displayed
+target FPS at 120 Hz, verified on Quest 3. At 144 Hz LOW cost about 10 FPS, so
+it is not used there. [Details](DECODE-PRIORITY.md).
+
 **October 4:** interleaved live screens traced lost native frames to a 1–2 ms
 selection edge. `.31` enables a bounded wait while a frame is decoding: about
 114 vs 110 displayed target FPS at 120 Hz, verified on Quest 3. Ready-FD early

@@ -27,9 +27,9 @@ resume paused hardware work or unattended workers.
 | Item | Evidence / limitation |
 | --- | --- |
 | Public release | [alpha.7](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.7), matching `.15` APK/server |
-| Development pair | Reviewed `.31`, built from `946940d` (bounded frame wait on by default); installed October 4 after live verification. `.30`/`.29` pairs retained. Recheck installation before hardware work |
+| Development pair | Reviewed `.33`, built from `8fb4656` (bounded frame wait on by default; LOW decode queue priority at ≤120 Hz / 4:2:0); installed October 4 after live verification. `.32`/`.31`/`.30`/`.29` pairs retained. Recheck installation before hardware work |
 | User feedback | Positive manual playtest after overlay/OpenXR repairs; not sustained FPS, optical latency or broad game acceptance |
-| Best short native screens | `.31` interleaved: about 113–116 displayed target FPS at 120 Hz with the default wait versus 107–110 without ([fresh-frame loss](FRESHNESS.md)); stationary chart, not sustained gameplay |
+| Best short native screens | `.33` at 120 Hz / 1000 Mbps / 4:2:0: about 116–118 displayed target FPS (2.8–4.8 lost/s) with the default wait and LOW decode priority. Without the priority it was 110–114, and without the wait 107–110 ([fresh-frame loss](FRESHNESS.md), [decode priority](DECODE-PRIORITY.md)). Stationary chart, not sustained gameplay |
 | Baseline recommendation | Haar/Compute, full-frame native encode, USB/TCP, 120 Hz request, 1000 Mbps, 4:2:0; experimental fence paths off |
 | 4:4:4 | Optional quality mode. Prior matched screens regressed performance; spare bandwidth does not make it free |
 | 2000 Mbps | Short idle/Home comparison increased estimated latency about 11 ms versus 1000; not a controlled gameplay/optical measurement |
@@ -43,6 +43,7 @@ state before testing; the private handoff includes a fresh disk snapshot.
 ## Read these first
 
 1. [Fresh-frame loss](FRESHNESS.md): measured cause, `.31` default wait, interleaved A/B method.
+   [Decode priority](DECODE-PRIORITY.md): `.33` eye copy preempts decode at ≤120 Hz / 4:2:0.
 2. [Ready-fence experiment](READY-FENCE-EXPERIMENT.md): correct on GPU, rejected live; opt-in only.
 3. [Nightfall synchronization review](NIGHTFALL-SYNC-REVIEW.md): ownership/lifetime audit.
 4. [Independent render/encode resolution](RENDER-ENCODE-RESOLUTION.md): already implemented.
@@ -50,6 +51,15 @@ state before testing; the private handoff includes a fresh disk snapshot.
 6. [OpenXR routing](OPENXR.md), [overlay](OVERLAY.md), [light foveation](LIGHT-FOVEATION.md).
 
 ## Highest-value next experiment
+
+**Update 2026-10-04 (later):** with equal GPU priority, the GLES eye copy
+queued behind the Vulkan decode (eye-copy CPU p90 about 7.5 ms). A LOW decode
+queue fixes that at 120 Hz (+3–5 displayed FPS, half the lost frames) but costs
+about 10 FPS at 144 Hz, where decode is throughput-bound. `.33` applies it only
+at ≤120 Hz / 4:2:0. At 144 Hz / 1000 Mbps / 4:2:0 the GPU is close to full:
+decode about 5.4 ms, convert 0.75 ms and copy about 0.65 ms in a 6.9 ms frame.
+Next: remove the YCbCr→RGBA convert pass by sampling the decoded planes in the
+eye copy. [Details](DECODE-PRIORITY.md).
 
 **Update 2026-10-04:** the corrected ready-fence GPU probe passed on Quest 3.
 Saved captures show lost frames come from publication landing 1–2 ms before the
