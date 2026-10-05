@@ -91,20 +91,16 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 ## Highest-value next experiment
 
-Use the [next overnight plan](NEXT-OVERNIGHT.md): whole-stack PC/game/SteamVR,
-composition/encode, transport, Quest decode/render and OpenXR timing/queue audit;
-bounded per-frame ownership trace; one mechanism-supported change; then repeated
-and sustained validation only if it improves the baseline. If rejected, spend
-remaining implementation time on one decoded-video presenter milestone. The
-plan has deliverables/time limits and does not resume the paused hardware session.
+Use the [next overnight plan](NEXT-OVERNIGHT.md) and the
+[October 5 scorecard](WHOLE-STACK-SCORECARD.md). The server already submits
+about 120 frames/s. About 3 unique targets/s are still missed after the
+half-frame wait, and that wait is already at its cap. `.49` passed review with
+native libraries identical to `.48` and is not installed.
 
-**October 5 next step:** the bounded one-submission prerecord prototype has
-been measured and did not improve fresh delivery/p1. Do not repeat unchanged
-flag/bitrate sweeps. Investigate publication-to-eye scheduling with per-frame
-content timestamp and pose evidence, preserve bounded latency and ordinary
-sync fallback. Add native decoder panic-time ownership before any promotion;
-environment restoration tests alone do not prove native cleanup. Two concurrent
-GPU decodes remain unsafe with current shared scratch/query/upload lifetimes.
+**October 5 next step:** on `experiment/producer-worker`, count whether an
+empty wait expired while decode was still in flight. Do not repeat prerecord,
+async copy, release fences, or another wait sweep. Two concurrent GPU decodes
+remain unsafe with current shared scratch/query/upload lifetimes.
 Native 120 sustained/optical acceptance remains unmet. The historical evidence
 below records earlier hypotheses; completed experiments are not pending work.
 
