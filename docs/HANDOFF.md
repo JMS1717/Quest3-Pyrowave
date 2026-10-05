@@ -113,6 +113,14 @@ per second. Drop this port. A corrected shader needs an exact-pixel proof
 before another live comparison. Adreno reports a 64-lane compute subgroup and
 32 KB of shared memory; that does not explain the 5.9 ms, and retuning this
 [3,2] port is not justified.
+
+**Fused final color, October 5:** `.53` (`656a81b`) skips the final luma Haar
+store when `debug.q3pw.fuse_color=1` and writes RGBA from that wavelet plus the
+4:2:0 chroma planes in the existing fragment pass. A 12 s off/on/off at 120 Hz,
+1000 Mbps, 4:2:0, 4160×2208: combined GPU decode+convert 6.62 ms to 5.40 ms
+p50 (−18%), fence 7.94 ms to 6.89 ms (−13%), lost targets about 3.8/s to 1.7/s.
+Unique targets moved only about 117/s to 118/s. The default stays off until an
+exact-pixel check; the flag is the measured faster path.
 Native 120 sustained/optical acceptance remains unmet. The historical evidence
 below records earlier hypotheses; completed experiments are not pending work.
 
