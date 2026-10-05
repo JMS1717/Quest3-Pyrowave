@@ -53,6 +53,15 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 ## Highest-value next experiment
 
+**Latest payload screen, October5:** same-session native120/4:2:0/LOW comparison
+of1000/800/600/800/1000Mbps used verified live directives and exact frame-byte
+caps. Controls agree near118.1 eye completions/s;800 varied118.4→117.5,600 reached
+118.7 once. GPU/completion times did not decrease consistently; p1 remains near60.
+Keep1000 default and avoid an unchanged sweep. [Metrics and limitations](BITRATE.md#current-native120-payload-isolation-october5).
+Next inspect presentation/completion scheduling. Earlier async-copy screens
+predated the LOW decode-priority change; audit ownership and the actual prior
+configuration before deciding whether that combination is a new useful test.
+
 **Latest CPU scheduling screen, October 5:** `.44` replaced repeated50µs
 selection sleeps with a bounded condition-variable notification, off by default.
 All matching CI jobs passed, including40 Linux production decoder tests with
