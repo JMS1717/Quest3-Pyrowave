@@ -79,6 +79,21 @@ def foveation(mode):
             'settings_verified': True, 'steamvr_restart_required': True,
             'perceptual_acceptance': False, 'sustained_performance_verified': False}
 
+def downsample(mode):
+    """PC composition filter from game render to stream size, for render-size A/B screens."""
+    variant = {'adaptive': 'Adaptive', 'bilinear': 'Bilinear'}.get(mode)
+    if variant is None:
+        raise ValueError('Use adaptive or bilinear')
+    pyro = session()['session_settings']['video']['pyrowave']
+    if 'render_downsample_filter' not in pyro:
+        raise ValueError('The downsample filter requires a streamer with the adaptive filter')
+    previous = pyro['render_downsample_filter']['variant']
+    set_values({'session_settings.video.pyrowave.render_downsample_filter.variant': variant})
+    if session()['session_settings']['video']['pyrowave']['render_downsample_filter']['variant'] != variant:
+        raise RuntimeError('Downsample filter setting rejected')
+    return {'mode': mode, 'previous': previous, 'settings_verified': True,
+            'steamvr_restart_required': True, 'perceptual_acceptance': False}
+
 def resolution(render_eye=None, encode_eye=None, profile=None):
     if profile is not None:
         if render_eye is not None or encode_eye is not None:
@@ -180,6 +195,8 @@ def main():
     r.add_argument('--encode-eye',type=int,nargs=2,metavar=('WIDTH','HEIGHT'))
     r.add_argument('--profile',choices=tuple(profiles()))
     f=sub.add_parser('foveation');f.add_argument('--mode',choices=['off','light'],required=True)
+    d=sub.add_parser('downsample',help='Game render -> stream filter; requires a SteamVR restart')
+    d.add_argument('--mode',choices=['adaptive','bilinear'],required=True)
     u=sub.add_parser('usb');g=u.add_mutually_exclusive_group(required=True)
     g.add_argument('--enable',action='store_true');g.add_argument('--disable',action='store_true')
     c=sub.add_parser('apply');c.add_argument('--codec',choices=['PyroWave','H264','Hevc','AV1'],default='PyroWave')
@@ -191,12 +208,13 @@ def main():
     if a.cmd=='restart':restart(a.steamvr,a.streamer);return
     if a.cmd=='resolution':print(json.dumps(resolution(a.render_eye,a.encode_eye,a.profile)));return
     if a.cmd=='foveation':print(json.dumps(foveation(a.mode)));return
+    if a.cmd=='downsample':print(json.dumps(downsample(a.mode)));return
     if a.cmd=='usb':usb(a.enable);print('USB mode enabled; restart SteamVR if transport changed' if a.enable else 'USB mode disabled');return
     if a.cmd=='apply':print(json.dumps(apply(a.codec,a.mbps,a.hz,a.decode_path,json.loads(Path(a.capabilities).read_text()),a.chroma,a.transport,a.wavelet)));return
     s=session();v=s['session_settings']['video'];clients=s.get('client_connections',{})
     print(json.dumps({'video':{key:v.get(key) for key in ('preferred_codec','preferred_fps','bitrate','pyrowave',ENCODE_FIELD,RENDER_FIELD)},
                      'openvr_config':{key:s.get('openvr_config',{}).get(key) for key in
-                        ('eye_resolution_width','eye_resolution_height','target_eye_resolution_width','target_eye_resolution_height')},
+                        ('eye_resolution_width','eye_resolution_height','target_eye_resolution_width','target_eye_resolution_height','render_downsample_filter')},
                      'client_count':len(clients)}))
 
 if __name__=='__main__':main()
