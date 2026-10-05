@@ -1,85 +1,92 @@
 # Fused final Haar level and colour conversion
 
-**Status: experiment, off by default.** Software Vulkan shows it produces the same bytes as the
-shipped path. It has not been tested on a Quest, measured for speed, or accepted in live VR.
+**Status: correct on Quest, no live gain, off by default.** On a Quest 3 the `.54` fused pass
+produces exactly the same bytes as the shipped two-pass path. In two live A/B screens it did not
+deliver more frames. Keep `debug.q3pw.fuse_color` unset.
 
 `debug.q3pw.fuse_color=1` replaces two passes with one fragment pass. Today PyroWave's final 4:2:0
 luma iDWT writes an R8 plane, and `convert.frag` then reads that plane to make RGBA8. The fused pass
-reads the level-0 luma wavelet and the chroma planes and writes the RGBA8 colour attachment
-directly. The bitstream, wavelet, precision, chroma, foveation and the 4000 µs selection wait are
-unchanged.
+reads the level-0 luma wavelet and the chroma planes and writes the RGBA8 attachment directly. The
+bitstream, wavelet, precision, chroma, foveation and the 4000 µs selection wait are unchanged.
 
-Commit `656a81b` measured median GPU decode+convert at 6.62 → 5.40 ms and fence at 7.94 → 6.89 ms
-in one short screen, with unique targets about 117 → 118/s. That screen proves nothing about
-sustained FPS, latency or images. It is the reason to finish the review, not an acceptance.
+## Results, October 5
 
-## What the review found in `656a81b`
-
-| Problem | Effect | Fix on `review/fuse-color-exact` |
+| Check | `.53` (`656a81b`, unreviewed) | `.54` (`7460906`, this review) |
 | --- | --- | --- |
-| No FP16 rounding of intermediates. The shipped `inverse_haar_pairs()` rounds the vertical step and the result through FP16 (`haar_intermediate`); the candidate stayed in FP32 | Luma could differ by one step in some pixels. No exact-pixel test existed to show it | The shader rounds at the same points, in two variants: `OpFConvert` when PyroWave uses its `shaderFloat16` variant, `packHalf2x16` otherwise. pyroclient chooses the variant the way PyroWave does |
-| `floor(x·255 + 0.5)` for the luma store | The add can round across a boundary that the hardware's round-to-nearest store does not cross | `roundEven(clamp(v)·255)` |
-| `setenv("PYROWAVE_FUSE_COLOR")` before every decoder creation, never restored | Process-wide state. Any later decoder in the process inherits it, `setenv` is unsafe against concurrent `getenv`, and a failed fused pipeline still left PyroWave skipping luma | New `pyrowave_decoder_set_skip_final_luma_idwt()` per decoder. It is called only after the fused pipeline exists, and any failure leaves the two-pass path running |
-| Fused-pipeline failure destroyed the client | Requesting the experiment on an unsupported path meant no video | Fall back and log `[Q3PW_FUSE_COLOR] … active=0 (<reason>)` |
-| Mode interactions undefined | With `debug.q3pw.haar_fused=1` PyroWave still wrote luma, so the work was wasted and the reference was different. With `debug.q3pw.haar_pairs` set, the fused shader silently replaced the kernel being tested | `fuse_color_policy.h` and PyroWave both refuse fused multilevel Haar, dedicated pair kernels, precision other than 1, 4:4:4, CDF wavelets, the fragment iDWT and compute colour conversion |
-| Combination with the prerecord prototype untested | Two unaccepted experiments at once cannot be attributed | `pyroclient_prerecord_enable` refuses while fused colour is active |
+| Quest exact pixels, native stereo 4160×2208 | not exact: 6010 pixels differ, by up to 2 | **0 of 9,185,280 pixels differ**, bilinear and Catmull-Rom chroma |
+| Quest exact pixels, small stereo 512×320 | not exact: 278 pixels differ | **0 of 163,840 pixels differ** |
+| Standalone fence p50, native, fused colour off → on | 12.22 → 11.18 ms | 12.24 → 11.32 ms |
+| Live unique targets/s, fused colour off vs on | one 12 s fused block: 117.0 vs 118.3 | 10 fused blocks: 118.2 vs 117.3, and 118.2 vs 117.8 |
+| Live fence p50, off vs on | one block: 7.94 vs 6.89 ms | 7.99 vs 7.92 ms, and 7.95 vs 7.93 ms |
 
-Format check: the fused shader reads the level-0 wavelet as a sampled `sampler2DArray`, and pyroclient
-checks that its view is `R16_SFLOAT`. It writes only the colour attachment, so it has no storage
-image whose declared format could mismatch, which was the defect in the earlier H2 port. The
-Vulkan validation layer runs in CI.
+The `.53` figures in the first two rows come from the diagnostic build of its arithmetic (luma mode
+1), run against the same libraries. Sanitized evidence: [GPU and standalone timing](../results/FUSE-COLOR-GPU-2026-10-05.json),
+[live A/B](../results/FUSE-COLOR-LIVE-2026-10-05.json).
 
-## Evidence
+**Live:** two client-restart screens on the installed `.54` pair. Settings were stationary chart,
+native 2080×2208 per eye, runtime 120 Hz, 1000 Mbps, 4:2:0, no foveation, LOW priority and TCP.
+Patterns were ABBAABBA and BAABBAABBAAB, 20 s blocks after 5 s settling. The fused-colour decision
+appeared in logcat in every process. Paired fused − off differences in unique targets were
+−0.94 ± 0.72/s (4 pairs) and −0.32 ± 0.41/s (6 pairs). Decode p50 fell by about 0.7 ms, but the fused
+pass grew by the same amount (0.77 → 1.4 ms), so the fence did not move. Eye-render p90 rose by
+about 0.22–0.25 ms and compositor time by about 0.02 ms in **every** pair.
 
-- `fuse_color_exact` CI job (Mesa lavapipe, Khronos validation layer). It runs the **shipped**
-  `idwt.comp` SPIR-V, taken from the patched `slangmosh.hpp` by
-  `tools/pyroclient/extract_pyrowave_spirv.py`, then the shipped `convert.frag`, and compares every
-  RGBA8 byte with the fused shader's output on the same inputs. Both FP16 variants are run on
-  2080×2208, on 66×34 (padded to a 96×64 wavelet) and on 1922×1090 (odd chroma, partial tiles),
-  with limited and full range and with bilinear and Catmull-Rom chroma. A CPU model of the Haar
-  level checks that the reference actually wrote every pixel. The old `656a81b` shader runs
-  alongside as a negative control and must differ, which shows the comparison can see this kind
-  of defect.
-- CPU tests: `fuse_color_policy_test.cpp` covers the eligibility rules. `tests/test_fuse_color.py`
-  covers the extractor, the absence of `PYROWAVE_FUSE_COLOR`, that the skip is enabled only after
-  the pipeline exists, the decoder-side refusals and the prerecord refusal.
-- The Android client and Windows streamer still build in the normal CI jobs, now with the patch
-  applied.
+The standalone run gains about 0.9 ms of fence; the live run gains nothing. Neither number is
+optical latency. One plausible explanation, not proven: live, the full-resolution fused fragment
+pass shares the GPU with the compositor's eye copy, while the compute iDWT it replaces overlapped
+it better. The single fused `.53` block that looked like a 1 ms fence win did not replicate over
+ten `.54` blocks. Standalone, the two builds differ by only 0.14 ms of fence.
 
-Results from CI run `37347344813` on `4bf333d` (llvmpipe, LLVM 20.1.2, validation layer
-enabled), matching the earlier run `37347071655`:
+## What the review fixed in `656a81b`
 
-- The fused output matched the reference in every byte, for all 8 cases and both FP16 variants.
-  There were 0 validation errors.
-- The reference luma matched the CPU model **without** the FP16 round trips exactly, with 0
-  differences in every case. The model that keeps them differed by 1 LSB in about 0.8% of pixels.
-  Mesa folds `f32→f16→f32` away, which Vulkan's relaxed float rules allow.
-- That is why the 656a81b control differed in only 1–2 pixels per frame, by up to 2 levels. On
-  lavapipe it catches only the store-rounding defect. The missing-FP16 defect cannot show on a
-  driver that folds the rounding.
+| Problem | Effect | Fix |
+| --- | --- | --- |
+| Arithmetic stayed in FP32 | 6010 native-frame pixels differed on Quest | Every lifting output is rounded to FP16 before the next step uses it. That is how Adreno evaluates the shipped `inverse_haar_pairs()`; the Quest readbacks showed it. Two variants, `OpFConvert` and `packHalf2x16`, chosen as PyroWave chooses (`shaderFloat16`) |
+| Luma computed as `k / 255` in the shader | The compiler reassociated the range conversion and moved single channels by one step | Luma is read back as an R8 texel from a fixed 256×1 identity table, as `convert.frag` reads its plane |
+| `setenv("PYROWAVE_FUSE_COLOR")` before every decoder creation, never restored | Process-wide state; later decoders inherited it; a failed fused pipeline still skipped luma | New per-decoder `pyrowave_decoder_set_skip_final_luma_idwt()`, called only after the fused pipeline exists. Any refusal keeps the two-pass path |
+| Failure destroyed the client | No video when requested on an unsupported path | Fall back and log `[Q3PW_FUSE_COLOR] … active=0 (<reason>)` |
+| Mode interactions undefined | With `haar_fused` the work was wasted; with `haar_pairs` the kernel under test was silently replaced | `fuse_color_policy.h` and PyroWave both refuse fused multilevel Haar, dedicated pair kernels, precision ≠ 1, 4:4:4, CDF wavelets, the fragment iDWT and compute colour conversion. The prerecord prototype refuses fused colour |
 
-lavapipe is not an Adreno. The test proves the shader logic, coefficient orientation, edges,
-formats and wiring. It does not prove that Adreno treats `OpFConvert`, `packHalf2x16` and UNORM
-stores the same way in a fragment shader as in compute, including whether its compiler folds the
-FP16 round trips. The fused shader uses the same instruction as the reference variant it replaces,
-so a compiler that folds or keeps them consistently gives the same bytes either way. Only a device
-readback can show that it does. On Quest, the `pyroclient_test` readback should also say which
-CPU model the device follows. If Adreno keeps the round trips, the unreviewed shader would differ
-by 1 LSB in some luma pixels: about 0.8% on this test's synthetic coefficients, and an unknown
-share on real content.
+How the two Quest causes were found: diagnostic builds of `libpyroclient.so` that differed only in
+the fused shader, each compared on the Quest with the two-pass bytes. The first table row went
+502 → 6010 (no rounding) → 166 (step-wise rounding) → 96 (optimization barrier on luma) → 0
+(table-fetched luma). Other forms changed nothing or made it worse: `unpackUnorm4x8`, FP16-rounded
+luma, chroma coordinate forms and `precise` colour maths. Every row is in the GPU results file.
 
-## Before any live comparison (needs hardware authorization)
+## Software checks (CI, no headset)
 
-1. With the matching CI APK and libraries installed, run `pyroclient_test` against the saved
-   small and native stereo fixtures twice, with `debug.q3pw.fuse_color` unset and then `1`. Use GPU
-   readback, Haar/Compute, precision 1, 4:2:0, limited range. Both runs must match the saved
-   reference RGBA exactly. Confirm from logcat in the same process and time window that
-   `[Q3PW_FUSE_COLOR] … active=1 (eligible)` and the expected `fp16_variant` appeared.
-2. Repeat with `debug.q3pw.chroma_filter=catmull` and with full range.
-3. Only then run short interleaved screens against the `.48` / `.50` controls in
-   [WHOLE-STACK-SCORECARD.md](WHOLE-STACK-SCORECARD.md). Report stage GPU time, fence, unique and
-   lost targets, and compositor stale counts separately. A faster decode is not a delivered-FPS gain
-   until sustained runs show one.
+`fuse_color_exact` runs on Mesa lavapipe with the Khronos validation layer:
 
-Restore with `adb shell setprop debug.q3pw.fuse_color 0` and restart the client. Nothing else
-changes.
+- It executes the shipped `idwt.comp` SPIR-V, extracted from `slangmosh.hpp` by
+  `tools/pyroclient/extract_pyrowave_spirv.py`, then the shipped `convert.frag`.
+- It compares every RGBA8 byte with the fused shader's output on the same inputs. Cases are
+  2080×2208, a padded 66×34 and 1922×1090 (odd chroma, partial tiles), with both ranges, both
+  chroma filters and both FP16 variants.
+- Three CPU luma models report which arithmetic the driver followed. Mesa folds the FP16 round
+  trips (the "folded" model matches exactly); Adreno performs them step by step.
+- The 656a81b shader runs alongside as a negative control and must differ. On lavapipe it differs
+  only through its store rounding.
+
+lavapipe proves the logic, orientation, edges, formats and wiring, not Adreno arithmetic; the Quest
+readbacks above cover that. CPU tests cover eligibility, the lifetime and order guarantees, and the
+SPIR-V extractor.
+
+## Reproducing on the Quest
+
+Private scripts in `workspace/state`:
+
+- `fuse-color-exact-device.py`: standalone `pyroclient_test`, GPU readback, saved Haar fixtures,
+  off/on/off/on with both chroma filters, properties restored with readback.
+- `fuse-color-timing-device.py`: standalone ABAB stage times.
+- `codex-overnight-20261004/live32.py`: live A/B with snapshot, independent restorer and rollback.
+
+To restore after a manual test, run `adb shell setprop debug.q3pw.fuse_color ""` and restart the
+client.
+
+## If this is revisited
+
+The exact pass is a correct baseline for any cheaper fused shader. A new variant must keep 0
+differing bytes on both fixtures and both chroma filters, and must show a live fence and
+unique-target gain over at least two reversed-order screens. Live, watch eye-render p90 and
+compositor stale counts as well as GPU decode. Directions not tried: fewer per-pixel wavelet
+fetches (one fetch per 2×2 quad) and doing the fused work in compute instead of a fragment pass.
