@@ -2,9 +2,10 @@
 
 The Windows pipeline already supports a larger SteamVR source with a smaller
 PyroWave frame. This change exposes that separation through geometry-only
-controls and paired benchmark profiles. No shaders, codec, defaults, client
-buffers or foveation settings change. It works with the existing matching .25
-APK/server; a new APK is not required.
+controls and paired benchmark profiles. The original geometry-only controls
+work with the matching `.25` pair without a new APK. Development `.55` adds
+separate dashboard/menu controls and an optional PC downsample shader; codec,
+client decode size and foveation remain independently selectable.
 
 ## Verified semantics
 
@@ -53,8 +54,8 @@ work all stay at the stream size.
 | Dashboard | One "render scale" preset (50–100 %) set **both** fields to the same size, so there was no way to render above the panel. | "Stream resolution" (50–100 % of panel) sets only the stream; "Game render resolution" (100–200 % per axis) sets only the SteamVR recommendation. |
 | Streaming profiles | Pinned both fields to the profile's size. | Pin the stream only; a chosen game render size survives a profile change. |
 
-The filter setting is `video.pyrowave.render_downsample_filter` (`Adaptive`
-default, `Bilinear` = the previous single tap, kept for A/B) and applies to every
+The filter setting is `video.pyrowave.render_downsample_filter` (`Bilinear`
+default = the previous single tap, `Adaptive` = optional filtered downsampling) and applies to every
 codec. It needs a SteamVR restart. If the runtime compile fails, the driver logs an
 error and keeps the single tap; the Windows build also compiles it with `fxc` so a
 shader error fails CI. The driver log prints the active sizes and filter:
@@ -75,7 +76,8 @@ Against a box-filtered ground truth of an edge-heavy test signal, RMS error was
 with the adaptive filter. Most of the gain is from rendering more pixels; the
 filter mainly removes the moiré. Fetches per output pixel: up to 3x3 at 1:1 (all
 zero-weight but one when aligned), 5x5 at 1.48x, 7x7 from 2x. PC GPU cost is
-estimated at well under a millisecond at 2x2080x2208 but has not been measured.
+not isolated by the CPU model. The October 5 live filter screen below records
+PC compositor/encoder timing and delivery; it withholds default promotion.
 
 Keep SteamVR's own render resolution at a custom 100 %: SteamVR's automatic
 setting multiplies the recommendation again. Footprints above 3x per axis are
@@ -83,7 +85,7 @@ filtered as 3x (under-filtered, never skipped).
 
 | Change | Reason | Before | After | Headset result | Status |
 | --- | --- | --- | --- | --- | --- |
-| Adaptive downsample + split render/stream controls | Higher-than-native render should add detail without bandwidth or Quest decode cost | 1 tap, both sizes tied in the dashboard | Footprint-wide Catmull-Rom; independent controls | Not tested (hardware paused). Planned: `supersampled150`, `control downsample` adaptive/bilinear/adaptive, same scene, text/fence detail plus server encoder and compositor time | CONTINUE |
+| Adaptive downsample + split render/stream controls | Higher-than-native render should add detail without bandwidth or Quest decode cost | 1 tap, both sizes tied in the dashboard | Footprint-wide Catmull-Rom; independent controls | Eight short Quest windows at explicit 3072×3216 source / 2080×2208 decode: Bilinear 119.46 FPS, Adaptive 118.73; Adaptive tail pacing weaker. [Data](PR-9-REVIEW.md) | Adaptive optional; Bilinear default |
 
 Our server rounds **both** axes up to multiples of 32. A request for
 3072x3216 therefore becomes a **3072x3232 recommendation**. The encode request

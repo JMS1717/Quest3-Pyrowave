@@ -264,6 +264,8 @@ bool pyroclient::create_device() {
         if (props.apiVersion >= VK_API_VERSION_1_2) p11.pNext = &p12;
         if (props.apiVersion >= VK_API_VERSION_1_3) p12.pNext = &p13;
         vkGetPhysicalDeviceProperties2(gpu, &p2);
+        // Adreno's driverInfo spans several lines; keep the tagged line whole for log filters.
+        for (char &ch : p12.driverInfo) if (ch == '\n' || ch == '\r') ch = ' ';
         LOGI("[Q3PW_GPU_CAPS] api=%u.%u driver=%s/%s subgroup=%u min=%u max=%u sized_stages=0x%x shared=%u ts_period=%.3f",
              VK_API_VERSION_MAJOR(props.apiVersion), VK_API_VERSION_MINOR(props.apiVersion),
              p12.driverName, p12.driverInfo, p11.subgroupSize, p13.minSubgroupSize, p13.maxSubgroupSize,

@@ -25,14 +25,17 @@ SteamVR integration, tracking, controllers and audio.
 | Track | What to expect |
 | --- | --- |
 | **Published preview: alpha.8 / `.51`** | Matching APK and Windows server with bounded frame waiting, automatic decode priority, independent resolution controls and safety fixes. [Release notes](docs/RELEASE-alpha.8.md) |
-| **Development: `.51`** | [PR #3](https://github.com/JMS1717/Quest3-Pyrowave/pull/3) merged native lifetime fixes, publication tests and producer diagnostics. [All four CI jobs passed](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37327925015) for the integrated runtime sources. |
+| **Development: `.55`** | [PR #9](https://github.com/JMS1717/Quest3-Pyrowave/pull/9) integrates overlay modes, independent game/stream controls, optional foveation profiles and diagnostics. Signed `2b289f8` passed all five CI jobs and short Quest screens near 119 fresh FPS; the amended head keeps Bilinear as the default. [Measurements and limits](docs/PR-9-REVIEW.md). |
 | **Working experimental target** | **2080 × 2208 per eye · 120 Hz · 1000 Mbps · 4:2:0 · no foveated encoding**, with Vulkan Compute decoding. Sustained acceptance is still pending. |
 | **Defaults preserved** | Conservative 400 Mbps / 72 Hz candidate; 4:2:0, TCP and Quest 3 Auto → Compute. Development keeps synchronous decoding and the 4 ms selection wait. |
 
 Publication notifications, prerecording and experimental fence handoffs remain
-off by default. The new Haar H2 and final-color fusion candidates are excluded
-from this integration; they require further correctness work. See the
-[integration review](docs/PR-3-REVIEW.md) and [whole-stack scorecard](docs/WHOLE-STACK-SCORECARD.md).
+off by default. Exact final-color fusion is included as an opt-in experiment;
+its earlier 120 Hz screen showed no delivery gain. Haar H2 remains excluded.
+Foveation, thread hints and eye invalidation remain off, and Bilinear remains the
+default filter. A 15-second no-decode probe reached 206.9 FPS at 207 Hz; this is
+runtime cadence, not 207 Hz streaming. See the [integration review](docs/PR-9-REVIEW.md)
+and [whole-stack scorecard](docs/WHOLE-STACK-SCORECARD.md).
 
 ## Why explore PyroWave?
 
@@ -43,7 +46,7 @@ from this integration; they require further correctness work. See the
 | **Bitrate control** | A 5–2000 Mbps slider, high-bitrate presets and latency-driven Auto bitrate. |
 | **Independent render / encode sizes** | Render a larger PC source while keeping the Quest's decoded pixel count fixed. |
 | **Chroma choices** | 4:2:0 by default; optional 4:4:4 for controlled quality comparisons. |
-| **Local performance overlay** | A client-rendered 3D panel, toggled with both thumbsticks. |
+| **Local performance overlay** | A client-rendered 3D panel: both-thumbstick clicks cycle Compact / Full / Hidden; a hold opens settings in `.55`. |
 | **Reproducible research** | Pinned upstream sources, matching platform builds, regression checks and published measurements. |
 
 Decoded Vulkan images cross an AHardwareBuffer bridge into GLES/OpenXR eye

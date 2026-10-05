@@ -1,9 +1,10 @@
 # Client performance overlay
 
-## Development build .54: overlay modes and headset settings menu
+## Development build .55: overlay modes and headset settings menu
 
-Not released and not yet tested in a headset. Released `.51` behaves as described
-in the sections after this one. Preview images are rendered by the same CPU code
+Not released. Signed `.55` now has a short Quest 3 Compact/Hidden comparison and
+correct stereo screenshot endpoints. Long-hold menu Apply/restart acceptance is
+still pending. Released `.51` behaves as described in the sections after this one. Preview images are rendered by the same CPU code
 the headset uses (`PANEL_PREVIEW=<dir> cargo test -p alvr_graphics preview_dump`),
 over a flat background:
 
@@ -50,9 +51,10 @@ input change while the menu is open). The render loop only uploads a finished im
 into the quad swapchain, so the `.51` per-redraw CPU text work no longer runs on it.
 `[Q3PW_OVERLAY_DRAW]` keeps its fields (`text_cpu_ms` now measures building the view on
 the render thread) and adds `raster_worker_ms`. No per-frame GPU work is added: as
-before there is one quad layer, reused by the compositor between updates. None of
-this has been measured on a Quest; the `.24` on/off screens below remain the only
-overlay overhead data.
+before there is one quad layer, reused by the compositor between updates. This does not
+establish zero compositor cost. The `.55` Compact/Hidden screen delivered
+119.09/118.71 unique fresh FPS with similar completion times; no repeatable
+overlay delivery penalty was isolated. [Measurements and limits](PR-9-REVIEW.md).
 
 `debug.q3pw.overlay_visible` still works: `0` hides, `1` shows Full if the
 controller mode is Hidden (otherwise the controller's mode), unset follows the

@@ -10,15 +10,15 @@ fewer encoded/decoded pixels; it does not reduce the game's rendering workload.
 
 The fixed center occupies approximately **80% of each eye's width and height**,
 with full sampling density there. A smooth ALVR spatial remapping compresses the
-remaining outer bands with a gentle **1.5× edge ratio**. Neither eye follows gaze,
+remaining outer bands with a gentle **1.5Ã— edge ratio**. Neither eye follows gaze,
 and both shifts are zero. The Quest reconstructs the original expanded view in
 the existing direct-eye draw, preserving its color/range handling and buffer
 ownership. There is no extra full-frame reconstruction pass in that direct path.
 
 | Native120 / 4:2:0 comparison | Full frame | Light mode |
 | --- | --- | --- |
-| Expanded view per eye | 2080×2208 | 2080×2208 |
-| Encoded/decoded pixels per eye | 2080×2208 | 1952×2080 |
+| Expanded view per eye | 2080Ã—2208 | 2080Ã—2208 |
+| Encoded/decoded pixels per eye | 2080Ã—2208 | 1952Ã—2080 |
 | Raw stereo 8-bit 4:2:0 bytes/frame | 13,777,920 | 12,180,480 |
 | 1000 Mbps / 120 Hz payload budget | 1,041,666.7 bytes/frame | 1,041,666.7 bytes/frame |
 
@@ -32,7 +32,7 @@ in-headset acceptance remains necessary.
 ## Enable and compare
 
 Use a matching `.28` or newer APK/Windows pair; the published alpha.7 pair has no
-light-mode setting. In the development dashboard, open **Video → PyroWave → Light
+light-mode setting. In the development dashboard, open **Video â†’ PyroWave â†’ Light
 peripheral encoding (experimental)**. Restart SteamVR after changing it.
 
 ```powershell
@@ -45,7 +45,7 @@ python -m tools.quest3.foveation --eye 2080 2208 --hz 120 --mbps 1000
 
 The toggle verifies setting readback; it does not claim the running stream has
 changed before restart. Captures verify the driver's fixed parameters and actual
-3904×2080 stereo decode dimensions. Unsupported clients negotiate the full-frame
+3904Ã—2080 stereo decode dimensions. Unsupported clients negotiate the full-frame
 fallback. Old generic FFE/force-enable/gaze overrides cannot select a different
 warp, and ordinary full-frame presets reset this explicit light switch.
 
@@ -59,11 +59,11 @@ regresses. Runtime120 acceptance alone does not certify 120 fresh frames/s.
 ## First Quest 3 comparison (October 2)
 
 Matching `.28` APK/Windows artifacts passed [CI and provenance checks](../results/LIGHT-FOVEATION-CI-2026-10-02.json).
-Three short 15-second screens used the same 2544�2704 game-source chart,
-expanded 2080�2208 view, runtime120, 4:2:0, Haar/compute, 1000 Mbps USB/TCP and
+Three short 15-second screens used the same 2544×2704 game-source chart,
+expanded 2080×2208 view, runtime120, 4:2:0, Haar/compute, 1000 Mbps USB/TCP and
 visible overlay. Restarts applied each geometry; individual source intervals and
 reference-image hashes matched. All three clock snapshots in every cell were
-690 MHz, battery temperature stayed 45�C and Android thermal status was zero.
+690 MHz, battery temperature stayed 45°C and Android thermal status was zero.
 Those sparse readings do not prove a continuously fixed clock or silicon temperature.
 
 | Metric | Full | Light | Full restored |
@@ -77,7 +77,7 @@ Those sparse readings do not prove a continuously fixed clock or silicon tempera
 | Actual video payload p50, Mbps | 1001.72 | 1005.04 | 1002.58 |
 | Timestamp gap p95, ms | 16.71 | 16.68 | 16.68 |
 
-The actual decoder received **1952�2080 per eye** only in light mode, while the
+The actual decoder received **1952×2080 per eye** only in light mode, while the
 reconstructed view stayed full size. GPU decode cost fell; CPU eye time rose,
 and the fresh-FPS difference over the restored control was small. This is an
 encouraging decode-budget result, not sustained 120 FPS or a proven latency win.
@@ -93,7 +93,7 @@ counter deltas, pacing, thermals and geometry. Full-frame mode was restored;
 light remains an optional experiment pending sustained and human quality checks.
 
 A follow-up with the GPU eye timer enabled in every mode stopped at the
-conservative 46�C screening cutoff after its first control. It yielded no
+conservative 46°C screening cutoff after its first control. It yielded no
 comparative GPU reconstruction-cost result and is excluded from acceptance.
 Temporary properties were restored with readback, and the proximity automation
 was disabled; no thermal safeguards were changed.
@@ -101,14 +101,24 @@ was disabled; no thermal safeguards were changed.
 ## Stronger profile candidates
 
 `video.pyrowave.foveation_profile` selects the fixed geometry used when peripheral
-encoding is on. Light (80% center, 1.5x) is the default and the only profile with
-headset screens. Balanced (68% center, 1.75x) encodes 1824x1920 per eye from native
+encoding is on. Light (80% center, 1.5x) is the default profile; encoding itself
+remains off by default. Light, Balanced and Strong now have short Quest screens. Balanced (68% center, 1.75x) encodes 1824x1920 per eye from native
 2080x2208, about 24% fewer pixels. Strong (60% center, 2x) encodes 1664x1792, about
 35% fewer. Both are decode-budget candidates for 144/207 Hz without perceptual or
 sustained-performance acceptance. Their constants were chosen so the client's f32
 sizing and the server's mixed float/double sizing agree for every 8-pixel eye size
 from 512 to 4096 (tests/test_foveation.py). `python -m tools.quest3.control foveation
 --mode light --profile strong` selects one; see [PATH-TO-207.md](PATH-TO-207.md).
+
+## October 5 profile screen
+
+Signed `.55` negotiated Light 1952×2080, Balanced 1824×1920 and Strong 1664×1792
+per eye, reconstructing 2080×2208. Fresh delivery stayed roughly 119 FPS. Strong
+reduced median native completion to 7.12 ms, while eye reconstruction GPU cost
+rose from about 0.66 ms without foveation to 1.19 ms. This still exceeds the
+4.83 ms period at 207 Hz. Captured endpoints retain upright LEFT/RIGHT mapping;
+peripheral detail changes need lens acceptance. Owner-interrupted windows were
+excluded and repeated cleanly. [Window data and limits](PR-9-REVIEW.md).
 
 ## Mapping safeguards and inspiration
 
