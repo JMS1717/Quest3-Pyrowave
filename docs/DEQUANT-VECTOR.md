@@ -25,3 +25,14 @@ shader execution. Require pinned shader regeneration/manifest review, full
 matching builds and exact small/native GPU readbacks before deployment. Only
 then compare short interleaved stage/total timing, delivered-frame proxies, pacing
 and thermals. No speedup, live acceptance or default promotion has been established.
+
+## Build preparation
+
+The `.43` source embeds the output of [pinned shader regeneration](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37266155789)
+at proposal `5e83fd7`. All generated source/binary manifest hashes and the
+storage3 × vector2 program dimensions were checked. The original dequant program
+SPIR-V is **byte-identical in all three storage modes** to `.42`; the candidate
+is a separate program. A fresh pinned codec tree plus the committed CDF/Quest
+patches reconstructs the source, generated header and manifest exactly after
+normalizing Windows checkout line endings. 104 CPU regressions and six lightweight
+GLSL variants passed. Matching native builds and GPU correctness remain required.
