@@ -1,0 +1,174 @@
+{
+  "date": "2026-10-05",
+  "version": "20.13.0-quest3.pyro.43",
+  "source_commit": "50c21f45058d441e61f959194580351039033fb5",
+  "ci_run": 37266754072,
+  "scope": "Android component-only standalone GPU correctness before full Windows review/deployment",
+  "android_client_and_regressions_passed": true,
+  "matching_pair_review_completed": false,
+  "apk_sha256": "2d9fe22eb4bac1e646b337a04ade35220756e904740a658eebe5872bd4b84e94",
+  "native_libraries_sha256": {
+    "libpyroclient.so": "4d32234707d57b13df76037cf5ae511bccb2541e509fccf571f090c168c0758c",
+    "libpyrowave-shared.so": "03dd6ffcab476953976704dafeb6302de5166130b85c7ea44dbf803ce98a7672",
+    "libc++_shared.so": "f9992c4ba6b7c5a716e3a202fceb1ce029d6a2b0605838ac6b3219f489dd7970"
+  },
+  "original_dequant_program_spirv_unchanged_all_storage_modes": true,
+  "settings_unchanged": true,
+  "fixtures": {
+    "small_stereo": [
+      512,
+      320
+    ],
+    "native_stereo": [
+      4160,
+      2208
+    ],
+    "chroma": "420",
+    "range": "limited",
+    "wavelet": "Haar",
+    "decode_path": "Compute",
+    "precision": "default1"
+  },
+  "cases": [
+    {
+      "vector": "0",
+      "haar": "0",
+      "pattern": "asymmetric",
+      "process_specific_activation": true,
+      "exact_reference_match": true,
+      "bytes": 655360,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 512,
+        "height": 320,
+        "bytes": 655360,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "c0e656fb",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    },
+    {
+      "vector": "0",
+      "haar": "0",
+      "pattern": "native-asymmetric",
+      "process_specific_activation": true,
+      "exact_reference_match": true,
+      "bytes": 36741120,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 4160,
+        "height": 2208,
+        "bytes": 36741120,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "aad9df7c",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    },
+    {
+      "vector": "1",
+      "haar": "0",
+      "pattern": "asymmetric",
+      "process_specific_activation": true,
+      "exact_reference_match": true,
+      "bytes": 655360,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 512,
+        "height": 320,
+        "bytes": 655360,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "c0e656fb",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    },
+    {
+      "vector": "1",
+      "haar": "0",
+      "pattern": "native-asymmetric",
+      "process_specific_activation": true,
+      "exact_reference_match": true,
+      "bytes": 36741120,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 4160,
+        "height": 2208,
+        "bytes": 36741120,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "aad9df7c",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    },
+    {
+      "vector": "1",
+      "haar": "128-row",
+      "pattern": "asymmetric",
+      "process_specific_activation": true,
+      "exact_reference_match": true,
+      "bytes": 655360,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 512,
+        "height": 320,
+        "bytes": 655360,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "c0e656fb",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    },
+    {
+      "vector": "1",
+      "haar": "128-row",
+      "pattern": "native-asymmetric",
+      "process_specific_activation": true,
+      "exact_reference_match": true,
+      "bytes": 36741120,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 4160,
+        "height": 2208,
+        "bytes": 36741120,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "aad9df7c",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    }
+  ],
+  "performance_acceptance": false,
+  "default_promoted": false,
+  "limitations": [
+    "Single-decode cold standalone runs; not awake VR or sustained timing",
+    "GPU readback bytes compare relatively to prior saved limited-range fixtures, not arbitrary-content or perceptual acceptance",
+    "Six cases cover baseline, vector-only and vector plus128-row at two sizes; not all wavelets, precision or chroma modes",
+    "No APK installation, VR launch or persistent property change during these checks"
+  ]
+}
