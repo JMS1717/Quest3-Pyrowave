@@ -26,6 +26,19 @@ static bool load(const char *path, Wave &w) {
     if(ok) {w.bytes.resize(len); ok=fread(w.bytes.data(),1,len,f)==len;}
     fclose(f); return ok;
 }
+static int prepare_bounded(pyroclient *c, const std::vector<unsigned char>& packet,
+                           uint64_t *generation) {
+    // A successful old native fence need not mean Granite's subsequently queued
+    // completion-coverage fence has signaled. Only retry the explicit defer;
+    // never advance/reset a context on timeout or mask an error as completion.
+    const auto deadline=std::chrono::steady_clock::now()+std::chrono::milliseconds(20);
+    int result;
+    do {
+        result=pyroclient_prerecord_prepare(c,packet.data(),packet.size(),nullptr,nullptr,generation);
+        if(result==0) std::this_thread::sleep_for(std::chrono::microseconds(100));
+    } while(result==0 && std::chrono::steady_clock::now()<deadline);
+    return result;
+}
 int main(int argc,char **argv) {
     if(argc!=3) {fprintf(stderr,"usage: %s A.wave B.wave (Haar/Compute/420; ready/release OFF)\n",argv[0]);return 2;}
     // Native-only ownership watchdog: a query-retirement/teardown deadlock must
@@ -88,12 +101,7 @@ int main(int argc,char **argv) {
         ++exhausted;
         int status=pyroclient_prerecord_pending_status(c);
         if(status<0) return fail("pending status"); if(status==0) ++before;
-        int recorded=0;
-        const auto deadline=std::chrono::steady_clock::now()+std::chrono::milliseconds(20);
-        do {
-            recorded=pyroclient_prerecord_prepare(c,b.bytes.data(),b.bytes.size(),nullptr,nullptr,&generation);
-            if(recorded==0) std::this_thread::sleep_for(std::chrono::microseconds(100));
-        } while(recorded==0 && std::chrono::steady_clock::now()<deadline);
+        int recorded=prepare_bounded(c,b.bytes,&generation);
         if(recorded!=1 || !generation) return fail("conditional prepare unavailable"); ++prepared;
         status=pyroclient_prerecord_pending_status(c);
         if(status<0) return fail("pending status after prepare"); if(status==0) ++after;
@@ -131,7 +139,7 @@ int main(int argc,char **argv) {
     // produces B's exact pixels (also proves the fixture's unused-tail semantics).
     AHardwareBuffer *ga=nullptr,*gb=nullptr; pyroclient_frame_info gai{},gbi{}; uint64_t gg=0;
     if(pyroclient_prerecord_start(c,a.bytes.data(),a.bytes.size(),&ga,&gai,nullptr,nullptr)!=0 ||
-       pyroclient_prerecord_prepare(c,growth.data(),growth.size(),nullptr,nullptr,&gg)!=-7 || gg)
+       prepare_bounded(c,growth,&gg)!=-7 || gg)
         return fail("payload growth was not safely deferred");
     if(pyroclient_finish_pending(c,&gai)!=0 || !readback_android_buffer(ga,false,actual,error) || actual!=ref_a)
         return fail("growth rejection changed A");
@@ -142,7 +150,7 @@ int main(int argc,char **argv) {
     // Teardown additionally owns both a submitted A and an unsubmitted B.
     AHardwareBuffer *last=nullptr; pyroclient_frame_info info{}; uint64_t generation=0;
     if(pyroclient_prerecord_start(c,a.bytes.data(),a.bytes.size(),&last,&info,nullptr,nullptr)!=0 ||
-       pyroclient_prerecord_prepare(c,b.bytes.data(),b.bytes.size(),nullptr,nullptr,&generation)!=1)
+       prepare_bounded(c,b.bytes,&generation)!=1)
         return fail("outstanding teardown setup");
     client.reset();
     if(a.p[0]>=4096 && after==0) return fail("native preparation never overlapped an unsignaled A");

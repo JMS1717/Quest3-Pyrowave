@@ -10,7 +10,9 @@ namespace q3pw {
 // fields and every original coefficient byte. No encoder/streaming mutation.
 inline std::vector<unsigned char> padded_growth_frame(const std::vector<unsigned char>& frame) {
     constexpr size_t limit=256u*1024*1024;
-    if (frame.empty() || frame.size()>limit/3) throw std::invalid_argument("growth fixture size");
+    // Final size is <= 3*input + one packet's overshoot; include that overshoot
+    // in the input bound rather than relying on a check before the remaining tail.
+    if (frame.empty() || frame.size()>(limit-4095*4)/3) throw std::invalid_argument("growth fixture size");
     std::vector<unsigned char> out;
     size_t offset=0, added=0;
     while(offset<frame.size()) {
