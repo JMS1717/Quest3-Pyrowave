@@ -257,14 +257,17 @@ static Outputs run_case(const Vk &vk, const std::vector<uint32_t> &idwt_spirv, c
                               VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
     Image cbi = make_image(vk, VK_FORMAT_R8_UNORM, chroma_w, chroma_h, 1, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
     Image cri = make_image(vk, VK_FORMAT_R8_UNORM, chroma_w, chroma_h, 1, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+    // pyroclient's 256x1 identity table: the fused shader fetches luma back as an R8 texel.
+    Image table = make_image(vk, VK_FORMAT_R8_UNORM, 256, 1, 1, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
     Image outs[3] = { make_image(vk, VK_FORMAT_R8G8B8A8_UNORM, c.w, c.h, 1, out_usage),
                       make_image(vk, VK_FORMAT_R8G8B8A8_UNORM, c.w, c.h, 1, out_usage),
                       make_image(vk, VK_FORMAT_R8G8B8A8_UNORM, c.w, c.h, 1, out_usage) };
     const VkDeviceSize wav_bytes = wavelet.size() * 2, chroma_bytes = cb.size(), rgba_bytes = (VkDeviceSize)c.w * c.h * 4;
-    Buffer upload = make_buffer(vk, wav_bytes + 2 * chroma_bytes, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+    Buffer upload = make_buffer(vk, wav_bytes + 2 * chroma_bytes + 256, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
     memcpy(upload.mapped, wavelet.data(), wav_bytes);
     memcpy((uint8_t *)upload.mapped + wav_bytes, cb.data(), chroma_bytes);
     memcpy((uint8_t *)upload.mapped + wav_bytes + chroma_bytes, cr.data(), chroma_bytes);
+    for (int i = 0; i < 256; i++) ((uint8_t *)upload.mapped)[wav_bytes + 2 * chroma_bytes + i] = (uint8_t)i;
     Buffer readback = make_buffer(vk, (VkDeviceSize)c.w * c.h + 3 * rgba_bytes, VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 
     // pyroclient's sampler; texelFetch ignores it, the chroma path does not.
@@ -294,10 +297,11 @@ static Outputs run_case(const Vk &vk, const std::vector<uint32_t> &idwt_spirv, c
     VkPipeline compute_pipeline; CHECK(vkCreateComputePipelines(vk.device, VK_NULL_HANDLE, 1, &cpi, nullptr, &compute_pipeline));
     vkDestroyShaderModule(vk.device, cpi.stage.module, nullptr);
 
-    // Fragment pipelines share one layout: three combined samplers, {limitedRange, chromaFilter}.
-    VkDescriptorSetLayoutBinding fb[3] = {};
-    for (uint32_t i = 0; i < 3; i++) fb[i] = { i, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr };
-    li.bindingCount = 3; li.pBindings = fb;
+    // Fragment pipelines share one layout: four combined samplers (convert.frag uses three),
+    // {limitedRange, chromaFilter}.
+    VkDescriptorSetLayoutBinding fb[4] = {};
+    for (uint32_t i = 0; i < 4; i++) fb[i] = { i, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr };
+    li.bindingCount = 4; li.pBindings = fb;
     VkDescriptorSetLayout frag_set_layout; CHECK(vkCreateDescriptorSetLayout(vk.device, &li, nullptr, &frag_set_layout));
     VkPushConstantRange frag_push = { VK_SHADER_STAGE_FRAGMENT_BIT, 0, 8 };
     pli.pSetLayouts = &frag_set_layout; pli.pPushConstantRanges = &frag_push;
@@ -356,7 +360,7 @@ static Outputs run_case(const Vk &vk, const std::vector<uint32_t> &idwt_spirv, c
     }
     vkDestroyShaderModule(vk.device, vert, nullptr);
 
-    VkDescriptorPoolSize ps[2] = { { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8 }, { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 } };
+    VkDescriptorPoolSize ps[2] = { { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 10 }, { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 } };
     VkDescriptorPoolCreateInfo dpi = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
     dpi.maxSets = 3; dpi.poolSizeCount = 2; dpi.pPoolSizes = ps;
     VkDescriptorPool pool; CHECK(vkCreateDescriptorPool(vk.device, &dpi, nullptr, &pool));
@@ -366,21 +370,22 @@ static Outputs run_case(const Vk &vk, const std::vector<uint32_t> &idwt_spirv, c
     VkDescriptorSet sets[3]; CHECK(vkAllocateDescriptorSets(vk.device, &sa, sets));
     // Same layouts as production: everything sampled or stored in GENERAL.
     const VkImageLayout G = VK_IMAGE_LAYOUT_GENERAL;
-    VkDescriptorImageInfo infos[8] = {
+    VkDescriptorImageInfo infos[9] = {
         { sampler, wav.view, G }, { VK_NULL_HANDLE, yplane.view, G },          // reference iDWT
         { sampler, yplane.view, G }, { sampler, cbi.view, G }, { sampler, cri.view, G },  // convert.frag
         { sampler, wav.view, G }, { sampler, cbi.view, G }, { sampler, cri.view, G },     // fused shaders
+        { sampler, table.view, G },
     };
-    VkWriteDescriptorSet writes[8] = {};
-    const VkDescriptorSet write_set[8] = { sets[0], sets[0], sets[1], sets[1], sets[1], sets[2], sets[2], sets[2] };
-    const uint32_t write_binding[8] = { 0, 1, 0, 1, 2, 0, 1, 2 };
-    for (int i = 0; i < 8; i++) {
+    VkWriteDescriptorSet writes[9] = {};
+    const VkDescriptorSet write_set[9] = { sets[0], sets[0], sets[1], sets[1], sets[1], sets[2], sets[2], sets[2], sets[2] };
+    const uint32_t write_binding[9] = { 0, 1, 0, 1, 2, 0, 1, 2, 3 };
+    for (int i = 0; i < 9; i++) {
         writes[i] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
         writes[i].dstSet = write_set[i]; writes[i].dstBinding = write_binding[i]; writes[i].descriptorCount = 1;
         writes[i].descriptorType = i == 1 ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         writes[i].pImageInfo = &infos[i];
     }
-    vkUpdateDescriptorSets(vk.device, 8, writes, 0, nullptr);
+    vkUpdateDescriptorSets(vk.device, 9, writes, 0, nullptr);
 
     VkFramebuffer framebuffers[3];
     for (int i = 0; i < 3; i++) {
@@ -402,7 +407,7 @@ static Outputs run_case(const Vk &vk, const std::vector<uint32_t> &idwt_spirv, c
 
     const VkPipelineStageFlags T = VK_PIPELINE_STAGE_TRANSFER_BIT, C = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                F = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    for (Image *img : { &wav, &cbi, &cri, &yplane })
+    for (Image *img : { &wav, &cbi, &cri, &yplane, &table })
         barrier(cmd, *img, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0, VK_ACCESS_TRANSFER_WRITE_BIT,
                 VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, T);
     VkBufferImageCopy copy = {};
@@ -413,11 +418,13 @@ static Outputs run_case(const Vk &vk, const std::vector<uint32_t> &idwt_spirv, c
     vkCmdCopyBufferToImage(cmd, upload.buffer, cbi.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
     copy.bufferOffset = wav_bytes + chroma_bytes;
     vkCmdCopyBufferToImage(cmd, upload.buffer, cri.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+    copy.bufferOffset = wav_bytes + 2 * chroma_bytes; copy.imageExtent = { 256, 1, 1 };
+    vkCmdCopyBufferToImage(cmd, upload.buffer, table.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
     // A sentinel in the luma plane: any pixel the reference iDWT fails to write is caught by the CPU model.
     VkClearColorValue sentinel = {}; sentinel.float32[0] = 77.0f / 255.0f;
     VkImageSubresourceRange whole = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
     vkCmdClearColorImage(cmd, yplane.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &sentinel, 1, &whole);
-    for (Image *img : { &wav, &cbi, &cri })
+    for (Image *img : { &wav, &cbi, &cri, &table })
         barrier(cmd, *img, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, G, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, T, C | F);
     barrier(cmd, yplane, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, G, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_WRITE_BIT, T, C);
 
@@ -467,31 +474,34 @@ static Outputs run_case(const Vk &vk, const std::vector<uint32_t> &idwt_spirv, c
     out.fused.assign(bytes + rgba_bytes, bytes + 2 * rgba_bytes);
     out.control.assign(bytes + 2 * rgba_bytes, bytes + 3 * rgba_bytes);
 
-    // CPU models of inverse_haar_pairs() + R8 store (FP32 arithmetic, round-to-nearest store), with
-    // and without the FP16 round trips. A driver may fold f32->f16->f32 away under Vulkan's relaxed
-    // float rules, so report which model the reference followed; either must hold to 1 LSB.
-    int mismatch[2] = {}, worst[2] = {};
+    // CPU models of inverse_haar_pairs() + R8 store (FP32 arithmetic, round-to-nearest store):
+    // FP16 round trips folded away (Mesa), as idwt.comp writes them, and rounded after every
+    // lifting step (Adreno). Report which one the reference followed; one must hold to 1 LSB.
+    const char *model_names[3] = { "folded", "as written", "step-wise" };
+    int mismatch[3] = {}, worst[3] = {};
     for (uint32_t y = 0; y < c.h; y++)
         for (uint32_t x = 0; x < c.w; x++) {
             const size_t k = (size_t)(y / 2) * cw + x / 2, layer = (size_t)cw * ch;
             const float a = from_half(wavelet[k]), horizontal = from_half(wavelet[layer + k]);
             const float vertical = from_half(wavelet[2 * layer + k]), diagonal = from_half(wavelet[3 * layer + k]);
-            const float low_even = a - 0.5f * vertical, low_odd = low_even + vertical;
-            const float high_even = horizontal - 0.5f * diagonal, high_odd = high_even + diagonal;
             const int got = out.y[(size_t)y * c.w + x];
-            for (int rounded = 0; rounded < 2; rounded++) {
-                auto r = [&](float v) { return rounded ? round_half(v) : v; };
+            for (int m = 0; m < 3; m++) {
+                auto r = [&](float v) { return m ? round_half(v) : v; };
+                auto s = [&](float v) { return m == 2 ? round_half(v) : v; };
+                const float low_even = s(a - 0.5f * vertical), low_odd = s(low_even + vertical);
+                const float high_even = s(horizontal - 0.5f * diagonal), high_odd = s(high_even + diagonal);
                 const float low = r((y & 1) ? low_odd : low_even), high = r((y & 1) ? high_odd : high_even);
-                const float even = low - 0.5f * high, odd = even + high;
+                const float even = s(low - 0.5f * high), odd = s(even + high);
                 float v = r((x & 1) ? odd : even) + 0.5f;
                 v = v < 0.0f ? 0.0f : v > 1.0f ? 1.0f : v;
                 const int d = std::abs((int)std::nearbyint(v * 255.0f) - got);
-                if (d) { mismatch[rounded]++; worst[rounded] = std::max(worst[rounded], d); }
+                if (d) { mismatch[m]++; worst[m] = std::max(worst[m], d); }
             }
         }
-    printf("  reference luma vs CPU model: FP16 round trips kept %d differ (worst %d), folded %d differ (worst %d), of %u\n",
-           mismatch[1], worst[1], mismatch[0], worst[0], c.w * c.h);
-    REQUIRE(std::min(worst[0], worst[1]) <= 1, "reference iDWT output does not match the Haar model: harness or wiring fault");
+    printf("  reference luma vs CPU models of %u pixels:", c.w * c.h);
+    for (int m = 0; m < 3; m++) printf(" %s %d differ (worst %d)%s", model_names[m], mismatch[m], worst[m], m < 2 ? "," : "\n");
+    REQUIRE(std::min({ worst[0], worst[1], worst[2] }) <= 1,
+            "reference iDWT output does not match the Haar model: harness or wiring fault");
 
     vkDestroyFence(vk.device, fence, nullptr);
     vkDestroyCommandPool(vk.device, cmd_pool, nullptr);
@@ -507,7 +517,7 @@ static Outputs run_case(const Vk &vk, const std::vector<uint32_t> &idwt_spirv, c
     vkDestroySampler(vk.device, sampler, nullptr);
     free_buffer(vk, readback); free_buffer(vk, upload);
     for (Image &img : outs) free_image(vk, img);
-    free_image(vk, cri); free_image(vk, cbi); free_image(vk, yplane); free_image(vk, wav);
+    free_image(vk, table); free_image(vk, cri); free_image(vk, cbi); free_image(vk, yplane); free_image(vk, wav);
     return out;
 }
 

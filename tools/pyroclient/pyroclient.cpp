@@ -152,6 +152,7 @@ struct pyroclient {
     VkPipeline fuse_pipeline = VK_NULL_HANDLE;
     VkDescriptorPool fuse_pool = VK_NULL_HANDLE;
     VkDescriptorSet fuse_set = VK_NULL_HANDLE;
+    Plane fuse_lut;                // 256x1 R8 identity: luma reaches the colour maths as a texel
     VkRenderPass convert_render_pass = VK_NULL_HANDLE;
     bool fragment_convert = false;
     bool fragment_min_usage = false; // optional sampled/color-only imported output
@@ -534,16 +535,70 @@ bool pyroclient::create_fragment_convert() {
     return result == VK_SUCCESS;
 }
 
+static void image_barrier(VkCommandBuffer cmd, VkImage img, VkImageLayout from, VkImageLayout to,
+                          VkAccessFlags srcA, VkAccessFlags dstA, VkPipelineStageFlags srcS,
+                          VkPipelineStageFlags dstS, uint32_t srcQ = VK_QUEUE_FAMILY_IGNORED,
+                          uint32_t dstQ = VK_QUEUE_FAMILY_IGNORED);
+
 // One descriptor set for every slot: the wavelet view and chroma planes are shared, the
 // colour target is the slot's framebuffer. Uses fragment convert's render pass.
 bool pyroclient::create_fuse_color() {
-    VkDescriptorSetLayoutBinding b[3] = {};
-    for (int i = 0; i < 3; i++) {
+    // convert.frag reads luma as an R8 texel; on Adreno, computing k / 255 in the shader instead
+    // let the compiler reassociate the range conversion and moved single RGB channels by one
+    // step. A fixed identity table returns the same hardware UNORM value through a fetch.
+    if (!create_plain_image(gpu, device, VK_FORMAT_R8_UNORM, 256, 1,
+                            VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, fuse_lut))
+        return false;
+    {
+        VkBufferCreateInfo bi = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+        bi.size = 256; bi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        VkBuffer staging = VK_NULL_HANDLE;
+        VK_TRY(vkCreateBuffer(device, &bi, nullptr, &staging));
+        VkMemoryRequirements req;
+        vkGetBufferMemoryRequirements(device, staging, &req);
+        VkMemoryAllocateInfo ai = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
+        ai.allocationSize = req.size;
+        ai.memoryTypeIndex = find_memory_type(gpu, req.memoryTypeBits,
+                                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        VkDeviceMemory memory = VK_NULL_HANDLE;
+        bool uploaded = ai.memoryTypeIndex != UINT32_MAX && vkAllocateMemory(device, &ai, nullptr, &memory) == VK_SUCCESS &&
+                        vkBindBufferMemory(device, staging, memory, 0) == VK_SUCCESS;
+        void *mapped = nullptr;
+        if (uploaded && vkMapMemory(device, memory, 0, 256, 0, &mapped) == VK_SUCCESS) {
+            for (int i = 0; i < 256; i++) static_cast<uint8_t *>(mapped)[i] = (uint8_t)i;
+            vkUnmapMemory(device, memory);
+            VkCommandBufferBeginInfo begin = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+            begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+            uploaded = vkResetCommandBuffer(cmd, 0) == VK_SUCCESS && vkBeginCommandBuffer(cmd, &begin) == VK_SUCCESS;
+            if (uploaded) {
+                image_barrier(cmd, fuse_lut.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0,
+                              VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+                VkBufferImageCopy copy = {};
+                copy.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 }; copy.imageExtent = { 256, 1, 1 };
+                vkCmdCopyBufferToImage(cmd, staging, fuse_lut.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+                image_barrier(cmd, fuse_lut.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL,
+                              VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                              VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+                VkSubmitInfo si = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+                si.commandBufferCount = 1; si.pCommandBuffers = &cmd;
+                uploaded = vkEndCommandBuffer(cmd) == VK_SUCCESS && vkResetFences(device, 1, &fence) == VK_SUCCESS &&
+                           vkQueueSubmit(queue, 1, &si, fence) == VK_SUCCESS &&
+                           vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX) == VK_SUCCESS;
+            }
+        } else {
+            uploaded = false;
+        }
+        vkDestroyBuffer(device, staging, nullptr);
+        if (memory) vkFreeMemory(device, memory, nullptr);
+        if (!uploaded) { LOGE("[Q3PW_FUSE_COLOR] luma table upload failed"); return false; }
+    }
+    VkDescriptorSetLayoutBinding b[4] = {};
+    for (int i = 0; i < 4; i++) {
         b[i].binding = i; b[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         b[i].descriptorCount = 1; b[i].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     }
     VkDescriptorSetLayoutCreateInfo li = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-    li.bindingCount = 3; li.pBindings = b;
+    li.bindingCount = 4; li.pBindings = b;
     VK_TRY(vkCreateDescriptorSetLayout(device, &li, nullptr, &fuse_set_layout));
     VkPushConstantRange pc = { VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int32_t) * 2 };
     VkPipelineLayoutCreateInfo pli = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -592,7 +647,7 @@ bool pyroclient::create_fuse_color() {
     for (auto module : modules) vkDestroyShaderModule(device, module, nullptr);
     if (result != VK_SUCCESS) { LOGE("[Q3PW_FUSE_COLOR] pipeline: %d", (int)result); return false; }
 
-    VkDescriptorPoolSize ps = { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 3 };
+    VkDescriptorPoolSize ps = { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4 };
     VkDescriptorPoolCreateInfo dpi = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
     dpi.maxSets = 1; dpi.poolSizeCount = 1; dpi.pPoolSizes = &ps;
     VK_TRY(vkCreateDescriptorPool(device, &dpi, nullptr, &fuse_pool));
@@ -607,17 +662,18 @@ bool pyroclient::create_fuse_color() {
         LOGE("[Q3PW_FUSE_COLOR] level-0 wavelet format %d, shader mirrors R16F only", (int)wavelet_format);
         return false;
     }
-    VkDescriptorImageInfo info[3] = {};
+    VkDescriptorImageInfo info[4] = {};
     info[0].sampler = sampler; info[0].imageView = wavelet; info[0].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
     info[1].sampler = sampler; info[1].imageView = planes[1].view; info[1].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
     info[2].sampler = sampler; info[2].imageView = planes[2].view; info[2].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-    VkWriteDescriptorSet w[3] = {};
-    for (int i = 0; i < 3; i++) {
+    info[3].sampler = sampler; info[3].imageView = fuse_lut.view; info[3].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+    VkWriteDescriptorSet w[4] = {};
+    for (int i = 0; i < 4; i++) {
         w[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET; w[i].dstSet = fuse_set; w[i].dstBinding = i;
         w[i].descriptorCount = 1; w[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         w[i].pImageInfo = &info[i];
     }
-    vkUpdateDescriptorSets(device, 3, w, 0, nullptr);
+    vkUpdateDescriptorSets(device, 4, w, 0, nullptr);
     LOGI("[Q3PW_FUSE_COLOR] pipeline ready %ux%u fp16_variant=%d", width, height, fp16 ? 1 : 0);
     return true;
 }
@@ -629,6 +685,10 @@ void pyroclient::destroy_fuse_color() {
     if (fuse_set_layout) vkDestroyDescriptorSetLayout(device, fuse_set_layout, nullptr);
     fuse_pipeline = VK_NULL_HANDLE; fuse_layout = VK_NULL_HANDLE; fuse_pool = VK_NULL_HANDLE;
     fuse_set_layout = VK_NULL_HANDLE; fuse_set = VK_NULL_HANDLE;
+    if (fuse_lut.view) vkDestroyImageView(device, fuse_lut.view, nullptr);
+    if (fuse_lut.image) vkDestroyImage(device, fuse_lut.image, nullptr);
+    if (fuse_lut.memory) vkFreeMemory(device, fuse_lut.memory, nullptr);
+    fuse_lut = Plane();
 }
 
 static bool write_set(VkDevice device, VkSampler sampler, const Plane planes[3], VkImageView out,
@@ -749,8 +809,7 @@ bool pyroclient::create_slot(Slot &s) {
 
 static void image_barrier(VkCommandBuffer cmd, VkImage img, VkImageLayout from, VkImageLayout to,
                           VkAccessFlags srcA, VkAccessFlags dstA, VkPipelineStageFlags srcS,
-                          VkPipelineStageFlags dstS, uint32_t srcQ = VK_QUEUE_FAMILY_IGNORED,
-                          uint32_t dstQ = VK_QUEUE_FAMILY_IGNORED) {
+                          VkPipelineStageFlags dstS, uint32_t srcQ, uint32_t dstQ) {
     VkImageMemoryBarrier b = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
     b.oldLayout = from; b.newLayout = to; b.srcAccessMask = srcA; b.dstAccessMask = dstA;
     b.srcQueueFamilyIndex = srcQ; b.dstQueueFamilyIndex = dstQ; b.image = img;

@@ -6,16 +6,23 @@
 // in one fragment pass, written straight to the RGBA8 colour attachment.
 //
 // It must reproduce, byte for byte, PyroWave's idwt.comp inverse_haar_pairs() (HAAR, DCShift,
-// PRECISION 1: FP32 arithmetic, FP16 rounding where the old path stored to shared memory),
-// the R8_UNORM plane store, and then convert.frag. fuse_color_vk_test.cpp runs this shader and
-// that reference on the same Vulkan device and compares every output byte. Keep the arithmetic
-// order identical to idwt.comp; adds of exact halves are what make the result reproducible.
+// PRECISION 1), the R8_UNORM plane store, and then convert.frag, as they run on the device.
+// fuse_color_vk_test.cpp compares every byte on lavapipe; docs/FUSE-COLOR.md records the Quest
+// readbacks. Two details came from the Quest, not from reading idwt.comp:
+// - Each lifting output is rounded to FP16 before the next step uses it. On Adreno the shipped
+//   iDWT behaves that way; rounding only where idwt.comp converts left 502 native-frame pixels
+//   one step off. A driver that folds the round trips (Mesa) folds them here too.
+// - Luma reaches the colour maths as an R8 texel from a 256-entry identity table, as it does in
+//   convert.frag. Computing k / 255 here let the compiler reassociate the range conversion and
+//   moved single channels by one step.
 //
 // Binding 0 is the luma level-0 wavelet view: R16F array, layers LL, LH ("horizontal"),
 // HL ("vertical"), HH ("diagonal"). Chroma planes are the reconstructed 4:2:0 R8 images.
+// Binding 3 is the 256x1 R8_UNORM table holding 0..255.
 layout(set = 0, binding = 0) uniform sampler2DArray waveletY;
 layout(set = 0, binding = 1) uniform sampler2D planeCb;
 layout(set = 0, binding = 2) uniform sampler2D planeCr;
+layout(set = 0, binding = 3) uniform sampler2D lumaTable;
 layout(push_constant) uniform Params { int limitedRange; int chromaFilter; } params;
 layout(location = 0) out vec4 color;
 
@@ -54,9 +61,10 @@ float haar_intermediate(float v) {
 #endif
 }
 
-// Vulkan's float -> UNORM8 store: clamp, scale, round to nearest.
+// The plane store: Vulkan's float -> UNORM8 conversion (clamp, scale, round to nearest), then
+// the value convert.frag would fetch back from that plane.
 float store_unorm8(float v) {
-    return roundEven(clamp(v, 0.0, 1.0) * 255.0) / 255.0;
+    return texelFetch(lumaTable, ivec2(int(roundEven(clamp(v, 0.0, 1.0) * 255.0)), 0), 0).r;
 }
 
 void main() {
@@ -66,18 +74,17 @@ void main() {
     float horizontal = texelFetch(waveletY, ivec3(coeff, 1), 0).x;
     float vertical = texelFetch(waveletY, ivec3(coeff, 2), 0).x;
     float diagonal = texelFetch(waveletY, ivec3(coeff, 3), 0).x;
-    float low_even = a - 0.5 * vertical;
-    float low_odd = low_even + vertical;
-    float high_even = horizontal - 0.5 * diagonal;
-    float high_odd = high_even + diagonal;
+    float low_even = haar_intermediate(a - 0.5 * vertical);
+    float low_odd = haar_intermediate(low_even + vertical);
+    float high_even = haar_intermediate(horizontal - 0.5 * diagonal);
+    float high_odd = haar_intermediate(high_even + diagonal);
     // Row parity picks the vertical half, column parity the horizontal one (pixel = 2 * coeff).
     bool odd_row = (pix.y & 1) != 0;
-    float low = haar_intermediate(odd_row ? low_odd : low_even);
-    float high = haar_intermediate(odd_row ? high_odd : high_even);
-    float even = low - 0.5 * high;
-    float odd = even + high;
-    float Y = haar_intermediate((pix.x & 1) != 0 ? odd : even);
-    Y = store_unorm8(Y + 0.5);
+    float low = odd_row ? low_odd : low_even;
+    float high = odd_row ? high_odd : high_even;
+    float even = haar_intermediate(low - 0.5 * high);
+    float odd = haar_intermediate(even + high);
+    float Y = store_unorm8(((pix.x & 1) != 0 ? odd : even) + 0.5);
 
     // convert.frag samples chroma at the luma plane's texel centres; 4:2:0 luma is twice chroma.
     vec2 uv = (vec2(pix) + 0.5) / vec2(textureSize(planeCb, 0) * 2);
