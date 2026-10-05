@@ -4843,10 +4843,10 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..fa6fc52aceaaa46d34f1fb266e896532
  
 diff --git a/alvr/client_openxr/src/performance.rs b/alvr/client_openxr/src/performance.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..dec6bb16dd0d81010faa383976242ed09544baa1
+index 0000000000000000000000000000000000000000..594514baa0411df1f4e3c3dbf75067379a8c053c
 --- /dev/null
 +++ b/alvr/client_openxr/src/performance.rs
-@@ -0,0 +1,757 @@
+@@ -0,0 +1,764 @@
 +use crate::interaction::{ButtonAction, InteractionContext};
 +use alvr_client_core::{
 +    performance::{
@@ -4907,6 +4907,9 @@ index 0000000000000000000000000000000000000000..dec6bb16dd0d81010faa383976242ed0
 +        context: &Rc<GraphicsContext>,
 +        (width, height): (u32, u32),
 +    ) -> xr::Result<Self> {
++        // The runtime creates the swapchain's GL textures in the current context, and wgpu's GLES
++        // backend releases it after each use; without this the second surface got texture name 0.
++        context.make_current();
 +        let swapchain = session.create_swapchain(&xr::SwapchainCreateInfo {
 +            create_flags: xr::SwapchainCreateFlags::EMPTY,
 +            usage_flags: xr::SwapchainUsageFlags::COLOR_ATTACHMENT
@@ -4920,8 +4923,12 @@ index 0000000000000000000000000000000000000000..dec6bb16dd0d81010faa383976242ed0
 +            mip_count: 1,
 +        })?;
 +        let size = UVec2::new(width, height);
-+        let renderer =
-+            PerformanceRenderer::new(Rc::clone(context), size, &swapchain.enumerate_images()?);
++        let images = swapchain.enumerate_images()?;
++        if images.iter().any(|&image| image == 0) {
++            // Disable the overlay rather than panic in texture import and take the client down.
++            return Err(xr::sys::Result::ERROR_RUNTIME_FAILURE);
++        }
++        let renderer = PerformanceRenderer::new(Rc::clone(context), size, &images);
 +        Ok(Self {
 +            swapchain,
 +            renderer,
