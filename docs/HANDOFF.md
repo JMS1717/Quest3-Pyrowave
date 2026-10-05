@@ -91,6 +91,12 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 ## Highest-value next experiment
 
+Use the [next overnight plan](NEXT-OVERNIGHT.md): bounded per-frame ownership and
+OpenXR timing trace, one mechanism-supported scheduling change, then repeated
+and sustained validation only if it improves the baseline. If rejected, spend
+remaining implementation time on one decoded-video presenter milestone. The
+plan has deliverables/time limits and does not resume the paused hardware session.
+
 **October 5 next step:** the bounded one-submission prerecord prototype has
 been measured and did not improve fresh delivery/p1. Do not repeat unchanged
 flag/bitrate sweeps. Investigate publication-to-eye scheduling with per-frame
