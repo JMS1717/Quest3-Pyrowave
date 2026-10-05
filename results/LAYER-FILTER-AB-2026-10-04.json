@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-04",
+  "build": {
+    "version": "20.13.0-quest3.pyro.34",
+    "head_sha": "28582899348ac35b1a638b91f20b638097d19352",
+    "run_id": 37245940089,
+    "apk_sha256": "5c4b74e613e907019b4f52f97ee824b69bf6801f1c737121afa9f6a49eeb01d5",
+    "windows_zip_sha256": "9e12a7d40050a9e836ee49777732ddba893892c0c361423a7c1ac112a678dc55"
+  },
+  "setup": {
+    "encode_eye": [
+      2080,
+      2208
+    ],
+    "decode": "Haar/Vulkan compute",
+    "transport": "ALVR USB/ADB TCP",
+    "foveated_encoding": false,
+    "refresh_hz": 120,
+    "target_mbps": 1000,
+    "chroma": "4:2:0",
+    "source": "tools.quest3.stereo_scene --quality --normalized-chart (stationary)",
+    "headset": "Quest 3, unworn; proximity held by power-manager automation; guardian paused; restored afterwards"
+  },
+  "method": "client force-stopped and relaunched per block; 5 s settle excluded; 20 s measured; order ABBAABBAAB",
+  "arms": {
+    "A": "debug.q3pw.layer_filter unset (flags 0x0)",
+    "B": "debug.q3pw.layer_filter=supersample_hq+sharpen_hq (XrCompositionLayerSettingsFB flags 0xa)"
+  },
+  "runtime_logged": {
+    "supported": true,
+    "auto_supported": true
+  },
+  "battery_temperature_c_range": [
+    30.0,
+    38.0
+  ],
+  "per_arm": {
+    "A": {
+      "blocks": 5,
+      "displayed_target_fps": 117.68,
+      "lost_target_frames_per_s": 2.41,
+      "vrapi_compositor_gpu_ms_TW": 0.86,
+      "vrapi_gpu_utilization": 0.855,
+      "eye_copy_cpu_ms_p50_p90": [
+        1.55,
+        1.77
+      ],
+      "gpu_decode_ms_p50_p90": [
+        6.0,
+        6.83
+      ],
+      "median_estimated_pipeline_latency_ms": 56.53
+    },
+    "B": {
+      "blocks": 5,
+      "displayed_target_fps": 117.6,
+      "lost_target_frames_per_s": 2.57,
+      "vrapi_compositor_gpu_ms_TW": 1.13,
+      "vrapi_gpu_utilization": 0.87,
+      "eye_copy_cpu_ms_p50_p90": [
+        1.55,
+        1.8
+      ],
+      "gpu_decode_ms_p50_p90": [
+        5.92,
+        6.87
+      ],
+      "median_estimated_pipeline_latency_ms": 52.18
+    }
+  },
+  "paired_B_minus_A": {
+    "adjacent_pairs": 5,
+    "fps": {
+      "mean": -0.076,
+      "sem": 0.268,
+      "pairs_positive": 4
+    },
+    "lost": {
+      "mean": 0.159,
+      "sem": 0.344,
+      "pairs_positive": 2
+    },
+    "eye_render_p90": {
+      "mean": 0.007,
+      "sem": 0.096,
+      "pairs_positive": 3
+    },
+    "compositor_tw_ms": {
+      "mean": 0.259,
+      "sem": 0.008,
+      "pairs_positive": 5
+    },
+    "gpu_util": {
+      "mean": 0.011,
+      "sem": 0.007,
+      "pairs_positive": 3
+    }
+  },
+  "not_measured": [
+    "perceived sharpness or aliasing",
+    "gameplay",
+    "other refresh rates or chroma",
+    "sustained thermals"
+  ]
+}

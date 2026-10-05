@@ -27,9 +27,9 @@ resume paused hardware work or unattended workers.
 | Item | Evidence / limitation |
 | --- | --- |
 | Public release | [alpha.7](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.7), matching `.15` APK/server |
-| Development pair | Reviewed `.33`, built from `8fb4656` (bounded frame wait on by default; LOW decode queue priority at ≤120 Hz / 4:2:0); installed October 4 after live verification. `.32`/`.31`/`.30`/`.29` pairs retained. Recheck installation before hardware work |
+| Development pair | Reviewed `.34`, built from `2858289`: `.33` plus opt-in compositor filtering (`debug.q3pw.layer_filter`, off by default); native libraries byte-identical to `.33`. Installed October 4 after a live A/B. `.33` (`8fb4656`: bounded frame wait on by default; LOW decode queue priority at ≤120 Hz / 4:2:0) and `.32`/`.31`/`.30`/`.29` pairs retained. Recheck installation before hardware work |
 | User feedback | Positive manual playtest after overlay/OpenXR repairs; not sustained FPS, optical latency or broad game acceptance |
-| Best short native screens | `.33` at 120 Hz / 1000 Mbps / 4:2:0: about 116–118 displayed target FPS (2.8–4.8 lost/s) with the default wait and LOW decode priority. Without the priority it was 110–114, and without the wait 107–110 ([fresh-frame loss](FRESHNESS.md), [decode priority](DECODE-PRIORITY.md)). Stationary chart, not sustained gameplay |
+| Best short native screens | `.33` at 120 Hz / 1000 Mbps / 4:2:0: about 116–118 displayed target FPS (2.4–4.8 lost/s across sessions, `.34` unfiltered arm included) with the default wait and LOW decode priority. Without the priority it was 110–114, and without the wait 107–110 ([fresh-frame loss](FRESHNESS.md), [decode priority](DECODE-PRIORITY.md)). Stationary chart, not sustained gameplay |
 | Baseline recommendation | Haar/Compute, full-frame native encode, USB/TCP, 120 Hz request, 1000 Mbps, 4:2:0; experimental fence paths off |
 | 4:4:4 | Optional quality mode. Prior matched screens regressed performance; spare bandwidth does not make it free |
 | 2000 Mbps | Short idle/Home comparison increased estimated latency about 11 ms versus 1000; not a controlled gameplay/optical measurement |
@@ -44,6 +44,7 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 1. [Fresh-frame loss](FRESHNESS.md): measured cause, `.31` default wait, interleaved A/B method.
    [Decode priority](DECODE-PRIORITY.md): `.33` eye copy preempts decode at ≤120 Hz / 4:2:0.
+   [Compositor filtering](COMPOSITOR-FILTER.md): `.34` opt-in supersample/sharpen cost.
 2. [Ready-fence experiment](READY-FENCE-EXPERIMENT.md): correct on GPU, rejected live; opt-in only.
 3. [Nightfall synchronization review](NIGHTFALL-SYNC-REVIEW.md): ownership/lifetime audit.
 4. [Independent render/encode resolution](RENDER-ENCODE-RESOLUTION.md): already implemented.
@@ -51,6 +52,16 @@ state before testing; the private handoff includes a fresh disk snapshot.
 6. [OpenXR routing](OPENXR.md), [overlay](OVERLAY.md), [light foveation](LIGHT-FOVEATION.md).
 
 ## Highest-value next experiment
+
+**Update 2026-10-04 (evening):** removing the convert pass is not possible
+this way: Quest 3 gralloc has no R8 AHardwareBuffer, so GLES cannot sample the
+decoded planes ([details](DECODE-PIPELINE.md)). `.34` adds opt-in compositor
+supersampling/sharpening. `supersample_hq+sharpen_hq` costs about 0.26 ms of
+compositor GPU and no measurable FPS at 120 Hz ([details](COMPOSITOR-FILTER.md)).
+It needs a headset-on visual comparison before it can become a default.
+Larger lead: present through `XR_KHR_android_surface_swapchain` with Vulkan WSI
+from the convert pass. That would remove the GLES eye copy (p50 about 1.55 ms
+CPU), but pose/content pairing is the risk.
 
 **Update 2026-10-04 (later):** with equal GPU priority, the GLES eye copy
 queued behind the Vulkan decode (eye-copy CPU p90 about 7.5 ms). A LOW decode

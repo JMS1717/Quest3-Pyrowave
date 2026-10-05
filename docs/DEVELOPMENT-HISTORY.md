@@ -1,5 +1,12 @@
 # Development history - archived README
 
+**October 4 (evening):** Quest 3 gralloc has no R8 AHardwareBuffer, so the
+decoded planes cannot be shared with GLES and the convert pass stays
+([details](DECODE-PIPELINE.md)). `.34` adds opt-in compositor supersampling and
+sharpening (`debug.q3pw.layer_filter`). The strongest setting costs about
+0.26 ms of compositor GPU time and no measurable FPS at 120 Hz.
+[Details](COMPOSITOR-FILTER.md).
+
 **October 4 (later):** the eye copy was waiting behind decode on the GPU. `.33`
 lowers decode queue priority at ≤120 Hz / 4:2:0: about 116 vs 111 displayed
 target FPS at 120 Hz, verified on Quest 3. At 144 Hz LOW cost about 10 FPS, so
