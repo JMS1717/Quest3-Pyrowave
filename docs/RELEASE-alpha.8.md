@@ -1,4 +1,4 @@
-# Proposed v0.1.0-alpha.8 — native-frame pacing and usability preview
+# alpha.8: native-frame pacing, usability and safety
 
 This prerelease packages the reviewed `.51` integration. Retain alpha.7 for
 rollback. It improves usability, pacing and safety; sustained 120 fresh FPS and
