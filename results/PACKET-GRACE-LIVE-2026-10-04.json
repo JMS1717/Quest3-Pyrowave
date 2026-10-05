@@ -2173,7 +2173,8 @@
     "Stationary pose-history estimated total latency is confounded; not used for a latency improvement claim",
     "Thermal status0, battery temperature37-40C; GPU clock not sampled in this screen",
     "Some fresh windows omitted after each configuration switch; all represented configurations verified",
-    "Device health/focus ADB sampling during capture may perturb USB; measurement overhead not yet isolated"
+    "Device health/focus ADB sampling during capture may perturb USB; measurement overhead not yet isolated",
+    "Device log windows preceded clock-offset calibration (~1.26s measured later); exact host-bounded log-window timing is uncertain. Submission and telemetry completion rates use host receive time and are unaffected by that offset."
   ],
   "performance_acceptance": false,
   "optical_latency_measured": false

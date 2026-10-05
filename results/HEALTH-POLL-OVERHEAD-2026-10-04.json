@@ -364,7 +364,8 @@
     "Health reads maximum10s with <42C/thermal0 headroom; identical holds/thermal protection",
     "Guard wall time includes focus/proximity renewal and hostADB overhead, not proven stream blocking",
     "Session variance greater than small observed average difference",
-    "Neither wall-time submission nor eye completion proxy establishes optical or unique-content FPS"
+    "Neither wall-time submission nor eye completion proxy establishes optical or unique-content FPS",
+    "Device log windows preceded clock-offset calibration (~1.26s measured later); exact host-bounded log-window timing is uncertain. Submission and telemetry completion rates use host receive time and are unaffected by that offset."
   ],
   "performance_acceptance": false
 }
