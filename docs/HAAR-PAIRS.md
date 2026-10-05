@@ -24,3 +24,15 @@ sustained pacing/latency/image checks follow any gain. Measure stage and total
 completion time; counters cannot establish optical delivery. Retain4:2:0/noFFE/
 native120 and keep candidates off by default. Preserve matching old binaries and
 independent restoration.
+
+## Quest GPU correctness screen
+
+The `.42` Android client and regression build passed. Default, `64-column`,
+`64-row` and `128-row` each matched the saved small/native stereo RGBA readbacks
+exactly at default precision1, Haar/Compute, 4:2:0 with limited-range fixtures.
+Current-process/time-window logcat records confirmed each candidate selector;
+producer completion and GPU readback completion were verified. Headset properties
+were unchanged. These were single-decode standalone checks on an asleep headset,
+with cold pipelines, not awake VR timing or arbitrary-content acceptance. No APK
+was deployed by them. Windows matching builds were still pending; candidates
+remain off by default. [Sanitized proof](../results/HAAR-PAIRS-GPU-2026-10-05.json).
