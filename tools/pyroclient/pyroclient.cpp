@@ -867,6 +867,13 @@ extern "C" pyroclient *pyroclient_create_ex(uint32_t width, uint32_t height, int
 extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t height, int chroma444, int full_range, uint32_t ring_size, int wavelet, int decode_path, int low_queue_priority) {
     if (!width || !height || (!chroma444 && ((width | height) & 1))) { LOGE("bad geometry %ux%u", width, height); return nullptr; }
     if (wavelet != 97 && wavelet != 53 && wavelet != 2) { LOGE("bad wavelet %d (97, 53 or 2=Haar)", wavelet); return nullptr; }
+    char pairs_prop[PROP_VALUE_MAX] = {};
+    if (__system_property_get("debug.q3pw.haar_pairs", pairs_prop) > 0) {
+        const bool allowed = !strcmp(pairs_prop, "64-column") || !strcmp(pairs_prop, "64-row") || !strcmp(pairs_prop, "128-row");
+        setenv("PYROWAVE_HAAR_PAIRS", allowed ? pairs_prop : "0", 1);
+    }
+    LOGI("[Q3PW_HAAR_PAIRS] mode=%s default_off=true",
+         getenv("PYROWAVE_HAAR_PAIRS") ? getenv("PYROWAVE_HAAR_PAIRS") : "0");
     char fused_prop[PROP_VALUE_MAX] = {};
     if (__system_property_get("debug.q3pw.haar_fused", fused_prop) > 0)
         setenv("PYROWAVE_FUSED_HAAR", !strcmp(fused_prop, "1") ? "1" : "0", 1);

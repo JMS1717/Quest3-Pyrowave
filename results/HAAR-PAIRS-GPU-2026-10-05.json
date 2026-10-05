@@ -1,0 +1,209 @@
+{
+  "date": "2026-10-05 America/New_York",
+  "version": "20.13.0-quest3.pyro.42",
+  "source_commit": "ef1e8cc557e54022e255f4e826eebd59530f5e06",
+  "ci_run": 37263669309,
+  "scope": "Android component-only standalone GPU correctness, before matching Windows review and deployment",
+  "android_client_and_regressions_passed": true,
+  "matching_pair_review_completed": false,
+  "apk_sha256": "7c331357e45667575fb9092bbb4b3f13bb8c753edfbed516d9525d09fa5b3421",
+  "native_libraries_sha256": {
+    "libpyroclient.so": "0789460fc35ed2388d1397655ab2c3018445426b389619a3c1f195f84a0b8362",
+    "libpyrowave-shared.so": "4725d9ea5450b4c77c4b6a85c0989346cab66a6d1a2c9b47422e9814b54426f1",
+    "libc++_shared.so": "f9992c4ba6b7c5a716e3a202fceb1ce029d6a2b0605838ac6b3219f489dd7970"
+  },
+  "settings_unchanged": true,
+  "fixtures": {
+    "small_stereo": [
+      512,
+      320
+    ],
+    "native_stereo": [
+      4160,
+      2208
+    ],
+    "chroma": "420",
+    "range": "limited",
+    "wavelet": "Haar",
+    "decode_path": "Compute",
+    "precision": "default1"
+  },
+  "default": [
+    {
+      "pattern": "asymmetric",
+      "exact_reference_match": true,
+      "bytes": 655360,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 512,
+        "height": 320,
+        "bytes": 655360,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "c0e656fb",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    },
+    {
+      "pattern": "native-asymmetric",
+      "exact_reference_match": true,
+      "bytes": 36741120,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 4160,
+        "height": 2208,
+        "bytes": 36741120,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "aad9df7c",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    }
+  ],
+  "candidates": [
+    {
+      "process_specific_activation": true,
+      "mode": "64-column",
+      "pattern": "asymmetric",
+      "exact_reference_match": true,
+      "bytes": 655360,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 512,
+        "height": 320,
+        "bytes": 655360,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "c0e656fb",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    },
+    {
+      "process_specific_activation": true,
+      "mode": "64-column",
+      "pattern": "native-asymmetric",
+      "exact_reference_match": true,
+      "bytes": 36741120,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 4160,
+        "height": 2208,
+        "bytes": 36741120,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "aad9df7c",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    },
+    {
+      "process_specific_activation": true,
+      "mode": "64-row",
+      "pattern": "asymmetric",
+      "exact_reference_match": true,
+      "bytes": 655360,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 512,
+        "height": 320,
+        "bytes": 655360,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "c0e656fb",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    },
+    {
+      "process_specific_activation": true,
+      "mode": "64-row",
+      "pattern": "native-asymmetric",
+      "exact_reference_match": true,
+      "bytes": 36741120,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 4160,
+        "height": 2208,
+        "bytes": 36741120,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "aad9df7c",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    },
+    {
+      "process_specific_activation": true,
+      "mode": "128-row",
+      "pattern": "asymmetric",
+      "exact_reference_match": true,
+      "bytes": 655360,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 512,
+        "height": 320,
+        "bytes": 655360,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "c0e656fb",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    },
+    {
+      "process_specific_activation": true,
+      "mode": "128-row",
+      "pattern": "native-asymmetric",
+      "exact_reference_match": true,
+      "bytes": 36741120,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 4160,
+        "height": 2208,
+        "bytes": 36741120,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "aad9df7c",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    }
+  ],
+  "decision": "All three kernels preserve these default-precision GPU outputs exactly. Keep candidates off by default; matching full builds and awake controlled streaming gates remain.",
+  "performance_acceptance": false,
+  "optical_latency_measured": false,
+  "limitations": [
+    "Single complete decode/readback per mode and fixture; not arbitrary content correctness or endurance",
+    "Asleep standalone headset and cold pipelines do not establish awake VR frame budgets",
+    "No total latency, sustained FPS, thermal or in-headset acceptance",
+    "Mode activation verified using exact current test PID and device-clock bounds; first observer mistakenly expected Android logcat output in stdout and was corrected before accepted proof",
+    "No APK installation by these component GPU checks"
+  ]
+}
