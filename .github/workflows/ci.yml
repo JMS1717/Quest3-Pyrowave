@@ -90,17 +90,19 @@ jobs:
           cmake --build "$PW/build-linux" --target pyrowave-shared
       - name: Fused color exact-pixel gate (lavapipe, no headset)
         env:
-          # The encoder needs 16-64 lane subgroups; lavapipe's linear-texture decode path
-          # crashes, so the gate uses the optimal-tiling path at a small size.
-          LP_NATIVE_VECTOR_WIDTH: '512'
-          PYROWAVE_NO_LINEAR_TEX: '1'
-          GATE_MIN_PSNR: '0'
+          GATE_PACKET_DIR: /tmp/fuse-gate
         run: |
           PW="$XRWIRED_INPUTS/research/pyrowave"
           g++ -std=c++17 -O2 -Wall -Wextra -Wno-missing-field-initializers -I"$PW" -I"$PW/Granite/third_party/khronos/vulkan-headers/include" \
             tools/pyroclient/fuse_color_gate.cpp -o /tmp/fuse_color_gate -L"$PW/build-linux" -lpyrowave-shared -lvulkan -Wl,-rpath,"$PW/build-linux"
           export VK_ICD_FILENAMES=$(ls /usr/share/vulkan/icd.d/lvp_icd*.json | head -n 1)
-          /tmp/fuse_color_gate 512 320 131072 | tee /tmp/fuse_color_gate.txt
+          mkdir -p "$GATE_PACKET_DIR"
+          # The encoder needs 16-64 lane subgroups (512-bit lavapipe vectors). Decode runs in a
+          # second process at 256 bits: 512-bit decode is blank or crashes on CPUs without
+          # AVX-512, and the linear-texture decode path crashes on lavapipe.
+          GATE_ENCODE_ONLY=1 LP_NATIVE_VECTOR_WIDTH=512 /tmp/fuse_color_gate 512 320 131072
+          GATE_DECODE_ONLY=1 LP_NATIVE_VECTOR_WIDTH=256 PYROWAVE_NO_LINEAR_TEX=1 GATE_MIN_PSNR=0 \
+            /tmp/fuse_color_gate 512 320 131072 | tee /tmp/fuse_color_gate.txt
           grep -q FUSE_COLOR_GATE_PASS /tmp/fuse_color_gate.txt
   publication_tests:
     runs-on: ubuntu-24.04
