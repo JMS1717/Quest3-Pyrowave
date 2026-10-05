@@ -101,17 +101,18 @@ that 5.9 ms GPU decode. An explicit 6 ms wait was measured on `.51` and is not
 the default: unique targets did not move, and compositor stale counts roughly
 doubled.
 
-**Haar [3,2] live, October 5:** `.52` (`f3a7184`) puts the Experiment 3 H2
-schedule in the streaming decoder behind `debug.q3pw.haar_h2=1`. Default stays
-the current multilevel Haar. The old all-levels fused kernel stays off. A 12 s
-off/on/off at 120 Hz, 1000 Mbps, 4:2:0, 4160×2208 made GPU decode slower
-(5.91 ms to 6.37 ms p50) and unique targets fell from about 118/s to 112/s.
-Lost targets rose from about 2.3/s to 7.6/s. The standalone −50% result was a
-different device, a locked 788 MHz clock, and 4:4:4 with no compositor. On
+**Haar [3,2] live, October 5:** Reviewed `.52` (`f3a7184`) was measured, then
+the branch removed that candidate. See [the format defect](PR-3-REVIEW.md).
+Binding 2 is declared `r16f` while the final plane is `R8`. A 12 s off/on/off
+at 120 Hz, 1000 Mbps, 4:2:0, 4160×2208 still ran: GPU decode went from 5.91 ms
+to 6.37 ms p50, unique targets from about 118/s to 112/s, and lost targets from
+about 2.3/s to 7.6/s. The flag was restored off. The standalone −50% result was
+a different device, a locked 788 MHz clock, and 4:4:4 with no compositor. On
 Quest the GPU sat at 640 MHz and about 87% busy, with roughly 700 preemptions
-per second, and the live port also bounds-checks partial 32×32 tiles. Drop the
-flag. Adreno reports a 64-lane compute subgroup and 32 KB of shared memory;
-that does not by itself explain the 5.9 ms, and retuning [3,2] is not justified.
+per second. Drop this port. A corrected shader needs an exact-pixel proof
+before another live comparison. Adreno reports a 64-lane compute subgroup and
+32 KB of shared memory; that does not explain the 5.9 ms, and retuning this
+[3,2] port is not justified.
 Native 120 sustained/optical acceptance remains unmet. The historical evidence
 below records earlier hypotheses; completed experiments are not pending work.
 
