@@ -27,6 +27,19 @@ The creation probe rejects unexpectedly large extents/image counts and requires
 an8-bit UNORM SRGB-nonlinear Surface format. Format acceptance does not validate
 range/gamma, image orientation or color appearance.
 
+Validate a saved startup log using the recorded client process and device-clock
+interval (include startup, since the probe runs before video begins):
+
+```text
+python -m tools.quest3.surface_probe client.log --start DEVICE_START_EPOCH --end DEVICE_END_EPOCH --pid CLIENT_PID
+```
+
+The reader requires one ordered creation/destruction pair with native result0.
+Wrong-process and out-of-window records are excluded; partial, duplicated,
+reordered, malformed or mixed failure/success records cannot pass. Missing
+records remain unknown. A passing report verifies reported object creation and
+destruction, not leak freedom, presentation, image correctness or performance.
+
 Before testing, require a reviewed matching cloud-built pair and unchanged-default
 GPU readback. Compare requested/off behavior, inspect object cleanup and resume
 normal streaming afterward. The next static-chart prototype must validate
