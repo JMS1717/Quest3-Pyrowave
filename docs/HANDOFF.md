@@ -24,6 +24,13 @@ resume paused hardware work or unattended workers.
 
 ## Current engineering state
 
+PR #3 integrates diagnostics and safety work while keeping the experiments off.
+See the [integration review and excluded Haar candidate](PR-3-REVIEW.md).
+The owner's Codex hardware pause remains in effect; merging source does not
+resume unattended tests. Installed-build statements below are historical records,
+not fresh device readbacks. The [scorecard](WHOLE-STACK-SCORECARD.md) records the
+later `.50`/`.51` screens and the reported `.51` installation.
+
 The `.48` prerecord worker is now active and measured, but **not promoted**.
 All matching builds passed; actual native activation, preparation and direct-only
 eye completions were verified. Same-session ABBA eye completion proxies stayed
