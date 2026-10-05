@@ -24,6 +24,13 @@ resume paused hardware work or unattended workers.
 
 ## Current engineering state
 
+[One-submission prerecord prototype](PRODUCER-PRERECORD.md): matching .46
+builds and small/native Quest exact-pixel checks passed for fragment and compute
+conversion, including cancellation, capacity growth and outstanding teardown.
+Standalone only; no ALVR worker call site or streaming gain yet. Installed .45
+retained. Next integrate a default-off, bounded latest-frame worker that preserves
+the existing post-publication wait and complete-frame/pose association.
+
 Latest [LOW+release handoff](RELEASE-LOW.md) confirms exact native-size fenced
 reuse and active GPU imports. CPU waiting drops ~1 ms and copy deferrals vanish,
 but delivery/p1 do not improve. Keep release off; investigate producer resource
