@@ -1,0 +1,57 @@
+# Path to 207 Hz: measured cadence and remaining work
+
+Updated October 5, 2026. Owner-authorized signed `.55` testing confirmed a short
+no-decode runtime cadence of 206.9 FPS (3104 frames / 15 s), with no skipped slots.
+Strong foveation still took 7.12 ms median completion at 120 Hz: 207 Hz streaming
+has not been reached. [Integration screen and limits](PR-9-REVIEW.md). Future
+hardware work requires current authorization and the repository safeguards.
+
+## Budget
+
+At 120 Hz with native 2080x2208 per eye, 4:2:0 and 1000 Mbps, the Quest app spends about
+7.3 ms of GPU per fresh frame (decode 5.9, RGBA conversion 0.8, eye copy 0.6; measured
+stages in [DECODE-PIPELINE.md](DECODE-PIPELINE.md)). That caps throughput near 137 fps. At
+207 Hz the frame period is 4.83 ms, which leaves about 3.8 ms for the app once the Meta
+compositor runs (est.). Reaching 207 Hz therefore needs about a 1.9x cut in GPU time per
+frame. Scheduling changes cannot provide that; it has to come from fewer pixels and fewer
+full-frame passes.
+
+## What this branch adds
+
+| Change | Expected effect | Checked off-device | Status |
+|---|---|---|---|
+| Balanced (68% center, 1.75x) and Strong (60% center, 2x) peripheral profiles, `video.pyrowave.foveation_profile` | Encoded pixels per eye drop by 23.8% (1824x1920) and 35.1% (1664x1792), versus 11.6% for Light. Measured Strong GPU decode is 5.08 ms, completion 7.12 ms at 120 Hz; the earlier 3.8 ms scaling estimate was not achieved | Rust server (C++ sizing), Rust client and the Python model agree for every eye width from 512 to 4096. Light geometry is unchanged | CONTINUE: candidates, not accepted |
+| Fused final color, opt-in with `debug.q3pw.fuse_color=1`. The integrated implementation is #4's, see [FUSE-COLOR.md](FUSE-COLOR.md); this branch's own version was not taken | Removes one full-resolution luma write and read | Byte-exact on Quest at 512x320 and 4160x2208. Live A/B at 120 Hz: no delivered gain, fence unchanged | STOP as a 120 Hz lever; keep off. Retest only within a 207 Hz budget |
+| Optical latency stamp, `video.pyrowave.latency_stamp` ([OPTICAL-LATENCY.md](OPTICAL-LATENCY.md)) | First real composition-to-photon number | The layout round-trips through a rasterizer for eye sizes 512 to 4096 | New diagnostic |
+| No-decode cadence probe, `debug.q3pw.cadence_probe=207` | Shows whether the runtime itself sustains 207 Hz with the lobby only | Counter and summary logic unit-tested | New diagnostic |
+
+Light stays the default profile while foveated encoding and fused color stay off.
+Bilinear remains the default PC filter after the measured Adaptive pacing concern.
+These optional profiles do not establish native-resolution 207 Hz streaming.
+
+## Hardware sequence and next gates
+
+Run these in order. Each step can reject a candidate on its own. Short screens cannot prove
+sustained FPS, thermal stability or optical latency.
+
+1. **Fused color exact-pixel proof on Adreno.** Done in #4 (October 5): byte-exact on both
+   saved stereo fixtures; see [FUSE-COLOR.md](FUSE-COLOR.md) for the device scripts.
+2. **No-decode 207 Hz cadence.** Short screen complete; sustained cadence remains
+   separate. Snapshot and temporarily align `debug.oculus.refreshRate` too: a saved
+   120 Hz override masked the first request. With the PC streamer stopped, run
+   `adb shell setprop debug.q3pw.cadence_probe 207` and relaunch the APK. Read the
+   `[Q3PW_CADENCE]` and `[Q3PW_CADENCE_SUMMARY]` lines, then clear the property. If the
+   lobby alone skips slots at 207, decoder work cannot be the only limit.
+3. **120 Hz profile screen:** Off/Light/Balanced/Strong/Off short cells are complete,
+   with owner-interrupted cells excluded and repeated. Sustained and lens checks
+   remain. For a new interleaved comparison: Light versus Strong,
+   then fused color off versus on (already no 120 Hz gain, see #4). Record decode stages, displayed FPS, lost frames and a
+   peripheral-text look for each profile.
+4. **207 Hz screen** with Strong and fused color both on. Report runtime acceptance,
+   decode budget and live delivery as three separate results.
+5. **Optical latency** at the best stable rate, following [OPTICAL-LATENCY.md](OPTICAL-LATENCY.md).
+
+If 207 Hz still misses after step 4, the next levers are Vulkan-native OpenXR presentation
+([VULKAN-PRESENTATION.md](VULKAN-PRESENTATION.md)), which removes the RGBA bridge and GLES
+copy, and fusing dequant with the level-0 Haar step, which avoids writing and re-reading
+most luma coefficients. Both are larger changes and are not started on this branch.

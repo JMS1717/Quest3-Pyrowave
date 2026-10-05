@@ -1,0 +1,1271 @@
+{
+ "date": "2026-10-05 America/New_York",
+ "authorization": "owner-authorized hardware testing, owner away (headset unworn, proximity held by the harness)",
+ "version": "20.13.0-quest3.pyro.54",
+ "source_commit": "7460906520b10bff428cfa6d07867d2116329631",
+ "ci_run": 37351760288,
+ "apk_sha256": "951cbb0370f5cbdc44a59fed434d26fa0f028a59d0e4f80a266d794e528e9c5b",
+ "windows_zip_sha256": "83b00339b488277ed27e0c05db68b4a5f64928b3edffc33d0b420d4bc9bb7301",
+ "native_libraries_sha256": {
+  "libpyroclient.so": "a4e19e81537c7b99a07158cd5fc1bb3a067bab1e5d57aa7a7ffe6c42eb43742e",
+  "libpyrowave-shared.so": "4b67527fdc3c7196ecc6749c4ab8464bd9f40868750f0105ba819fc8fb71f77d",
+  "libc++_shared.so": "f9992c4ba6b7c5a716e3a202fceb1ce029d6a2b0605838ac6b3219f489dd7970"
+ },
+ "scope": "Client-restart A/B of debug.q3pw.fuse_color on one installed .54 pair: stationary normalized chart, native 2080x2208 per eye, runtime 120 Hz, 1000 Mbps, 4:2:0, no foveation, LOW decode priority, TCP. Unique displayed targets are timestamp steps, not optical delivery or pose accuracy.",
+ "verdict": "No delivered gain. Fence p50 unchanged; decode time moves into the fused pass; eye-render p90 and compositor time rise in every pair. Keep default off.",
+ "phases": [
+  {
+   "capture": "phase32-20261005T181419Z",
+   "pattern": "ABBAABBA",
+   "measure_s": 20.0,
+   "settle_s": 5.0,
+   "hz": 120,
+   "source_eye": [
+    2080,
+    2208
+   ],
+   "arms": {
+    "A": {
+     "debug.q3pw.fuse_color": ""
+    },
+    "B": {
+     "debug.q3pw.fuse_color": "1"
+    }
+   },
+   "session_values_during_test": {
+    "preferred_fps": 120.0,
+    "variant": "ConstantMbps",
+    "ConstantMbps": 1000,
+    "chroma_444": false,
+    "wired_client_autolaunch": false
+   },
+   "fused_active_processes": 4,
+   "fused_off_processes": 4,
+   "blocks": [
+    {
+     "arm": "A",
+     "fps": 117.60417730788548,
+     "lost_per_s": 2.6455948205933493,
+     "p50": {
+      "gpu_decode_ms": 5.965208,
+      "fence_ms": 7.979844,
+      "convert_ms": 0.77010417,
+      "eye_acquire_wait_ms": 0.006928,
+      "eye_render_ms": 1.6611459,
+      "eye_release_ms": 0.003333,
+      "wait_ms": 7.390105
+     },
+     "p90": {
+      "gpu_decode_ms": 6.726875,
+      "fence_ms": 8.322032,
+      "convert_ms": 0.9141666,
+      "eye_acquire_wait_ms": 0.011510001,
+      "eye_render_ms": 1.9651039,
+      "eye_release_ms": 0.0048950003,
+      "wait_ms": 7.732136
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 48.63447,
+      "decoder_queue_s": 3.7916149999999997,
+      "vsync_queue_s": 14.283631999999999,
+      "client_compositor_s": 1.6875010000000001
+     },
+     "vrapi": {
+      "App": 5.67,
+      "GD": 0.0,
+      "GPU%": 0.87,
+      "TW": 0.88,
+      "vrapi_fps": 121.0,
+      "stale_sum": 83.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 27.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "B",
+     "fps": 117.85279442649953,
+     "lost_per_s": 2.2462413168964335,
+     "p50": {
+      "gpu_decode_ms": 5.2352605,
+      "fence_ms": 7.916876,
+      "convert_ms": 1.3570312,
+      "eye_acquire_wait_ms": 0.005677,
+      "eye_render_ms": 1.6846881,
+      "eye_release_ms": 0.0042709997,
+      "wait_ms": 7.417552
+     },
+     "p90": {
+      "gpu_decode_ms": 6.252708,
+      "fence_ms": 8.362293,
+      "convert_ms": 2.2429166,
+      "eye_acquire_wait_ms": 0.008281,
+      "eye_render_ms": 2.193281,
+      "eye_release_ms": 0.006407,
+      "wait_ms": 7.826303
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 58.835627,
+      "decoder_queue_s": 3.9745054999999994,
+      "vsync_queue_s": 14.880324,
+      "client_compositor_s": 1.7129949999999998
+     },
+     "vrapi": {
+      "App": 5.56,
+      "GD": 0.0,
+      "GPU%": 0.86,
+      "TW": 0.89,
+      "vrapi_fps": 120.0,
+      "stale_sum": 95.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 28.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "B",
+     "fps": 118.25286897895243,
+     "lost_per_s": 1.7470875535092172,
+     "p50": {
+      "gpu_decode_ms": 5.9381247,
+      "fence_ms": 8.056928,
+      "convert_ms": 1.3511978,
+      "eye_acquire_wait_ms": 0.005833,
+      "eye_render_ms": 1.6284901,
+      "eye_release_ms": 0.00302,
+      "wait_ms": 7.525782
+     },
+     "p90": {
+      "gpu_decode_ms": 6.1324997,
+      "fence_ms": 8.26599,
+      "convert_ms": 2.1129687,
+      "eye_acquire_wait_ms": 0.008177,
+      "eye_render_ms": 1.9860419,
+      "eye_release_ms": 0.004896,
+      "wait_ms": 7.694584
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 59.69709650000001,
+      "decoder_queue_s": 4.3291405,
+      "vsync_queue_s": 14.370194,
+      "client_compositor_s": 1.6508595
+     },
+     "vrapi": {
+      "App": 5.5649999999999995,
+      "GD": 0.0,
+      "GPU%": 0.87,
+      "TW": 0.9,
+      "vrapi_fps": 120.0,
+      "stale_sum": 108.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 29.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "A",
+     "fps": 117.92155299277891,
+     "lost_per_s": 2.0959395792199382,
+     "p50": {
+      "gpu_decode_ms": 6.006875,
+      "fence_ms": 8.036199,
+      "convert_ms": 0.7706771,
+      "eye_acquire_wait_ms": 0.0060409997,
+      "eye_render_ms": 1.661979,
+      "eye_release_ms": 0.0038540002,
+      "wait_ms": 7.472917
+     },
+     "p90": {
+      "gpu_decode_ms": 6.8498955,
+      "fence_ms": 8.419428,
+      "convert_ms": 0.8634375,
+      "eye_acquire_wait_ms": 0.0100529995,
+      "eye_render_ms": 1.9363021,
+      "eye_release_ms": 0.005521,
+      "wait_ms": 7.84875
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 58.2753385,
+      "decoder_queue_s": 3.9028650000000003,
+      "vsync_queue_s": 14.3582935,
+      "client_compositor_s": 1.6943495000000002
+     },
+     "vrapi": {
+      "App": 5.69,
+      "GD": 0.0,
+      "GPU%": 0.87,
+      "TW": 0.865,
+      "vrapi_fps": 120.5,
+      "stale_sum": 90.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 31.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "A",
+     "fps": 118.91847518707057,
+     "lost_per_s": 1.4977137932880424,
+     "p50": {
+      "gpu_decode_ms": 5.9867187,
+      "fence_ms": 7.97323,
+      "convert_ms": 0.7651562,
+      "eye_acquire_wait_ms": 0.006146,
+      "eye_render_ms": 1.682761,
+      "eye_release_ms": 0.003386,
+      "wait_ms": 7.443803
+     },
+     "p90": {
+      "gpu_decode_ms": 6.815729,
+      "fence_ms": 8.312658,
+      "convert_ms": 0.93333334,
+      "eye_acquire_wait_ms": 0.0117190005,
+      "eye_render_ms": 1.892344,
+      "eye_release_ms": 0.00474,
+      "wait_ms": 7.816199
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 55.81228,
+      "decoder_queue_s": 1.323177,
+      "vsync_queue_s": 14.521078999999999,
+      "client_compositor_s": 1.711615
+     },
+     "vrapi": {
+      "App": 5.69,
+      "GD": 0.0,
+      "GPU%": 0.87,
+      "TW": 0.87,
+      "vrapi_fps": 121.0,
+      "stale_sum": 64.0,
+      "samples": 21
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 32.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "B",
+     "fps": 116.50565729067063,
+     "lost_per_s": 4.094926660023571,
+     "p50": {
+      "gpu_decode_ms": 5.0721354,
+      "fence_ms": 7.815991,
+      "convert_ms": 1.388802,
+      "eye_acquire_wait_ms": 0.005781,
+      "eye_render_ms": 1.646459,
+      "eye_release_ms": 0.003386,
+      "wait_ms": 7.246303
+     },
+     "p90": {
+      "gpu_decode_ms": 6.0384374,
+      "fence_ms": 8.215522,
+      "convert_ms": 2.289427,
+      "eye_acquire_wait_ms": 0.008906,
+      "eye_render_ms": 2.226042,
+      "eye_release_ms": 0.005209,
+      "wait_ms": 7.644064
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 60.866318500000006,
+      "decoder_queue_s": 2.770886,
+      "vsync_queue_s": 15.0265225,
+      "client_compositor_s": 1.6707555
+     },
+     "vrapi": {
+      "App": 5.52,
+      "GD": 0.0,
+      "GPU%": 0.84,
+      "TW": 0.89,
+      "vrapi_fps": 120.0,
+      "stale_sum": 133.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 32.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "B",
+     "fps": 116.50594317479218,
+     "lost_per_s": 4.34276651936886,
+     "p50": {
+      "gpu_decode_ms": 5.0924478,
+      "fence_ms": 7.878959,
+      "convert_ms": 1.3926562,
+      "eye_acquire_wait_ms": 0.005885,
+      "eye_render_ms": 1.645729,
+      "eye_release_ms": 0.0030210002,
+      "wait_ms": 7.290418
+     },
+     "p90": {
+      "gpu_decode_ms": 6.060156,
+      "fence_ms": 8.243803,
+      "convert_ms": 2.261302,
+      "eye_acquire_wait_ms": 0.008906,
+      "eye_render_ms": 2.3119798,
+      "eye_release_ms": 0.004427,
+      "wait_ms": 7.651563
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 60.801050000000004,
+      "decoder_queue_s": 3.644636,
+      "vsync_queue_s": 14.987433,
+      "client_compositor_s": 1.664115
+     },
+     "vrapi": {
+      "App": 5.55,
+      "GD": 0.0,
+      "GPU%": 0.85,
+      "TW": 0.88,
+      "vrapi_fps": 120.5,
+      "stale_sum": 126.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 33.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "A",
+     "fps": 118.41881541708882,
+     "lost_per_s": 1.7972501496691389,
+     "p50": {
+      "gpu_decode_ms": 5.9778643,
+      "fence_ms": 7.976303,
+      "convert_ms": 0.7836458,
+      "eye_acquire_wait_ms": 0.0062499996,
+      "eye_render_ms": 1.680573,
+      "eye_release_ms": 0.003177,
+      "wait_ms": 7.450052
+     },
+     "p90": {
+      "gpu_decode_ms": 6.805052,
+      "fence_ms": 8.303751,
+      "convert_ms": 1.511927,
+      "eye_acquire_wait_ms": 0.010938,
+      "eye_render_ms": 1.916771,
+      "eye_release_ms": 0.004375,
+      "wait_ms": 7.822293
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 56.680147,
+      "decoder_queue_s": 1.402709,
+      "vsync_queue_s": 14.497641999999999,
+      "client_compositor_s": 1.707292
+     },
+     "vrapi": {
+      "App": 5.73,
+      "GD": 0.0,
+      "GPU%": 0.87,
+      "TW": 0.86,
+      "vrapi_fps": 120.0,
+      "stale_sum": 69.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 34.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    }
+   ],
+   "per_arm": {
+    "A": {
+     "blocks": 4,
+     "fps_mean": 118.21575522620594,
+     "lost_per_s_mean": 2.009124585692617,
+     "lat_ms_median": {
+      "total_pipeline_latency_s": 56.246213499999996,
+      "decoder_queue_s": 2.597162,
+      "vsync_queue_s": 14.42796775,
+      "client_compositor_s": 1.70082075
+     },
+     "p50_median": {
+      "gpu_decode_ms": 5.9822915000000005,
+      "fence_ms": 7.9780735,
+      "convert_ms": 0.770390635,
+      "eye_acquire_wait_ms": 0.0061979998,
+      "eye_render_ms": 1.6712760000000002,
+      "eye_release_ms": 0.0033595,
+      "wait_ms": 7.4469275
+     },
+     "p90_median": {
+      "gpu_decode_ms": 6.8103905000000005,
+      "fence_ms": 8.317345,
+      "convert_ms": 0.92374997,
+      "eye_acquire_wait_ms": 0.011224000500000001,
+      "eye_render_ms": 1.92653655,
+      "eye_release_ms": 0.00481750015,
+      "wait_ms": 7.819246
+     },
+     "vrapi_median": {
+      "App": 5.69,
+      "GD": 0.0,
+      "GPU%": 0.87,
+      "TW": 0.8674999999999999,
+      "samples": 20.0,
+      "stale_sum": 76.0,
+      "vrapi_fps": 120.75
+     }
+    },
+    "B": {
+     "blocks": 4,
+     "fps_mean": 117.27931596772869,
+     "lost_per_s_mean": 3.10775551244952,
+     "lat_ms_median": {
+      "total_pipeline_latency_s": 60.24907325000001,
+      "decoder_queue_s": 3.80957075,
+      "vsync_queue_s": 14.933878499999999,
+      "client_compositor_s": 1.66743525
+     },
+     "p50_median": {
+      "gpu_decode_ms": 5.163854150000001,
+      "fence_ms": 7.8979175,
+      "convert_ms": 1.3729166,
+      "eye_acquire_wait_ms": 0.005807,
+      "eye_render_ms": 1.646094,
+      "eye_release_ms": 0.0032035001000000002,
+      "wait_ms": 7.353985
+     },
+     "p90_median": {
+      "gpu_decode_ms": 6.09632785,
+      "fence_ms": 8.254896500000001,
+      "convert_ms": 2.2521093,
+      "eye_acquire_wait_ms": 0.0085935,
+      "eye_render_ms": 2.2096615,
+      "eye_release_ms": 0.0050525,
+      "wait_ms": 7.6730735
+     },
+     "vrapi_median": {
+      "App": 5.555,
+      "GD": 0.0,
+      "GPU%": 0.855,
+      "TW": 0.89,
+      "samples": 20.0,
+      "stale_sum": 117.0,
+      "vrapi_fps": 120.0
+     }
+    }
+   },
+   "paired": {
+    "arm_minus": "B-A",
+    "adjacent_pairs": 4,
+    "fps": {
+     "mean": -0.9364392584772538,
+     "sem": 0.7155811875455506,
+     "positive": 2
+    },
+    "lost": {
+     "mean": 1.0986309267569032,
+     "sem": 0.8504111538640382,
+     "positive": 2
+    },
+    "eye_render_p90": {
+     "mean": 0.251705925,
+     "sem": 0.07564153221470966,
+     "positive": 4
+    },
+    "compositor_tw_ms": {
+     "mean": 0.02125000000000002,
+     "sem": 0.0051538820320220806,
+     "positive": 4
+    },
+    "gpu_util": {
+     "mean": -0.015000000000000013,
+     "sem": 0.006454972243679034,
+     "positive": 0
+    }
+   },
+   "restore": {
+    "errors": [],
+    "installed_version": "20.13.0-quest3.pyro.54",
+    "project_runtime_registered_after": false,
+    "virtual_desktop_registered_after": true
+   }
+  },
+  {
+   "capture": "phase32-20261005T182254Z",
+   "pattern": "BAABBAABBAAB",
+   "measure_s": 20.0,
+   "settle_s": 5.0,
+   "hz": 120,
+   "source_eye": [
+    2080,
+    2208
+   ],
+   "arms": {
+    "A": {
+     "debug.q3pw.fuse_color": ""
+    },
+    "B": {
+     "debug.q3pw.fuse_color": "1"
+    }
+   },
+   "session_values_during_test": {
+    "preferred_fps": 120.0,
+    "variant": "ConstantMbps",
+    "ConstantMbps": 1000,
+    "chroma_444": false,
+    "wired_client_autolaunch": false
+   },
+   "fused_active_processes": 6,
+   "fused_off_processes": 6,
+   "blocks": [
+    {
+     "arm": "B",
+     "fps": 118.00254098032542,
+     "lost_per_s": 2.1972542543945486,
+     "p50": {
+      "gpu_decode_ms": 5.3329167,
+      "fence_ms": 7.970001,
+      "convert_ms": 1.4045833,
+      "eye_acquire_wait_ms": 0.005937,
+      "eye_render_ms": 1.6783849,
+      "eye_release_ms": 0.003802,
+      "wait_ms": 7.461772
+     },
+     "p90": {
+      "gpu_decode_ms": 6.071198,
+      "fence_ms": 8.186824,
+      "convert_ms": 2.393906,
+      "eye_acquire_wait_ms": 0.0088019995,
+      "eye_render_ms": 2.4269788,
+      "eye_release_ms": 0.007084,
+      "wait_ms": 7.664011
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 47.889441,
+      "decoder_queue_s": 4.368281499999999,
+      "vsync_queue_s": 14.657642,
+      "client_compositor_s": 1.7052345
+     },
+     "vrapi": {
+      "App": 5.585,
+      "GD": 0.0,
+      "GPU%": 0.86,
+      "TW": 0.88,
+      "vrapi_fps": 121.0,
+      "stale_sum": 83.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 35.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "A",
+     "fps": 118.45244836474419,
+     "lost_per_s": 1.6971695088079657,
+     "p50": {
+      "gpu_decode_ms": 6.002656,
+      "fence_ms": 7.99875,
+      "convert_ms": 0.7657812,
+      "eye_acquire_wait_ms": 0.0062499996,
+      "eye_render_ms": 1.737917,
+      "eye_release_ms": 0.003958,
+      "wait_ms": 7.484115
+     },
+     "p90": {
+      "gpu_decode_ms": 6.723802,
+      "fence_ms": 8.234219,
+      "convert_ms": 0.90468746,
+      "eye_acquire_wait_ms": 0.00927,
+      "eye_render_ms": 2.025677,
+      "eye_release_ms": 0.005469,
+      "wait_ms": 7.733022
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 56.755155,
+      "decoder_queue_s": 3.3496615,
+      "vsync_queue_s": 14.276303500000001,
+      "client_compositor_s": 1.7687764999999998
+     },
+     "vrapi": {
+      "App": 5.71,
+      "GD": 0.0,
+      "GPU%": 0.87,
+      "TW": 0.86,
+      "vrapi_fps": 121.0,
+      "stale_sum": 93.0,
+      "samples": 21
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 35.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "A",
+     "fps": 118.35284932667281,
+     "lost_per_s": 1.6472560218389722,
+     "p50": {
+      "gpu_decode_ms": 5.918958,
+      "fence_ms": 7.904323,
+      "convert_ms": 0.7732291,
+      "eye_acquire_wait_ms": 0.006562,
+      "eye_render_ms": 1.6740631,
+      "eye_release_ms": 0.003802,
+      "wait_ms": 7.342917
+     },
+     "p90": {
+      "gpu_decode_ms": 6.793333,
+      "fence_ms": 8.33323,
+      "convert_ms": 0.9614583,
+      "eye_acquire_wait_ms": 0.00974,
+      "eye_render_ms": 1.9145839,
+      "eye_release_ms": 0.005625,
+      "wait_ms": 7.829376
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 56.358334,
+      "decoder_queue_s": 3.0912765,
+      "vsync_queue_s": 14.315669999999999,
+      "client_compositor_s": 1.702266
+     },
+     "vrapi": {
+      "App": 5.720000000000001,
+      "GD": 0.0,
+      "GPU%": 0.87,
+      "TW": 0.85,
+      "vrapi_fps": 120.5,
+      "stale_sum": 80.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 35.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "B",
+     "fps": 117.25320348004068,
+     "lost_per_s": 3.0961237716194727,
+     "p50": {
+      "gpu_decode_ms": 5.162552,
+      "fence_ms": 7.939428,
+      "convert_ms": 1.4582812,
+      "eye_acquire_wait_ms": 0.0062499996,
+      "eye_render_ms": 1.687708,
+      "eye_release_ms": 0.003385,
+      "wait_ms": 7.354167
+     },
+     "p90": {
+      "gpu_decode_ms": 6.0559893,
+      "fence_ms": 8.301251,
+      "convert_ms": 2.192552,
+      "eye_acquire_wait_ms": 0.008958,
+      "eye_render_ms": 2.255938,
+      "eye_release_ms": 0.005156,
+      "wait_ms": 7.773178
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 62.282,
+      "decoder_queue_s": 3.366615,
+      "vsync_queue_s": 14.950714,
+      "client_compositor_s": 1.710989
+     },
+     "vrapi": {
+      "App": 5.575,
+      "GD": 0.0,
+      "GPU%": 0.85,
+      "TW": 0.89,
+      "vrapi_fps": 121.0,
+      "stale_sum": 109.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 37.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "B",
+     "fps": 117.03977932574064,
+     "lost_per_s": 3.2926792137676393,
+     "p50": {
+      "gpu_decode_ms": 5.1640625,
+      "fence_ms": 7.929897,
+      "convert_ms": 1.5419271,
+      "eye_acquire_wait_ms": 0.005781,
+      "eye_render_ms": 1.758698,
+      "eye_release_ms": 0.005105,
+      "wait_ms": 7.387397
+     },
+     "p90": {
+      "gpu_decode_ms": 5.9741144,
+      "fence_ms": 8.27297,
+      "convert_ms": 2.181302,
+      "eye_acquire_wait_ms": 0.009167,
+      "eye_render_ms": 2.180104,
+      "eye_release_ms": 0.007968999,
+      "wait_ms": 7.768334
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 56.111864999999995,
+      "decoder_queue_s": 2.3072399999999997,
+      "vsync_queue_s": 14.95134,
+      "client_compositor_s": 1.790261
+     },
+     "vrapi": {
+      "App": 5.61,
+      "GD": 0.0,
+      "GPU%": 0.86,
+      "TW": 0.88,
+      "vrapi_fps": 120.0,
+      "stale_sum": 87.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 37.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "A",
+     "fps": 118.58650712808743,
+     "lost_per_s": 1.846675405614156,
+     "p50": {
+      "gpu_decode_ms": 5.930677,
+      "fence_ms": 7.865417,
+      "convert_ms": 0.76942706,
+      "eye_acquire_wait_ms": 0.006198,
+      "eye_render_ms": 1.7414579,
+      "eye_release_ms": 0.003229,
+      "wait_ms": 7.293698
+     },
+     "p90": {
+      "gpu_decode_ms": 6.8123956,
+      "fence_ms": 8.417188,
+      "convert_ms": 0.95437497,
+      "eye_acquire_wait_ms": 0.010989,
+      "eye_render_ms": 1.949636,
+      "eye_release_ms": 0.004583,
+      "wait_ms": 7.818386
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 53.289775,
+      "decoder_queue_s": 1.2985419999999999,
+      "vsync_queue_s": 14.435735,
+      "client_compositor_s": 1.773021
+     },
+     "vrapi": {
+      "App": 5.69,
+      "GD": 0.0,
+      "GPU%": 0.87,
+      "TW": 0.87,
+      "vrapi_fps": 121.0,
+      "stale_sum": 59.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 38.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "A",
+     "fps": 118.30266858754321,
+     "lost_per_s": 1.7970025608234412,
+     "p50": {
+      "gpu_decode_ms": 5.9935937,
+      "fence_ms": 8.002189,
+      "convert_ms": 0.7807292,
+      "eye_acquire_wait_ms": 0.006459,
+      "eye_render_ms": 1.74875,
+      "eye_release_ms": 0.003698,
+      "wait_ms": 7.470418
+     },
+     "p90": {
+      "gpu_decode_ms": 6.8911457,
+      "fence_ms": 8.417709,
+      "convert_ms": 0.85531247,
+      "eye_acquire_wait_ms": 0.009687,
+      "eye_render_ms": 2.034219,
+      "eye_release_ms": 0.0055730003,
+      "wait_ms": 7.905521
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 56.55603,
+      "decoder_queue_s": 3.675208,
+      "vsync_queue_s": 14.204151999999999,
+      "client_compositor_s": 1.7734370000000002
+     },
+     "vrapi": {
+      "App": 5.75,
+      "GD": 0.0,
+      "GPU%": 0.87,
+      "TW": 0.86,
+      "vrapi_fps": 121.0,
+      "stale_sum": 83.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 38.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "B",
+     "fps": 118.102943909429,
+     "lost_per_s": 1.9966685360850212,
+     "p50": {
+      "gpu_decode_ms": 5.1456246,
+      "fence_ms": 7.794324,
+      "convert_ms": 1.4185938,
+      "eye_acquire_wait_ms": 0.006198,
+      "eye_render_ms": 1.777344,
+      "eye_release_ms": 0.004011,
+      "wait_ms": 7.238751
+     },
+     "p90": {
+      "gpu_decode_ms": 5.4817705,
+      "fence_ms": 8.275262,
+      "convert_ms": 2.157552,
+      "eye_acquire_wait_ms": 0.009166,
+      "eye_render_ms": 2.091354,
+      "eye_release_ms": 0.005885,
+      "wait_ms": 7.746147
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 55.66525,
+      "decoder_queue_s": 2.365729,
+      "vsync_queue_s": 14.886163000000002,
+      "client_compositor_s": 1.8068229999999998
+     },
+     "vrapi": {
+      "App": 5.59,
+      "GD": 0.0,
+      "GPU%": 0.86,
+      "TW": 0.89,
+      "vrapi_fps": 121.0,
+      "stale_sum": 65.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 39.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "B",
+     "fps": 118.40251253022767,
+     "lost_per_s": 1.7970027196830505,
+     "p50": {
+      "gpu_decode_ms": 5.5385413,
+      "fence_ms": 8.004376,
+      "convert_ms": 1.3533853,
+      "eye_acquire_wait_ms": 0.0060940003,
+      "eye_render_ms": 1.705104,
+      "eye_release_ms": 0.0038540002,
+      "wait_ms": 7.465939
+     },
+     "p90": {
+      "gpu_decode_ms": 6.2149997,
+      "fence_ms": 8.328699,
+      "convert_ms": 2.1260417,
+      "eye_acquire_wait_ms": 0.008698,
+      "eye_render_ms": 2.2814069,
+      "eye_release_ms": 0.0060409997,
+      "wait_ms": 7.798699
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 57.835147000000006,
+      "decoder_queue_s": 4.0716149999999995,
+      "vsync_queue_s": 14.310402,
+      "client_compositor_s": 1.731303
+     },
+     "vrapi": {
+      "App": 5.605,
+      "GD": 0.0,
+      "GPU%": 0.87,
+      "TW": 0.9,
+      "vrapi_fps": 120.0,
+      "stale_sum": 103.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 39.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "A",
+     "fps": 118.30267903989554,
+     "lost_per_s": 1.697169235171497,
+     "p50": {
+      "gpu_decode_ms": 5.9841666,
+      "fence_ms": 8.022241,
+      "convert_ms": 0.7626042,
+      "eye_acquire_wait_ms": 0.006406,
+      "eye_render_ms": 1.7505211,
+      "eye_release_ms": 0.003281,
+      "wait_ms": 7.470365
+     },
+     "p90": {
+      "gpu_decode_ms": 6.8466144,
+      "fence_ms": 8.36948,
+      "convert_ms": 0.8430729,
+      "eye_acquire_wait_ms": 0.010417,
+      "eye_render_ms": 2.0709898,
+      "eye_release_ms": 0.005052,
+      "wait_ms": 7.827396
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 59.49629,
+      "decoder_queue_s": 3.40073,
+      "vsync_queue_s": 14.277329,
+      "client_compositor_s": 1.779844
+     },
+     "vrapi": {
+      "App": 5.715,
+      "GD": 0.0,
+      "GPU%": 0.87,
+      "TW": 0.88,
+      "vrapi_fps": 120.0,
+      "stale_sum": 92.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 40.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "A",
+     "fps": 116.95486345350774,
+     "lost_per_s": 3.6439202014964,
+     "p50": {
+      "gpu_decode_ms": 5.8258333,
+      "fence_ms": 7.887553,
+      "convert_ms": 0.78546876,
+      "eye_acquire_wait_ms": 0.0067189997,
+      "eye_render_ms": 1.693021,
+      "eye_release_ms": 0.003437,
+      "wait_ms": 7.315625
+     },
+     "p90": {
+      "gpu_decode_ms": 6.937187,
+      "fence_ms": 8.478178,
+      "convert_ms": 1.5377083,
+      "eye_acquire_wait_ms": 0.0106770005,
+      "eye_render_ms": 2.01724,
+      "eye_release_ms": 0.005365,
+      "wait_ms": 7.951303
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 56.8246425,
+      "decoder_queue_s": 2.4053905,
+      "vsync_queue_s": 14.4331625,
+      "client_compositor_s": 1.724167
+     },
+     "vrapi": {
+      "App": 5.7,
+      "GD": 0.0,
+      "GPU%": 0.86,
+      "TW": 0.87,
+      "vrapi_fps": 120.0,
+      "stale_sum": 79.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 40.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    },
+    {
+     "arm": "B",
+     "fps": 118.25351153504376,
+     "lost_per_s": 1.7962558714183863,
+     "p50": {
+      "gpu_decode_ms": 5.2843227,
+      "fence_ms": 7.959792,
+      "convert_ms": 1.386927,
+      "eye_acquire_wait_ms": 0.006198,
+      "eye_render_ms": 1.734948,
+      "eye_release_ms": 0.003438,
+      "wait_ms": 7.473334
+     },
+     "p90": {
+      "gpu_decode_ms": 6.244323,
+      "fence_ms": 8.386512,
+      "convert_ms": 2.1527603,
+      "eye_acquire_wait_ms": 0.009271,
+      "eye_render_ms": 2.0968752,
+      "eye_release_ms": 0.004844,
+      "wait_ms": 7.861146
+     },
+     "lat_ms": {
+      "total_pipeline_latency_s": 57.113949999999996,
+      "decoder_queue_s": 3.85099,
+      "vsync_queue_s": 14.732799,
+      "client_compositor_s": 1.7690620000000001
+     },
+     "vrapi": {
+      "App": 5.605,
+      "GD": 0.0,
+      "GPU%": 0.86,
+      "TW": 0.89,
+      "vrapi_fps": 121.0,
+      "stale_sum": 83.0,
+      "samples": 20
+     },
+     "priority_log": [
+      "policy refresh_hz=120 chroma444=false low=true",
+      "decode queue requested=low applied=1 extension=VK_KHR_global_priority"
+     ],
+     "health": {
+      "battery_percent": 100,
+      "battery_temperature_c": 40.0,
+      "thermal_status": 0,
+      "ac_powered": true
+     }
+    }
+   ],
+   "per_arm": {
+    "A": {
+     "blocks": 6,
+     "fps_mean": 118.15866931674182,
+     "lost_per_s_mean": 2.0548654889587388,
+     "lat_ms_median": {
+      "total_pipeline_latency_s": 56.6555925,
+      "decoder_queue_s": 3.220469,
+      "vsync_queue_s": 14.2964995,
+      "client_compositor_s": 1.7708987499999997
+     },
+     "p50_median": {
+      "gpu_decode_ms": 5.9574218000000005,
+      "fence_ms": 7.9515365,
+      "convert_ms": 0.77132808,
+      "eye_acquire_wait_ms": 0.006432500000000001,
+      "eye_render_ms": 1.73968745,
+      "eye_release_ms": 0.0035675,
+      "wait_ms": 7.4066410000000005
+     },
+     "p90_median": {
+      "gpu_decode_ms": 6.829505,
+      "fence_ms": 8.393334,
+      "convert_ms": 0.929531215,
+      "eye_acquire_wait_ms": 0.0100785,
+      "eye_render_ms": 2.0214585,
+      "eye_release_ms": 0.005417,
+      "wait_ms": 7.828386
+     },
+     "vrapi_median": {
+      "App": 5.7125,
+      "GD": 0.0,
+      "GPU%": 0.87,
+      "TW": 0.865,
+      "samples": 20.0,
+      "stale_sum": 81.5,
+      "vrapi_fps": 120.75
+     }
+    },
+    "B": {
+     "blocks": 6,
+     "fps_mean": 117.84241529346787,
+     "lost_per_s_mean": 2.362664061161353,
+     "lat_ms_median": {
+      "total_pipeline_latency_s": 56.61290749999999,
+      "decoder_queue_s": 3.6088025,
+      "vsync_queue_s": 14.809481000000002,
+      "client_compositor_s": 1.7501825000000002
+     },
+     "p50_median": {
+      "gpu_decode_ms": 5.2241926,
+      "fence_ms": 7.94961,
+      "convert_ms": 1.41158855,
+      "eye_acquire_wait_ms": 0.006146000150000001,
+      "eye_render_ms": 1.7200259999999998,
+      "eye_release_ms": 0.0038280001,
+      "wait_ms": 7.4245845
+     },
+     "p90_median": {
+      "gpu_decode_ms": 6.06359365,
+      "fence_ms": 8.2882565,
+      "convert_ms": 2.1694269999999998,
+      "eye_acquire_wait_ms": 0.009062,
+      "eye_render_ms": 2.2180210000000002,
+      "eye_release_ms": 0.005962999849999999,
+      "wait_ms": 7.770756
+     },
+     "vrapi_median": {
+      "App": 5.5975,
+      "GD": 0.0,
+      "GPU%": 0.86,
+      "TW": 0.89,
+      "samples": 20.0,
+      "stale_sum": 85.0,
+      "vrapi_fps": 121.0
+     }
+    }
+   },
+   "paired": {
+    "arm_minus": "B-A",
+    "adjacent_pairs": 6,
+    "fps": {
+     "mean": -0.3162540232739583,
+     "sem": 0.40580161024066386,
+     "positive": 2
+    },
+    "lost": {
+     "mean": 0.30779857220261436,
+     "sem": 0.49448580899645944,
+     "positive": 5
+    },
+    "eye_render_p90": {
+     "mean": 0.22005186666666662,
+     "sem": 0.055983878759750576,
+     "positive": 6
+    },
+    "compositor_tw_ms": {
+     "mean": 0.023333333333333355,
+     "sem": 0.004216370213557843,
+     "positive": 6
+    },
+    "gpu_util": {
+     "mean": -0.00833333333333334,
+     "sem": 0.003073181485764299,
+     "positive": 0
+    }
+   },
+   "restore": {
+    "errors": [],
+    "installed_version": "20.13.0-quest3.pyro.54",
+    "project_runtime_registered_after": false,
+    "virtual_desktop_registered_after": true
+   }
+  }
+ ],
+ "prior_unreviewed_53_screen": {
+  "capture": "phase32-20261005T150436Z",
+  "pattern": "ABA",
+  "measure_s": 12,
+  "fused_blocks": 1,
+  "note": "single fused block; did not replicate over 10 blocks here"
+ }
+}

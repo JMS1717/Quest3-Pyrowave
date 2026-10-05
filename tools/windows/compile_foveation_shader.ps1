@@ -13,3 +13,13 @@ $taskOutput = Join-Path $taskAlvrRoot 'alvr\server_openvr\cpp\platform\win32\Com
 & $taskCompiler /nologo /T ps_5_0 /E main /O3 /Fo $taskOutput $taskSource
 if ($LASTEXITCODE -ne 0) { throw 'Foveated encoding shader compilation failed' }
 Write-Output ('Compiled FFE shader SHA256: ' + (Get-FileHash -LiteralPath $taskOutput -Algorithm SHA256).Hash.ToLower())
+
+# The adaptive game-render downsample is compiled at runtime by FrameRender (D3DCompile), with a
+# single-tap fallback. Compile it here as well, with the same profile, so a shader error fails
+# the build instead of silently falling back on a tester's PC.
+$taskDownsample = Join-Path $PSScriptRoot '..\downsample\frame_downsample.hlsl'
+$taskDownsampleOutput = Join-Path ([System.IO.Path]::GetTempPath()) 'FrameDownsample-check.cso'
+& $taskCompiler /nologo /T ps_5_0 /E main /O3 /Fo $taskDownsampleOutput $taskDownsample
+if ($LASTEXITCODE -ne 0) { throw 'Adaptive downsample shader compilation failed' }
+Remove-Item -LiteralPath $taskDownsampleOutput -Force
+Write-Output 'Adaptive downsample shader compiles for ps_5_0'

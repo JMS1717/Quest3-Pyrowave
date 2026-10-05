@@ -193,6 +193,11 @@ def snapshot(adb):
         except (RuntimeError,subprocess.TimeoutExpired) as e: result[key]={'value':None,'error':str(e)}
     return result
 
+def foveation_profile_name(value):
+    # Session JSON stores enums as {'variant': 'Light', ...}; older servers lack the field.
+    if isinstance(value, dict): value = value.get('variant')
+    return (value or 'Light').lower()
+
 def active_settings():
     from .control import session
     s=session();v=s['session_settings']['video'];o=s.get('openvr_config',{})
@@ -204,6 +209,7 @@ def active_settings():
         'wavelet':v['pyrowave']['wavelet']['variant'],
         'chroma':'444' if v['pyrowave'].get('chroma_444',False) else '420',
         'light_foveated_encoding':v['pyrowave'].get('light_foveated_encoding',False),
+        'foveation_profile':foveation_profile_name(v['pyrowave'].get('foveation_profile')),
         'transport':v['pyrowave']['transport']['variant'], 'stream_protocol':s['session_settings']['connection']['stream_protocol']['variant'],
         'configured_view_resolution':v['transcoding_view_resolution'],
         'configured_render_view_resolution':v.get('emulated_headset_view_resolution'),

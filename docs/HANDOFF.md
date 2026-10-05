@@ -31,6 +31,12 @@ resume unattended tests. Installed-build statements below are historical records
 not fresh device readbacks. The [scorecard](WHOLE-STACK-SCORECARD.md) records the
 later `.50`/`.51` screens and the reported `.51` installation.
 
+**Chip-level levers (October 5, draft PR #7, not run on hardware):** [ADRENO-740.md](ADRENO-740.md)
+and [XR2-GEN2-SOC.md](XR2-GEN2-SOC.md) rank GPU, CPU, memory, DSP, USB and power levers. Built
+behind default-off flags: `debug.q3pw.lpac`, `debug.q3pw.eye_invalidate` and
+`debug.q3pw.thread_hints`. The always-on `[Q3PW_GPU_CAPS]` and `[Q3PW_SOC_CAPS]` logcat lines
+say which of them this firmware exposes, so read them first in the next authorized session.
+
 The `.48` prerecord worker is now active and measured, but **not promoted**.
 All matching builds passed; actual native activation, preparation and direct-only
 eye completions were verified. Same-session ABBA eye completion proxies stayed
@@ -83,6 +89,12 @@ state before testing; the private handoff includes a fresh disk snapshot.
 6. [OpenXR routing](OPENXR.md), [overlay](OVERLAY.md), [light foveation](LIGHT-FOVEATION.md).
 
 ## Highest-value next experiment
+
+**207 Hz branch (October 5, no hardware run):** [PATH-TO-207.md](PATH-TO-207.md) adds
+Balanced and Strong peripheral profiles (about 24% and 35% fewer encoded pixels,
+candidates), an optical latency stamp and a no-decode cadence probe. Fused final
+colour is #4's Quest-verified implementation ([FUSE-COLOR.md](FUSE-COLOR.md)): byte-exact,
+no live 120 Hz gain, off. The hardware plan now starts with the 207 Hz lobby cadence.
 
 Use the [next overnight plan](NEXT-OVERNIGHT.md) and the
 [October 5 scorecard](WHOLE-STACK-SCORECARD.md). The server already submits

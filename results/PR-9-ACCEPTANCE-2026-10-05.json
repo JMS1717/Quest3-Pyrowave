@@ -1,0 +1,2298 @@
+{
+  "schema": 1,
+  "date": "2026-10-05",
+  "runtime_source": "2b289f8c7d5e2eef010bf564266fe7830d6c6f75",
+  "version": "20.13.0-quest3.pyro.55",
+  "signed_ci_run": 37365361691,
+  "artifact_sha256": {
+    "apk": "7580af0200de32a34eb7854f71e93fdde3288c82ab6dac7e892e5786e0c8b93d",
+    "windows_zip": "5ad12a071f4f51fed5ce588e4f018c80d04054c190a6499429baaa0e9325f1be"
+  },
+  "common": {
+    "headset": "Quest 3",
+    "runtime_hz": 120,
+    "mbps": 1000,
+    "chroma": "4:2:0",
+    "decoder": "HaarCompute",
+    "queue_priority": "LOW",
+    "transport": "USB ADB TCP, one decoder worker",
+    "direct_eye_copy": true,
+    "selection_wait_us": 4000,
+    "conversion_compute": false,
+    "overlay": "Compact except Hidden comparison",
+    "decode_stages_and_eye_gpu_timer": true,
+    "measurement_s": 12,
+    "settle_s": 3,
+    "restart_between_windows": true
+  },
+  "limitations": [
+    "Short stationary chart screens; not sustained gameplay, continuous pose/content proof, lens quality acceptance or optical latency.",
+    "Fresh FPS uses unique GraphStatistics target timestamps, not independently photographed frames. p1 is reciprocal p99 target gap, not an optical result.",
+    "All latency values are ALVR estimates. Native fence_ms is CPU record-to-completion; stage timings are separate.",
+    "Synchronous GL completion retained. Independent async eye-completion observer is off, so its sample count is zero. Completed/direct-copy counters and eye GPU timer are separate evidence.",
+    "Thermals and GPU clocks are sparse; battery temperature is not silicon temperature.",
+    "Foveation profiles run sequentially during warm-up; short differences are not causal sustained gains.",
+    "Filter comparison uses identical explicit source size and chart but is not a native-vs-supersampled normalized-chart quality experiment."
+  ],
+  "excluded": [
+    {
+      "cells": "first Strong and following Off",
+      "reason": "Owner interacted with headset/controllers, changing overlay modes; one endpoint capture was blank. Clean repeats replace these cells."
+    },
+    {
+      "cells": "initial 207 cadence attempt",
+      "reason": "Saved Android refresh override kept actual cadence at 120. Corrected temporary override produced separate valid 207 result."
+    }
+  ],
+  "groups": {
+    "options": [
+      {
+        "cell": "Control",
+        "window": 1,
+        "seconds": 12.042,
+        "unique_fresh_fps": 119.50092262594508,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 8.413022,
+        "timestamp_gap_p99_ms": 11.092397,
+        "nominal_p1_fps_from_target_gaps": 90.15184003962354,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 3.9245,
+          "server_compositor_ms": 0.1966,
+          "encoder_ms": 2.8498,
+          "network_ms": 4.249099,
+          "decoder_ms": 13.270158,
+          "decoder_queue_ms": 4.325625,
+          "client_compositor_ms": 1.656458,
+          "vsync_queue_ms": 13.777121,
+          "total_pipeline_latency_ms": 44.459604
+        },
+        "game_fps_p50": 120.606895,
+        "video_payload_reported_p50_mbps": 1005.0306,
+        "received_graph_video_bytes_mbps": 995.8006365416696,
+        "native_p50_ms": {
+          "gpu_decode_ms": 5.8911977,
+          "fence_ms": 7.951928,
+          "convert_ms": 0.76479167,
+          "eye_acquire_wait_ms": 0.006198,
+          "eye_render_ms": 1.63349,
+          "eye_release_ms": 0.00302,
+          "wait_ms": 7.341355
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.6773434,
+          "fence_ms": 8.220782,
+          "convert_ms": 0.85005206,
+          "eye_acquire_wait_ms": 0.008177,
+          "eye_render_ms": 1.781459,
+          "eye_release_ms": 0.004114,
+          "wait_ms": 7.687136
+        },
+        "eye_gpu_timer_mean_ms_median": 0.6745000000000001,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1321,
+          "partial": 0,
+          "skipped": 4,
+          "dropped": 0,
+          "superseded": 1,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1319,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1319
+        },
+        "completed_eye_copies_per_s": 119.50582747541416,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 27.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          640
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.71,
+          "GD": 0.0,
+          "GPU%": 0.87,
+          "TW": 0.84,
+          "vrapi_fps": 121.0,
+          "stale_sum": 4.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "Eye invalidate",
+        "window": 2,
+        "seconds": 12.041,
+        "unique_fresh_fps": 119.41774183672388,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 8.435678,
+        "timestamp_gap_p99_ms": 11.15823,
+        "nominal_p1_fps_from_target_gaps": 89.61994868361738,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 11.7812,
+          "server_compositor_ms": 0.1775,
+          "encoder_ms": 2.6912,
+          "network_ms": 4.43366,
+          "decoder_ms": 12.917033,
+          "decoder_queue_ms": 4.007656,
+          "client_compositor_ms": 1.7825,
+          "vsync_queue_ms": 13.921444,
+          "total_pipeline_latency_ms": 52.482333
+        },
+        "game_fps_p50": 120.98043,
+        "video_payload_reported_p50_mbps": 1008.15994,
+        "received_graph_video_bytes_mbps": 994.5201804025663,
+        "native_p50_ms": {
+          "gpu_decode_ms": 5.916875,
+          "fence_ms": 7.890626,
+          "convert_ms": 0.7598437,
+          "eye_acquire_wait_ms": 0.006406,
+          "eye_render_ms": 1.760834,
+          "eye_release_ms": 0.003645,
+          "wait_ms": 7.230729
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.6547394,
+          "fence_ms": 8.28698,
+          "convert_ms": 0.9361458,
+          "eye_acquire_wait_ms": 0.008854999,
+          "eye_render_ms": 1.955,
+          "eye_release_ms": 0.006146,
+          "wait_ms": 7.720157
+        },
+        "eye_gpu_timer_mean_ms_median": 0.6375,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1327,
+          "partial": 0,
+          "skipped": 2,
+          "dropped": 0,
+          "superseded": 2,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1326,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1326
+        },
+        "completed_eye_copies_per_s": 119.73439031220582,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 27.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          545,
+          640
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.75,
+          "GD": 0.0,
+          "GPU%": 0.87,
+          "TW": 0.82,
+          "vrapi_fps": 120.0,
+          "stale_sum": 6.0,
+          "samples": 13
+        }
+      },
+      {
+        "cell": "Thread hints",
+        "window": 3,
+        "seconds": 12.046,
+        "unique_fresh_fps": 118.83673122806965,
+        "duplicate_target_rows_removed": 1,
+        "timestamp_gap_p95_ms": 11.121667,
+        "timestamp_gap_p99_ms": 11.178647,
+        "nominal_p1_fps_from_target_gaps": 89.456264250942,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 2.9762999999999997,
+          "server_compositor_ms": 0.2056,
+          "encoder_ms": 2.8219,
+          "network_ms": 4.127113,
+          "decoder_ms": 10.433385999999999,
+          "decoder_queue_ms": 1.657761,
+          "client_compositor_ms": 1.7204169999999999,
+          "vsync_queue_ms": 14.380631,
+          "total_pipeline_latency_ms": 37.891917
+        },
+        "game_fps_p50": 120.65929,
+        "video_payload_reported_p50_mbps": 1005.4915,
+        "received_graph_video_bytes_mbps": 989.9488025086362,
+        "native_p50_ms": {
+          "gpu_decode_ms": 5.9479165,
+          "fence_ms": 7.941667,
+          "convert_ms": 0.7765104,
+          "eye_acquire_wait_ms": 0.0060940003,
+          "eye_render_ms": 1.689167,
+          "eye_release_ms": 0.003229,
+          "wait_ms": 7.436772
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.823854,
+          "fence_ms": 8.350417,
+          "convert_ms": 1.5159374,
+          "eye_acquire_wait_ms": 0.009792,
+          "eye_render_ms": 1.9040099,
+          "eye_release_ms": 0.004844,
+          "wait_ms": 7.834793
+        },
+        "eye_gpu_timer_mean_ms_median": 0.681,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1369,
+          "partial": 0,
+          "skipped": 10,
+          "dropped": 0,
+          "superseded": 2,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1368,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1368
+        },
+        "completed_eye_copies_per_s": 119.03688080233461,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 28.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          640
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.69,
+          "GD": 0.0,
+          "GPU%": 0.86,
+          "TW": 0.83,
+          "vrapi_fps": 121.0,
+          "stale_sum": 24.0,
+          "samples": 13
+        }
+      },
+      {
+        "cell": "Hidden overlay",
+        "window": 4,
+        "seconds": 12.04,
+        "unique_fresh_fps": 119.0851726159642,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 10.982137,
+        "timestamp_gap_p99_ms": 11.18599,
+        "nominal_p1_fps_from_target_gaps": 89.39754103123639,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 11.782850000000002,
+          "server_compositor_ms": 0.17755,
+          "encoder_ms": 2.6732,
+          "network_ms": 4.029043499999999,
+          "decoder_ms": 11.701486000000001,
+          "decoder_queue_ms": 1.6009375,
+          "client_compositor_ms": 1.7111980000000002,
+          "vsync_queue_ms": 13.929069499999999,
+          "total_pipeline_latency_ms": 47.58131899999999
+        },
+        "game_fps_p50": 120.638185,
+        "video_payload_reported_p50_mbps": 1005.26873,
+        "received_graph_video_bytes_mbps": 992.475135679048,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.069062,
+          "fence_ms": 7.97849,
+          "convert_ms": 0.7611979,
+          "eye_acquire_wait_ms": 0.006459,
+          "eye_render_ms": 1.6860931,
+          "eye_release_ms": 0.003229,
+          "wait_ms": 7.445053
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.7804685,
+          "fence_ms": 8.312032,
+          "convert_ms": 0.8539583,
+          "eye_acquire_wait_ms": 0.009219,
+          "eye_render_ms": 1.822448,
+          "eye_release_ms": 0.004532,
+          "wait_ms": 7.787501
+        },
+        "eye_gpu_timer_mean_ms_median": 0.6835,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1319,
+          "partial": 0,
+          "skipped": 11,
+          "dropped": 0,
+          "superseded": 0,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1319,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1319
+        },
+        "completed_eye_copies_per_s": 119.02020848410434,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 30.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          599
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.875,
+          "GD": 0.0,
+          "GPU%": 0.88,
+          "TW": 0.73,
+          "vrapi_fps": 121.0,
+          "stale_sum": 4.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "Hidden overlay",
+        "window": 5,
+        "seconds": 12.043,
+        "unique_fresh_fps": 118.33787995529057,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 8.416563,
+        "timestamp_gap_p99_ms": 16.6687,
+        "nominal_p1_fps_from_target_gaps": 59.992680892931055,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 12.205300000000001,
+          "server_compositor_ms": 0.1774,
+          "encoder_ms": 2.6835,
+          "network_ms": 4.230063,
+          "decoder_ms": 11.91073,
+          "decoder_queue_ms": 1.9978650000000002,
+          "client_compositor_ms": 1.631979,
+          "vsync_queue_ms": 13.844047999999999,
+          "total_pipeline_latency_ms": 53.414363
+        },
+        "game_fps_p50": 120.672386,
+        "video_payload_reported_p50_mbps": 1005.56205,
+        "received_graph_video_bytes_mbps": 986.0336310364145,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.041406,
+          "fence_ms": 7.95422,
+          "convert_ms": 0.8086458,
+          "eye_acquire_wait_ms": 0.0067189997,
+          "eye_render_ms": 1.6093229,
+          "eye_release_ms": 0.003229,
+          "wait_ms": 7.273282
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.2834373,
+          "fence_ms": 8.363543,
+          "convert_ms": 1.5056771,
+          "eye_acquire_wait_ms": 0.008959,
+          "eye_render_ms": 1.782031,
+          "eye_release_ms": 0.004688,
+          "wait_ms": 7.81297
+        },
+        "eye_gpu_timer_mean_ms_median": 0.688,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1307,
+          "partial": 0,
+          "skipped": 19,
+          "dropped": 0,
+          "superseded": 0,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1306,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1306
+        },
+        "completed_eye_copies_per_s": 118.23076717200905,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 31.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          599
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.9,
+          "GD": 0.0,
+          "GPU%": 0.88,
+          "TW": 0.75,
+          "vrapi_fps": 121.0,
+          "stale_sum": 18.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "Thread hints",
+        "window": 6,
+        "seconds": 12.044,
+        "unique_fresh_fps": 119.33572890106672,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 8.375886,
+        "timestamp_gap_p99_ms": 8.550574,
+        "nominal_p1_fps_from_target_gaps": 116.95121286594328,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 12.8077,
+          "server_compositor_ms": 0.18045,
+          "encoder_ms": 2.705,
+          "network_ms": 4.594249,
+          "decoder_ms": 11.754428500000001,
+          "decoder_queue_ms": 1.5512765,
+          "client_compositor_ms": 1.747083,
+          "vsync_queue_ms": 14.274767,
+          "total_pipeline_latency_ms": 50.28611900000001
+        },
+        "game_fps_p50": 120.74087,
+        "video_payload_reported_p50_mbps": 1006.14425,
+        "received_graph_video_bytes_mbps": 994.9340676733751,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.4934373,
+          "fence_ms": 8.014845,
+          "convert_ms": 0.7441146,
+          "eye_acquire_wait_ms": 0.006406,
+          "eye_render_ms": 1.718177,
+          "eye_release_ms": 0.003958,
+          "wait_ms": 7.505314
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.7033854,
+          "fence_ms": 8.212136,
+          "convert_ms": 1.4722395,
+          "eye_acquire_wait_ms": 0.01198,
+          "eye_render_ms": 1.878386,
+          "eye_release_ms": 0.005521,
+          "wait_ms": 7.681303
+        },
+        "eye_gpu_timer_mean_ms_median": 0.666,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1234,
+          "partial": 0,
+          "skipped": 3,
+          "dropped": 0,
+          "superseded": 0,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1234,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1234
+        },
+        "completed_eye_copies_per_s": 119.35398266984713,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 31.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          456,
+          640
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.65,
+          "GD": 0.0,
+          "GPU%": 0.86,
+          "TW": 0.82,
+          "vrapi_fps": 121.0,
+          "stale_sum": 7.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "Eye invalidate",
+        "window": 7,
+        "seconds": 12.042,
+        "unique_fresh_fps": 119.88927687399067,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 11.14823,
+        "timestamp_gap_p99_ms": 11.19974,
+        "nominal_p1_fps_from_target_gaps": 89.28778703791338,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 14.341,
+          "server_compositor_ms": 0.1759,
+          "encoder_ms": 2.70025,
+          "network_ms": 4.040024,
+          "decoder_ms": 11.2152095,
+          "decoder_queue_ms": 1.2264585,
+          "client_compositor_ms": 1.9054430000000002,
+          "vsync_queue_ms": 14.32635,
+          "total_pipeline_latency_ms": 50.1662285
+        },
+        "game_fps_p50": 120.7467,
+        "video_payload_reported_p50_mbps": 1006.19093,
+        "received_graph_video_bytes_mbps": 999.1970470308001,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.4997396,
+          "fence_ms": 8.002657,
+          "convert_ms": 0.72718745,
+          "eye_acquire_wait_ms": 0.006198,
+          "eye_render_ms": 1.881563,
+          "eye_release_ms": 0.003593,
+          "wait_ms": 7.475939
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.8266144,
+          "fence_ms": 8.343907,
+          "convert_ms": 0.7789583,
+          "eye_acquire_wait_ms": 0.01177,
+          "eye_render_ms": 2.077448,
+          "eye_release_ms": 0.005,
+          "wait_ms": 7.765678
+        },
+        "eye_gpu_timer_mean_ms_median": 0.6645000000000001,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1326,
+          "partial": 0,
+          "skipped": 1,
+          "dropped": 0,
+          "superseded": 0,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1326,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1326
+        },
+        "completed_eye_copies_per_s": 119.899687135092,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 32.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          599,
+          640
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.72,
+          "GD": 0.0,
+          "GPU%": 0.87,
+          "TW": 0.81,
+          "vrapi_fps": 121.0,
+          "stale_sum": 3.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "Control",
+        "window": 8,
+        "seconds": 12.043,
+        "unique_fresh_fps": 118.67166166937295,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 8.528439,
+        "timestamp_gap_p99_ms": 16.571564,
+        "nominal_p1_fps_from_target_gaps": 60.344334427335895,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 12.1233,
+          "server_compositor_ms": 0.17459999999999998,
+          "encoder_ms": 2.6984,
+          "network_ms": 4.333321000000001,
+          "decoder_ms": 11.650001,
+          "decoder_queue_ms": 1.8676039999999998,
+          "client_compositor_ms": 1.762084,
+          "vsync_queue_ms": 14.159464999999999,
+          "total_pipeline_latency_ms": 49.014799999999994
+        },
+        "game_fps_p50": 120.640366,
+        "video_payload_reported_p50_mbps": 1005.27366,
+        "received_graph_video_bytes_mbps": 988.7826193498103,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.1372914,
+          "fence_ms": 8.012761,
+          "convert_ms": 0.75614583,
+          "eye_acquire_wait_ms": 0.006927,
+          "eye_render_ms": 1.7381771,
+          "eye_release_ms": 0.0047919997,
+          "wait_ms": 7.450261
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.787083,
+          "fence_ms": 8.372501,
+          "convert_ms": 1.4469792,
+          "eye_acquire_wait_ms": 0.013541999,
+          "eye_render_ms": 1.952916,
+          "eye_release_ms": 0.006979,
+          "wait_ms": 7.83198
+        },
+        "eye_gpu_timer_mean_ms_median": 0.6815,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1312,
+          "partial": 0,
+          "skipped": 15,
+          "dropped": 0,
+          "superseded": 1,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1310,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1310
+        },
+        "completed_eye_copies_per_s": 118.48837105490598,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 33.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          599
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.720000000000001,
+          "GD": 0.0,
+          "GPU%": 0.88,
+          "TW": 0.83,
+          "vrapi_fps": 121.0,
+          "stale_sum": 11.0,
+          "samples": 12
+        }
+      }
+    ],
+    "foveation": [
+      {
+        "cell": "foveation-Off",
+        "window": 1,
+        "seconds": 12.043,
+        "unique_fresh_fps": 119.66748384186953,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 11.123178,
+        "timestamp_gap_p99_ms": 11.191459,
+        "nominal_p1_fps_from_target_gaps": 89.35385457785263,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 9.219700000000001,
+          "server_compositor_ms": 0.22890000000000002,
+          "encoder_ms": 2.7192000000000003,
+          "network_ms": 4.405641,
+          "decoder_ms": 11.805418,
+          "decoder_queue_ms": 1.718385,
+          "client_compositor_ms": 1.7127080000000001,
+          "vsync_queue_ms": 14.175572,
+          "total_pipeline_latency_ms": 46.203233000000004
+        },
+        "game_fps_p50": 120.976036,
+        "video_payload_reported_p50_mbps": 1008.1272,
+        "received_graph_video_bytes_mbps": 997.0785879800771,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.470989,
+          "fence_ms": 8.007188,
+          "convert_ms": 0.7445833,
+          "eye_acquire_wait_ms": 0.007187,
+          "eye_render_ms": 1.682605,
+          "eye_release_ms": 0.004479,
+          "wait_ms": 7.492917
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.7036977,
+          "fence_ms": 8.201771,
+          "convert_ms": 1.4652083,
+          "eye_acquire_wait_ms": 0.01224,
+          "eye_render_ms": 1.892813,
+          "eye_release_ms": 0.006406,
+          "wait_ms": 7.685886
+        },
+        "eye_gpu_timer_mean_ms_median": 0.66,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1270,
+          "partial": 0,
+          "skipped": 1,
+          "dropped": 0,
+          "superseded": 0,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1270,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1270
+        },
+        "completed_eye_copies_per_s": 119.91198834423199,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 35.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          640
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.65,
+          "GD": 0.0,
+          "GPU%": 0.87,
+          "TW": 0.82,
+          "vrapi_fps": 121.0,
+          "stale_sum": 3.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "foveation-Off",
+        "window": 2,
+        "seconds": 12.042,
+        "unique_fresh_fps": 118.11599020827252,
+        "duplicate_target_rows_removed": 6,
+        "timestamp_gap_p95_ms": 11.153178,
+        "timestamp_gap_p99_ms": 16.662085,
+        "nominal_p1_fps_from_target_gaps": 60.01649853544739,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 17.15755,
+          "server_compositor_ms": 2.1224,
+          "encoder_ms": 2.62875,
+          "network_ms": 4.5770395,
+          "decoder_ms": 13.318673,
+          "decoder_queue_ms": 1.582969,
+          "client_compositor_ms": 1.7416150000000001,
+          "vsync_queue_ms": 14.271875,
+          "total_pipeline_latency_ms": 58.1212365
+        },
+        "game_fps_p50": 121.3503825,
+        "video_payload_reported_p50_mbps": 1011.20403,
+        "received_graph_video_bytes_mbps": 983.9983497119489,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.1255207,
+          "fence_ms": 8.017605,
+          "convert_ms": 0.7668229,
+          "eye_acquire_wait_ms": 0.006302,
+          "eye_render_ms": 1.714583,
+          "eye_release_ms": 0.005052,
+          "wait_ms": 7.450782
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.7139583,
+          "fence_ms": 8.269585,
+          "convert_ms": 0.9454166,
+          "eye_acquire_wait_ms": 0.010834,
+          "eye_render_ms": 1.92948,
+          "eye_release_ms": 0.0072399997,
+          "wait_ms": 7.742709
+        },
+        "eye_gpu_timer_mean_ms_median": 0.671,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1293,
+          "partial": 0,
+          "skipped": 13,
+          "dropped": 0,
+          "superseded": 0,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1294,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1294
+        },
+        "completed_eye_copies_per_s": 118.8999818958593,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 35.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          599,
+          640
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.65,
+          "GD": 0.0,
+          "GPU%": 0.865,
+          "TW": 0.83,
+          "vrapi_fps": 120.0,
+          "stale_sum": 17.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "foveation-Light",
+        "window": 1,
+        "seconds": 12.043,
+        "unique_fresh_fps": 119.66712694092053,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 11.120678,
+        "timestamp_gap_p99_ms": 11.204324,
+        "nominal_p1_fps_from_target_gaps": 89.25125692545129,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 9.2857,
+          "server_compositor_ms": 0.243,
+          "encoder_ms": 2.7234499999999997,
+          "network_ms": 4.1954835,
+          "decoder_ms": 11.432422500000001,
+          "decoder_queue_ms": 1.3573175,
+          "client_compositor_ms": 2.367813,
+          "vsync_queue_ms": 14.1756925,
+          "total_pipeline_latency_ms": 46.115835000000004
+        },
+        "game_fps_p50": 120.939455,
+        "video_payload_reported_p50_mbps": 1007.799105,
+        "received_graph_video_bytes_mbps": 996.387014752381,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.0068226,
+          "fence_ms": 8.021928,
+          "convert_ms": 0.70640624,
+          "eye_acquire_wait_ms": 0.007552,
+          "eye_render_ms": 2.058855,
+          "eye_release_ms": 0.004063,
+          "wait_ms": 7.51323
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.8085938,
+          "fence_ms": 8.251719,
+          "convert_ms": 1.4755728,
+          "eye_acquire_wait_ms": 0.012761001,
+          "eye_render_ms": 2.270574,
+          "eye_release_ms": 0.0060940003,
+          "wait_ms": 7.751459
+        },
+        "eye_gpu_timer_mean_ms_median": 1.0695000000000001,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            3904,
+            2080
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1333,
+          "partial": 0,
+          "skipped": 1,
+          "dropped": 0,
+          "superseded": 3,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1330,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1330
+        },
+        "completed_eye_copies_per_s": 119.67424308473647,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 36.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          599
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.66,
+          "GD": 0.0,
+          "GPU%": 0.87,
+          "TW": 0.85,
+          "vrapi_fps": 120.5,
+          "stale_sum": 18.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "foveation-Light",
+        "window": 2,
+        "seconds": 12.045,
+        "unique_fresh_fps": 119.16862380570386,
+        "duplicate_target_rows_removed": 1,
+        "timestamp_gap_p95_ms": 11.060314,
+        "timestamp_gap_p99_ms": 11.211095,
+        "nominal_p1_fps_from_target_gaps": 89.1973531577424,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 17.9945,
+          "server_compositor_ms": 2.1078,
+          "encoder_ms": 2.6377,
+          "network_ms": 4.270786,
+          "decoder_ms": 14.61922,
+          "decoder_queue_ms": 3.692448,
+          "client_compositor_ms": 2.253437,
+          "vsync_queue_ms": 13.952187,
+          "total_pipeline_latency_ms": 61.87738
+        },
+        "game_fps_p50": 121.35333,
+        "video_payload_reported_p50_mbps": 1011.2713,
+        "received_graph_video_bytes_mbps": 992.7477381097443,
+        "native_p50_ms": {
+          "gpu_decode_ms": 5.966979,
+          "fence_ms": 7.943282,
+          "convert_ms": 0.701875,
+          "eye_acquire_wait_ms": 0.007604,
+          "eye_render_ms": 1.955729,
+          "eye_release_ms": 0.002864,
+          "wait_ms": 7.396146
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.867031,
+          "fence_ms": 8.346511,
+          "convert_ms": 0.791875,
+          "eye_acquire_wait_ms": 0.012605,
+          "eye_render_ms": 2.18026,
+          "eye_release_ms": 0.003698,
+          "wait_ms": 7.813021
+        },
+        "eye_gpu_timer_mean_ms_median": 1.0565,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            3904,
+            2080
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1323,
+          "partial": 0,
+          "skipped": 6,
+          "dropped": 0,
+          "superseded": 1,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1323,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1323
+        },
+        "completed_eye_copies_per_s": 119.4750983316698,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 36.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          599
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.69,
+          "GD": 0.0,
+          "GPU%": 0.87,
+          "TW": 0.86,
+          "vrapi_fps": 120.5,
+          "stale_sum": 32.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "foveation-Balanced",
+        "window": 1,
+        "seconds": 12.044,
+        "unique_fresh_fps": 118.00581291000032,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 11.109324,
+        "timestamp_gap_p99_ms": 16.664377,
+        "nominal_p1_fps_from_target_gaps": 60.008243932551444,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 11.2703,
+          "server_compositor_ms": 0.2429,
+          "encoder_ms": 2.6499,
+          "network_ms": 4.685323,
+          "decoder_ms": 8.466823999999999,
+          "decoder_queue_ms": 4.039688,
+          "client_compositor_ms": 2.317188,
+          "vsync_queue_ms": 13.849777000000001,
+          "total_pipeline_latency_ms": 49.218792
+        },
+        "game_fps_p50": 121.06245,
+        "video_payload_reported_p50_mbps": 1008.83174,
+        "received_graph_video_bytes_mbps": 983.1218084438237,
+        "native_p50_ms": {
+          "gpu_decode_ms": 4.9079165,
+          "fence_ms": 7.602969,
+          "convert_ms": 0.70135415,
+          "eye_acquire_wait_ms": 0.008229,
+          "eye_render_ms": 2.0171878,
+          "eye_release_ms": 0.005313,
+          "wait_ms": 7.101563
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.4773955,
+          "fence_ms": 8.009897,
+          "convert_ms": 2.121354,
+          "eye_acquire_wait_ms": 0.011146001,
+          "eye_render_ms": 2.442032,
+          "eye_release_ms": 0.00776,
+          "wait_ms": 7.478646
+        },
+        "eye_gpu_timer_mean_ms_median": 1.0625,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            3648,
+            1920
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1328,
+          "partial": 0,
+          "skipped": 0,
+          "dropped": 0,
+          "superseded": 24,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1304,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1304
+        },
+        "completed_eye_copies_per_s": 117.76855595134924,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 37.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          599
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.305,
+          "GD": 0.0,
+          "GPU%": 0.815,
+          "TW": 0.84,
+          "vrapi_fps": 121.0,
+          "stale_sum": 13.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "foveation-Balanced",
+        "window": 2,
+        "seconds": 12.041,
+        "unique_fresh_fps": 119.19706756753605,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 11.165157,
+        "timestamp_gap_p99_ms": 11.29922,
+        "nominal_p1_fps_from_target_gaps": 88.50168418705007,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 12.710249999999998,
+          "server_compositor_ms": 1.7055500000000001,
+          "encoder_ms": 2.5217499999999995,
+          "network_ms": 4.56495,
+          "decoder_ms": 10.7353915,
+          "decoder_queue_ms": 0.880547,
+          "client_compositor_ms": 2.5123699999999998,
+          "vsync_queue_ms": 14.39522,
+          "total_pipeline_latency_ms": 49.91655050000001
+        },
+        "game_fps_p50": 121.163655,
+        "video_payload_reported_p50_mbps": 1009.679025,
+        "received_graph_video_bytes_mbps": 993.8013561635726,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.087031,
+          "fence_ms": 7.954584,
+          "convert_ms": 0.63140625,
+          "eye_acquire_wait_ms": 0.007761,
+          "eye_render_ms": 2.245053,
+          "eye_release_ms": 0.004844,
+          "wait_ms": 7.424167
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.956823,
+          "fence_ms": 8.32349,
+          "convert_ms": 1.4475,
+          "eye_acquire_wait_ms": 0.011615001,
+          "eye_render_ms": 2.528906,
+          "eye_release_ms": 0.0077080005,
+          "wait_ms": 7.830313
+        },
+        "eye_gpu_timer_mean_ms_median": 1.174,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            3648,
+            1920
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1266,
+          "partial": 0,
+          "skipped": 7,
+          "dropped": 0,
+          "superseded": 0,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1267,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1267
+        },
+        "completed_eye_copies_per_s": 119.52106066629547,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 37.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          545
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.635,
+          "GD": 0.0,
+          "GPU%": 0.87,
+          "TW": 0.9,
+          "vrapi_fps": 121.0,
+          "stale_sum": 25.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "foveation-Strong",
+        "window": 1,
+        "seconds": 12.037,
+        "unique_fresh_fps": 118.58607297570883,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 8.440782,
+        "timestamp_gap_p99_ms": 16.63271,
+        "nominal_p1_fps_from_target_gaps": 60.12249356839625,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 4.39625,
+          "server_compositor_ms": 0.2179,
+          "encoder_ms": 2.4618,
+          "network_ms": 4.278092000000001,
+          "decoder_ms": 8.2329435,
+          "decoder_queue_ms": 4.5048705,
+          "client_compositor_ms": 2.4256515,
+          "vsync_queue_ms": 13.8145585,
+          "total_pipeline_latency_ms": 40.4056385
+        },
+        "game_fps_p50": 120.447103,
+        "video_payload_reported_p50_mbps": 1003.68473,
+        "received_graph_video_bytes_mbps": 988.5280405925565,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.2796354,
+          "fence_ms": 7.592292,
+          "convert_ms": 0.5860416,
+          "eye_acquire_wait_ms": 0.0077080005,
+          "eye_render_ms": 2.104687,
+          "eye_release_ms": 0.0042709997,
+          "wait_ms": 7.096407
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.4311457,
+          "fence_ms": 7.829585,
+          "convert_ms": 2.1067708,
+          "eye_acquire_wait_ms": 0.011303,
+          "eye_render_ms": 2.367865,
+          "eye_release_ms": 0.006614,
+          "wait_ms": 7.339116
+        },
+        "eye_gpu_timer_mean_ms_median": 1.1835,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            3328,
+            1792
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1333,
+          "partial": 0,
+          "skipped": 0,
+          "dropped": 0,
+          "superseded": 15,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1319,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1319
+        },
+        "completed_eye_copies_per_s": 118.69811265415659,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 37.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          545
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.09,
+          "GD": 0.0,
+          "GPU%": 0.82,
+          "TW": 0.9,
+          "vrapi_fps": 121.0,
+          "stale_sum": 31.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "foveation-Strong",
+        "window": 2,
+        "seconds": 12.04,
+        "unique_fresh_fps": 119.58462365571621,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 8.424949,
+        "timestamp_gap_p99_ms": 11.125679,
+        "nominal_p1_fps_from_target_gaps": 89.88215460827155,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 17.85625,
+          "server_compositor_ms": 2.2146,
+          "encoder_ms": 2.62765,
+          "network_ms": 3.9561514999999994,
+          "decoder_ms": 7.3277350000000006,
+          "decoder_queue_ms": 1.3667714999999998,
+          "client_compositor_ms": 2.455417,
+          "vsync_queue_ms": 14.2202445,
+          "total_pipeline_latency_ms": 52.106647
+        },
+        "game_fps_p50": 121.159255,
+        "video_payload_reported_p50_mbps": 1009.62297,
+        "received_graph_video_bytes_mbps": 996.5947447941666,
+        "native_p50_ms": {
+          "gpu_decode_ms": 3.8803644,
+          "fence_ms": 6.65323,
+          "convert_ms": 1.3278645,
+          "eye_acquire_wait_ms": 0.008541999,
+          "eye_render_ms": 2.1416671,
+          "eye_release_ms": 0.003698,
+          "wait_ms": 5.958542
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 5.51276,
+          "fence_ms": 7.274792,
+          "convert_ms": 1.3588021,
+          "eye_acquire_wait_ms": 0.017396,
+          "eye_render_ms": 2.349428,
+          "eye_release_ms": 0.005625,
+          "wait_ms": 6.672501
+        },
+        "eye_gpu_timer_mean_ms_median": 1.1960000000000002,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            3328,
+            1792
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1272,
+          "partial": 0,
+          "skipped": 0,
+          "dropped": 0,
+          "superseded": 4,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1268,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1268
+        },
+        "completed_eye_copies_per_s": 119.63496406920582,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 37.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          492,
+          545
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 4.94,
+          "GD": 0.0,
+          "GPU%": 0.77,
+          "TW": 0.895,
+          "vrapi_fps": 120.5,
+          "stale_sum": 22.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "foveation-Off",
+        "window": 1,
+        "seconds": 12.041,
+        "unique_fresh_fps": 118.91877881726906,
+        "duplicate_target_rows_removed": 1,
+        "timestamp_gap_p95_ms": 10.94198,
+        "timestamp_gap_p99_ms": 11.237814,
+        "nominal_p1_fps_from_target_gaps": 88.98527774173874,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 3.7925,
+          "server_compositor_ms": 0.2011,
+          "encoder_ms": 2.6008,
+          "network_ms": 4.351532,
+          "decoder_ms": 14.47672,
+          "decoder_queue_ms": 4.077188,
+          "client_compositor_ms": 1.65849,
+          "vsync_queue_ms": 14.048944,
+          "total_pipeline_latency_ms": 46.195403000000006
+        },
+        "game_fps_p50": 120.53131,
+        "video_payload_reported_p50_mbps": 1004.3556,
+        "received_graph_video_bytes_mbps": 990.2919095563112,
+        "native_p50_ms": {
+          "gpu_decode_ms": 5.9015102,
+          "fence_ms": 7.926563,
+          "convert_ms": 0.77791667,
+          "eye_acquire_wait_ms": 0.006823,
+          "eye_render_ms": 1.63448,
+          "eye_release_ms": 0.003698,
+          "wait_ms": 7.328438
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.8120832,
+          "fence_ms": 8.436876,
+          "convert_ms": 0.9708854,
+          "eye_acquire_wait_ms": 0.0098439995,
+          "eye_render_ms": 1.830364,
+          "eye_release_ms": 0.005625,
+          "wait_ms": 7.902188
+        },
+        "eye_gpu_timer_mean_ms_median": 0.659,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1323,
+          "partial": 0,
+          "skipped": 5,
+          "dropped": 0,
+          "superseded": 3,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1320,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1320
+        },
+        "completed_eye_copies_per_s": 119.17616477255605,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 37.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          640
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.74,
+          "GD": 0.0,
+          "GPU%": 0.87,
+          "TW": 0.835,
+          "vrapi_fps": 121.0,
+          "stale_sum": 23.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "foveation-Off",
+        "window": 2,
+        "seconds": 12.04,
+        "unique_fresh_fps": 119.25150966673195,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 8.436615,
+        "timestamp_gap_p99_ms": 11.149115,
+        "nominal_p1_fps_from_target_gaps": 89.69321780248926,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 18.409399999999998,
+          "server_compositor_ms": 2.1841,
+          "encoder_ms": 2.7274000000000003,
+          "network_ms": 4.271205,
+          "decoder_ms": 13.042136,
+          "decoder_queue_ms": 4.1568760000000005,
+          "client_compositor_ms": 1.677708,
+          "vsync_queue_ms": 13.908162,
+          "total_pipeline_latency_ms": 61.071239999999996
+        },
+        "game_fps_p50": 121.400475,
+        "video_payload_reported_p50_mbps": 1011.6111,
+        "received_graph_video_bytes_mbps": 993.1738309701586,
+        "native_p50_ms": {
+          "gpu_decode_ms": 5.881614,
+          "fence_ms": 7.873178,
+          "convert_ms": 0.76895833,
+          "eye_acquire_wait_ms": 0.006979,
+          "eye_render_ms": 1.651458,
+          "eye_release_ms": 0.003542,
+          "wait_ms": 7.275261
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.828958,
+          "fence_ms": 8.43625,
+          "convert_ms": 1.4960938,
+          "eye_acquire_wait_ms": 0.009323,
+          "eye_render_ms": 1.874115,
+          "eye_release_ms": 0.0060940003,
+          "wait_ms": 7.879011
+        },
+        "eye_gpu_timer_mean_ms_median": 0.6675,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1261,
+          "partial": 0,
+          "skipped": 9,
+          "dropped": 0,
+          "superseded": 0,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1262,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1262
+        },
+        "completed_eye_copies_per_s": 119.31664273028122,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 37.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          599,
+          640
+        ],
+        "source_eye": [
+          2080,
+          2208
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.735,
+          "GD": 0.0,
+          "GPU%": 0.87,
+          "TW": 0.83,
+          "vrapi_fps": 120.0,
+          "stale_sum": 10.0,
+          "samples": 12
+        }
+      }
+    ],
+    "downsample": [
+      {
+        "cell": "downsample-Bilinear",
+        "window": 1,
+        "seconds": 12.041,
+        "unique_fresh_fps": 119.58465212749613,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 8.487605,
+        "timestamp_gap_p99_ms": 11.129584,
+        "nominal_p1_fps_from_target_gaps": 89.85061795661007,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 4.2255,
+          "server_compositor_ms": 0.1959,
+          "encoder_ms": 1.84265,
+          "network_ms": 4.1935715,
+          "decoder_ms": 9.5607825,
+          "decoder_queue_ms": 4.0620575,
+          "client_compositor_ms": 1.745209,
+          "vsync_queue_ms": 14.1429785,
+          "total_pipeline_latency_ms": 39.708296
+        },
+        "game_fps_p50": 120.66801799999999,
+        "video_payload_reported_p50_mbps": 1005.548825,
+        "received_graph_video_bytes_mbps": 996.5372565917831,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.0540104,
+          "fence_ms": 7.965886,
+          "convert_ms": 0.7651042,
+          "eye_acquire_wait_ms": 0.006927,
+          "eye_render_ms": 1.704844,
+          "eye_release_ms": 0.003542,
+          "wait_ms": 7.46422
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.689375,
+          "fence_ms": 8.189376,
+          "convert_ms": 1.4292707,
+          "eye_acquire_wait_ms": 0.010572,
+          "eye_render_ms": 2.016563,
+          "eye_release_ms": 0.005052,
+          "wait_ms": 7.66698
+        },
+        "eye_gpu_timer_mean_ms_median": 0.6705000000000001,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1324,
+          "partial": 0,
+          "skipped": 5,
+          "dropped": 0,
+          "superseded": 0,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1324,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1324
+        },
+        "completed_eye_copies_per_s": 119.58037867122991,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 37.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          640
+        ],
+        "source_eye": [
+          3072,
+          3216
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.7,
+          "GD": 0.0,
+          "GPU%": 0.86,
+          "TW": 0.82,
+          "vrapi_fps": 120.5,
+          "stale_sum": 12.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "downsample-Bilinear",
+        "window": 2,
+        "seconds": 12.04,
+        "unique_fresh_fps": 119.50109902799028,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 11.136355,
+        "timestamp_gap_p99_ms": 11.178283,
+        "nominal_p1_fps_from_target_gaps": 89.45917722784438,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 19.492500000000003,
+          "server_compositor_ms": 2.2599,
+          "encoder_ms": 2.1316,
+          "network_ms": 4.0987885,
+          "decoder_ms": 10.8688815,
+          "decoder_queue_ms": 1.61862,
+          "client_compositor_ms": 1.7500520000000002,
+          "vsync_queue_ms": 14.2778835,
+          "total_pipeline_latency_ms": 56.87611
+        },
+        "game_fps_p50": 121.47200000000001,
+        "video_payload_reported_p50_mbps": 1012.25047,
+        "received_graph_video_bytes_mbps": 995.2659347867602,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.003229,
+          "fence_ms": 7.961823,
+          "convert_ms": 0.7774479,
+          "eye_acquire_wait_ms": 0.007605,
+          "eye_render_ms": 1.719011,
+          "eye_release_ms": 0.003802,
+          "wait_ms": 7.446355
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.6354685,
+          "fence_ms": 8.234063,
+          "convert_ms": 1.5189062,
+          "eye_acquire_wait_ms": 0.014948,
+          "eye_render_ms": 1.945417,
+          "eye_release_ms": 0.005365,
+          "wait_ms": 7.725261
+        },
+        "eye_gpu_timer_mean_ms_median": 0.6655,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1384,
+          "partial": 0,
+          "skipped": 5,
+          "dropped": 0,
+          "superseded": 1,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1384,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1384
+        },
+        "completed_eye_copies_per_s": 119.57943558520812,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 37.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          599,
+          640
+        ],
+        "source_eye": [
+          3072,
+          3216
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.73,
+          "GD": 0.0,
+          "GPU%": 0.88,
+          "TW": 0.83,
+          "vrapi_fps": 121.0,
+          "stale_sum": 6.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "downsample-Adaptive",
+        "window": 1,
+        "seconds": 12.044,
+        "unique_fresh_fps": 118.50391764411584,
+        "duplicate_target_rows_removed": 3,
+        "timestamp_gap_p95_ms": 11.135209,
+        "timestamp_gap_p99_ms": 13.81099,
+        "nominal_p1_fps_from_target_gaps": 72.4061055724463,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 2.7229,
+          "server_compositor_ms": 0.21359999999999998,
+          "encoder_ms": 3.0255,
+          "network_ms": 4.783838,
+          "decoder_ms": 14.436147,
+          "decoder_queue_ms": 4.417553,
+          "client_compositor_ms": 1.623125,
+          "vsync_queue_ms": 13.805923,
+          "total_pipeline_latency_ms": 45.451865
+        },
+        "game_fps_p50": 120.69423,
+        "video_payload_reported_p50_mbps": 1005.71315,
+        "received_graph_video_bytes_mbps": 987.3337582110962,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.420156,
+          "fence_ms": 7.973594,
+          "convert_ms": 0.7522916,
+          "eye_acquire_wait_ms": 0.006355,
+          "eye_render_ms": 1.5996879,
+          "eye_release_ms": 0.003229,
+          "wait_ms": 7.452553
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.816875,
+          "fence_ms": 8.311771,
+          "convert_ms": 0.88656247,
+          "eye_acquire_wait_ms": 0.008229,
+          "eye_render_ms": 1.8043231,
+          "eye_release_ms": 0.004688,
+          "wait_ms": 7.798491
+        },
+        "eye_gpu_timer_mean_ms_median": 0.6595,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1323,
+          "partial": 0,
+          "skipped": 13,
+          "dropped": 0,
+          "superseded": 0,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1322,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1322
+        },
+        "completed_eye_copies_per_s": 118.77628992256889,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 38.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          640
+        ],
+        "source_eye": [
+          3072,
+          3216
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.71,
+          "GD": 0.0,
+          "GPU%": 0.87,
+          "TW": 0.82,
+          "vrapi_fps": 120.0,
+          "stale_sum": 21.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "downsample-Adaptive",
+        "window": 2,
+        "seconds": 12.04,
+        "unique_fresh_fps": 118.50481062367327,
+        "duplicate_target_rows_removed": 1,
+        "timestamp_gap_p95_ms": 8.426824,
+        "timestamp_gap_p99_ms": 16.49573,
+        "nominal_p1_fps_from_target_gaps": 60.621748779835755,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 12.347199999999999,
+          "server_compositor_ms": 0.1681,
+          "encoder_ms": 2.8587000000000002,
+          "network_ms": 4.292977,
+          "decoder_ms": 13.649532,
+          "decoder_queue_ms": 4.151355,
+          "client_compositor_ms": 1.674219,
+          "vsync_queue_ms": 13.662975000000001,
+          "total_pipeline_latency_ms": 53.14801
+        },
+        "game_fps_p50": 120.29931,
+        "video_payload_reported_p50_mbps": 1002.458,
+        "received_graph_video_bytes_mbps": 987.6336787015288,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.078958,
+          "fence_ms": 7.97073,
+          "convert_ms": 0.76203126,
+          "eye_acquire_wait_ms": 0.006666,
+          "eye_render_ms": 1.650208,
+          "eye_release_ms": 0.0031249998,
+          "wait_ms": 7.34625
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.273229,
+          "fence_ms": 8.396094,
+          "convert_ms": 0.8980208,
+          "eye_acquire_wait_ms": 0.00901,
+          "eye_render_ms": 1.822136,
+          "eye_release_ms": 0.004479,
+          "wait_ms": 7.81599
+        },
+        "eye_gpu_timer_mean_ms_median": 0.673,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1316,
+          "partial": 0,
+          "skipped": 15,
+          "dropped": 0,
+          "superseded": 0,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1316,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1316
+        },
+        "completed_eye_copies_per_s": 118.67297120527614,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 38.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          456,
+          599
+        ],
+        "source_eye": [
+          3072,
+          3216
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.885,
+          "GD": 0.0,
+          "GPU%": 0.89,
+          "TW": 0.85,
+          "vrapi_fps": 121.0,
+          "stale_sum": 7.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "downsample-Adaptive",
+        "window": 1,
+        "seconds": 12.039,
+        "unique_fresh_fps": 118.50327504569846,
+        "duplicate_target_rows_removed": 1,
+        "timestamp_gap_p95_ms": 11.188908,
+        "timestamp_gap_p99_ms": 13.871981,
+        "nominal_p1_fps_from_target_gaps": 72.08775732896405,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 9.61435,
+          "server_compositor_ms": 0.22675,
+          "encoder_ms": 3.4013000000000004,
+          "network_ms": 4.288038,
+          "decoder_ms": 12.3869025,
+          "decoder_queue_ms": 3.7071875,
+          "client_compositor_ms": 1.586198,
+          "vsync_queue_ms": 14.287105,
+          "total_pipeline_latency_ms": 51.585091
+        },
+        "game_fps_p50": 121.17907500000001,
+        "video_payload_reported_p50_mbps": 1009.80168,
+        "received_graph_video_bytes_mbps": 987.0002783549554,
+        "native_p50_ms": {
+          "gpu_decode_ms": 5.8616667,
+          "fence_ms": 7.924584,
+          "convert_ms": 0.7818229,
+          "eye_acquire_wait_ms": 0.006823,
+          "eye_render_ms": 1.562083,
+          "eye_release_ms": 0.0030210002,
+          "wait_ms": 7.332865
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.644479,
+          "fence_ms": 8.220313,
+          "convert_ms": 0.97479165,
+          "eye_acquire_wait_ms": 0.009896,
+          "eye_render_ms": 1.746093,
+          "eye_release_ms": 0.004323,
+          "wait_ms": 7.683438
+        },
+        "eye_gpu_timer_mean_ms_median": 0.6234999999999999,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1317,
+          "partial": 0,
+          "skipped": 13,
+          "dropped": 0,
+          "superseded": 2,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1316,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1316
+        },
+        "completed_eye_copies_per_s": 118.82913153314053,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 38.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          640
+        ],
+        "source_eye": [
+          3072,
+          3216
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.63,
+          "GD": 0.0,
+          "GPU%": 0.85,
+          "TW": 0.82,
+          "vrapi_fps": 120.0,
+          "stale_sum": 23.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "downsample-Adaptive",
+        "window": 2,
+        "seconds": 12.037,
+        "unique_fresh_fps": 119.41853888627803,
+        "duplicate_target_rows_removed": 1,
+        "timestamp_gap_p95_ms": 8.410938,
+        "timestamp_gap_p99_ms": 11.066095,
+        "nominal_p1_fps_from_target_gaps": 90.36611379172146,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 18.0798,
+          "server_compositor_ms": 2.2548,
+          "encoder_ms": 2.9478999999999997,
+          "network_ms": 4.776173,
+          "decoder_ms": 12.269845,
+          "decoder_queue_ms": 1.341407,
+          "client_compositor_ms": 1.75,
+          "vsync_queue_ms": 14.267486,
+          "total_pipeline_latency_ms": 58.22348
+        },
+        "game_fps_p50": 121.347435,
+        "video_payload_reported_p50_mbps": 1011.22214,
+        "received_graph_video_bytes_mbps": 994.7920897110558,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.1098437,
+          "fence_ms": 8.005522,
+          "convert_ms": 0.7682812,
+          "eye_acquire_wait_ms": 0.006927,
+          "eye_render_ms": 1.7209901,
+          "eye_release_ms": 0.004636,
+          "wait_ms": 7.42849
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.6684895,
+          "fence_ms": 8.244271,
+          "convert_ms": 0.87083334,
+          "eye_acquire_wait_ms": 0.0117190005,
+          "eye_render_ms": 1.900573,
+          "eye_release_ms": 0.006667,
+          "wait_ms": 7.696407
+        },
+        "eye_gpu_timer_mean_ms_median": 0.664,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1325,
+          "partial": 0,
+          "skipped": 4,
+          "dropped": 0,
+          "superseded": 0,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1325,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1325
+        },
+        "completed_eye_copies_per_s": 119.64961043306099,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 38.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          599,
+          640
+        ],
+        "source_eye": [
+          3072,
+          3216
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.715,
+          "GD": 0.0,
+          "GPU%": 0.875,
+          "TW": 0.835,
+          "vrapi_fps": 121.0,
+          "stale_sum": 11.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "downsample-Bilinear",
+        "window": 1,
+        "seconds": 12.039,
+        "unique_fresh_fps": 118.91989354770799,
+        "duplicate_target_rows_removed": 1,
+        "timestamp_gap_p95_ms": 8.404011,
+        "timestamp_gap_p99_ms": 11.162501,
+        "nominal_p1_fps_from_target_gaps": 89.58565826780216,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 3.6050500000000003,
+          "server_compositor_ms": 0.20775000000000002,
+          "encoder_ms": 1.8265500000000001,
+          "network_ms": 4.290417,
+          "decoder_ms": 14.4016945,
+          "decoder_queue_ms": 1.5563545,
+          "client_compositor_ms": 1.801927,
+          "vsync_queue_ms": 14.188918,
+          "total_pipeline_latency_ms": 42.750394
+        },
+        "game_fps_p50": 122.0427525,
+        "video_payload_reported_p50_mbps": 1017.01447,
+        "received_graph_video_bytes_mbps": 991.1951053378916,
+        "native_p50_ms": {
+          "gpu_decode_ms": 6.098177,
+          "fence_ms": 8.021876,
+          "convert_ms": 0.7571354,
+          "eye_acquire_wait_ms": 0.007344,
+          "eye_render_ms": 1.778438,
+          "eye_release_ms": 0.0031249998,
+          "wait_ms": 7.449428
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.6935415,
+          "fence_ms": 8.318491,
+          "convert_ms": 0.9283333,
+          "eye_acquire_wait_ms": 0.013541999,
+          "eye_render_ms": 1.9877081,
+          "eye_release_ms": 0.004218,
+          "wait_ms": 7.732918
+        },
+        "eye_gpu_timer_mean_ms_median": 0.6855,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1390,
+          "partial": 0,
+          "skipped": 10,
+          "dropped": 0,
+          "superseded": 0,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1390,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1390
+        },
+        "completed_eye_copies_per_s": 119.15598859503262,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 38.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          640
+        ],
+        "source_eye": [
+          3072,
+          3216
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.63,
+          "GD": 0.0,
+          "GPU%": 0.86,
+          "TW": 0.82,
+          "vrapi_fps": 121.0,
+          "stale_sum": 8.0,
+          "samples": 12
+        }
+      },
+      {
+        "cell": "downsample-Bilinear",
+        "window": 2,
+        "seconds": 12.039,
+        "unique_fresh_fps": 119.8339035369203,
+        "duplicate_target_rows_removed": 0,
+        "timestamp_gap_p95_ms": 11.100731,
+        "timestamp_gap_p99_ms": 11.151772,
+        "nominal_p1_fps_from_target_gaps": 89.67184766689994,
+        "latency_and_pc_timing_p50": {
+          "game_time_ms": 19.219800000000003,
+          "server_compositor_ms": 2.2569,
+          "encoder_ms": 2.1376500000000003,
+          "network_ms": 4.182383499999999,
+          "decoder_ms": 9.389870499999999,
+          "decoder_queue_ms": 3.7490364999999994,
+          "client_compositor_ms": 1.793594,
+          "vsync_queue_ms": 14.2195535,
+          "total_pipeline_latency_ms": 56.991718
+        },
+        "game_fps_p50": 121.2650375,
+        "video_payload_reported_p50_mbps": 1010.5239,
+        "received_graph_video_bytes_mbps": 998.1082758433452,
+        "native_p50_ms": {
+          "gpu_decode_ms": 5.916354,
+          "fence_ms": 7.92021,
+          "convert_ms": 0.8040104,
+          "eye_acquire_wait_ms": 0.006354,
+          "eye_render_ms": 1.7630731,
+          "eye_release_ms": 0.003437,
+          "wait_ms": 7.434375
+        },
+        "native_p90_ms": {
+          "gpu_decode_ms": 6.74651,
+          "fence_ms": 8.284324,
+          "convert_ms": 1.4673437,
+          "eye_acquire_wait_ms": 0.011042,
+          "eye_render_ms": 2.048437,
+          "eye_release_ms": 0.004896,
+          "wait_ms": 7.780522
+        },
+        "eye_gpu_timer_mean_ms_median": 0.6884999999999999,
+        "eye_gpu_timer_records": 12,
+        "encoded_stereo_sizes": [
+          [
+            4160,
+            2208
+          ]
+        ],
+        "sampled_counter_deltas": {
+          "complete": 1273,
+          "partial": 0,
+          "skipped": 2,
+          "dropped": 0,
+          "superseded": 0,
+          "stale_packets": 0,
+          "decode_failures": 0,
+          "direct_eye_copies": 1272,
+          "staging_eye_copies": 0,
+          "completed_eye_copies": 1272
+        },
+        "completed_eye_copies_per_s": 119.76108833746012,
+        "completion_observer_samples": 0,
+        "battery_temperature_c": 38.0,
+        "thermal_status": 0,
+        "gpu_clock_samples_mhz": [
+          640
+        ],
+        "source_eye": [
+          3072,
+          3216
+        ],
+        "explicit_source": true,
+        "source_covers_window": true,
+        "source_pulse_enabled": true,
+        "vrapi": {
+          "App": 5.71,
+          "GD": 0.0,
+          "GPU%": 0.87,
+          "TW": 0.81,
+          "vrapi_fps": 120.5,
+          "stale_sum": 5.0,
+          "samples": 12
+        }
+      }
+    ]
+  },
+  "cadence": {
+    "requested_hz": 207,
+    "elapsed_s": 15,
+    "frames": 3104,
+    "fps": 206.9,
+    "period_ns": 4830944,
+    "skipped_slots": 0,
+    "stalled": 0,
+    "late_waits": 0,
+    "wait_p50_us": 4875,
+    "wait_p99_us": 5839,
+    "no_decode": true,
+    "streaming": false,
+    "request_240": "ERROR_DISPLAY_REFRESH_RATE_UNSUPPORTED_FB"
+  },
+  "restoration": {
+    "all_phases_errors_empty": true,
+    "original_properties_and_touched_session_values_readback": true,
+    "independent_restorers_exited": true,
+    "vd_registered": true,
+    "project_unregistered": true,
+    "temporary_proximity_removed": true,
+    "old_matching_pairs_preserved": true
+  }
+}

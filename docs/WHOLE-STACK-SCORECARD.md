@@ -80,3 +80,21 @@ the selection open to catch them makes the compositor repeat instead.
 Virtual Desktop remained the only registered driver, saved settings stayed
 144 Hz / 2000 Mbps / 4:4:4, and SteamVR was stopped. `.51` is the installed
 client. Native 120 sustained and optical latency remain unmet.
+
+## Fused colour, `.54`
+
+After that, the unreviewed `.53` fused-colour build (`656a81b`) was installed and screened once:
+one 12-second fused block. The reviewed `.54` (`7460906`) makes the pass byte-exact on the Quest,
+on both saved stereo fixtures and both chroma filters. Two live screens followed (ABBAABBA, then
+BAABBAABBAAB, 20 s blocks), with the same settings as the table above:
+
+| | Off | Fused |
+| --- | --- | --- |
+| Unique displayed targets | 118.2 and 118.2 /s | 117.3 and 117.8 /s |
+| Fence p50 | 7.99 and 7.95 ms | 7.92 and 7.93 ms |
+
+The fused − off differences were −0.94 ± 0.72 and −0.32 ± 0.41 targets/s. Decode time moved into
+the fused pass, and eye-render p90 rose in every pair. No gain; keep it off. Details are in
+[FUSE-COLOR.md](FUSE-COLOR.md). After restoration only Virtual Desktop is registered, your
+144 Hz / 2000 Mbps / 4:4:4 settings and the device properties read back as original, SteamVR is
+stopped, and `.54` (fused colour unset) is the installed client.

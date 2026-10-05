@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "description": "Geometry-only A/B profiles. Preserve bitrate, refresh, wavelet, chroma, decoder, transport and foveation. No default is changed.",
+  "description": "Geometry-only A/B profiles. Preserve bitrate, refresh, wavelet, chroma, decoder, transport and foveation. No default is changed. supersampled150 is the dashboard 150 % game render resolution; A/B the PC filter with `control downsample --mode adaptive|bilinear`.",
   "profiles": {
     "native2080": {
       "render_eye": [2080, 2208],
@@ -8,6 +8,10 @@
     },
     "supersampled3072": {
       "render_eye": [3072, 3216],
+      "encode_eye": [2080, 2208]
+    },
+    "supersampled150": {
+      "render_eye": [3096, 3312],
       "encode_eye": [2080, 2208]
     }
   },
