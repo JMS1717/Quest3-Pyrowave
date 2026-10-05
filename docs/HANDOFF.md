@@ -100,6 +100,18 @@ with current shared scratch/query/upload lifetimes. The open lever is shortening
 that 5.9 ms GPU decode. An explicit 6 ms wait was measured on `.51` and is not
 the default: unique targets did not move, and compositor stale counts roughly
 doubled.
+
+**Haar [3,2] live, October 5:** `.52` (`f3a7184`) puts the Experiment 3 H2
+schedule in the streaming decoder behind `debug.q3pw.haar_h2=1`. Default stays
+the current multilevel Haar. The old all-levels fused kernel stays off. A 12 s
+off/on/off at 120 Hz, 1000 Mbps, 4:2:0, 4160×2208 made GPU decode slower
+(5.91 ms to 6.37 ms p50) and unique targets fell from about 118/s to 112/s.
+Lost targets rose from about 2.3/s to 7.6/s. The standalone −50% result was a
+different device, a locked 788 MHz clock, and 4:4:4 with no compositor. On
+Quest the GPU sat at 640 MHz and about 87% busy, with roughly 700 preemptions
+per second, and the live port also bounds-checks partial 32×32 tiles. Drop the
+flag. Adreno reports a 64-lane compute subgroup and 32 KB of shared memory;
+that does not by itself explain the 5.9 ms, and retuning [3,2] is not justified.
 Native 120 sustained/optical acceptance remains unmet. The historical evidence
 below records earlier hypotheses; completed experiments are not pending work.
 
