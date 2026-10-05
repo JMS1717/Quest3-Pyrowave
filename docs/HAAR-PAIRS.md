@@ -1,7 +1,8 @@
 # Dedicated Haar kernel experiment
 
-Experimental branch only: pinned shader regeneration is pending. Do not build or
-install this branch until its generated header and source manifest match.
+Experimental `.42` candidate: pinned shader regeneration passed, all generated
+source hashes and program dimensions verified. Matching native builds, default
+and candidate GPU readbacks, then live performance gates are still required.
 Defaults retain the original shader. Bitstream, reconstruction arithmetic,
 precision, foveation and codec remain unchanged.
 
