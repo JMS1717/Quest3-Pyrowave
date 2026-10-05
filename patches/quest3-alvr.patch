@@ -206,7 +206,7 @@ index 7cead7b..18ad9d0 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..40f59b6 100644
+index ae00ce8..ddfa501 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..40f59b6 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.47"
++version = "20.13.0-quest3.pyro.48"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -1560,7 +1560,7 @@ index 4d2e699..7fea2be 100644
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601..8a77bc3 100644
+index 2e22601..9617944 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -1741,7 +1741,7 @@ index 2e22601..8a77bc3 100644
              t.join().ok();
          }
      }
-@@ -99,18 +181,79 @@ pub fn video_decoder_split(
+@@ -99,18 +181,84 @@ pub fn video_decoder_split(
      let pending = Arc::new(Pending {
          frame: Mutex::new(None),
          ready: Condvar::new(),
@@ -1817,6 +1817,11 @@ index 2e22601..8a77bc3 100644
 +        let telemetry_started = Arc::clone(&telemetry_started);
 +        let report_frame_decoded = Arc::clone(&report_frame_decoded);
          move || {
++            // Must precede native allocation, not merely prerecord_enable. The
++            // standalone exact-pixel proofs used the same setting. Scope drops
++            // AFTER native destruction, including constructor-error returns.
++            let _allocation_environment = prerecord_requested.then(super::producer_prerecord::AllocationEnvironment::enable);
++            if prerecord_requested { super::logcat_info("PYROWAVE", "[Q3PW_PRERECORD_ALLOCATION] PYROWAVE_NO_LINEAR_TEX=1 scoped_single_decoder=1"); }
              // Created here so every Vulkan call the library makes stays on this thread.
              let client = unsafe {
 -                pyroclient_create_ex(
@@ -1824,7 +1829,7 @@ index 2e22601..8a77bc3 100644
                      cfg.width,
                      cfg.height,
                      cfg.chroma444 as i32,
-@@ -118,6 +261,7 @@ pub fn video_decoder_split(
+@@ -118,6 +266,7 @@ pub fn video_decoder_split(
                      3,
                      cfg.wavelet as i32,
                      cfg.decode_path as i32,
@@ -1832,7 +1837,7 @@ index 2e22601..8a77bc3 100644
                  )
              };
              if client.is_null() {
-@@ -128,64 +272,246 @@ pub fn video_decoder_split(
+@@ -128,64 +277,246 @@ pub fn video_decoder_split(
                  )));
                  return;
              }

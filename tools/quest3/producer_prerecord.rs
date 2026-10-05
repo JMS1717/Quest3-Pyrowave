@@ -1,6 +1,25 @@
 //! Worker metadata only. Native code owns slots, command buffers and completion.
 //! No packet FIFO: one preparation plus the receive thread's one latest payload.
 use std::time::Duration;
+use std::ffi::OsString;
+
+/// Single decoder owner only. The eligible TCP worker is the sole constructor;
+/// teardown joins it before another decoder is created. Restore process state
+/// after native destruction, including constructor-error and unwind paths.
+pub struct AllocationEnvironment { previous: Option<OsString> }
+impl AllocationEnvironment {
+    pub fn enable() -> Self {
+        let previous=std::env::var_os("PYROWAVE_NO_LINEAR_TEX");
+        std::env::set_var("PYROWAVE_NO_LINEAR_TEX","1");
+        Self { previous }
+    }
+}
+impl Drop for AllocationEnvironment {
+    fn drop(&mut self) {
+        if let Some(value)=self.previous.take() { std::env::set_var("PYROWAVE_NO_LINEAR_TEX",value); }
+        else { std::env::remove_var("PYROWAVE_NO_LINEAR_TEX"); }
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Prepared {
@@ -33,6 +52,18 @@ mod tests {
     use super::*;
     use std::sync::{Arc, Mutex, mpsc};
     use std::thread;
+    #[test]
+    fn allocation_scope_restores_prior_value_and_unset_state() {
+        // One test owns this process variable; no other portable test reads it.
+        let original=std::env::var_os("PYROWAVE_NO_LINEAR_TEX");
+        std::env::set_var("PYROWAVE_NO_LINEAR_TEX","0");
+        { let _guard=AllocationEnvironment::enable(); assert_eq!(std::env::var("PYROWAVE_NO_LINEAR_TEX").unwrap(),"1"); }
+        assert_eq!(std::env::var("PYROWAVE_NO_LINEAR_TEX").unwrap(),"0");
+        std::env::remove_var("PYROWAVE_NO_LINEAR_TEX");
+        let _=std::panic::catch_unwind(|| { let _guard=AllocationEnvironment::enable(); panic!("constructor failed"); });
+        assert!(std::env::var_os("PYROWAVE_NO_LINEAR_TEX").is_none());
+        if let Some(v)=original { std::env::set_var("PYROWAVE_NO_LINEAR_TEX",v); }
+    }
     fn prepared() -> Prepared { Prepared { timestamp: Duration::from_nanos(9), order: u64::MAX, generation: 17 } }
     #[test]
     fn gate_requires_single_native_low_worker_and_excludes_other_modes() {

@@ -120,7 +120,7 @@ values and physical proximity behavior were restored with readback; Virtual
 Desktop registration was preserved. This is a correctness milestone, **not a
 measured FPS or latency improvement**. Keep the normal synchronous path as default.
 
-## Opt-in streaming integration candidate `.47`
+## Opt-in streaming integration candidate `.48`
 
 Not device-accepted or promoted. Matching builds, renewed native proof and a
 controlled streaming screen are required. `debug.q3pw.prerecord_mode=1` at client
@@ -129,6 +129,16 @@ it uses explicit single-submission start/poll/finish with no preparation.
 `prerecord_active=1` additionally permits one successor preparation. Both arms
 disable optional Granite stage timestamps and retain native completion queries.
 Leave `prerecord_mode` empty or zero to retain the existing synchronous default.
+
+The first `.47` streaming screen was excluded: eligibility passed, but native
+enable rejected the missing `PYROWAVE_NO_LINEAR_TEX=1` allocation environment.
+Standalone exact-pixel tests had set it before constructing the decoder. All
+four captured windows stayed on the ordinary fallback; no preparation gain can
+be inferred. Settings were restored. `.48` scopes that environment to the one
+eligible decoder, before construction, and restores the prior value after native
+destruction or constructor failure. Both experimental arms use the same allocation
+setting; the default worker does not change its environment. Native libraries are
+unchanged from `.47`; exact artifact identity is still required for proof reuse.
 
 The Rust gate requires one TCP worker, exact native stereo geometry, Haar/Compute
 4:2:0 and LOW priority policy. Other ready/release/async/handoff/event/stage/Surface
