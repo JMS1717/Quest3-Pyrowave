@@ -1,18 +1,23 @@
-// Exact-pixel gate for the fused final-Haar + BT.709 color pass, runnable without a headset.
+// Exact-pixel gate for the fused final-Haar + BT.709 color pass and the fused dequant + level-0
+// Haar kernel, runnable without a headset.
 //
-// Encodes a deterministic asymmetric 4:2:0 frame with PyroWave Haar, decodes it twice on one
-// Vulkan device and compares the RGBA results:
+// Encodes a deterministic asymmetric 4:2:0 frame with PyroWave Haar, decodes it three times on
+// one Vulkan device and compares each candidate with the current path:
 //   A: current path. PyroWave writes all three R8 planes; convert.frag makes RGBA.
-//   B: fused path.   pyrowave_decoder_set_final_luma_store(0); fuse_color.frag reconstructs
+//   B: fused color.  pyrowave_decoder_set_final_luma_store(0); fuse_color.frag reconstructs
 //                    luma level 0 from the wavelet image while converting to RGBA.
-// Both use the SPIR-V headers that ship in pyroclient. On CI this runs on Mesa lavapipe, so it
+//   C: fused dequant+Haar. pyrowave_decoder_set_fused_dequant_haar(1) decodes the level-0 luma
+//                    bands inside the final Haar pass; convert.frag as in A. Luma and RGBA are
+//                    compared.
+// The color passes use the SPIR-V headers that ship in pyroclient. On CI this runs on Mesa lavapipe, so it
 // proves shader/API equivalence for the same coefficients, not Adreno rounding or decode
 // fidelity; repeat on Quest (default GATE_MIN_PSNR=30) before promotion.
 //
 // Usage: fuse_color_gate [width height max_bytes]...   (default: 512 320 131072 and 4160 2208 2083333)
-// Exit 0 when every case has max RGBA difference <= 1, a non-trivial decoded luma plane and
-// luma PSNR >= GATE_MIN_PSNR. GATE_ENCODE_ONLY / GATE_DECODE_ONLY (+ GATE_PACKET_DIR) split
-// encode and decode across processes, e.g. lavapipe at 512-bit (encoder needs 16 lanes).
+// Exit 0 when every case has max RGBA difference <= 1 (and luma <= 1 for C), a non-trivial
+// decoded luma plane and luma PSNR >= GATE_MIN_PSNR. GATE_ENCODE_ONLY / GATE_DECODE_ONLY (+ GATE_PACKET_DIR) split
+// encode and decode across processes: lavapipe encodes at 512-bit (the encoder needs 16 lanes)
+// and decodes at 256-bit. GATE_DUMP_DIR writes the source and decoded luma as PGM files.
 
 #include <vulkan/vulkan.h>
 #include "pyrowave.h"
@@ -315,18 +320,22 @@ void destroy_pass(const Gpu &g, Pass &p) {
 
 struct Result {
     std::vector<uint8_t> rgba;
-    std::vector<uint8_t> luma; // only for the current path
+    std::vector<uint8_t> luma; // empty for fused color, which never writes the luma plane
 };
+
+enum class Path { Current, FusedColor, DequantHaar };
 
 // Decode one frame with a fresh decoder, convert it with `pass`, read RGBA (and luma) back.
 Result run(const Gpu &g, uint32_t w, uint32_t h, const std::vector<std::vector<uint8_t>> &packets,
-           bool fused, int limited, int chroma_filter) {
+           Path path, int limited, int chroma_filter) {
+    const bool fused = path == Path::FusedColor;
     pyrowave_decoder_create_info di = {};
     di.device = g.pyro; di.width = int(w); di.height = int(h);
     di.chroma = PYROWAVE_CHROMA_SUBSAMPLING_420; di.fragment_path = false; di.wavelet = PYROWAVE_WAVELET_HAAR;
     pyrowave_decoder dec = nullptr;
     PW_CHECK(pyrowave_decoder_create(&di, &dec));
     if (fused) PW_CHECK(pyrowave_decoder_set_final_luma_store(dec, 0));
+    if (path == Path::DequantHaar) PW_CHECK(pyrowave_decoder_set_fused_dequant_haar(dec, 1));
     for (const auto &p : packets) PW_CHECK(pyrowave_decoder_push_packet(dec, p.data(), p.size()));
     if (!pyrowave_decoder_decode_is_ready(dec, false)) { fprintf(stderr, "frame incomplete\n"); exit(2); }
 
@@ -483,6 +492,19 @@ Result run(const Gpu &g, uint32_t w, uint32_t h, const std::vector<std::vector<u
     return r;
 }
 
+struct Diff { int max = 0; size_t differing = 0; };
+
+Diff compare(const std::vector<uint8_t> &a, const std::vector<uint8_t> &b) {
+    Diff r;
+    if (a.size() != b.size()) { r.max = 256; return r; }
+    for (size_t i = 0; i < a.size(); i++) {
+        const int d = std::abs(int(a[i]) - int(b[i]));
+        if (d) r.differing++;
+        if (d > r.max) r.max = d;
+    }
+    return r;
+}
+
 double psnr(const std::vector<uint8_t> &a, const std::vector<uint8_t> &b) {
     double se = 0;
     for (size_t i = 0; i < a.size(); i++) { double d = double(a[i]) - double(b[i]); se += d * d; }
@@ -517,9 +539,20 @@ int main(int argc, char **argv) {
         di.chroma = PYROWAVE_CHROMA_SUBSAMPLING_420; di.wavelet = PYROWAVE_WAVELET_CDF97;
         PW_CHECK(pyrowave_decoder_create(&di, &dec));
         const bool rejected97 = pyrowave_decoder_set_final_luma_store(dec, 0) != PYROWAVE_SUCCESS;
+        const bool dh_rejected97 = pyrowave_decoder_set_fused_dequant_haar(dec, 1) != PYROWAVE_SUCCESS;
         pyrowave_decoder_destroy(dec);
-        printf("unsupported 4:4:4 rejected=%d, CDF 9/7 rejected=%d\n", rejected, rejected97);
-        if (!rejected || !rejected97) return 1;
+        // The two final-pass replacements are mutually exclusive in either order.
+        di.wavelet = PYROWAVE_WAVELET_HAAR;
+        PW_CHECK(pyrowave_decoder_create(&di, &dec));
+        PW_CHECK(pyrowave_decoder_set_final_luma_store(dec, 0));
+        const bool dh_after_skip = pyrowave_decoder_set_fused_dequant_haar(dec, 1) != PYROWAVE_SUCCESS;
+        PW_CHECK(pyrowave_decoder_set_final_luma_store(dec, 1));
+        PW_CHECK(pyrowave_decoder_set_fused_dequant_haar(dec, 1));
+        const bool skip_after_dh = pyrowave_decoder_set_final_luma_store(dec, 0) != PYROWAVE_SUCCESS;
+        pyrowave_decoder_destroy(dec);
+        printf("unsupported 4:4:4 rejected=%d, CDF 9/7 rejected=%d, dequant_haar CDF 9/7 rejected=%d, "
+               "exclusive=%d/%d\n", rejected, rejected97, dh_rejected97, dh_after_skip, skip_after_dh);
+        if (!rejected || !rejected97 || !dh_rejected97 || !dh_after_skip || !skip_after_dh) return 1;
     }
 
     bool ok = true;
@@ -549,26 +582,47 @@ int main(int argc, char **argv) {
         }
         for (int limited = 0; limited < 2; limited++)
             for (int filter = 0; filter < 2; filter++) {
-                const Result a = run(g, c.w, c.h, packets, false, limited, filter);
-                const Result b = run(g, c.w, c.h, packets, true, limited, filter);
-                int max_diff = 0;
-                size_t differing = 0;
-                for (size_t i = 0; i < a.rgba.size(); i++) {
-                    const int d = std::abs(int(a.rgba[i]) - int(b.rgba[i]));
-                    if (d) differing++;
-                    if (d > max_diff) max_diff = d;
+                const Result a = run(g, c.w, c.h, packets, Path::Current, limited, filter);
+                const Result b = run(g, c.w, c.h, packets, Path::FusedColor, limited, filter);
+                const Diff rgba = compare(a.rgba, b.rgba);
+                // The dequant+Haar kernel does not touch color conversion, so one variant suffices.
+                Diff dh_luma, dh_rgba;
+                const bool run_dh = limited == 0 && filter == 0;
+                if (run_dh) {
+                    const Result d = run(g, c.w, c.h, packets, Path::DequantHaar, limited, filter);
+                    dh_luma = compare(a.luma, d.luma);
+                    dh_rgba = compare(a.rgba, d.rgba);
                 }
                 const double luma_psnr = psnr(a.luma, y);
+                if (const char *dir = getenv("GATE_DUMP_DIR"); dir && limited == 0 && filter == 0) {
+                    // Source and decoded luma as PGM, to inspect a low PSNR by eye.
+                    for (int which = 0; which < 2; which++) {
+                        char name[512];
+                        snprintf(name, sizeof name, "%s/fuse_gate_%ux%u_%s.pgm", dir, c.w, c.h, which ? "decoded" : "source");
+                        if (FILE *f = fopen(name, "wb")) {
+                            fprintf(f, "P5\n%u %u\n255\n", c.w, c.h);
+                            fwrite(which ? a.luma.data() : y.data(), 1, y.size(), f);
+                            fclose(f);
+                        }
+                    }
+                }
                 std::vector<int> seen(256);
                 for (uint8_t v : a.luma) seen[v] = 1;
                 int distinct = 0;
                 for (int v : seen) distinct += v;
                 // Identical but trivial images (blank decode) must not pass.
                 const bool nontrivial = distinct >= 64;
-                const bool pass = max_diff <= 1 && nontrivial && luma_psnr >= min_psnr;
+                const bool pass = rgba.max <= 1 && nontrivial && luma_psnr >= min_psnr;
                 printf("  limited=%d catmull=%d luma_psnr=%.2f dB distinct_luma=%d rgba_max_diff=%d differing_bytes=%zu/%zu %s\n",
-                       limited, filter, luma_psnr, distinct, max_diff, differing, a.rgba.size(), pass ? "PASS" : "FAIL");
+                       limited, filter, luma_psnr, distinct, rgba.max, rgba.differing, a.rgba.size(), pass ? "PASS" : "FAIL");
                 ok = ok && pass;
+                if (run_dh) {
+                    const bool dh_pass = dh_luma.max <= 1 && dh_rgba.max <= 1 && nontrivial;
+                    printf("  dequant_haar luma_max_diff=%d differing=%zu/%zu rgba_max_diff=%d differing_bytes=%zu/%zu %s\n",
+                           dh_luma.max, dh_luma.differing, a.luma.size(), dh_rgba.max, dh_rgba.differing,
+                           a.rgba.size(), dh_pass ? "PASS" : "FAIL");
+                    ok = ok && dh_pass;
+                }
             }
     }
     pyrowave_device_destroy(g.pyro);

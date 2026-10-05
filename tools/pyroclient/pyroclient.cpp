@@ -143,6 +143,8 @@ struct pyroclient {
     VkPipeline pipeline = VK_NULL_HANDLE;
     VkPipeline fragment_pipeline = VK_NULL_HANDLE;
     bool fuse_color = false;
+    // Experiment: decode the level-0 luma bands inside the final Haar pass (debug.q3pw.dequant_haar).
+    bool dequant_haar = false;
     VkDescriptorSetLayout fuse_set_layout = VK_NULL_HANDLE;
     VkPipelineLayout fuse_layout = VK_NULL_HANDLE;
     VkPipeline fuse_pipeline = VK_NULL_HANDLE;
@@ -1057,6 +1059,12 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
     if (c->haar && !c->chroma444 && __system_property_get("debug.q3pw.fuse_color", fuse_prop) > 0 && !strcmp(fuse_prop, "1"))
         c->fuse_color = true;
     LOGI("[Q3PW_FUSE_COLOR] requested=%d debug.q3pw.fuse_color=%s", c->fuse_color ? 1 : 0, fuse_prop[0] ? fuse_prop : "unset");
+    char dequant_haar_prop[PROP_VALUE_MAX] = {};
+    if (c->haar && !c->chroma444 && __system_property_get("debug.q3pw.dequant_haar", dequant_haar_prop) > 0 &&
+        !strcmp(dequant_haar_prop, "1"))
+        c->dequant_haar = true;
+    LOGI("[Q3PW_DEQUANT_HAAR] requested=%d debug.q3pw.dequant_haar=%s", c->dequant_haar ? 1 : 0,
+         dequant_haar_prop[0] ? dequant_haar_prop : "unset");
     c->decode_path_hint = decode_path;
     c->low_queue_priority = low_queue_priority != 0;
     char stage_prop[PROP_VALUE_MAX] = {};
@@ -1106,6 +1114,12 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
             c->fuse_color = false;
         }
         LOGI("[Q3PW_FUSE_COLOR] applied=%d", c->fuse_color ? 1 : 0);
+        // Both experiments replace the same final pass, so fused color takes precedence.
+        if (c->dequant_haar) {
+            c->dequant_haar = !c->fuse_color && pyrowave_decoder_set_fused_dequant_haar(c->decoder, 1) == PYROWAVE_SUCCESS;
+            LOGI("[Q3PW_DEQUANT_HAAR] applied=%d%s", c->dequant_haar ? 1 : 0,
+                 c->fuse_color ? " (fuse_color takes precedence)" : "");
+        }
         char minimal_prop[PROP_VALUE_MAX] = {};
         const bool requested = __system_property_get("debug.q3pw.fragment_min_usage", minimal_prop) > 0
             && !strcmp(minimal_prop, "1");

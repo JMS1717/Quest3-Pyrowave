@@ -97,11 +97,15 @@ jobs:
             tools/pyroclient/fuse_color_gate.cpp -o /tmp/fuse_color_gate -L"$PW/build-linux" -lpyrowave-shared -lvulkan -Wl,-rpath,"$PW/build-linux"
           export VK_ICD_FILENAMES=$(ls /usr/share/vulkan/icd.d/lvp_icd*.json | head -n 1)
           mkdir -p "$GATE_PACKET_DIR"
+          set -o pipefail
+          grep -m1 'model name' /proc/cpuinfo || true
+          grep -o -m1 'avx512[a-z]*' /proc/cpuinfo | head -n 1 || echo "no avx512"
           # The encoder needs 16-64 lane subgroups (512-bit lavapipe vectors). Decode runs in a
           # second process at 256 bits: 512-bit decode is blank or crashes on CPUs without
-          # AVX-512, and the linear-texture decode path crashes on lavapipe.
+          # AVX-512. Lavapipe also crashes in the linear-texture and texel-buffer payload reads,
+          # so decode uses the SSBO payload variants (PYROWAVE_FORCE_SSBO).
           GATE_ENCODE_ONLY=1 LP_NATIVE_VECTOR_WIDTH=512 /tmp/fuse_color_gate 512 320 131072
-          GATE_DECODE_ONLY=1 LP_NATIVE_VECTOR_WIDTH=256 PYROWAVE_NO_LINEAR_TEX=1 GATE_MIN_PSNR=0 \
+          GATE_DECODE_ONLY=1 LP_NATIVE_VECTOR_WIDTH=256 PYROWAVE_NO_LINEAR_TEX=1 PYROWAVE_FORCE_SSBO=1 GATE_MIN_PSNR=0 \
             /tmp/fuse_color_gate 512 320 131072 | tee /tmp/fuse_color_gate.txt
           grep -q FUSE_COLOR_GATE_PASS /tmp/fuse_color_gate.txt
   publication_tests:
