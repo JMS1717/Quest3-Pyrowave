@@ -24,6 +24,11 @@ resume paused hardware work or unattended workers.
 
 ## Current engineering state
 
+Latest [LOW+release handoff](RELEASE-LOW.md) confirms exact native-size fenced
+reuse and active GPU imports. CPU waiting drops ~1 ms and copy deferrals vanish,
+but delivery/p1 do not improve. Keep release off; investigate producer resource
+lifetime and presentation scheduling before another mechanism.
+
 Latest [LOW+async comparison](ASYNC-LOW.md) verifies actual GPU-fence polling:
 CPU eye-render time fell ~1.63→0.59 ms, but eye completions stayed ~117/s and
 p1 near 60. Keep synchronous default; no sustained or optical acceptance.
