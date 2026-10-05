@@ -7165,7 +7165,7 @@ index 3be93190b208e2811ea657244046718f516760da..2a84d8d00ed7b828fc5c890cd9431515
 +        assert_eq!(r["settings"]["render_per_eye"], json!([2064, 2208]));
 +        assert_eq!(r["settings"]["render_scale_percent"], 100.0);
 +        assert_eq!(r["settings"]["game_render_per_eye"], json!([2064, 2208]));
-+        assert_eq!(r["settings"]["render_downsample_filter"], "Adaptive");
++        assert_eq!(r["settings"]["render_downsample_filter"], "Bilinear");
 +        assert_eq!(r["settings"]["pyrowave"]["transport"], "TCP");
          assert_eq!(r["settings"]["advanced_changes"], json!([]));
          assert_eq!(r["encoded_size"], json!([1984, 896]));
@@ -9938,7 +9938,7 @@ index 7bed823544ba31eeeebde4643e7a2de0de6424ca..8f2ca598f564600742763f41829b3388
 +    bool m_pyrowaveWaveletHaar = false;
 +    bool m_pyrowaveChroma444 = false;
 +    // 1: adaptive bicubic composition downsample (FrameRender), 0: previous single bilinear tap.
-+    int m_renderDownsampleFilter = 1;
++    int m_renderDownsampleFilter = 0;
      int m_pyrowaveDecodePath = 0; // 0 auto, 1 fragment, 2 compute
 +    bool m_pyrowaveLatencyStamp = false; // diagnostic clock stamp, tools/latency/latency_stamp.h
      int m_h264Profile;
@@ -11358,10 +11358,10 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e56843
 +}
 +
 +#[test]
-+fn fresh_install_uses_the_adaptive_downsample() {
++fn fresh_and_legacy_sessions_keep_the_single_tap_downsample() {
 +    assert_eq!(
 +        default_settings().video.pyrowave.render_downsample_filter,
-+        RenderDownsampleFilter::Adaptive
++        RenderDownsampleFilter::Bilinear
 +    );
 +    // A session saved before the setting existed loads with the same filter.
 +    let mut old = json::to_value(SessionConfig::default()).unwrap();
@@ -11376,7 +11376,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e56843
 +    assert_eq!(settings.video.pyrowave.wavelet, PyroWaveWavelet::Haar);
 +    assert_eq!(
 +        settings.video.pyrowave.render_downsample_filter,
-+        RenderDownsampleFilter::Adaptive
++        RenderDownsampleFilter::Bilinear
 +    );
 +}
 +
@@ -11939,10 +11939,10 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
 +    Bilinear = 0,
 +}
 +
-+// A session saved before this setting existed gets the adaptive filter, like a fresh install.
++// Preserve the legacy single-tap filter for fresh installs and older sessions.
 +impl Default for RenderDownsampleFilter {
 +    fn default() -> Self {
-+        Self::Adaptive
++        Self::Bilinear
 +    }
 +}
 +
@@ -12139,7 +12139,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
 +                    variant: PyroWaveDecodePathDefaultVariant::Auto,
 +                },
 +                render_downsample_filter: RenderDownsampleFilterDefault {
-+                    variant: RenderDownsampleFilterDefaultVariant::Adaptive,
++                    variant: RenderDownsampleFilterDefaultVariant::Bilinear,
                  },
 +                latency_stamp: false,
              },
