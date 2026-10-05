@@ -91,8 +91,9 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 ## Highest-value next experiment
 
-Use the [next overnight plan](NEXT-OVERNIGHT.md): bounded per-frame ownership and
-OpenXR timing trace, one mechanism-supported scheduling change, then repeated
+Use the [next overnight plan](NEXT-OVERNIGHT.md): whole-stack PC/game/SteamVR,
+composition/encode, transport, Quest decode/render and OpenXR timing/queue audit;
+bounded per-frame ownership trace; one mechanism-supported change; then repeated
 and sustained validation only if it improves the baseline. If rejected, spend
 remaining implementation time on one decoded-video presenter milestone. The
 plan has deliverables/time limits and does not resume the paused hardware session.

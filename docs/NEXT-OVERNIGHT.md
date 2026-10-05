@@ -22,7 +22,8 @@ stage causes each miss. See [measured findings](PRODUCER-PRERECORD.md).
 
 Commit to these deliverables, even if no candidate improves FPS:
 
-1. A bounded per-frame trace and replay analyzer that locates individual misses.
+1. A whole-stack timing/queue map, bounded per-frame trace and replay analyzer
+   that locate individual misses from PC source through Quest submission.
 2. One source-built scheduling candidate addressing the dominant measured cause,
    with an explicit comparison or a documented reason it cannot safely be tested.
 3. A reproducible verdict, matching artifact hashes, rollback and remaining gates.
@@ -57,6 +58,42 @@ server binaries only when their protocol/ABI compatibility is established and
 the exact hashes/source provenance are recorded. Change-required compilation and
 tests still run; a source or protocol change invalidates affected cached proofs.
 Do not manufacture a matching pair by relabeling an old binary.
+
+## Whole-stack audit before choosing an optimization
+
+The remaining problem must not be assumed to originate in Quest decoding.
+Audit the entire active route, record which stages are measured versus inferred,
+then select the dominant cause. The small local trace below is one part of this
+map; it must not replace PC, transport or runtime investigation.
+
+| Stage | Evidence and questions |
+| --- | --- |
+| Game / SteamVR | Actual submitted per-eye texture size, fresh game submissions, GPU/CPU frame times, refresh/throttling/reprojection settings, render queue and frame age. Is the game rendering what the preset requests? Does a real game differ from the diagnostic fixture? |
+| PC composition / capture | Source selection, supersampling/downscale, color conversion, capture/synchronization waits and queued textures. Is a high-resolution source preserved before downsampling? |
+| PyroWave encoder | Record/submit/GPU completion, payload size and frame budget, stale source selection, queued frames and pacing. Does target FPS/bitrate math agree with actual serialized output? Does automatic bitrate control really affect this codec? |
+| Transport | Actual route and negotiated USB/link speed, TCP/ADB forwarding or Wi-Fi path, sender/receiver backlog, socket waits, retransmissions where observable, bursts and payload copy cost. High link bandwidth does not prove low queueing latency. |
+| Quest ingress / decoder | Complete packet arrival, copying/allocation, latest-frame replacement, CPU scheduling, upload/record/submit, GPU reconstruction/conversion and completion publication. Correlate drops/superseding to frame identity. |
+| Quest renderer | Buffer leases, selection, import/copy, overlay, eye acquire/wait/release and completion. Count both eyes and actual direct/staging path. |
+| OpenXR / compositor | Wait/begin/end cadence, predicted display interval, application misses, runtime throttling/reprojection and presentation ownership. Separate observable application timing from undisclosed compositor behavior and optical output. |
+| System conditions | PC/Quest contention, GPU clock changes, thermal behavior, memory pressure, charging and process identity throughout. Report shared GPU counters honestly; do not label them calibrated per-app load. |
+
+Use a frame identity or verified ordered correlation across PC and Quest; tracking
+timestamps alone are insufficient. Capture local durations on each side and
+cross-clock uncertainty. An end-to-end latency sum is valid only when its stages,
+overlaps and boundaries agree. A lower total estimate cannot be assigned to one
+stage when game timing, phase or pose association changed.
+
+Produce a single scorecard before changing settings: available source FPS,
+encoded/sent/received/completed/selected/submitted unique-frame rates, queue age
+and depth, stage duration distributions, deadline misses and source resolution.
+Instrument missing boundaries in the same planned build where feasible. Start
+with the USB route already measured; compare Wi-Fi only when transport evidence
+warrants it. Keep the network configuration and Virtual Desktop preserved.
+
+The one-candidate time limit still applies **after** this whole-stack assessment.
+If PC rendering, encoding, transport or a system condition dominates, optimize
+that stage first and revise the later presentation milestone accordingly.
+Do not force a Quest-side solution to satisfy a preconceived diagnosis.
 
 ## First implementation: trace real frame ownership and deadlines
 
@@ -105,7 +142,8 @@ current OpenXR timing and measured copy/submission reserve. Preserve the complet
 frame lease, both-eye identity and synchronous fallback. This replaces a fixed
 selection policy only if the trace supports it; it is not another fixed-wait sweep.
 
-If input or GPU completion is late, change only the dominant identified stage.
+If input or GPU completion is late, trace that lateness back through the whole
+stack and change only the dominant identified stage.
 Do not force a presentation fix, raise bitrate, or allow two GPU decodes to overlap
 shared query/upload/scratch resources. A multi-flight decoder is a separate
 resource-lifetime project, not a quick deletion of its completion wait.
