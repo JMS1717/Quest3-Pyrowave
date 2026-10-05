@@ -63,6 +63,20 @@ class GapTests(unittest.TestCase):
 
 
 class WindowTests(unittest.TestCase):
+    def test_rate_uses_actual_window_duration_and_excludes_switch_interval(self):
+        log = [line(fresh(taken=100), 10), line(fresh(taken=100), 11.25),
+               line(fresh(wait_us=2000, taken=120), 12.5), line(fresh(wait_us=2000, taken=120), 14)]
+        base, changed = windows(log, 9, 15, 42)['configurations']
+        self.assertAlmostEqual(base['selected_source_frame_rate_fps'], 80)
+        self.assertAlmostEqual(changed['selected_source_frame_rate_fps'], 80)
+        self.assertEqual(changed['timed_windows'], 1)
+        self.assertAlmostEqual(changed['interval_s'], 1.5)
+
+    def test_nonincreasing_window_times_invalidate_rate(self):
+        r = windows([line(fresh(), 11), line(fresh(), 11)], 10, 12, 42)
+        self.assertEqual(r['status'], 'invalid_records')
+        self.assertIsNone(r['configurations'])
+
     def test_groups_alternating_configurations_and_skips_switch_windows(self):
         log = [line(fresh(0, 0), 10), line(fresh(0, 0), 11), line(fresh(2000, 0, taken=118), 12),
                line(fresh(2000, 0, taken=118), 13), line(fresh(0, 0), 14), line(fresh(0, 0), 15)]

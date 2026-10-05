@@ -87,6 +87,7 @@ def windows(lines, start, end, pid, settle_windows=1):
     if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 0:
         raise ValueError('Need the recorded client process ID')
     groups, malformed, foreign, previous, settled = {}, 0, 0, None, 0
+    previous_stamp = None
     for line in lines:
         marker = re.search(r'\[Q3PW_FRESH\]', line)
         if not marker:
@@ -116,11 +117,21 @@ def windows(lines, start, end, pid, settle_windows=1):
         # The first window after a switch straddles both configurations.
         settled = settled + 1 if config == previous else 0
         previous = config
+        elapsed = stamp - previous_stamp if previous_stamp is not None else None
+        previous_stamp = stamp
+        if elapsed is not None and elapsed <= 0:
+            malformed += 1
+            continue
         if settled < settle_windows:
             continue
         g = groups.setdefault(config, {'windows': 0, 'margin': [0] * 7, 'late': [0] * 7,
+                                       'timed_windows': 0, 'timed_taken': 0, 'interval_s': 0.0,
                                        **{k: 0 for k in counts}})
         g['windows'] += 1
+        if elapsed is not None and settled > 0:
+            g['timed_windows'] += 1
+            g['timed_taken'] += counts['taken']
+            g['interval_s'] += elapsed
         for k, v in counts.items():
             g[k] += v
         g['margin'] = [a + b for a, b in zip(g['margin'], margin)]
@@ -129,12 +140,13 @@ def windows(lines, start, end, pid, settle_windows=1):
     for (wait_us, ready, packet_grace_us), g in sorted(groups.items()):
         n = g['windows']
         result.append({'wait_us': wait_us, 'ready_active': bool(ready), 'packet_grace_us': packet_grace_us, **g,
+                       'selected_source_frame_rate_fps': g['timed_taken'] / g['interval_s'] if g['interval_s'] > 0 else None,
                        'taken_per_window': g['taken'] / n, 'superseded_per_window': g['superseded'] / n,
                        'late_taken_fraction': g['late_taken'] / max(1, g['late_taken'] + g['late_superseded'])})
     return {'status': 'invalid_records' if malformed else 'parsed' if result else 'no_probe_records',
             'configurations': result if not malformed else None, 'edges_us': list(EDGES_US),
             'malformed_records': malformed, 'foreign_process_records': foreign,
-            'scope': 'Windows are about one second of render-loop selections; counts are publications and selections, not optical FPS.',
+            'scope': 'Counts are publications and source-order selections, not optical FPS or accepted eye copies. selected_source_frame_rate_fps uses actual log-time intervals only between consecutive same-configuration windows; transition/unbounded intervals are excluded. Native completion and wall-time submission proxies remain separate.',
             'performance_acceptance': False, 'optical_latency_measured': False}
 
 

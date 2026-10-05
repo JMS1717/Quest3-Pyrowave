@@ -148,11 +148,15 @@
           18,
           1
         ],
+        "timed_windows": 7,
+        "timed_taken": 824,
+        "interval_s": 7.025000095367432,
         "taken": 824,
         "empty": 56,
         "late_taken": 56,
         "late_superseded": 0,
         "superseded": 14,
+        "selected_source_frame_rate_fps": 117.29537207314472,
         "taken_per_window": 117.71428571428571,
         "superseded_per_window": 2.0,
         "late_taken_fraction": 1.0
@@ -274,11 +278,15 @@
           18,
           0
         ],
+        "timed_windows": 7,
+        "timed_taken": 824,
+        "interval_s": 7.02400016784668,
         "taken": 824,
         "empty": 78,
         "late_taken": 78,
         "late_superseded": 0,
         "superseded": 12,
+        "selected_source_frame_rate_fps": 117.31207008962963,
         "taken_per_window": 117.71428571428571,
         "superseded_per_window": 1.7142857142857142,
         "late_taken_fraction": 1.0
@@ -400,11 +408,15 @@
           17,
           0
         ],
+        "timed_windows": 7,
+        "timed_taken": 826,
+        "interval_s": 7.026000022888184,
         "taken": 826,
         "empty": 96,
         "late_taken": 96,
         "late_superseded": 0,
         "superseded": 13,
+        "selected_source_frame_rate_fps": 117.56333579692411,
         "taken_per_window": 118.0,
         "superseded_per_window": 1.8571428571428572,
         "late_taken_fraction": 1.0
@@ -526,11 +538,15 @@
           16,
           0
         ],
+        "timed_windows": 7,
+        "timed_taken": 828,
+        "interval_s": 7.0279998779296875,
         "taken": 828,
         "empty": 57,
         "late_taken": 58,
         "late_superseded": 0,
         "superseded": 12,
+        "selected_source_frame_rate_fps": 117.81445850621056,
         "taken_per_window": 118.28571428571429,
         "superseded_per_window": 1.7142857142857142,
         "late_taken_fraction": 1.0
@@ -652,11 +668,15 @@
           17,
           0
         ],
+        "timed_windows": 7,
+        "timed_taken": 826,
+        "interval_s": 7.025000095367432,
         "taken": 826,
         "empty": 49,
         "late_taken": 49,
         "late_superseded": 0,
         "superseded": 11,
+        "selected_source_frame_rate_fps": 117.58006957817662,
         "taken_per_window": 118.0,
         "superseded_per_window": 1.5714285714285714,
         "late_taken_fraction": 1.0
@@ -778,11 +798,15 @@
           17,
           0
         ],
+        "timed_windows": 7,
+        "timed_taken": 826,
+        "interval_s": 7.025000095367432,
         "taken": 826,
         "empty": 48,
         "late_taken": 48,
         "late_superseded": 0,
         "superseded": 13,
+        "selected_source_frame_rate_fps": 117.58006957817662,
         "taken_per_window": 118.0,
         "superseded_per_window": 1.8571428571428572,
         "late_taken_fraction": 1.0
@@ -904,11 +928,15 @@
           19,
           0
         ],
+        "timed_windows": 7,
+        "timed_taken": 824,
+        "interval_s": 7.0249998569488525,
         "taken": 824,
         "empty": 67,
         "late_taken": 66,
         "late_superseded": 1,
         "superseded": 10,
+        "selected_source_frame_rate_fps": 117.29537605398407,
         "taken_per_window": 117.71428571428571,
         "superseded_per_window": 1.4285714285714286,
         "late_taken_fraction": 0.9850746268656716
@@ -1030,11 +1058,15 @@
           20,
           3
         ],
+        "timed_windows": 7,
+        "timed_taken": 816,
+        "interval_s": 7.025000095367432,
         "taken": 816,
         "empty": 86,
         "late_taken": 85,
         "late_superseded": 1,
         "superseded": 11,
+        "selected_source_frame_rate_fps": 116.15658205301709,
         "taken_per_window": 116.57142857142857,
         "superseded_per_window": 1.5714285714285714,
         "late_taken_fraction": 0.9883720930232558
@@ -1156,11 +1188,15 @@
           18,
           0
         ],
+        "timed_windows": 7,
+        "timed_taken": 825,
+        "interval_s": 7.0249998569488525,
         "taken": 825,
         "empty": 70,
         "late_taken": 70,
         "late_superseded": 0,
         "superseded": 10,
+        "selected_source_frame_rate_fps": 117.43772481133115,
         "taken_per_window": 117.85714285714286,
         "superseded_per_window": 1.4285714285714286,
         "late_taken_fraction": 1.0
@@ -1282,11 +1318,15 @@
           27,
           3
         ],
+        "timed_windows": 7,
+        "timed_taken": 808,
+        "interval_s": 7.0320000648498535,
         "taken": 808,
         "empty": 98,
         "late_taken": 97,
         "late_superseded": 1,
         "superseded": 13,
+        "selected_source_frame_rate_fps": 114.90329814399004,
         "taken_per_window": 115.42857142857143,
         "superseded_per_window": 1.8571428571428572,
         "late_taken_fraction": 0.9897959183673469
@@ -1408,11 +1448,15 @@
           12,
           0
         ],
+        "timed_windows": 7,
+        "timed_taken": 831,
+        "interval_s": 7.0249998569488525,
         "taken": 831,
         "empty": 55,
         "late_taken": 55,
         "late_superseded": 0,
         "superseded": 11,
+        "selected_source_frame_rate_fps": 118.29181735541356,
         "taken_per_window": 118.71428571428571,
         "superseded_per_window": 1.5714285714285714,
         "late_taken_fraction": 1.0
@@ -1534,11 +1578,15 @@
           13,
           2
         ],
+        "timed_windows": 7,
+        "timed_taken": 829,
+        "interval_s": 7.028000116348267,
         "taken": 829,
         "empty": 37,
         "late_taken": 37,
         "late_superseded": 0,
         "superseded": 10,
+        "selected_source_frame_rate_fps": 117.95674249799907,
         "taken_per_window": 118.42857142857143,
         "superseded_per_window": 1.4285714285714286,
         "late_taken_fraction": 1.0
@@ -1660,11 +1708,15 @@
           11,
           1
         ],
+        "timed_windows": 7,
+        "timed_taken": 828,
+        "interval_s": 7.01200008392334,
         "taken": 828,
         "empty": 63,
         "late_taken": 63,
         "late_superseded": 0,
         "superseded": 9,
+        "selected_source_frame_rate_fps": 118.08328438249521,
         "taken_per_window": 118.28571428571429,
         "superseded_per_window": 1.2857142857142858,
         "late_taken_fraction": 1.0
@@ -1786,11 +1838,15 @@
           9,
           0
         ],
+        "timed_windows": 7,
+        "timed_taken": 833,
+        "interval_s": 7.016999959945679,
         "taken": 833,
         "empty": 23,
         "late_taken": 23,
         "late_superseded": 0,
         "superseded": 9,
+        "selected_source_frame_rate_fps": 118.71170083439029,
         "taken_per_window": 119.0,
         "superseded_per_window": 1.2857142857142858,
         "late_taken_fraction": 1.0
@@ -1912,11 +1968,15 @@
           16,
           0
         ],
+        "timed_windows": 7,
+        "timed_taken": 827,
+        "interval_s": 7.023999929428101,
         "taken": 827,
         "empty": 55,
         "late_taken": 55,
         "late_superseded": 0,
         "superseded": 12,
+        "selected_source_frame_rate_fps": 117.73918113739715,
         "taken_per_window": 118.14285714285714,
         "superseded_per_window": 1.7142857142857142,
         "late_taken_fraction": 1.0
@@ -2038,11 +2098,15 @@
           11,
           0
         ],
+        "timed_windows": 7,
+        "timed_taken": 832,
+        "interval_s": 7.0249998569488525,
         "taken": 832,
         "empty": 22,
         "late_taken": 22,
         "late_superseded": 0,
         "superseded": 10,
+        "selected_source_frame_rate_fps": 118.43416611276062,
         "taken_per_window": 118.85714285714286,
         "superseded_per_window": 1.4285714285714286,
         "late_taken_fraction": 1.0
@@ -2059,7 +2123,8 @@
       "unique_tracking_id_rate_fps_mean": 117.51052357869273,
       "client_fps_p01_median": 60.001603700000004,
       "target_gap_p99_ms_median": 16.644828859999997,
-      "payload_p50_mbps_median": 1010.13525
+      "payload_p50_mbps_median": 1010.13525,
+      "selected_source_order_fps_over_probe_intervals": 117.61355542868716
     },
     "B": {
       "packet_grace_us": 250,
@@ -2070,7 +2135,8 @@
       "unique_tracking_id_rate_fps_mean": 117.41698846969427,
       "client_fps_p01_median": 60.00111956,
       "target_gap_p99_ms_median": 16.674834905,
-      "payload_p50_mbps_median": 1009.9463149999999
+      "payload_p50_mbps_median": 1009.9463149999999,
+      "selected_source_order_fps_over_probe_intervals": 117.64705752991635
     },
     "C": {
       "packet_grace_us": 500,
@@ -2081,7 +2147,8 @@
       "unique_tracking_id_rate_fps_mean": 117.62377552226961,
       "client_fps_p01_median": 60.000969845,
       "target_gap_p99_ms_median": 16.65567008,
-      "payload_p50_mbps_median": 1008.137725
+      "payload_p50_mbps_median": 1008.137725,
+      "selected_source_order_fps_over_probe_intervals": 117.753817293498
     },
     "D": {
       "packet_grace_us": 1000,
@@ -2092,7 +2159,8 @@
       "unique_tracking_id_rate_fps_mean": 117.04574386336584,
       "client_fps_p01_median": 60.00093262,
       "target_gap_p99_ms_median": 16.66487853,
-      "payload_p50_mbps_median": 1008.87932
+      "payload_p50_mbps_median": 1008.87932,
+      "selected_source_order_fps_over_probe_intervals": 117.02317021801058
     }
   },
   "normal_restoration_errors": [],

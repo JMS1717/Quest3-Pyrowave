@@ -179,6 +179,12 @@ of distinct tracking IDs separately. Distinct IDs still do not prove unique
 video contents. Compare submission wall-time rate, matching direct-completion
 counters and instantaneous client FPS/pacing together; none measures optical FPS.
 
+The optional freshness windows count source-order selections independently of
+tracking IDs. `selected_source_frame_rate_fps` divides those counts by actual
+log-time intervals between consecutive unchanged-configuration windows, excluding
+transitions. It measures queue selections, which can precede a failed eye copy;
+it must be compared with completion counters and does not prove optical delivery.
+
 The `.35` surface probe also looked only in `ExtensionSet.other`, which excludes
 extensions known to the Rust bindings. Its all-false log cannot rule out Android
 surface swapchains. `.37` reads the three named fields from the pinned openxr
