@@ -97,10 +97,14 @@ about 120 frames/s. About 3 unique targets/s are still missed after the
 half-frame wait, and that wait is already at its cap. `.49` passed review with
 native libraries identical to `.48` and is not installed.
 
-**October 5 next step:** on `experiment/producer-worker`, count whether an
-empty wait expired while decode was still in flight. Do not repeat prerecord,
-async copy, release fences, or another wait sweep. Two concurrent GPU decodes
-remain unsafe with current shared scratch/query/upload lifetimes.
+**October 5 measurement:** `.50` (`d0a77ef`) counted those expiries. In the
+steady 25-second window every empty expiry was still decoding (56/56) and none
+were idle. Unique targets stayed 117.7/s with 3.9 lost/s. GPU decode was about
+5.9 ms and conversion about 0.8 ms, inside an 8.0 ms fence. Do not repeat
+prerecord, async copy, release fences, or another wait sweep, and do not build
+a presenter to recover these misses. Two concurrent GPU decodes remain unsafe
+with current shared scratch/query/upload lifetimes. The open lever is shortening
+that 5.9 ms GPU decode.
 Native 120 sustained/optical acceptance remains unmet. The historical evidence
 below records earlier hypotheses; completed experiments are not pending work.
 

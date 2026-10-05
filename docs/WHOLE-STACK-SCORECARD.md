@@ -1,13 +1,13 @@
 # Whole-stack scorecard, October 5
 
 **The PC is already sending about 120 frames/s. The residual miss is on the
-Quest: about 3 displayed target frames/s are repeats because a completed frame
-is not published inside the existing half-frame wait. Lengthening that wait is
-not available. Prerecord did not move this.**
+Quest: about 3–4 displayed target frames/s are repeats. A later `.50` window
+showed every steady-state empty wait expired while decode was still running,
+not because the decoder was idle.**
 
-This uses the already captured `.48` control windows
-(`phase32-20261005T111731Z`, arms A1 and A2). It does not add a headset run.
-`.49` was reviewed after the fact and not installed.
+The stage table below is the already captured `.48` control windows
+(`phase32-20261005T111731Z`, arms A1 and A2). The classification run is in
+Decision.
 
 ## What is measured
 
@@ -43,13 +43,29 @@ stayed near 44 ms and is not used as a stage diagnosis.
 ## Decision
 
 Do not repeat prerecord, async copy, release fences, Haar-pair kernels, vector
-dequant, packet grace, or another wait-budget sweep. The next useful measurement
-is a default-off counter on the experiment branch: when the half-frame wait
-expires empty, record whether decode was still in flight. That separates a late
-GPU completion from an idle decoder with no input, which this capture cannot.
+dequant, packet grace, or another wait-budget sweep.
 
-`.49` ([run 37303701652](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37303701652),
-`28e1941`) passed every matching job. Its three native libraries match reviewed
-`.48` byte for byte, so the `.47` GPU pixel proof still applies by identity.
-The client change is ownership cleanup only. It is not installed; `.48` remains
-the headset build with prerecord off.
+`.50` (`d0a77ef`, [run 37309129157](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37309129157))
+adds that classification on the existing once-per-second frame-wait line. Its
+three native libraries match reviewed `.49` and `.48`. One 25-second stationary
+window (`phase32-20261005T124733Z`, 2080×2208, runtime 120 Hz, 1000 Mbps, 4:2:0,
+no foveation, LOW priority applied) measured:
+
+| Result | Value |
+| --- | --- |
+| Unique displayed targets | 117.7 /s |
+| Lost targets | 3.9 /s |
+| Empty wait expiries in the window | 56, all `still_decoding`, none `idle_no_input` |
+| GPU decode p50 / p90 | 5.90 / 6.78 ms |
+| Convert p50 / p90 | 0.77 / 1.53 ms |
+| Native fence p50 / p90 | 7.98 / 8.34 ms |
+
+Startup seconds before that window did include idle expiries. The steady window
+did not. Delivery matches the `.48` control; this run classifies the miss, it
+does not claim a faster client. Every empty expiry was a decode that had not
+published after 4 ms. Convert is too small to close that gap, and a different
+presenter cannot publish a frame the GPU has not finished.
+
+`.50` stayed installed after the verified run. Virtual Desktop remained the only
+registered driver, saved settings stayed 144 Hz / 2000 Mbps / 4:4:4, and SteamVR
+was stopped. Native 120 sustained and optical latency remain unmet.
