@@ -884,6 +884,11 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
         setenv("PYROWAVE_BATCH_DEQUANT", !strcmp(batch_prop, "1") ? "1" : "0", 1);
     LOGI("optional batched dequant: %s", getenv("PYROWAVE_BATCH_DEQUANT") &&
          !strcmp(getenv("PYROWAVE_BATCH_DEQUANT"), "1") ? "enabled" : "disabled");
+    char vector_prop[PROP_VALUE_MAX] = {};
+    if (__system_property_get("debug.q3pw.dequant_vector", vector_prop) > 0)
+        setenv("PYROWAVE_VECTOR_PAYLOAD", !strcmp(vector_prop, "1") ? "1" : "0", 1);
+    LOGI("[Q3PW_DEQUANT_VECTOR] enabled=%d default_off=true",
+         getenv("PYROWAVE_VECTOR_PAYLOAD") && !strcmp(getenv("PYROWAVE_VECTOR_PAYLOAD"), "1"));
     char convert_prop[PROP_VALUE_MAX] = {};
     if (__system_property_get("debug.q3pw.convert_compute", convert_prop) > 0) {
         if (!strcmp(convert_prop, "1")) setenv("PYROWAVE_CONVERT_COMPUTE", "1", 1);
