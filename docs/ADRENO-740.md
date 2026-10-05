@@ -2,7 +2,9 @@
 
 October 5 review of the Quest 3 GPU (Snapdragon XR2 Gen 2, Adreno 740) against the current
 decode path. Nothing here ran on hardware: every item below is built or proposed, and
-each needs an owner-approved headset screen before any keep/drop decision.
+each needs an owner-approved headset screen before any keep/drop decision. The rest of the SoC
+(CPU, memory, DSP, USB, power, video block) and the combined ranking are in
+[XR2-GEN2-SOC.md](XR2-GEN2-SOC.md).
 
 ## What the chip changes about the problem
 

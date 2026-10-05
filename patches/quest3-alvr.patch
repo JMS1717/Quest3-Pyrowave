@@ -206,7 +206,7 @@ index 7cead7b..18ad9d0 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..bb2bda6 100644
+index ae00ce8..cacc39e 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -430,7 +430,7 @@ index 0000000..057b458
 +    }
 +}
 diff --git a/alvr/client_core/src/connection.rs b/alvr/client_core/src/connection.rs
-index 1ed4333..996268d 100644
+index 1ed4333..517138e 100644
 --- a/alvr/client_core/src/connection.rs
 +++ b/alvr/client_core/src/connection.rs
 @@ -80,11 +80,13 @@ pub struct ConnectionContext {
@@ -467,7 +467,18 @@ index 1ed4333..996268d 100644
                  Arc::clone(&ctx),
                  Arc::clone(&lifecycle_state),
                  Arc::clone(&event_queue),
-@@ -571,6 +574,13 @@ fn connection_pipeline(
+@@ -327,6 +330,10 @@ fn connection_pipeline(
+     let video_receive_thread = thread::spawn({
+         let ctx = Arc::clone(&ctx);
+         move || {
++            crate::thread_hints::publish_current(
++                crate::thread_hints::ThreadRole::ApplicationWorker,
++                "video_receive",
++            );
+             let mut stream_corrupted = true;
+             // With PyroWave over UDP nothing arrives on this stream, so the RequestIdr that
+             // normally fetches the DecoderConfig would never be sent. Ask once a second until a
+@@ -571,6 +578,13 @@ fn connection_pipeline(
                          set_hud_message(&event_queue, SERVER_RESTART_MESSAGE);
                          disconnect_notif.notify_one();
                      }
@@ -481,19 +492,31 @@ index 1ed4333..996268d 100644
                      Ok(ServerControlPacket::ReservedBuffer(buffer)) => {
                          // NB: it's normal for deserialization to fail if server has different
                          // version
+@@ -607,6 +621,10 @@ fn connection_pipeline(
+         let event_queue = Arc::clone(&event_queue);
+         let disconnect_notif = Arc::clone(&disconnect_notif);
+         move || {
++            crate::thread_hints::publish_current(
++                crate::thread_hints::ThreadRole::ApplicationWorker,
++                "stream_receive",
++            );
+             while is_streaming(&ctx) {
+                 match stream_socket.recv() {
+                     Ok(()) => (),
 diff --git a/alvr/client_core/src/lib.rs b/alvr/client_core/src/lib.rs
-index 90a7c0a..041310e 100644
+index 90a7c0a..06c5a27 100644
 --- a/alvr/client_core/src/lib.rs
 +++ b/alvr/client_core/src/lib.rs
-@@ -11,6 +11,7 @@ mod logging_backend;
+@@ -11,6 +11,8 @@ mod logging_backend;
  mod sockets;
  mod statistics;
  mod storage;
 +pub mod performance;
++pub mod thread_hints;
  
  #[cfg(target_os = "android")]
  mod audio;
-@@ -92,6 +93,7 @@ pub(crate) fn push_foveation_center(timestamp: Duration, center: [[f32; 2]; 2])
+@@ -92,6 +94,7 @@ pub(crate) fn push_foveation_center(timestamp: Duration, center: [[f32; 2]; 2])
  }
  
  pub struct ClientCoreContext {
@@ -501,7 +524,7 @@ index 90a7c0a..041310e 100644
      lifecycle_state: Arc<RwLock<LifecycleState>>,
      event_queue: Arc<Mutex<VecDeque<ClientCoreEvent>>>,
      connection_context: Arc<ConnectionContext>,
-@@ -99,6 +101,11 @@ pub struct ClientCoreContext {
+@@ -99,6 +102,11 @@ pub struct ClientCoreContext {
  }
  
  impl ClientCoreContext {
@@ -513,7 +536,7 @@ index 90a7c0a..041310e 100644
      pub fn new(capabilities: ClientCapabilities) -> Self {
          dbg_client_core!("Create");
  
-@@ -115,6 +122,7 @@ impl ClientCoreContext {
+@@ -115,6 +123,7 @@ impl ClientCoreContext {
              alvr_system_info::set_wifi_lock(true);
          }
  
@@ -521,7 +544,7 @@ index 90a7c0a..041310e 100644
          let lifecycle_state = Arc::new(RwLock::new(LifecycleState::Idle));
          let event_queue = Arc::new(Mutex::new(VecDeque::new()));
          let connection_context = Arc::new(ConnectionContext::default());
-@@ -122,6 +130,7 @@ impl ClientCoreContext {
+@@ -122,6 +131,7 @@ impl ClientCoreContext {
              let lifecycle_state = Arc::clone(&lifecycle_state);
              let connection_context = Arc::clone(&connection_context);
              let event_queue = Arc::clone(&event_queue);
@@ -529,7 +552,7 @@ index 90a7c0a..041310e 100644
              move || {
                  connection::connection_lifecycle_loop(
                      capabilities,
-@@ -133,6 +142,7 @@ impl ClientCoreContext {
+@@ -133,6 +143,7 @@ impl ClientCoreContext {
          });
  
          Self {
@@ -537,7 +560,7 @@ index 90a7c0a..041310e 100644
              lifecycle_state,
              event_queue,
              connection_context,
-@@ -140,6 +150,11 @@ impl ClientCoreContext {
+@@ -140,6 +151,11 @@ impl ClientCoreContext {
          }
      }
  
@@ -638,6 +661,208 @@ index 0000000..0cd84ff
 +        assert_eq!(metric(f32::INFINITY), "--");
 +        assert_eq!(metric(-1.0), "--");
 +        assert_eq!(metric(120.0), "120.0");
++    }
++}
+diff --git a/alvr/client_core/src/thread_hints.rs b/alvr/client_core/src/thread_hints.rs
+new file mode 100644
+index 0000000..26cd78a
+--- /dev/null
++++ b/alvr/client_core/src/thread_hints.rs
+@@ -0,0 +1,196 @@
++// `debug.q3pw.thread_hints=1`: declare the stream's time-critical threads to the OpenXR runtime
++// (XR_KHR_android_thread_settings) so it can raise their priority and keep them off the slow
++// efficiency cores. The network and decode threads live here in client_core, which has no
++// XrSession, so each one publishes its kernel thread id and the OpenXR frame loop declares it.
++// Unset or anything but "1" publishes nothing, and the extension is not even enabled.
++
++use std::sync::{
++    atomic::{AtomicBool, Ordering},
++    Mutex, OnceLock,
++};
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum ThreadRole {
++    /// The OpenXR frame loop: xrWaitFrame, the GLES eye copy, xrEndFrame.
++    RendererMain,
++    /// Decode workers: Vulkan submission and the fence wait that gates each frame.
++    RendererWorker,
++    /// Socket reads, frame hand-off to the decoder and tracking input.
++    ApplicationWorker,
++}
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub struct DeclaredThread {
++    pub role: ThreadRole,
++    pub tid: i32,
++    pub name: &'static str,
++}
++
++static PENDING: Mutex<Vec<DeclaredThread>> = Mutex::new(Vec::new());
++static HAS_PENDING: AtomicBool = AtomicBool::new(false);
++
++pub fn requested() -> bool {
++    static REQUESTED: OnceLock<bool> = OnceLock::new();
++    *REQUESTED.get_or_init(|| requested_from_str(&property(c"debug.q3pw.thread_hints")))
++}
++
++pub fn requested_from_str(value: &str) -> bool {
++    value.trim() == "1"
++}
++
++/// Publishes the calling thread for declaration. Does nothing unless requested.
++pub fn publish_current(role: ThreadRole, name: &'static str) {
++    if requested() {
++        publish(DeclaredThread { role, tid: current_tid(), name });
++    }
++}
++
++fn publish(thread: DeclaredThread) {
++    PENDING.lock().unwrap_or_else(|e| e.into_inner()).push(thread);
++    HAS_PENDING.store(true, Ordering::Release);
++}
++
++/// Threads published since the last call. One atomic swap when there are none, so the frame loop
++/// can call it every frame.
++pub fn take_pending() -> Vec<DeclaredThread> {
++    if !HAS_PENDING.swap(false, Ordering::AcqRel) {
++        return Vec::new();
++    }
++    std::mem::take(&mut *PENDING.lock().unwrap_or_else(|e| e.into_inner()))
++}
++
++#[cfg(target_os = "android")]
++pub fn current_tid() -> i32 {
++    unsafe { libc::gettid() }
++}
++
++#[cfg(not(target_os = "android"))]
++pub fn current_tid() -> i32 {
++    0
++}
++
++/// Scheduler state of one thread of this process (0 = the caller), for before/after logs:
++/// policy, real-time priority, nice value and the CPUs it may run on.
++#[cfg(target_os = "android")]
++pub fn sched_snapshot(tid: i32) -> String {
++    unsafe {
++        let policy = libc::sched_getscheduler(tid);
++        let mut param: libc::sched_param = std::mem::zeroed();
++        let rt = if libc::sched_getparam(tid, &mut param) == 0 { param.sched_priority } else { -1 };
++        let nice = libc::getpriority(libc::PRIO_PROCESS, tid as libc::id_t);
++        let mut set: libc::cpu_set_t = std::mem::zeroed();
++        let cpus = if libc::sched_getaffinity(tid, std::mem::size_of::<libc::cpu_set_t>(), &mut set) == 0 {
++            (0..64usize).filter(|&cpu| libc::CPU_ISSET(cpu, &set)).fold(0u64, |mask, cpu| mask | 1 << cpu)
++        } else {
++            0
++        };
++        format!("policy={} rt={rt} nice={nice} cpus=0x{cpus:x}", policy_name(policy))
++    }
++}
++
++#[cfg(not(target_os = "android"))]
++pub fn sched_snapshot(_tid: i32) -> String {
++    String::new()
++}
++
++pub fn policy_name(policy: i32) -> &'static str {
++    const SCHED_RESET_ON_FORK: i32 = 0x4000_0000;
++    let policy = if policy < 0 { policy } else { policy & !SCHED_RESET_ON_FORK };
++    match policy {
++        0 => "OTHER",
++        1 => "FIFO",
++        2 => "RR",
++        3 => "BATCH",
++        5 => "IDLE",
++        _ => "?",
++    }
++}
++
++/// One line of SoC facts the CPU and DSP levers depend on, read without side effects: each core's
++/// maximum clock (MHz, which separates performance from efficiency cores), the calling thread's
++/// scheduler state, and whether any Hexagon FastRPC node is visible and openable by this app.
++#[cfg(target_os = "android")]
++pub fn soc_caps() -> String {
++    let mut cores = Vec::new();
++    for cpu in 0..16 {
++        let dir = format!("/sys/devices/system/cpu/cpu{cpu}");
++        if !std::path::Path::new(&dir).exists() {
++            break;
++        }
++        let mhz = std::fs::read_to_string(format!("{dir}/cpufreq/cpuinfo_max_freq"))
++            .ok()
++            .and_then(|khz| khz.trim().parse::<u64>().ok())
++            .map(|khz| (khz / 1000).to_string())
++            .unwrap_or_else(|| "?".into());
++        cores.push(format!("{cpu}:{mhz}"));
++    }
++    let nodes = [
++        "/dev/adsprpc-smd",
++        "/dev/cdsprpc-smd",
++        "/dev/fastrpc-adsp",
++        "/dev/fastrpc-cdsp",
++        "/dev/fastrpc-cdsp-secure",
++    ]
++    .iter()
++    .filter(|path| std::path::Path::new(path).exists())
++    .map(|path| {
++        let c_path = std::ffi::CString::new(*path).unwrap();
++        let rw = unsafe { libc::access(c_path.as_ptr(), libc::R_OK | libc::W_OK) } == 0;
++        format!("{path}:{}", if rw { "rw" } else { "denied" })
++    })
++    .collect::<Vec<_>>();
++    format!(
++        "max_mhz=[{}] caller=({}) fastrpc=[{}]",
++        cores.join(" "),
++        sched_snapshot(0),
++        nodes.join(" ")
++    )
++}
++
++#[cfg(target_os = "android")]
++fn property(name: &std::ffi::CStr) -> String {
++    let mut value = [0u8; 92]; // PROP_VALUE_MAX
++    let len = unsafe { libc::__system_property_get(name.as_ptr(), value.as_mut_ptr().cast()) };
++    String::from_utf8_lossy(&value[..len.max(0) as usize]).into_owned()
++}
++
++#[cfg(not(target_os = "android"))]
++fn property(_name: &std::ffi::CStr) -> String {
++    String::new()
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn only_one_turns_it_on() {
++        assert!(requested_from_str("1"));
++        assert!(requested_from_str("1\n"));
++        assert!(!requested_from_str(""));
++        assert!(!requested_from_str("0"));
++        assert!(!requested_from_str("true"));
++    }
++
++    #[test]
++    fn published_threads_are_taken_once_in_order() {
++        let decode = DeclaredThread { role: ThreadRole::RendererWorker, tid: 41, name: "decode" };
++        let receive = DeclaredThread { role: ThreadRole::ApplicationWorker, tid: 42, name: "receive" };
++        publish(decode);
++        publish(receive);
++        assert_eq!(take_pending(), vec![decode, receive]);
++        assert!(take_pending().is_empty());
++        publish(decode);
++        assert_eq!(take_pending(), vec![decode]);
++    }
++
++    #[test]
++    fn policy_names_cover_the_linux_policies() {
++        assert_eq!(policy_name(0), "OTHER");
++        assert_eq!(policy_name(1), "FIFO");
++        assert_eq!(policy_name(2), "RR");
++        assert_eq!(policy_name(0x4000_0001), "FIFO");
++        assert_eq!(policy_name(-1), "?");
++        assert_eq!(policy_name(9), "?");
 +    }
 +}
 diff --git a/alvr/client_core/src/video_decoder/android.rs b/alvr/client_core/src/video_decoder/android.rs
@@ -1560,7 +1785,7 @@ index 4d2e699..7fea2be 100644
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601..37c555f 100644
+index 2e22601..2f520d7 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -1741,7 +1966,7 @@ index 2e22601..37c555f 100644
              t.join().ok();
          }
      }
-@@ -99,18 +181,84 @@ pub fn video_decoder_split(
+@@ -99,18 +181,85 @@ pub fn video_decoder_split(
      let pending = Arc::new(Pending {
          frame: Mutex::new(None),
          ready: Condvar::new(),
@@ -1817,6 +2042,7 @@ index 2e22601..37c555f 100644
 +        let telemetry_started = Arc::clone(&telemetry_started);
 +        let report_frame_decoded = Arc::clone(&report_frame_decoded);
          move || {
++            crate::thread_hints::publish_current(crate::thread_hints::ThreadRole::RendererWorker, "pyrowave_decode");
 +            // Must precede native allocation, not merely prerecord_enable. The
 +            // standalone exact-pixel proofs used the same setting. Scope drops
 +            // AFTER the later-declared NativeOwner drains, including Rust unwind.
@@ -1829,7 +2055,7 @@ index 2e22601..37c555f 100644
                      cfg.width,
                      cfg.height,
                      cfg.chroma444 as i32,
-@@ -118,6 +266,7 @@ pub fn video_decoder_split(
+@@ -118,6 +267,7 @@ pub fn video_decoder_split(
                      3,
                      cfg.wavelet as i32,
                      cfg.decode_path as i32,
@@ -1837,7 +2063,7 @@ index 2e22601..37c555f 100644
                  )
              };
              if client.is_null() {
-@@ -128,64 +277,251 @@ pub fn video_decoder_split(
+@@ -128,64 +278,251 @@ pub fn video_decoder_split(
                  )));
                  return;
              }
@@ -2111,7 +2337,7 @@ index 2e22601..37c555f 100644
          },
      ))
 diff --git a/alvr/client_core/src/video_decoder/pyrowave_udp.rs b/alvr/client_core/src/video_decoder/pyrowave_udp.rs
-index f8a6cfe..c6c8852 100644
+index f8a6cfe..1f32e06 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave_udp.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave_udp.rs
 @@ -1,29 +1,20 @@
@@ -2158,7 +2384,7 @@ index f8a6cfe..c6c8852 100644
  #[repr(C)]
  #[derive(Default, Clone, Copy)]
  struct FrameInfo {
-@@ -42,341 +32,331 @@ struct FrameInfo {
+@@ -42,341 +32,333 @@ struct FrameInfo {
      convert_ms: f64,
      total_ms: f64,
      complete: i32,
@@ -2376,6 +2602,7 @@ index f8a6cfe..c6c8852 100644
 -                cfg.width, cfg.height, cfg.deadline, cfg.wavelet
 -            ));
 -
++            crate::thread_hints::publish_current(crate::thread_hints::ThreadRole::ApplicationWorker, "pyrowave_udp_receive");
              let fd = socket.as_raw_fd();
 +            let mut assembler = Assembler::new(cfg.deadline);
              let mut bufs = vec![[0u8; DATAGRAM]; BATCH];
@@ -2568,6 +2795,7 @@ index f8a6cfe..c6c8852 100644
 +        let inbox = Arc::clone(&inbox);
 +        let decoded = Arc::clone(&decoded);
 +        move || {
++            crate::thread_hints::publish_current(crate::thread_hints::ThreadRole::RendererWorker, "pyrowave_udp_decode");
 +            // All codec/Vulkan state is owned by this worker. It never holds the socket.
 +            let client = unsafe {
 +                pyroclient_create_ex(
@@ -3239,22 +3467,23 @@ index 7765bb4..b102615 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..0cba1f1 100644
+index a0fd36f..312014e 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
-@@ -4,7 +4,11 @@ mod graphics;
+@@ -4,7 +4,12 @@ mod graphics;
  mod interaction;
  mod lobby;
  mod passthrough;
 +mod performance;
 +mod refresh_probe;
  mod stream;
++mod thread_hints;
 +#[cfg(target_os = "android")]
 +mod surface_probe;
  
  use crate::stream::ParsedStreamConfig;
  use alvr_client_core::{ClientCapabilities, ClientCoreContext, ClientCoreEvent};
-@@ -28,7 +32,7 @@ use interaction::{InteractionContext, InteractionSourcesConfig};
+@@ -28,7 +33,7 @@ use interaction::{InteractionContext, InteractionSourcesConfig};
  use lobby::Lobby;
  use openxr as xr;
  use passthrough::PassthroughLayer;
@@ -3263,7 +3492,7 @@ index a0fd36f..0cba1f1 100644
  use stream::StreamContext;
  
  fn from_xr_vec3(v: xr::Vector3f) -> Vec3 {
-@@ -117,6 +121,26 @@ fn default_view() -> xr::View {
+@@ -117,6 +122,26 @@ fn default_view() -> xr::View {
  }
  
  // This exists to circumvent dead-code analysis
@@ -3290,7 +3519,7 @@ index a0fd36f..0cba1f1 100644
  fn create_session(
      xr_instance: &xr::Instance,
      xr_system: xr::SystemId,
-@@ -137,6 +161,21 @@ pub fn entry_point() {
+@@ -137,6 +162,21 @@ pub fn entry_point() {
      alvr_client_core::init_logging();
  
      let platform = alvr_system_info::platform();
@@ -3312,7 +3541,7 @@ index a0fd36f..0cba1f1 100644
      #[cfg(target_os = "android")]
      let galaxy_xr = alvr_system_info::model_name() == "SM-I610";
      #[cfg(not(target_os = "android"))]
-@@ -176,6 +215,13 @@ pub fn entry_point() {
+@@ -176,6 +216,13 @@ pub fn entry_point() {
          available_extensions.khr_vulkan_enable2,
          available_extensions.khr_opengl_es_enable,
      );
@@ -3326,7 +3555,7 @@ index a0fd36f..0cba1f1 100644
  
      // todo: switch to vulkan
      assert!(available_extensions.khr_opengl_es_enable);
-@@ -198,6 +244,8 @@ pub fn entry_point() {
+@@ -198,6 +245,8 @@ pub fn entry_point() {
      exts.ext_local_floor = available_extensions.ext_local_floor;
      exts.fb_body_tracking = available_extensions.fb_body_tracking;
      exts.fb_color_space = available_extensions.fb_color_space;
@@ -3335,16 +3564,19 @@ index a0fd36f..0cba1f1 100644
      exts.fb_display_refresh_rate = available_extensions.fb_display_refresh_rate;
      exts.fb_eye_tracking_social = available_extensions.fb_eye_tracking_social;
      exts.fb_face_tracking2 = available_extensions.fb_face_tracking2;
-@@ -212,6 +260,8 @@ pub fn entry_point() {
+@@ -212,6 +261,11 @@ pub fn entry_point() {
      #[cfg(target_os = "android")]
      {
          exts.khr_android_create_instance = true;
++        // [Q3PW_THREAD_HINTS] enabled only when requested, so the default instance is unchanged.
++        exts.khr_android_thread_settings = alvr_client_core::thread_hints::requested()
++            && available_extensions.khr_android_thread_settings;
 +        exts.khr_android_surface_swapchain = (surface_probe::requested() || surface_probe::chart_requested())
 +            && available_extensions.khr_android_surface_swapchain;
      }
      exts.khr_convert_timespec_time = true;
      exts.khr_opengl_es_enable = true;
-@@ -263,6 +313,14 @@ pub fn entry_point() {
+@@ -263,6 +317,14 @@ pub fn entry_point() {
  
          let (xr_session, mut xr_frame_waiter, mut xr_frame_stream) =
              create_session(&xr_instance, xr_system, &graphics_context);
@@ -3359,7 +3591,7 @@ index a0fd36f..0cba1f1 100644
  
          let views_config = xr_instance
              .enumerate_view_configuration_views(
-@@ -287,15 +345,31 @@ pub fn entry_point() {
+@@ -287,19 +349,36 @@ pub fn entry_point() {
          let early_poll = extra_extensions::perf_settings::early_poll_enabled();
          alvr_common::error!("[EARLYPOLL] decoded frame polled before xrWaitFrame: {early_poll}");
  
@@ -3396,7 +3628,12 @@ index a0fd36f..0cba1f1 100644
              }
          } else {
              alvr_common::error!("[PERF] XR_EXT_performance_settings not advertised");
-@@ -313,19 +387,37 @@ pub fn entry_point() {
+         }
++        let xr_thread_hints = thread_hints::ThreadHints::new(&xr_session);
+ 
+         // [BLEND] environment blend modes: Ok([OPAQUE, ALPHA_BLEND])
+         let blend_modes = xr_instance
+@@ -313,19 +392,37 @@ pub fn entry_point() {
              views_config[0].recommended_image_rect_height,
          );
  
@@ -3438,7 +3675,7 @@ index a0fd36f..0cba1f1 100644
  
          // Whether anything is correcting for the ~26 ms the runtime predicts ahead. If the
          // compositor does not timewarp and ALVR does not either -- 20.13.0 hardcodes
-@@ -354,8 +446,10 @@ pub fn entry_point() {
+@@ -354,8 +451,10 @@ pub fn entry_point() {
              exts.fb_foveation,
              advertised_extension_names.len(),
          );
@@ -3451,7 +3688,7 @@ index a0fd36f..0cba1f1 100644
  
          if exts.fb_color_space {
              xr_session
-@@ -365,8 +459,8 @@ pub fn entry_point() {
+@@ -365,8 +464,8 @@ pub fn entry_point() {
  
          let capabilities = ClientCapabilities {
              default_view_resolution,
@@ -3462,7 +3699,7 @@ index a0fd36f..0cba1f1 100644
              encoder_high_profile: galaxy_xr || platform != Platform::Unknown,
              encoder_10_bits: galaxy_xr || platform != Platform::Unknown,
              encoder_av1: matches!(
-@@ -392,9 +486,16 @@ pub fn entry_point() {
+@@ -392,9 +491,16 @@ pub fn entry_point() {
              Rc::clone(&graphics_context),
              Arc::clone(&interaction_context),
              platform,
@@ -3480,7 +3717,7 @@ index a0fd36f..0cba1f1 100644
          let lobby_body_tracking_config = BodyTrackingSourcesConfig {
              body_tracking_fb: Switch::Disabled,
              body_tracking_bd: Switch::Enabled(BodyTrackingBDConfig::BodyTracking {
-@@ -412,11 +513,17 @@ pub fn entry_point() {
+@@ -412,14 +518,21 @@ pub fn entry_point() {
              .select_sources(&lobby_interaction_sources);
  
          let mut session_running = false;
@@ -3499,7 +3736,11 @@ index a0fd36f..0cba1f1 100644
          // Budget for the pre-xrWaitFrame poll: the previous frame's period, 72 Hz until known.
          let mut poll_interval = Duration::from_micros(13_889);
          'render_loop: loop {
-@@ -432,14 +539,31 @@ pub fn entry_point() {
++            xr_thread_hints.declare_pending();
+             while let Some(event) = xr_instance.poll_event(&mut event_storage).unwrap() {
+                 match event {
+                     xr::Event::EventsLost(event) => {
+@@ -432,14 +545,31 @@ pub fn entry_point() {
                                  .begin(xr::ViewConfigurationType::PRIMARY_STEREO)
                                  .unwrap();
  
@@ -3532,7 +3773,7 @@ index a0fd36f..0cba1f1 100644
  
                              passthrough_layer = None;
  
-@@ -447,6 +571,8 @@ pub fn entry_point() {
+@@ -447,6 +577,8 @@ pub fn entry_point() {
  
                              xr_session.end().unwrap();
                          }
@@ -3541,7 +3782,7 @@ index a0fd36f..0cba1f1 100644
                          xr::SessionState::EXITING => break 'render_loop,
                          xr::SessionState::LOSS_PENDING => break 'render_loop,
                          _ => (),
-@@ -494,7 +620,29 @@ pub fn entry_point() {
+@@ -494,7 +626,29 @@ pub fn entry_point() {
                          lobby.update_hud_message(&message);
                      }
                      ClientCoreEvent::StreamingStarted(config) => {
@@ -3571,7 +3812,7 @@ index a0fd36f..0cba1f1 100644
  
                          let context = StreamContext::new(
                              Arc::clone(&core_context),
-@@ -512,6 +660,8 @@ pub fn entry_point() {
+@@ -512,6 +666,8 @@ pub fn entry_point() {
                          stream_context = Some(context);
                      }
                      ClientCoreEvent::StreamingStopped => {
@@ -3580,7 +3821,7 @@ index a0fd36f..0cba1f1 100644
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -562,13 +712,23 @@ pub fn entry_point() {
+@@ -562,13 +718,23 @@ pub fn entry_point() {
                  }
              }
  
@@ -3605,7 +3846,7 @@ index a0fd36f..0cba1f1 100644
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -576,12 +736,49 @@ pub fn entry_point() {
+@@ -576,12 +742,49 @@ pub fn entry_point() {
                      panic!();
                  }
              };
@@ -3656,7 +3897,7 @@ index a0fd36f..0cba1f1 100644
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +802,15 @@ pub fn entry_point() {
+@@ -605,15 +808,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -3681,7 +3922,7 @@ index a0fd36f..0cba1f1 100644
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,13 +818,16 @@ pub fn entry_point() {
+@@ -621,13 +824,16 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -3699,7 +3940,7 @@ index a0fd36f..0cba1f1 100644
  
              if !frame_state.should_render {
                  xr_frame_stream
-@@ -654,22 +854,89 @@ pub fn entry_point() {
+@@ -654,22 +860,89 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
@@ -3797,7 +4038,7 @@ index a0fd36f..0cba1f1 100644
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +965,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +971,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
@@ -4237,7 +4478,7 @@ index 0000000..766b412
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..9a909cf 100644
+index b87dfe9..cfef554 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -1,3 +1,6 @@
@@ -4321,7 +4562,7 @@ index b87dfe9..9a909cf 100644
  }
  
  impl StreamContext {
-@@ -115,12 +141,6 @@ impl StreamContext {
+@@ -115,12 +143,6 @@ impl StreamContext {
  
          let xr_exts = xr_session.instance().exts();
  
@@ -4334,7 +4575,7 @@ index b87dfe9..9a909cf 100644
          let foveation_profile = if let Some(config) = &config.clientside_foveation_config {
              if xr_exts.fb_swapchain_update_state.is_some()
                  && xr_exts.fb_foveation.is_some()
-@@ -228,6 +248,10 @@ impl StreamContext {
+@@ -228,6 +250,10 @@ impl StreamContext {
              view_reference_space,
              swapchains,
              last_good_view_params: [ViewParams::default(); 2],
@@ -4345,7 +4586,7 @@ index b87dfe9..9a909cf 100644
              input_thread: None,
              input_thread_running,
              config,
-@@ -235,8 +259,36 @@ impl StreamContext {
+@@ -235,8 +261,36 @@ impl StreamContext {
              renderer,
              decoder: None,
              pending_frame: None,
@@ -4382,7 +4623,18 @@ index b87dfe9..9a909cf 100644
          this.update_reference_space();
  
          this
-@@ -310,6 +361,24 @@ impl StreamContext {
+@@ -280,6 +334,10 @@ impl StreamContext {
+             let refresh_rate = self.config.refresh_rate_hint;
+             let running = Arc::clone(&self.input_thread_running);
+             move || {
++                alvr_client_core::thread_hints::publish_current(
++                    alvr_client_core::thread_hints::ThreadRole::ApplicationWorker,
++                    "tracking_input",
++                );
+                 stream_input_loop(
+                     &core_ctx,
+                     xr_session,
+@@ -310,6 +368,24 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
@@ -4407,7 +4659,7 @@ index b87dfe9..9a909cf 100644
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +407,42 @@ impl StreamContext {
+@@ -338,12 +414,42 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -4452,7 +4704,7 @@ index b87dfe9..9a909cf 100644
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +454,25 @@ impl StreamContext {
+@@ -355,8 +461,25 @@ impl StreamContext {
          }
      }
  
@@ -4478,7 +4730,7 @@ index b87dfe9..9a909cf 100644
      }
  
      pub fn render(
-@@ -364,15 +480,151 @@ impl StreamContext {
+@@ -364,15 +487,151 @@ impl StreamContext {
          frame_interval: Duration,
          vsync_time: Duration,
      ) -> (ProjectionLayerBuilder, Duration) {
@@ -4632,7 +4884,7 @@ index b87dfe9..9a909cf 100644
              }
          }
  
-@@ -401,37 +647,80 @@ impl StreamContext {
+@@ -401,37 +660,80 @@ impl StreamContext {
              ]);
          }
  
@@ -4743,7 +4995,7 @@ index b87dfe9..9a909cf 100644
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +782,8 @@ impl StreamContext {
+@@ -493,6 +795,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
@@ -4990,6 +5242,86 @@ index 0000000..7bde148
 +    alvr_common::error!(
 +        "[Q3PW_SURFACE_PROBE] native_result={status} destroyed=true submitted=false keep_gles=true"
 +    );
++}
+diff --git a/alvr/client_openxr/src/thread_hints.rs b/alvr/client_openxr/src/thread_hints.rs
+new file mode 100644
+index 0000000..358b58d
+--- /dev/null
++++ b/alvr/client_openxr/src/thread_hints.rs
+@@ -0,0 +1,74 @@
++// [Q3PW_THREAD_HINTS] With `debug.q3pw.thread_hints=1`, declares the stream's time-critical
++// threads through XR_KHR_android_thread_settings: this frame loop as RENDERER_MAIN, the PyroWave
++// decode workers as RENDERER_WORKER, and the socket, frame hand-off and tracking input threads as
++// APPLICATION_WORKER. The extension only promises that the runtime "adjusts scheduling priority",
++// so each declaration logs the thread's policy, nice value and allowed CPUs before and after.
++// [Q3PW_SOC_CAPS] is logged once per session either way: core clocks and FastRPC visibility.
++
++#[cfg(target_os = "android")]
++use alvr_client_core::thread_hints::{self, ThreadRole};
++#[cfg(target_os = "android")]
++use alvr_common::error;
++use openxr as xr;
++
++pub struct ThreadHints {
++    #[cfg(target_os = "android")]
++    declare: Option<(xr::sys::Session, xr::sys::pfn::SetAndroidApplicationThreadKHR)>,
++}
++
++impl ThreadHints {
++    pub fn new<G>(session: &xr::Session<G>) -> Self {
++        #[cfg(target_os = "android")]
++        let declare = {
++            error!("[Q3PW_SOC_CAPS] {}", thread_hints::soc_caps());
++            let requested = thread_hints::requested();
++            let extension = session.instance().exts().khr_android_thread_settings;
++            error!(
++                "[Q3PW_THREAD_HINTS] requested={requested} enabled={}",
++                extension.is_some()
++            );
++            let declare = extension
++                .filter(|_| requested)
++                .map(|extension| (session.as_raw(), extension.set_android_application_thread));
++            if declare.is_some() {
++                thread_hints::publish_current(ThreadRole::RendererMain, "openxr_frame_loop");
++            }
++            declare
++        };
++        #[cfg(not(target_os = "android"))]
++        let _ = session;
++        Self {
++            #[cfg(target_os = "android")]
++            declare,
++        }
++    }
++
++    /// Declares the threads published since the last call. Called every frame; one atomic swap
++    /// when there is nothing new.
++    pub fn declare_pending(&self) {
++        #[cfg(target_os = "android")]
++        {
++            let Some((session, set_thread)) = self.declare else { return };
++            for thread in thread_hints::take_pending() {
++                let before = thread_hints::sched_snapshot(thread.tid);
++                let result = unsafe { set_thread(session, thread_type(thread.role), thread.tid as u32) };
++                error!(
++                    "[Q3PW_THREAD_HINTS] name={} role={:?} tid={} result={result:?} before=({before}) after=({})",
++                    thread.name,
++                    thread.role,
++                    thread.tid,
++                    thread_hints::sched_snapshot(thread.tid)
++                );
++            }
++        }
++    }
++}
++
++#[cfg(target_os = "android")]
++fn thread_type(role: ThreadRole) -> xr::sys::AndroidThreadTypeKHR {
++    match role {
++        ThreadRole::RendererMain => xr::sys::AndroidThreadTypeKHR::RENDERER_MAIN,
++        ThreadRole::RendererWorker => xr::sys::AndroidThreadTypeKHR::RENDERER_WORKER,
++        ThreadRole::ApplicationWorker => xr::sys::AndroidThreadTypeKHR::APPLICATION_WORKER,
++    }
 +}
 diff --git a/alvr/dashboard/src/dashboard/components/settings.rs b/alvr/dashboard/src/dashboard/components/settings.rs
 index 5cfc048..7b4bab9 100644
