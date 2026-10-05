@@ -1,0 +1,382 @@
+{
+  "date": "2026-10-04 America/New_York",
+  "source_commit": "a356edbed6a39c390df858497ea7d28627db7290",
+  "ci_run": 37259316495,
+  "version": "20.13.0-quest3.pyro.40",
+  "scope": "One-shot static Surface presentation and shutdown screen",
+  "matching_ci_artifacts_reviewed": true,
+  "default_small_native_gpu_readbacks_exact": true,
+  "settings": {
+    "source_eye": [
+      2080,
+      2208
+    ],
+    "encoded_eye": [
+      2080,
+      2208
+    ],
+    "runtime_hz": 120,
+    "target_mbps": 1000,
+    "chroma": "420",
+    "decoder": "Haar Vulkan Compute",
+    "queue_priority": "LOW",
+    "transport": "USB/TCP",
+    "foveated_encoding": false
+  },
+  "pattern": "ABA",
+  "nominal_measure_s": 8,
+  "settle_s": 2,
+  "source_covers_all_blocks": true,
+  "one_shot_lifecycle_verified": true,
+  "blocks": [
+    {
+      "arm": "A",
+      "probe_requested": false,
+      "surface_evidence": {
+        "status": "incomplete_or_failed",
+        "fact_counts": {
+          "instance_dependencies": 0,
+          "device_feature": 0,
+          "prepared": 0,
+          "visible_write": 0,
+          "fences": 0,
+          "layer": 0,
+          "stopping": 0,
+          "retired": 0,
+          "producer_destroyed": 0
+        },
+        "enqueue_count": 0,
+        "image_index": null,
+        "format": null,
+        "failures": [],
+        "nonblocking_poll_observed_both_fences": null,
+        "performance_acceptance": false,
+        "optical_presentation_verified": false,
+        "scope": "Process-specific ordered enqueue, successful XR layer call and independent GPU/presentation retirement. Screenshot/image, optical display, live video ownership/pose pairing and performance remain separate."
+      },
+      "seconds": 8.038925170898438,
+      "submission_wall_time_fps": 118.38048997527211,
+      "direct_completion_proxy_fps": 118.30891589812902,
+      "client_fps": {
+        "n": 951,
+        "p01": 60.002651,
+        "p50": 119.99998,
+        "p95": 120.0126975,
+        "p99": 120.028605,
+        "max": 120.631516
+      },
+      "payload_mbps": {
+        "n": 951,
+        "p01": 947.3062,
+        "p50": 1010.7238,
+        "p95": 1037.18565,
+        "p99": 1050.00607,
+        "max": 1070.8047
+      },
+      "gpu_decode_ms": {
+        "n": 1026,
+        "p01": 4.73041635,
+        "p50": 6.5091405,
+        "p95": 6.763853924999999,
+        "p99": 6.878021,
+        "max": 7.0998955
+      },
+      "decode_to_fence_ms": {
+        "n": 1026,
+        "p01": 6.983842,
+        "p50": 8.0164855,
+        "p95": 8.269779750000001,
+        "p99": 8.444102749999999,
+        "max": 9.05474
+      },
+      "eye_cpu_ms": {
+        "n": 1014,
+        "p01": 1.3855405,
+        "p50": 1.6437505,
+        "p95": 2.127653385,
+        "p99": 2.3538391,
+        "max": 2.6251569
+      },
+      "effective_probe": {
+        "wait_us": 4000,
+        "ready_active": false,
+        "packet_grace_us": 0,
+        "windows": 7,
+        "margin": [
+          20,
+          21,
+          335,
+          42,
+          139,
+          276,
+          0
+        ],
+        "late": [
+          0,
+          0,
+          0,
+          2,
+          10,
+          12,
+          0
+        ],
+        "timed_windows": 7,
+        "timed_taken": 833,
+        "interval_s": 7.033998966217041,
+        "taken": 833,
+        "empty": 24,
+        "late_taken": 24,
+        "late_superseded": 0,
+        "superseded": 11,
+        "selected_source_frame_rate_fps": 118.42481126322886,
+        "taken_per_window": 119.0,
+        "superseded_per_window": 1.5714285714285714,
+        "late_taken_fraction": 1.0
+      },
+      "battery_temperature_c": 29.0,
+      "thermal_status": 0
+    },
+    {
+      "arm": "B",
+      "probe_requested": true,
+      "surface_evidence": {
+        "status": "one_shot_lifecycle_verified",
+        "fact_counts": {
+          "instance_dependencies": 1,
+          "device_feature": 1,
+          "prepared": 1,
+          "visible_write": 1,
+          "fences": 1,
+          "layer": 1,
+          "stopping": 1,
+          "retired": 1,
+          "producer_destroyed": 1
+        },
+        "enqueue_count": 1,
+        "image_index": 0,
+        "format": 37,
+        "failures": [],
+        "nonblocking_poll_observed_both_fences": true,
+        "performance_acceptance": false,
+        "optical_presentation_verified": false,
+        "scope": "Process-specific ordered enqueue, successful XR layer call and independent GPU/presentation retirement. Screenshot/image, optical display, live video ownership/pose pairing and performance remain separate."
+      },
+      "seconds": 8.03821325302124,
+      "submission_wall_time_fps": 114.78556130777267,
+      "direct_completion_proxy_fps": 114.26533452894857,
+      "client_fps": {
+        "n": 923,
+        "p01": 59.9972834,
+        "p50": 119.99953,
+        "p95": 120.0156214,
+        "p99": 120.025948,
+        "max": 120.157875
+      },
+      "payload_mbps": {
+        "n": 923,
+        "p01": 951.28481,
+        "p50": 1012.7137,
+        "p95": 1033.3169599999999,
+        "p99": 1050.558414,
+        "max": 1082.011
+      },
+      "gpu_decode_ms": {
+        "n": 860,
+        "p01": 4.04335936,
+        "p50": 5.90460925,
+        "p95": 7.5343876199999995,
+        "p99": 8.12427143,
+        "max": 8.968437
+      },
+      "decode_to_fence_ms": {
+        "n": 860,
+        "p01": 6.70740754,
+        "p50": 8.048907,
+        "p95": 9.65850045,
+        "p99": 10.38868354,
+        "max": 10.983699
+      },
+      "eye_cpu_ms": {
+        "n": 852,
+        "p01": 1.353611351,
+        "p50": 1.60106795,
+        "p95": 2.337677249999999,
+        "p99": 2.5882935710000003,
+        "max": 3.392761
+      },
+      "effective_probe": {
+        "wait_us": 4000,
+        "ready_active": false,
+        "packet_grace_us": 0,
+        "windows": 7,
+        "margin": [
+          107,
+          19,
+          241,
+          144,
+          175,
+          121,
+          1
+        ],
+        "late": [
+          12,
+          10,
+          28,
+          16,
+          19,
+          33,
+          0
+        ],
+        "timed_windows": 7,
+        "timed_taken": 808,
+        "interval_s": 7.009999990463257,
+        "taken": 808,
+        "empty": 118,
+        "late_taken": 118,
+        "late_superseded": 0,
+        "superseded": 9,
+        "selected_source_frame_rate_fps": 115.26390885866509,
+        "taken_per_window": 115.42857142857143,
+        "superseded_per_window": 1.2857142857142858,
+        "late_taken_fraction": 1.0
+      },
+      "battery_temperature_c": 29.0,
+      "thermal_status": 0
+    },
+    {
+      "arm": "A",
+      "probe_requested": false,
+      "surface_evidence": {
+        "status": "incomplete_or_failed",
+        "fact_counts": {
+          "instance_dependencies": 0,
+          "device_feature": 0,
+          "prepared": 0,
+          "visible_write": 0,
+          "fences": 0,
+          "layer": 0,
+          "stopping": 0,
+          "retired": 0,
+          "producer_destroyed": 0
+        },
+        "enqueue_count": 0,
+        "image_index": null,
+        "format": null,
+        "failures": [],
+        "nonblocking_poll_observed_both_fences": null,
+        "performance_acceptance": false,
+        "optical_presentation_verified": false,
+        "scope": "Process-specific ordered enqueue, successful XR layer call and independent GPU/presentation retirement. Screenshot/image, optical display, live video ownership/pose pairing and performance remain separate."
+      },
+      "seconds": 8.038797855377197,
+      "submission_wall_time_fps": 114.99683547565668,
+      "direct_completion_proxy_fps": 115.14366544435102,
+      "client_fps": {
+        "n": 924,
+        "p01": 59.99907456,
+        "p50": 119.999245,
+        "p95": 120.01513800000001,
+        "p99": 120.0609021,
+        "max": 120.49484
+      },
+      "payload_mbps": {
+        "n": 924,
+        "p01": 949.8388952,
+        "p50": 1014.6867,
+        "p95": 1032.804035,
+        "p99": 1042.0037,
+        "max": 1056.75034
+      },
+      "gpu_decode_ms": {
+        "n": 984,
+        "p01": 4.006613541,
+        "p50": 5.8554946,
+        "p95": 7.517632615,
+        "p99": 7.986028070999998,
+        "max": 8.444635
+      },
+      "decode_to_fence_ms": {
+        "n": 984,
+        "p01": 6.6997974099999995,
+        "p50": 7.9084905,
+        "p95": 9.548092699999998,
+        "p99": 10.231518199999996,
+        "max": 10.675939
+      },
+      "eye_cpu_ms": {
+        "n": 972,
+        "p01": 1.33273764,
+        "p50": 1.600573,
+        "p95": 2.41497434,
+        "p99": 2.601587429999999,
+        "max": 3.025312
+      },
+      "effective_probe": {
+        "wait_us": 4000,
+        "ready_active": false,
+        "packet_grace_us": 0,
+        "windows": 7,
+        "margin": [
+          104,
+          23,
+          105,
+          105,
+          185,
+          291,
+          0
+        ],
+        "late": [
+          14,
+          13,
+          21,
+          17,
+          20,
+          31,
+          0
+        ],
+        "timed_windows": 7,
+        "timed_taken": 813,
+        "interval_s": 7.035001039505005,
+        "taken": 813,
+        "empty": 116,
+        "late_taken": 116,
+        "late_superseded": 0,
+        "superseded": 12,
+        "selected_source_frame_rate_fps": 115.56501490683563,
+        "taken_per_window": 116.14285714285714,
+        "superseded_per_window": 1.7142857142857142,
+        "late_taken_fraction": 1.0
+      },
+      "battery_temperature_c": 30.0,
+      "thermal_status": 0
+    }
+  ],
+  "normal_restoration_errors": [],
+  "image_observation": {
+    "method": "Private compositor screenshot after B measurement window",
+    "panel_present_both_eyes": true,
+    "left_right_correct": true,
+    "top_bottom_correct": false,
+    "observed_top_corners": [
+      "cyan",
+      "magenta"
+    ],
+    "observed_bottom_corners": [
+      "white",
+      "yellow"
+    ],
+    "in_headset_acceptance": false,
+    "colorimetric_accuracy_tested": false
+  },
+  "decision": "Lifecycle passes; reject orientation. Keep default-off and normal GLES video. Correct static upload rows before testing decoded Surface presentation.",
+  "limitations": [
+    "One 64x32 static image; not full-resolution video or zero-copy decoding",
+    "Visible vertical inversion blocks image acceptance",
+    "No decoded-image identity, pose/content pairing or live path speedup established",
+    "Short stationary restarted-client blocks cannot establish sustained rates or gameplay acceptance",
+    "Submission/completion counters are not unique optical frames; p1 exposes missed periods",
+    "GPU clock not sampled throughout blocks; periodic ADB checks can perturb USB streaming"
+  ],
+  "performance_acceptance": false,
+  "optical_latency_measured": false
+}

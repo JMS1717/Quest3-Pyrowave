@@ -1,7 +1,8 @@
-# One-shot Vulkan Surface chart (`.40`)
+# One-shot Vulkan Surface chart (`.40` / `.41`)
 
-Status: **default-off diagnostic candidate**, awaiting matching build and Quest
-validation. Normal PyroWave decoding, video projection and the GLES eye renderer
+Status: **default-off diagnostic**. `.40` passed API lifecycle checks on Quest 3,
+but its compositor image was vertically inverted. `.41` corrects the static
+upload rows; matching builds and a new visual check are required. Normal PyroWave decoding, video projection and the GLES eye renderer
 are unchanged. This is a prerequisite experiment for removing that copy, not
 an optimized video path or a latency claim.
 
@@ -11,7 +12,8 @@ Set `debug.q3pw.surface_chart=1` before launching. The client creates a separate
 `VK_EXT_swapchain_maintenance1` extension **and feature bit**, and transfer-destination
 usage before accepting the producer. Missing support leaves normal GLES video
 available. The read-only Quest GPU inventory advertises these extensions; that
-alone does not verify the device feature or presentation.
+alone does not verify the device feature or presentation. The `.40` live test
+separately confirmed the required feature and one successful enqueue.
 
 After receiving VISIBLE/FOCUSED and a renderable frame, the producer uploads
 exactly one opaque asymmetric image: red/green halves, white/yellow upper
@@ -72,3 +74,39 @@ The reader rejects partial, duplicated, failed or reordered lifecycle records.
 Shutdown's two successful fence waits prove retirement even if the nonblocking
 poll did not observe both fences earlier. A passing report is API/lifecycle
 evidence, with optical presentation and performance acceptance explicitly false.
+
+## Quest 3 result: lifecycle passed, orientation rejected
+
+The October 4 `.40` matching pair passed all CI jobs, artifact/version/signing
+checks and exact small/native baseline GPU readbacks. A short native 2080×2208
+per-eye, 120 Hz, 1000 Mbps, 4:2:0 USB/TCP off/on/off screen confirmed:
+
+- Exactly one Vulkan present and a successful OpenXR layer call.
+- Both render and presentation fences completed, followed by STOPPING,
+  producer retirement and destruction before Surface destruction.
+- The panel appeared in both eyes in a private compositor capture. Its red/green
+  sides were correct, but cyan/magenta appeared above white/yellow: **vertical
+  orientation failed**. This is a screenshot observation, not headset acceptance.
+- Temporary properties, proximity behavior, the saved session and VD-only driver
+  registration restored successfully; no fatal signal was recorded.
+
+| Chart | Submission events/s | Eye-completion proxy/s | FPS p1 | GPU decode p50 ms | Completion p50 ms | Payload p50 Mbps |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Off, first | 118.38 | 118.31 | 60.00 | 6.51 | 8.02 | 1011 |
+| On | 114.79 | 114.27 | 60.00 | 5.90 | 8.05 | 1013 |
+| Off, last | 115.00 | 115.14 | 60.00 | 5.86 | 7.91 | 1015 |
+
+Each measurement lasted eight seconds after two seconds settling, with separate
+client launches and verified continuous source coverage. Battery temperature was
+29–30°C, thermal status zero. The final control was also slower; these blocks
+establish no causal performance benefit or penalty. p1 near 60 exposes missed
+120 Hz periods. Counters are not unique optically delivered frames. No optical
+latency or sustained gameplay/thermal acceptance was measured.
+[Sanitized evidence](../results/SURFACE-CHART-2026-10-04.json).
+
+`.41` reverses upload rows only for this diagnostic in the existing GLES-bound
+session, based on the observed compositor interpretation. It preserves channel
+order and corner colors, with a CPU regression for both RGBA/BGRA and output
+bounds. It does not change video decode, eye mapping or shaders. A future
+Vulkan-bound session must establish its own orientation convention. Full-resolution
+color handling and decoded-frame/pose selection remain unresolved.

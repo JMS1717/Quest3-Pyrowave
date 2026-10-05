@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <memory>
 #include <vector>
+#include "surface_chart_pixels.h"
 
 #define PROBE_LOG(...) __android_log_print(ANDROID_LOG_INFO, "pyroclient", __VA_ARGS__)
 
@@ -266,19 +267,9 @@ extern "C" int pyroclient_present_surface_chart(void *opaque) {
     if ((result = vkBindBufferMemory(p.device, p.upload, p.upload_memory, 0)) != VK_SUCCESS) return int(result);
     void *mapping = nullptr;
     if ((result = vkMapMemory(p.device, p.upload_memory, 0, bytes, 0, &mapping)) != VK_SUCCESS) return int(result);
-    auto pixels = static_cast<uint8_t *>(mapping);
-    // Asymmetric opaque corners: white/yellow over cyan/magenta, red/green halves.
-    for (uint32_t y = 0; y < p.extent.height; ++y) for (uint32_t x = 0; x < p.extent.width; ++x) {
-        bool left = x < p.extent.width / 2;
-        uint8_t r = left ? 190 : 20, g = left ? 20 : 190, b = 20;
-        bool edge_x = x < p.extent.width / 8 || x >= p.extent.width * 7 / 8;
-        if (edge_x && y < p.extent.height / 4) { r = 255; g = 255; b = left ? 255 : 0; }
-        if (edge_x && y >= p.extent.height * 3 / 4) { r = left ? 0 : 255; g = left ? 255 : 0; b = 255; }
-        if (x == p.extent.width / 2 || y == p.extent.height / 2) r = g = b = 0;
-        size_t offset = (size_t(y) * p.extent.width + x) * 4;
-        pixels[offset] = p.format == VK_FORMAT_B8G8R8A8_UNORM ? b : r;
-        pixels[offset+1] = g; pixels[offset+2] = p.format == VK_FORMAT_B8G8R8A8_UNORM ? r : b; pixels[offset+3] = 255;
-    }
+    fill_surface_chart(static_cast<uint8_t *>(mapping), p.extent.width, p.extent.height,
+                       p.format == VK_FORMAT_B8G8R8A8_UNORM);
+    PROBE_LOG("[Q3PW_SURFACE_CHART_ORIENTATION] gles_session=true upload_rows=bottom_up");
     vkUnmapMemory(p.device, p.upload_memory);
     VkCommandPoolCreateInfo pool = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
     pool.queueFamilyIndex = p.family;
