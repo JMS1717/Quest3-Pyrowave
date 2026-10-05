@@ -61,3 +61,14 @@ Even a passing static chart does not establish full-resolution WSI storage
 writes, useful performance, sustained 120 FPS, decoded image identity or
 pose/content pairing. Those are required before any decoded projection replaces
 the existing eye copy. [Creation baseline](SURFACE-PROBE.md#quest-3-creation-result).
+
+Validate the complete saved startup/close log with device-clock bounds:
+
+```text
+python -m tools.quest3.surface_chart client.log --start DEVICE_START_EPOCH --end DEVICE_END_EPOCH --pid CLIENT_PID
+```
+
+The reader rejects partial, duplicated, failed or reordered lifecycle records.
+Shutdown's two successful fence waits prove retirement even if the nonblocking
+poll did not observe both fences earlier. A passing report is API/lifecycle
+evidence, with optical presentation and performance acceptance explicitly false.
