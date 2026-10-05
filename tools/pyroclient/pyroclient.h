@@ -25,6 +25,13 @@ typedef struct pyroclient pyroclient;
 // JavaVM and Surface jobject. Retains/releases its own JNI/window references,
 // destroys all Vulkan objects before return; never acquires/submits/presents.
 int pyroclient_probe_android_surface(void *java_vm, void *java_surface);
+// Default-off one-shot Surface chart. Render thread owns every call. Requires
+// EXT presentation fences; destroy drains render AND presentation before free.
+// Call present only while OpenXR is VISIBLE/FOCUSED. No decoder resources shared.
+void *pyroclient_create_surface_chart(void *java_vm, void *java_surface, int *status);
+int pyroclient_present_surface_chart(void *chart);
+int pyroclient_poll_surface_chart(void *chart);
+void pyroclient_destroy_surface_chart(void *chart);
 
 typedef struct pyroclient_frame_info {
     double decode_ms;    // GPU time of PyroWave's decode (timestamp queries)

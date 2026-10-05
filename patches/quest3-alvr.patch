@@ -206,7 +206,7 @@ index 7cead7b..18ad9d0 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..a449138 100644
+index ae00ce8..cc0bdd4 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..a449138 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.39"
++version = "20.13.0-quest3.pyro.40"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -2848,7 +2848,7 @@ index 7765bb4..b102615 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..f9c2910 100644
+index a0fd36f..0cba1f1 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -4,7 +4,11 @@ mod graphics;
@@ -2948,21 +2948,27 @@ index a0fd36f..f9c2910 100644
      #[cfg(target_os = "android")]
      {
          exts.khr_android_create_instance = true;
-+        exts.khr_android_surface_swapchain = surface_probe::requested()
++        exts.khr_android_surface_swapchain = (surface_probe::requested() || surface_probe::chart_requested())
 +            && available_extensions.khr_android_surface_swapchain;
      }
      exts.khr_convert_timespec_time = true;
      exts.khr_opengl_es_enable = true;
-@@ -263,6 +313,8 @@ pub fn entry_point() {
+@@ -263,6 +313,14 @@ pub fn entry_point() {
  
          let (xr_session, mut xr_frame_waiter, mut xr_frame_stream) =
              create_session(&xr_instance, xr_system, &graphics_context);
 +        #[cfg(target_os = "android")]
 +        surface_probe::run(&xr_session);
++        #[cfg(target_os = "android")]
++        let mut surface_chart = surface_probe::SurfaceChart::new(&xr_session)
++            .map_err(|error| error!("[Q3PW_SURFACE_CHART] create_failed={error:?} keep_gles=true"))
++            .ok().flatten();
++        #[cfg(target_os = "android")]
++        let mut surface_layer_logged = false;
  
          let views_config = xr_instance
              .enumerate_view_configuration_views(
-@@ -287,15 +339,31 @@ pub fn entry_point() {
+@@ -287,15 +345,31 @@ pub fn entry_point() {
          let early_poll = extra_extensions::perf_settings::early_poll_enabled();
          alvr_common::error!("[EARLYPOLL] decoded frame polled before xrWaitFrame: {early_poll}");
  
@@ -2999,7 +3005,7 @@ index a0fd36f..f9c2910 100644
              }
          } else {
              alvr_common::error!("[PERF] XR_EXT_performance_settings not advertised");
-@@ -313,19 +381,37 @@ pub fn entry_point() {
+@@ -313,19 +387,37 @@ pub fn entry_point() {
              views_config[0].recommended_image_rect_height,
          );
  
@@ -3041,7 +3047,7 @@ index a0fd36f..f9c2910 100644
  
          // Whether anything is correcting for the ~26 ms the runtime predicts ahead. If the
          // compositor does not timewarp and ALVR does not either -- 20.13.0 hardcodes
-@@ -354,8 +440,10 @@ pub fn entry_point() {
+@@ -354,8 +446,10 @@ pub fn entry_point() {
              exts.fb_foveation,
              advertised_extension_names.len(),
          );
@@ -3054,7 +3060,7 @@ index a0fd36f..f9c2910 100644
  
          if exts.fb_color_space {
              xr_session
-@@ -365,8 +453,8 @@ pub fn entry_point() {
+@@ -365,8 +459,8 @@ pub fn entry_point() {
  
          let capabilities = ClientCapabilities {
              default_view_resolution,
@@ -3065,7 +3071,7 @@ index a0fd36f..f9c2910 100644
              encoder_high_profile: galaxy_xr || platform != Platform::Unknown,
              encoder_10_bits: galaxy_xr || platform != Platform::Unknown,
              encoder_av1: matches!(
-@@ -392,9 +480,16 @@ pub fn entry_point() {
+@@ -392,9 +486,16 @@ pub fn entry_point() {
              Rc::clone(&graphics_context),
              Arc::clone(&interaction_context),
              platform,
@@ -3083,10 +3089,11 @@ index a0fd36f..f9c2910 100644
          let lobby_body_tracking_config = BodyTrackingSourcesConfig {
              body_tracking_fb: Switch::Disabled,
              body_tracking_bd: Switch::Enabled(BodyTrackingBDConfig::BodyTracking {
-@@ -412,11 +507,16 @@ pub fn entry_point() {
+@@ -412,11 +513,17 @@ pub fn entry_point() {
              .select_sources(&lobby_interaction_sources);
  
          let mut session_running = false;
++        let mut surface_visible = false;
 +        let mut refresh_probe = None;
 +        let mut refresh_probed = false;
 +        let mut requested_refresh_rate = None::<f32>;
@@ -3101,7 +3108,7 @@ index a0fd36f..f9c2910 100644
          // Budget for the pre-xrWaitFrame poll: the previous frame's period, 72 Hz until known.
          let mut poll_interval = Duration::from_micros(13_889);
          'render_loop: loop {
-@@ -432,7 +532,17 @@ pub fn entry_point() {
+@@ -432,14 +539,31 @@ pub fn entry_point() {
                                  .begin(xr::ViewConfigurationType::PRIMARY_STEREO)
                                  .unwrap();
  
@@ -3120,15 +3127,30 @@ index a0fd36f..f9c2910 100644
  
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
  
-@@ -440,6 +550,7 @@ pub fn entry_point() {
+                             session_running = true;
                          }
                          xr::SessionState::STOPPING => {
++                            surface_visible = false;
++                            #[cfg(target_os = "android")]
++                            {
++                                if surface_chart.is_some() { error!("[Q3PW_SURFACE_CHART] stopping=true writes_disabled=true"); }
++                                surface_chart = None;
++                            } // Drain producer before xrEndSession.
                              session_running = false;
 +                            refresh_probe = None;
  
                              passthrough_layer = None;
  
-@@ -494,7 +605,29 @@ pub fn entry_point() {
+@@ -447,6 +571,8 @@ pub fn entry_point() {
+ 
+                             xr_session.end().unwrap();
+                         }
++                        xr::SessionState::VISIBLE | xr::SessionState::FOCUSED => { surface_visible = true; }
++                        xr::SessionState::SYNCHRONIZED => { surface_visible = false; }
+                         xr::SessionState::EXITING => break 'render_loop,
+                         xr::SessionState::LOSS_PENDING => break 'render_loop,
+                         _ => (),
+@@ -494,7 +620,29 @@ pub fn entry_point() {
                          lobby.update_hud_message(&message);
                      }
                      ClientCoreEvent::StreamingStarted(config) => {
@@ -3158,7 +3180,7 @@ index a0fd36f..f9c2910 100644
  
                          let context = StreamContext::new(
                              Arc::clone(&core_context),
-@@ -512,6 +645,8 @@ pub fn entry_point() {
+@@ -512,6 +660,8 @@ pub fn entry_point() {
                          stream_context = Some(context);
                      }
                      ClientCoreEvent::StreamingStopped => {
@@ -3167,7 +3189,7 @@ index a0fd36f..f9c2910 100644
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -562,13 +697,23 @@ pub fn entry_point() {
+@@ -562,13 +712,23 @@ pub fn entry_point() {
                  }
              }
  
@@ -3192,7 +3214,7 @@ index a0fd36f..f9c2910 100644
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -576,12 +721,49 @@ pub fn entry_point() {
+@@ -576,12 +736,49 @@ pub fn entry_point() {
                      panic!();
                  }
              };
@@ -3243,7 +3265,7 @@ index a0fd36f..f9c2910 100644
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +787,15 @@ pub fn entry_point() {
+@@ -605,15 +802,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -3268,7 +3290,7 @@ index a0fd36f..f9c2910 100644
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,13 +803,16 @@ pub fn entry_point() {
+@@ -621,13 +818,16 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -3286,12 +3308,16 @@ index a0fd36f..f9c2910 100644
  
              if !frame_state.should_render {
                  xr_frame_stream
-@@ -654,22 +839,76 @@ pub fn entry_point() {
+@@ -654,22 +854,89 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
 -            // todo: allow rendering lobby and stream layers at the same time and add cross fade
 +            let overlay_started = loop_probe.then(Instant::now);
++            #[cfg(target_os = "android")]
++            if let Some(chart) = &mut surface_chart {
++                if !chart.update(surface_visible) { surface_chart = None; }
++            }
 +            if let Some(overlay) = &mut performance_overlay {
 +                if let Err(error) = overlay.update(&core_context) {
 +                    error!("Performance overlay disabled after render failure: {error:?}");
@@ -3332,10 +3358,14 @@ index a0fd36f..f9c2910 100644
 +                unsafe { xr::CompositionLayerProjection::from_raw(raw) }
 +            };
 +            let overlay_layer = performance_overlay.as_ref().and_then(|overlay| overlay.layer());
++            #[cfg(target_os = "android")]
++            let surface_layer = surface_chart.as_ref().and_then(|chart| chart.layer(surface_visible));
 +            let mut layers: Vec<&xr::CompositionLayerBase<_>> = Vec::with_capacity(3);
 +            if let Some(passthrough_layer) = &passthrough_layer { layers.push(passthrough_layer); }
 +            layers.push(&projection);
 +            if let Some(overlay_layer) = &overlay_layer { layers.push(overlay_layer); }
++            #[cfg(target_os = "android")]
++            if let Some(surface_layer) = &surface_layer { layers.push(surface_layer); }
  
              graphics_context.make_current();
 -            let res = xr_frame_stream.end(to_xr_time(display_time), blend_mode, layers);
@@ -3344,6 +3374,11 @@ index a0fd36f..f9c2910 100644
 +            } else { to_xr_time(display_time) };
 +            let end_started = loop_probe.then(Instant::now);
 +            let res = xr_frame_stream.end(end_time, blend_mode, &layers);
++            #[cfg(target_os = "android")]
++            if res.is_ok() && surface_layer.is_some() && !surface_layer_logged {
++                error!("[Q3PW_SURFACE_CHART] layer_submitted=true xr_end_ok=true static_only=true");
++                surface_layer_logged = true;
++            }
 +            if let Some(started) = end_started {
 +                loop_samples += 1;
 +                loop_wait_sum += waited_ms;
@@ -3371,7 +3406,7 @@ index a0fd36f..f9c2910 100644
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +937,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +965,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
@@ -4295,10 +4330,10 @@ index b87dfe9..ef9fe65 100644
      }
 diff --git a/alvr/client_openxr/src/surface_probe.rs b/alvr/client_openxr/src/surface_probe.rs
 new file mode 100644
-index 0000000..acdced5
+index 0000000..7bde148
 --- /dev/null
 +++ b/alvr/client_openxr/src/surface_probe.rs
-@@ -0,0 +1,72 @@
+@@ -0,0 +1,233 @@
 +//! Default-off creation probe only. Surface swapchains never enter the GLES eye loop.
 +use openxr as xr;
 +use std::{ffi::c_void, ptr};
@@ -4306,11 +4341,172 @@ index 0000000..acdced5
 +#[link(name = "pyroclient")]
 +extern "C" {
 +    fn pyroclient_probe_android_surface(java_vm: *mut c_void, surface: *mut c_void) -> i32;
++    fn pyroclient_create_surface_chart(
++        java_vm: *mut c_void,
++        surface: *mut c_void,
++        status: *mut i32,
++    ) -> *mut c_void;
++    fn pyroclient_present_surface_chart(chart: *mut c_void) -> i32;
++    fn pyroclient_poll_surface_chart(chart: *mut c_void) -> i32;
++    fn pyroclient_destroy_surface_chart(chart: *mut c_void);
 +}
 +
 +pub fn requested() -> bool {
 +    crate::extra_extensions::perf_settings::system_property("debug.q3pw.surface_probe").trim()
 +        == "1"
++}
++
++pub fn chart_requested() -> bool {
++    crate::extra_extensions::perf_settings::system_property("debug.q3pw.surface_chart").trim()
++        == "1"
++}
++
++/// Separate static diagnostic quad; no pose-matched video or ordinary eye calls.
++pub struct SurfaceChart {
++    native: *mut c_void,
++    swapchain: xr::Swapchain<xr::OpenGlEs>,
++    space: xr::Space,
++    presented: bool,
++}
++
++impl SurfaceChart {
++    pub fn new(session: &xr::Session<xr::OpenGlEs>) -> xr::Result<Option<Self>> {
++        if !chart_requested() {
++            return Ok(None);
++        }
++        let Some(extension) = session
++            .instance()
++            .exts()
++            .khr_android_surface_swapchain
++            .as_ref()
++        else {
++            alvr_common::error!("[Q3PW_SURFACE_CHART] unsupported keep_gles=true");
++            return Ok(None);
++        };
++        let space =
++            session.create_reference_space(xr::ReferenceSpaceType::VIEW, xr::Posef::IDENTITY)?;
++        let info = xr::sys::SwapchainCreateInfo {
++            ty: xr::sys::SwapchainCreateInfo::TYPE,
++            next: ptr::null(),
++            create_flags: xr::SwapchainCreateFlags::EMPTY,
++            usage_flags: xr::SwapchainUsageFlags::COLOR_ATTACHMENT
++                | xr::SwapchainUsageFlags::SAMPLED,
++            format: 0,
++            sample_count: 0,
++            width: 64,
++            height: 32,
++            face_count: 0,
++            array_size: 0,
++            mip_count: 0,
++        };
++        let mut handle = xr::sys::Swapchain::NULL;
++        let mut surface = ptr::null_mut();
++        let result = unsafe {
++            (extension.create_swapchain_android_surface)(
++                session.as_raw(),
++                &info,
++                &mut handle,
++                &mut surface,
++            )
++        };
++        if result.into_raw() < 0 {
++            return Err(result);
++        }
++        if handle == xr::sys::Swapchain::NULL {
++            return Err(xr::sys::Result::ERROR_RUNTIME_FAILURE);
++        }
++        // Wrapper is for destruction/layer reference ONLY; no enumerate/acquire/wait/release.
++        let swapchain = unsafe { xr::Swapchain::<xr::OpenGlEs>::from_raw(session.clone(), handle) };
++        let mut status = 0;
++        let native = unsafe {
++            pyroclient_create_surface_chart(
++                ndk_context::android_context().vm().cast(),
++                surface.cast(),
++                &mut status,
++            )
++        };
++        if native.is_null() {
++            alvr_common::error!("[Q3PW_SURFACE_CHART] prepare_failed={status} keep_gles=true");
++            return Ok(None);
++        }
++        alvr_common::error!("[Q3PW_SURFACE_CHART] prepared=true submitted=false keep_gles=true");
++        Ok(Some(Self {
++            native,
++            swapchain,
++            space,
++            presented: false,
++        }))
++    }
++
++    pub fn update(&mut self, visible: bool) -> bool {
++        if !visible {
++            return true;
++        }
++        if !self.presented {
++            // One static enqueue, only after processing VISIBLE/FOCUSED state.
++            alvr_common::error!("[Q3PW_SURFACE_CHART] write_allowed=true visible=true");
++            let result = unsafe { pyroclient_present_surface_chart(self.native) };
++            if result != 0 {
++                alvr_common::error!(
++                    "[Q3PW_SURFACE_CHART] present_failed={result} retirement_required=true"
++                );
++                return false;
++            }
++            self.presented = true;
++        }
++        let result = unsafe { pyroclient_poll_surface_chart(self.native) };
++        if result < 0 {
++            alvr_common::error!(
++                "[Q3PW_SURFACE_CHART] poll_failed={result} retirement_required=true"
++            );
++            return false;
++        }
++        true
++    }
++
++    pub fn layer(&self, visible: bool) -> Option<xr::CompositionLayerQuad<'_, xr::OpenGlEs>> {
++        (visible && self.presented).then(|| {
++            xr::CompositionLayerQuad::new()
++                .space(&self.space)
++                .eye_visibility(xr::EyeVisibility::BOTH)
++                .sub_image(
++                    xr::SwapchainSubImage::new()
++                        .swapchain(&self.swapchain)
++                        .image_array_index(0)
++                        .image_rect(xr::Rect2Di {
++                            offset: xr::Offset2Di { x: 0, y: 0 },
++                            extent: xr::Extent2Di {
++                                width: 64,
++                                height: 32,
++                            },
++                        }),
++                )
++                .pose(xr::Posef {
++                    position: xr::Vector3f {
++                        x: 0.55,
++                        y: 0.35,
++                        z: -1.2,
++                    },
++                    ..xr::Posef::IDENTITY
++                })
++                .size(xr::Extent2Df {
++                    width: 0.55,
++                    height: 0.275,
++                })
++        })
++    }
++}
++
++impl Drop for SurfaceChart {
++    fn drop(&mut self) {
++        // Native waits bounded render + EXT presentation fences before freeing;
++        // unproved completion fails closed by terminating this opt-in client.
++        // XrSwapchain field drops only AFTER the native producer has retired.
++        unsafe {
++            pyroclient_destroy_surface_chart(self.native);
++        }
++        alvr_common::error!("[Q3PW_SURFACE_CHART] producer_destroyed=true");
++    }
 +}
 +
 +pub fn run(session: &xr::Session<xr::OpenGlEs>) {
