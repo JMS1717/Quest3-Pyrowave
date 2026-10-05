@@ -4992,7 +4992,7 @@ index 0000000..7bde148
 +    );
 +}
 diff --git a/alvr/dashboard/src/dashboard/components/settings.rs b/alvr/dashboard/src/dashboard/components/settings.rs
-index 5cfc048..7b4bab9 100644
+index 5cfc048..11b465f 100644
 --- a/alvr/dashboard/src/dashboard/components/settings.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings.rs
 @@ -4,7 +4,7 @@ use super::{
@@ -5004,18 +5004,43 @@ index 5cfc048..7b4bab9 100644
  use alvr_session::{SessionSettings, Settings};
  use eframe::egui::{self, Align, Frame, Grid, Layout, RichText, ScrollArea, Ui};
  #[cfg(target_arch = "wasm32")]
-@@ -68,9 +68,7 @@ impl SettingsTab {
+@@ -26,7 +26,8 @@ struct TopLevelEntry {
+ pub struct SettingsTab {
+     selected_top_tab_id: String,
+     streaming_profile_preset: PresetControl,
+-    render_scale_preset: PresetControl,
++    stream_resolution_preset: PresetControl,
++    game_render_resolution_preset: PresetControl,
+     refresh_rate_preset: PresetControl,
+     game_audio_preset: Option<PresetControl>,
+     microphone_preset: Option<PresetControl>,
+@@ -68,10 +69,11 @@ impl SettingsTab {
  
          Self {
              selected_top_tab_id: "presets".into(),
 -            streaming_profile_preset: PresetControl::new(
 -                builtin_schema::streaming_profile_schema(),
--            ),
 +            streaming_profile_preset: PresetControl::new(builtin_schema::streaming_profile_schema()),
-             render_scale_preset: PresetControl::new(builtin_schema::render_scale_schema()),
++            stream_resolution_preset: PresetControl::new(builtin_schema::stream_resolution_schema()),
++            game_render_resolution_preset: PresetControl::new(
++                builtin_schema::game_render_resolution_schema(),
+             ),
+-            render_scale_preset: PresetControl::new(builtin_schema::render_scale_schema()),
              refresh_rate_preset: PresetControl::new(builtin_schema::refresh_rate_schema()),
              game_audio_preset: None,
-@@ -171,6 +169,9 @@ impl SettingsTab {
+             microphone_preset: None,
+@@ -90,7 +92,9 @@ impl SettingsTab {
+ 
+         self.streaming_profile_preset
+             .update_session_settings(&settings_json);
+-        self.render_scale_preset
++        self.stream_resolution_preset
++            .update_session_settings(&settings_json);
++        self.game_render_resolution_preset
+             .update_session_settings(&settings_json);
+         self.refresh_rate_preset
+             .update_session_settings(&settings_json);
+@@ -171,10 +175,16 @@ impl SettingsTab {
                          .num_columns(2)
                          .min_col_width(MIN_COLUMN_SIZE)
                          .show(ui, |ui| {
@@ -5025,7 +5050,15 @@ index 5cfc048..7b4bab9 100644
                              path_value_pairs.extend(self.streaming_profile_preset.ui(ui));
                              ui.end_row();
  
-@@ -241,3 +242,139 @@ impl SettingsTab {
+-                            path_value_pairs.extend(self.render_scale_preset.ui(ui));
++                            path_value_pairs.extend(self.stream_resolution_preset.ui(ui));
++                            ui.end_row();
++
++                            path_value_pairs.extend(self.game_render_resolution_preset.ui(ui));
+                             ui.end_row();
+ 
+                             path_value_pairs.extend(self.refresh_rate_preset.ui(ui));
+@@ -241,3 +251,139 @@ impl SettingsTab {
          requests
      }
  }
@@ -5166,7 +5199,7 @@ index 5cfc048..7b4bab9 100644
 +    changes
 +}
 diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
-index efb0f8e..93cd6ba 100644
+index efb0f8e..e7d051a 100644
 --- a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 @@ -323,7 +323,7 @@ pub fn streaming_profile_schema() -> PresetSchemaNode {
@@ -5178,24 +5211,62 @@ index efb0f8e..93cd6ba 100644
  afterwards leaves no profile selected; pick the profile again to return to it."
                  .into(),
          )]
-@@ -351,14 +351,13 @@ afterwards leaves no profile selected; pick the profile again to return to it."
+@@ -351,65 +351,78 @@ afterwards leaves no profile selected; pick the profile again to return to it."
      })
  }
  
 -/// Render size as a share of the Galaxy XR panel, the axis the resolution matrix measured.
-+/// Render size as a share of the Quest 3 panel (not lens-corrected recommendation).
- pub fn render_scale_schema() -> PresetSchemaNode {
+-pub fn render_scale_schema() -> PresetSchemaNode {
++fn panel_size_schema(
++    name: &str,
++    help: &str,
++    field: &str,
++    percents: &[u32],
++) -> PresetSchemaNode {
      PresetSchemaNode::HigherOrderChoice(HigherOrderChoiceSchema {
-         name: "render_scale".into(),
-         strings: [(
-             "help".into(),
+-        name: "render_scale".into(),
+-        strings: [(
+-            "help".into(),
 -            "Per-eye render size as a share of the 3552x3840 panel. On static SteamVR Home, \
 -PyroWave held 90 fps up to 70 % at 400 Mbps; 80 % and above dropped frames and ran the headset hot."
-+            "Per-eye render size as a share of the Quest 3 2064x2208 panel. The starting preset uses 100 percent, with uniform full-frame rendering."
-                 .into(),
-         )]
-         .into_iter()
-@@ -391,7 +390,7 @@ PyroWave held 90 fps up to 70 % at 400 Mbps; 80 % and above dropped frames and r
+-                .into(),
+-        )]
+-        .into_iter()
+-        .collect(),
++        name: name.into(),
++        strings: [("help".into(), help.into())].into_iter().collect(),
+         flags: ["steamvr-restart".into()].into_iter().collect(),
+-        options: [50, 60, 70, 80, 90, 100]
+-            .into_iter()
+-            .map(|percent| {
++        options: percents
++            .iter()
++            .map(|&percent| {
+                 let (width, height) = alvr_session::beta::render_scale_size(percent);
+                 let panel = if percent == 100 { ", panel" } else { "" };
+                 HigherOrderChoiceOption {
+                     display_name: format!("{percent} % ({width}x{height} per eye{panel})"),
+                     description: None,
+-                    modifiers: ["transcoding_view_resolution", "emulated_headset_view_resolution"]
++                    modifiers: alvr_session::beta::panel_size_assignments(field, percent)
+                         .into_iter()
+-                        .flat_map(|field| {
+-                            let prefix = format!("session_settings.video.{field}");
+-                            [
+-                                string_modifier(&format!("{prefix}.variant"), "Absolute"),
+-                                num_modifier(&format!("{prefix}.Absolute.width"), &width.to_string()),
+-                                bool_modifier(&format!("{prefix}.Absolute.height.set"), true),
+-                                num_modifier(
+-                                    &format!("{prefix}.Absolute.height.content"),
+-                                    &height.to_string(),
+-                                ),
+-                            ]
++                        .map(|(path, value)| PresetModifier {
++                            target_path: format!("session_settings.{path}"),
++                            operation: PresetModifierOperation::Assign(value),
+                         })
+                         .collect(),
+                     content: None,
                  }
              })
              .collect(),
@@ -5204,7 +5275,35 @@ index efb0f8e..93cd6ba 100644
          gui: ChoiceControlType::Dropdown,
      })
  }
-@@ -402,14 +401,13 @@ pub fn refresh_rate_schema() -> PresetSchemaNode {
+ 
++/// What PyroWave encodes and the headset decodes. Sets headset GPU cost; never touches the
++/// game render size.
++pub fn stream_resolution_schema() -> PresetSchemaNode {
++    panel_size_schema(
++        "stream_resolution",
++        "Per-eye size PyroWave encodes and the headset decodes, as a share of the Quest 3 2064x2208 panel. \
++This sets headset decode cost; the bitrate sets bandwidth. It does not change the game render resolution.",
++        "transcoding_view_resolution",
++        &alvr_session::beta::STREAM_SCALES,
++    )
++}
++
++/// What SteamVR asks games to render, independent of the stream (Virtual Desktop style).
++pub fn game_render_resolution_schema() -> PresetSchemaNode {
++    panel_size_schema(
++        "game_render_resolution",
++        "Per-eye size SteamVR recommends to games, per axis, as a share of the Quest 3 panel. \
++The PC downsamples it to the stream resolution, so higher values sharpen the image at PC GPU cost only, \
++with no extra bandwidth or headset decode work. Set SteamVR's own render resolution to a custom 100 % \
++so games use this size, and restart games that cache their render targets.",
++        "emulated_headset_view_resolution",
++        &alvr_session::beta::GAME_RENDER_SCALES,
++    )
++}
++
+ /// The refresh rates the Galaxy XR runtime enumerates.
+ pub fn refresh_rate_schema() -> PresetSchemaNode {
+     PresetSchemaNode::HigherOrderChoice(HigherOrderChoiceSchema {
          name: "refresh_rate".into(),
          strings: [(
              "help".into(),
@@ -5221,7 +5320,7 @@ index efb0f8e..93cd6ba 100644
              .into_iter()
              .map(|hz| HigherOrderChoiceOption {
                  display_name: format!("{hz} Hz"),
-@@ -426,7 +424,6 @@ the tuned H.264 profile runs at 72 Hz because the headset's H.264 decode is too
+@@ -426,7 +439,6 @@ the tuned H.264 profile runs at 72 Hz because the headset's H.264 decode is too
      })
  }
  
@@ -5229,7 +5328,7 @@ index efb0f8e..93cd6ba 100644
  #[cfg(test)]
  mod tests {
      use super::*;
-@@ -447,16 +444,37 @@ mod tests {
+@@ -447,25 +459,96 @@ mod tests {
              .iter()
              .map(|o| o.display_name.as_str())
              .collect::<Vec<_>>();
@@ -5271,7 +5370,68 @@ index efb0f8e..93cd6ba 100644
              assert_eq!(modifier.target_path, format!("session_settings.{path}"));
              let PresetModifierOperation::Assign(assigned) = &modifier.operation;
              assert_eq!(assigned, value);
-@@ -474,15 +492,22 @@ mod tests {
+         }
+     }
+ 
++    fn sizes_set(schema: &HigherOrderChoiceSchema, option: usize) -> Vec<String> {
++        let mut fields = schema.options[option]
++            .modifiers
++            .iter()
++            .map(|m| m.target_path.split('.').nth(2).unwrap().to_owned())
++            .collect::<Vec<_>>();
++        fields.dedup();
++        fields
++    }
++
++    fn width_of(schema: &HigherOrderChoiceSchema, option: usize, field: &str) -> Option<serde_json::Value> {
++        schema.options[option]
++            .modifiers
++            .iter()
++            .find(|m| m.target_path == format!("session_settings.video.{field}.Absolute.width"))
++            .map(|m| {
++                let PresetModifierOperation::Assign(value) = &m.operation;
++                value.clone()
++            })
++    }
++
++    #[test]
++    fn stream_resolution_is_panel_relative_and_leaves_game_render_alone() {
++        let schema = choice(stream_resolution_schema());
++        let names = schema
++            .options
++            .iter()
++            .map(|o| o.display_name.as_str())
++            .collect::<Vec<_>>();
++        assert_eq!(
++            names,
++            [
++                "50 % (1032x1104 per eye)",
++                "60 % (1238x1325 per eye)",
++                "70 % (1445x1546 per eye)",
++                "80 % (1651x1766 per eye)",
++                "90 % (1858x1987 per eye)",
++                "100 % (2064x2208 per eye, panel)",
++            ]
++        );
++        assert!(schema
++            .options
++            .iter()
++            .any(|o| o.display_name == schema.default_option_display_name));
++        for option in 0..schema.options.len() {
++            assert_eq!(sizes_set(&schema, option), ["transcoding_view_resolution"]);
++        }
++        assert_eq!(width_of(&schema, 2, "transcoding_view_resolution"), Some(1445.into()));
++    }
++
+     #[test]
+-    fn render_scale_is_panel_relative_and_sets_both_resolutions() {
+-        let schema = choice(render_scale_schema());
++    fn game_render_resolution_goes_above_the_panel_without_touching_the_stream() {
++        let schema = choice(game_render_resolution_schema());
+         let names = schema
+             .options
+             .iter()
+@@ -474,28 +557,21 @@ mod tests {
          assert_eq!(
              names,
              [
@@ -5281,38 +5441,39 @@ index efb0f8e..93cd6ba 100644
 -                "80 % (2842x3072 per eye)",
 -                "90 % (3197x3456 per eye)",
 -                "100 % (3552x3840 per eye, panel)",
-+                "50 % (1032x1104 per eye)",
-+                "60 % (1238x1325 per eye)",
-+                "70 % (1445x1546 per eye)",
-+                "80 % (1651x1766 per eye)",
-+                "90 % (1858x1987 per eye)",
 +                "100 % (2064x2208 per eye, panel)",
++                "125 % (2580x2760 per eye)",
++                "150 % (3096x3312 per eye)",
++                "175 % (3612x3864 per eye)",
++                "200 % (4128x4416 per eye)",
              ]
          );
 -        assert_eq!(schema.default_option_display_name, "60 % (2131x2304 per eye)");
+-        let seventy = &schema.options[2];
+-        let width = |field: &str| {
+-            seventy
+-                .modifiers
+-                .iter()
+-                .find(|m| m.target_path == format!("session_settings.video.{field}.Absolute.width"))
+-                .map(|m| {
+-                    let PresetModifierOperation::Assign(value) = &m.operation;
+-                    value.clone()
+-                })
+-        };
+-        assert_eq!(width("transcoding_view_resolution"), Some(2486.into()));
+-        assert_eq!(width("emulated_headset_view_resolution"), Some(2486.into()));
 +        assert_eq!(
 +            schema.default_option_display_name,
 +            "100 % (2064x2208 per eye, panel)"
 +        );
-+        assert!(schema
-+            .options
-+            .iter()
-+            .any(|o| o.display_name == schema.default_option_display_name));
-         let seventy = &schema.options[2];
-         let width = |field: &str| {
-             seventy
-@@ -494,8 +519,8 @@ mod tests {
-                     value.clone()
-                 })
-         };
--        assert_eq!(width("transcoding_view_resolution"), Some(2486.into()));
--        assert_eq!(width("emulated_headset_view_resolution"), Some(2486.into()));
-+        assert_eq!(width("transcoding_view_resolution"), Some(1445.into()));
-+        assert_eq!(width("emulated_headset_view_resolution"), Some(1445.into()));
++        for option in 0..schema.options.len() {
++            assert_eq!(sizes_set(&schema, option), ["emulated_headset_view_resolution"]);
++        }
++        assert_eq!(width_of(&schema, 2, "emulated_headset_view_resolution"), Some(3096.into()));
      }
  
      #[test]
-@@ -506,7 +531,10 @@ mod tests {
+@@ -506,7 +582,10 @@ mod tests {
              .iter()
              .map(|o| o.display_name.as_str())
              .collect::<Vec<_>>();
@@ -5342,10 +5503,21 @@ index ccc83c8..5e14bba 100644
                  .options
                  .into_iter()
 diff --git a/alvr/dashboard/src/dashboard/components/test_report.rs b/alvr/dashboard/src/dashboard/components/test_report.rs
-index 3be9319..d3a1d7c 100644
+index 3be9319..2a84d8d 100644
 --- a/alvr/dashboard/src/dashboard/components/test_report.rs
 +++ b/alvr/dashboard/src/dashboard/components/test_report.rs
-@@ -255,8 +255,8 @@ fn effective_settings(settings: &Settings, session_settings: &Value) -> Value {
+@@ -243,6 +243,10 @@ fn effective_settings(settings: &Settings, session_settings: &Value) -> Value {
+         }
+         FrameSize::Scale(_) => None,
+     };
++    let game_render = match &video.emulated_headset_view_resolution {
++        FrameSize::Absolute { width, height } => json!([width, height.unwrap_or(*width)]),
++        FrameSize::Scale(scale) => json!({ "scale_of_headset_default": scale }),
++    };
+     let pyrowave = video.preferred_codec == CodecType::PyroWave;
+     let foveation = match video.foveated_encoding.as_option() {
+         Some(f) => json!({
+@@ -255,10 +259,12 @@ fn effective_settings(settings: &Settings, session_settings: &Value) -> Value {
      };
      json!({
          "profile": beta::matching_profile(session_settings).unwrap_or("custom"),
@@ -5355,8 +5527,12 @@ index 3be9319..d3a1d7c 100644
 +        "chroma": if pyrowave && video.pyrowave.chroma_444 { "4:4:4" } else { "4:2:0" },
          "render_per_eye": render,
          "render_scale_percent": render_percent,
++        "game_render_per_eye": game_render,
++        "render_downsample_filter": format!("{:?}", video.pyrowave.render_downsample_filter),
          "refresh_hz": video.preferred_fps,
-@@ -272,6 +272,7 @@ fn effective_settings(settings: &Settings, session_settings: &Value) -> Value {
+         "bitrate_mbps": match video.bitrate.mode {
+             BitrateMode::ConstantMbps(mbps) => json!(mbps),
+@@ -272,6 +278,7 @@ fn effective_settings(settings: &Settings, session_settings: &Value) -> Value {
              "wavelet": match video.pyrowave.wavelet {
                  PyroWaveWavelet::Cdf97 => "CDF 9/7",
                  PyroWaveWavelet::Cdf53 => "CDF 5/3",
@@ -5364,7 +5540,7 @@ index 3be9319..d3a1d7c 100644
              },
              "decode_path": match video.pyrowave.decode_path {
                  PyroWaveDecodePath::Compute => "compute",
-@@ -549,11 +550,11 @@ mod tests {
+@@ -549,11 +556,13 @@ mod tests {
          let r = report(&Subjective::default());
          assert_eq!(r["schema_version"], 1);
          assert_eq!(r["settings"]["profile"], beta::RECOMMENDED_PROFILE);
@@ -5377,6 +5553,8 @@ index 3be9319..d3a1d7c 100644
 +        assert_eq!(r["settings"]["chroma"], "4:2:0");
 +        assert_eq!(r["settings"]["render_per_eye"], json!([2064, 2208]));
 +        assert_eq!(r["settings"]["render_scale_percent"], 100.0);
++        assert_eq!(r["settings"]["game_render_per_eye"], json!([2064, 2208]));
++        assert_eq!(r["settings"]["render_downsample_filter"], "Adaptive");
 +        assert_eq!(r["settings"]["pyrowave"]["transport"], "TCP");
          assert_eq!(r["settings"]["advanced_changes"], json!([]));
          assert_eq!(r["encoded_size"], json!([1984, 896]));
@@ -7043,7 +7221,7 @@ index 81f2f8e..869fa77 100644
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da..e6686ad 100644
+index fc176da..34e5784 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -53,7 +53,8 @@ pub struct VideoPacket {
@@ -7094,17 +7272,18 @@ index fc176da..e6686ad 100644
  
      let mut brightness = 0.0;
      let mut contrast = 0.0;
-@@ -240,7 +234,9 @@ fn openvr_config_with_env(
+@@ -240,7 +234,10 @@ fn openvr_config_with_env(
          pyrowave_enabled: pyrowave.enabled,
          pyrowave_udp: pyrowave.udp,
          pyrowave_wavelet_53: pyrowave.wavelet_53,
 +        pyrowave_wavelet_haar: pyrowave.wavelet_haar,
          pyrowave_decode_path: pyrowave.decode_path as u32,
 +        pyrowave_chroma_444: settings.video.pyrowave.chroma_444,
++        render_downsample_filter: settings.video.pyrowave.render_downsample_filter as u32,
          _controller_profile,
          _server_impl_debug: settings.extra.logging.debug_groups.server_impl,
          _client_impl_debug: settings.extra.logging.debug_groups.client_impl,
-@@ -629,6 +625,14 @@ fn connection_pipeline(
+@@ -629,6 +626,14 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -7119,7 +7298,7 @@ index fc176da..e6686ad 100644
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +653,9 @@ fn connection_pipeline(
+@@ -649,18 +654,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -7141,7 +7320,7 @@ index fc176da..e6686ad 100644
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -802,6 +797,10 @@ fn connection_pipeline(
+@@ -802,6 +798,10 @@ fn connection_pipeline(
          proto_socket.split(STREAMING_RECV_TIMEOUT).to_con()?;
  
      let mut new_openvr_config = contruct_openvr_config(session_manager_lock.session());
@@ -7152,7 +7331,7 @@ index fc176da..e6686ad 100644
      new_openvr_config.eye_resolution_width = stream_view_resolution.x;
      new_openvr_config.eye_resolution_height = stream_view_resolution.y;
      new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
-@@ -869,10 +868,11 @@ fn connection_pipeline(
+@@ -869,10 +869,11 @@ fn connection_pipeline(
  
      // PyroWave over UDP: a plain socket to the client's address. The same resolution fills
      // openvr_config for the C++ encoder, so the two sides cannot disagree.
@@ -7168,7 +7347,7 @@ index fc176da..e6686ad 100644
      if pyrowave.enabled {
          info!("{pyrowave}");
      }
-@@ -1102,7 +1102,10 @@ fn connection_pipeline(
+@@ -1102,7 +1103,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -7180,7 +7359,7 @@ index fc176da..e6686ad 100644
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1118,7 @@ fn connection_pipeline(
+@@ -1115,6 +1119,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -7188,7 +7367,7 @@ index fc176da..e6686ad 100644
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1135,14 @@ fn connection_pipeline(
+@@ -1131,6 +1136,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -7203,7 +7382,7 @@ index fc176da..e6686ad 100644
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1299,6 +1311,9 @@ fn connection_pipeline(
+@@ -1299,6 +1312,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -7213,7 +7392,7 @@ index fc176da..e6686ad 100644
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1552,9 +1567,10 @@ mod beta_tests {
+@@ -1552,9 +1568,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -7499,28 +7678,33 @@ index 1f84992..3bd71b9 100644
 +    }
 +}
 diff --git a/alvr/server_openvr/cpp/alvr_server/Settings.cpp b/alvr/server_openvr/cpp/alvr_server/Settings.cpp
-index e729ffa..e2f1e79 100644
+index e729ffa..c9b0353 100644
 --- a/alvr/server_openvr/cpp/alvr_server/Settings.cpp
 +++ b/alvr/server_openvr/cpp/alvr_server/Settings.cpp
-@@ -65,6 +65,8 @@ void Settings::Load() {
+@@ -65,6 +65,11 @@ void Settings::Load() {
          m_pyrowaveEnabled = config.get("pyrowave_enabled").get<bool>();
          m_pyrowaveUdp = config.get("pyrowave_udp").get<bool>();
          m_pyrowaveWavelet53 = config.get("pyrowave_wavelet_53").get<bool>();
 +        m_pyrowaveWaveletHaar = config.get("pyrowave_wavelet_haar").get<bool>();
 +        m_pyrowaveChroma444 = config.get("pyrowave_chroma_444").get<bool>();
++        if (config.get("render_downsample_filter").is<int64_t>()) {
++            m_renderDownsampleFilter = (int)config.get("render_downsample_filter").get<int64_t>();
++        }
          m_pyrowaveDecodePath = (int32_t)config.get("pyrowave_decode_path").get<int64_t>();
          m_h264Profile = (int32_t)config.get("h264_profile").get<int64_t>();
          m_rateControlMode = (uint32_t)config.get("rate_control_mode").get<int64_t>();
 diff --git a/alvr/server_openvr/cpp/alvr_server/Settings.h b/alvr/server_openvr/cpp/alvr_server/Settings.h
-index 7bed823..c3b4f9e 100644
+index 7bed823..42880a3 100644
 --- a/alvr/server_openvr/cpp/alvr_server/Settings.h
 +++ b/alvr/server_openvr/cpp/alvr_server/Settings.h
-@@ -44,6 +44,8 @@ public:
+@@ -44,6 +44,10 @@ public:
      bool m_pyrowaveEnabled = false;
      bool m_pyrowaveUdp = false;
      bool m_pyrowaveWavelet53 = false;
 +    bool m_pyrowaveWaveletHaar = false;
 +    bool m_pyrowaveChroma444 = false;
++    // 1: adaptive bicubic composition downsample (FrameRender), 0: previous single bilinear tap.
++    int m_renderDownsampleFilter = 1;
      int m_pyrowaveDecodePath = 0; // 0 auto, 1 fragment, 2 compute
      int m_h264Profile;
      bool m_use10bitEncoder;
@@ -7574,8 +7758,215 @@ index 5aae602..2f68f66 100644
  
      try {
          Debug("Try to use VideoEncoderNVENC.\n");
+diff --git a/alvr/server_openvr/cpp/platform/win32/FrameDownsample.hlsl.inc b/alvr/server_openvr/cpp/platform/win32/FrameDownsample.hlsl.inc
+new file mode 100644
+index 0000000..f053eb0
+--- /dev/null
++++ b/alvr/server_openvr/cpp/platform/win32/FrameDownsample.hlsl.inc
+@@ -0,0 +1,201 @@
++R"HLSL(
++// Quest3-Pyrowave PC composition filter (pixel shader, ps_5_0).
++//
++// Replaces the composition pass's single bilinear tap when the game renders above the stream
++// resolution. Each output pixel measures its footprint in source texels from the UV derivatives
++// and applies a Catmull-Rom kernel widened to that footprint, so a 3072x3216 eye is averaged
++// into a 2080x2208 stream pixel instead of point-sampled. At equal render and stream size the
++// kernel collapses to the identity on texel centers.
++//
++// Separable weights let each pair of adjacent same-sign texels share one bilinear fetch (exact
++// for a separable kernel). Pairs that straddle a kernel zero crossing, or are merged by edge
++// clamping, use point fetches instead. Taps are clamped to the layer's submitted bounds so a
++// side-by-side game texture never bleeds the other eye into the edge.
++//
++// Signature matches FrameRender.fx's VS output and PS; the post-filter colour handling below is
++// copied from that PS so both paths produce identical colour on identical filtered input.
++// tools/downsample/reference.py models the same weights for CPU regression tests.
++
++cbuffer FrameRenderParams : register(b0) {
++    float encodingGamma;
++    float _padding0;
++    float _padding1;
++    float _padding2;
++};
++
++cbuffer DownsampleParams : register(b1) {
++    float4 boundsLeft;  // uMin, vMin, uMax, vMax of the submitted eye region
++    float4 boundsRight;
++};
++
++Texture2D txLeft : register(t0);
++Texture2D txRight : register(t1);
++SamplerState samClampLinear : register(s1);
++
++struct PS_INPUT {
++    float4 Pos : SV_POSITION;
++    float2 Tex : TEXCOORD;
++    uint View : VIEW;
++};
++
++// Footprints above this are filtered as if they were this wide (under-filtered, never skipped).
++// 3.0 keeps the loop at <= 7x7 bilinear pairs and covers render scales up to 3x per axis.
++#define MAX_SCALE 3.0
++#define MAX_PAIRS 7
++
++float CatmullRom(float x) {
++    x = abs(x);
++    if (x < 1.0) return (1.5 * x - 2.5) * x * x + 1.0;
++    if (x < 2.0) return ((-0.5 * x + 2.5) * x - 4.0) * x + 2.0;
++    return 0.0;
++}
++
++struct AxisPair {
++    float p0; // texel-space positions (texel i spans [i, i + 1])
++    float w0;
++    float p1;
++    float w1;
++};
++
++// Pair k covers texels first + 2k and first + 2k + 1. lo/hi are the clamped texel indices.
++AxisPair MakePair(float first, int k, float center, float invScale, float lo, float hi) {
++    float ia = first + 2.0 * k;
++    float ib = ia + 1.0;
++    float wa = CatmullRom((ia + 0.5 - center) * invScale);
++    float wb = CatmullRom((ib + 0.5 - center) * invScale);
++    float ja = clamp(ia, lo, hi);
++    float jb = clamp(ib, lo, hi);
++    AxisPair r;
++    r.p1 = 0.0;
++    r.w1 = 0.0;
++    if (ja == jb) {
++        r.p0 = ja + 0.5;
++        r.w0 = wa + wb;
++    } else if (wa * wb > 0.0) {
++        r.w0 = wa + wb;
++        r.p0 = ja + 0.5 + wb / r.w0;
++    } else {
++        r.p0 = ja + 0.5;
++        r.w0 = wa;
++        r.p1 = jb + 0.5;
++        r.w1 = wb;
++    }
++    return r;
++}
++
++float4 FilterEye(Texture2D tex, float4 bounds, float2 uv, float2 scale) {
++    float width, height;
++    tex.GetDimensions(width, height);
++    float2 size = float2(width, height);
++    float2 t = uv * size;
++    // Texels whose centers lie inside the submitted bounds (bounds may be flipped).
++    float2 bMin = min(bounds.xy, bounds.zw) * size;
++    float2 bMax = max(bounds.xy, bounds.zw) * size;
++    float2 lo = ceil(bMin - 0.5);
++    float2 hi = max(lo, floor(bMax - 0.5));
++    float2 invScale = 1.0 / scale;
++    float2 first = floor(t - 0.5 - 2.0 * scale);
++    float2 last = floor(t - 0.5 + 2.0 * scale);
++    int2 pairs = min(int2((last - first + 2.0) * 0.5), MAX_PAIRS);
++    float2 invSize = 1.0 / size;
++
++    float4 sum = 0.0;
++    float weight = 0.0;
++    [loop] for (int ky = 0; ky < pairs.y; ky++) {
++        AxisPair py = MakePair(first.y, ky, t.y, invScale.y, lo.y, hi.y);
++        [loop] for (int kx = 0; kx < pairs.x; kx++) {
++            AxisPair px = MakePair(first.x, kx, t.x, invScale.x, lo.x, hi.x);
++            [unroll] for (int sy = 0; sy < 2; sy++) {
++                float wy = sy == 0 ? py.w0 : py.w1;
++                float y = sy == 0 ? py.p0 : py.p1;
++                [unroll] for (int sx = 0; sx < 2; sx++) {
++                    float w = wy * (sx == 0 ? px.w0 : px.w1);
++                    if (w != 0.0) {
++                        float x = sx == 0 ? px.p0 : px.p1;
++                        sum += w * tex.SampleLevel(samClampLinear, float2(x, y) * invSize, 0.0);
++                        weight += w;
++                    }
++                }
++            }
++        }
++    }
++    return weight != 0.0 ? sum / weight : tex.SampleLevel(samClampLinear, uv, 0.0);
++}
++
++#define SRGB_GAMMA_TO_NONLINEAR (1.0 / 2.4)
++#define SRGB_GAMMA_TO_LINEAR (2.4)
++
++float4 EncodingLinearToNonlinearRGB(float4 color, float gamma) {
++    float4 c;
++    c.r = (color.r <= 0.0) ? color.r : pow(color.r, gamma);
++    c.g = (color.g <= 0.0) ? color.g : pow(color.g, gamma);
++    c.b = (color.b <= 0.0) ? color.b : pow(color.b, gamma);
++    c.a = (color.a <= 0.0) ? color.a : pow(color.a, gamma);
++    return c;
++}
++
++float4 LinearToNonlinearRGB(float4 color, float gamma) {
++    float4 c;
++    c.r = (color.r <= 0.0031308) ? (color.r * 12.92) : (1.055 * pow(color.r, gamma) - 0.055);
++    c.g = (color.g <= 0.0031308) ? (color.g * 12.92) : (1.055 * pow(color.g, gamma) - 0.055);
++    c.b = (color.b <= 0.0031308) ? (color.b * 12.92) : (1.055 * pow(color.b, gamma) - 0.055);
++    c.a = (color.a <= 0.0031308) ? (color.a * 12.92) : (1.055 * pow(color.a, gamma) - 0.055);
++    return c;
++}
++
++float4 NonlinearToLinearRGB(float4 color, float gamma) {
++    float4 c;
++    c.r = (color.r <= 0.04045) ? (color.r / 12.92) : pow((color.r + 0.055) / 1.055, gamma);
++    c.g = (color.g <= 0.04045) ? (color.g / 12.92) : pow((color.g + 0.055) / 1.055, gamma);
++    c.b = (color.b <= 0.04045) ? (color.b / 12.92) : pow((color.b + 0.055) / 1.055, gamma);
++    c.a = (color.a <= 0.04045) ? (color.a / 12.92) : pow((color.a + 0.055) / 1.055, gamma);
++    return c;
++}
++
++float4 main(PS_INPUT input) : SV_Target {
++    uint correctionType = (input.View >> 1) & 0xF;
++    uint shouldClamp = (input.View >> 5);
++
++    // Footprint of one output pixel along each source axis, in source texels. Derivatives are
++    // taken before the per-eye branch; View is constant across each triangle.
++    bool right = (input.View & 1) == 1;
++    float width, height;
++    if (right) {
++        txRight.GetDimensions(width, height);
++    } else {
++        txLeft.GetDimensions(width, height);
++    }
++    float2 t = input.Tex * float2(width, height);
++    float2 dx = ddx(t);
++    float2 dy = ddy(t);
++    float2 scale = clamp(float2(length(float2(dx.x, dy.x)), length(float2(dx.y, dy.y))),
++        1.0, MAX_SCALE);
++
++    // if/else rather than ?: because HLSL evaluates both ternary operands.
++    float4 color;
++    if (right) {
++        color = FilterEye(txRight, boundsRight, input.Tex, scale);
++    } else {
++        color = FilterEye(txLeft, boundsLeft, input.Tex, scale);
++    }
++    // Catmull-Rom lobes can undershoot; negative light is never valid input below.
++    color = max(color, 0.0);
++
++    if (shouldClamp == (uint)1) {
++        color = clamp(color, 0.0, 1.0);
++    }
++
++    color = EncodingLinearToNonlinearRGB(color, encodingGamma);
++
++    if (correctionType == (uint)1) {
++        color = LinearToNonlinearRGB(color, SRGB_GAMMA_TO_NONLINEAR);
++    } else if (correctionType == (uint)2) {
++        color = NonlinearToLinearRGB(color, SRGB_GAMMA_TO_LINEAR);
++    }
++    if (shouldClamp == (uint)2) {
++        color = clamp(color, 0.0, 1.0);
++    }
++
++    return color;
++}
++)HLSL"
 diff --git a/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp b/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
-index 3b23460..668f121 100644
+index 3b23460..ab78243 100644
 --- a/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
 +++ b/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
 @@ -5,6 +5,7 @@
@@ -7586,7 +7977,63 @@ index 3b23460..668f121 100644
  
  extern uint64_t g_DriverTestMode;
  
-@@ -552,9 +553,9 @@ bool FrameRender::Startup() {
+@@ -343,6 +344,55 @@ bool FrameRender::Startup() {
+         return false;
+     }
+ 
++    // Game render -> stream downsample. The game renders at the SteamVR recommendation, which
++    // can be larger than the stream; one bilinear tap per stream pixel would skip most of those
++    // pixels and alias. The adaptive shader widens a Catmull-Rom kernel to each pixel's source
++    // footprint instead, and is the identity when both sizes match. On any failure the
++    // previous single-tap shader stays in use.
++    Info("[FrameRender] game render %dx%d per eye -> stream %dx%d per eye (%.2fx per axis), %s downsample\n",
++        Settings::Instance().m_recommendedTargetWidth / 2, Settings::Instance().m_recommendedTargetHeight,
++        Settings::Instance().m_renderWidth / 2, Settings::Instance().m_renderHeight,
++        (double)Settings::Instance().m_recommendedTargetHeight / Settings::Instance().m_renderHeight,
++        Settings::Instance().m_renderDownsampleFilter == 1 ? "adaptive bicubic" : "single-tap");
++    if (Settings::Instance().m_renderDownsampleFilter == 1) {
++        static const char downsampleSource[] =
++#include "FrameDownsample.hlsl.inc"
++            ;
++        ComPtr<ID3DBlob> code, errors;
++        hr = D3DCompile(downsampleSource, sizeof(downsampleSource) - 1, "FrameDownsample",
++            nullptr, nullptr, "main", "ps_5_0", D3DCOMPILE_OPTIMIZATION_LEVEL3, 0,
++            code.GetAddressOf(), errors.GetAddressOf());
++        if (SUCCEEDED(hr)) {
++            hr = m_pD3DRender->GetDevice()->CreatePixelShader(code->GetBufferPointer(),
++                code->GetBufferSize(), nullptr, m_pDownsamplePixelShader.GetAddressOf());
++        }
++        if (SUCCEEDED(hr)) {
++            D3D11_SAMPLER_DESC clampDesc = {};
++            clampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
++            clampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
++            clampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
++            clampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
++            clampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
++            clampDesc.MaxLOD = D3D11_FLOAT32_MAX;
++            hr = m_pD3DRender->GetDevice()->CreateSamplerState(&clampDesc,
++                m_pSamplerClamp.GetAddressOf());
++        }
++        if (SUCCEEDED(hr)) {
++            D3D11_BUFFER_DESC boundsDesc = {};
++            boundsDesc.ByteWidth = 8 * sizeof(float);
++            boundsDesc.Usage = D3D11_USAGE_DYNAMIC;
++            boundsDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
++            boundsDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
++            hr = m_pD3DRender->GetDevice()->CreateBuffer(&boundsDesc, nullptr,
++                m_pDownsampleBoundsCBuffer.GetAddressOf());
++        }
++        if (FAILED(hr)) {
++            Error("[FrameRender] adaptive downsample unavailable (%p %hs); using single-tap\n", hr,
++                errors ? (const char*)errors->GetBufferPointer() : "");
++            m_pDownsamplePixelShader.Reset();
++        }
++    }
++
+     //
+     // Create alpha blend state
+     // We need alpha blending to support layer.
+@@ -552,9 +602,9 @@ bool FrameRender::Startup() {
          m_pStagingTexture = yuvTexture;
      }
  
@@ -7599,7 +8046,7 @@ index 3b23460..668f121 100644
      enablePlanarYuv = PyroWaveEnabled() && !Settings::Instance().m_enableHdr;
      if (enablePlanarYuv) {
          uint32_t texWidth, texHeight;
-@@ -647,6 +648,37 @@ bool FrameRender::Startup() {
+@@ -647,6 +697,37 @@ bool FrameRender::Startup() {
              planarTargets,
              planarParamBuffer.Get()
          );
@@ -7637,7 +8084,48 @@ index 3b23460..668f121 100644
      }
  
      Debug("Staging Texture created\n");
-@@ -992,6 +1024,12 @@ bool FrameRender::RenderFrame(
+@@ -913,6 +994,23 @@ bool FrameRender::RenderFrame(
+               1 + (inputColorAdjust * 2) },
+         };
+ 
++        if (m_pDownsamplePixelShader) {
++            // Clamp the downsample kernel to each eye's submitted region, so a side-by-side
++            // texture never bleeds the other eye into the edge.
++            const float eyeBounds[8] = { bound[0].uMin, bound[0].vMin, bound[0].uMax, bound[0].vMax,
++                                         bound[1].uMin, bound[1].vMin, bound[1].uMax, bound[1].vMax };
++            D3D11_MAPPED_SUBRESOURCE mappedBounds = { 0 };
++            hr = m_pD3DRender->GetContext()->Map(
++                m_pDownsampleBoundsCBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBounds
++            );
++            if (FAILED(hr)) {
++                Error("Map %p %ls\n", hr, GetErrorStr(hr).c_str());
++                return false;
++            }
++            memcpy(mappedBounds.pData, eyeBounds, sizeof(eyeBounds));
++            m_pD3DRender->GetContext()->Unmap(m_pDownsampleBoundsCBuffer.Get(), 0);
++        }
++
+         D3D11_MAPPED_SUBRESOURCE mapped = { 0 };
+         hr = m_pD3DRender->GetContext()->Map(
+             m_pVertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped
+@@ -949,7 +1047,15 @@ bool FrameRender::RenderFrame(
+         //
+ 
+         m_pD3DRender->GetContext()->VSSetShader(m_pVertexShader.Get(), nullptr, 0);
+-        m_pD3DRender->GetContext()->PSSetShader(m_pPixelShader.Get(), nullptr, 0);
++        if (m_pDownsamplePixelShader) {
++            m_pD3DRender->GetContext()->PSSetShader(m_pDownsamplePixelShader.Get(), nullptr, 0);
++            m_pD3DRender->GetContext()->PSSetConstantBuffers(
++                1, 1, m_pDownsampleBoundsCBuffer.GetAddressOf()
++            );
++            m_pD3DRender->GetContext()->PSSetSamplers(1, 1, m_pSamplerClamp.GetAddressOf());
++        } else {
++            m_pD3DRender->GetContext()->PSSetShader(m_pPixelShader.Get(), nullptr, 0);
++        }
+ 
+         ID3D11ShaderResourceView* shaderResourceView[2]
+             = { pShaderResourceView[0].Get(), pShaderResourceView[1].Get() };
+@@ -992,6 +1098,12 @@ bool FrameRender::RenderFrame(
  
      if (enablePlanarYuv) {
          m_planarPipeline->Render();
@@ -7650,7 +8138,7 @@ index 3b23460..668f121 100644
      }
  
      m_pD3DRender->GetContext()->Flush();
-@@ -1003,7 +1041,8 @@ ComPtr<ID3D11Texture2D> FrameRender::GetTexture() { return m_pStagingTexture; }
+@@ -1003,7 +1115,8 @@ ComPtr<ID3D11Texture2D> FrameRender::GetTexture() { return m_pStagingTexture; }
  
  void FrameRender::GetPlanarTextures(ID3D11Texture2D* out[3]) {
      for (int i = 0; i < 3; i++) {
@@ -7661,7 +8149,7 @@ index 3b23460..668f121 100644
  }
  
 diff --git a/alvr/server_openvr/cpp/platform/win32/FrameRender.h b/alvr/server_openvr/cpp/platform/win32/FrameRender.h
-index 8136dda..8a395c8 100644
+index 8136dda..3447ce5 100644
 --- a/alvr/server_openvr/cpp/platform/win32/FrameRender.h
 +++ b/alvr/server_openvr/cpp/platform/win32/FrameRender.h
 @@ -69,7 +69,7 @@ public:
@@ -7673,7 +8161,20 @@ index 8136dda..8a395c8 100644
      /// path is off. Shared textures, so they can be imported by a Vulkan encoder.
      void GetPlanarTextures(ID3D11Texture2D* out[3]);
      bool HasPlanarTextures() const { return enablePlanarYuv; }
-@@ -125,6 +125,8 @@ private:
+@@ -97,6 +97,12 @@ private:
+     D3D11_VIEWPORT m_viewportL, m_viewportR, m_viewport;
+     D3D11_RECT m_scissorL, m_scissorR, m_scissor;
+ 
++    // Adaptive game-render -> stream downsample (tools/downsample/frame_downsample.hlsl in
++    // Quest3-Pyrowave). Null when the legacy single-tap shader is selected or failed to build.
++    ComPtr<ID3D11PixelShader> m_pDownsamplePixelShader;
++    ComPtr<ID3D11SamplerState> m_pSamplerClamp;
++    ComPtr<ID3D11Buffer> m_pDownsampleBoundsCBuffer;
++
+     ComPtr<ID3D11BlendState> m_pBlendStateFirst;
+     ComPtr<ID3D11BlendState> m_pBlendState;
+ 
+@@ -125,6 +131,8 @@ private:
      std::unique_ptr<d3d_render_utils::RenderPipelineYUV> m_yuvPipeline;
  
      ComPtr<ID3D11Texture2D> m_planarTextures[3];
@@ -7952,7 +8453,7 @@ index 861f726..713a470 100644
          &alvr_server_core::settings(),
          &alvr_session::beta::process_env,
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
-index 84100dc..65236d3 100644
+index 84100dc..c9ad430 100644
 --- a/alvr/session/src/beta.rs
 +++ b/alvr/session/src/beta.rs
 @@ -3,25 +3,94 @@
@@ -8057,9 +8558,13 @@ index 84100dc..65236d3 100644
  pub struct StreamingProfile {
      pub name: &'static str,
      pub subtitle: &'static str,
-@@ -35,20 +104,26 @@ fn assign(path: &str, value: json::Value) -> (String, json::Value) {
+@@ -33,22 +102,36 @@ fn assign(path: &str, value: json::Value) -> (String, json::Value) {
+     (path.to_owned(), value)
+ }
  
- fn render_size(percent: u32) -> Vec<(String, json::Value)> {
+-fn render_size(percent: u32) -> Vec<(String, json::Value)> {
++/// Absolute per-eye size assignments for one resolution field, at a percentage of the panel.
++pub fn panel_size_assignments(field: &str, percent: u32) -> Vec<(String, json::Value)> {
      let (width, height) = render_scale_size(percent);
 -    ["transcoding_view_resolution", "emulated_headset_view_resolution"]
 -        .into_iter()
@@ -8072,23 +8577,30 @@ index 84100dc..65236d3 100644
 -            ]
 -        })
 -        .collect()
-+    [
-+        "transcoding_view_resolution",
-+        "emulated_headset_view_resolution",
++    vec![
++        assign(&format!("video.{field}.variant"), "Absolute".into()),
++        assign(&format!("video.{field}.Absolute.width"), width.into()),
++        assign(&format!("video.{field}.Absolute.height.set"), true.into()),
++        assign(
++            &format!("video.{field}.Absolute.height.content"),
++            height.into(),
++        ),
 +    ]
-+    .into_iter()
-+    .flat_map(|field| {
-+        [
-+            assign(&format!("video.{field}.variant"), "Absolute".into()),
-+            assign(&format!("video.{field}.Absolute.width"), width.into()),
-+            assign(&format!("video.{field}.Absolute.height.set"), true.into()),
-+            assign(
-+                &format!("video.{field}.Absolute.height.content"),
-+                height.into(),
-+            ),
-+        ]
-+    })
-+    .collect()
++}
++
++/// Stream (encode/decode) resolution choices, as panel percentages. Above the panel only adds
++/// headset decode work, so the stream tops out at the panel.
++pub const STREAM_SCALES: [u32; 6] = [50, 60, 70, 80, 90, 100];
++
++/// Game render resolution choices, as panel percentages per axis. Like Virtual Desktop's
++/// separate SteamVR resolution: the PC renders this size and downsamples it to the stream, so
++/// raising it costs PC GPU time only, never bandwidth or headset decode work.
++pub const GAME_RENDER_SCALES: [u32; 5] = [100, 125, 150, 175, 200];
++
++/// Profiles pin the stream only. The game render resolution is the tester's quality/PC-load
++/// choice, so picking a profile never throws away a supersampling setting.
++fn stream_size(percent: u32) -> Vec<(String, json::Value)> {
++    panel_size_assignments("transcoding_view_resolution", percent)
  }
  
 -/// The settings both profiles pin: the measured foveation, buffering, pacing, encoder and
@@ -8096,7 +8608,7 @@ index 84100dc..65236d3 100644
  /// socket values, so switching profiles never leaves one of them at a tester's experiment.
  fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::Value)> {
      let mut list = vec![
-@@ -56,48 +131,146 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
+@@ -56,48 +139,146 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
          assign("video.bitrate.mode.variant", "ConstantMbps".into()),
          assign("video.bitrate.mode.ConstantMbps", mbps.into()),
          assign("video.preferred_fps", json::json!(fps)),
@@ -8158,7 +8670,8 @@ index 84100dc..65236d3 100644
 -        assign("connection.max_queued_server_video_frames", 12.into()),
 +        assign("connection.max_queued_server_video_frames", 2.into()),
      ];
-     list.extend(render_size(percent));
+-    list.extend(render_size(percent));
++    list.extend(stream_size(percent));
      list
  }
  
@@ -8267,7 +8780,7 @@ index 84100dc..65236d3 100644
 +    ] {
 +        profiles.push(StreamingProfile {
 +            name,
-+            subtitle: "Hardware codec baseline, 200 Mbps, 120 Hz, same full render size",
++            subtitle: "Hardware codec baseline, 200 Mbps, 120 Hz, same full stream size",
 +            assignments: shared(codec, 200, 120.0, 100),
 +        });
 +    }
@@ -8275,7 +8788,7 @@ index 84100dc..65236d3 100644
  }
  
  #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-@@ -186,8 +359,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
+@@ -186,8 +367,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
  #[derive(Clone, Debug, PartialEq)]
  pub struct PyroWaveEffective {
      pub enabled: bool,
@@ -8286,7 +8799,7 @@ index 84100dc..65236d3 100644
      pub decode_path: PyroWaveDecodePath,
      pub follow_gaze: bool,
      pub overrides: Vec<&'static str>,
-@@ -211,30 +386,24 @@ pub fn pyrowave_effective(
+@@ -211,30 +394,24 @@ pub fn pyrowave_effective(
          value
      };
  
@@ -8325,7 +8838,7 @@ index 84100dc..65236d3 100644
          decode_path: video.pyrowave.decode_path,
          follow_gaze,
          overrides,
-@@ -255,10 +424,11 @@ impl fmt::Display for PyroWaveEffective {
+@@ -255,10 +432,11 @@ impl fmt::Display for PyroWaveEffective {
          };
          write!(
              f,
@@ -8339,7 +8852,7 @@ index 84100dc..65236d3 100644
              if self.follow_gaze { "on" } else { "off" },
              if self.overrides.is_empty() {
                  "none".to_owned()
-@@ -279,7 +449,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
+@@ -279,7 +457,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
  }
  
  fn at<'a>(root: &'a json::Value, path: &str) -> Option<&'a json::Value> {
@@ -8350,7 +8863,7 @@ index 84100dc..65236d3 100644
  
  /// The profile whose every assignment the session (`session_settings` as JSON) currently holds,
 diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
-index 985a4d0..8a4d440 100644
+index 985a4d0..46b8212 100644
 --- a/alvr/session/src/beta_tests.rs
 +++ b/alvr/session/src/beta_tests.rs
 @@ -31,7 +31,7 @@ fn video_shows_only_codec_experiment_controls() {
@@ -8362,7 +8875,7 @@ index 985a4d0..8a4d440 100644
      );
      assert_eq!(
          names(entries, Visibility::Advanced),
-@@ -49,36 +49,32 @@ fn video_shows_only_codec_experiment_controls() {
+@@ -49,36 +49,37 @@ fn video_shows_only_codec_experiment_controls() {
  fn codec_picker_offers_pyrowave_and_h264_only() {
      assert_eq!(
          visible_variants(&schema(), &["video", "preferred_codec"]).unwrap(),
@@ -8383,8 +8896,13 @@ index 985a4d0..8a4d440 100644
 +            "transport",
 +            "wavelet",
 +            "decode_path",
-+            "light_foveated_encoding"
++            "light_foveated_encoding",
++            "render_downsample_filter"
 +        ])
++    );
++    assert_eq!(
++        visible_variants(&schema(), &["video", "pyrowave", "render_downsample_filter"]).unwrap(),
++        sorted(&["Adaptive", "Bilinear"])
      );
      assert_eq!(
          visible_variants(&schema(), &["video", "pyrowave", "decode_path"]).unwrap(),
@@ -8411,7 +8929,7 @@ index 985a4d0..8a4d440 100644
  }
  
  #[test]
-@@ -133,8 +129,11 @@ fn default_settings() -> Settings {
+@@ -133,8 +134,11 @@ fn default_settings() -> Settings {
  fn fresh_install_streams_the_recommended_profile() {
      let s = default_settings();
      assert_eq!(s.video.preferred_codec, CodecType::PyroWave);
@@ -8425,7 +8943,7 @@ index 985a4d0..8a4d440 100644
      for size in [
          &s.video.transcoding_view_resolution,
          &s.video.emulated_headset_view_resolution,
-@@ -142,33 +141,27 @@ fn fresh_install_streams_the_recommended_profile() {
+@@ -142,33 +146,27 @@ fn fresh_install_streams_the_recommended_profile() {
          assert!(matches!(
              size,
              FrameSize::Absolute {
@@ -8466,7 +8984,7 @@ index 985a4d0..8a4d440 100644
  }
  
  // Applies session-style assignments the way the dashboard's SetValues does.
-@@ -198,13 +191,10 @@ fn profile(name: &str) -> StreamingProfile {
+@@ -198,13 +196,10 @@ fn profile(name: &str) -> StreamingProfile {
  #[test]
  fn profiles_are_named_for_testers() {
      let profiles = streaming_profiles();
@@ -8484,7 +9002,7 @@ index 985a4d0..8a4d440 100644
  }
  
  #[test]
-@@ -218,13 +208,16 @@ fn recommended_profile_is_the_fresh_install() {
+@@ -218,13 +213,16 @@ fn recommended_profile_is_the_fresh_install() {
  fn h264_profile_is_the_measured_b15_cell() {
      let s = apply(&profile(H264_PROFILE));
      assert_eq!(s.video.preferred_codec, CodecType::H264);
@@ -8505,7 +9023,7 @@ index 985a4d0..8a4d440 100644
          }
      ));
      assert_eq!(s.video.max_buffering_frames, 1.5);
-@@ -233,20 +226,20 @@ fn h264_profile_is_the_measured_b15_cell() {
+@@ -233,20 +231,66 @@ fn h264_profile_is_the_measured_b15_cell() {
          EncoderQualityPresetNvidia::P1
      );
      assert_eq!(s.video.encoder_config.entropy_coding, EntropyCoding::Cavlc);
@@ -8522,6 +9040,52 @@ index 985a4d0..8a4d440 100644
 -    assert!(fov.follow_gaze);
 +    assert!(!s.video.foveated_encoding.enabled());
 +    assert!(!s.video.clientside_foveation.enabled());
++}
++
++#[test]
++fn fresh_install_uses_the_adaptive_downsample() {
++    assert_eq!(
++        default_settings().video.pyrowave.render_downsample_filter,
++        RenderDownsampleFilter::Adaptive
++    );
++    // A session saved before the setting existed loads with the same filter.
++    let mut old = json::to_value(SessionConfig::default()).unwrap();
++    old["session_settings"]["video"]["pyrowave"]
++        .as_object_mut()
++        .unwrap()
++        .remove("render_downsample_filter");
++    old["session_settings"]["video"]["pyrowave"]["wavelet"]["variant"] = "Haar".into();
++    let mut session = SessionConfig::default();
++    session.merge_from_json(&old).unwrap();
++    let settings = session.to_settings();
++    assert_eq!(settings.video.pyrowave.wavelet, PyroWaveWavelet::Haar);
++    assert_eq!(
++        settings.video.pyrowave.render_downsample_filter,
++        RenderDownsampleFilter::Adaptive
++    );
++}
++
++#[test]
++fn profiles_pin_the_stream_but_keep_the_game_render_resolution() {
++    for profile in streaming_profiles() {
++        let paths = profile.assignments.iter().map(|(p, _)| p.as_str()).collect::<Vec<_>>();
++        assert!(paths.contains(&"video.transcoding_view_resolution.Absolute.width"), "{}", profile.name);
++        assert!(
++            !paths.iter().any(|p| p.contains("emulated_headset_view_resolution")),
++            "{} overrides the game render resolution",
++            profile.name
++        );
++    }
++    let mut session = json::to_value(SessionConfig::default().session_settings).unwrap();
++    session["video"]["emulated_headset_view_resolution"]["Absolute"]["width"] = 3096.into();
++    for (path, value) in profile(RECOMMENDED_PROFILE).assignments {
++        let mut node = &mut session;
++        for field in path.split('.') {
++            node = &mut node[field];
++        }
++        *node = value;
++    }
++    assert_eq!(session["video"]["emulated_headset_view_resolution"]["Absolute"]["width"], 3096);
  }
  
  #[test]
@@ -8535,7 +9099,7 @@ index 985a4d0..8a4d440 100644
  }
  
  fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
-@@ -261,21 +254,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
+@@ -261,21 +305,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
  fn effective_config_follows_settings_without_env() {
      let e = pyrowave_effective(&default_settings(), &env(&[]));
      assert!(e.enabled);
@@ -8562,7 +9126,7 @@ index 985a4d0..8a4d440 100644
      assert!(e.wavelet_53);
      assert_eq!(e.decode_path, PyroWaveDecodePath::Fragment);
  }
-@@ -284,6 +277,7 @@ fn effective_config_follows_a_non_default_setting() {
+@@ -284,6 +328,7 @@ fn effective_config_follows_a_non_default_setting() {
  fn research_env_overrides_win_and_are_reported() {
      let mut s = default_settings();
      s.video.preferred_codec = CodecType::H264;
@@ -8570,7 +9134,7 @@ index 985a4d0..8a4d440 100644
      let e = pyrowave_effective(
          &s,
          &env(&[
-@@ -302,8 +296,7 @@ fn research_env_overrides_win_and_are_reported() {
+@@ -302,8 +347,7 @@ fn research_env_overrides_win_and_are_reported() {
          vec![
              "ALVR_PYROWAVE",
              "ALVR_PYROWAVE_UDP",
@@ -8580,7 +9144,7 @@ index 985a4d0..8a4d440 100644
          ]
      );
  }
-@@ -320,8 +313,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
+@@ -320,8 +364,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
      let line = pyrowave_effective(&default_settings(), &env(&[])).to_string();
      assert_eq!(
          line,
@@ -8591,7 +9155,7 @@ index 985a4d0..8a4d440 100644
      );
  }
  
-@@ -398,6 +391,7 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
+@@ -398,6 +442,7 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
          "pyrowave_enabled",
          "pyrowave_udp",
          "pyrowave_wavelet_53",
@@ -8599,7 +9163,7 @@ index 985a4d0..8a4d440 100644
          "pyrowave_decode_path",
      ] {
          openvr.remove(key).expect(key);
-@@ -410,3 +404,20 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
+@@ -410,3 +455,20 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
          "upgrading must not forget the paired headset"
      );
  }
@@ -8621,10 +9185,10 @@ index 985a4d0..8a4d440 100644
 +    assert!(!e.wavelet_53);
 +}
 diff --git a/alvr/session/src/lib.rs b/alvr/session/src/lib.rs
-index d7d0dbb..d382c8f 100644
+index d7d0dbb..a171ea3 100644
 --- a/alvr/session/src/lib.rs
 +++ b/alvr/session/src/lib.rs
-@@ -119,7 +119,11 @@ pub struct OpenvrConfig {
+@@ -119,7 +119,14 @@ pub struct OpenvrConfig {
      #[serde(default)]
      pub pyrowave_wavelet_53: bool,
      #[serde(default)]
@@ -8633,11 +9197,14 @@ index d7d0dbb..d382c8f 100644
      pub pyrowave_decode_path: u32,
 +    #[serde(default)]
 +    pub pyrowave_chroma_444: bool,
++    // 1 = adaptive bicubic composition downsample, 0 = the previous single bilinear tap.
++    #[serde(default)]
++    pub render_downsample_filter: u32,
  
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99..2e69a5b 100644
+index 1009e99..f76ae34 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -8689,7 +9256,7 @@ index 1009e99..2e69a5b 100644
  }
  
  #[repr(u8)]
-@@ -618,7 +618,6 @@ pub enum PyroWaveWavelet {
+@@ -618,32 +618,78 @@ pub enum PyroWaveWavelet {
  #[schema(gui = "button_group")]
  pub enum PyroWaveDecodePath {
      // The driver heuristic, which picks the fragment path on Qualcomm. Kept for research.
@@ -8697,8 +9264,25 @@ index 1009e99..2e69a5b 100644
      Auto = 0,
      Compute = 2,
      Fragment = 1,
-@@ -626,26 +625,48 @@ pub enum PyroWaveDecodePath {
+ }
  
++#[repr(u8)]
++#[derive(SettingsSchema, Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
++#[schema(gui = "button_group")]
++pub enum RenderDownsampleFilter {
++    #[schema(strings(display_name = "Adaptive bicubic"))]
++    Adaptive = 1,
++    #[schema(strings(display_name = "Single tap (legacy)"))]
++    Bilinear = 0,
++}
++
++// A session saved before this setting existed gets the adaptive filter, like a fresh install.
++impl Default for RenderDownsampleFilter {
++    fn default() -> Self {
++        Self::Adaptive
++    }
++}
++
  #[derive(SettingsSchema, Serialize, Deserialize, Clone, PartialEq, Debug)]
  pub struct PyroWaveConfig {
 +    #[serde(default)]
@@ -8732,8 +9316,16 @@ index 1009e99..2e69a5b 100644
      ))]
      #[schema(flag = "steamvr-restart")]
      pub decode_path: PyroWaveDecodePath,
- }
- 
++
++    #[serde(default)]
++    #[schema(strings(
++        display_name = "Game render downsample filter",
++        help = "How the PC scales the game's render down to the stream resolution, for every codec. Adaptive bicubic averages every game pixel under each stream pixel, so rendering above the stream size sharpens the image without adding bandwidth or headset decode work; it is the identity when both sizes match. Single tap is the previous one-sample filter, kept for A/B comparison. Restart SteamVR after changing this."
++    ))]
++    #[schema(flag = "steamvr-restart")]
++    pub render_downsample_filter: RenderDownsampleFilter,
++}
++
 +/// Only this fixed, mild profile is exposed by Quest3-Pyrowave. Generic stale
 +/// foveation/force-enable/gaze/environment settings cannot modify its geometry.
 +pub fn pyrowave_light_foveation_enabled(codec: CodecType, requested: bool, supported: bool) -> bool {
@@ -8744,12 +9336,10 @@ index 1009e99..2e69a5b 100644
 +    FoveatedEncodingConfig { force_enable: false, center_size_x: 0.8, center_size_y: 0.8,
 +        center_shift_x: 0.0, center_shift_y: 0.0, edge_ratio_x: 1.5, edge_ratio_y: 1.5,
 +        follow_gaze: false }
-+}
-+
+ }
+ 
  #[repr(u8)]
- #[derive(SettingsSchema, Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
- #[schema(gui = "button_group")]
-@@ -799,23 +820,20 @@ pub struct VideoConfig {
+@@ -799,23 +845,20 @@ pub struct VideoConfig {
      pub bitrate: BitrateConfig,
  
      #[schema(strings(
@@ -8778,7 +9368,24 @@ index 1009e99..2e69a5b 100644
      pub foveated_encoding: Switch<FoveatedEncodingConfig>,
  
      #[schema(flag = "steamvr-restart")]
-@@ -1663,15 +1681,15 @@ pub struct Settings {
+@@ -858,14 +901,14 @@ If you want to reduce the amount of pixelation on the edges, increase the center
+     pub mediacodec_extra_options: Vec<(String, MediacodecProperty)>,
+ 
+     #[schema(strings(
+-        help = "Resolution used for encoding and decoding. Relative to a single eye view."
++        help = "Stream resolution: the per-eye size PyroWave encodes and the headset decodes. It sets headset GPU cost; bandwidth is set by the bitrate. Independent of the game render resolution."
+     ))]
+     #[schema(flag = "steamvr-restart")]
+     #[schema(flag = "hidden")]
+     pub transcoding_view_resolution: FrameSize,
+ 
+     #[schema(strings(
+-        help = "This is the resolution that SteamVR will use as default for the game rendering. Relative to a single eye view."
++        help = "Game render resolution: the per-eye size SteamVR recommends to games. The PC downsamples it to the stream resolution, so a larger value adds PC GPU work only. Keep SteamVR's own render resolution at a custom 100 % so games use this size."
+     ))]
+     #[schema(flag = "steamvr-restart")]
+     #[schema(flag = "hidden")]
+@@ -1663,15 +1706,15 @@ pub struct Settings {
  }
  
  pub fn session_settings_default() -> SettingsDefault {
@@ -8797,7 +9404,7 @@ index 1009e99..2e69a5b 100644
              },
          },
      };
-@@ -1742,7 +1760,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1742,7 +1785,7 @@ pub fn session_settings_default() -> SettingsDefault {
              adapter_index: 0,
              transcoding_view_resolution: view_resolution.clone(),
              emulated_headset_view_resolution: view_resolution,
@@ -8806,7 +9413,7 @@ index 1009e99..2e69a5b 100644
              max_buffering_frames: 1.5,
              buffering_history_weight: 0.90,
              enforce_server_frame_pacing: true,
-@@ -1796,14 +1814,16 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1796,14 +1839,19 @@ pub fn session_settings_default() -> SettingsDefault {
                  variant: CodecTypeDefaultVariant::PyroWave,
              },
              pyrowave: PyroWaveConfigDefault {
@@ -8822,10 +9429,13 @@ index 1009e99..2e69a5b 100644
                  decode_path: PyroWaveDecodePathDefault {
 -                    variant: PyroWaveDecodePathDefaultVariant::Compute,
 +                    variant: PyroWaveDecodePathDefaultVariant::Auto,
++                },
++                render_downsample_filter: RenderDownsampleFilterDefault {
++                    variant: RenderDownsampleFilterDefaultVariant::Adaptive,
                  },
              },
              encoder_config: EncoderConfigDefault {
-@@ -1901,7 +1921,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1901,7 +1949,7 @@ pub fn session_settings_default() -> SettingsDefault {
                  }
              },
              foveated_encoding: SwitchDefault {
@@ -8834,7 +9444,7 @@ index 1009e99..2e69a5b 100644
                  content: FoveatedEncodingConfigDefault {
                      force_enable: false,
                      center_size_x: 0.20,
-@@ -1910,7 +1930,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1910,7 +1958,7 @@ pub fn session_settings_default() -> SettingsDefault {
                      center_shift_y: 0.0,
                      edge_ratio_x: 3.,
                      edge_ratio_y: 4.,
@@ -8843,7 +9453,7 @@ index 1009e99..2e69a5b 100644
                  },
              },
              clientside_foveation: SwitchDefault {
-@@ -2066,7 +2086,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2066,7 +2114,7 @@ pub fn session_settings_default() -> SettingsDefault {
                                  content: vec![],
                              },
                          },
@@ -8852,7 +9462,7 @@ index 1009e99..2e69a5b 100644
                      },
                      extra_openvr_props: default_custom_openvr_props,
                      button_mappings: OptionalDefault {
-@@ -2179,16 +2199,12 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2179,16 +2227,12 @@ pub fn session_settings_default() -> SettingsDefault {
                  content: DiscoveryConfigDefault {
                      // Beta: no pairing step. The pre-release protocol ID already keeps stock
                      // ALVR clients out; turn this off to approve each headset by hand.
@@ -8872,7 +9482,7 @@ index 1009e99..2e69a5b 100644
              },
              wired_client_autolaunch: true,
              web_server_port: 8082,
-@@ -2211,7 +2227,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2211,7 +2255,7 @@ pub fn session_settings_default() -> SettingsDefault {
              server_recv_buffer_bytes: socket_buffer.clone(),
              client_send_buffer_bytes: socket_buffer.clone(),
              client_recv_buffer_bytes: socket_buffer,
@@ -8881,7 +9491,7 @@ index 1009e99..2e69a5b 100644
              avoid_video_glitching: true,
              minimum_idr_interval_ms: 100,
              enable_on_connect_script: false,
-@@ -2262,7 +2278,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2262,7 +2306,7 @@ pub fn session_settings_default() -> SettingsDefault {
              },
              steamvr_launcher: SteamvrLauncherDefault {
                  driver_launch_action: DriverLaunchActionDefault {
@@ -8890,7 +9500,7 @@ index 1009e99..2e69a5b 100644
                  },
                  open_close_steamvr_with_dashboard: false,
              },
-@@ -2287,3 +2303,30 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2287,3 +2331,30 @@ pub fn session_settings_default() -> SettingsDefault {
          },
      }
  }

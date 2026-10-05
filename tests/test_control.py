@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch
-from tools.quest3.control import apply
+from tools.quest3.control import apply, downsample
 
 
 class ControlTests(unittest.TestCase):
@@ -60,4 +60,31 @@ class ControlTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 apply('PyroWave', 1000, 120, 'Fragment',
                       {'refresh_extension':True, 'rates_hz':[120]}, wavelet='Haar')
+            write.assert_not_called()
+
+class DownsampleControlTests(unittest.TestCase):
+    def run_offline(self, mode, current='Adaptive'):
+        state = {'session_settings': {'video': {'pyrowave': {'render_downsample_filter': {'variant': current}}}}}
+        def write(values):
+            for path, value in values.items():
+                node = state
+                fields = path.split('.')
+                for field in fields[:-1]:
+                    node = node[field]
+                node[fields[-1]] = value
+        with patch('tools.quest3.control.set_values', side_effect=write), \
+                patch('tools.quest3.control.session', return_value=state):
+            return downsample(mode), state
+
+    def test_selects_legacy_filter_and_reports_previous(self):
+        result, state = self.run_offline('bilinear')
+        self.assertEqual(state['session_settings']['video']['pyrowave']['render_downsample_filter']['variant'], 'Bilinear')
+        self.assertEqual(result['previous'], 'Adaptive')
+        self.assertTrue(result['steamvr_restart_required'])
+        self.assertFalse(result['perceptual_acceptance'])
+
+    def test_unknown_mode_rejected_before_mutation(self):
+        with patch('tools.quest3.control.set_values') as write:
+            with self.assertRaises(ValueError):
+                downsample('lanczos')
             write.assert_not_called()
