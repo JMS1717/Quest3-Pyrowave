@@ -214,7 +214,7 @@ index ae00ce8..bb2bda6 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.50"
++version = "20.13.0-quest3.pyro.51"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -4271,7 +4271,7 @@ index b87dfe9..9a909cf 100644
              upscaling: config.settings.video.upscaling.as_option().cloned(),
              force_software_decoder: config.settings.video.force_software_decoder,
              max_buffering_frames: config.settings.video.max_buffering_frames,
-@@ -88,16 +86,45 @@ pub struct StreamContext {
+@@ -88,16 +86,46 @@ pub struct StreamContext {
      view_reference_space: Arc<xr::Space>,
      swapchains: [xr::Swapchain<xr::OpenGlEs>; 2],
      last_good_view_params: [ViewParams; 2],
@@ -4312,11 +4312,12 @@ index b87dfe9..9a909cf 100644
 +const DEFAULT_FRAME_WAIT_US: u64 = 4000;
 +
 +/// `debug.q3pw.frame_wait_us`, re-read about once per second so A/B blocks can
-+/// alternate within one session. The render loop further caps it at half a frame.
++/// alternate within one session. Values through 4000 µs stay within half a frame.
++/// An explicit 4001–6000 µs request keeps 2000 µs of the frame for the eye copy.
 +fn frame_wait_budget_property() -> Duration {
 +    Duration::from_micros(
 +        crate::extra_extensions::perf_settings::system_property("debug.q3pw.frame_wait_us")
-+            .trim().parse::<u64>().unwrap_or(DEFAULT_FRAME_WAIT_US).min(4000))
++            .trim().parse::<u64>().unwrap_or(DEFAULT_FRAME_WAIT_US).min(6000))
  }
  
  impl StreamContext {
@@ -4531,7 +4532,7 @@ index b87dfe9..9a909cf 100644
 +                    video_decoder::FRESHNESS_EDGES_US));
 +            }
 +        }
-+        let latest_wait_budget = self.frame_wait_budget.min(frame_interval / 2);
++        let latest_wait_budget = latest_wait::selection_wait_budget(self.frame_wait_budget, frame_interval);
 +        let mut latest_wait_observed = None;
          if let Some((_, source)) = &mut self.decoder {
 -            while frame_result.is_none() && Instant::now() < frame_poll_deadline {

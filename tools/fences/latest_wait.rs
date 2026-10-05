@@ -17,6 +17,17 @@ pub fn empty_wait_class(decoding: bool) -> &'static str {
     if decoding { "still_decoding" } else { "idle_no_input" }
 }
 
+/// Requests up to 4000 µs keep the historical half-frame cap. A larger explicit
+/// request may use the rest of the frame except 2000 µs kept for the eye copy.
+pub fn selection_wait_budget(requested: Duration, frame: Duration) -> Duration {
+    let requested = requested.min(Duration::from_micros(6000));
+    if requested <= Duration::from_micros(4000) {
+        requested.min(frame / 2)
+    } else {
+        requested.min(frame.saturating_sub(Duration::from_micros(2000)))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -28,6 +39,21 @@ mod tests {
     fn empty_expiry_separates_a_busy_decoder_from_no_input() {
         assert_eq!(empty_wait_class(true), "still_decoding");
         assert_eq!(empty_wait_class(false), "idle_no_input");
+    }
+
+    #[test]
+    fn historical_wait_stays_inside_half_a_frame() {
+        assert_eq!(selection_wait_budget(us(4000), us(8333)), us(4000));
+        assert_eq!(selection_wait_budget(us(4000), us(6944)), us(3472));
+        assert_eq!(selection_wait_budget(us(0), us(8333)), us(0));
+    }
+
+    #[test]
+    fn explicit_longer_wait_keeps_two_milliseconds_for_the_eye_copy() {
+        assert_eq!(selection_wait_budget(us(6000), us(8333)), us(6000));
+        assert_eq!(selection_wait_budget(us(5000), us(8333)), us(5000));
+        assert_eq!(selection_wait_budget(us(6000), us(6944)), us(4944));
+        assert_eq!(selection_wait_budget(us(9000), us(8333)), us(6000));
     }
 
     #[test]
