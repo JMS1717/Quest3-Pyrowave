@@ -11860,7 +11860,7 @@ index d7d0dbbfcbfc7eaacf6f4ff5f0c47f882f1eee1a..e85a1e8a6f60414317ee82c6b1a251c5
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276f780e932 100644
+index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a714d39f1 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -11912,7 +11912,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276
  }
  
  #[repr(u8)]
-@@ -618,32 +618,116 @@ pub enum PyroWaveWavelet {
+@@ -618,32 +618,120 @@ pub enum PyroWaveWavelet {
  #[schema(gui = "button_group")]
  pub enum PyroWaveDecodePath {
      // The driver heuristic, which picks the fragment path on Qualcomm. Kept for research.
@@ -11937,6 +11937,8 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276
 +    fn default() -> Self {
 +        Self::Adaptive
 +    }
++}
++
 +/// Fixed, non-gaze peripheral profiles. Balanced and strong exist to measure the
 +/// Quest decode budget for 144/207 Hz; only light has in-headset screens so far.
 +#[repr(u8)]
@@ -11998,6 +12000,8 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276
 +    ))]
 +    #[schema(flag = "steamvr-restart")]
 +    pub render_downsample_filter: RenderDownsampleFilter,
++
++    #[serde(default)]
 +    #[schema(strings(display_name = "Optical latency stamp (diagnostic)", help = "Draws the PC performance-counter clock (ms) and two frame-parity squares just below the center of each eye. Film a monitor running tools/quest3/latency_clock.py next to a headset lens to measure composition-to-photon latency. Leave off for play. Restart SteamVR."))]
 +    #[schema(flag = "steamvr-restart")]
 +    pub latency_stamp: bool,
@@ -12033,7 +12037,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276
  }
  
  #[repr(u8)]
-@@ -799,23 +883,20 @@ pub struct VideoConfig {
+@@ -799,23 +887,20 @@ pub struct VideoConfig {
      pub bitrate: BitrateConfig,
  
      #[schema(strings(
@@ -12062,7 +12066,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276
      pub foveated_encoding: Switch<FoveatedEncodingConfig>,
  
      #[schema(flag = "steamvr-restart")]
-@@ -858,14 +939,14 @@ If you want to reduce the amount of pixelation on the edges, increase the center
+@@ -858,14 +943,14 @@ If you want to reduce the amount of pixelation on the edges, increase the center
      pub mediacodec_extra_options: Vec<(String, MediacodecProperty)>,
  
      #[schema(strings(
@@ -12079,7 +12083,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276
      ))]
      #[schema(flag = "steamvr-restart")]
      #[schema(flag = "hidden")]
-@@ -1663,15 +1744,15 @@ pub struct Settings {
+@@ -1663,15 +1748,15 @@ pub struct Settings {
  }
  
  pub fn session_settings_default() -> SettingsDefault {
@@ -12098,7 +12102,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276
              },
          },
      };
-@@ -1742,7 +1823,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1742,7 +1827,7 @@ pub fn session_settings_default() -> SettingsDefault {
              adapter_index: 0,
              transcoding_view_resolution: view_resolution.clone(),
              emulated_headset_view_resolution: view_resolution,
@@ -12107,7 +12111,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276
              max_buffering_frames: 1.5,
              buffering_history_weight: 0.90,
              enforce_server_frame_pacing: true,
-@@ -1796,15 +1877,24 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1796,15 +1881,24 @@ pub fn session_settings_default() -> SettingsDefault {
                  variant: CodecTypeDefaultVariant::PyroWave,
              },
              pyrowave: PyroWaveConfigDefault {
@@ -12134,7 +12138,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276
              },
              encoder_config: EncoderConfigDefault {
                  gui_collapsed: true,
-@@ -1901,7 +1991,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1901,7 +1995,7 @@ pub fn session_settings_default() -> SettingsDefault {
                  }
              },
              foveated_encoding: SwitchDefault {
@@ -12143,7 +12147,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276
                  content: FoveatedEncodingConfigDefault {
                      force_enable: false,
                      center_size_x: 0.20,
-@@ -1910,7 +2000,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1910,7 +2004,7 @@ pub fn session_settings_default() -> SettingsDefault {
                      center_shift_y: 0.0,
                      edge_ratio_x: 3.,
                      edge_ratio_y: 4.,
@@ -12152,7 +12156,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276
                  },
              },
              clientside_foveation: SwitchDefault {
-@@ -2066,7 +2156,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2066,7 +2160,7 @@ pub fn session_settings_default() -> SettingsDefault {
                                  content: vec![],
                              },
                          },
@@ -12161,7 +12165,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276
                      },
                      extra_openvr_props: default_custom_openvr_props,
                      button_mappings: OptionalDefault {
-@@ -2179,16 +2269,12 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2179,16 +2273,12 @@ pub fn session_settings_default() -> SettingsDefault {
                  content: DiscoveryConfigDefault {
                      // Beta: no pairing step. The pre-release protocol ID already keeps stock
                      // ALVR clients out; turn this off to approve each headset by hand.
@@ -12181,7 +12185,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276
              },
              wired_client_autolaunch: true,
              web_server_port: 8082,
-@@ -2211,7 +2297,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2211,7 +2301,7 @@ pub fn session_settings_default() -> SettingsDefault {
              server_recv_buffer_bytes: socket_buffer.clone(),
              client_send_buffer_bytes: socket_buffer.clone(),
              client_recv_buffer_bytes: socket_buffer,
@@ -12190,7 +12194,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276
              avoid_video_glitching: true,
              minimum_idr_interval_ms: 100,
              enable_on_connect_script: false,
-@@ -2262,7 +2348,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2262,7 +2352,7 @@ pub fn session_settings_default() -> SettingsDefault {
              },
              steamvr_launcher: SteamvrLauncherDefault {
                  driver_launch_action: DriverLaunchActionDefault {
@@ -12199,7 +12203,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..bcb10c877ec4fa6b4689368a654ba276
                  },
                  open_close_steamvr_with_dashboard: false,
              },
-@@ -2287,3 +2373,50 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2287,3 +2377,50 @@ pub fn session_settings_default() -> SettingsDefault {
          },
      }
  }
