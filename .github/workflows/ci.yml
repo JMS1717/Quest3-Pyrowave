@@ -51,6 +51,8 @@ jobs:
       - run: g++ -std=c++17 -Wall -Werror tools/pyroclient/decode_path_test.cpp -o /tmp/decode-path && /tmp/decode-path
       - name: Experimental fused-colour eligibility and mode interactions (CPU only)
         run: g++ -std=c++17 -Wall -Wextra -Werror tools/pyroclient/fuse_color_policy_test.cpp -o /tmp/fuse-color-policy && /tmp/fuse-color-policy
+      - name: Adreno LPAC queue-family choice (CPU only)
+        run: g++ -std=c++17 -Wall -Wextra -Werror tools/pyroclient/lpac_queue_test.cpp -o /tmp/lpac-queue && /tmp/lpac-queue
       - name: Surface chart orientation and channel order (CPU only)
         run: g++ -std=c++17 -Wall -Wextra -Werror tools/pyroclient/surface_chart_pixels_test.cpp -o /tmp/surface-chart-pixels && /tmp/surface-chart-pixels
       - name: Software GLES readback correctness (no Quest hardware)

@@ -31,6 +31,12 @@ resume unattended tests. Installed-build statements below are historical records
 not fresh device readbacks. The [scorecard](WHOLE-STACK-SCORECARD.md) records the
 later `.50`/`.51` screens and the reported `.51` installation.
 
+**Chip-level levers (October 5, draft PR #7, not run on hardware):** [ADRENO-740.md](ADRENO-740.md)
+and [XR2-GEN2-SOC.md](XR2-GEN2-SOC.md) rank GPU, CPU, memory, DSP, USB and power levers. Built
+behind default-off flags: `debug.q3pw.lpac`, `debug.q3pw.eye_invalidate` and
+`debug.q3pw.thread_hints`. The always-on `[Q3PW_GPU_CAPS]` and `[Q3PW_SOC_CAPS]` logcat lines
+say which of them this firmware exposes, so read them first in the next authorized session.
+
 The `.48` prerecord worker is now active and measured, but **not promoted**.
 All matching builds passed; actual native activation, preparation and direct-only
 eye completions were verified. Same-session ABBA eye completion proxies stayed
