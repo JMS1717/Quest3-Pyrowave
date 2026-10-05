@@ -49,23 +49,6 @@ pyroclient *pyroclient_create_ex(uint32_t width, uint32_t height, int chroma444,
 pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t height, int chroma444, int full_range, uint32_t ring,
                                           int wavelet, int decode_path, int low_queue_priority);
 
-#define PYROCLIENT_FLAG_LOW_QUEUE_PRIORITY 1u
-// Decode Y, Cb and Cr straight into three R8 AHardwareBuffers per ring slot and skip the
-// YCbCr->RGBA pass; the consumer converts while sampling (see pyroclient_output_planes).
-// Falls back to RGBA output when R8 buffers are unsupported; check pyroclient_is_planar.
-#define PYROCLIENT_FLAG_PLANAR_OUTPUT 2u
-
-// As pyroclient_create_ex, with PYROCLIENT_FLAG_* options.
-pyroclient *pyroclient_create_flags(uint32_t width, uint32_t height, int chroma444, int full_range, uint32_t ring,
-                                    int wavelet, int decode_path, uint32_t flags);
-// 1 when decodes hand out planar slots: *out is then the Y plane, full resolution, and
-// convert_ms is 0.
-int pyroclient_is_planar(pyroclient *c);
-// For a planar Y buffer returned by decode, the Cb and Cr buffers of the same slot (half
-// width and height for 4:2:0). Values are BT.709 in the stream's range. Owned by the library
-// with the Y buffer's lifetime. Returns 1 on success, 0 if luma is not a planar output.
-int pyroclient_output_planes(AHardwareBuffer *luma, AHardwareBuffer **cb, AHardwareBuffer **cr);
-
 // Feed bitstream. A whole frame or one network packet; PyroWave sequences frames itself.
 // Returns 1 when the current frame is complete and ready to decode, 0 otherwise, <0 on error.
 int pyroclient_push_packet(pyroclient *c, const void *data, size_t size);

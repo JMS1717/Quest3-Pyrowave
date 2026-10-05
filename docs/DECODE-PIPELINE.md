@@ -657,3 +657,21 @@ validate a direct Vulkan presentation implementation or its performance.
 The [Vulkan presentation investigation](VULKAN-PRESENTATION.md) records device,
 swapchain, synchronization and renderer migration requirements, with pixel/traffic
 math for native120 and the later resolution/refresh targets.
+
+## Planar output without the RGBA pass (not possible on Quest 3, October 4)
+
+The idea: give each ring slot three R8 AHardwareBuffers, let PyroWave decode Y,
+Cb and Cr straight into them, and convert BT.709 in the direct eye copy's
+fragment shader. That would drop the YCbCr→RGBA pass (0.62 ms GPU p50 at 144 Hz)
+and the eye copy would read 1.5 instead of 4 bytes per pixel.
+
+Commit `c0f92b9` implemented it behind a flag with an RGBA fallback, plus an
+on-device test comparing both paths pixel by pixel. On the Quest 3 the probe
+reported `PLANAR_UNSUPPORTED`: gralloc has no mapping for
+`AHARDWAREBUFFER_FORMAT_R8_UNORM` (`qdgralloc: GetGpuPixelFormat: No map for
+format: 0x38`; `AHardwareBuffer_isSupported` fails). That confirms the existing
+pyroclient comment about single-component hardware buffers. The YUV AHB format
+is NV12, whose interleaved chroma plane cannot be a storage target and does not
+match PyroWave's separate Cb and Cr outputs. The code was reverted, so `.34`
+ships the same native libraries as `.33`. A zero-copy route needs a Vulkan
+OpenXR presenter instead (see [Vulkan presentation](VULKAN-PRESENTATION.md)).

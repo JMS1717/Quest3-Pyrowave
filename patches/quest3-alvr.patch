@@ -668,7 +668,7 @@ index f764033..d636442 100644
                          decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
                      }
 diff --git a/alvr/client_core/src/video_decoder/mod.rs b/alvr/client_core/src/video_decoder/mod.rs
-index 4d2e699..0f51e0b 100644
+index 4d2e699..d0209b3 100644
 --- a/alvr/client_core/src/video_decoder/mod.rs
 +++ b/alvr/client_core/src/video_decoder/mod.rs
 @@ -1,14 +1,18 @@
@@ -743,7 +743,7 @@ index 4d2e699..0f51e0b 100644
      if complete {
          FrameDecision::DecodeComplete
      } else if age < deadline {
-@@ -130,22 +150,252 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
+@@ -130,22 +150,230 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
      let mean = samples.iter().sum::<f32>() / n as f32;
      format!(
          "min {:.2} mean {:.2} p50 {:.2} p95 {:.2} p99 {:.2} max {:.2}",
@@ -968,28 +968,6 @@ index 4d2e699..0f51e0b 100644
 +    f32::from_bits(PYROWAVE_REFRESH_HZ_BITS.load(std::sync::atomic::Ordering::Relaxed))
 +}
 +
-+static PYROWAVE_PLANAR_REQUEST: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-+
-+/// Whether the next PyroWave decoder may hand out planar Y/Cb/Cr buffers instead of RGBA.
-+/// Set only when the renderer can sample them (`StreamRenderer::enable_planar_source`).
-+pub fn set_pyrowave_planar_request(enabled: bool) {
-+    PYROWAVE_PLANAR_REQUEST.store(enabled, std::sync::atomic::Ordering::Relaxed);
-+}
-+
-+#[cfg_attr(not(target_os = "android"), allow(dead_code))]
-+pub(crate) fn pyrowave_planar_requested() -> bool {
-+    PYROWAVE_PLANAR_REQUEST.load(std::sync::atomic::Ordering::Relaxed)
-+}
-+
-+/// For a decoded PyroWave buffer that is a planar Y plane: its Cb and Cr buffers and whether
-+/// the stream is limited range. None for RGBA buffers.
-+pub fn pyrowave_output_planes(buffer: *mut std::ffi::c_void) -> Option<([*mut std::ffi::c_void; 2], bool)> {
-+    #[cfg(target_os = "android")]
-+    { pyrowave::output_planes(buffer) }
-+    #[cfg(not(target_os = "android"))]
-+    { let _ = buffer; None }
-+}
-+
 +/// `debug.q3pw.decode_priority`: `low` or `default` force the queue priority; anything else
 +/// picks LOW only where decode leaves GPU headroom (4:2:0 at <=120 Hz). There it lets the
 +/// eye copy preempt decode; at 144 Hz decode is throughput-bound and LOW cost ~10 FPS.
@@ -1001,7 +979,7 @@ index 4d2e699..0f51e0b 100644
      }
  }
  
-@@ -203,6 +453,53 @@ pub struct VideoDecoderSource {
+@@ -203,6 +431,53 @@ pub struct VideoDecoderSource {
  }
  
  impl VideoDecoderSource {
@@ -1055,7 +1033,7 @@ index 4d2e699..0f51e0b 100644
      /// If a frame is available, return the timestamp and the AHardwareBuffer.
      pub fn get_frame(&mut self) -> Option<(Duration, *mut std::ffi::c_void)> {
          #[cfg(target_os = "android")]
-@@ -229,7 +526,9 @@ fn logcat_info(tag: &str, message: &str) {
+@@ -229,7 +504,9 @@ fn logcat_info(tag: &str, message: &str) {
      }
      let tag = std::ffi::CString::new(tag).unwrap_or_default();
      let text = std::ffi::CString::new(message).unwrap_or_default();
@@ -1066,7 +1044,7 @@ index 4d2e699..0f51e0b 100644
  }
  
  // report_frame_decoded: (target_timestamp: Duration) -> ()
-@@ -249,7 +548,9 @@ pub fn create_decoder(
+@@ -249,7 +526,9 @@ pub fn create_decoder(
              }
          }
          if config.codec == CodecType::PyroWave
@@ -1077,7 +1055,7 @@ index 4d2e699..0f51e0b 100644
          {
              let (sink, source) = pyrowave_udp::video_decoder_split(
                  config.clone(),
-@@ -304,6 +605,22 @@ pub fn create_decoder(
+@@ -304,6 +583,22 @@ pub fn create_decoder(
  mod tests {
      use super::*;
  
@@ -1100,7 +1078,7 @@ index 4d2e699..0f51e0b 100644
      #[test]
      fn config_round_trips_the_encoder_blob() {
          let mut buf = Vec::new();
-@@ -312,53 +629,97 @@ mod tests {
+@@ -312,53 +607,97 @@ mod tests {
          buf.push(1);
          buf.push(0);
          let c = parse_pyrowave_config(&buf).unwrap();
@@ -1211,7 +1189,7 @@ index 4d2e699..0f51e0b 100644
          assert_eq!(dist(&mut Vec::new()), "-");
      }
  
-@@ -392,4 +753,145 @@ mod tests {
+@@ -392,4 +731,145 @@ mod tests {
          assert_eq!(slot.take(), Some((Duration::from_millis(2), 0x20)));
          assert!(slot.take().is_none());
      }
@@ -1358,7 +1336,7 @@ index 4d2e699..0f51e0b 100644
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601..1e5f9a0 100644
+index 2e22601..3120693 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -1403,7 +1381,7 @@ index 2e22601..1e5f9a0 100644
  #[repr(C)]
  struct PyroClient {
      _private: [u8; 0],
-@@ -33,36 +45,72 @@ struct FrameInfo {
+@@ -33,36 +45,59 @@ struct FrameInfo {
      convert_ms: f64,
      total_ms: f64,
      complete: i32,
@@ -1411,12 +1389,9 @@ index 2e22601..1e5f9a0 100644
 +    wait_ms: f64,
  }
  
-+const PYROCLIENT_FLAG_LOW_QUEUE_PRIORITY: u32 = 1;
-+const PYROCLIENT_FLAG_PLANAR_OUTPUT: u32 = 2;
-+
  extern "C" {
 -    fn pyroclient_create_ex(width: u32, height: u32, chroma444: i32, full_range: i32, ring: u32, wavelet: i32, decode_path: i32) -> *mut PyroClient;
-+    fn pyroclient_create_flags(
++    fn pyroclient_create_prioritized(
 +        width: u32,
 +        height: u32,
 +        chroma444: i32,
@@ -1424,10 +1399,8 @@ index 2e22601..1e5f9a0 100644
 +        ring: u32,
 +        wavelet: i32,
 +        decode_path: i32,
-+        flags: u32,
++        low_queue_priority: i32,
 +    ) -> *mut PyroClient;
-+    fn pyroclient_is_planar(c: *mut PyroClient) -> i32;
-+    fn pyroclient_output_planes(luma: *mut c_void, cb: *mut *mut c_void, cr: *mut *mut c_void) -> i32;
      fn pyroclient_push_packet(c: *mut PyroClient, data: *const u8, size: usize) -> i32;
 -    fn pyroclient_decode(
 +    fn pyroclient_clear(c: *mut PyroClient);
@@ -1444,14 +1417,6 @@ index 2e22601..1e5f9a0 100644
 +    fn pyroclient_finish_pending(c: *mut PyroClient, info: *mut FrameInfo) -> i32;
 +    fn pyroclient_output_release_token(buffer: *mut c_void) -> u64;
 +    fn pyroclient_attach_release_fd(buffer: *mut c_void, token: u64, fd: i32) -> i32;
-+}
-+
-+static PLANAR_LIMITED_RANGE: AtomicBool = AtomicBool::new(false);
-+
-+pub(super) fn output_planes(buffer: *mut c_void) -> Option<([*mut c_void; 2], bool)> {
-+    let (mut cb, mut cr) = (std::ptr::null_mut(), std::ptr::null_mut());
-+    (!buffer.is_null() && unsafe { pyroclient_output_planes(buffer, &mut cb, &mut cr) } == 1)
-+        .then(|| ([cb, cr], PLANAR_LIMITED_RANGE.load(Ordering::Relaxed)))
  }
  
  /// One pending frame, latest wins. Intra-only, so skipping a frame costs nothing downstream.
@@ -1480,7 +1445,7 @@ index 2e22601..1e5f9a0 100644
          self.pending.ready.notify_one();
          Ok(true)
      }
-@@ -71,13 +119,34 @@ impl VideoDecoderSink {
+@@ -71,13 +106,34 @@ impl VideoDecoderSink {
  pub struct VideoDecoderSource {
      running: Arc<AtomicBool>,
      pending: Arc<Pending>,
@@ -1517,7 +1482,7 @@ index 2e22601..1e5f9a0 100644
      }
  }
  
-@@ -85,7 +154,7 @@ impl Drop for VideoDecoderSource {
+@@ -85,7 +141,7 @@ impl Drop for VideoDecoderSource {
      fn drop(&mut self) {
          self.running.store(false, Ordering::Relaxed);
          self.pending.ready.notify_all();
@@ -1526,7 +1491,7 @@ index 2e22601..1e5f9a0 100644
              t.join().ok();
          }
      }
-@@ -99,18 +168,68 @@ pub fn video_decoder_split(
+@@ -99,18 +155,64 @@ pub fn video_decoder_split(
      let pending = Arc::new(Pending {
          frame: Mutex::new(None),
          ready: Condvar::new(),
@@ -1576,10 +1541,6 @@ index 2e22601..1e5f9a0 100644
 +        cfg.chroma444,
 +    );
 +    super::logcat_info("PYROWAVE", &format!("[Q3PW_PRIORITY] policy refresh_hz={refresh_hz} chroma444={} low={low_priority}", cfg.chroma444));
-+    let planar_requested = super::pyrowave_planar_requested();
-+    PLANAR_LIMITED_RANGE.store(!cfg.full_range, Ordering::Relaxed);
-+    let flags = (if low_priority { PYROCLIENT_FLAG_LOW_QUEUE_PRIORITY } else { 0 })
-+        | (if planar_requested { PYROCLIENT_FLAG_PLANAR_OUTPUT } else { 0 });
 +    let report_frame_decoded = Arc::new(report_frame_decoded);
 +    let mut threads = Vec::with_capacity(workers);
 +    for worker_index in 0..workers {
@@ -1594,26 +1555,21 @@ index 2e22601..1e5f9a0 100644
              // Created here so every Vulkan call the library makes stays on this thread.
              let client = unsafe {
 -                pyroclient_create_ex(
-+                pyroclient_create_flags(
++                pyroclient_create_prioritized(
                      cfg.width,
                      cfg.height,
                      cfg.chroma444 as i32,
-@@ -118,6 +237,7 @@ pub fn video_decoder_split(
+@@ -118,6 +220,7 @@ pub fn video_decoder_split(
                      3,
                      cfg.wavelet as i32,
                      cfg.decode_path as i32,
-+                    flags,
++                    low_priority as i32,
                  )
              };
              if client.is_null() {
-@@ -128,64 +248,138 @@ pub fn video_decoder_split(
-                 )));
+@@ -129,63 +232,133 @@ pub fn video_decoder_split(
                  return;
              }
-+            if planar_requested {
-+                let active = unsafe { pyroclient_is_planar(client) } == 1;
-+                super::logcat_info("PYROWAVE", &format!("[Q3PW_PLANAR] decoder requested=true active={active}"));
-+            }
              let mut frames: u64 = 0;
 -            let mut failures: u64 = 0;
              let mut sum_total = 0.0f64;
@@ -3820,7 +3776,7 @@ index 0000000..766b412
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..d6ea841 100644
+index b87dfe9..2f56de8 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -59,17 +59,12 @@ impl ParsedStreamConfig {
@@ -3944,7 +3900,7 @@ index b87dfe9..d6ea841 100644
          this.update_reference_space();
  
          this
-@@ -310,6 +347,27 @@ impl StreamContext {
+@@ -310,6 +347,24 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
@@ -3964,15 +3920,12 @@ index b87dfe9..d6ea841 100644
 +                    .parse::<i32>().unwrap_or(0).clamp(0, 2000),
 +                crate::extra_extensions::perf_settings::system_property("debug.q3pw.raw_srgb_copy") == "1",
 +                crate::extra_extensions::perf_settings::system_property("debug.q3pw.image_cache") == "1",
-+                crate::extra_extensions::perf_settings::system_property("debug.q3pw.planar_output") == "1",
 +            );
-+            video_decoder::set_pyrowave_planar_request(codec == CodecType::PyroWave
-+                && self.renderer.enable_planar_source(video_decoder::pyrowave_output_planes));
 +            video_decoder::set_pyrowave_refresh_hz(self.config.refresh_rate_hint);
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +396,42 @@ impl StreamContext {
+@@ -338,12 +393,42 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -4017,7 +3970,7 @@ index b87dfe9..d6ea841 100644
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +443,25 @@ impl StreamContext {
+@@ -355,8 +440,25 @@ impl StreamContext {
          }
      }
  
@@ -4043,7 +3996,7 @@ index b87dfe9..d6ea841 100644
      }
  
      pub fn render(
-@@ -364,15 +469,128 @@ impl StreamContext {
+@@ -364,15 +466,128 @@ impl StreamContext {
          frame_interval: Duration,
          vsync_time: Duration,
      ) -> (ProjectionLayerBuilder, Duration) {
@@ -4174,7 +4127,7 @@ index b87dfe9..d6ea841 100644
              }
          }
  
-@@ -401,37 +619,80 @@ impl StreamContext {
+@@ -401,37 +616,80 @@ impl StreamContext {
              ]);
          }
  
@@ -4285,7 +4238,7 @@ index b87dfe9..d6ea841 100644
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +754,8 @@ impl StreamContext {
+@@ -493,6 +751,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
@@ -4686,19 +4639,14 @@ index 3be9319..d3a1d7c 100644
          assert_eq!(r["window"]["frames"], 900);
 diff --git a/alvr/graphics/resources/direct_eye_fragment.glsl b/alvr/graphics/resources/direct_eye_fragment.glsl
 new file mode 100644
-index 0000000..4abde10
+index 0000000..901d8fa
 --- /dev/null
 +++ b/alvr/graphics/resources/direct_eye_fragment.glsl
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,29 @@
 +#version 300 es
 +#extension GL_OES_EGL_image_external_essl3 : require
 +precision highp float;
 +uniform samplerExternalOES tex;
-+#ifdef Q3PW_PLANAR
-+uniform samplerExternalOES tex_cb;
-+uniform samplerExternalOES tex_cr;
-+uniform int limited_input;
-+#endif
 +uniform int fix_limited_range;
 +uniform int srgb_correction;
 +uniform float encoding_gamma;
@@ -4710,21 +4658,7 @@ index 0000000..4abde10
 +#ifdef Q3PW_FFE
 +    sample_uv = light_foveated_uv(uv);
 +#endif
-+#ifdef Q3PW_PLANAR
-+    // BT.709, as pyroclient's convert.frag produces for RGBA output.
-+    float Y = texture(tex, sample_uv).r;
-+    float Cb = texture(tex_cb, sample_uv).r;
-+    float Cr = texture(tex_cr, sample_uv).r;
-+    if (limited_input != 0) {
-+        Y = (Y - 16.0 / 255.0) * (255.0 / 219.0);
-+        Cb = (Cb - 128.0 / 255.0) * (255.0 / 224.0);
-+        Cr = (Cr - 128.0 / 255.0) * (255.0 / 224.0);
-+    } else { Cb -= 0.5; Cr -= 0.5; }
-+    vec3 color = clamp(vec3(Y + 1.5748 * Cr, Y - 0.1873 * Cb - 0.4681 * Cr,
-+                            Y + 1.8556 * Cb), 0.0, 1.0);
-+#else
 +    vec3 color = texture(tex, sample_uv).rgb;
-+#endif
 +    if (fix_limited_range != 0)
 +        color = vec3(16.0 / 255.0) + (219.0 / 255.0) * color;
 +    if (srgb_correction != 0) {
@@ -4776,10 +4710,10 @@ index 0000000..bc6bee0
 +}
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000..9e5c62f
+index 0000000..ce89759
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,546 @@
+@@ -0,0 +1,461 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -4829,21 +4763,9 @@ index 0000000..9e5c62f
 +    pub foveation: Option<([f32; 6], [f32; 16], UVec2)>,
 +}
 +
-+/// Cb and Cr buffers and "limited range" for a planar PyroWave Y buffer; None for RGBA buffers.
-+pub type PlanarLookup = fn(*mut c_void) -> Option<([*mut c_void; 2], bool)>;
-+
-+struct PlanarProgram {
-+    program: gl::Program,
-+    view_idx: gl::UniformLocation,
-+    flip_y: gl::UniformLocation,
-+    limited_input: gl::UniformLocation,
-+}
-+
 +pub struct DirectEyeRenderer {
 +    context: Rc<GraphicsContext>,
 +    program: gl::Program,
-+    planar: Option<PlanarProgram>,
-+    planar_failure_logged: Cell<bool>,
 +    source_texture: gl::Texture,
 +    vertex_array: gl::VertexArray,
 +    framebuffers: [Vec<gl::Framebuffer>; 2],
@@ -4868,7 +4790,7 @@ index 0000000..9e5c62f
 +    release_last_log: RefCell<Instant>,
 +}
 +
-+unsafe fn compile_program(gl: &gl::Context, foveation: bool, planar: bool) -> Result<gl::Program, String> {
++unsafe fn compile_program(gl: &gl::Context, foveation: bool) -> Result<gl::Program, String> {
 +    let program = gl.create_program()?;
 +    let mut shaders = Vec::new();
 +    let result = (|| {
@@ -4878,14 +4800,10 @@ index 0000000..9e5c62f
 +        ] {
 +            let shader = gl.create_shader(kind)?;
 +            shaders.push(shader);
-+            let mut source = source.to_owned();
-+            if kind == gl::FRAGMENT_SHADER && foveation {
-+                source = source.replace("#version 300 es", "#version 300 es\n#define Q3PW_FFE")
-+                    .replace("// Q3PW_FOVEATION_FUNCTION", include_str!("../resources/light_foveation.glsl"));
-+            }
-+            if kind == gl::FRAGMENT_SHADER && planar {
-+                source = source.replace("#version 300 es", "#version 300 es\n#define Q3PW_PLANAR");
-+            }
++            let source = if kind == gl::FRAGMENT_SHADER && foveation {
++                source.replace("#version 300 es", "#version 300 es\n#define Q3PW_FFE")
++                    .replace("// Q3PW_FOVEATION_FUNCTION", include_str!("../resources/light_foveation.glsl"))
++            } else { source.to_owned() };
 +            gl.shader_source(shader, &source);
 +            gl.compile_shader(shader);
 +            if !gl.get_shader_compile_status(shader) {
@@ -4903,51 +4821,10 @@ index 0000000..9e5c62f
 +    if result.is_err() { gl.delete_program(program); }
 +    result
 +}
-+
-+/// Leaves `program` bound. Returns the view_idx and flip_y locations.
-+unsafe fn configure_program(gl: &gl::Context, program: gl::Program, config: &DirectEyeConfig, bypass_srgb: bool)
-+    -> Result<(gl::UniformLocation, gl::UniformLocation), String> {
-+    let location = |name: &str| gl.get_uniform_location(program, name)
-+        .ok_or_else(|| format!("Direct eye copy missing uniform {name}"));
-+    let view_idx = location("view_idx")?;
-+    let flip_y = location("flip_y")?;
-+    gl.use_program(Some(program));
-+    gl.uniform_1_i32(Some(&location("tex")?), 0);
-+    gl.uniform_1_i32(Some(&location("fix_limited_range")?), config.fix_limited_range as i32);
-+    gl.uniform_1_i32(Some(&location("srgb_correction")?), (config.srgb_correction && !bypass_srgb) as i32);
-+    gl.uniform_1_f32(Some(&location("encoding_gamma")?), if bypass_srgb { 0.0 } else { config.encoding_gamma });
-+    if let Some((values, params, encoded)) = &config.foveation {
-+        gl.uniform_2_f32(Some(&location("ffe_view_ratio")?), values[0], values[1]);
-+        gl.uniform_2_f32(Some(&location("ffe_edge_ratio")?), values[2], values[3]);
-+        gl.uniform_2_f32(Some(&location("ffe_c2")?), values[4], values[5]);
-+        gl.uniform_4_f32_slice(Some(&location("ffe_p[0]")?), params);
-+        gl.uniform_2_f32(Some(&location("ffe_half_texel")?), 0.25 / encoded.x as f32, 0.5 / encoded.y as f32);
-+    }
-+    Ok((view_idx, flip_y))
-+}
-+
-+unsafe fn create_planar_program(gl: &gl::Context, config: &DirectEyeConfig, bypass_srgb: bool) -> Result<PlanarProgram, String> {
-+    let program = compile_program(gl, config.foveation.is_some(), true)?;
-+    let result = (|| {
-+        let (view_idx, flip_y) = configure_program(gl, program, config, bypass_srgb)?;
-+        let location = |name: &str| gl.get_uniform_location(program, name)
-+            .ok_or_else(|| format!("Direct eye copy missing uniform {name}"));
-+        gl.uniform_1_i32(Some(&location("tex_cb")?), 1);
-+        gl.uniform_1_i32(Some(&location("tex_cr")?), 2);
-+        let limited_input = location("limited_input")?;
-+        Ok(PlanarProgram { program, view_idx, flip_y, limited_input })
-+    })();
-+    gl.use_program(None);
-+    if result.is_err() { gl.delete_program(program); }
-+    result
-+}
-+
 +impl DirectEyeRenderer {
 +    /// Any compile/import-target failure leaves the existing renderer usable.
-+    #[expect(clippy::too_many_arguments)]
 +    pub fn new(context: Rc<GraphicsContext>, config: &DirectEyeConfig,
-+               flip: bool, asynchronous: bool, copy_wait_us: i32, raw_srgb_requested: bool, image_cache_requested: bool,
-+               planar_requested: bool) -> Result<Self, String> {
++               flip: bool, asynchronous: bool, copy_wait_us: i32, raw_srgb_requested: bool, image_cache_requested: bool) -> Result<Self, String> {
 +        context.make_current();
 +        let gl = &context.gl_context;
 +        unsafe {
@@ -4960,7 +4837,7 @@ index 0000000..9e5c62f
 +            import_diagnostic(4, format!("[Q3PW_COLOR_COPY] requested={} active={} srgb_target={} correction={} gamma={}",
 +                raw_srgb_requested, bypass_srgb, config.srgb_target,
 +                config.srgb_correction, config.encoding_gamma));
-+            let program = compile_program(gl, config.foveation.is_some(), false)?;
++            let program = compile_program(gl, config.foveation.is_some())?;
 +            let source_texture = match gl.create_texture() {
 +                Ok(texture) => texture,
 +                Err(e) => { gl.delete_program(program); return Err(e); }
@@ -4975,8 +4852,21 @@ index 0000000..9e5c62f
 +            };
 +            let mut framebuffers: [Vec<gl::Framebuffer>; 2] = [vec![], vec![]];
 +            let setup = (|| {
-+                let (view_idx, flip_y) = configure_program(gl, program, config, bypass_srgb)?;
-+                if let Some((_, _, encoded)) = &config.foveation {
++                let location = |name: &str| gl.get_uniform_location(program, name)
++                    .ok_or_else(|| format!("Direct eye copy missing uniform {name}"));
++                let view_idx = location("view_idx")?;
++                let flip_y = location("flip_y")?;
++                gl.use_program(Some(program));
++                gl.uniform_1_i32(Some(&location("tex")?), 0);
++                gl.uniform_1_i32(Some(&location("fix_limited_range")?), config.fix_limited_range as i32);
++                gl.uniform_1_i32(Some(&location("srgb_correction")?), (config.srgb_correction && !bypass_srgb) as i32);
++                gl.uniform_1_f32(Some(&location("encoding_gamma")?), if bypass_srgb { 0.0 } else { config.encoding_gamma });
++                if let Some((values, params, encoded)) = &config.foveation {
++                    gl.uniform_2_f32(Some(&location("ffe_view_ratio")?), values[0], values[1]);
++                    gl.uniform_2_f32(Some(&location("ffe_edge_ratio")?), values[2], values[3]);
++                    gl.uniform_2_f32(Some(&location("ffe_c2")?), values[4], values[5]);
++                    gl.uniform_4_f32_slice(Some(&location("ffe_p[0]")?), params);
++                    gl.uniform_2_f32(Some(&location("ffe_half_texel")?), 0.25 / encoded.x as f32, 0.5 / encoded.y as f32);
 +                    import_diagnostic(4, format!("[Q3PW_LIGHT_FFE] direct=true expanded_eye={}x{} encoded_eye={}x{} center=0.8 edge=1.5 fixed=true",
 +                        config.resolution.x, config.resolution.y, encoded.x, encoded.y));
 +                }
@@ -5003,19 +4893,9 @@ index 0000000..9e5c62f
 +            gl.use_program(None);
 +            match setup {
 +                Ok((view_idx, flip_y)) => {
-+                    let planar = if planar_requested && cfg!(target_os = "android") {
-+                        match create_planar_program(gl, config, bypass_srgb) {
-+                            Ok(planar) => Some(planar),
-+                            Err(error) => {
-+                                import_diagnostic(6, format!("[Q3PW_PLANAR] eye copy program failed: {error}"));
-+                                None
-+                            }
-+                        }
-+                    } else { None };
-+                    import_diagnostic(4, format!("[Q3PW_PLANAR] eye copy requested={planar_requested} ready={}", planar.is_some()));
 +                    let timer = RefCell::new(super::eye_timer::EyeTimer::new(&context));
 +                    let native_release = NativeRelease::new(&context);
-+                    Ok(Self { context, program, planar, planar_failure_logged: Cell::new(false), source_texture,
++                    Ok(Self { context, program, source_texture,
 +                    vertex_array, framebuffers, resolution: config.resolution,
 +                    view_idx, flip_y, flip, asynchronous: Cell::new(asynchronous),
 +                    image_cache_enabled: Cell::new(image_cache_requested && cfg!(target_os = "android")),
@@ -5038,9 +4918,7 @@ index 0000000..9e5c62f
 +
 +    /// Each entry holds an AHB reference, so its pointer cannot be recycled for a
 +    /// different allocation. Leases still protect per-frame content writes.
-+    /// Planar planes have no legacy import path, so they are cached regardless of
-+    /// image_cache, up to three planes for each of four ring slots.
-+    unsafe fn cached_source_texture(&self, buffer: *const c_void, planar: bool) -> Option<gl::Texture> {
++    unsafe fn cached_source_texture(&self, buffer: *const c_void) -> Option<gl::Texture> {
 +        if buffer.is_null() { return None; }
 +        #[cfg(target_os = "android")]
 +        {
@@ -5049,10 +4927,10 @@ index 0000000..9e5c62f
 +                return Some(entry.texture);
 +            }
 +            // Existing imports remain usable if a later entry caused fallback.
-+            if !planar && !self.image_cache_enabled.get() { return None; }
++            if !self.image_cache_enabled.get() { return None; }
 +            // Do not evict images while an external producer may still own them.
 +            // Bounded fallback keeps retained storage below eight ring entries.
-+            if cache.len() >= if planar { 12 } else { 8 } {
++            if cache.len() >= 8 {
 +                self.image_cache_enabled.set(false);
 +                import_diagnostic(5, format!("[Q3PW_IMAGE_CACHE] capacity reached; legacy import fallback"));
 +                return None;
@@ -5103,10 +4981,8 @@ index 0000000..9e5c62f
 +            Some(texture)
 +        }
 +        #[cfg(not(target_os = "android"))]
-+        { let _ = planar; None }
++        { None }
 +    }
-+
-+    pub fn planar_ready(&self) -> bool { self.planar.is_some() }
 +
 +    /// Returns readiness and, once per completed async copy, observed wall time.
 +    /// TIMEOUT retains the texture binding AND decoder consumer lease. Never
@@ -5192,32 +5068,16 @@ index 0000000..9e5c62f
 +    /// The caller has acquired/waited both indices and retains the PyroWave
 +    /// source lease until poll_copy completes. These textures are borrowed;
 +    /// this object owns ONLY its FBOs/program/external texture/VAO.
-+    /// `planes`: the Cb/Cr buffers and range when `buffer` is a planar Y plane.
-+    pub unsafe fn render(&self, buffer: *mut c_void, planes: Option<([*mut c_void; 2], bool)>, indices: [u32; 2]) {
++    pub unsafe fn render(&self, buffer: *mut c_void, indices: [u32; 2]) {
 +        if self.pending.borrow().is_some() { self.drain_copy(); }
 +        if self.release_fd.borrow().is_some() { self.reject_release_fence(); }
 +        self.context.make_current();
 +        let gl = &self.context.gl_context;
 +        let started = Instant::now();
-+        let planar = planes.and_then(|([cb, cr], limited)| {
-+            let program = self.planar.as_ref()?;
-+            let textures = [self.cached_source_texture(buffer, true)?, self.cached_source_texture(cb, true)?,
-+                            self.cached_source_texture(cr, true)?];
-+            Some((program, textures, limited))
-+        });
-+        if planes.is_some() && planar.is_none() {
-+            // Sampling the Y plane as RGBA would show a wrong image; keep the previous one.
-+            if !self.planar_failure_logged.replace(true) {
-+                import_diagnostic(6, "[Q3PW_PLANAR] eye copy cannot sample planar frame; skipping".into());
-+            }
-+            return;
-+        }
-+        let cached = if planar.is_some() { None } else { self.cached_source_texture(buffer, false) };
-+        let source_texture = planar.map_or(cached.unwrap_or(self.source_texture), |(_, textures, _)| textures[0]);
-+        let (program, view_idx, flip_y) = planar.map_or((self.program, &self.view_idx, &self.flip_y),
-+            |(p, _, _)| (p.program, &p.view_idx, &p.flip_y));
++        let cached = self.cached_source_texture(buffer);
++        let source_texture = cached.unwrap_or(self.source_texture);
 +        let draw = || {
-+            gl.use_program(Some(program));
++            gl.use_program(Some(self.program));
 +            gl.bind_vertex_array(Some(self.vertex_array));
 +            gl.viewport(0, 0, self.resolution.x as i32, self.resolution.y as i32);
 +            for state in [gl::SCISSOR_TEST, gl::STENCIL_TEST, gl::DEPTH_TEST, gl::BLEND, gl::CULL_FACE] {
@@ -5230,30 +5090,20 @@ index 0000000..9e5c62f
 +                if self.bypass_srgb { gl.disable(0x8DB9); }
 +                else { gl.enable(0x8DB9); } // GL_FRAMEBUFFER_SRGB_EXT
 +            }
-+            let mut units = vec![source_texture];
-+            if let Some((_, textures, _)) = planar { units.extend_from_slice(&textures[1..]); }
-+            for (unit, &texture) in units.iter().enumerate().rev() {
-+                gl.active_texture(gl::TEXTURE0 + unit as u32);
-+                gl.bind_texture(GL_TEXTURE_EXTERNAL_OES, Some(texture));
-+                gl.bind_sampler(unit as u32, None);
-+                gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
-+                gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
-+                gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
-+                gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
-+            }
-+            if let Some((p, _, limited)) = planar { gl.uniform_1_i32(Some(&p.limited_input), limited as i32); }
-+            gl.uniform_1_i32(Some(flip_y), self.flip as i32);
++            gl.active_texture(gl::TEXTURE0);
++            gl.bind_texture(GL_TEXTURE_EXTERNAL_OES, Some(source_texture));
++            gl.bind_sampler(0, None);
++            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
++            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
++            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
++            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
++            gl.uniform_1_i32(Some(&self.flip_y), self.flip as i32);
 +            let query = self.timer.borrow_mut().as_mut().and_then(|timer| timer.begin(gl));
 +            for (eye, &index) in indices.iter().enumerate() {
 +                gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, Some(self.framebuffers[eye][index as usize]));
-+                gl.uniform_1_i32(Some(view_idx), eye as i32);
++                gl.uniform_1_i32(Some(&self.view_idx), eye as i32);
 +                gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
 +            }
-+            for unit in (1..units.len()).rev() {
-+                gl.active_texture(gl::TEXTURE0 + unit as u32);
-+                gl.bind_texture(GL_TEXTURE_EXTERNAL_OES, None);
-+            }
-+            gl.active_texture(gl::TEXTURE0);
 +            if let Some(index) = query {
 +                if let Some(timer) = self.timer.borrow_mut().as_mut() { timer.end(gl, index); }
 +            }
@@ -5298,7 +5148,7 @@ index 0000000..9e5c62f
 +            gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, None);
 +            gl.bind_vertex_array(None);
 +        };
-+        if cached.is_some() || planar.is_some() { draw(); }
++        if cached.is_some() { draw(); }
 +        else { self.context.render_ahardwarebuffer_using_texture(buffer, self.source_texture, draw); }
 +    }
 +}
@@ -5322,7 +5172,6 @@ index 0000000..9e5c62f
 +            gl.delete_vertex_array(self.vertex_array);
 +            gl.delete_texture(self.source_texture);
 +            gl.delete_program(self.program);
-+            if let Some(planar) = &self.planar { gl.delete_program(planar.program); }
 +        }
 +    }
 +}
@@ -5625,10 +5474,10 @@ index 0000000..832dd35
 +    }
 +}
 diff --git a/alvr/graphics/src/lib.rs b/alvr/graphics/src/lib.rs
-index 3485570..3612bdf 100644
+index 3485570..490fe8c 100644
 --- a/alvr/graphics/src/lib.rs
 +++ b/alvr/graphics/src/lib.rs
-@@ -1,9 +1,20 @@
+@@ -1,9 +1,19 @@
 +mod direct_eye;
 +mod eye_timer;
 +mod native_release;
@@ -5645,11 +5494,10 @@ index 3485570..3612bdf 100644
 +pub use performance::*;
  pub use stream::*;
 +pub use native_release::ReleaseFence;
-+pub use direct_eye::PlanarLookup;
  
  use alvr_common::{
      glam::{Mat4, UVec2, Vec4},
-@@ -18,6 +29,11 @@ use wgpu::{
+@@ -18,6 +28,11 @@ use wgpu::{
      TextureFormat, TextureUsages, TextureView,
  };
  
@@ -5661,7 +5509,7 @@ index 3485570..3612bdf 100644
  pub const SDR_FORMAT: TextureFormat = TextureFormat::Rgba8Unorm;
  pub const SDR_FORMAT_GL: u32 = gl::RGBA8;
  pub const GL_TEXTURE_EXTERNAL_OES: u32 = 0x8D65;
-@@ -209,6 +225,19 @@ pub struct GraphicsContext {
+@@ -209,6 +224,19 @@ pub struct GraphicsContext {
  }
  
  impl GraphicsContext {
@@ -6041,7 +5889,7 @@ index febd2c3..779de33 100644
          );
      }
 diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
-index 737b7d0..2d85a71 100644
+index 737b7d0..9f1548c 100644
 --- a/alvr/graphics/src/stream.rs
 +++ b/alvr/graphics/src/stream.rs
 @@ -1,10 +1,10 @@
@@ -6066,7 +5914,7 @@ index 737b7d0..2d85a71 100644
      context: Rc<GraphicsContext>,
      staging_renderer: StagingRenderer,
      pipeline: RenderPipeline,
-@@ -72,6 +74,13 @@ pub struct StreamRenderer {
+@@ -72,6 +74,12 @@ pub struct StreamRenderer {
      ffe_params_buffer: Buffer,
      /// `None` when foveated encoding is off, in which case there is nothing to steer.
      foveated_encoding: Option<(UVec2, FoveatedEncodingConfig)>,
@@ -6076,11 +5924,10 @@ index 737b7d0..2d85a71 100644
 +    direct_eye_enabled: bool,
 +    leased_pyrowave_buffer: Cell<*mut c_void>,
 +    last_copy_direct: Cell<bool>,
-+    planar_lookup: Option<super::PlanarLookup>,
  }
  
  impl StreamRenderer {
-@@ -90,6 +99,22 @@ impl StreamRenderer {
+@@ -90,6 +98,22 @@ impl StreamRenderer {
      ) -> Self {
          let device = &context.device;
  
@@ -6103,7 +5950,7 @@ index 737b7d0..2d85a71 100644
          let target_format = super::gl_format_to_wgpu(target_format);
  
          let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-@@ -292,15 +317,95 @@ impl StreamRenderer {
+@@ -292,15 +316,82 @@ impl StreamRenderer {
          );
  
          Self {
@@ -6121,7 +5968,6 @@ index 737b7d0..2d85a71 100644
 +            direct_eye_enabled: false,
 +            leased_pyrowave_buffer: Cell::new(ptr::null_mut()),
 +            last_copy_direct: Cell::new(false),
-+            planar_lookup: None,
 +        }
 +    }
 +
@@ -6133,34 +5979,22 @@ index 737b7d0..2d85a71 100644
 +        self.leased_pyrowave_buffer.set(ptr::null_mut());
 +        self.last_copy_direct.set(false);
 +        self.direct_eye_enabled = false;
-+        self.planar_lookup = None;
 +    }
 +
-+    #[expect(clippy::too_many_arguments)]
-+    pub fn set_direct_eye_copy(&mut self, requested: bool, flip_y: bool, asynchronous: bool, copy_wait_us: i32, raw_srgb_requested: bool, image_cache_requested: bool,
-+                               planar_requested: bool) {
++    pub fn set_direct_eye_copy(&mut self, requested: bool, flip_y: bool, asynchronous: bool, copy_wait_us: i32, raw_srgb_requested: bool, image_cache_requested: bool) {
 +        self.direct_eye_enabled = false;
-+        self.planar_lookup = None;
 +        if !requested || !self.wait_for_import_copy { return; }
 +        let Some(config) = &self.direct_eye_config else { return; };
 +        // Re-create only on stream/decoder initialization; errors fall back.
-+        match DirectEyeRenderer::new(Rc::clone(&self.context), config, flip_y, asynchronous, copy_wait_us, raw_srgb_requested, image_cache_requested, planar_requested) {
++        match DirectEyeRenderer::new(Rc::clone(&self.context), config, flip_y, asynchronous, copy_wait_us, raw_srgb_requested, image_cache_requested) {
 +            Ok(renderer) => {
 +                self.direct_eye_renderer = Some(renderer);
 +                self.direct_eye_enabled = true;
 +            }
 +            Err(error) => alvr_common::error!("Direct eye copy unavailable; using staging: {error}"),
-+        }
-+    }
-+
-+    /// Planar decoder output is sampled only by the direct eye copy. Returns whether the
-+    /// next decoder may produce it; `lookup` then resolves each frame's chroma planes.
-+    pub fn enable_planar_source(&mut self, lookup: super::PlanarLookup) -> bool {
-+        let ready = self.direct_eye_enabled && self.direct_eye_renderer.as_ref().is_some_and(|r| r.planar_ready());
-+        self.planar_lookup = ready.then_some(lookup);
-+        ready
-+    }
-+
+         }
+     }
+ 
 +    pub fn last_copy_was_direct(&self) -> bool { self.last_copy_direct.get() }
 +    #[cfg(unix)]
 +    pub fn wait_source_ready(&self, fd: std::os::fd::OwnedFd) -> bool {
@@ -6169,9 +6003,9 @@ index 737b7d0..2d85a71 100644
 +            let mut state = self.ready_wait.borrow_mut();
 +            state.get_or_insert_with(||super::native_ready::NativeReady::new(&self.context))
 +                .wait(&self.context,fd)
-         }
-     }
- 
++        }
++    }
++
 +    pub fn poll_import_copy(&self) -> (bool, Vec<f32>) {
 +        self.direct_eye_renderer.as_ref().map_or((true, Vec::new()), |r| r.poll_copy())
 +    }
@@ -6199,7 +6033,7 @@ index 737b7d0..2d85a71 100644
      /// Move the full-resolution centre to match the server's, for the frame about to be drawn.
      ///
      /// Per eye: the horizontal frusta are asymmetric and mirrored, so one shared shift is only
-@@ -333,9 +438,33 @@ impl StreamRenderer {
+@@ -333,9 +424,30 @@ impl StreamRenderer {
          view_params: [StreamViewParams; 2],
          passthrough: Option<&PassthroughMode>,
      ) {
@@ -6212,14 +6046,11 @@ index 737b7d0..2d85a71 100644
 +        // source for a configuration-forced redraw as well as fresh frames.
 +        let retained = self.leased_pyrowave_buffer.get();
 +        let source = if !hardware_buffer.is_null() { hardware_buffer } else { retained };
-+        let planes = self.planar_lookup.filter(|_| self.direct_eye_enabled && !source.is_null())
-+            .and_then(|lookup| lookup(source));
-+        // The staging path cannot read planar frames, so they ignore passthrough and reprojection.
-+        if self.direct_eye_enabled && !source.is_null() && (planes.is_some() || (passthrough.is_none()
-+            && view_params.iter().all(|view| view.reprojection_rotation == Quat::IDENTITY)))
++        if self.direct_eye_enabled && !source.is_null() && passthrough.is_none()
++            && view_params.iter().all(|view| view.reprojection_rotation == Quat::IDENTITY)
 +        {
 +            if let Some(renderer) = &self.direct_eye_renderer {
-+                renderer.render(source, planes, [view_params[0].swapchain_index, view_params[1].swapchain_index]);
++                renderer.render(source, [view_params[0].swapchain_index, view_params[1].swapchain_index]);
 +                self.last_copy_direct.set(true);
 +                return;
 +            }

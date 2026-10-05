@@ -15,8 +15,6 @@
 #include <cstring>
 #include <cstdlib>
 #include <vector>
-#include <array>
-#include <mutex>
 #include <unistd.h>
 #include <poll.h>
 #include <cerrno>
@@ -71,14 +69,7 @@ struct Slot {
     bool first_use = true;
     VkSemaphore released = VK_NULL_HANDLE;
     bool release_registered = false;
-    // Planar output: the fields above hold the R8 Y plane; Cb and Cr follow.
-    AHardwareBuffer *chroma_ahb[2] = {};
-    Plane chroma[2];
-    bool planar_registered = false;
 };
-
-std::mutex planar_mutex;
-std::vector<std::array<AHardwareBuffer *, 3>> planar_outputs;
 
 uint32_t find_memory_type(VkPhysicalDevice gpu, uint32_t bits, VkMemoryPropertyFlags want) {
     VkPhysicalDeviceMemoryProperties props;
@@ -99,7 +90,6 @@ struct pyroclient {
     bool legall53 = false;      // Experiment 2: CDF 5/3 instead of 9/7 (compute path only)
     int decode_path_hint = 0;   // dashboard setting: 0 auto, 1 fragment, 2 compute
     bool low_queue_priority = false;
-    bool planar = false;
 
     VkInstance instance = VK_NULL_HANDLE;
     VkPhysicalDevice gpu = VK_NULL_HANDLE;
@@ -167,15 +157,7 @@ struct pyroclient {
     bool create_convert();
     bool create_fragment_convert();
     bool create_slot(Slot &s);
-    bool planar_supported();
-    bool create_output_plane(uint32_t w, uint32_t h, AHardwareBuffer *&ahb, VkImage &image,
-                             VkDeviceMemory &memory, VkImageView &view);
-    bool create_planar_slot(Slot &s);
     bool record_and_submit(Slot &s, pyroclient_frame_info *info, int *ready_fd = nullptr);
-    bool record_planar(Slot &s);
-    bool record_rgba(Slot &s);
-    bool submit_recorded(Slot &s, pyroclient_frame_info *info, int *ready_fd, bool wait_released,
-                         std::chrono::steady_clock::time_point t0);
     bool finish_pending(pyroclient_frame_info *info);
     void destroy();
 };
@@ -630,103 +612,6 @@ bool pyroclient::create_slot(Slot &s) {
     return true;
 }
 
-static const VkImageUsageFlags planar_image_usage =
-    VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-bool pyroclient::planar_supported() {
-    const uint32_t cw = chroma444 ? width : width / 2, ch = chroma444 ? height : height / 2;
-    for (uint32_t i = 0; i < 2; i++) {
-        AHardwareBuffer_Desc d = {};
-        d.width = i ? cw : width; d.height = i ? ch : height; d.layers = 1;
-        d.format = AHARDWAREBUFFER_FORMAT_R8_UNORM;
-        d.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE | AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT;
-        if (!AHardwareBuffer_isSupported(&d)) {
-            LOGI("[Q3PW_PLANAR] R8 AHardwareBuffer %ux%u unsupported", d.width, d.height);
-            return false;
-        }
-    }
-    VkPhysicalDeviceExternalImageFormatInfo ext = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_IMAGE_FORMAT_INFO };
-    ext.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID;
-    VkPhysicalDeviceImageFormatInfo2 fi = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2 };
-    fi.pNext = &ext; fi.format = VK_FORMAT_R8_UNORM; fi.type = VK_IMAGE_TYPE_2D;
-    fi.tiling = VK_IMAGE_TILING_OPTIMAL; fi.usage = planar_image_usage;
-    VkExternalImageFormatProperties ep = { VK_STRUCTURE_TYPE_EXTERNAL_IMAGE_FORMAT_PROPERTIES };
-    VkImageFormatProperties2 p2 = { VK_STRUCTURE_TYPE_IMAGE_FORMAT_PROPERTIES_2 };
-    p2.pNext = &ep;
-    const VkResult r = vkGetPhysicalDeviceImageFormatProperties2(gpu, &fi, &p2);
-    const bool importable = r == VK_SUCCESS &&
-        (ep.externalMemoryProperties.externalMemoryFeatures & VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT) &&
-        p2.imageFormatProperties.maxExtent.width >= width && p2.imageFormatProperties.maxExtent.height >= height;
-    LOGI("[Q3PW_PLANAR] R8 AHB Vulkan usage=0x%x result=%d importable=%d", unsigned(fi.usage), int(r), importable);
-    return importable;
-}
-
-bool pyroclient::create_output_plane(uint32_t w, uint32_t h, AHardwareBuffer *&ahb, VkImage &image,
-                                     VkDeviceMemory &memory, VkImageView &view) {
-    AHardwareBuffer_Desc d = {};
-    d.width = w; d.height = h; d.layers = 1;
-    d.format = AHARDWAREBUFFER_FORMAT_R8_UNORM;
-    d.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE | AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT;
-    if (AHardwareBuffer_allocate(&d, &ahb) != 0 || !ahb) { LOGE("[Q3PW_PLANAR] R8 allocate %ux%u failed", w, h); return false; }
-    auto getProps = (PFN_vkGetAndroidHardwareBufferPropertiesANDROID)vkGetDeviceProcAddr(device, "vkGetAndroidHardwareBufferPropertiesANDROID");
-    if (!getProps) { LOGE("no vkGetAndroidHardwareBufferPropertiesANDROID"); return false; }
-    VkAndroidHardwareBufferFormatPropertiesANDROID fp = { VK_STRUCTURE_TYPE_ANDROID_HARDWARE_BUFFER_FORMAT_PROPERTIES_ANDROID };
-    VkAndroidHardwareBufferPropertiesANDROID ap = { VK_STRUCTURE_TYPE_ANDROID_HARDWARE_BUFFER_PROPERTIES_ANDROID };
-    ap.pNext = &fp;
-    VK_TRY(getProps(device, ahb, &ap));
-    if (fp.format != VK_FORMAT_R8_UNORM) { LOGE("[Q3PW_PLANAR] R8 AHB imports as format %d", int(fp.format)); return false; }
-
-    VkExternalMemoryImageCreateInfo ext = { VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO };
-    ext.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_BIT_ANDROID;
-    VkImageCreateInfo ii = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-    ii.pNext = &ext;
-    ii.imageType = VK_IMAGE_TYPE_2D; ii.format = VK_FORMAT_R8_UNORM;
-    ii.extent = { w, h, 1 }; ii.mipLevels = 1; ii.arrayLayers = 1;
-    ii.samples = VK_SAMPLE_COUNT_1_BIT; ii.tiling = VK_IMAGE_TILING_OPTIMAL;
-    ii.usage = planar_image_usage;
-    ii.sharingMode = VK_SHARING_MODE_EXCLUSIVE; ii.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    VK_TRY(vkCreateImage(device, &ii, nullptr, &image));
-
-    VkImportAndroidHardwareBufferInfoANDROID imp = { VK_STRUCTURE_TYPE_IMPORT_ANDROID_HARDWARE_BUFFER_INFO_ANDROID };
-    imp.buffer = ahb;
-    VkMemoryDedicatedAllocateInfo ded = { VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO };
-    ded.image = image; ded.pNext = &imp;
-    uint32_t type = find_memory_type(gpu, ap.memoryTypeBits, 0);
-    if (type == UINT32_MAX) { LOGE("no memory type for R8 AHB"); return false; }
-    VkMemoryAllocateInfo ai = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
-    ai.pNext = &ded; ai.allocationSize = ap.allocationSize; ai.memoryTypeIndex = type;
-    VK_TRY(vkAllocateMemory(device, &ai, nullptr, &memory));
-    VK_TRY(vkBindImageMemory(device, image, memory, 0));
-
-    VkImageViewCreateInfo vi = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-    vi.image = image; vi.viewType = VK_IMAGE_VIEW_TYPE_2D; vi.format = VK_FORMAT_R8_UNORM;
-    vi.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
-    VK_TRY(vkCreateImageView(device, &vi, nullptr, &view));
-    return true;
-}
-
-bool pyroclient::create_planar_slot(Slot &s) {
-    const uint32_t cw = chroma444 ? width : width / 2, ch = chroma444 ? height : height / 2;
-    if (!create_output_plane(width, height, s.ahb, s.image, s.memory, s.view)) return false;
-    for (int i = 0; i < 2; i++) {
-        Plane &p = s.chroma[i];
-        if (!create_output_plane(cw, ch, s.chroma_ahb[i], p.image, p.memory, p.view)) return false;
-        p.width = cw; p.height = ch;
-    }
-    {
-        std::lock_guard<std::mutex> lock(planar_mutex);
-        planar_outputs.push_back({s.ahb, s.chroma_ahb[0], s.chroma_ahb[1]});
-        s.planar_registered = true;
-    }
-    if (release_fences) {
-        VkSemaphoreCreateInfo semaphore = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-        VK_TRY(vkCreateSemaphore(device, &semaphore, nullptr, &s.released));
-        s.release_registered = release_registry.add(s.ahb);
-        if (!s.release_registered) { LOGE("release registry duplicate buffer"); return false; }
-    }
-    return true;
-}
-
 static void image_barrier(VkCommandBuffer cmd, VkImage img, VkImageLayout from, VkImageLayout to,
                           VkAccessFlags srcA, VkAccessFlags dstA, VkPipelineStageFlags srcS,
                           VkPipelineStageFlags dstS, uint32_t srcQ = VK_QUEUE_FAMILY_IGNORED,
@@ -773,41 +658,7 @@ bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info, int *re
     VkCommandBufferBeginInfo bi = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
     bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     VK_TRY(vkBeginCommandBuffer(cmd, &bi));
-    if (!(planar ? record_planar(s) : record_rgba(s))) return false;
-    return submit_recorded(s, info, ready_fd, wait_released, t0);
-}
 
-// PyroWave writes the slot's own R8 buffers; nothing else touches them. Each is acquired from the
-// foreign (GLES) family in GENERAL, keeping its contents, and released back in GENERAL.
-bool pyroclient::record_planar(Slot &s) {
-    const VkPipelineStageFlags writeStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-    const VkAccessFlags writeAccess = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_WRITE_BIT;
-    const VkImage images[3] = { s.image, s.chroma[0].image, s.chroma[1].image };
-    for (VkImage image : images)
-        image_barrier(cmd, image, s.first_use ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_GENERAL,
-                      VK_IMAGE_LAYOUT_GENERAL, 0, writeAccess, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, writeStages,
-                      s.first_use ? VK_QUEUE_FAMILY_IGNORED : VK_QUEUE_FAMILY_FOREIGN_EXT,
-                      s.first_use ? VK_QUEUE_FAMILY_IGNORED : family);
-    s.first_use = false;
-
-    pyrowave_gpu_buffers out = buffers;
-    for (int i = 0; i < 3; i++) out.planes[i].image = images[i];
-    vkCmdResetQueryPool(cmd, queries, 0, 3);
-    vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queries, 0);
-    pyrowave_device_set_command_buffer(pyro, cmd);
-    pyrowave_result dr = pyrowave_decoder_decode_gpu_buffer(decoder, nullptr, nullptr, &out);
-    pyrowave_device_set_command_buffer(pyro, VK_NULL_HANDLE);
-    if (dr != PYROWAVE_SUCCESS) { LOGE("decode_gpu_buffer: %d", (int)dr); return false; }
-    vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queries, 1);
-    vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queries, 2);
-
-    for (VkImage image : images)
-        image_barrier(cmd, image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL, writeAccess, 0,
-                      writeStages, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, family, VK_QUEUE_FAMILY_FOREIGN_EXT);
-    return true;
-}
-
-bool pyroclient::record_rgba(Slot &s) {
     const VkPipelineStageFlags writeStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
     const VkAccessFlags writeAccess = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_WRITE_BIT;
     // Planes: created UNDEFINED, the views declare GENERAL, and PyroWave transitions nothing.
@@ -882,11 +733,7 @@ bool pyroclient::record_rgba(Slot &s) {
     // Hand the buffer to the foreign (GLES) queue family in GENERAL; the EGL import reads it.
     image_barrier(cmd, s.image, outLayout, VK_IMAGE_LAYOUT_GENERAL, outAccess, 0,
                   outStage, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, family, VK_QUEUE_FAMILY_FOREIGN_EXT);
-    return true;
-}
 
-bool pyroclient::submit_recorded(Slot &s, pyroclient_frame_info *info, int *ready_fd, bool wait_released,
-                                 std::chrono::steady_clock::time_point t0) {
     VK_TRY(vkEndCommandBuffer(cmd));
     VkSubmitInfo si = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
     // Wait before the FOREIGN acquire barrier as well as any writes. Preserve
@@ -959,18 +806,6 @@ void pyroclient::destroy() {
     if (decoder) pyrowave_decoder_destroy(decoder);
     for (Slot &s : ring) {
         if (s.release_registered) release_registry.remove(s.ahb);
-        if (s.planar_registered) {
-            std::lock_guard<std::mutex> lock(planar_mutex);
-            for (size_t i = 0; i < planar_outputs.size(); i++)
-                if (planar_outputs[i][0] == s.ahb) { planar_outputs.erase(planar_outputs.begin() + i); break; }
-        }
-        for (int i = 0; i < 2; i++) {
-            Plane &p = s.chroma[i];
-            if (p.view) vkDestroyImageView(device, p.view, nullptr);
-            if (p.image) vkDestroyImage(device, p.image, nullptr);
-            if (p.memory) vkFreeMemory(device, p.memory, nullptr);
-            if (s.chroma_ahb[i]) AHardwareBuffer_release(s.chroma_ahb[i]);
-        }
         if (s.released) vkDestroySemaphore(device, s.released, nullptr);
         if (s.framebuffer) vkDestroyFramebuffer(device, s.framebuffer, nullptr);
         if (s.view) vkDestroyImageView(device, s.view, nullptr);
@@ -1014,11 +849,6 @@ extern "C" pyroclient *pyroclient_create_ex(uint32_t width, uint32_t height, int
 }
 
 extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t height, int chroma444, int full_range, uint32_t ring_size, int wavelet, int decode_path, int low_queue_priority) {
-    return pyroclient_create_flags(width, height, chroma444, full_range, ring_size, wavelet, decode_path,
-                                   low_queue_priority ? PYROCLIENT_FLAG_LOW_QUEUE_PRIORITY : 0u);
-}
-
-extern "C" pyroclient *pyroclient_create_flags(uint32_t width, uint32_t height, int chroma444, int full_range, uint32_t ring_size, int wavelet, int decode_path, uint32_t flags) {
     if (!width || !height || (!chroma444 && ((width | height) & 1))) { LOGE("bad geometry %ux%u", width, height); return nullptr; }
     if (wavelet != 97 && wavelet != 53 && wavelet != 2) { LOGE("bad wavelet %d (97, 53 or 2=Haar)", wavelet); return nullptr; }
     char fused_prop[PROP_VALUE_MAX] = {};
@@ -1041,25 +871,9 @@ extern "C" pyroclient *pyroclient_create_flags(uint32_t width, uint32_t height, 
     c->legall53 = wavelet == 53;
     c->haar = wavelet == 2;
     c->decode_path_hint = decode_path;
-    c->low_queue_priority = (flags & PYROCLIENT_FLAG_LOW_QUEUE_PRIORITY) != 0;
+    c->low_queue_priority = low_queue_priority != 0;
     c->ring.resize(ring_size < 2 ? 2 : ring_size);
     if (!c->create_device() || !c->create_planes() || !c->create_convert()) { c->destroy(); delete c; return nullptr; }
-
-    if (flags & PYROCLIENT_FLAG_PLANAR_OUTPUT) {
-        c->planar = c->planar_supported();
-        for (Slot &s : c->ring)
-            if (c->planar && !c->create_planar_slot(s)) c->planar = false;
-        if (!c->planar) {
-            LOGI("[Q3PW_PLANAR] requested=1 active=0; falling back to RGBA output");
-            c->destroy(); delete c;
-            return pyroclient_create_flags(width, height, chroma444, full_range, ring_size, wavelet, decode_path,
-                                           flags & ~PYROCLIENT_FLAG_PLANAR_OUTPUT);
-        }
-        LOGI("[Q3PW_PLANAR] requested=1 active=1 ring=%zu", c->ring.size());
-        LOGI("ready: %ux%u %s %s range, ring %zu, planar", width, height, chroma444 ? "4:4:4" : "4:2:0",
-             full_range ? "full" : "limited", c->ring.size());
-        return c;
-    }
 
     // Does this driver take STORAGE usage on an imported AHB image? Ask before creating the ring.
     {
@@ -1192,16 +1006,6 @@ extern "C" uint64_t pyroclient_output_release_token(AHardwareBuffer *buffer) {
 }
 extern "C" int pyroclient_attach_release_fd(AHardwareBuffer *buffer, uint64_t token, int fd) {
     return release_registry.attach(buffer, token, fd) ? 1 : 0;
-}
-
-extern "C" int pyroclient_is_planar(pyroclient *c) { return c && c->planar ? 1 : 0; }
-
-extern "C" int pyroclient_output_planes(AHardwareBuffer *luma, AHardwareBuffer **cb, AHardwareBuffer **cr) {
-    if (!luma || !cb || !cr) return 0;
-    std::lock_guard<std::mutex> lock(planar_mutex);
-    for (const auto &planes : planar_outputs)
-        if (planes[0] == luma) { *cb = planes[1]; *cr = planes[2]; return 1; }
-    return 0;
 }
 
 extern "C" void pyroclient_destroy(pyroclient *c) { if (!c) return; c->destroy(); delete c; }

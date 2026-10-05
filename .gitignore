@@ -46,6 +46,5 @@ results/local/
 tools/pyroclient/pyroclient_test
 tools/pyroclient/release_fence_gpu_test
 tools/pyroclient/ready_fence_gpu_test
-tools/pyroclient/planar_output_test
 tools/udptest/udprecv-android
 tools/udptest/udprecv-host
