@@ -4728,7 +4728,7 @@ index 5cfc048..7b4bab9 100644
 +            mbps,
 +            video["pyrowave"]["chroma_444"].as_bool().unwrap_or(false),
 +        ) {
-+            ui.label(format!("{}Ã—{} / eye â€¢ {:.2} ms â€¢ â‰¤{} B/frame â€¢ {:.2}:1 raw/payload{}",
++            ui.label(format!("{}×{} / eye • {:.2} ms • ≤{} B/frame • {:.2}:1 raw/payload{}",
 +                b.eye_width, b.eye_height, b.frame_ms, b.payload_bytes, b.raw_to_payload,
 +                if automatic { " at ceiling" } else { "" }))
 +                .on_hover_text("PyroWave 8-bit codec payload after 32-pixel padding. Excludes network overhead. This budget does not prove decode speed or image quality. Resolution/refresh changes need a SteamVR restart.");
