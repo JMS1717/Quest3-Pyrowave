@@ -31,10 +31,12 @@ git -C "$dest/ALVR-20.13.0" submodule update -q --init --recursive --depth 1   #
 git -C "$dest/ALVR-20.13.0" apply --binary "$repo/patches/alvr-20.13.0-server-instrumentation.patch"
 git -C "$dest/ALVR-20.13.0" apply --binary "$repo/patches/quest3-alvr.patch"
 cp "$repo/tools/foveation/light.glsl" "$dest/ALVR-20.13.0/alvr/graphics/resources/light_foveation.glsl"
+cp "$repo/tools/latency/latency_stamp.h" "$dest/ALVR-20.13.0/alvr/server_openvr/cpp/platform/win32/latency_stamp.h"
 cp "$repo/tools/fences/native_ready.rs" "$dest/ALVR-20.13.0/alvr/graphics/src/native_ready.rs"
 cp "$repo/tools/fences/ready_wait.rs" "$dest/ALVR-20.13.0/alvr/graphics/src/ready_wait.rs"
 cp "$repo/tools/fences/ready_frames.rs" "$dest/ALVR-20.13.0/alvr/client_core/src/video_decoder/ready_frames.rs"
 cp "$repo/tools/fences/latest_wait.rs" "$dest/ALVR-20.13.0/alvr/client_openxr/src/latest_wait.rs"
+cp "$repo/tools/quest3/cadence_probe.rs" "$dest/ALVR-20.13.0/alvr/client_openxr/src/cadence_probe.rs"
 cp "$repo/tools/quest3/producer_opportunity.rs" "$dest/ALVR-20.13.0/alvr/client_core/src/video_decoder/producer_opportunity.rs"
 cp "$repo/tools/quest3/producer_prerecord.rs" "$dest/ALVR-20.13.0/alvr/client_core/src/video_decoder/producer_prerecord.rs"
 fi

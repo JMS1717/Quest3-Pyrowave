@@ -40,6 +40,8 @@ jobs:
           /tmp/producer-opportunity-test
           rustc --edition=2021 --test tools/quest3/producer_prerecord.rs -o /tmp/producer-prerecord-test
           /tmp/producer-prerecord-test
+          rustc --edition=2021 --test tools/quest3/cadence_probe.rs -o /tmp/cadence-probe-test
+          /tmp/cadence-probe-test
       - name: CPU source-chart scale and stripe regression (no VR)
         run: |
           python3 -m pip install --disable-pip-version-check -r tools/requirements-test.txt
@@ -53,6 +55,8 @@ jobs:
         run: g++ -std=c++17 -Wall -Wextra -Werror tools/pyroclient/fuse_color_policy_test.cpp -o /tmp/fuse-color-policy && /tmp/fuse-color-policy
       - name: Adreno LPAC queue-family choice (CPU only)
         run: g++ -std=c++17 -Wall -Wextra -Werror tools/pyroclient/lpac_queue_test.cpp -o /tmp/lpac-queue && /tmp/lpac-queue
+      - name: Optical latency stamp layout round trip (CPU only)
+        run: g++ -std=c++17 -Wall -Wextra -Werror tools/latency/latency_stamp_test.cpp -o /tmp/latency-stamp && /tmp/latency-stamp
       - name: Surface chart orientation and channel order (CPU only)
         run: g++ -std=c++17 -Wall -Wextra -Werror tools/pyroclient/surface_chart_pixels_test.cpp -o /tmp/surface-chart-pixels && /tmp/surface-chart-pixels
       - name: Software GLES readback correctness (no Quest hardware)

@@ -2,7 +2,7 @@
 import json
 import math
 from pathlib import Path
-from .foveation import encoded_eye, CENTER, EDGE
+from .foveation import encoded_eye, profile_values
 
 RENDER_FIELD = 'emulated_headset_view_resolution'
 ENCODE_FIELD = 'transcoding_view_resolution'
@@ -74,6 +74,8 @@ def evidence(settings, telemetry=()):
             mismatches.append(f'{name}_size_pending_restart_or_negotiation')
     ffe = o.get('enable_foveated_encoding')
     light_requested = settings.get('light_foveated_encoding', False)
+    profile = settings.get('foveation_profile', 'light')
+    CENTER, EDGE = profile_values(profile)
     light_verified = (ffe is True and light_requested is True and
         all(type(o.get(key)) in (int, float) and math.isclose(o[key], value, abs_tol=1e-6, rel_tol=0) for key, value in (
             ('foveation_center_size_x', CENTER), ('foveation_center_size_y', CENTER),
@@ -83,7 +85,7 @@ def evidence(settings, telemetry=()):
         mismatches.append('light_foveation_pending_restart_or_negotiation')
     if ffe is True and not light_verified:
         mismatches.append('foveated_profile_not_verified')
-    expected_decode = encoded_eye(encode) if known(encode) and light_verified else encode if ffe is False else None
+    expected_decode = encoded_eye(encode, profile) if known(encode) and light_verified else encode if ffe is False else None
     decoded = []
     if settings.get('codec') == 'PyroWave':
         for item in telemetry:
@@ -102,6 +104,7 @@ def evidence(settings, telemetry=()):
             'aligned_requested_encode_eye': requested_encode,
             'negotiated_render_eye': render, 'negotiated_encode_eye': encode,
             'expected_decode_eye': expected_decode, 'light_foveation_verified': light_verified,
+            'foveation_profile': profile,
             'observed_encoded_stereo_frames': decoded,
             'pc_source_pixel_ratio': render[0] * render[1] / (encode[0] * encode[1])
                 if known(render) and known(encode) else None,
