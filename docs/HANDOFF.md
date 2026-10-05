@@ -53,6 +53,14 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 ## Highest-value next experiment
 
+**Producer audit, October 5:** [bounded overlap](PRODUCER-OVERLAP.md) found an
+existing Granite context-readiness method, but it has locking/recycling side
+effects and is absent from the C API. Three AHBs can all be occupied by a lease,
+pending output and active decode. Measure packet-arrival/recording/publication
+overlap and free-slot availability before implementing a second submission.
+A conditional pre-recorded successor with only one GPU submission is a smaller
+proposal; no wait has been removed and no new native artifact was built.
+
 **Latest rejection, October 5:** the reviewed `.43` vector-dequant branch passed
 all matching builds and six exact GPU checks (baseline/vector/combined at two
 sizes). Stage-enabled medians suggested small headroom, but the diagnostic-off

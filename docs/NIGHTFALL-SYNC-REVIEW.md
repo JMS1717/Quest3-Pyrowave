@@ -1,8 +1,10 @@
 # Nightfall native-fence review
 
 Source review on 2026-10-02; the review itself did not deploy a native change.
-The latest matching development pair is now .28. Keep full-frame 4:2:0 and
-synchronous producer completion as the defaults.
+Keep full-frame 4:2:0 and synchronous producer completion as the defaults.
+The October 5 [producer-overlap audit](PRODUCER-OVERLAP.md) identifies Granite's
+existing readiness gate, worst-case output-slot exhaustion and a smaller
+pre-recording design. These are source findings, not a new performance gain.
 
 Follow-up: the [.26 release-fence candidate](RELEASE-FENCE-EXPERIMENT.md) implements
 the first step below, default off. Its queued-read/reuse correctness checks passed,
