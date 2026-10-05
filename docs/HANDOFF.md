@@ -24,6 +24,30 @@ resume paused hardware work or unattended workers.
 
 ## Current engineering state
 
+The `.48` prerecord worker is now active and measured, but **not promoted**.
+All matching builds passed; actual native activation, preparation and direct-only
+eye completions were verified. Same-session ABBA eye completion proxies stayed
+116–117/s and p1 near 60; preparation worsened native completion tails to about
+12.3 ms p99 versus 8.5–8.6 ms control. Keep sync default and prerecord off.
+Estimated latency shifted about one runtime interval, not an optical gain.
+See [measurements, hashes and limitations](PRODUCER-PRERECORD.md).
+
+Installed reviewed `.48` is left with the mode off; temporary properties and
+both sessions were restored, physical proximity restored, Virtual Desktop-only
+driver registration and no VR/client/capture workers verified. Older pairs remain.
+Native libraries EXACT `.47` reuse its small/native exact-pixel proofs including
+partial-warm rejection. `.47` streaming windows remain excluded for inactive
+allocation. Source fixture was native-sized; no supersampling quality claim.
+
+Latest [LOW+release handoff](RELEASE-LOW.md) confirms exact native-size fenced
+reuse and active GPU imports. CPU waiting drops ~1 ms and copy deferrals vanish,
+but delivery/p1 do not improve. Keep release off; investigate producer resource
+lifetime and presentation scheduling before another mechanism.
+
+Latest [LOW+async comparison](ASYNC-LOW.md) verifies actual GPU-fence polling:
+CPU eye-render time fell ~1.63→0.59 ms, but eye completions stayed ~117/s and
+p1 near 60. Keep synchronous default; no sustained or optical acceptance.
+
 | Item | Evidence / limitation |
 | --- | --- |
 | Public release | [alpha.7](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.7), matching `.15` APK/server |
@@ -53,6 +77,17 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 ## Highest-value next experiment
 
+**October 5 next step:** the bounded one-submission prerecord prototype has
+been measured and did not improve fresh delivery/p1. Do not repeat unchanged
+flag/bitrate sweeps. Investigate publication-to-eye scheduling with per-frame
+content timestamp and pose evidence, preserve bounded latency and ordinary
+sync fallback. Add native decoder panic-time ownership before any promotion;
+environment restoration tests alone do not prove native cleanup. Two concurrent
+GPU decodes remain unsafe with current shared scratch/query/upload lifetimes.
+Native 120 sustained/optical acceptance remains unmet. The historical evidence
+below records earlier hypotheses; completed experiments are not pending work.
+
+
 **Producer audit, October 5:** [bounded overlap](PRODUCER-OVERLAP.md) found an
 existing Granite context-readiness method, but it has locking/recycling side
 effects and is absent from the C API. Three AHBs can all be occupied by a lease,
@@ -61,20 +96,40 @@ overlap and free-slot availability before implementing a second submission.
 A conditional pre-recorded successor with only one GPU submission is a smaller
 proposal; no wait has been removed and no new native artifact was built.
 
+**Latest payload screen, October5:** same-session native120/4:2:0/LOW comparison
+of1000/800/600/800/1000Mbps used verified live directives and exact frame-byte
+caps. Controls agree near118.1 eye completions/s;800 varied118.4→117.5,600 reached
+118.7 once. GPU/completion times did not decrease consistently; p1 remains near60.
+Keep1000 default and avoid an unchanged sweep. [Metrics and limitations](BITRATE.md#current-native120-payload-isolation-october5).
+Next inspect presentation/completion scheduling. Earlier async-copy screens
+predated the LOW decode-priority change; audit ownership and the actual prior
+configuration before deciding whether that combination is a new useful test.
+
+**Latest CPU scheduling screen, October 5:** `.44` replaced repeated50µs
+selection sleeps with a bounded condition-variable notification, off by default.
+All matching CI jobs passed, including40 Linux production decoder tests with
+nine new race/FD cases. Its native libraries are byte-identical to GPU-verified
+`.42`. The candidate executed223/194 real waits with zero fallback, but completed
+115.82/116.03 eyes/s versus controls118.28/115.54. No consistent delivery gain;
+keep it disabled and avoid an unchanged repeat. Private compositor images retain
+correct orientation and eye mapping; sustained/optical acceptance remains unmet.
+[Source, matching artifacts, replay tooling and sanitized findings](https://github.com/JMS1717/Quest3-Pyrowave/blob/experiment/publication-event/docs/PUBLICATION-EVENT.md).
+Main retains `.42`; `.44` remains a documented experiment. Next isolate payload
+versus fixed reconstruction/completion cost with the current native120 path,
+or investigate removing the GLES bridge with exact image/pose ownership.
+
 **Latest rejection, October 5:** the reviewed `.43` vector-dequant branch passed
 all matching builds and six exact GPU checks (baseline/vector/combined at two
 sizes). Stage-enabled medians suggested small headroom, but the diagnostic-off
 repeat found no consistent GPU, completion or delivery gain. Keep it disabled;
 do not repeat unchanged screens. [Implementation and measured findings](https://github.com/JMS1717/Quest3-Pyrowave/blob/experiment/dequant-vector/docs/DEQUANT-VECTOR.md).
 Main retains `.42`; `.43` stays a documented experiment with matching artifacts.
-Next investigate CPU publication notifications in place of repeated50µs selection
-sleeps, while preserving the current bounded wait, ready-FD and buffer-lease rules.
-Any candidate needs race/ownership tests, matching builds and controlled live
-comparison; a notification itself does not establish GPU or optical completion.
+The subsequent publication-notification screen above found no consistent gain;
+notification itself does not establish GPU or optical completion.
 
 **Latest kernel screen, October 5:** `.42` row-wise Haar lowered inverse-transform
 stage averages to 2.8–3.0 ms versus roughly 3.1–3.6 ms, but delivery still overlaps
-115–118 completion events/s with p1 near60. Candidates ended at599MHz and controls
+115–118 completion events/s with p1 near 60. Candidates ended at599MHz and controls
 at640MHz. Diagnostic-off repeats suggest a small benefit, insufficient for default
 promotion or sustained120 acceptance. Dequantization remains about2.6–3.0ms.
 Read [source, matching build, exact GPU checks and three comparisons](HAAR-PAIRS.md).

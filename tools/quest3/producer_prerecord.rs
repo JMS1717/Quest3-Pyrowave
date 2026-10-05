@@ -3,9 +3,24 @@
 use std::time::Duration;
 use std::ffi::OsString;
 
+/// Thread-local native cleanup. Declare after the allocation environment so
+/// native resources drain before the process environment is restored, including
+/// Rust unwind. The callback must not panic; native destruction remains checked
+/// by the independent hardware restorer, not by these CPU tests.
+pub struct NativeOwner<F: FnOnce()> { destroy: Option<F> }
+impl<F: FnOnce()> NativeOwner<F> {
+    pub fn new(destroy: F) -> Self { Self { destroy: Some(destroy) } }
+}
+impl<F: FnOnce()> Drop for NativeOwner<F> {
+    fn drop(&mut self) {
+        if let Some(destroy) = self.destroy.take() { destroy(); }
+    }
+}
+
 /// Single decoder owner only. The eligible TCP worker is the sole constructor;
 /// teardown joins it before another decoder is created. Restore process state
-/// after native destruction, including constructor-error and unwind paths.
+/// after native destruction when the later-declared NativeOwner drains first.
+/// Constructor failure owns no native decoder.
 pub struct AllocationEnvironment { previous: Option<OsString> }
 impl AllocationEnvironment {
     pub fn enable() -> Self {
@@ -62,6 +77,22 @@ mod tests {
         std::env::remove_var("PYROWAVE_NO_LINEAR_TEX");
         let _=std::panic::catch_unwind(|| { let _guard=AllocationEnvironment::enable(); panic!("constructor failed"); });
         assert!(std::env::var_os("PYROWAVE_NO_LINEAR_TEX").is_none());
+        // Exercise the production guard and declaration order used by the
+        // worker. This proves callback ordering, not actual GPU destruction.
+        let destroyed=std::cell::Cell::new(0);
+        for panic_after_creation in [false,true] {
+            let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                let _environment=AllocationEnvironment::enable();
+                let _native=NativeOwner::new(|| {
+                    assert_eq!(std::env::var("PYROWAVE_NO_LINEAR_TEX").unwrap(),"1");
+                    destroyed.set(destroyed.get()+1);
+                });
+                if panic_after_creation { panic!("worker failed after native creation"); }
+            }));
+            assert_eq!(result.is_err(),panic_after_creation);
+            assert!(std::env::var_os("PYROWAVE_NO_LINEAR_TEX").is_none());
+        }
+        assert_eq!(destroyed.get(),2);
         if let Some(v)=original { std::env::set_var("PYROWAVE_NO_LINEAR_TEX",v); }
     }
     fn prepared() -> Prepared { Prepared { timestamp: Duration::from_nanos(9), order: u64::MAX, generation: 17 } }

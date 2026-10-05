@@ -120,54 +120,96 @@ values and physical proximity behavior were restored with readback; Virtual
 Desktop registration was preserved. This is a correctness milestone, **not a
 measured FPS or latency improvement**. Keep the normal synchronous path as default.
 
-## Opt-in streaming integration candidate `.48`
+## `.47` integration screen: excluded, allocation guard worked
 
-Not device-accepted or promoted. Matching builds, renewed native proof and a
-controlled streaming screen are required. `debug.q3pw.prerecord_mode=1` at client
-startup requests the experimental worker. With `debug.q3pw.prerecord_active=0`,
-it uses explicit single-submission start/poll/finish with no preparation.
-`prerecord_active=1` additionally permits one successor preparation. Both arms
-disable optional Granite stage timestamps and retain native completion queries.
-Leave `prerecord_mode` empty or zero to retain the existing synchronous default.
+[Matching `.47` builds](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37294992783)
+passed all four jobs and 53 production Linux tests. Renewed small/native Quest
+checks passed on fragment and compute conversion, including rejection after
+only one or two output slots were warmed. Default readbacks stayed exact.
+[Sanitized results and matching hashes](../results/PRODUCER-PRERECORD-47-2026-10-05.json).
 
-The first `.47` streaming screen was excluded: eligibility passed, but native
-enable rejected the missing `PYROWAVE_NO_LINEAR_TEX=1` allocation environment.
-Standalone exact-pixel tests had set it before constructing the decoder. All
-four captured windows stayed on the ordinary fallback; no preparation gain can
-be inferred. Settings were restored. `.48` scopes that environment to the one
-eligible decoder, before construction, and restores the prior value after native
-destruction or constructor failure. Both experimental arms use the same allocation
-setting; the default worker does not change its environment. Native libraries are
-unchanged from `.47`; exact artifact identity is still required for proof reuse.
+The subsequent four 12-second same-session control/prepare windows are **all
+excluded**. Rust eligibility passed, but native enable rejected the configuration;
+the worker stayed on ordinary decoding. No actual preparation or experimental
+timing rows exist, so comparing their FPS would be misleading.
 
-The Rust gate requires one TCP worker, exact native stereo geometry, Haar/Compute
-4:2:0 and LOW priority policy. Other ready/release/async/handoff/event/stage/Surface
-experiments and producer diagnostics are excluded. Before enable, the worker
-observes three distinct completed output buffers; the native API independently
-rejects any initially unused slot. Native startup can still reject unsupported
-configuration, preserving baseline decoding before any experimental submission.
+Source review found that ALVR had not established the required
+`PYROWAVE_NO_LINEAR_TEX=1` environment before native allocation. The standalone
+fixtures had done so. Candidate `.48` scopes that setting to the eligible single
+decoder, restores its prior value after native destruction/constructor failure,
+and leaves the default worker alone. Portable tests cover prior-value, unset and
+unwind restoration. Matching builds, exact native-library identity and an actual
+`enabled=1` streaming screen remain required. This correction is not yet accepted.
 
-While A runs, the worker removes at most one complete pending packet and reserves
-a genuinely free B output from the coherent consumer snapshot. Context, slot or
-upload-capacity deferral restores that packet only if no newer receive arrived.
-Successful preparation retains only timestamp/order/generation metadata, not a
-second payload FIFO. After A's verified fence and query collection, publish A
-normally. At the next producer selection point, newer pending input or a switch
-to control cancels B; otherwise submit B with its original content timestamp and
-receive order. Arrivals after that selection are eligible for the next successor.
-Only completed outputs enter `FrameSlot`; no ready-fence early publication.
+Both native and streaming phases ended normally with original property/session
+readbacks and physical proximity restored. Virtual Desktop registration and old
+matching pairs remain preserved. Installed `.47` stays on default decoding with
+the experimental mode off. No release or default performance promotion.
 
-The existing render-loop fresh-frame wait (default 4000 microseconds) is unchanged.
-`wait_producer_ready` is also preserved; it normally returns immediately with
-copy handoff disabled. **There is no new 4 ms producer sleep.** Experimental
-completion status polling sleeps 100 microseconds between checks in both arms,
-with a one-second bound plus the existing checked drain. Cancellation/poison or
-completion failure stops the decoder rather than releasing unsafe storage.
+## `.48` active streaming comparison: keep the default
 
-`Q3PW_PRERECORD` reports 120-completion windows, both arm counts, cumulative
-prepared/submitted/canceled/deferred counts and mean queue/record/completion/GPU
-times. Preparation-to-submit delay stays in native `total_ms`; do not subtract
-it to claim latency. Mixed-arm windows must be excluded. CPU policy tests cover
-eligibility, payload deferral races, latest-input cancellation across order wrap,
-and the timestamp/generation association. They do not replace Quest image,
-fresh-frame pacing, latency or sustained thermal acceptance.
+[Matching `.48` source/builds](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37299359906)
+passed all four jobs and 54 production Linux tests. The scoped allocation fix
+activated the native worker with all three outputs warmed. All three native
+libraries match reviewed `.47` byte for byte, so its GPU correctness proof is
+reused by identity; this is not a new standalone device run.
+[Matching hashes and sanitized measurements](../results/PRODUCER-PRERECORD-48-2026-10-05.json).
+
+Same-process ABBA used four 12-second windows, each after three seconds of settling:
+native 2080×2208 per eye, runtime120, 1000 Mbps, 4:2:0, no foveation, LOW priority,
+USB/TCP, one worker. A uses explicit serial start/poll/finish; B additionally
+prepares one successor while A runs, then submits only after A's fence and queries.
+Both keep the existing 4 ms render freshness wait and native completion queries;
+optional Granite stage queries are off. This A is an experimental serial control,
+not proof that every timing equals the ordinary synchronous API.
+
+| Window | Eye completions/s proxy | Client FPS p1 | Native total p50 / p99 (ms) | Mean preparation queue (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| A1 | 116.61 | 60.00 | 7.96 / 8.51 | 0.0003 |
+| B1 | 116.98 | 60.00 | 8.35 / 12.27 | 0.308 |
+| B2 | 116.37 | 60.00 | 8.27 / 12.38 | 0.352 |
+| A2 | 117.25 | 60.00 | 7.96 / 8.61 | 0.0003 |
+
+Preparation actually ran: B1/B2 counter deltas report 710/653 successor
+submissions, with six/three cancellations and 234/233 deferrals. Those deltas
+cover the first-to-last 120-completion records within each window, not the whole
+12 seconds. Mean GPU decode-plus-conversion remains approximately 7 ms; CPU
+recording approximately 0.5 ms. Median payload is about 1005 Mbps in every arm.
+GPU clock endpoints were 640 MHz, battery temperature 30–32°C, thermal status 0.
+No staging fallback or pending eye-copy deferrals appeared. Four compositor
+images were upright with correct LEFT/RIGHT and matching source pulse endpoints.
+
+**Keep normal synchronous decoding as default; prerecord remains off.** Fresh
+delivery/p1 did not improve, while completion tails increased. Estimated pipeline
+latency medians fell about one 120 Hz interval in B, but source-game/decoder-queue
+timing and phase differ. This does not establish optical latency improvement.
+Short screenshots do not establish continuous pose pairing or in-headset quality.
+The source fixture explicitly submitted native-sized textures, so this comparison
+also does not prove a visual benefit from the larger emulated render setting.
+
+Temporary properties, both matching sessions and physical proximity behavior
+were restored with fresh readbacks. Virtual Desktop remains registered; no VR
+server, Quest client or capture lock remains. Installed `.48` has experimental
+mode off, and older matching pairs are preserved. No release or default promotion.
+
+Next investigate publication-to-eye timing with bounded per-frame timestamp/pose
+evidence rather than another unchanged bitrate or flag sweep. Before promoting
+this experimental worker, give its native decoder a Rust ownership guard: the
+current manual destructor handles normal exit, but environment unwind tests do
+not prove native cleanup after a Rust panic. Shared GPU resources still prohibit
+overlapping two decode submissions without a separate lifetime design.
+
+## `.49` cleanup repair: build candidate, not a performance change
+
+The worker now declares a native ownership guard after its allocation environment
+scope. Normal return and Rust panic both clear in-flight state and destroy the
+native decoder before restoring the environment. Constructor failure has no
+native owner. This replaces the previous manual normal-exit destructor; ordinary
+submission, preparation, completion and output timing are unchanged.
+
+The same production helper's CPU test verifies exactly one cleanup callback and
+that the allocation environment remains active during cleanup on normal return
+and unwind. It does not inject a GPU fault or establish real native panic-time
+teardown; matching Android compilation/artifact review remains required. Native
+libraries are unchanged by this Rust-only repair. Keep prerecord off and retain
+the measured `.48` installed pair until review. No FPS/latency gain is claimed.

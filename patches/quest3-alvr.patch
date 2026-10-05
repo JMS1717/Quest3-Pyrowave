@@ -206,7 +206,7 @@ index 7cead7b..18ad9d0 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..ddfa501 100644
+index ae00ce8..bb2bda6 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..ddfa501 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.48"
++version = "20.13.0-quest3.pyro.49"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -1560,7 +1560,7 @@ index 4d2e699..7fea2be 100644
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601..9617944 100644
+index 2e22601..37c555f 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -1819,7 +1819,7 @@ index 2e22601..9617944 100644
          move || {
 +            // Must precede native allocation, not merely prerecord_enable. The
 +            // standalone exact-pixel proofs used the same setting. Scope drops
-+            // AFTER native destruction, including constructor-error returns.
++            // AFTER the later-declared NativeOwner drains, including Rust unwind.
 +            let _allocation_environment = prerecord_requested.then(super::producer_prerecord::AllocationEnvironment::enable);
 +            if prerecord_requested { super::logcat_info("PYROWAVE", "[Q3PW_PRERECORD_ALLOCATION] PYROWAVE_NO_LINEAR_TEX=1 scoped_single_decoder=1"); }
              // Created here so every Vulkan call the library makes stays on this thread.
@@ -1837,10 +1837,15 @@ index 2e22601..9617944 100644
                  )
              };
              if client.is_null() {
-@@ -128,64 +277,246 @@ pub fn video_decoder_split(
+@@ -128,64 +277,251 @@ pub fn video_decoder_split(
                  )));
                  return;
              }
++            let _native_owner = super::producer_prerecord::NativeOwner::new(|| {
++                decoded.clear_in_flight();
++                unsafe { pyroclient_destroy(client) };
++            });
++            if prerecord_requested { super::logcat_info("PYROWAVE", "[Q3PW_PRERECORD_OWNER] rust_unwind_cleanup=1 environment_after_destroy=1"); }
 +            let mut opportunities = super::producer_opportunity::Opportunity::default();
 +            let mut warmed = Vec::with_capacity(3);
 +            let mut prerecord_enabled = false;
@@ -2082,9 +2087,10 @@ index 2e22601..9617944 100644
                      );
                  }
              }
+-            unsafe { pyroclient_destroy(client) };
 +            if let Some(p)=prepared.take() { unsafe { pyroclient_prerecord_cancel(client,p.generation) }; }
-+            decoded.clear_in_flight();
-             unsafe { pyroclient_destroy(client) };
++            // NativeOwner clears in-flight state and destroys before the
++            // allocation environment drops on normal exit or Rust unwind.
          }
 -    });
 +        }));
