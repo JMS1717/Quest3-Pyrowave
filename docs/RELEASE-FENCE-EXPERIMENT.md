@@ -67,6 +67,15 @@ The cloud Android artifact includes a separate `release_fence_gpu_test` diagnost
 release_fence_gpu_test A.wave B.wave haar 3 16
 ```
 
+The diagnostic also accepts a final `default|low` queue argument. Omitting it
+preserves its original default-priority behavior. For a LOW-priority comparison,
+use `A.wave B.wave haar 3 16 low`; the standalone executable passes this directly
+to `pyroclient_create_prioritized`. The app's `debug.q3pw.decode_priority` property
+is interpreted by its Rust caller and does not change the old standalone
+constructor. Require the process-specific native log to show
+`requested=low applied=1`; `queue_requested` alone cannot prove driver acceptance.
+This diagnostic change does not change the APK renderer or either native library.
+
 Use distinct valid Haar-encoded frames with identical dimensions/chroma/range and
 the saved-property guards below. It records synchronous reference pixels, queues
 GLES reads of A, exports/attaches their release FD, and cycles all three Vulkan
