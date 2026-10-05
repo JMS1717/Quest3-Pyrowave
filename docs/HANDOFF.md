@@ -24,6 +24,20 @@ resume paused hardware work or unattended workers.
 
 ## Current engineering state
 
+**Paused by owner October 5.** Overnight automation and the local CI watcher
+are stopped. Fresh property/session and physical-proximity readbacks passed;
+Virtual Desktop is the only registered project-independent driver, with no VR
+server, Quest client or capture worker left running. Do not automatically resume.
+
+A separate [`.49` safety cleanup commit](https://github.com/JMS1717/Quest3-Pyrowave/commit/28e194101799ec07351dfe033645c2cd402cea54)
+adds native ownership so destruction precedes allocation-environment restoration
+on normal return and Rust unwind. Six production helper tests (including cleanup
+order), 115 Python tests, Rust parsing and a 92-file pinned reconstruction passed.
+[Matching cloud build](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37303701652)
+was still pending when work stopped; full artifact review and device acceptance
+remain pending. It is not installed or promoted, and claims no performance gain.
+Installed `.48` and older matching pairs are preserved. No new release.
+
 The `.48` prerecord worker is now active and measured, but **not promoted**.
 All matching builds passed; actual native activation, preparation and direct-only
 eye completions were verified. Same-session ABBA eye completion proxies stayed
