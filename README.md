@@ -19,8 +19,8 @@ USB or Wi-Fi, tune the stream, and measure where every millisecond goes.
 
 [Latest manual playtest and setup fixes](docs/PLAYTEST-2026-10-02.md): optional
 larger PC source, mild sharpening, the overlay override fix and the OpenXR game
-launch fix. The latest reviewed development pair is `.38`, with optional decode
-stage diagnostics off by default. It retains the `.33` improvements: wait up to half a frame
+launch fix. The latest reviewed development pair is `.39`, with optional decode
+stage and Surface diagnostics off by default. It retains the `.33` improvements: wait up to half a frame
 for a frame that is still decoding ([measured gain](docs/FRESHNESS.md)) and at
 ≤120 Hz / 4:2:0 lowers decode priority so the eye copy is not stuck behind it
 ([measured gain](docs/DECODE-PRIORITY.md)). The published preview remains alpha.7. These notes do not establish sustained fresh 120 FPS.
@@ -151,8 +151,8 @@ display-scaling experiment and was rejected on the tested setup.
 
 Current presentation research checks an optional
 [Android Surface/Vulkan WSI path](docs/SURFACE-PROBE.md) that could eventually
-avoid the GLES eye copy. Extension advertisement is verified; object creation,
-presentation and pose/content pairing are separate gates. It is not a measured
+avoid the GLES eye copy. Extension advertisement and tiny object creation are
+verified; presentation and pose/content pairing remain separate gates. It is not a measured
 speedup or a replacement presenter yet. Earlier synchronization research examined a
 [Nightfall-inspired native-fence handoff](docs/NIGHTFALL-SYNC-REVIEW.md).
 The `.26` release-fence experiment passed GPU reuse checks and reduced CPU copy

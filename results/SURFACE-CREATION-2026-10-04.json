@@ -1,0 +1,343 @@
+{
+  "date": "2026-10-04 America/New_York",
+  "source_commit": "55489d8d2d334f3854c9cf59e49f9656345f6cb4",
+  "ci_run": 37256606847,
+  "version": "20.13.0-quest3.pyro.39",
+  "scope": "Creation-only optional Surface/Vulkan WSI screen",
+  "matching_ci_artifacts_reviewed": true,
+  "default_small_native_gpu_readbacks_exact": true,
+  "settings": {
+    "source_eye": [
+      2080,
+      2208
+    ],
+    "encoded_eye": [
+      2080,
+      2208
+    ],
+    "runtime_hz": 120,
+    "target_mbps": 1000,
+    "chroma": "420",
+    "decoder": "Haar Vulkan Compute",
+    "queue_priority": "LOW",
+    "transport": "USB/TCP",
+    "foveated_encoding": false
+  },
+  "pattern": "ABA",
+  "nominal_measure_s": 8,
+  "settle_s": 2,
+  "source_covers_all_blocks": true,
+  "creation_verified": true,
+  "blocks": [
+    {
+      "arm": "A",
+      "probe_requested": false,
+      "surface_evidence": {
+        "status": "no_probe_records",
+        "invalid_records": 0,
+        "native_result": null,
+        "wsi": null,
+        "failure_records": [],
+        "performance_acceptance": false,
+        "scope": "One process-specific creation/destruction report pair. No image submission, presentation, pose pairing, leak measurement or performance acceptance."
+      },
+      "seconds": 8.043494939804077,
+      "submission_wall_time_fps": 118.63343159054202,
+      "direct_completion_proxy_fps": 118.73059456087655,
+      "client_fps": {
+        "n": 955,
+        "p01": 60.00343342,
+        "p50": 119.999535,
+        "p95": 120.01424,
+        "p99": 120.02844,
+        "max": 120.61208
+      },
+      "payload_mbps": {
+        "n": 955,
+        "p01": 949.3132644000001,
+        "p50": 1012.5906,
+        "p95": 1032.57561,
+        "p99": 1049.4326852000002,
+        "max": 1092.7517
+      },
+      "gpu_decode_ms": {
+        "n": 964,
+        "p01": 4.636388548,
+        "p50": 5.79260395,
+        "p95": 6.6863097499999995,
+        "p99": 6.85332222,
+        "max": 7.2745833
+      },
+      "decode_to_fence_ms": {
+        "n": 964,
+        "p01": 6.29749001,
+        "p50": 7.7379175,
+        "p95": 8.244120599999999,
+        "p99": 8.42652792,
+        "max": 8.711616
+      },
+      "eye_cpu_ms": {
+        "n": 955,
+        "p01": 1.2687781,
+        "p50": 1.516251,
+        "p95": 1.7958645,
+        "p99": 2.0760440520000016,
+        "max": 2.484427
+      },
+      "effective_probe": {
+        "wait_us": 4000,
+        "ready_active": false,
+        "packet_grace_us": 0,
+        "windows": 7,
+        "margin": [
+          107,
+          44,
+          309,
+          19,
+          102,
+          253,
+          0
+        ],
+        "late": [
+          18,
+          10,
+          28,
+          20,
+          13,
+          9,
+          0
+        ],
+        "timed_windows": 7,
+        "timed_taken": 834,
+        "interval_s": 7.02400016784668,
+        "taken": 834,
+        "empty": 98,
+        "late_taken": 98,
+        "late_superseded": 0,
+        "superseded": 8,
+        "selected_source_frame_rate_fps": 118.73576026062028,
+        "taken_per_window": 119.14285714285714,
+        "superseded_per_window": 1.1428571428571428,
+        "late_taken_fraction": 1.0
+      },
+      "battery_temperature_c": 32.0,
+      "thermal_status": 0
+    },
+    {
+      "arm": "B",
+      "probe_requested": true,
+      "surface_evidence": {
+        "status": "creation_verified",
+        "invalid_records": 0,
+        "native_result": 0,
+        "wsi": {
+          "vendor_id": "0x5143",
+          "device_id": "0x43050b00",
+          "queue_family": 0,
+          "extent": [
+            64,
+            32
+          ],
+          "images": 5,
+          "format": 37,
+          "supported_usage": "0x9f",
+          "max_extent": [
+            4294967295,
+            4294967295
+          ],
+          "min_images": 3,
+          "max_images": 64
+        },
+        "failure_records": [],
+        "performance_acceptance": false,
+        "scope": "One process-specific creation/destruction report pair. No image submission, presentation, pose pairing, leak measurement or performance acceptance."
+      },
+      "seconds": 8.039677619934082,
+      "submission_wall_time_fps": 116.00251003506582,
+      "direct_completion_proxy_fps": 115.5763815301328,
+      "client_fps": {
+        "n": 933,
+        "p01": 59.9991312,
+        "p50": 119.9999,
+        "p95": 120.022074,
+        "p99": 120.0485534,
+        "max": 120.45016
+      },
+      "payload_mbps": {
+        "n": 933,
+        "p01": 944.1025,
+        "p50": 1015.87424,
+        "p95": 1033.167104,
+        "p99": 1053.8824727999997,
+        "max": 1096.447
+      },
+      "gpu_decode_ms": {
+        "n": 936,
+        "p01": 4.65192943,
+        "p50": 6.21807275,
+        "p95": 7.47898435,
+        "p99": 7.901778474999998,
+        "max": 8.7048435
+      },
+      "decode_to_fence_ms": {
+        "n": 936,
+        "p01": 6.4497143999999995,
+        "p50": 8.042006,
+        "p95": 9.49563875,
+        "p99": 10.24751165,
+        "max": 10.783074
+      },
+      "eye_cpu_ms": {
+        "n": 927,
+        "p01": 1.3287145,
+        "p50": 1.617553,
+        "p95": 2.37118277,
+        "p99": 2.678214192,
+        "max": 3.212292
+      },
+      "effective_probe": {
+        "wait_us": 4000,
+        "ready_active": false,
+        "packet_grace_us": 0,
+        "windows": 7,
+        "margin": [
+          121,
+          32,
+          223,
+          48,
+          75,
+          317,
+          3
+        ],
+        "late": [
+          25,
+          10,
+          23,
+          17,
+          27,
+          24,
+          0
+        ],
+        "timed_windows": 7,
+        "timed_taken": 819,
+        "interval_s": 7.0249998569488525,
+        "taken": 819,
+        "empty": 126,
+        "late_taken": 126,
+        "late_superseded": 0,
+        "superseded": 7,
+        "selected_source_frame_rate_fps": 116.58363226724873,
+        "taken_per_window": 117.0,
+        "superseded_per_window": 1.0,
+        "late_taken_fraction": 1.0
+      },
+      "battery_temperature_c": 32.0,
+      "thermal_status": 0
+    },
+    {
+      "arm": "A",
+      "probe_requested": false,
+      "surface_evidence": {
+        "status": "no_probe_records",
+        "invalid_records": 0,
+        "native_result": null,
+        "wsi": null,
+        "failure_records": [],
+        "performance_acceptance": false,
+        "scope": "One process-specific creation/destruction report pair. No image submission, presentation, pose pairing, leak measurement or performance acceptance."
+      },
+      "seconds": 8.038896322250366,
+      "submission_wall_time_fps": 115.1310928041969,
+      "direct_completion_proxy_fps": 115.10018059770964,
+      "client_fps": {
+        "n": 926,
+        "p01": 59.9978275,
+        "p50": 119.99931,
+        "p95": 120.01547500000001,
+        "p99": 120.14716949999999,
+        "max": 120.77067
+      },
+      "payload_mbps": {
+        "n": 926,
+        "p01": 945.449765,
+        "p50": 1012.92295,
+        "p95": 1032.4791249999998,
+        "p99": 1048.72455,
+        "max": 1105.641
+      },
+      "gpu_decode_ms": {
+        "n": 925,
+        "p01": 4.2106998639999995,
+        "p50": 5.851875,
+        "p95": 7.32598956,
+        "p99": 7.87017498,
+        "max": 8.526771
+      },
+      "decode_to_fence_ms": {
+        "n": 925,
+        "p01": 6.47598352,
+        "p50": 8.004532,
+        "p95": 9.4715318,
+        "p99": 9.96991592,
+        "max": 10.347189
+      },
+      "eye_cpu_ms": {
+        "n": 917,
+        "p01": 1.300747696,
+        "p50": 1.550573,
+        "p95": 2.0246982399999998,
+        "p99": 2.51124444,
+        "max": 2.751511
+      },
+      "effective_probe": {
+        "wait_us": 4000,
+        "ready_active": false,
+        "packet_grace_us": 0,
+        "windows": 7,
+        "margin": [
+          81,
+          22,
+          186,
+          201,
+          175,
+          146,
+          0
+        ],
+        "late": [
+          8,
+          3,
+          28,
+          8,
+          16,
+          28,
+          2
+        ],
+        "timed_windows": 7,
+        "timed_taken": 811,
+        "interval_s": 7.01800012588501,
+        "taken": 811,
+        "empty": 93,
+        "late_taken": 93,
+        "late_superseded": 0,
+        "superseded": 9,
+        "selected_source_frame_rate_fps": 115.5599865278897,
+        "taken_per_window": 115.85714285714286,
+        "superseded_per_window": 1.2857142857142858,
+        "late_taken_fraction": 1.0
+      },
+      "battery_temperature_c": 33.0,
+      "thermal_status": 0
+    }
+  ],
+  "normal_restoration_errors": [],
+  "decision": "Proceed to a separate static Surface image prototype; keep normal GLES presentation and probe off by default.",
+  "limitations": [
+    "Tiny creation/destruction only; no Surface image acquired, submitted or presented",
+    "No leak measurement, image/eye orientation, color, pose/content pairing or live path speedup established",
+    "Short stationary restarted-client blocks cannot establish sustained rates or gameplay acceptance",
+    "Submission/completion counters are not unique optical frames; p1 exposes missed periods",
+    "GPU clock not sampled; periodic ADB checks can perturb USB streaming"
+  ],
+  "performance_acceptance": false,
+  "optical_latency_measured": false
+}
