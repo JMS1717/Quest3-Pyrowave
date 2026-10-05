@@ -3,8 +3,10 @@
 // the Adreno 740; the harness stays as the record and the scoring tool.
 #include "pyroclient.h"
 #include "decode_path.h"
+#include "lpac_queue.h"
 #include "release_fence_registry.h"
 #include "prerecord_state.h"
+#include <string>
 #include <thread>
 #include <utility>
 
@@ -110,7 +112,11 @@ struct pyroclient {
     VkInstanceCreateInfo instance_info{};
     float queue_priority = 1.0f;
     VkDeviceQueueGlobalPriorityCreateInfoKHR queue_global_priority{};
-    VkDeviceQueueCreateInfo queue_info{};
+    // [0] the graphics family (Granite requires one); [1] the LPAC family when debug.q3pw.lpac applies.
+    VkDeviceQueueCreateInfo queue_infos[2]{};
+    VkDeviceQueueGlobalPriorityCreateInfoKHR lpac_global_priority{};
+    bool lpac_requested = false;
+    bool lpac = false; // decode + RGBA conversion submit on the compute-only LOW (LPAC) queue
     VkPhysicalDeviceVulkan13Features f13{};
     VkPhysicalDeviceVulkan12Features f12{};
     VkPhysicalDeviceVulkan11Features f11{};
@@ -206,19 +212,88 @@ bool pyroclient::create_device() {
     ns_per_tick = props.limits.timestampPeriod;
     LOGI("gpu %s", props.deviceName);
 
+    uint32_t extension_count = 0;
+    vkEnumerateDeviceExtensionProperties(gpu, nullptr, &extension_count, nullptr);
+    std::vector<VkExtensionProperties> available(extension_count);
+    vkEnumerateDeviceExtensionProperties(gpu, nullptr, &extension_count, available.data());
+    const auto has_extension = [&](const char *name) {
+        for (const auto &extension : available) if (!strcmp(extension.extensionName, name)) return true;
+        return false;
+    };
+    const char *priority_extension_available = has_extension(VK_KHR_GLOBAL_PRIORITY_EXTENSION_NAME) ?
+        VK_KHR_GLOBAL_PRIORITY_EXTENSION_NAME : has_extension(VK_EXT_GLOBAL_PRIORITY_EXTENSION_NAME) ?
+        VK_EXT_GLOBAL_PRIORITY_EXTENSION_NAME : nullptr;
+    const bool per_family_priority = has_extension(VK_KHR_GLOBAL_PRIORITY_EXTENSION_NAME) ||
+                                     has_extension(VK_EXT_GLOBAL_PRIORITY_QUERY_EXTENSION_NAME);
+
     uint32_t fc = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(gpu, &fc, nullptr);
-    std::vector<VkQueueFamilyProperties> fams(fc);
-    vkGetPhysicalDeviceQueueFamilyProperties(gpu, &fc, fams.data());
+    vkGetPhysicalDeviceQueueFamilyProperties2(gpu, &fc, nullptr);
+    std::vector<VkQueueFamilyProperties2> fams(fc, { VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2 });
+    std::vector<VkQueueFamilyGlobalPriorityPropertiesKHR> fam_priorities(fc, { VK_STRUCTURE_TYPE_QUEUE_FAMILY_GLOBAL_PRIORITY_PROPERTIES_KHR });
+    if (per_family_priority)
+        for (uint32_t i = 0; i < fc; i++) fams[i].pNext = &fam_priorities[i];
+    vkGetPhysicalDeviceQueueFamilyProperties2(gpu, &fc, fams.data());
     family = UINT32_MAX;
     for (uint32_t i = 0; i < fc; i++)
-        if (fams[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) { family = i; break; }
+        if (fams[i].queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT) { family = i; break; }
     if (family == UINT32_MAX) { LOGE("no graphics queue"); return false; }
+    const uint32_t graphics_family = family;
 
+    // Facts the Adreno tuning work needs from the device, logged once per decoder. No GPU work.
+    std::vector<LpacFamily> lpac_families(fc);
+    {
+        VkPhysicalDeviceVulkan13Properties p13 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES };
+        VkPhysicalDeviceVulkan12Properties p12 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES };
+        VkPhysicalDeviceVulkan11Properties p11 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES };
+        VkPhysicalDeviceProperties2 p2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
+        p2.pNext = &p11;
+        if (props.apiVersion >= VK_API_VERSION_1_2) p11.pNext = &p12;
+        if (props.apiVersion >= VK_API_VERSION_1_3) p12.pNext = &p13;
+        vkGetPhysicalDeviceProperties2(gpu, &p2);
+        LOGI("[Q3PW_GPU_CAPS] api=%u.%u driver=%s/%s subgroup=%u min=%u max=%u sized_stages=0x%x shared=%u ts_period=%.3f",
+             VK_API_VERSION_MAJOR(props.apiVersion), VK_API_VERSION_MINOR(props.apiVersion),
+             p12.driverName, p12.driverInfo, p11.subgroupSize, p13.minSubgroupSize, p13.maxSubgroupSize,
+             unsigned(p13.requiredSubgroupSizeStages), props.limits.maxComputeSharedMemorySize,
+             props.limits.timestampPeriod);
+        for (uint32_t i = 0; i < fc; i++) {
+            const VkQueueFamilyProperties &q = fams[i].queueFamilyProperties;
+            int low = -1;
+            if (per_family_priority) {
+                low = 0;
+                for (uint32_t p = 0; p < fam_priorities[i].priorityCount; p++)
+                    if (fam_priorities[i].priorities[p] == VK_QUEUE_GLOBAL_PRIORITY_LOW_KHR) low = 1;
+            }
+            lpac_families[i] = { uint32_t(q.queueFlags), q.queueCount, q.timestampValidBits, low };
+            LOGI("[Q3PW_GPU_CAPS] family=%u flags=0x%x count=%u timestamp_bits=%u low_priority=%d",
+                 i, unsigned(q.queueFlags), q.queueCount, q.timestampValidBits, low);
+        }
+        std::string notable;
+        for (const auto &extension : available) {
+            const char *name = extension.extensionName;
+            if (!strncmp(name, "VK_QCOM_", 8) || strstr(name, "compression") || strstr(name, "global_priority") ||
+                strstr(name, "subgroup_size") || strstr(name, "float16") || strstr(name, "cooperative"))
+                notable += std::string(notable.empty() ? "" : " ") + name;
+        }
+        LOGI("[Q3PW_GPU_CAPS] extensions %s", notable.c_str());
+    }
+    const LpacChoice lpac_choice = choose_lpac_family(lpac_families, graphics_family, lpac_requested,
+                                                     priority_extension_available != nullptr);
+    lpac = lpac_choice.active;
+
+    VkDeviceQueueCreateInfo &queue_info = queue_infos[0];
     queue_info = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
-    queue_info.queueFamilyIndex = family;
+    queue_info.queueFamilyIndex = graphics_family;
     queue_info.queueCount = 1;
     queue_info.pQueuePriorities = &queue_priority;
+    if (lpac) {
+        lpac_global_priority = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_GLOBAL_PRIORITY_CREATE_INFO_KHR };
+        lpac_global_priority.globalPriority = VK_QUEUE_GLOBAL_PRIORITY_LOW_KHR;
+        queue_infos[1] = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
+        queue_infos[1].pNext = &lpac_global_priority;
+        queue_infos[1].queueFamilyIndex = lpac_choice.family;
+        queue_infos[1].queueCount = 1;
+        queue_infos[1].pQueuePriorities = &queue_priority;
+    }
     f13 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
     f12 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
     f11 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES };
@@ -227,8 +302,8 @@ bool pyroclient::create_device() {
     vkGetPhysicalDeviceFeatures2(gpu, &f2);   // enable exactly what the driver has
     device_info = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
     device_info.pNext = &f2;
-    device_info.queueCreateInfoCount = 1;
-    device_info.pQueueCreateInfos = &queue_info;
+    device_info.queueCreateInfoCount = lpac ? 2 : 1;
+    device_info.pQueueCreateInfos = queue_infos;
     char release_prop[PROP_VALUE_MAX] = {};
     const bool release_requested = __system_property_get("debug.q3pw.release_fd", release_prop) > 0 && !strcmp(release_prop, "1");
     char ready_prop[PROP_VALUE_MAX] = {};
@@ -254,31 +329,38 @@ bool pyroclient::create_device() {
         if (ready_requested) LOGI("[Q3PW_READY_FD] Vulkan requested=1 exportable=%d max_inflight=1", ready_fences);
     }
     // A LOW global-priority decode queue lets the medium-priority GLES eye copy
-    // preempt decode instead of queueing behind it.
+    // preempt decode instead of queueing behind it. With LPAC the decode queue is
+    // a separate LOW compute-only queue and the unused graphics queue keeps default.
     const bool low_priority_requested = low_queue_priority;
-    const char *priority_extension = nullptr;
-    if (low_priority_requested) {
-        uint32_t count = 0;
-        vkEnumerateDeviceExtensionProperties(gpu, nullptr, &count, nullptr);
-        std::vector<VkExtensionProperties> extensions(count);
-        vkEnumerateDeviceExtensionProperties(gpu, nullptr, &count, extensions.data());
-        for (const auto &extension : extensions) {
-            if (!strcmp(extension.extensionName, VK_KHR_GLOBAL_PRIORITY_EXTENSION_NAME)) { priority_extension = VK_KHR_GLOBAL_PRIORITY_EXTENSION_NAME; break; }
-            if (!strcmp(extension.extensionName, VK_EXT_GLOBAL_PRIORITY_EXTENSION_NAME)) priority_extension = VK_EXT_GLOBAL_PRIORITY_EXTENSION_NAME;
+    const char *priority_extension = low_priority_requested || lpac ? priority_extension_available : nullptr;
+    const auto apply_graphics_priority = [&](bool low) {
+        if (low) {
+            queue_global_priority = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_GLOBAL_PRIORITY_CREATE_INFO_KHR };
+            queue_global_priority.globalPriority = VK_QUEUE_GLOBAL_PRIORITY_LOW_KHR;
         }
-    }
-    if (priority_extension) {
-        queue_global_priority = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_GLOBAL_PRIORITY_CREATE_INFO_KHR };
-        queue_global_priority.globalPriority = VK_QUEUE_GLOBAL_PRIORITY_LOW_KHR;
-        queue_info.pNext = &queue_global_priority;
-        device_extensions.push_back(priority_extension);
-    }
+        queue_info.pNext = low ? &queue_global_priority : nullptr;
+    };
+    apply_graphics_priority(priority_extension && low_priority_requested && !lpac);
+    if (priority_extension) device_extensions.push_back(priority_extension);
     device_info.enabledExtensionCount = uint32_t(device_extensions.size());
     device_info.ppEnabledExtensionNames = device_extensions.data();
     VkResult created = vkCreateDevice(gpu, &device_info, nullptr, &device);
+    if (created != VK_SUCCESS && lpac) {
+        LOGE("[Q3PW_LPAC] LOW compute-only queue rejected (%d); existing queue", created);
+        lpac = false;
+        device_info.queueCreateInfoCount = 1;
+        if (!low_priority_requested) {
+            device_extensions.pop_back();
+            device_info.enabledExtensionCount = uint32_t(device_extensions.size());
+            device_info.ppEnabledExtensionNames = device_extensions.data();
+            priority_extension = nullptr;
+        }
+        apply_graphics_priority(priority_extension != nullptr);
+        created = vkCreateDevice(gpu, &device_info, nullptr, &device);
+    }
     if (created != VK_SUCCESS && priority_extension) {
         LOGE("[Q3PW_PRIORITY] low-priority decode queue rejected (%d); default priority", created);
-        queue_info.pNext = nullptr;
+        apply_graphics_priority(false);
         device_extensions.pop_back();
         device_info.enabledExtensionCount = uint32_t(device_extensions.size());
         device_info.ppEnabledExtensionNames = device_extensions.data();
@@ -286,8 +368,11 @@ bool pyroclient::create_device() {
         created = vkCreateDevice(gpu, &device_info, nullptr, &device);
     }
     VK_TRY(created);
-    LOGI("[Q3PW_PRIORITY] decode queue requested=%s applied=%d extension=%s", low_priority_requested ? "low" : "default",
+    LOGI("[Q3PW_PRIORITY] decode queue requested=%s applied=%d extension=%s", low_priority_requested || lpac ? "low" : "default",
          priority_extension != nullptr, priority_extension ? priority_extension : "none");
+    if (lpac) family = lpac_choice.family;
+    LOGI("[Q3PW_LPAC] requested=%d applied=%d family=%u reason=%s", lpac_requested, lpac, family,
+         lpac ? "applied" : lpac_choice.active ? "device_rejected" : lpac_choice.reason);
     vkGetDeviceQueue(device, family, 0, &queue);
     if (release_fences) {
         import_semaphore_fd = reinterpret_cast<PFN_vkImportSemaphoreFdKHR>(vkGetDeviceProcAddr(device, "vkImportSemaphoreFdKHR"));
@@ -352,6 +437,8 @@ bool pyroclient::create_device() {
             has_prop ? prop : nullptr, legall53 || haar);
         fragment_path = choice.fragment;
         forced = choice.reason;
+        // A compute-only queue cannot run the fragment reconstruction.
+        if (lpac && fragment_path) { fragment_path = false; forced = "forced by lpac"; }
     }
     // The queue type must match the path, or the work is recorded against the wrong queue.
     PW_TRY(pyrowave_device_set_queue_type(pyro, fragment_path ? VK_QUEUE_GRAPHICS_BIT : VK_QUEUE_COMPUTE_BIT));
@@ -689,13 +776,16 @@ bool pyroclient::record_commands(Slot &s) {
     bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     VK_TRY(vkBeginCommandBuffer(cmd, &bi));
 
-    const VkPipelineStageFlags writeStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-    const VkAccessFlags writeAccess = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+    // A compute-only (LPAC) queue must not name graphics stages in its barriers.
+    const VkPipelineStageFlags graphicsStages = lpac ? 0 : VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    const VkPipelineStageFlags writeStages = graphicsStages | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+    const VkAccessFlags writeAccess = (lpac ? 0 : VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT) | VK_ACCESS_SHADER_WRITE_BIT;
+    const VkPipelineStageFlags readStages = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | (lpac ? 0 : VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     // Planes: created UNDEFINED, the views declare GENERAL, and PyroWave transitions nothing.
     for (int i = 0; i < 3; i++)
         image_barrier(cmd, planes[i].image, planes_initialised ? VK_IMAGE_LAYOUT_GENERAL : VK_IMAGE_LAYOUT_UNDEFINED,
                       VK_IMAGE_LAYOUT_GENERAL, planes_initialised ? VK_ACCESS_SHADER_READ_BIT : 0, writeAccess,
-                      planes_initialised ? (VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT) : VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, writeStages);
+                      planes_initialised ? readStages : VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, writeStages);
     planes_initialised = true;
 
     vkCmdResetQueryPool(cmd, queries, 0, 3);
@@ -952,6 +1042,8 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
     c->haar = wavelet == 2;
     c->decode_path_hint = decode_path;
     c->low_queue_priority = low_queue_priority != 0;
+    char lpac_prop[PROP_VALUE_MAX] = {};
+    c->lpac_requested = __system_property_get("debug.q3pw.lpac", lpac_prop) > 0 && !strcmp(lpac_prop, "1");
     char stage_prop[PROP_VALUE_MAX] = {};
     __system_property_get("debug.q3pw.decode_stages", stage_prop);
     c->decode_stage_probe = !strcmp(stage_prop, "1");
@@ -982,14 +1074,15 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
         // Tile-based color output is faster on the measured Adreno 740. This changes
         // only the YCbCr-to-RGBA bridge, independently of the selected wavelet path.
         const bool prefer_fragment_convert = properties.vendorID == 0x5143 || getenv("PYROWAVE_FRAGMENT_CONVERT");
-        if (c->storage_on_ahb && prefer_fragment_convert && !getenv("PYROWAVE_CONVERT_COMPUTE")) {
+        // The LPAC queue has no graphics pipe, so conversion stays a compute dispatch there.
+        if (c->storage_on_ahb && prefer_fragment_convert && !getenv("PYROWAVE_CONVERT_COMPUTE") && !c->lpac) {
             fi.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
             if (vkGetPhysicalDeviceImageFormatProperties2(c->gpu, &fi, &p2) == VK_SUCCESS &&
                 (ep.externalMemoryProperties.externalMemoryFeatures & VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT)) {
                 c->fragment_convert = c->create_fragment_convert();
             }
         }
-        LOGI("RGBA conversion: %s", c->fragment_convert ? "fragment" : "compute fallback");
+        LOGI("RGBA conversion: %s", c->fragment_convert ? "fragment" : c->lpac ? "compute (lpac)" : "compute fallback");
         char minimal_prop[PROP_VALUE_MAX] = {};
         const bool requested = __system_property_get("debug.q3pw.fragment_min_usage", minimal_prop) > 0
             && !strcmp(minimal_prop, "1");

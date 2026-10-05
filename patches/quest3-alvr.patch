@@ -5454,10 +5454,10 @@ index 0000000..bc6bee0
 +}
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000..ce89759
+index 0000000..e9ae82c
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,461 @@
+@@ -0,0 +1,479 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -5475,6 +5475,20 @@ index 0000000..ce89759
 +    fn AHardwareBuffer_release(buffer: *const c_void);
 +    fn __android_log_write(priority: i32, tag: *const std::ffi::c_char,
 +                           text: *const std::ffi::c_char) -> i32;
++    fn __system_property_get(name: *const std::ffi::c_char, value: *mut std::ffi::c_char) -> i32;
++}
++
++// debug.q3pw.eye_invalidate=1: discard each eye image before its full-screen draw, so a
++// tiled (GMEM) Adreno pass need not load the previous contents. Every pixel is redrawn.
++fn eye_invalidate_requested() -> bool {
++    #[cfg(target_os = "android")]
++    {
++        let mut value = [0u8; 92];
++        let len = unsafe { __system_property_get(c"debug.q3pw.eye_invalidate".as_ptr(), value.as_mut_ptr().cast()) };
++        len == 1 && value[0] == b'1'
++    }
++    #[cfg(not(target_os = "android"))]
++    { false }
 +}
 +
 +// Initialization diagnostics bypass the mirrored-log severity filter. No per-frame
@@ -5520,6 +5534,7 @@ index 0000000..ce89759
 +    asynchronous: Cell<bool>,
 +    copy_wait_ns: i32,
 +    bypass_srgb: bool,
++    invalidate: bool,
 +    image_cache_enabled: Cell<bool>,
 +    image_cache: RefCell<Vec<CachedImport>>,
 +    pending: RefCell<Option<(gl::Fence, Instant)>>,
@@ -5581,6 +5596,8 @@ index 0000000..ce89759
 +            import_diagnostic(4, format!("[Q3PW_COLOR_COPY] requested={} active={} srgb_target={} correction={} gamma={}",
 +                raw_srgb_requested, bypass_srgb, config.srgb_target,
 +                config.srgb_correction, config.encoding_gamma));
++            let invalidate = eye_invalidate_requested();
++            import_diagnostic(4, format!("[Q3PW_EYE_INVALIDATE] requested={invalidate} active={invalidate}"));
 +            let program = compile_program(gl, config.foveation.is_some())?;
 +            let source_texture = match gl.create_texture() {
 +                Ok(texture) => texture,
@@ -5647,7 +5664,7 @@ index 0000000..ce89759
 +                    native_release, release_active: Cell::new(true), source_release_token: Cell::new(0),
 +                    release_fd: RefCell::new(None), release_observers: RefCell::new(VecDeque::new()),
 +                    release_exported: Cell::new(0), release_observed: Cell::new(0), release_last_log: RefCell::new(Instant::now()),
-+                    image_cache: RefCell::new(Vec::new()), pending: RefCell::new(None), copy_wait_ns: copy_wait_us.clamp(0, 2000) * 1000, bypass_srgb })
++                    image_cache: RefCell::new(Vec::new()), pending: RefCell::new(None), copy_wait_ns: copy_wait_us.clamp(0, 2000) * 1000, bypass_srgb, invalidate })
 +                },
 +                Err(e) => {
 +                    for framebuffer in framebuffers.into_iter().flatten() { gl.delete_framebuffer(framebuffer); }
@@ -5845,6 +5862,7 @@ index 0000000..ce89759
 +            let query = self.timer.borrow_mut().as_mut().and_then(|timer| timer.begin(gl));
 +            for (eye, &index) in indices.iter().enumerate() {
 +                gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, Some(self.framebuffers[eye][index as usize]));
++                if self.invalidate { gl.invalidate_framebuffer(gl::DRAW_FRAMEBUFFER, &[gl::COLOR_ATTACHMENT0]); }
 +                gl.uniform_1_i32(Some(&self.view_idx), eye as i32);
 +                gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
 +            }

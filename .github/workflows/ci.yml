@@ -49,6 +49,8 @@ jobs:
       - name: Release-fence ownership and generation regression
         run: g++ -std=c++17 -Wall -Wextra -Werror -pthread tools/pyroclient/release_fence_registry_test.cpp -o /tmp/release-fence-test && /tmp/release-fence-test
       - run: g++ -std=c++17 -Wall -Werror tools/pyroclient/decode_path_test.cpp -o /tmp/decode-path && /tmp/decode-path
+      - name: Adreno LPAC queue-family choice (CPU only)
+        run: g++ -std=c++17 -Wall -Wextra -Werror tools/pyroclient/lpac_queue_test.cpp -o /tmp/lpac-queue && /tmp/lpac-queue
       - name: Surface chart orientation and channel order (CPU only)
         run: g++ -std=c++17 -Wall -Wextra -Werror tools/pyroclient/surface_chart_pixels_test.cpp -o /tmp/surface-chart-pixels && /tmp/surface-chart-pixels
       - name: Software GLES readback correctness (no Quest hardware)
