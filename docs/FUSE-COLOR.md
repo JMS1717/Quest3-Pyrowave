@@ -46,9 +46,27 @@ Vulkan validation layer runs in CI.
 - The Android client and Windows streamer still build in the normal CI jobs, now with the patch
   applied.
 
+Results from CI run `37347344813` on `4bf333d` (llvmpipe, LLVM 20.1.2, validation layer
+enabled), matching the earlier run `37347071655`:
+
+- The fused output matched the reference in every byte, for all 8 cases and both FP16 variants.
+  There were 0 validation errors.
+- The reference luma matched the CPU model **without** the FP16 round trips exactly, with 0
+  differences in every case. The model that keeps them differed by 1 LSB in about 0.8% of pixels.
+  Mesa folds `f32→f16→f32` away, which Vulkan's relaxed float rules allow.
+- That is why the 656a81b control differed in only 1–2 pixels per frame, by up to 2 levels. On
+  lavapipe it catches only the store-rounding defect. The missing-FP16 defect cannot show on a
+  driver that folds the rounding.
+
 lavapipe is not an Adreno. The test proves the shader logic, coefficient orientation, edges,
-formats and wiring. It does not prove that Adreno rounds `OpFConvert`, `packHalf2x16` and UNORM
-stores the same way in a fragment shader as in compute. Only a device readback can show that.
+formats and wiring. It does not prove that Adreno treats `OpFConvert`, `packHalf2x16` and UNORM
+stores the same way in a fragment shader as in compute, including whether its compiler folds the
+FP16 round trips. The fused shader uses the same instruction as the reference variant it replaces,
+so a compiler that folds or keeps them consistently gives the same bytes either way. Only a device
+readback can show that it does. On Quest, the `pyroclient_test` readback should also say which
+CPU model the device follows. If Adreno keeps the round trips, the unreviewed shader would differ
+by 1 LSB in some luma pixels: about 0.8% on this test's synthetic coefficients, and an unknown
+share on real content.
 
 ## Before any live comparison (needs hardware authorization)
 
