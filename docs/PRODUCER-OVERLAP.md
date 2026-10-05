@@ -12,6 +12,11 @@ assuming another removed wait will automatically recover the remaining frames.
 
 ## The measured opportunity is small and still unlocalized
 
+Follow-up: the [`.45` scheduling diagnostic](PRODUCER-OPPORTUNITY.md) now confirms
+that a complete next packet is usually available during the current native call.
+It supports investigating CPU pre-recording, while leaving actual mid-call slot
+availability, safe resource reuse and performance gains unproven.
+
 The four reviewed `.44` native120 windows had median CPU recording times of
 **0.521 / 0.546 / 0.534 / 0.540 ms**; p99 was **0.938 / 0.915 / 0.964 / 0.886 ms**.
 The 120 Hz period is 8.333 ms. Recording therefore occupies about 6.3–6.6% of one

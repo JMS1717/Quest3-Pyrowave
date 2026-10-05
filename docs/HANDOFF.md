@@ -62,6 +62,15 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 ## Highest-value next experiment
 
+**Producer opportunity, October 5:** [measured default-off diagnostic](PRODUCER-OPPORTUNITY.md)
+found next-packet availability during 1365/1440 native calls, mean possible wall-time
+overlap 4.944 ms and post-return output headroom 1422/1440. This is not joint slot
+availability or an FPS gain. Reviewed `.45` matching builds passed all four jobs
+and 48 production tests; native libraries EXACT `.42`/`.44`. Investigate one GPU
+submission plus a conditionally pre-recorded successor, preserving Granite
+recycling, leases, bounded freshness and honest queue timing. Full native120
+remains unmet; sync default unchanged.
+
 **Producer audit, October 5:** [bounded overlap](PRODUCER-OVERLAP.md) found an
 existing Granite context-readiness method, but it has locking/recycling side
 effects and is absent from the C API. Three AHBs can all be occupied by a lease,
