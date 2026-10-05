@@ -36,6 +36,9 @@ remain opt-in. The measured 6000 microsecond wait remains rejected as a default.
 
 Require the Python/portable checks, production publication tests, Android client
 build and Windows streamer build to pass on the reviewed PR head before merging.
+Run `37327925015` passed all four jobs on `62257e0`. Later review additions only
+change documentation; the integrated runtime, build workflow and tests are exactly
+the same as that passing commit.
 The GPU prerecord readback evidence applies to its documented historical sources;
 CI compilation of a new APK does not replace device acceptance. No APK install,
 driver registration, headset/SteamVR test or release follows automatically from
