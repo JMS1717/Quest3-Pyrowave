@@ -206,7 +206,7 @@ index 7cead7b..18ad9d0 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..bb2bda6 100644
+index ae00ce8..05cea91 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..bb2bda6 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.51"
++version = "20.13.0-quest3.pyro.54"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -430,14 +430,15 @@ index 0000000..057b458
 +    }
 +}
 diff --git a/alvr/client_core/src/connection.rs b/alvr/client_core/src/connection.rs
-index 1ed4333..996268d 100644
+index 1ed4333..778d666 100644
 --- a/alvr/client_core/src/connection.rs
 +++ b/alvr/client_core/src/connection.rs
-@@ -80,11 +80,13 @@ pub struct ConnectionContext {
+@@ -80,11 +80,14 @@ pub struct ConnectionContext {
      pub uses_multimodal_protocol: RelaxedAtomic,
      pub velocities_multiplier: RwLock<f32>,
      pub max_prediction: RwLock<Duration>,
 +    pub performance: RwLock<Option<(alvr_packets::PerformanceSnapshot, Instant)>>,
++    pub settings_ack: Mutex<Option<alvr_session::headset_settings::HeadsetSettingsAck>>,
  }
  
  impl ConnectionContext {
@@ -447,7 +448,7 @@ index 1ed4333..996268d 100644
          *self.control_sender.lock() = None;
          *self.tracking_sender.lock() = None;
          *self.statistics_sender.lock() = None;
-@@ -112,7 +114,7 @@ fn is_streaming(ctx: &ConnectionContext) -> bool {
+@@ -112,7 +115,7 @@ fn is_streaming(ctx: &ConnectionContext) -> bool {
  }
  
  pub fn connection_lifecycle_loop(
@@ -456,7 +457,7 @@ index 1ed4333..996268d 100644
      ctx: Arc<ConnectionContext>,
      lifecycle_state: Arc<RwLock<LifecycleState>>,
      event_queue: Arc<Mutex<VecDeque<ClientCoreEvent>>>,
-@@ -123,8 +125,9 @@ pub fn connection_lifecycle_loop(
+@@ -123,8 +126,9 @@ pub fn connection_lifecycle_loop(
  
      while *lifecycle_state.read() != LifecycleState::ShuttingDown {
          if *lifecycle_state.read() == LifecycleState::Resumed {
@@ -467,7 +468,7 @@ index 1ed4333..996268d 100644
                  Arc::clone(&ctx),
                  Arc::clone(&lifecycle_state),
                  Arc::clone(&event_queue),
-@@ -571,6 +574,13 @@ fn connection_pipeline(
+@@ -571,6 +575,19 @@ fn connection_pipeline(
                          set_hud_message(&event_queue, SERVER_RESTART_MESSAGE);
                          disconnect_notif.notify_one();
                      }
@@ -476,13 +477,19 @@ index 1ed4333..996268d 100644
 +                            if let Ok(snapshot) = serde_json::from_str::<alvr_packets::PerformanceSnapshot>(json) {
 +                                *ctx.performance.write() = Some((snapshot, Instant::now()));
 +                            }
++                        } else if let Some(json) =
++                            text.strip_prefix(alvr_packets::HEADSET_SETTINGS_ACK_PREFIX)
++                        {
++                            if let Ok(ack) = serde_json::from_str(json) {
++                                *ctx.settings_ack.lock() = Some(ack);
++                            }
 +                        }
 +                    }
                      Ok(ServerControlPacket::ReservedBuffer(buffer)) => {
                          // NB: it's normal for deserialization to fail if server has different
                          // version
 diff --git a/alvr/client_core/src/lib.rs b/alvr/client_core/src/lib.rs
-index 90a7c0a..041310e 100644
+index 90a7c0a..a273f7f 100644
 --- a/alvr/client_core/src/lib.rs
 +++ b/alvr/client_core/src/lib.rs
 @@ -11,6 +11,7 @@ mod logging_backend;
@@ -549,37 +556,133 @@ index 90a7c0a..041310e 100644
      pub fn resume(&self) {
          dbg_client_core!("resume");
  
+@@ -218,6 +233,27 @@ impl ClientCoreContext {
+         }
+     }
+ 
++    pub fn send_headset_settings(
++        &self,
++        request: alvr_session::headset_settings::HeadsetSettingsRequest,
++    ) -> bool {
++        if let Some(sender) = &mut *self.connection_context.control_sender.lock() {
++            sender
++                .send(&alvr_packets::encode_reserved_client_control_packet(
++                    &ReservedClientControlPacket::HeadsetSettings(request),
++                ))
++                .is_ok()
++        } else {
++            false
++        }
++    }
++
++    pub fn take_headset_settings_ack(
++        &self,
++    ) -> Option<alvr_session::headset_settings::HeadsetSettingsAck> {
++        self.connection_context.settings_ack.lock().take()
++    }
++
+     pub fn send_buttons(&self, entries: Vec<ButtonEntry>) {
+         dbg_client_core!("send_buttons");
+ 
 diff --git a/alvr/client_core/src/performance.rs b/alvr/client_core/src/performance.rs
 new file mode 100644
-index 0000000..0cd84ff
+index 0000000..feed5f3
 --- /dev/null
 +++ b/alvr/client_core/src/performance.rs
-@@ -0,0 +1,85 @@
-+//! Client overlay controls; independent of graphics so the chord can be regression tested.
-+pub struct OverlayToggle {
-+    pub visible: bool,
+@@ -0,0 +1,749 @@
++//! Client overlay and headset menu logic; independent of graphics and OpenXR so the controller
++//! gestures and the menu can be regression tested on any platform.
++use alvr_session::headset_settings::{
++    panel_percent_size, HeadsetSettingsRequest, BITRATE_MBPS, RENDER_PERCENT, STREAM_PERCENT,
++};
++use std::{
++    sync::atomic::{AtomicBool, Ordering},
++    time::{Duration, Instant},
++};
++
++/// Holding both thumbsticks this long opens the menu instead of changing the overlay mode.
++pub const MENU_HOLD: Duration = Duration::from_millis(700);
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
++pub enum OverlayMode {
++    #[default]
++    Compact,
++    Full,
++    Hidden,
++}
++
++impl OverlayMode {
++    pub fn next(self) -> Self {
++        match self {
++            Self::Compact => Self::Full,
++            Self::Full => Self::Hidden,
++            Self::Hidden => Self::Compact,
++        }
++    }
++
++    pub fn name(self) -> &'static str {
++        match self {
++            Self::Compact => "Compact",
++            Self::Full => "Full",
++            Self::Hidden => "Hidden",
++        }
++    }
++}
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum ChordEvent {
++    CycleOverlay,
++    OpenMenu,
++}
++
++/// Both thumbstick clicks: a short click cycles the overlay on release, a hold opens the menu
++/// once. Both sticks must be released before the chord can fire again.
++#[derive(Default)]
++pub struct ThumbstickChord {
++    pressed_since: Option<Instant>,
++    fired: bool,
 +    armed: bool,
 +}
 +
-+impl Default for OverlayToggle {
-+    fn default() -> Self {
++impl ThumbstickChord {
++    pub fn new() -> Self {
 +        Self {
-+            visible: true,
 +            armed: true,
++            ..Default::default()
 +        }
++    }
++
++    pub fn update(&mut self, left: bool, right: bool, now: Instant) -> Option<ChordEvent> {
++        if !left && !right {
++            let short_click = self.pressed_since.is_some() && !self.fired;
++            self.pressed_since = None;
++            self.fired = false;
++            self.armed = true;
++            return short_click.then_some(ChordEvent::CycleOverlay);
++        }
++        if left && right && self.armed && self.pressed_since.is_none() {
++            self.pressed_since = Some(now);
++            self.armed = false;
++        }
++        if let Some(since) = self.pressed_since {
++            if !self.fired && now.saturating_duration_since(since) >= MENU_HOLD {
++                self.fired = true;
++                return Some(ChordEvent::OpenMenu);
++            }
++        }
++        None
 +    }
 +}
 +
-+impl OverlayToggle {
-+    pub fn update(&mut self, left: bool, right: bool) {
-+        if !left && !right {
-+            self.armed = true;
-+        }
-+        if self.armed && left && right {
-+            self.visible = !self.visible;
-+            self.armed = false;
-+        }
-+    }
++static MENU_CAPTURES_INPUT: AtomicBool = AtomicBool::new(false);
++
++/// While the menu is open, controller buttons go to the menu instead of the game.
++pub fn set_menu_captures_input(captured: bool) {
++    MENU_CAPTURES_INPUT.store(captured, Ordering::Relaxed);
++}
++
++pub fn menu_captures_input() -> bool {
++    MENU_CAPTURES_INPUT.load(Ordering::Relaxed)
 +}
 +
 +pub fn metric(value: f32) -> String {
@@ -590,54 +693,650 @@ index 0000000..0cd84ff
 +    }
 +}
 +
-+/// Diagnostic override. Clearing it restores the controller's session state.
-+pub fn overlay_visibility(property: &str, controller_visible: bool) -> bool {
++/// Diagnostic override. `0` hides, `1` forces a visible mode; anything else uses the controller
++/// state, which keeps updating underneath so clearing the property restores it.
++pub fn overlay_visibility(property: &str, controller_mode: OverlayMode) -> OverlayMode {
 +    match property.trim() {
-+        "0" => false,
-+        "1" => true,
-+        _ => controller_visible,
++        "0" => OverlayMode::Hidden,
++        "1" if controller_mode == OverlayMode::Hidden => OverlayMode::Full,
++        _ => controller_mode,
++    }
++}
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum Health {
++    Good,
++    Warn,
++    Bad,
++    Unknown,
++}
++
++/// Fresh frames against the refresh rate.
++pub fn fps_health(fps: f32, refresh_hz: f32) -> Health {
++    if !fps.is_finite() || fps < 0.0 || !refresh_hz.is_finite() || refresh_hz <= 0.0 {
++        Health::Unknown
++    } else if fps >= refresh_hz * 0.97 {
++        Health::Good
++    } else if fps >= refresh_hz * 0.85 {
++        Health::Warn
++    } else {
++        Health::Bad
++    }
++}
++
++/// The project's end-to-end goal is under 30 ms.
++pub fn latency_health(ms: f32) -> Health {
++    if !ms.is_finite() || ms < 0.0 {
++        Health::Unknown
++    } else if ms <= 30.0 {
++        Health::Good
++    } else if ms <= 45.0 {
++        Health::Warn
++    } else {
++        Health::Bad
++    }
++}
++
++/// Quest GPU work for one frame against the frame period.
++pub fn budget_health(ms: f32, refresh_hz: f32) -> Health {
++    if !ms.is_finite() || ms < 0.0 || !refresh_hz.is_finite() || refresh_hz <= 0.0 {
++        return Health::Unknown;
++    }
++    let budget = 1000.0 / refresh_hz;
++    if ms <= budget * 0.7 {
++        Health::Good
++    } else if ms <= budget * 0.9 {
++        Health::Warn
++    } else {
++        Health::Bad
++    }
++}
++
++/// Turns an analog stick axis into discrete steps: one on push, then repeats while held.
++#[derive(Default)]
++pub struct StickRepeat {
++    direction: i32,
++    next: Option<Instant>,
++}
++
++impl StickRepeat {
++    const THRESHOLD: f32 = 0.6;
++    const RELEASE: f32 = 0.3;
++    const FIRST_REPEAT: Duration = Duration::from_millis(400);
++    const REPEAT: Duration = Duration::from_millis(120);
++
++    pub fn update(&mut self, value: f32, now: Instant) -> i32 {
++        let direction = if value >= Self::THRESHOLD {
++            1
++        } else if value <= -Self::THRESHOLD {
++            -1
++        } else if value.abs() < Self::RELEASE || !value.is_finite() {
++            0
++        } else {
++            self.direction
++        };
++        if direction == 0 {
++            self.direction = 0;
++            self.next = None;
++            return 0;
++        }
++        if direction != self.direction {
++            self.direction = direction;
++            self.next = Some(now + Self::FIRST_REPEAT);
++            return direction;
++        }
++        match self.next {
++            Some(next) if now >= next => {
++                self.next = Some(now + Self::REPEAT);
++                direction
++            }
++            _ => 0,
++        }
++    }
++}
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
++pub struct MenuInput {
++    /// -1 up, +1 down
++    pub vertical: i32,
++    /// -1 left, +1 right
++    pub horizontal: i32,
++    pub confirm: bool,
++    pub back: bool,
++}
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum MenuRow {
++    Refresh,
++    Bitrate,
++    StreamSize,
++    RenderSize,
++    Chroma,
++    Overlay,
++    Apply,
++    Close,
++}
++
++#[derive(Debug, PartialEq)]
++pub enum MenuAction {
++    None,
++    Close,
++    SetOverlay(OverlayMode),
++    Apply(HeadsetSettingsRequest),
++}
++
++/// The values the stream is running with, as the menu shows them.
++#[derive(Clone, Debug, PartialEq)]
++pub struct MenuValues {
++    pub refresh_hz: f32,
++    pub bitrate_mbps: u64,
++    pub chroma_444: bool,
++    pub stream_percent: u32,
++    pub render_percent: u32,
++}
++
++pub struct MenuLine {
++    pub label: &'static str,
++    pub value: String,
++    pub selected: bool,
++    pub changed: bool,
++    /// Whether left/right does anything on this row
++    pub adjustable: bool,
++}
++
++pub struct SettingsMenu {
++    rows: Vec<MenuRow>,
++    selected: usize,
++    refresh_rates: Vec<f32>,
++    initial: MenuValues,
++    values: MenuValues,
++    overlay: OverlayMode,
++    pyrowave: bool,
++    next_request_id: u32,
++    pub pending: Option<(u32, Instant)>,
++    pub status: String,
++}
++
++fn snap(value: u64, (min, max, step): (u64, u64, u64)) -> u64 {
++    let value = value.clamp(min, max);
++    min + (value - min + step / 2) / step * step
++}
++
++fn step(value: u64, delta: i32, (min, max, step): (u64, u64, u64)) -> u64 {
++    let next = value as i64 + delta as i64 * step as i64;
++    snap(next.clamp(min as i64, max as i64) as u64, (min, max, step))
++}
++
++fn range32((min, max, step): (u32, u32, u32)) -> (u64, u64, u64) {
++    (min as u64, max as u64, step as u64)
++}
++
++impl SettingsMenu {
++    pub const PENDING_TIMEOUT: Duration = Duration::from_secs(3);
++
++    pub fn new(
++        current: MenuValues,
++        refresh_rates: &[f32],
++        overlay: OverlayMode,
++        pyrowave: bool,
++    ) -> Self {
++        let mut refresh_rates = refresh_rates
++            .iter()
++            .copied()
++            .filter(|r| r.is_finite() && *r > 0.0)
++            .collect::<Vec<_>>();
++        if !refresh_rates
++            .iter()
++            .any(|r| (r - current.refresh_hz).abs() < 0.01)
++        {
++            refresh_rates.push(current.refresh_hz);
++        }
++        refresh_rates.sort_by(f32::total_cmp);
++        refresh_rates.dedup();
++        let mut values = current.clone();
++        values.bitrate_mbps = snap(values.bitrate_mbps, BITRATE_MBPS);
++        values.stream_percent =
++            snap(values.stream_percent as u64, range32(STREAM_PERCENT)) as u32;
++        values.render_percent =
++            snap(values.render_percent as u64, range32(RENDER_PERCENT)) as u32;
++        let mut rows = vec![
++            MenuRow::Refresh,
++            MenuRow::Bitrate,
++            MenuRow::StreamSize,
++            MenuRow::RenderSize,
++        ];
++        if pyrowave {
++            rows.push(MenuRow::Chroma);
++        }
++        rows.extend([MenuRow::Overlay, MenuRow::Apply, MenuRow::Close]);
++        Self {
++            rows,
++            selected: 0,
++            refresh_rates,
++            initial: values.clone(),
++            values,
++            overlay,
++            pyrowave,
++            next_request_id: 1,
++            pending: None,
++            status: String::new(),
++        }
++    }
++
++    pub fn selected_row(&self) -> MenuRow {
++        self.rows[self.selected]
++    }
++
++    pub fn values(&self) -> &MenuValues {
++        &self.values
++    }
++
++    pub fn needs_reconnect(&self) -> bool {
++        let (a, b) = (&self.values, &self.initial);
++        (a.refresh_hz - b.refresh_hz).abs() >= 0.01
++            || a.chroma_444 != b.chroma_444
++            || a.stream_percent != b.stream_percent
++            || a.render_percent != b.render_percent
++    }
++
++    pub fn has_changes(&self) -> bool {
++        self.needs_reconnect() || self.values.bitrate_mbps != self.initial.bitrate_mbps
++    }
++
++    /// Only the fields the user moved, so values the menu could not read are never rewritten.
++    pub fn request(&mut self) -> HeadsetSettingsRequest {
++        let (a, b) = (&self.values, &self.initial);
++        let request = HeadsetSettingsRequest {
++            request_id: self.next_request_id,
++            refresh_hz: ((a.refresh_hz - b.refresh_hz).abs() >= 0.01).then_some(a.refresh_hz),
++            bitrate_mbps: (a.bitrate_mbps != b.bitrate_mbps).then_some(a.bitrate_mbps),
++            chroma_444: (a.chroma_444 != b.chroma_444).then_some(a.chroma_444),
++            stream_percent: (a.stream_percent != b.stream_percent).then_some(a.stream_percent),
++            render_percent: (a.render_percent != b.render_percent).then_some(a.render_percent),
++        };
++        self.next_request_id = self.next_request_id.wrapping_add(1);
++        request
++    }
++
++    /// A live change (bitrate) becomes the new baseline once the server confirms it.
++    pub fn confirm_applied(&mut self) {
++        self.initial = self.values.clone();
++    }
++
++    pub fn handle(&mut self, input: MenuInput, now: Instant) -> MenuAction {
++        if input.back {
++            return MenuAction::Close;
++        }
++        if input.vertical != 0 {
++            let len = self.rows.len() as i32;
++            self.selected = (self.selected as i32 + input.vertical).rem_euclid(len) as usize;
++        }
++        if input.horizontal != 0 {
++            let d = input.horizontal;
++            let row = self.selected_row();
++            let v = &mut self.values;
++            match row {
++                MenuRow::Refresh => {
++                    let index = self
++                        .refresh_rates
++                        .iter()
++                        .position(|r| (r - v.refresh_hz).abs() < 0.01)
++                        .unwrap_or(0) as i32;
++                    let index =
++                        (index + d).clamp(0, self.refresh_rates.len() as i32 - 1) as usize;
++                    v.refresh_hz = self.refresh_rates[index];
++                }
++                MenuRow::Bitrate => v.bitrate_mbps = step(v.bitrate_mbps, d, BITRATE_MBPS),
++                MenuRow::StreamSize => {
++                    v.stream_percent =
++                        step(v.stream_percent as u64, d, range32(STREAM_PERCENT)) as u32
++                }
++                MenuRow::RenderSize => {
++                    v.render_percent =
++                        step(v.render_percent as u64, d, range32(RENDER_PERCENT)) as u32
++                }
++                MenuRow::Chroma => v.chroma_444 = !v.chroma_444,
++                MenuRow::Overlay => {
++                    self.overlay = if d > 0 {
++                        self.overlay.next()
++                    } else {
++                        self.overlay.next().next()
++                    };
++                    return MenuAction::SetOverlay(self.overlay);
++                }
++                MenuRow::Apply | MenuRow::Close => (),
++            }
++        }
++        if input.confirm {
++            match self.selected_row() {
++                MenuRow::Close => return MenuAction::Close,
++                MenuRow::Apply => {
++                    if self.pending.is_some() {
++                        return MenuAction::None;
++                    }
++                    if !self.has_changes() {
++                        self.status = "Nothing to apply".into();
++                        return MenuAction::None;
++                    }
++                    let request = self.request();
++                    self.pending = Some((request.request_id, now));
++                    self.status = "Sending to PC...".into();
++                    return MenuAction::Apply(request);
++                }
++                MenuRow::Overlay => {
++                    self.overlay = self.overlay.next();
++                    return MenuAction::SetOverlay(self.overlay);
++                }
++                _ => {
++                    // A on a value row jumps to Apply, the usual next step
++                    if let Some(i) = self.rows.iter().position(|r| *r == MenuRow::Apply) {
++                        self.selected = i;
++                    }
++                }
++            }
++        }
++        MenuAction::None
++    }
++
++    /// Clears a request the PC never answered, e.g. an older streamer without menu support.
++    pub fn expire_pending(&mut self, now: Instant) {
++        if let Some((_, sent)) = self.pending {
++            if now.saturating_duration_since(sent) >= Self::PENDING_TIMEOUT {
++                self.pending = None;
++                self.status = "No reply from PC. Update the streamer to change settings here.".into();
++            }
++        }
++    }
++
++    pub fn lines(&self) -> Vec<MenuLine> {
++        let (v, i) = (&self.values, &self.initial);
++        let size = |percent: u32| {
++            let (w, h) = panel_percent_size(percent);
++            format!("{percent}%  ({w} x {h})")
++        };
++        self.rows
++            .iter()
++            .enumerate()
++            .map(|(index, row)| {
++                let (label, value, changed, adjustable) = match row {
++                    MenuRow::Refresh => (
++                        "Refresh rate",
++                        format!("{:.0} Hz", v.refresh_hz),
++                        (v.refresh_hz - i.refresh_hz).abs() >= 0.01,
++                        self.refresh_rates.len() > 1,
++                    ),
++                    MenuRow::Bitrate => (
++                        "Bitrate",
++                        format!("{} Mbps", v.bitrate_mbps),
++                        v.bitrate_mbps != i.bitrate_mbps,
++                        true,
++                    ),
++                    MenuRow::StreamSize => (
++                        "Stream size /eye",
++                        size(v.stream_percent),
++                        v.stream_percent != i.stream_percent,
++                        true,
++                    ),
++                    MenuRow::RenderSize => (
++                        "Game render /eye",
++                        size(v.render_percent),
++                        v.render_percent != i.render_percent,
++                        true,
++                    ),
++                    MenuRow::Chroma => (
++                        "Chroma",
++                        if v.chroma_444 { "4:4:4" } else { "4:2:0" }.into(),
++                        v.chroma_444 != i.chroma_444,
++                        self.pyrowave,
++                    ),
++                    MenuRow::Overlay => ("Overlay", self.overlay.name().into(), false, true),
++                    MenuRow::Apply => (
++                        if self.needs_reconnect() {
++                            "Apply and reconnect"
++                        } else {
++                            "Apply"
++                        },
++                        String::new(),
++                        false,
++                        false,
++                    ),
++                    MenuRow::Close => ("Close", String::new(), false, false),
++                };
++                MenuLine {
++                    label,
++                    value,
++                    selected: index == self.selected,
++                    changed,
++                    adjustable,
++                }
++            })
++            .collect()
 +    }
 +}
 +
 +#[cfg(test)]
 +mod tests {
 +    use super::*;
++
++    fn at(start: Instant, ms: u64) -> Instant {
++        start + Duration::from_millis(ms)
++    }
++
++    #[test]
++    fn short_chord_cycles_on_release_and_hold_opens_menu_once() {
++        let t = Instant::now();
++        let mut chord = ThumbstickChord::new();
++        assert_eq!(chord.update(true, false, at(t, 0)), None);
++        assert_eq!(chord.update(true, true, at(t, 10)), None);
++        assert_eq!(chord.update(true, true, at(t, 200)), None);
++        assert_eq!(chord.update(false, true, at(t, 250)), None);
++        assert_eq!(chord.update(false, false, at(t, 260)), Some(ChordEvent::CycleOverlay));
++
++        assert_eq!(chord.update(true, true, at(t, 1000)), None);
++        assert_eq!(chord.update(true, true, at(t, 1800)), Some(ChordEvent::OpenMenu));
++        assert_eq!(chord.update(true, true, at(t, 2500)), None);
++        // releasing after a hold does not also cycle the overlay
++        assert_eq!(chord.update(false, false, at(t, 2600)), None);
++    }
++
++    #[test]
++    fn chord_needs_both_sticks_released_to_rearm() {
++        let t = Instant::now();
++        let mut chord = ThumbstickChord::new();
++        chord.update(true, true, at(t, 0));
++        chord.update(true, true, at(t, 800));
++        // one stick still down: pressing the other again must not start a new chord
++        chord.update(true, false, at(t, 900));
++        assert_eq!(chord.update(true, true, at(t, 1000)), None);
++        assert_eq!(chord.update(true, true, at(t, 2000)), None);
++        assert_eq!(chord.update(false, false, at(t, 2100)), None);
++        chord.update(true, true, at(t, 3000));
++        assert_eq!(chord.update(false, false, at(t, 3100)), Some(ChordEvent::CycleOverlay));
++    }
++
 +    #[test]
 +    fn overlay_override_has_priority_without_changing_controller_state() {
-+        let mut toggle = OverlayToggle::default();
-+        assert!(!overlay_visibility("0", toggle.visible));
-+        toggle.update(true, true);
-+        assert!(!toggle.visible);
-+        assert!(overlay_visibility("1\n", toggle.visible));
-+        assert!(!overlay_visibility("", toggle.visible));
-+        toggle.update(false, false);
-+        toggle.update(true, true);
-+        assert!(!overlay_visibility(" 0 ", toggle.visible));
-+        assert!(overlay_visibility("", toggle.visible));
-+        assert!(overlay_visibility("invalid", toggle.visible));
++        assert_eq!(overlay_visibility("0", OverlayMode::Full), OverlayMode::Hidden);
++        assert_eq!(overlay_visibility("1\n", OverlayMode::Hidden), OverlayMode::Full);
++        assert_eq!(overlay_visibility("1", OverlayMode::Compact), OverlayMode::Compact);
++        assert_eq!(overlay_visibility("", OverlayMode::Hidden), OverlayMode::Hidden);
++        assert_eq!(overlay_visibility(" 0 ", OverlayMode::Compact), OverlayMode::Hidden);
++        assert_eq!(overlay_visibility("invalid", OverlayMode::Full), OverlayMode::Full);
++        assert_eq!(OverlayMode::default(), OverlayMode::Compact);
++        assert_eq!(OverlayMode::Hidden.next(), OverlayMode::Compact);
 +    }
-+    #[test]
-+    fn both_sticks_toggle_once_and_both_must_be_released_to_rearm() {
-+        let mut toggle = OverlayToggle::default();
-+        assert!(toggle.visible);
-+        toggle.update(true, false);
-+        assert!(toggle.visible);
-+        toggle.update(true, true);
-+        assert!(!toggle.visible);
-+        toggle.update(true, true);
-+        toggle.update(true, false);
-+        toggle.update(true, true);
-+        assert!(!toggle.visible);
-+        toggle.update(false, false);
-+        toggle.update(true, true);
-+        assert!(toggle.visible);
-+    }
++
 +    #[test]
 +    fn unknown_metrics_are_never_displayed_as_valid_numbers() {
 +        assert_eq!(metric(f32::NAN), "--");
 +        assert_eq!(metric(f32::INFINITY), "--");
 +        assert_eq!(metric(-1.0), "--");
 +        assert_eq!(metric(120.0), "120.0");
++        assert_eq!(fps_health(f32::NAN, 120.0), Health::Unknown);
++        assert_eq!(latency_health(-1.0), Health::Unknown);
++        assert_eq!(budget_health(5.0, 0.0), Health::Unknown);
++    }
++
++    #[test]
++    fn health_thresholds_follow_refresh_and_budget() {
++        assert_eq!(fps_health(118.0, 120.0), Health::Good);
++        assert_eq!(fps_health(110.0, 120.0), Health::Warn);
++        assert_eq!(fps_health(90.0, 120.0), Health::Bad);
++        assert_eq!(latency_health(29.0), Health::Good);
++        assert_eq!(latency_health(44.0), Health::Warn);
++        // 207 Hz leaves 4.83 ms; today's 5.9 ms decode is over it
++        assert_eq!(budget_health(5.9, 207.0), Health::Bad);
++        assert_eq!(budget_health(5.9, 120.0), Health::Warn);
++        assert_eq!(budget_health(4.0, 120.0), Health::Good);
++    }
++
++    #[test]
++    fn stick_steps_once_then_repeats_while_held() {
++        let t = Instant::now();
++        let mut stick = StickRepeat::default();
++        assert_eq!(stick.update(0.2, at(t, 0)), 0);
++        assert_eq!(stick.update(0.9, at(t, 10)), 1);
++        assert_eq!(stick.update(0.9, at(t, 200)), 0);
++        assert_eq!(stick.update(0.5, at(t, 300)), 0); // hysteresis keeps it held
++        assert_eq!(stick.update(0.9, at(t, 420)), 1);
++        assert_eq!(stick.update(0.9, at(t, 500)), 0);
++        assert_eq!(stick.update(0.9, at(t, 545)), 1);
++        assert_eq!(stick.update(0.0, at(t, 600)), 0);
++        assert_eq!(stick.update(-0.8, at(t, 610)), -1);
++    }
++
++    fn menu() -> SettingsMenu {
++        SettingsMenu::new(
++            MenuValues {
++                refresh_hz: 120.0,
++                bitrate_mbps: 1000,
++                chroma_444: false,
++                stream_percent: 100,
++                render_percent: 100,
++            },
++            &[72.0, 90.0, 120.0, 144.0],
++            OverlayMode::Compact,
++            true,
++        )
++    }
++
++    fn press(menu: &mut SettingsMenu, input: MenuInput) -> MenuAction {
++        menu.handle(input, Instant::now())
++    }
++
++    const DOWN: MenuInput = MenuInput { vertical: 1, horizontal: 0, confirm: false, back: false };
++    const RIGHT: MenuInput = MenuInput { vertical: 0, horizontal: 1, confirm: false, back: false };
++    const LEFT: MenuInput = MenuInput { vertical: 0, horizontal: -1, confirm: false, back: false };
++    const A: MenuInput = MenuInput { vertical: 0, horizontal: 0, confirm: true, back: false };
++    const B: MenuInput = MenuInput { vertical: 0, horizontal: 0, confirm: false, back: true };
++
++    #[test]
++    fn bitrate_only_change_sends_just_bitrate_and_stays_live() {
++        let mut m = menu();
++        press(&mut m, DOWN);
++        assert_eq!(m.selected_row(), MenuRow::Bitrate);
++        press(&mut m, LEFT);
++        press(&mut m, LEFT);
++        assert!(!m.needs_reconnect());
++        press(&mut m, A); // jumps to Apply
++        assert_eq!(m.selected_row(), MenuRow::Apply);
++        let MenuAction::Apply(request) = press(&mut m, A) else {
++            panic!("no request")
++        };
++        assert_eq!(
++            request,
++            HeadsetSettingsRequest {
++                request_id: 1,
++                bitrate_mbps: Some(900),
++                ..Default::default()
++            }
++        );
++        // a second A while waiting does not resend
++        assert_eq!(press(&mut m, A), MenuAction::None);
++    }
++
++    #[test]
++    fn refresh_only_offers_confirmed_rates_and_needs_reconnect() {
++        let mut m = menu();
++        for _ in 0..5 {
++            press(&mut m, RIGHT);
++        }
++        assert_eq!(m.values().refresh_hz, 144.0);
++        assert!(m.needs_reconnect());
++        assert!(m.lines()[m.lines().len() - 2].label.contains("reconnect"));
++        for _ in 0..10 {
++            press(&mut m, LEFT);
++        }
++        assert_eq!(m.values().refresh_hz, 72.0);
++    }
++
++    #[test]
++    fn values_stay_inside_server_ranges() {
++        let mut m = menu();
++        press(&mut m, DOWN);
++        for _ in 0..100 {
++            press(&mut m, RIGHT);
++        }
++        assert_eq!(m.values().bitrate_mbps, BITRATE_MBPS.1);
++        press(&mut m, DOWN);
++        for _ in 0..100 {
++            press(&mut m, LEFT);
++        }
++        assert_eq!(m.values().stream_percent, STREAM_PERCENT.0);
++        let request = m.request();
++        assert!(alvr_session::headset_settings::plan(
++            &request,
++            &alvr_session::SessionConfig::default().to_settings(),
++            &[120.0]
++        )
++        .is_ok());
++    }
++
++    #[test]
++    fn nothing_changed_sends_nothing_and_back_closes() {
++        let mut m = menu();
++        for _ in 0..6 {
++            press(&mut m, DOWN);
++        }
++        assert_eq!(m.selected_row(), MenuRow::Apply);
++        assert_eq!(press(&mut m, A), MenuAction::None);
++        assert_eq!(m.status, "Nothing to apply");
++        assert_eq!(press(&mut m, B), MenuAction::Close);
++    }
++
++    #[test]
++    fn overlay_row_changes_mode_immediately_and_wraps() {
++        let mut m = menu();
++        for _ in 0..5 {
++            press(&mut m, DOWN);
++        }
++        assert_eq!(m.selected_row(), MenuRow::Overlay);
++        assert_eq!(press(&mut m, RIGHT), MenuAction::SetOverlay(OverlayMode::Full));
++        assert_eq!(press(&mut m, LEFT), MenuAction::SetOverlay(OverlayMode::Compact));
++        assert_eq!(press(&mut m, LEFT), MenuAction::SetOverlay(OverlayMode::Hidden));
++        // moving up from the first row wraps to the last
++        let mut m = menu();
++        press(&mut m, MenuInput { vertical: -1, ..Default::default() });
++        assert_eq!(m.selected_row(), MenuRow::Close);
++    }
++
++    #[test]
++    fn unanswered_request_expires_with_a_message() {
++        let mut m = menu();
++        press(&mut m, DOWN);
++        press(&mut m, RIGHT);
++        let t = Instant::now();
++        m.pending = Some((1, t));
++        m.expire_pending(t + Duration::from_secs(1));
++        assert!(m.pending.is_some());
++        m.expire_pending(t + SettingsMenu::PENDING_TIMEOUT);
++        assert!(m.pending.is_none() && m.status.contains("No reply"));
++    }
++
++    #[test]
++    fn chroma_row_is_hidden_for_hardware_codecs() {
++        let m = SettingsMenu::new(menu().values().clone(), &[120.0], OverlayMode::Full, false);
++        assert!(m.lines().iter().all(|l| l.label != "Chroma"));
 +    }
 +}
 diff --git a/alvr/client_core/src/video_decoder/android.rs b/alvr/client_core/src/video_decoder/android.rs
@@ -3213,7 +3912,7 @@ index 30b0e81..50d1bb6 100644
      }
  }
 diff --git a/alvr/client_openxr/src/interaction.rs b/alvr/client_openxr/src/interaction.rs
-index 7765bb4..b102615 100644
+index 7765bb4..1a2b815 100644
 --- a/alvr/client_openxr/src/interaction.rs
 +++ b/alvr/client_openxr/src/interaction.rs
 @@ -342,8 +342,7 @@ impl InteractionContext {
@@ -3226,7 +3925,43 @@ index 7765bb4..b102615 100644
  
          // The gaze action space is created *after* attach, like the grip spaces below.
          //
-@@ -947,6 +946,11 @@ pub fn get_eye_gazes(
+@@ -872,6 +871,35 @@ pub fn update_buttons(
+     button_entries
+ }
+ 
++/// Every bound control, either at rest (`released`) or at its current state.
++pub fn all_buttons(
++    xr_session: &xr::Session<xr::OpenGlEs>,
++    button_actions: &HashMap<u64, ButtonAction>,
++    released: bool,
++) -> Vec<ButtonEntry> {
++    button_actions
++        .iter()
++        .map(|(id, action)| ButtonEntry {
++            path_id: *id,
++            value: match action {
++                ButtonAction::Binary(action) => ButtonValue::Binary(
++                    !released
++                        && action
++                            .state(xr_session, xr::Path::NULL)
++                            .is_ok_and(|s| s.current_state),
++                ),
++                ButtonAction::Scalar(action) => ButtonValue::Scalar(if released {
++                    0.0
++                } else {
++                    action
++                        .state(xr_session, xr::Path::NULL)
++                        .map_or(0.0, |s| s.current_state)
++                }),
++            },
++        })
++        .collect()
++}
++
+ pub fn get_eye_gazes(
+     xr_session: &xr::Session<xr::OpenGlEs>,
+     sources: &FaceSources,
+@@ -947,6 +975,11 @@ pub fn get_eye_gazes(
  /// rejected, a pose that is present but untracked -- otherwise collapses into the same silent
  /// `[None, None]`, and the whole foveation feature downstream just quietly does nothing.
  fn gaze_diag(message: &str) {
@@ -3239,7 +3974,7 @@ index 7765bb4..b102615 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..0cba1f1 100644
+index a0fd36f..bb7aeb5 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -4,7 +4,11 @@ mod graphics;
@@ -3541,11 +4276,21 @@ index a0fd36f..0cba1f1 100644
                          xr::SessionState::EXITING => break 'render_loop,
                          xr::SessionState::LOSS_PENDING => break 'render_loop,
                          _ => (),
-@@ -494,7 +620,29 @@ pub fn entry_point() {
+@@ -458,6 +584,9 @@ pub fn entry_point() {
+                         );
+ 
+                         lobby.update_reference_space();
++                        if let Some(overlay) = &mut performance_overlay {
++                            overlay.reference_space_changed();
++                        }
+ 
+                         if let Some(stream) = &mut stream_context {
+                             stream.update_reference_space();
+@@ -494,7 +623,29 @@ pub fn entry_point() {
                          lobby.update_hud_message(&message);
                      }
                      ClientCoreEvent::StreamingStarted(config) => {
-+                        if let Some(overlay) = &mut performance_overlay { overlay.set_stream(&config); }
++                        if let Some(overlay) = &mut performance_overlay { overlay.set_stream(&config, &refresh_rates); }
                          let config = ParsedStreamConfig::new(&config);
 +                        // The runtime may reject a previously confirmed mode after OS/thermal changes.
 +                        // Abort this connection, keep the lobby usable and require a new selection/relaunch.
@@ -3571,7 +4316,7 @@ index a0fd36f..0cba1f1 100644
  
                          let context = StreamContext::new(
                              Arc::clone(&core_context),
-@@ -512,6 +660,8 @@ pub fn entry_point() {
+@@ -512,6 +663,8 @@ pub fn entry_point() {
                          stream_context = Some(context);
                      }
                      ClientCoreEvent::StreamingStopped => {
@@ -3580,7 +4325,7 @@ index a0fd36f..0cba1f1 100644
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -562,13 +712,23 @@ pub fn entry_point() {
+@@ -562,13 +715,23 @@ pub fn entry_point() {
                  }
              }
  
@@ -3605,7 +4350,7 @@ index a0fd36f..0cba1f1 100644
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -576,12 +736,49 @@ pub fn entry_point() {
+@@ -576,12 +739,49 @@ pub fn entry_point() {
                      panic!();
                  }
              };
@@ -3656,7 +4401,7 @@ index a0fd36f..0cba1f1 100644
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +802,15 @@ pub fn entry_point() {
+@@ -605,15 +805,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -3681,7 +4426,7 @@ index a0fd36f..0cba1f1 100644
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,13 +818,16 @@ pub fn entry_point() {
+@@ -621,13 +821,16 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -3699,7 +4444,7 @@ index a0fd36f..0cba1f1 100644
  
              if !frame_state.should_render {
                  xr_frame_stream
-@@ -654,22 +854,89 @@ pub fn entry_point() {
+@@ -654,22 +857,89 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
@@ -3710,7 +4455,7 @@ index a0fd36f..0cba1f1 100644
 +                if !chart.update(surface_visible) { surface_chart = None; }
 +            }
 +            if let Some(overlay) = &mut performance_overlay {
-+                if let Err(error) = overlay.update(&core_context) {
++                if let Err(error) = overlay.update(&core_context, frame_state.predicted_display_time) {
 +                    error!("Performance overlay disabled after render failure: {error:?}");
 +                    performance_overlay = None;
 +                }
@@ -3797,7 +4542,7 @@ index a0fd36f..0cba1f1 100644
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +965,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +968,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
@@ -3810,43 +4555,161 @@ index a0fd36f..0cba1f1 100644
  
 diff --git a/alvr/client_openxr/src/performance.rs b/alvr/client_openxr/src/performance.rs
 new file mode 100644
-index 0000000..869319d
+index 0000000..dec6bb1
 --- /dev/null
 +++ b/alvr/client_openxr/src/performance.rs
-@@ -0,0 +1,304 @@
+@@ -0,0 +1,757 @@
 +use crate::interaction::{ButtonAction, InteractionContext};
 +use alvr_client_core::{
-+    performance::{metric, overlay_visibility, OverlayToggle},
++    performance::{
++        budget_health, fps_health, latency_health, metric, overlay_visibility,
++        set_menu_captures_input, ChordEvent, Health, MenuAction, MenuInput, MenuValues,
++        OverlayMode, SettingsMenu, StickRepeat, ThumbstickChord,
++    },
 +    ClientCoreContext,
 +};
 +use alvr_common::{
-+    glam::UVec2, parking_lot::RwLock, LEFT_THUMBSTICK_CLICK_ID, RIGHT_THUMBSTICK_CLICK_ID,
++    glam::{Quat, UVec2, Vec3},
++    parking_lot::RwLock,
++    Pose, LEFT_THUMBSTICK_CLICK_ID, LEFT_THUMBSTICK_X_ID, LEFT_THUMBSTICK_Y_ID, LEFT_X_CLICK_ID,
++    LEFT_Y_CLICK_ID, RIGHT_A_CLICK_ID, RIGHT_B_CLICK_ID, RIGHT_THUMBSTICK_CLICK_ID,
++    RIGHT_THUMBSTICK_X_ID, RIGHT_THUMBSTICK_Y_ID,
 +};
-+use alvr_graphics::{GraphicsContext, PerformanceRenderer, SDR_FORMAT_GL};
++use alvr_graphics::{
++    GraphicsContext, MenuView, MenuViewLine, PanelRasterizer, PanelView, PerformanceRenderer,
++    StatsView, Tile, Tone, PANEL_SIZE, SDR_FORMAT_GL, STRIP_SIZE,
++};
 +use alvr_packets::{PerformanceSnapshot, StreamConfig};
++use alvr_session::{
++    beta::PANEL_PER_EYE,
++    headset_settings::frame_size_percent,
++    BitrateMode, CodecType,
++};
 +use openxr as xr;
 +use std::{
++    collections::VecDeque,
 +    rc::Rc,
 +    sync::Arc,
 +    time::{Duration, Instant},
 +};
 +
-+const RESOLUTION: UVec2 = UVec2::new(960, 448);
++const UPDATE_INTERVAL: Duration = Duration::from_millis(500);
++/// 30 s of history at the update interval
++const HISTORY_LEN: usize = 60;
++const MENU_DISTANCE_M: f32 = 1.0;
++
++#[derive(Clone, Copy, PartialEq, Eq)]
++enum Shown {
++    Nothing,
++    Stats,
++    Menu,
++}
++
++/// A quad layer's swapchain and the GL renderer that uploads finished images into it.
++struct Surface {
++    swapchain: xr::Swapchain<xr::OpenGlEs>,
++    renderer: PerformanceRenderer,
++    size: UVec2,
++    shown: Shown,
++}
++
++impl Surface {
++    fn new(
++        session: &xr::Session<xr::OpenGlEs>,
++        context: &Rc<GraphicsContext>,
++        (width, height): (u32, u32),
++    ) -> xr::Result<Self> {
++        let swapchain = session.create_swapchain(&xr::SwapchainCreateInfo {
++            create_flags: xr::SwapchainCreateFlags::EMPTY,
++            usage_flags: xr::SwapchainUsageFlags::COLOR_ATTACHMENT
++                | xr::SwapchainUsageFlags::SAMPLED,
++            format: SDR_FORMAT_GL,
++            sample_count: 1,
++            width,
++            height,
++            face_count: 1,
++            array_size: 1,
++            mip_count: 1,
++        })?;
++        let size = UVec2::new(width, height);
++        let renderer =
++            PerformanceRenderer::new(Rc::clone(context), size, &swapchain.enumerate_images()?);
++        Ok(Self {
++            swapchain,
++            renderer,
++            size,
++            shown: Shown::Nothing,
++        })
++    }
++
++    fn quad(&self) -> xr::CompositionLayerQuad<'_, xr::OpenGlEs> {
++        xr::CompositionLayerQuad::new()
++            .layer_flags(
++                xr::CompositionLayerFlags::BLEND_TEXTURE_SOURCE_ALPHA
++                    | xr::CompositionLayerFlags::UNPREMULTIPLIED_ALPHA,
++            )
++            .eye_visibility(xr::EyeVisibility::BOTH)
++            .sub_image(self.sub_image())
++    }
++
++    fn sub_image(&self) -> xr::SwapchainSubImage<'_, xr::OpenGlEs> {
++        xr::SwapchainSubImage::new()
++            .swapchain(&self.swapchain)
++            .image_array_index(0)
++            .image_rect(xr::Rect2Di {
++                offset: xr::Offset2Di { x: 0, y: 0 },
++                extent: xr::Extent2Di {
++                    width: self.size.x as i32,
++                    height: self.size.y as i32,
++                },
++            })
++    }
++}
++
++/// What the current stream was negotiated with, for the panel header and the menu.
++#[derive(Default)]
++struct StreamInfo {
++    subtitle: String,
++    refresh_hz: f32,
++    pyrowave: bool,
++    bitrate_mbps: Option<u64>,
++    chroma_444: bool,
++    stream_percent: u32,
++    render_percent: u32,
++    refresh_rates: Vec<f32>,
++}
++
++#[derive(Default)]
++struct MenuButtons {
++    confirm: bool,
++    back: bool,
++}
 +
 +pub struct PerformanceOverlay {
 +    session: xr::Session<xr::OpenGlEs>,
 +    context: Rc<GraphicsContext>,
 +    interactions: Arc<RwLock<InteractionContext>>,
-+    space: xr::Space,
-+    swapchain: xr::Swapchain<xr::OpenGlEs>,
-+    renderer: PerformanceRenderer,
-+    toggle: OverlayToggle,
++    view_space: xr::Space,
++    local_space: xr::Space,
++    strip: Surface,
++    panel: Surface,
++    rasterizer: PanelRasterizer,
++    chord: ThumbstickChord,
++    /// Controller-selected mode; the debug property can override what is shown
++    mode: OverlayMode,
++    shown_mode: OverlayMode,
++    menu: Option<SettingsMenu>,
++    menu_pose: Option<(xr::Posef, bool)>,
++    vertical: StickRepeat,
++    horizontal: StickRepeat,
++    buttons: MenuButtons,
++    menu_dirty: bool,
 +    next_update: Instant,
 +    next_property_poll: Instant,
 +    visibility_property: String,
-+    visible: bool,
 +    probe: bool,
-+    header: String,
++    stream: Option<StreamInfo>,
++    history: VecDeque<f32>,
 +}
 +
 +impl PerformanceOverlay {
@@ -3856,49 +4719,47 @@ index 0000000..869319d
 +        interactions: Arc<RwLock<InteractionContext>>,
 +    ) -> xr::Result<Self> {
 +        context.make_current();
-+        let space =
++        let view_space =
 +            session.create_reference_space(xr::ReferenceSpaceType::VIEW, xr::Posef::IDENTITY)?;
-+        let swapchain = session.create_swapchain(&xr::SwapchainCreateInfo {
-+            create_flags: xr::SwapchainCreateFlags::EMPTY,
-+            usage_flags: xr::SwapchainUsageFlags::COLOR_ATTACHMENT
-+                | xr::SwapchainUsageFlags::SAMPLED,
-+            format: SDR_FORMAT_GL,
-+            sample_count: 1,
-+            width: RESOLUTION.x,
-+            height: RESOLUTION.y,
-+            face_count: 1,
-+            array_size: 1,
-+            mip_count: 1,
-+        })?;
-+        let renderer = PerformanceRenderer::new(
-+            Rc::clone(&context),
-+            RESOLUTION,
-+            &swapchain.enumerate_images()?,
-+        );
++        let local_space =
++            session.create_reference_space(xr::ReferenceSpaceType::LOCAL, xr::Posef::IDENTITY)?;
++        let strip = Surface::new(&session, &context, STRIP_SIZE)?;
++        let panel = Surface::new(&session, &context, PANEL_SIZE)?;
 +        Ok(Self {
 +            session,
 +            context,
 +            interactions,
-+            space,
-+            swapchain,
-+            renderer,
-+            toggle: OverlayToggle::default(),
++            view_space,
++            local_space,
++            strip,
++            panel,
++            rasterizer: PanelRasterizer::new(),
++            chord: ThumbstickChord::new(),
++            mode: OverlayMode::default(),
++            shown_mode: OverlayMode::default(),
++            menu: None,
++            menu_pose: None,
++            vertical: StickRepeat::default(),
++            horizontal: StickRepeat::default(),
++            buttons: MenuButtons::default(),
++            menu_dirty: false,
 +            next_update: Instant::now(),
 +            next_property_poll: Instant::now(),
 +            visibility_property: String::new(),
-+            visible: true,
 +            probe: crate::extra_extensions::perf_settings::system_property("debug.q3pw.loop_probe")
 +                == "1",
-+            header: "Connecting".into(),
++            stream: None,
++            history: VecDeque::with_capacity(HISTORY_LEN),
 +        })
 +    }
 +
-+    pub fn set_stream(&mut self, config: &StreamConfig) {
++    pub fn set_stream(&mut self, config: &StreamConfig, refresh_rates: &[f32]) {
 +        let v = &config.settings.video;
 +        let n = &config.negotiated_config;
++        let pyrowave = v.preferred_codec == CodecType::PyroWave;
 +        let transport = if n.wired {
 +            "USB/TCP"
-+        } else if v.preferred_codec == alvr_session::CodecType::PyroWave {
++        } else if pyrowave {
 +            if v.pyrowave.transport == alvr_session::PyroWaveTransport::Udp {
 +                "Wi-Fi/PWU2 UDP"
 +            } else {
@@ -3907,28 +4768,130 @@ index 0000000..869319d
 +        } else {
 +            "Wireless"
 +        };
-+        self.header = format!(
-+            "{:?} {}  |  {}x{} /eye  |  {:.0} Hz",
-+            v.preferred_codec,
-+            if v.preferred_codec == alvr_session::CodecType::PyroWave && v.pyrowave.chroma_444 {
-+                "4:4:4"
-+            } else {
-+                "4:2:0"
++        let chroma = if pyrowave && v.pyrowave.chroma_444 {
++            "4:4:4"
++        } else {
++            "4:2:0"
++        };
++        // Negotiated sizes are padded to 32, so 2080 still reads as the 100% panel width.
++        let negotiated_percent =
++            (n.view_resolution.x as f64 * 100.0 / PANEL_PER_EYE.0 as f64).round() as u32;
++        let stream_percent =
++            frame_size_percent(&v.transcoding_view_resolution).unwrap_or(negotiated_percent);
++        self.stream = Some(StreamInfo {
++            subtitle: format!(
++                "{:?} {chroma}  |  {} x {} /eye  |  {:.0} Hz  |  {transport}",
++                v.preferred_codec, n.view_resolution.x, n.view_resolution.y, n.refresh_rate_hint
++            ),
++            refresh_hz: n.refresh_rate_hint,
++            pyrowave,
++            bitrate_mbps: match v.bitrate.mode {
++                BitrateMode::ConstantMbps(mbps) => Some(mbps),
++                _ => None,
 +            },
-+            n.view_resolution.x,
-+            n.view_resolution.y,
-+            n.refresh_rate_hint
-+        );
-+        self.header.push_str(&format!("  |  {transport}"));
++            chroma_444: pyrowave && v.pyrowave.chroma_444,
++            stream_percent,
++            render_percent: frame_size_percent(&v.emulated_headset_view_resolution)
++                .unwrap_or(stream_percent),
++            refresh_rates: refresh_rates.to_vec(),
++        });
++        self.history.clear();
 +        self.next_update = Instant::now();
 +    }
 +
 +    pub fn disconnected(&mut self) {
-+        self.header = "Waiting for stream".into();
++        self.stream = None;
++        self.close_menu();
 +        self.next_update = Instant::now();
 +    }
 +
-+    pub fn update(&mut self, core: &ClientCoreContext) -> xr::Result<()> {
++    /// Re-anchors an open menu after a recenter.
++    pub fn reference_space_changed(&mut self) {
++        self.menu_pose = None;
++    }
++
++    fn close_menu(&mut self) {
++        self.menu = None;
++        self.menu_pose = None;
++        set_menu_captures_input(false);
++    }
++
++    fn open_menu(&mut self, core: &ClientCoreContext) {
++        let Some(stream) = &self.stream else {
++            return;
++        };
++        let bitrate_mbps = stream.bitrate_mbps.unwrap_or_else(|| {
++            core.performance_snapshot()
++                .map(|s| (s.requested_bitrate_bps / 1e6).round())
++                .filter(|v| v.is_finite() && *v > 0.0)
++                .map_or(1000, |v| v as u64)
++        });
++        self.menu = Some(SettingsMenu::new(
++            MenuValues {
++                refresh_hz: stream.refresh_hz,
++                bitrate_mbps,
++                chroma_444: stream.chroma_444,
++                stream_percent: stream.stream_percent,
++                render_percent: stream.render_percent,
++            },
++            &stream.refresh_rates,
++            self.mode,
++            stream.pyrowave,
++        ));
++        self.menu_pose = None;
++        self.menu_dirty = true;
++        set_menu_captures_input(true);
++    }
++
++    /// Places the menu in front of the head at open time, level and upright, in LOCAL space so
++    /// it stays put while the user looks around. Falls back to head-locked if tracking is lost.
++    fn anchor_menu(&mut self, time: xr::Time) {
++        if self.menu_pose.is_some() {
++            return;
++        }
++        let head = self
++            .view_space
++            .locate(&self.local_space, time)
++            .ok()
++            .filter(|l| {
++                l.location_flags.contains(
++                    xr::SpaceLocationFlags::POSITION_VALID
++                        | xr::SpaceLocationFlags::ORIENTATION_VALID,
++                )
++            })
++            .map(|l| crate::from_xr_pose(l.pose));
++        self.menu_pose = Some(match head {
++            Some(Pose {
++                orientation,
++                position,
++            }) => {
++                let forward = orientation * Vec3::NEG_Z;
++                let yaw = Quat::from_rotation_y(f32::atan2(-forward.x, -forward.z));
++                let position = position + yaw * Vec3::new(0.0, -0.08, -MENU_DISTANCE_M);
++                (
++                    crate::to_xr_pose(Pose {
++                        orientation: yaw,
++                        position,
++                    }),
++                    true,
++                )
++            }
++            None => (
++                xr::Posef {
++                    position: xr::Vector3f {
++                        x: 0.0,
++                        y: -0.05,
++                        z: -MENU_DISTANCE_M,
++                    },
++                    ..xr::Posef::IDENTITY
++                },
++                false,
++            ),
++        });
++    }
++
++    pub fn update(&mut self, core: &ClientCoreContext, time: xr::Time) -> xr::Result<()> {
++        let now = Instant::now();
 +        let interactions = self.interactions.read();
 +        let pressed = |id: u64| {
 +            if let Some(ButtonAction::Binary(action)) = interactions.button_actions.get(&id) {
@@ -3940,13 +4903,86 @@ index 0000000..869319d
 +                false
 +            }
 +        };
-+        let was_visible = self.visible;
-+        self.toggle.update(
++        let axis = |id: u64| {
++            if let Some(ButtonAction::Scalar(action)) = interactions.button_actions.get(&id) {
++                action
++                    .state(&self.session, xr::Path::NULL)
++                    .ok()
++                    .filter(|state| state.is_active)
++                    .map_or(0.0, |state| state.current_state)
++            } else {
++                0.0
++            }
++        };
++        let chord = self.chord.update(
 +            pressed(*LEFT_THUMBSTICK_CLICK_ID),
 +            pressed(*RIGHT_THUMBSTICK_CLICK_ID),
++            now,
 +        );
++        // Either hand drives the menu; the stick pushed further wins.
++        let strongest = |a: f32, b: f32| if a.abs() >= b.abs() { a } else { b };
++        let stick_x = strongest(axis(*LEFT_THUMBSTICK_X_ID), axis(*RIGHT_THUMBSTICK_X_ID));
++        let stick_y = strongest(axis(*LEFT_THUMBSTICK_Y_ID), axis(*RIGHT_THUMBSTICK_Y_ID));
++        let confirm = pressed(*RIGHT_A_CLICK_ID) || pressed(*LEFT_X_CLICK_ID);
++        let back = pressed(*RIGHT_B_CLICK_ID) || pressed(*LEFT_Y_CLICK_ID);
 +        drop(interactions);
-+        if Instant::now() >= self.next_property_poll {
++
++        match chord {
++            Some(ChordEvent::OpenMenu) if self.menu.is_some() => self.close_menu(),
++            Some(ChordEvent::OpenMenu) => self.open_menu(core),
++            Some(ChordEvent::CycleOverlay) if self.menu.is_none() => {
++                self.mode = self.mode.next();
++                alvr_common::error!("[Q3PW_OVERLAY_CONTROL] mode={}", self.mode.name());
++            }
++            _ => (),
++        }
++
++        let input = MenuInput {
++            // Stick up is positive Y; the menu counts rows downward.
++            vertical: -self.vertical.update(stick_y, now),
++            horizontal: self.horizontal.update(stick_x, now),
++            confirm: confirm && !self.buttons.confirm,
++            back: back && !self.buttons.back,
++        };
++        self.buttons = MenuButtons { confirm, back };
++
++        let mut close = false;
++        if let Some(menu) = &mut self.menu {
++            if input != MenuInput::default() {
++                self.menu_dirty = true;
++                match menu.handle(input, now) {
++                    MenuAction::None => (),
++                    MenuAction::Close => close = true,
++                    MenuAction::SetOverlay(mode) => self.mode = mode,
++                    MenuAction::Apply(request) => {
++                        alvr_common::error!("[Q3PW_MENU] request={request:?}");
++                        if !core.send_headset_settings(request) {
++                            menu.pending = None;
++                            menu.status = "Not connected to the PC".into();
++                        }
++                    }
++                }
++            }
++            if let Some(ack) = core.take_headset_settings_ack() {
++                if menu.pending.is_some_and(|(id, _)| id == ack.request_id) {
++                    menu.pending = None;
++                    if ack.applied && !ack.reconnect {
++                        menu.confirm_applied();
++                    }
++                    menu.status = ack.message;
++                    self.menu_dirty = true;
++                }
++            }
++            if menu.pending.is_some() {
++                menu.expire_pending(now);
++                self.menu_dirty |= menu.pending.is_none();
++            }
++        }
++        if close {
++            self.close_menu();
++        }
++
++        if now >= self.next_property_poll {
 +            let property = crate::extra_extensions::perf_settings::system_property(
 +                "debug.q3pw.overlay_visible",
 +            );
@@ -3961,161 +4997,323 @@ index 0000000..869319d
 +                );
 +            }
 +            self.visibility_property = property;
-+            self.next_property_poll = Instant::now() + Duration::from_millis(500);
++            self.next_property_poll = now + Duration::from_millis(500);
 +        }
-+        self.visible = overlay_visibility(&self.visibility_property, self.toggle.visible);
-+        if was_visible != self.visible {
++        let shown_mode = overlay_visibility(&self.visibility_property, self.mode);
++        if shown_mode != self.shown_mode {
 +            alvr_common::error!(
-+                "[Q3PW_OVERLAY] visible={} forced={}",
-+                self.visible,
-+                matches!(self.visibility_property.trim(), "0" | "1")
++                "[Q3PW_OVERLAY] visible={} forced={} mode={}",
++                shown_mode != OverlayMode::Hidden,
++                matches!(self.visibility_property.trim(), "0" | "1"),
++                shown_mode.name()
 +            );
++            self.shown_mode = shown_mode;
++            self.next_update = now;
 +        }
-+        if !was_visible && self.visible {
-+            self.next_update = Instant::now();
-+        }
-+        if !self.visible || Instant::now() < self.next_update {
-+            return Ok(());
-+        }
++
 +        let text_started = self.probe.then(Instant::now);
-+        let text = self.text(core.performance_snapshot());
-+        let text_ms = text_started
-+            .map(|t| t.elapsed().as_secs_f64() * 1000.0)
-+            .unwrap_or(0.0);
-+        let acquire_started = self.probe.then(Instant::now);
-+        self.context.make_current();
-+        let image = self.swapchain.acquire_image()?;
-+        self.swapchain.wait_image(xr::Duration::INFINITE)?;
-+        let acquire_ms = acquire_started
-+            .map(|t| t.elapsed().as_secs_f64() * 1000.0)
-+            .unwrap_or(0.0);
-+        let draw_started = self.probe.then(Instant::now);
-+        self.renderer.update(image as usize, &text);
-+        let draw_ms = draw_started
-+            .map(|t| t.elapsed().as_secs_f64() * 1000.0)
-+            .unwrap_or(0.0);
-+        let release_started = self.probe.then(Instant::now);
-+        self.swapchain.release_image()?;
-+        if let Some(t) = release_started {
-+            alvr_common::error!("[Q3PW_OVERLAY_DRAW] text_cpu_ms={text_ms:.3} acquire_wait_cpu_ms={acquire_ms:.3} renderer_submit_cpu_ms={draw_ms:.3} release_cpu_ms={:.3}", t.elapsed().as_secs_f64() * 1000.0);
++        if self.menu.is_some() {
++            self.anchor_menu(time);
 +        }
-+        self.next_update = Instant::now() + Duration::from_millis(500);
++        if let Some(menu) = &self.menu {
++            if self.menu_dirty || now >= self.next_update {
++                self.rasterizer.submit(PanelView::Menu(menu_view(menu)));
++                self.menu_dirty = false;
++                self.next_update = now + UPDATE_INTERVAL;
++            }
++        } else if self.shown_mode != OverlayMode::Hidden && now >= self.next_update {
++            let snapshot = core
++                .performance_snapshot()
++                .filter(|s| s.frame_age_ms < 2000.0);
++            if let Some(s) = &snapshot {
++                if self.history.len() == HISTORY_LEN {
++                    self.history.pop_front();
++                }
++                self.history.push_back(s.client_fps);
++            }
++            let view = if self.shown_mode == OverlayMode::Compact {
++                PanelView::Strip(self.strip_tiles(snapshot.as_ref()))
++            } else {
++                PanelView::Stats(self.stats_view(snapshot.as_ref()))
++            };
++            self.rasterizer.submit(view);
++            self.next_update = now + UPDATE_INTERVAL;
++        }
++        let text_ms = text_started.map_or(0.0, |t| t.elapsed().as_secs_f64() * 1000.0);
++
++        if let Some((view, pixels, raster_ms)) = self.rasterizer.poll() {
++            let (surface, shown) = match view {
++                PanelView::Strip(_) => (&mut self.strip, Shown::Stats),
++                PanelView::Stats(_) => (&mut self.panel, Shown::Stats),
++                PanelView::Menu(_) => (&mut self.panel, Shown::Menu),
++            };
++            let acquire_started = self.probe.then(Instant::now);
++            self.context.make_current();
++            let image = surface.swapchain.acquire_image()?;
++            surface.swapchain.wait_image(xr::Duration::INFINITE)?;
++            let acquire_ms = acquire_started.map_or(0.0, |t| t.elapsed().as_secs_f64() * 1000.0);
++            let draw_started = self.probe.then(Instant::now);
++            surface.renderer.update(image as usize, &pixels);
++            let draw_ms = draw_started.map_or(0.0, |t| t.elapsed().as_secs_f64() * 1000.0);
++            let release_started = self.probe.then(Instant::now);
++            surface.swapchain.release_image()?;
++            surface.shown = shown;
++            if let Some(t) = release_started {
++                alvr_common::error!("[Q3PW_OVERLAY_DRAW] text_cpu_ms={text_ms:.3} acquire_wait_cpu_ms={acquire_ms:.3} renderer_submit_cpu_ms={draw_ms:.3} release_cpu_ms={:.3} raster_worker_ms={raster_ms:.3}", t.elapsed().as_secs_f64() * 1000.0);
++            }
++        }
 +        Ok(())
 +    }
 +
-+    fn text(&self, data: Option<PerformanceSnapshot>) -> String {
-+        let Some(s) = data.filter(|s| s.frame_age_ms < 2000.0) else {
-+            return format!("QUEST3 PYROWAVE PERFORMANCE\n{}\n\nWaiting for fresh stream statistics\n\nBoth thumbstick clicks: toggle overlay", self.header);
++    fn strip_tiles(&self, data: Option<&PerformanceSnapshot>) -> Vec<Tile> {
++        let Some(s) = data else {
++            return vec![Tile {
++                label: String::new(),
++                value: if self.stream.is_some() {
++                    "Waiting for statistics"
++                } else {
++                    "Waiting for stream"
++                }
++                .into(),
++                unit: String::new(),
++                tone: Tone::Neutral,
++            }];
 +        };
-+        let mut text = format!(
-+            "QUEST3 PYROWAVE PERFORMANCE\n{}\n\
-+            Bitrate {} Mbps  |  target {} Mbps\n\
-+            Delivered {} FPS  |  Game/host {} FPS*\n\
-+            Latency {} ms*  |  Game {} / Encode {} / Network {}*\n\
-+            Decode {} / Queue {} / Render {} / Vsync {} ms\n\
-+            Presented frames {}  |  Lost packets {}\n",
-+            self.header,
-+            metric(s.bitrate_bps / 1e6),
-+            metric(s.requested_bitrate_bps / 1e6),
-+            metric(s.client_fps),
-+            metric(s.server_fps),
-+            metric(s.total_ms),
-+            metric(s.game_ms),
-+            metric(s.encoder_ms),
-+            metric(s.network_ms),
-+            metric(s.decoder_ms),
-+            metric(s.queue_ms),
-+            metric(s.compositor_ms),
-+            metric(s.vsync_ms),
-+            s.frames_total,
-+            s.packets_lost_total
-+        );
-+        if let Some(h) = s.headset {
-+            if let Some(p) = h.pyrowave {
-+                let mean = |values: &[f32]| {
-+                    let values: Vec<_> = values
-+                        .iter()
-+                        .copied()
-+                        .filter(|v| v.is_finite() && *v >= 0.0)
-+                        .collect();
-+                    if values.is_empty() {
-+                        "--".into()
-+                    } else {
-+                        metric(values.iter().sum::<f32>() / values.len() as f32)
-+                    }
-+                };
-+                text.push_str(&format!(
-+                    "GPU decode {} / Completion {} ms  |  Decoded {}\n\
-+                    Dropped {} / Skipped {} / Superseded {} / Errors {}\n",
-+                    mean(&p.gpu_decode_ms),
-+                    mean(&p.fence_ms),
-+                    p.complete,
-+                    p.dropped,
-+                    p.skipped,
-+                    p.superseded,
-+                    p.decode_failures
-+                ));
-+            }
-+            text.push_str(&format!(
-+                "Battery {}% / {} C  |  Thermal {}  |  GPU {} MHz\n",
-+                h.battery_level
-+                    .map(|v| metric(v * 100.0))
-+                    .unwrap_or_else(|| "--".into()),
-+                h.battery_temperature_c
-+                    .map(metric)
-+                    .unwrap_or_else(|| "--".into()),
-+                h.thermal_status
-+                    .map(|v| v.to_string())
-+                    .unwrap_or_else(|| "--".into()),
-+                gpu_clock()
-+            ));
++        let refresh = self.refresh_hz();
++        let mut tiles = vec![
++            Tile {
++                label: "Fresh".into(),
++                value: metric(s.client_fps),
++                unit: format!("/ {refresh:.0} fps"),
++                tone: tone(fps_health(s.client_fps, refresh)),
++            },
++            Tile {
++                label: "Latency".into(),
++                value: metric(s.total_ms),
++                unit: "ms latency*".into(),
++                tone: tone(latency_health(s.total_ms)),
++            },
++        ];
++        if let Some(decode) = gpu_decode_ms(s) {
++            tiles.push(Tile {
++                label: "Decode".into(),
++                value: metric(decode),
++                unit: "ms decode".into(),
++                tone: tone(budget_health(decode, refresh)),
++            });
 +        }
-+        text.push_str("*ALVR estimates; host presents proxy game FPS. Network is residual.\nBoth thumbstick clicks: toggle overlay");
-+        text
++        tiles
++    }
++
++    fn stats_view(&self, data: Option<&PerformanceSnapshot>) -> StatsView {
++        let refresh = self.refresh_hz();
++        let subtitle = self
++            .stream
++            .as_ref()
++            .map_or("Waiting for stream".into(), |s| s.subtitle.clone());
++        let footer = "*ALVR estimates, not optical latency.  Click both sticks: overlay mode.  Hold both: settings".into();
++        let Some(s) = data else {
++            return StatsView {
++                title: "Quest3 PyroWave".into(),
++                subtitle: format!("{subtitle}  |  waiting for fresh statistics"),
++                tiles: vec![],
++                history: self.history.iter().copied().collect(),
++                history_target: refresh,
++                details: vec![],
++                footer,
++            };
++        };
++        let decode = gpu_decode_ms(s);
++        let mut tiles = vec![
++            Tile {
++                label: "Fresh FPS".into(),
++                value: metric(s.client_fps),
++                unit: format!("/ {refresh:.0}"),
++                tone: tone(fps_health(s.client_fps, refresh)),
++            },
++            Tile {
++                label: "Latency*".into(),
++                value: metric(s.total_ms),
++                unit: "ms".into(),
++                tone: tone(latency_health(s.total_ms)),
++            },
++        ];
++        tiles.push(match decode {
++            Some(ms) => Tile {
++                label: "GPU decode".into(),
++                value: metric(ms),
++                unit: "ms".into(),
++                tone: tone(budget_health(ms, refresh)),
++            },
++            None => Tile {
++                label: "Decode*".into(),
++                value: metric(s.decoder_ms),
++                unit: "ms".into(),
++                tone: Tone::Neutral,
++            },
++        });
++        tiles.push(Tile {
++            label: "Bitrate".into(),
++            value: format!("{:.0}", s.bitrate_bps / 1e6),
++            unit: format!("/ {:.0} Mbps", s.requested_bitrate_bps / 1e6),
++            tone: Tone::Neutral,
++        });
++
++        let ms = |v: f32| format!("{} ms", metric(v));
++        let pair = |a: f32, b: f32| format!("{} / {} ms", metric(a), metric(b));
++        let mut details = vec![
++            ("Game / host*".into(), format!("{} fps", metric(s.server_fps))),
++            ("Encode".into(), ms(s.encoder_ms)),
++            ("Network*".into(), ms(s.network_ms)),
++            ("Decode / queue".into(), pair(s.decoder_ms, s.queue_ms)),
++            ("Render / vsync".into(), pair(s.compositor_ms, s.vsync_ms)),
++            ("Lost packets".into(), s.packets_lost_total.to_string()),
++        ];
++        let headset = s.headset.as_ref();
++        if let Some(p) = headset.and_then(|h| h.pyrowave.as_ref()) {
++            details.extend([
++                ("Completion".into(), ms(mean(&p.fence_ms).unwrap_or(-1.0))),
++                ("Decoded / presented".into(), format!("{} / {}", p.complete, s.frames_total)),
++                ("Dropped / skipped".into(), format!("{} / {}", p.dropped, p.skipped)),
++                (
++                    "Superseded / errors".into(),
++                    format!("{} / {}", p.superseded, p.decode_failures),
++                ),
++            ]);
++        } else {
++            details.push(("Presented frames".into(), s.frames_total.to_string()));
++        }
++        if let Some(h) = headset {
++            details.extend([
++                (
++                    "Battery".into(),
++                    format!(
++                        "{}% / {} C",
++                        h.battery_level
++                            .map(|v| format!("{:.0}", v * 100.0))
++                            .unwrap_or_else(|| "--".into()),
++                        h.battery_temperature_c
++                            .map(metric)
++                            .unwrap_or_else(|| "--".into())
++                    ),
++                ),
++                (
++                    "Thermal / GPU".into(),
++                    format!(
++                        "{} / {} MHz",
++                        h.thermal_status
++                            .map(|v| v.to_string())
++                            .unwrap_or_else(|| "--".into()),
++                        gpu_clock()
++                    ),
++                ),
++            ]);
++        }
++        StatsView {
++            title: "Quest3 PyroWave".into(),
++            subtitle,
++            tiles,
++            history: self.history.iter().copied().collect(),
++            history_target: refresh,
++            details,
++            footer,
++        }
++    }
++
++    fn refresh_hz(&self) -> f32 {
++        self.stream.as_ref().map_or(f32::NAN, |s| s.refresh_hz)
 +    }
 +
 +    pub fn layer(&self) -> Option<xr::CompositionLayerQuad<'_, xr::OpenGlEs>> {
-+        self.visible.then(|| {
-+            xr::CompositionLayerQuad::new()
-+                .layer_flags(
-+                    xr::CompositionLayerFlags::BLEND_TEXTURE_SOURCE_ALPHA
-+                        | xr::CompositionLayerFlags::UNPREMULTIPLIED_ALPHA,
-+                )
-+                .space(&self.space)
-+                .eye_visibility(xr::EyeVisibility::BOTH)
-+                .sub_image(
-+                    xr::SwapchainSubImage::new()
-+                        .swapchain(&self.swapchain)
-+                        .image_array_index(0)
-+                        .image_rect(xr::Rect2Di {
-+                            offset: xr::Offset2Di { x: 0, y: 0 },
-+                            extent: xr::Extent2Di {
-+                                width: RESOLUTION.x as i32,
-+                                height: RESOLUTION.y as i32,
-+                            },
-+                        }),
-+                )
-+                .pose(xr::Posef {
-+                    position: xr::Vector3f {
-+                        x: 0.0,
-+                        y: -0.32,
-+                        z: -1.2,
-+                    },
-+                    ..xr::Posef::IDENTITY
-+                })
-+                .size(xr::Extent2Df {
-+                    width: 0.9,
-+                    height: 0.42,
-+                })
-+        })
++        let aspect = |surface: &Surface, width: f32| xr::Extent2Df {
++            width,
++            height: width * surface.size.y as f32 / surface.size.x as f32,
++        };
++        let head_locked = |x: f32, y: f32, z: f32| xr::Posef {
++            position: xr::Vector3f { x, y, z },
++            ..xr::Posef::IDENTITY
++        };
++        if self.menu.is_some() {
++            let (pose, world) = self.menu_pose?;
++            return (self.panel.shown == Shown::Menu).then(|| {
++                self.panel.quad()
++                    .space(if world {
++                        &self.local_space
++                    } else {
++                        &self.view_space
++                    })
++                    .pose(pose)
++                    .size(aspect(&self.panel, 0.8))
++            });
++        }
++        match self.shown_mode {
++            OverlayMode::Hidden => None,
++            OverlayMode::Compact => (self.strip.shown == Shown::Stats).then(|| {
++                self.strip.quad()
++                    .space(&self.view_space)
++                    .pose(head_locked(0.0, -0.40, -1.2))
++                    .size(aspect(&self.strip, 0.62))
++            }),
++            OverlayMode::Full => (self.panel.shown == Shown::Stats).then(|| {
++                self.panel.quad()
++                    .space(&self.view_space)
++                    .pose(head_locked(0.0, -0.30, -1.2))
++                    .size(aspect(&self.panel, 0.84))
++            }),
++        }
 +    }
++}
++
++fn menu_view(menu: &SettingsMenu) -> MenuView {
++    MenuView {
++        title: "Stream settings".into(),
++        subtitle: "Saved on the PC. Bitrate applies live; the rest reconnect the stream.".into(),
++        lines: menu
++            .lines()
++            .into_iter()
++            .map(|line| MenuViewLine {
++                label: line.label.into(),
++                value: line.value,
++                selected: line.selected,
++                changed: line.changed,
++                adjustable: line.adjustable,
++            })
++            .collect(),
++        status: menu.status.clone(),
++        hint: "Stick: move and change   A/X: select   B/Y: close   Game input paused".into(),
++    }
++}
++
++fn tone(health: Health) -> Tone {
++    match health {
++        Health::Good => Tone::Good,
++        Health::Warn => Tone::Warn,
++        Health::Bad => Tone::Bad,
++        Health::Unknown => Tone::Neutral,
++    }
++}
++
++fn mean(values: &[f32]) -> Option<f32> {
++    let values = values
++        .iter()
++        .copied()
++        .filter(|v| v.is_finite() && *v >= 0.0)
++        .collect::<Vec<_>>();
++    (!values.is_empty()).then(|| values.iter().sum::<f32>() / values.len() as f32)
++}
++
++fn gpu_decode_ms(s: &PerformanceSnapshot) -> Option<f32> {
++    s.headset
++        .as_ref()
++        .and_then(|h| h.pyrowave.as_ref())
++        .and_then(|p| mean(&p.gpu_decode_ms))
 +}
 +
 +fn gpu_clock() -> String {
 +    std::fs::read_to_string("/sys/class/kgsl/kgsl-3d0/gpuclk")
 +        .ok()
 +        .and_then(|v| v.trim().parse::<f32>().ok())
-+        .map(|v| metric(v / 1e6))
++        .map(|v| format!("{:.0}", v / 1e6))
 +        .unwrap_or_else(|| "--".into())
 +}
 diff --git a/alvr/client_openxr/src/refresh_probe.rs b/alvr/client_openxr/src/refresh_probe.rs
@@ -4237,7 +5435,7 @@ index 0000000..766b412
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..9a909cf 100644
+index b87dfe9..ac82ef1 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -1,3 +1,6 @@
@@ -4321,7 +5519,7 @@ index b87dfe9..9a909cf 100644
  }
  
  impl StreamContext {
-@@ -115,12 +141,6 @@ impl StreamContext {
+@@ -115,12 +143,6 @@ impl StreamContext {
  
          let xr_exts = xr_session.instance().exts();
  
@@ -4334,7 +5532,7 @@ index b87dfe9..9a909cf 100644
          let foveation_profile = if let Some(config) = &config.clientside_foveation_config {
              if xr_exts.fb_swapchain_update_state.is_some()
                  && xr_exts.fb_foveation.is_some()
-@@ -228,6 +248,10 @@ impl StreamContext {
+@@ -228,6 +250,10 @@ impl StreamContext {
              view_reference_space,
              swapchains,
              last_good_view_params: [ViewParams::default(); 2],
@@ -4345,7 +5543,7 @@ index b87dfe9..9a909cf 100644
              input_thread: None,
              input_thread_running,
              config,
-@@ -235,8 +259,36 @@ impl StreamContext {
+@@ -235,8 +261,36 @@ impl StreamContext {
              renderer,
              decoder: None,
              pending_frame: None,
@@ -4382,7 +5580,7 @@ index b87dfe9..9a909cf 100644
          this.update_reference_space();
  
          this
-@@ -310,6 +361,24 @@ impl StreamContext {
+@@ -310,6 +364,24 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
@@ -4407,7 +5605,7 @@ index b87dfe9..9a909cf 100644
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +407,42 @@ impl StreamContext {
+@@ -338,12 +410,42 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -4452,7 +5650,7 @@ index b87dfe9..9a909cf 100644
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +454,25 @@ impl StreamContext {
+@@ -355,8 +457,25 @@ impl StreamContext {
          }
      }
  
@@ -4478,7 +5676,7 @@ index b87dfe9..9a909cf 100644
      }
  
      pub fn render(
-@@ -364,15 +480,151 @@ impl StreamContext {
+@@ -364,15 +483,151 @@ impl StreamContext {
          frame_interval: Duration,
          vsync_time: Duration,
      ) -> (ProjectionLayerBuilder, Duration) {
@@ -4632,7 +5830,7 @@ index b87dfe9..9a909cf 100644
              }
          }
  
-@@ -401,37 +647,80 @@ impl StreamContext {
+@@ -401,37 +656,80 @@ impl StreamContext {
              ]);
          }
  
@@ -4743,7 +5941,7 @@ index b87dfe9..9a909cf 100644
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +782,8 @@ impl StreamContext {
+@@ -493,6 +791,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
@@ -4752,6 +5950,33 @@ index b87dfe9..9a909cf 100644
          self.input_thread_running.set(false);
          self.input_thread.take().unwrap().join().ok();
      }
+@@ -510,6 +810,7 @@ fn stream_input_loop(
+     let platform = alvr_system_info::platform();
+ 
+     let mut last_controller_poses = [Pose::default(); 2];
++    let mut menu_captured = false;
+     let mut last_palm_poses = [Pose::default(); 2];
+     let mut last_view_params = [ViewParams::default(); 2];
+ 
+@@ -630,7 +931,17 @@ fn stream_input_loop(
+         );
+ 
+         let button_entries = interaction::update_buttons(&xr_session, &int_ctx.button_actions);
+-        if !button_entries.is_empty() {
++        // While the headset menu is open the game sees every control released; on close it
++        // gets the full current state, since changes made meanwhile were never sent.
++        let captured = alvr_client_core::performance::menu_captures_input();
++        if captured != menu_captured {
++            menu_captured = captured;
++            core_ctx.send_buttons(interaction::all_buttons(
++                &xr_session,
++                &int_ctx.button_actions,
++                captured,
++            ));
++        } else if !captured && !button_entries.is_empty() {
+             core_ctx.send_buttons(button_entries);
+         }
+ 
 diff --git a/alvr/client_openxr/src/surface_probe.rs b/alvr/client_openxr/src/surface_probe.rs
 new file mode 100644
 index 0000000..7bde148
@@ -6218,10 +7443,10 @@ index 0000000..832dd35
 +    }
 +}
 diff --git a/alvr/graphics/src/lib.rs b/alvr/graphics/src/lib.rs
-index 3485570..490fe8c 100644
+index 3485570..080259b 100644
 --- a/alvr/graphics/src/lib.rs
 +++ b/alvr/graphics/src/lib.rs
-@@ -1,9 +1,19 @@
+@@ -1,9 +1,21 @@
 +mod direct_eye;
 +mod eye_timer;
 +mod native_release;
@@ -6230,18 +7455,20 @@ index 3485570..490fe8c 100644
 +#[cfg(unix)]
 +mod ready_wait;
  mod lobby;
++mod panel;
 +mod performance;
  mod staging;
  mod stream;
  
  pub use lobby::*;
++pub use panel::*;
 +pub use performance::*;
  pub use stream::*;
 +pub use native_release::ReleaseFence;
  
  use alvr_common::{
      glam::{Mat4, UVec2, Vec4},
-@@ -18,6 +28,11 @@ use wgpu::{
+@@ -18,6 +30,11 @@ use wgpu::{
      TextureFormat, TextureUsages, TextureView,
  };
  
@@ -6253,7 +7480,7 @@ index 3485570..490fe8c 100644
  pub const SDR_FORMAT: TextureFormat = TextureFormat::Rgba8Unorm;
  pub const SDR_FORMAT_GL: u32 = gl::RGBA8;
  pub const GL_TEXTURE_EXTERNAL_OES: u32 = 0x8D65;
-@@ -209,6 +224,19 @@ pub struct GraphicsContext {
+@@ -209,6 +226,19 @@ pub struct GraphicsContext {
  }
  
  impl GraphicsContext {
@@ -6404,22 +7631,564 @@ index 0000000..ce59222
 +        fence
 +    }
 +}
-diff --git a/alvr/graphics/src/performance.rs b/alvr/graphics/src/performance.rs
+diff --git a/alvr/graphics/src/panel.rs b/alvr/graphics/src/panel.rs
 new file mode 100644
-index 0000000..31f33b6
+index 0000000..9e121e6
 --- /dev/null
-+++ b/alvr/graphics/src/performance.rs
-@@ -0,0 +1,197 @@
-+use crate::{create_gl_swapchain, create_texture, GraphicsContext, SDR_FORMAT};
-+use alvr_common::glam::UVec2;
++++ b/alvr/graphics/src/panel.rs
+@@ -0,0 +1,540 @@
++//! CPU layout and rasterization for the client overlay and headset menu. Drawing happens on a
++//! worker thread, so the render loop only uploads a finished image: nothing here runs per frame.
 +use glyph_brush_layout::{
 +    ab_glyph::{Font, FontRef, ScaleFont},
 +    FontId, GlyphPositioner, Layout, SectionGeometry, SectionText,
 +};
++use std::sync::mpsc::{self, Receiver, SyncSender, TrySendError};
++
++pub const STRIP_SIZE: (u32, u32) = (1024, 96);
++pub const PANEL_SIZE: (u32, u32) = (1024, 640);
++
++const FONT: &[u8] = include_bytes!("../resources/Ubuntu-Medium.ttf");
++
++type Rgba = [u8; 4];
++const BACKGROUND: Rgba = [12, 17, 26, 228];
++const CARD: Rgba = [26, 34, 48, 255];
++const SELECTED: Rgba = [44, 74, 122, 255];
++const TEXT: Rgba = [238, 242, 248, 255];
++const MUTED: Rgba = [140, 152, 170, 255];
++const ACCENT: Rgba = [98, 170, 255, 255];
++const GOOD: Rgba = [72, 214, 120, 255];
++const WARN: Rgba = [255, 196, 64, 255];
++const BAD: Rgba = [255, 92, 84, 255];
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum Tone {
++    Good,
++    Warn,
++    Bad,
++    Neutral,
++}
++
++impl Tone {
++    fn color(self) -> Rgba {
++        match self {
++            Tone::Good => GOOD,
++            Tone::Warn => WARN,
++            Tone::Bad => BAD,
++            Tone::Neutral => TEXT,
++        }
++    }
++}
++
++#[derive(Clone, Debug)]
++pub struct Tile {
++    pub label: String,
++    pub value: String,
++    pub unit: String,
++    pub tone: Tone,
++}
++
++#[derive(Clone, Debug)]
++pub struct StatsView {
++    pub title: String,
++    pub subtitle: String,
++    pub tiles: Vec<Tile>,
++    /// Delivered FPS samples, oldest first
++    pub history: Vec<f32>,
++    pub history_target: f32,
++    pub details: Vec<(String, String)>,
++    pub footer: String,
++}
++
++#[derive(Clone, Debug)]
++pub struct MenuViewLine {
++    pub label: String,
++    pub value: String,
++    pub selected: bool,
++    pub changed: bool,
++    pub adjustable: bool,
++}
++
++#[derive(Clone, Debug)]
++pub struct MenuView {
++    pub title: String,
++    pub subtitle: String,
++    pub lines: Vec<MenuViewLine>,
++    pub status: String,
++    pub hint: String,
++}
++
++#[derive(Clone, Debug)]
++pub enum PanelView {
++    Strip(Vec<Tile>),
++    Stats(StatsView),
++    Menu(MenuView),
++}
++
++impl PanelView {
++    pub fn size(&self) -> (u32, u32) {
++        match self {
++            PanelView::Strip(_) => STRIP_SIZE,
++            _ => PANEL_SIZE,
++        }
++    }
++}
++
++pub struct Canvas<'a> {
++    pub width: u32,
++    pub height: u32,
++    pub pixels: Vec<u8>,
++    font: FontRef<'a>,
++}
++
++impl Canvas<'_> {
++    pub fn new(width: u32, height: u32) -> Self {
++        Self {
++            width,
++            height,
++            pixels: vec![0; (width * height * 4) as usize],
++            font: FontRef::try_from_slice(FONT).unwrap(),
++        }
++    }
++
++    fn blend(&mut self, x: i32, y: i32, color: Rgba, coverage: f32) {
++        if x < 0 || y < 0 || x >= self.width as i32 || y >= self.height as i32 {
++            return;
++        }
++        let a = (color[3] as f32 / 255.0) * coverage.clamp(0.0, 1.0);
++        if a <= 0.0 {
++            return;
++        }
++        let i = ((y as u32 * self.width + x as u32) * 4) as usize;
++        let dst_a = self.pixels[i + 3] as f32 / 255.0;
++        let out_a = a + dst_a * (1.0 - a);
++        for c in 0..3 {
++            let src = color[c] as f32;
++            let dst = self.pixels[i + c] as f32;
++            self.pixels[i + c] = ((src * a + dst * dst_a * (1.0 - a)) / out_a.max(1e-6)) as u8;
++        }
++        self.pixels[i + 3] = (out_a * 255.0).round() as u8;
++    }
++
++    /// Antialiased rounded rectangle.
++    pub fn rounded_rect(&mut self, x: f32, y: f32, w: f32, h: f32, radius: f32, color: Rgba) {
++        let r = radius.min(w / 2.0).min(h / 2.0);
++        for py in y.floor() as i32..(y + h).ceil() as i32 {
++            for px in x.floor() as i32..(x + w).ceil() as i32 {
++                let (cx, cy) = (px as f32 + 0.5, py as f32 + 0.5);
++                let dx = (x + r - cx).max(cx - (x + w - r)).max(0.0);
++                let dy = (y + r - cy).max(cy - (y + h - r)).max(0.0);
++                let corner = (dx * dx + dy * dy).sqrt() - r;
++                let edge = (x - cx).max(cx - (x + w)).max(y - cy).max(cy - (y + h));
++                let distance = if dx > 0.0 && dy > 0.0 { corner } else { edge };
++                self.blend(px, py, color, 0.5 - distance);
++            }
++        }
++    }
++
++    /// Draws one line of text with its top-left at (x, y); returns the advance width.
++    pub fn text(&mut self, x: f32, y: f32, size: f32, color: Rgba, text: &str) -> f32 {
++        let font = self.font.clone();
++        let glyphs = Layout::default_single_line().calculate_glyphs(
++            &[&font],
++            &SectionGeometry {
++                screen_position: (x, y),
++                bounds: (f32::INFINITY, f32::INFINITY),
++            },
++            &[SectionText {
++                text,
++                scale: size.into(),
++                font_id: FontId(0),
++            }],
++        );
++        let scaled = font.as_scaled(size);
++        let mut right = x;
++        for glyph in glyphs {
++            right = right.max(glyph.glyph.position.x + scaled.h_advance(glyph.glyph.id));
++            if let Some(outline) = scaled.outline_glyph(glyph.glyph) {
++                let bounds = outline.px_bounds();
++                outline.draw(|gx, gy, alpha| {
++                    self.blend(
++                        gx as i32 + bounds.min.x as i32,
++                        gy as i32 + bounds.min.y as i32,
++                        color,
++                        alpha,
++                    );
++                });
++            }
++        }
++        right - x
++    }
++
++    pub fn text_width(&self, size: f32, text: &str) -> f32 {
++        let scaled = self.font.as_scaled(size);
++        text.chars()
++            .map(|c| scaled.h_advance(self.font.glyph_id(c)))
++            .sum()
++    }
++
++    fn text_right(&mut self, right: f32, y: f32, size: f32, color: Rgba, text: &str) {
++        let width = self.text_width(size, text);
++        self.text(right - width, y, size, color, text);
++    }
++
++    /// Antialiased segment, by distance from each pixel in its bounding box.
++    fn line(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, width: f32, color: Rgba) {
++        let half = width / 2.0;
++        let (dx, dy) = (x1 - x0, y1 - y0);
++        let length_sq = (dx * dx + dy * dy).max(1e-6);
++        for py in (y0.min(y1) - half - 1.0) as i32..=(y0.max(y1) + half + 1.0) as i32 {
++            for px in (x0.min(x1) - half - 1.0) as i32..=(x0.max(x1) + half + 1.0) as i32 {
++                let (cx, cy) = (px as f32 + 0.5, py as f32 + 0.5);
++                let t = (((cx - x0) * dx + (cy - y0) * dy) / length_sq).clamp(0.0, 1.0);
++                let d = ((cx - x0 - dx * t).powi(2) + (cy - y0 - dy * t).powi(2)).sqrt();
++                self.blend(px, py, color, half + 0.5 - d);
++            }
++        }
++    }
++}
++
++fn tile(canvas: &mut Canvas, x: f32, y: f32, w: f32, h: f32, tile: &Tile) {
++    canvas.rounded_rect(x, y, w, h, 14.0, CARD);
++    canvas.rounded_rect(x, y + 14.0, 5.0, h - 28.0, 2.5, tile.tone.color());
++    canvas.text(x + 22.0, y + 12.0, 24.0, MUTED, &tile.label);
++    let advance = canvas.text(x + 20.0, y + 40.0, 60.0, tile.tone.color(), &tile.value);
++    canvas.text(x + 28.0 + advance, y + 68.0, 26.0, MUTED, &tile.unit);
++}
++
++fn draw_strip(canvas: &mut Canvas, tiles: &[Tile]) {
++    let (w, h) = (canvas.width as f32, canvas.height as f32);
++    canvas.rounded_rect(0.0, 0.0, w, h, h / 2.0, BACKGROUND);
++    let item = |canvas: &Canvas, t: &Tile| {
++        24.0 + canvas.text_width(46.0, &t.value) + 8.0 + canvas.text_width(26.0, &t.unit)
++    };
++    let gap = 44.0;
++    let total = tiles.iter().map(|t| item(canvas, t)).sum::<f32>()
++        + gap * tiles.len().saturating_sub(1) as f32;
++    let mut x = ((w - total) / 2.0).max(36.0);
++    for (i, t) in tiles.iter().enumerate() {
++        if i > 0 {
++            canvas.rounded_rect(x - gap / 2.0 - 1.0, 24.0, 2.0, h - 48.0, 1.0, CARD);
++        }
++        canvas.rounded_rect(x, h / 2.0 - 7.0, 14.0, 14.0, 7.0, t.tone.color());
++        x += 24.0;
++        x += canvas.text(x, 20.0, 46.0, TEXT, &t.value) + 8.0;
++        x += canvas.text(x, 36.0, 26.0, MUTED, &t.unit) + gap;
++    }
++}
++
++fn draw_stats(canvas: &mut Canvas, view: &StatsView) {
++    let (w, h) = (canvas.width as f32, canvas.height as f32);
++    canvas.rounded_rect(0.0, 0.0, w, h, 28.0, BACKGROUND);
++    canvas.text(32.0, 24.0, 34.0, TEXT, &view.title);
++    canvas.text(32.0, 66.0, 24.0, MUTED, &view.subtitle);
++
++    let count = view.tiles.len().max(1) as f32;
++    let gap = 16.0;
++    let tile_w = (w - 64.0 - gap * (count - 1.0)) / count;
++    for (i, t) in view.tiles.iter().enumerate() {
++        tile(canvas, 32.0 + i as f32 * (tile_w + gap), 106.0, tile_w, 112.0, t);
++    }
++
++    // Delivered FPS history against the refresh rate
++    let (gx, gy, gw, gh) = (32.0, 234.0, w - 64.0, 120.0);
++    canvas.rounded_rect(gx, gy, gw, gh, 14.0, CARD);
++    canvas.text(gx + 18.0, gy + 10.0, 22.0, MUTED, "Delivered FPS, last 30 s");
++    let target = view.history_target;
++    if target.is_finite() && target > 0.0 {
++        // Half the refresh rate at the bottom keeps small drops visible
++        let (bottom, top) = (target * 0.5, target * 1.08);
++        let (px, pw, py, ph) = (gx + 18.0, gw - 36.0, gy + 40.0, gh - 54.0);
++        let y_of = |v: f32| py + ph - ((v - bottom) / (top - bottom)).clamp(0.0, 1.0) * ph;
++        let ty = y_of(target);
++        canvas.line(px, ty, px + pw, ty, 1.5, [ACCENT[0], ACCENT[1], ACCENT[2], 140]);
++        canvas.text_right(gx + gw - 18.0, gy + 10.0, 22.0, ACCENT, &format!("{target:.0} Hz"));
++        let points = view
++            .history
++            .iter()
++            .map(|v| if v.is_finite() && *v >= 0.0 { *v } else { 0.0 })
++            .collect::<Vec<_>>();
++        if points.len() >= 2 {
++            let dx = pw / (points.len() - 1) as f32;
++            for (i, pair) in points.windows(2).enumerate() {
++                let tone = if pair[1] >= target * 0.97 {
++                    GOOD
++                } else if pair[1] >= target * 0.85 {
++                    WARN
++                } else {
++                    BAD
++                };
++                canvas.line(
++                    px + i as f32 * dx,
++                    y_of(pair[0]),
++                    px + (i + 1) as f32 * dx,
++                    y_of(pair[1]),
++                    3.0,
++                    tone,
++                );
++            }
++        }
++    }
++
++    // Two columns of label/value rows
++    let rows_y = 372.0;
++    let row_h = 34.0;
++    let col_w = (w - 64.0) / 2.0;
++    let per_column = view.details.len().div_ceil(2);
++    for (i, (label, value)) in view.details.iter().enumerate() {
++        let col = (i / per_column.max(1)) as f32;
++        let row = (i % per_column.max(1)) as f32;
++        let x = 32.0 + col * col_w;
++        let y = rows_y + row * row_h;
++        canvas.text(x, y, 24.0, MUTED, label);
++        canvas.text_right(x + col_w - 24.0, y, 24.0, TEXT, value);
++    }
++    canvas.text(32.0, h - 40.0, 20.0, MUTED, &view.footer);
++}
++
++fn draw_menu(canvas: &mut Canvas, view: &MenuView) {
++    let (w, h) = (canvas.width as f32, canvas.height as f32);
++    canvas.rounded_rect(0.0, 0.0, w, h, 28.0, BACKGROUND);
++    canvas.text(36.0, 24.0, 36.0, TEXT, &view.title);
++    canvas.text(36.0, 68.0, 22.0, MUTED, &view.subtitle);
++    let row_h = 52.0;
++    let mut y = 108.0;
++    for line in &view.lines {
++        if line.selected {
++            canvas.rounded_rect(24.0, y, w - 48.0, row_h - 6.0, 12.0, SELECTED);
++        }
++        let label_color = if line.selected { TEXT } else { [200, 208, 220, 255] };
++        canvas.text(48.0, y + 9.0, 28.0, label_color, &line.label);
++        if !line.value.is_empty() {
++            let right = w - 56.0;
++            let value_color = if line.changed { WARN } else { TEXT };
++            if line.adjustable && line.selected {
++                let arrows_w = canvas.text_width(28.0, ">");
++                canvas.text_right(right, y + 9.0, 28.0, ACCENT, ">");
++                let value_right = right - arrows_w - 14.0;
++                canvas.text_right(value_right, y + 9.0, 28.0, value_color, &line.value);
++                let value_w = canvas.text_width(28.0, &line.value);
++                canvas.text_right(value_right - value_w - 14.0, y + 9.0, 28.0, ACCENT, "<");
++            } else {
++                canvas.text_right(right, y + 9.0, 28.0, value_color, &line.value);
++            }
++        }
++        y += row_h;
++    }
++    if !view.status.is_empty() {
++        canvas.text(48.0, h - 78.0, 24.0, ACCENT, &view.status);
++    }
++    canvas.text(48.0, h - 42.0, 22.0, MUTED, &view.hint);
++}
++
++pub fn rasterize(view: &PanelView) -> Vec<u8> {
++    let (width, height) = view.size();
++    let mut canvas = Canvas::new(width, height);
++    match view {
++        PanelView::Strip(tiles) => draw_strip(&mut canvas, tiles),
++        PanelView::Stats(stats) => draw_stats(&mut canvas, stats),
++        PanelView::Menu(menu) => draw_menu(&mut canvas, menu),
++    }
++    canvas.pixels
++}
++
++/// Rasterizes views on a worker thread. At most one view waits; a newer one replaces it.
++pub struct PanelRasterizer {
++    jobs: SyncSender<PanelView>,
++    results: Receiver<(PanelView, Vec<u8>, f64)>,
++    busy: bool,
++    waiting: Option<PanelView>,
++}
++
++impl Default for PanelRasterizer {
++    fn default() -> Self {
++        Self::new()
++    }
++}
++
++impl PanelRasterizer {
++    pub fn new() -> Self {
++        let (jobs, job_receiver) = mpsc::sync_channel::<PanelView>(1);
++        let (result_sender, results) = mpsc::channel();
++        std::thread::Builder::new()
++            .name("q3pw-overlay".into())
++            .spawn(move || {
++                while let Ok(view) = job_receiver.recv() {
++                    let started = std::time::Instant::now();
++                    let pixels = rasterize(&view);
++                    let ms = started.elapsed().as_secs_f64() * 1000.0;
++                    if result_sender.send((view, pixels, ms)).is_err() {
++                        break;
++                    }
++                }
++            })
++            .ok();
++        Self {
++            jobs,
++            results,
++            busy: false,
++            waiting: None,
++        }
++    }
++
++    pub fn submit(&mut self, view: PanelView) {
++        if self.busy {
++            self.waiting = Some(view);
++            return;
++        }
++        match self.jobs.try_send(view) {
++            Ok(()) => self.busy = true,
++            Err(TrySendError::Full(view)) => self.waiting = Some(view),
++            Err(TrySendError::Disconnected(_)) => (),
++        }
++    }
++
++    /// The newest finished image and its worker raster time, if one completed since the last call.
++    pub fn poll(&mut self) -> Option<(PanelView, Vec<u8>, f64)> {
++        let mut latest = None;
++        while let Ok(result) = self.results.try_recv() {
++            self.busy = false;
++            latest = Some(result);
++        }
++        if !self.busy {
++            if let Some(view) = self.waiting.take() {
++                self.submit(view);
++            }
++        }
++        latest
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use std::time::{Duration, Instant};
++
++    fn tiles() -> Vec<Tile> {
++        vec![
++            Tile {
++                label: "Fresh FPS".into(),
++                value: "118".into(),
++                unit: "/ 120 Hz".into(),
++                tone: Tone::Good,
++            },
++            Tile {
++                label: "Latency".into(),
++                value: "44".into(),
++                unit: "ms".into(),
++                tone: Tone::Warn,
++            },
++        ]
++    }
++
++    fn alpha(pixels: &[u8], width: u32, x: u32, y: u32) -> u8 {
++        pixels[((y * width + x) * 4 + 3) as usize]
++    }
++
++    #[test]
++    fn rounded_corners_are_transparent_and_text_draws_pixels() {
++        let view = PanelView::Strip(tiles());
++        let pixels = rasterize(&view);
++        let (w, h) = STRIP_SIZE;
++        assert_eq!(pixels.len(), (w * h * 4) as usize);
++        assert_eq!(alpha(&pixels, w, 0, 0), 0);
++        assert_eq!(alpha(&pixels, w, w - 1, h - 1), 0);
++        assert!(alpha(&pixels, w, w / 2, h / 2) > 200);
++        // Some bright text pixels exist
++        assert!(pixels.chunks(4).any(|p| p[0] > 200 && p[1] > 200 && p[2] > 200));
++    }
++
++    #[test]
++    fn stats_and_menu_fit_their_panel_and_tolerate_missing_values() {
++        let stats = PanelView::Stats(StatsView {
++            title: "Quest3 PyroWave".into(),
++            subtitle: "PyroWave 4:2:0 | 2080x2208 /eye | 120 Hz | USB/TCP".into(),
++            tiles: tiles(),
++            history: vec![118.0, f32::NAN, 60.0, 119.0],
++            history_target: 120.0,
++            details: (0..12).map(|i| (format!("Row {i}"), "--".into())).collect(),
++            footer: "Click both sticks: overlay mode | Hold both: settings".into(),
++        });
++        assert_eq!(rasterize(&stats).len(), (PANEL_SIZE.0 * PANEL_SIZE.1 * 4) as usize);
++        let menu = PanelView::Menu(MenuView {
++            title: "Stream settings".into(),
++            subtitle: "".into(),
++            lines: (0..8)
++                .map(|i| MenuViewLine {
++                    label: format!("Row {i}"),
++                    value: "100%  (2064 x 2208)".into(),
++                    selected: i == 2,
++                    changed: i == 3,
++                    adjustable: true,
++                })
++                .collect(),
++            status: "Sending to PC...".into(),
++            hint: "Stick: choose | A: apply | B: close".into(),
++        });
++        assert!(rasterize(&menu).chunks(4).any(|p| p == SELECTED));
++    }
++
++    #[test]
++    fn worker_returns_the_newest_view() {
++        let mut worker = PanelRasterizer::new();
++        worker.submit(PanelView::Strip(vec![]));
++        worker.submit(PanelView::Strip(tiles()));
++        let deadline = Instant::now() + Duration::from_secs(10);
++        let mut last = None;
++        while Instant::now() < deadline {
++            if let Some((view, _, _)) = worker.poll() {
++                last = Some(view);
++                if matches!(&last, Some(PanelView::Strip(t)) if t.len() == 2) {
++                    break;
++                }
++            }
++            std::thread::sleep(Duration::from_millis(5));
++        }
++        assert!(matches!(last, Some(PanelView::Strip(t)) if t.len() == 2));
++    }
++}
++#[cfg(test)]
++mod preview_dump {
++    use super::*;
++    #[test]
++    fn dump() {
++        let Ok(dir) = std::env::var("PANEL_PREVIEW") else { return };
++        let t = |l: &str, v: &str, u: &str, tone| Tile { label: l.into(), value: v.into(), unit: u.into(), tone };
++        let strip = PanelView::Strip(vec![
++            t("Fresh", "117.7", "/ 120 fps", Tone::Good), t("Latency", "44", "ms latency*", Tone::Warn),
++            t("Decode", "5.9", "ms decode", Tone::Warn)]);
++        let history: Vec<f32> = (0..60).map(|i| 118.0 - ((i * 37) % 11) as f32 - if i == 40 { 50.0 } else { 0.0 }).collect();
++        let stats = PanelView::Stats(StatsView {
++            title: "Quest3 PyroWave".into(),
++            subtitle: "PyroWave 4:2:0  |  2080 x 2208 /eye  |  120 Hz  |  USB/TCP".into(),
++            tiles: vec![t("Fresh FPS", "117.7", "/ 120", Tone::Good), t("Latency*", "44.1", "ms", Tone::Warn), t("GPU decode", "5.9", "ms", Tone::Warn), t("Bitrate", "998", "Mbps", Tone::Neutral)],
++            history, history_target: 120.0,
++            details: vec![("Game / host".into(), "120.4 fps*".into()), ("Encode".into(), "2.1 ms".into()), ("Network*".into(), "4.4 ms".into()), ("Decode / queue".into(), "8.0 / 3.5 ms".into()), ("Render / vsync".into(), "1.6 / 4.1 ms".into()), ("Completion".into(), "8.0 ms".into()),
++                ("Decoded".into(), "45210".into()), ("Dropped / skipped".into(), "12 / 3".into()), ("Superseded / errors".into(), "140 / 0".into()), ("Lost packets".into(), "0".into()), ("Battery".into(), "84% / 33.0 C".into()), ("Thermal / GPU".into(), "1 / 640 MHz".into())],
++            footer: "*ALVR estimates, not optical latency.  Click both sticks: overlay mode.  Hold both: settings".into(),
++        });
++        let lines = [("Refresh rate", "120 Hz", false, true), ("Bitrate", "900 Mbps", true, true), ("Stream size /eye", "100%  (2064 x 2208)", false, true), ("Game render /eye", "150%  (3096 x 3312)", true, true), ("Chroma", "4:2:0", false, true), ("Overlay", "Compact", false, true), ("Apply and reconnect", "", false, false), ("Close", "", false, false)];
++        let menu = PanelView::Menu(MenuView { title: "Stream settings".into(), subtitle: "Changes are saved on the PC. Bitrate applies live; the rest reconnect the stream.".into(),
++            lines: lines.iter().enumerate().map(|(i, (l, v, c, a))| MenuViewLine { label: (*l).into(), value: (*v).into(), selected: i == 1, changed: *c, adjustable: *a }).collect(),
++            status: "Sending to PC...".into(), hint: "Stick: move and change   A: select   B: close   Game input paused".into() });
++        for (name, view) in [("strip", strip), ("stats", stats), ("menu", menu)] {
++            let (w, h) = view.size();
++            std::fs::write(format!("{dir}/{name}_{w}x{h}.rgba"), rasterize(&view)).unwrap();
++        }
++    }
++}
+diff --git a/alvr/graphics/src/performance.rs b/alvr/graphics/src/performance.rs
+new file mode 100644
+index 0000000..48250e4
+--- /dev/null
++++ b/alvr/graphics/src/performance.rs
+@@ -0,0 +1,156 @@
++use crate::{create_gl_swapchain, create_texture, GraphicsContext, SDR_FORMAT};
++use alvr_common::glam::UVec2;
 +use std::rc::Rc;
 +use wgpu::*;
 +
-+/// A small client-local panel. Text is rasterized/uploaded only when updated, then
++/// A small client-local panel. Images are rasterized off-thread and uploaded only when updated, then
 +/// the OpenXR compositor reuses the last released image at the headset refresh rate.
 +pub struct PerformanceRenderer {
 +    context: Rc<GraphicsContext>,
@@ -6520,47 +8289,10 @@ index 0000000..31f33b6
 +        }
 +    }
 +
-+    pub fn update(&self, image: usize, text: &str) {
-+        let font =
-+            FontRef::try_from_slice(include_bytes!("../resources/Ubuntu-Medium.ttf")).unwrap();
-+        let glyphs = Layout::default().calculate_glyphs(
-+            &[&font],
-+            &SectionGeometry {
-+                screen_position: (24.0, 22.0),
-+                bounds: (
-+                    self.resolution.x as f32 - 48.0,
-+                    self.resolution.y as f32 - 44.0,
-+                ),
-+            },
-+            &[SectionText {
-+                text,
-+                scale: 27.0.into(),
-+                font_id: FontId(0),
-+            }],
-+        );
-+        let mut pixels = [10, 16, 24, 235].repeat((self.resolution.x * self.resolution.y) as usize);
-+        let scaled = font.as_scaled(27.0);
-+        for glyph in glyphs {
-+            if let Some(outline) = scaled.outline_glyph(glyph.glyph) {
-+                let bounds = outline.px_bounds();
-+                outline.draw(|x, y, alpha| {
-+                    let x = x as i32 + bounds.min.x as i32;
-+                    let y = y as i32 + bounds.min.y as i32;
-+                    if x >= 0
-+                        && y >= 0
-+                        && x < self.resolution.x as i32
-+                        && y < self.resolution.y as i32
-+                    {
-+                        let index = ((y as u32 * self.resolution.x + x as u32) * 4) as usize;
-+                        for channel in 0..3 {
-+                            pixels[index + channel] =
-+                                (pixels[index + channel] as f32 * (1.0 - alpha) + 245.0 * alpha)
-+                                    as u8;
-+                        }
-+                        pixels[index + 3] = 255;
-+                    }
-+                });
-+            }
++    /// Uploads a finished RGBA image (see `panel::rasterize`) and draws it into a swapchain image.
++    pub fn update(&self, image: usize, pixels: &[u8]) {
++        if pixels.len() != (self.resolution.x * self.resolution.y * 4) as usize {
++            return;
 +        }
 +        self.context.queue.write_texture(
 +            TexelCopyTextureInfo {
@@ -6569,7 +8301,7 @@ index 0000000..31f33b6
 +                origin: Origin3d::ZERO,
 +                aspect: TextureAspect::All,
 +            },
-+            &pixels,
++            pixels,
 +            TexelCopyBufferLayout {
 +                offset: 0,
 +                bytes_per_row: Some(self.resolution.x * 4),
@@ -6811,10 +8543,19 @@ index 737b7d0..9f1548c 100644
  
          let mut encoder = self
 diff --git a/alvr/packets/src/lib.rs b/alvr/packets/src/lib.rs
-index 6b4ac58..5706052 100644
+index 6b4ac58..85fdf62 100644
 --- a/alvr/packets/src/lib.rs
 +++ b/alvr/packets/src/lib.rs
-@@ -290,6 +290,22 @@ pub struct PyroWaveDecodeStats {
+@@ -247,6 +247,8 @@ pub enum ReservedClientControlPacket {
+         device_id: u64,
+         input_ids: HashSet<u64>,
+     },
++    /// In-headset settings menu. The server replies with `HEADSET_SETTINGS_ACK_PREFIX`.
++    HeadsetSettings(alvr_session::headset_settings::HeadsetSettingsRequest),
+ }
+ 
+ pub fn encode_reserved_client_control_packet(
+@@ -290,6 +292,22 @@ pub struct PyroWaveDecodeStats {
      pub encoded_height: u32,
      pub gpu_decode_ms: Vec<f32>,
      pub fence_ms: Vec<f32>,
@@ -6837,7 +8578,7 @@ index 6b4ac58..5706052 100644
  }
  
  /// What the beta test report needs from the headset that per-frame statistics do not carry.
-@@ -457,6 +473,30 @@ pub struct RealTimeConfig {
+@@ -457,6 +475,32 @@ pub struct RealTimeConfig {
      pub passthrough: Option<PassthroughMode>,
  }
  
@@ -6864,11 +8605,13 @@ index 6b4ac58..5706052 100644
 +}
 +
 +pub const PERFORMANCE_PREFIX: &str = "Q3PW_PERF:";
++/// Followed by a JSON `alvr_session::headset_settings::HeadsetSettingsAck`
++pub const HEADSET_SETTINGS_ACK_PREFIX: &str = "Q3PW_SETTINGS_ACK:";
 +
  pub fn encode_real_time_config(config: &RealTimeConfig) -> Result<ServerControlPacket> {
      Ok(ServerControlPacket::ReservedBuffer(bincode::serialize(
          config,
-@@ -477,15 +517,15 @@ pub struct ViewParams {
+@@ -477,15 +521,15 @@ pub struct ViewParams {
  
  // ---- PyroWave over UDP ----
  //
@@ -6888,7 +8631,7 @@ index 6b4ac58..5706052 100644
  /// Datagram payload budget below a 1500-byte MTU with IPv4/UDP headers and ours.
  pub const PYROWAVE_UDP_PAYLOAD: usize = 1400 - PYROWAVE_UDP_HEADER_LEN;
  
-@@ -586,6 +626,14 @@ mod beta_telemetry_tests {
+@@ -586,6 +630,14 @@ mod beta_telemetry_tests {
                  partial: 3,
                  gpu_decode_ms: vec![3.2, 3.4],
                  fence_ms: vec![4.9, 5.1],
@@ -7043,20 +8786,73 @@ index 81f2f8e..869fa77 100644
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da..e6686ad 100644
+index fc176da..b023df3 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
-@@ -53,7 +53,8 @@ pub struct VideoPacket {
+@@ -53,7 +53,61 @@ pub struct VideoPacket {
  }
  
  fn align32(value: f32) -> u32 {
 -    ((value / 32.).floor() * 32.) as u32
 +    // Pad up so the full panel-relative request never loses pixels to alignment.
 +    ((value / 32.).ceil() * 32.) as u32
++}
++
++/// Validates a headset menu request and saves it to the session, as a dashboard edit would.
++fn apply_headset_settings(
++    request: &alvr_session::headset_settings::HeadsetSettingsRequest,
++    supported_refresh_rates: &[f32],
++) -> alvr_session::headset_settings::HeadsetSettingsAck {
++    use alvr_packets::{PathSegment, PathValuePair};
++    let mut session_manager = SESSION_MANAGER.write();
++    let result = alvr_session::headset_settings::plan(
++        request,
++        session_manager.settings(),
++        supported_refresh_rates,
++    )
++    .and_then(|plan| {
++        if !plan.assignments.is_empty() {
++            let descs = plan
++                .assignments
++                .iter()
++                .map(|(path, value)| PathValuePair {
++                    path: std::iter::once("session_settings")
++                        .chain(path.split('.'))
++                        .map(|name| PathSegment::Name(name.into()))
++                        .collect(),
++                    value: value.clone(),
++                })
++                .collect();
++            session_manager
++                .set_values(descs)
++                .map_err(|e| format!("Could not save settings: {e}"))?;
++        }
++        Ok(plan)
++    });
++    match result {
++        Ok(plan) => alvr_session::headset_settings::HeadsetSettingsAck {
++            request_id: request.request_id,
++            applied: true,
++            reconnect: plan.reconnect,
++            message: if plan.changes.is_empty() {
++                "No changes".into()
++            } else if plan.reconnect {
++                format!("Saved {}. Reconnecting...", plan.changes.join(", "))
++            } else {
++                format!("Applied {}", plan.changes.join(", "))
++            },
++        },
++        Err(message) => alvr_session::headset_settings::HeadsetSettingsAck {
++            request_id: request.request_id,
++            applied: false,
++            reconnect: false,
++            message,
++        },
++    }
  }
  
  fn is_streaming(client_hostname: &str) -> bool {
-@@ -133,25 +134,18 @@ fn openvr_config_with_env(
+@@ -133,25 +187,18 @@ fn openvr_config_with_env(
          })
          .unwrap_or(false);
  
@@ -7094,7 +8890,7 @@ index fc176da..e6686ad 100644
  
      let mut brightness = 0.0;
      let mut contrast = 0.0;
-@@ -240,7 +234,9 @@ fn openvr_config_with_env(
+@@ -240,7 +287,9 @@ fn openvr_config_with_env(
          pyrowave_enabled: pyrowave.enabled,
          pyrowave_udp: pyrowave.udp,
          pyrowave_wavelet_53: pyrowave.wavelet_53,
@@ -7104,7 +8900,7 @@ index fc176da..e6686ad 100644
          _controller_profile,
          _server_impl_debug: settings.extra.logging.debug_groups.server_impl,
          _client_impl_debug: settings.extra.logging.debug_groups.client_impl,
-@@ -629,6 +625,14 @@ fn connection_pipeline(
+@@ -629,6 +678,14 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -7119,7 +8915,7 @@ index fc176da..e6686ad 100644
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +653,9 @@ fn connection_pipeline(
+@@ -649,18 +706,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -7141,7 +8937,7 @@ index fc176da..e6686ad 100644
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -802,6 +797,10 @@ fn connection_pipeline(
+@@ -802,6 +850,10 @@ fn connection_pipeline(
          proto_socket.split(STREAMING_RECV_TIMEOUT).to_con()?;
  
      let mut new_openvr_config = contruct_openvr_config(session_manager_lock.session());
@@ -7152,7 +8948,7 @@ index fc176da..e6686ad 100644
      new_openvr_config.eye_resolution_width = stream_view_resolution.x;
      new_openvr_config.eye_resolution_height = stream_view_resolution.y;
      new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
-@@ -869,10 +868,11 @@ fn connection_pipeline(
+@@ -869,10 +921,11 @@ fn connection_pipeline(
  
      // PyroWave over UDP: a plain socket to the client's address. The same resolution fills
      // openvr_config for the C++ encoder, so the two sides cannot disagree.
@@ -7168,7 +8964,7 @@ index fc176da..e6686ad 100644
      if pyrowave.enabled {
          info!("{pyrowave}");
      }
-@@ -1102,7 +1102,10 @@ fn connection_pipeline(
+@@ -1102,7 +1155,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -7180,7 +8976,7 @@ index fc176da..e6686ad 100644
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1118,7 @@ fn connection_pipeline(
+@@ -1115,6 +1171,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -7188,7 +8984,7 @@ index fc176da..e6686ad 100644
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1135,14 @@ fn connection_pipeline(
+@@ -1131,6 +1188,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -7203,7 +8999,15 @@ index fc176da..e6686ad 100644
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1299,6 +1311,9 @@ fn connection_pipeline(
+@@ -1184,6 +1249,7 @@ fn connection_pipeline(
+         let disconnect_notif = Arc::clone(&disconnect_notif);
+         let control_sender = Arc::clone(&control_sender);
+         let client_hostname = client_hostname.clone();
++        let supported_refresh_rates = streaming_caps.supported_refresh_rates.clone();
+         move || {
+             let mut disconnection_deadline = Instant::now() + KEEPALIVE_TIMEOUT;
+             while is_streaming(&client_hostname) {
+@@ -1299,6 +1365,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -7213,7 +9017,30 @@ index fc176da..e6686ad 100644
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1552,9 +1567,10 @@ mod beta_tests {
+@@ -1378,6 +1447,22 @@ fn connection_pipeline(
+                             };
+ 
+                         match reserved {
++                            ReservedClientControlPacket::HeadsetSettings(request) => {
++                                let ack = apply_headset_settings(&request, &supported_refresh_rates);
++                                info!("Headset settings request {}: {}", ack.request_id, ack.message);
++                                let reconnect = ack.reconnect;
++                                if let Ok(json) = serde_json::to_string(&ack) {
++                                    control_sender.lock().send(&ServerControlPacket::Reserved(
++                                        format!("{}{json}", alvr_packets::HEADSET_SETTINGS_ACK_PREFIX),
++                                    )).ok();
++                                }
++                                if reconnect {
++                                    // The next connection renegotiates and restarts SteamVR only
++                                    // if the OpenVR configuration changed, as for dashboard edits.
++                                    control_sender.lock().send(&ServerControlPacket::Restarting).ok();
++                                    break;
++                                }
++                            }
+                             ReservedClientControlPacket::CustomInteractionProfile {
+                                 input_ids,
+                                 ..
+@@ -1552,9 +1637,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -8620,11 +10447,345 @@ index 985a4d0..8a4d440 100644
 +    assert!(e.wavelet_haar);
 +    assert!(!e.wavelet_53);
 +}
+diff --git a/alvr/session/src/headset_settings.rs b/alvr/session/src/headset_settings.rs
+new file mode 100644
+index 0000000..c5549ef
+--- /dev/null
++++ b/alvr/session/src/headset_settings.rs
+@@ -0,0 +1,322 @@
++//! Settings the headset menu may change, and how the server turns a request into session edits.
++//! The client never names a session path: it sends typed fields, and only the assignments built
++//! here reach `set_values`, after each value is checked against a fixed range.
++
++use crate::{
++    beta::PANEL_PER_EYE,
++    settings::{BitrateMode, CodecType, FrameSize, Settings},
++};
++use serde::{Deserialize, Serialize};
++use serde_json as json;
++
++pub const BITRATE_MBPS: (u64, u64, u64) = (100, 2000, 50);
++pub const STREAM_PERCENT: (u32, u32, u32) = (50, 150, 5);
++pub const RENDER_PERCENT: (u32, u32, u32) = (50, 200, 5);
++
++/// Every field is optional; `None` leaves that setting alone.
++#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
++pub struct HeadsetSettingsRequest {
++    pub request_id: u32,
++    pub refresh_hz: Option<f32>,
++    pub bitrate_mbps: Option<u64>,
++    pub chroma_444: Option<bool>,
++    /// Encoded (streamed) per-eye size, percent of the Quest 3 panel
++    pub stream_percent: Option<u32>,
++    /// Size SteamVR asks the game to render per eye, percent of the Quest 3 panel
++    pub render_percent: Option<u32>,
++}
++
++#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
++pub struct HeadsetSettingsAck {
++    pub request_id: u32,
++    pub applied: bool,
++    /// The stream ends and reconnects so the new values take effect
++    pub reconnect: bool,
++    pub message: String,
++}
++
++#[derive(Debug, PartialEq)]
++pub struct HeadsetSettingsPlan {
++    /// Paths relative to `session_settings`, as in `beta::StreamingProfile`
++    pub assignments: Vec<(String, json::Value)>,
++    pub reconnect: bool,
++    pub changes: Vec<String>,
++}
++
++/// Per-eye size for a percentage of the Quest 3 panel.
++pub fn panel_percent_size(percent: u32) -> (u32, u32) {
++    crate::beta::render_scale_size(percent)
++}
++
++/// The panel percentage a configured size corresponds to, when it can be known from settings
++/// alone. `Scale` is relative to the headset's recommended size, which only the client knows.
++pub fn frame_size_percent(size: &FrameSize) -> Option<u32> {
++    match size {
++        FrameSize::Absolute { width, .. } => {
++            Some((*width as f64 * 100.0 / PANEL_PER_EYE.0 as f64).round() as u32)
++        }
++        FrameSize::Scale(_) => None,
++    }
++}
++
++fn check_step(name: &str, value: u64, (min, max, step): (u64, u64, u64)) -> Result<(), String> {
++    if value < min || value > max || (value - min) % step != 0 {
++        Err(format!("{name} {value} is outside {min}-{max} in steps of {step}"))
++    } else {
++        Ok(())
++    }
++}
++
++fn size_matches(size: &FrameSize, percent: u32) -> bool {
++    let (width, height) = panel_percent_size(percent);
++    matches!(size, FrameSize::Absolute { width: w, height: Some(h) } if *w == width && *h == height)
++}
++
++fn size_assignments(field: &str, percent: u32) -> Vec<(String, json::Value)> {
++    let (width, height) = panel_percent_size(percent);
++    vec![
++        (format!("video.{field}.variant"), "Absolute".into()),
++        (format!("video.{field}.Absolute.width"), width.into()),
++        (format!("video.{field}.Absolute.height.set"), true.into()),
++        (format!("video.{field}.Absolute.height.content"), height.into()),
++    ]
++}
++
++/// Validates the whole request before anything is assigned, so a bad field rejects all of it.
++/// `supported_refresh` is the list the client confirmed when this stream was negotiated.
++pub fn plan(
++    request: &HeadsetSettingsRequest,
++    settings: &Settings,
++    supported_refresh: &[f32],
++) -> Result<HeadsetSettingsPlan, String> {
++    let video = &settings.video;
++    let mut plan = HeadsetSettingsPlan {
++        assignments: vec![],
++        reconnect: false,
++        changes: vec![],
++    };
++
++    if let Some(mbps) = request.bitrate_mbps {
++        check_step("Bitrate", mbps, BITRATE_MBPS)?;
++        if !matches!(video.bitrate.mode, BitrateMode::ConstantMbps(current) if current == mbps) {
++            plan.assignments.extend([
++                ("video.bitrate.mode.variant".into(), "ConstantMbps".into()),
++                ("video.bitrate.mode.ConstantMbps".into(), mbps.into()),
++            ]);
++            plan.changes.push(format!("bitrate {mbps} Mbps"));
++        }
++    }
++
++    if let Some(hz) = request.refresh_hz {
++        let Some(rate) = supported_refresh
++            .iter()
++            .copied()
++            .find(|rate| rate.is_finite() && (rate - hz).abs() < 0.01)
++        else {
++            return Err(format!("{hz} Hz is not a rate this headset confirmed"));
++        };
++        if (rate - video.preferred_fps).abs() >= 0.01 {
++            plan.assignments
++                .push(("video.preferred_fps".into(), json::json!(rate)));
++            plan.changes.push(format!("{rate:.0} Hz"));
++            plan.reconnect = true;
++        }
++    }
++
++    if let Some(full) = request.chroma_444 {
++        if video.preferred_codec != CodecType::PyroWave {
++            return Err("Chroma can only be chosen for PyroWave".into());
++        }
++        if full != video.pyrowave.chroma_444 {
++            plan.assignments
++                .push(("video.pyrowave.chroma_444".into(), full.into()));
++            plan.changes
++                .push(if full { "4:4:4" } else { "4:2:0" }.into());
++            plan.reconnect = true;
++        }
++    }
++
++    for (percent, range, field, label) in [
++        (
++            request.stream_percent,
++            STREAM_PERCENT,
++            "transcoding_view_resolution",
++            "stream",
++        ),
++        (
++            request.render_percent,
++            RENDER_PERCENT,
++            "emulated_headset_view_resolution",
++            "render",
++        ),
++    ] {
++        let Some(percent) = percent else { continue };
++        check_step(
++            &format!("{label} size"),
++            percent as u64,
++            (range.0 as u64, range.1 as u64, range.2 as u64),
++        )?;
++        let current = if field == "transcoding_view_resolution" {
++            &video.transcoding_view_resolution
++        } else {
++            &video.emulated_headset_view_resolution
++        };
++        if !size_matches(current, percent) {
++            plan.assignments.extend(size_assignments(field, percent));
++            let (w, h) = panel_percent_size(percent);
++            plan.changes.push(format!("{label} {percent}% ({w}x{h})"));
++            plan.reconnect = true;
++        }
++    }
++
++    Ok(plan)
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use crate::SessionConfig;
++
++    // Applies assignments the way the server's `set_values` does, failing on an unknown path.
++    fn apply(assignments: &[(String, json::Value)]) -> Settings {
++        let mut session = SessionConfig::default();
++        let mut root = json::to_value(&session.session_settings).unwrap();
++        for (path, value) in assignments {
++            let mut node = &mut root;
++            for segment in path.split('.') {
++                node = node.get_mut(segment).unwrap_or_else(|| panic!("no {path}"));
++            }
++            *node = value.clone();
++        }
++        session.session_settings = json::from_value(root).unwrap();
++        session.to_settings()
++    }
++
++    fn settings() -> Settings {
++        apply(&[
++            ("video.preferred_codec.variant".into(), "PyroWave".into()),
++            ("video.bitrate.mode.variant".into(), "ConstantMbps".into()),
++            ("video.bitrate.mode.ConstantMbps".into(), 1000.into()),
++            ("video.preferred_fps".into(), json::json!(120.0)),
++        ])
++    }
++
++    #[test]
++    fn every_assignment_applies_to_a_real_session_path() {
++        let request = HeadsetSettingsRequest {
++            request_id: 1,
++            refresh_hz: Some(90.0),
++            bitrate_mbps: Some(600),
++            chroma_444: Some(true),
++            stream_percent: Some(85),
++            render_percent: Some(150),
++        };
++        let p = plan(&request, &settings(), &[90.0, 120.0]).unwrap();
++        let s = apply(&p.assignments);
++        assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(600)));
++        assert_eq!(s.video.preferred_fps, 90.0);
++        assert!(s.video.pyrowave.chroma_444);
++        assert!(size_matches(&s.video.transcoding_view_resolution, 85));
++        assert!(size_matches(&s.video.emulated_headset_view_resolution, 150));
++        // Applying the same request again changes nothing
++        let again = plan(&request, &s, &[90.0, 120.0]).unwrap();
++        assert!(again.assignments.is_empty() && !again.reconnect);
++    }
++
++    #[test]
++    fn bitrate_alone_is_live_and_unchanged_values_assign_nothing() {
++        let s = settings();
++        let rates = [72.0, 90.0, 120.0];
++        let same = HeadsetSettingsRequest {
++            bitrate_mbps: Some(1000),
++            refresh_hz: Some(120.0),
++            chroma_444: Some(s.video.pyrowave.chroma_444),
++            ..Default::default()
++        };
++        let p = plan(&same, &s, &rates).unwrap();
++        assert!(p.assignments.is_empty() && !p.reconnect);
++
++        let p = plan(
++            &HeadsetSettingsRequest {
++                bitrate_mbps: Some(800),
++                ..Default::default()
++            },
++            &s,
++            &rates,
++        )
++        .unwrap();
++        assert!(!p.reconnect);
++        assert_eq!(p.assignments[1], ("video.bitrate.mode.ConstantMbps".into(), 800.into()));
++    }
++
++    #[test]
++    fn refresh_must_be_client_confirmed_and_reconnects() {
++        let s = settings();
++        let request = |hz| HeadsetSettingsRequest {
++            refresh_hz: Some(hz),
++            ..Default::default()
++        };
++        assert!(plan(&request(207.0), &s, &[72.0, 120.0]).is_err());
++        let p = plan(&request(90.0), &s, &[72.0, 90.0, 120.0]).unwrap();
++        assert!(p.reconnect);
++        assert_eq!(p.assignments, [("video.preferred_fps".into(), json::json!(90.0))]);
++    }
++
++    #[test]
++    fn out_of_range_or_off_step_values_reject_the_whole_request() {
++        let s = settings();
++        for request in [
++            HeadsetSettingsRequest {
++                bitrate_mbps: Some(5000),
++                ..Default::default()
++            },
++            HeadsetSettingsRequest {
++                bitrate_mbps: Some(825),
++                ..Default::default()
++            },
++            HeadsetSettingsRequest {
++                bitrate_mbps: Some(800),
++                stream_percent: Some(30),
++                ..Default::default()
++            },
++            HeadsetSettingsRequest {
++                render_percent: Some(103),
++                ..Default::default()
++            },
++        ] {
++            assert!(plan(&request, &s, &[120.0]).is_err(), "{request:?}");
++        }
++    }
++
++    #[test]
++    fn sizes_use_panel_percent_and_round_trip() {
++        let s = settings();
++        let p = plan(
++            &HeadsetSettingsRequest {
++                stream_percent: Some(80),
++                render_percent: Some(150),
++                ..Default::default()
++            },
++            &s,
++            &[120.0],
++        )
++        .unwrap();
++        assert!(p.reconnect);
++        let (w, h) = panel_percent_size(150);
++        assert!(p.assignments.contains(&(
++            "video.emulated_headset_view_resolution.Absolute.width".into(),
++            w.into()
++        )));
++        assert!(p.assignments.contains(&(
++            "video.emulated_headset_view_resolution.Absolute.height.content".into(),
++            h.into()
++        )));
++        assert_eq!(
++            frame_size_percent(&FrameSize::Absolute {
++                width: panel_percent_size(80).0,
++                height: None
++            }),
++            Some(80)
++        );
++    }
++}
 diff --git a/alvr/session/src/lib.rs b/alvr/session/src/lib.rs
-index d7d0dbb..d382c8f 100644
+index d7d0dbb..feea55b 100644
 --- a/alvr/session/src/lib.rs
 +++ b/alvr/session/src/lib.rs
-@@ -119,7 +119,11 @@ pub struct OpenvrConfig {
+@@ -1,4 +1,5 @@
+ pub mod beta;
++pub mod headset_settings;
+ mod settings;
+ 
+ #[cfg(test)]
+@@ -119,7 +120,11 @@ pub struct OpenvrConfig {
      #[serde(default)]
      pub pyrowave_wavelet_53: bool,
      #[serde(default)]
