@@ -49,3 +49,45 @@ These are cold single-decode checks on an asleep headset, not performance tests
 or arbitrary-content/headset-quality acceptance. No APK was installed. Matching
 Windows review was pending at this checkpoint; candidates remain off by default.
 [Sanitized GPU proof](../results/DEQUANT-VECTOR-GPU-2026-10-05.json).
+
+## Live result: keep disabled
+
+All matching `.43` [build jobs](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37266754072)
+passed. Final signed APK/Windows hashes, versions, packaged native identities,
+unchanged FFE shader and component GPU proof were checked before deployment.
+The client uses native2080×2208 encode, runtime120, 1000Mbps, Haar/Compute,
+4:2:0, no foveation, LOW decode queue, the existing synchronous eye copy and
+4000µs selection wait. Active server geometry/codec/foveation settings and
+current-process selector/runtime logs verified the requested configuration.
+
+First ABACABA screen, 8 seconds each, stage diagnostics on: vector-only
+GPU decode p50 was6.08/6.06ms versus6.45–6.59ms in nearby controls. However,
+dequant averages overlapped (vector2.73–2.89ms, controls2.79–3.04ms), completion
+medians stayed about8.1ms and delivery did not improve. The one combined
+vector+128-row arm completed116.99/s versus nearby controls about114.8–115.0/s;
+the previously measured Haar effect cannot be separated from vector in that arm.
+
+Follow-up ABBA, 12 seconds each, **stage diagnostics off**, original Haar:
+
+| Vector flag | Submissions/s | Eye completions/s | GPU decode p50/p95 ms | Decode-to-fence p50/p95 ms | Client FPS p1 |
+| --- | --- | --- | --- | --- | --- |
+| 0 | 118.48 | 118.47 | 5.89 / 6.72 | 7.90 / 8.26 | 60.0 |
+| 1 | 115.40 | 116.28 | 5.86 / 7.26 | 7.97 / 9.39 | 60.0 |
+| 1 | 116.25 | 116.58 | 6.40 / 7.06 | 7.99 / 9.36 | 60.0 |
+| 0 | 115.51 | 116.08 | 6.04 / 7.32 | 8.04 / 9.36 | 60.0 |
+
+**No consistent diagnostic-off gain. Keep vector dequantization off.** The first
+control again outperformed later controls; restart/session phase and DVFS confound
+small differences. P1 remains near60 and sustained fresh120 is unmet. Correct
+pixels and fewer compiler loops did not translate into a useful delivery gain.
+Do not repeat this candidate without a new hypothesis; investigate publication,
+selection/completion scheduling or the presentation bridge next.
+
+Battery temperature stayed30–35°C, thermal status0, AC powered. GPU endpoint
+clocks were generally640MHz; combined Haar and one later baseline ended599MHz.
+These reads cannot establish continuous clock/load or sustained thermals. Total
+ALVR latency estimates do not measure optical latency. Both groups restored
+temporary properties/proximity/settings with empty errors and kept VD registered.
+The test chart explicitly rendered at2080×2208 regardless of the larger SteamVR
+recommendation; it is not a comparison of supersampled source quality.
+[Full sanitized metrics, package hashes and limits](../results/DEQUANT-VECTOR-LIVE-2026-10-05.json).

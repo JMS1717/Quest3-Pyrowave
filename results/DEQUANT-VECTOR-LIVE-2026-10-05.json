@@ -1,0 +1,2571 @@
+{
+  "date": "2026-10-05",
+  "version": "20.13.0-quest3.pyro.43",
+  "source_commit": "50c21f45058d441e61f959194580351039033fb5",
+  "ci_run": 37266754072,
+  "apk_sha256": "2d9fe22eb4bac1e646b337a04ade35220756e904740a658eebe5872bd4b84e94",
+  "windows_zip_sha256": "7d31b4fa9c0d2d5dea526b18ca20afa5b2013272863e1c202c88603b718cdab2",
+  "all_matching_jobs_passed": true,
+  "matching_pair_review_completed": true,
+  "default_vector_and_combined_exact_small_native_gpu_passed": true,
+  "original_default_dequant_spirv_unchanged": true,
+  "configuration": {
+    "encoded_per_eye": [
+      2080,
+      2208
+    ],
+    "explicit_scene_per_eye": [
+      2080,
+      2208
+    ],
+    "runtime_hz": 120,
+    "target_mbps": 1000,
+    "chroma": "420",
+    "foveation": false,
+    "wavelet": "Haar",
+    "decoder": "Compute",
+    "precision": 1,
+    "queue": "LOW verified",
+    "transport": "USB/ADB TCP",
+    "eye_copy": "synchronous direct GLES",
+    "frame_wait_us": 4000,
+    "packet_grace_us": 0,
+    "ready_fd": false,
+    "fused_haar": false,
+    "batched_dequant": false
+  },
+  "source": "continuous stationary normalized procedural chart; source/config/PID/clock alignment verified, client restarted per block",
+  "sessions": [
+    {
+      "pattern": "ABACABA",
+      "measure_seconds": 8.0,
+      "settle_seconds": 2.0,
+      "stage_diagnostics": true,
+      "source_eye": [
+        2080,
+        2208
+      ],
+      "steamvr_recommended_eye": [
+        3420,
+        3596
+      ],
+      "effective_video": {
+        "preferred_codec": {
+          "variant": "PyroWave"
+        },
+        "transcoding_view_resolution": {
+          "Scale": 1.0,
+          "Absolute": {
+            "width": 2080,
+            "height": {
+              "set": true,
+              "content": 2208
+            }
+          },
+          "variant": "Absolute"
+        },
+        "emulated_headset_view_resolution": {
+          "Scale": 1.0,
+          "Absolute": {
+            "width": 3072,
+            "height": {
+              "set": true,
+              "content": 3216
+            }
+          },
+          "variant": "Absolute"
+        },
+        "pyrowave": {
+          "light_foveated_encoding": false,
+          "chroma_444": false,
+          "transport": {
+            "variant": "Tcp"
+          },
+          "wavelet": {
+            "variant": "Haar"
+          },
+          "decode_path": {
+            "variant": "Compute"
+          }
+        },
+        "foveated_encoding": {
+          "enabled": false,
+          "content": {
+            "force_enable": false,
+            "center_size_x": 0.2,
+            "center_size_y": 0.178,
+            "center_shift_x": 0.0,
+            "center_shift_y": 0.0,
+            "edge_ratio_x": 3.0,
+            "edge_ratio_y": 4.0,
+            "follow_gaze": false
+          }
+        },
+        "clientside_foveation": {
+          "enabled": false,
+          "content": {
+            "mode": {
+              "Static": {
+                "level": {
+                  "variant": "High"
+                }
+              },
+              "Dynamic": {
+                "max_level": {
+                  "variant": "High"
+                }
+              },
+              "variant": "Dynamic"
+            },
+            "vertical_offset_deg": 0.0
+          }
+        },
+        "openvr_geometry": {
+          "eye_resolution_width": 2080,
+          "eye_resolution_height": 2208,
+          "target_eye_resolution_width": 3072,
+          "target_eye_resolution_height": 3232,
+          "enable_foveated_encoding": false
+        }
+      },
+      "clock_offset_drift_s": 0.0025424957275390625,
+      "blocks": [
+        {
+          "arm": "A",
+          "mode": "0",
+          "vector": "0",
+          "runtime120_records": 8,
+          "seconds": 8.040045261383057,
+          "submission_wall_time_fps": 118.76121790909683,
+          "direct_completion_proxy_fps": 118.82080965960174,
+          "client_fps": {
+            "n": 955,
+            "p01": 92.03059892000005,
+            "p50": 119.99932,
+            "p95": 120.01798,
+            "p99": 120.03803400000001,
+            "max": 120.72736
+          },
+          "source_fps": {
+            "n": 955,
+            "p01": 113.5880878,
+            "p50": 121.331245,
+            "p95": 124.54386,
+            "p99": 125.91623124,
+            "max": 128.2561
+          },
+          "payload_mbps": {
+            "n": 955,
+            "p01": 946.554024,
+            "p50": 1011.0794,
+            "p95": 1037.8509,
+            "p99": 1049.2871496,
+            "max": 1068.7858
+          },
+          "encode_ms": {
+            "n": 955,
+            "p01": 1.80174,
+            "p50": 2.0672,
+            "p95": 2.17612,
+            "p99": 2.2319540000000004,
+            "max": 3.7243
+          },
+          "network_estimate_ms": {
+            "n": 955,
+            "p01": 3.8121435,
+            "p50": 4.60714,
+            "p95": 6.128092099999998,
+            "p99": 8.187335960000006,
+            "max": 12.458687
+          },
+          "estimated_pipeline_ms": {
+            "n": 955,
+            "p01": 40.391548560000004,
+            "p50": 48.776187,
+            "p95": 48.8855059,
+            "p99": 51.62579472,
+            "max": 51.701947999999994
+          },
+          "gpu_decode_ms": {
+            "n": 964,
+            "p01": 4.040089471,
+            "p50": 6.5533593,
+            "p95": 6.793692605,
+            "p99": 6.85958775,
+            "max": 6.9379163
+          },
+          "decode_to_fence_ms": {
+            "n": 964,
+            "p01": 7.08306419,
+            "p50": 8.033412,
+            "p95": 8.29470345,
+            "p99": 8.403169010000001,
+            "max": 8.650626
+          },
+          "convert_ms": {
+            "n": 964,
+            "p01": 0.7045276085000001,
+            "p50": 0.764505185,
+            "p95": 0.9615520494999996,
+            "p99": 1.575369235,
+            "max": 2.7271354
+          },
+          "record_ms": {
+            "n": 964,
+            "p01": 0.38437734,
+            "p50": 0.5000525,
+            "p95": 0.67162785,
+            "p99": 0.8143822300000001,
+            "max": 1.178541
+          },
+          "eye_cpu_ms": {
+            "n": 954,
+            "p01": 1.43612445,
+            "p50": 1.710157,
+            "p95": 2.0578445999999997,
+            "p99": 2.397409296,
+            "max": 2.608334
+          },
+          "target_gap_ms": {
+            "n": 954,
+            "p01": 5.505085520000001,
+            "p50": 8.333412,
+            "p95": 8.66163615,
+            "p99": 13.785967720000132,
+            "max": 19.418335
+          },
+          "decoder_queue_ms": {
+            "n": 955,
+            "p01": 0.0952891,
+            "p50": 2.200625,
+            "p95": 4.672333999999999,
+            "p99": 4.890688000000001,
+            "max": 7.468855
+          },
+          "vsync_queue_ms": {
+            "n": 955,
+            "p01": 8.76835562,
+            "p50": 14.216913,
+            "p95": 15.0633293,
+            "p99": 15.499735300000005,
+            "max": 16.756997
+          },
+          "stages": {
+            "Dequant": {
+              "intervals": 8,
+              "mean_of_interval_averages_ms": 2.7904999999999998,
+              "min_average_ms": 2.622,
+              "max_average_ms": 3.053
+            },
+            "iDWT": {
+              "intervals": 8,
+              "mean_of_interval_averages_ms": 3.29525,
+              "min_average_ms": 2.961,
+              "max_average_ms": 3.521
+            }
+          },
+          "effective_probe": {
+            "wait_us": 4000,
+            "ready_active": false,
+            "packet_grace_us": 0,
+            "windows": 7,
+            "margin": [
+              16,
+              35,
+              367,
+              35,
+              112,
+              270,
+              0
+            ],
+            "late": [
+              0,
+              2,
+              2,
+              2,
+              8,
+              8,
+              1
+            ],
+            "timed_windows": 7,
+            "timed_taken": 835,
+            "interval_s": 7.0329999923706055,
+            "taken": 835,
+            "empty": 23,
+            "late_taken": 23,
+            "late_superseded": 0,
+            "superseded": 9,
+            "selected_source_frame_rate_fps": 118.72600610064092,
+            "taken_per_window": 119.28571428571429,
+            "superseded_per_window": 1.2857142857142858,
+            "late_taken_fraction": 1.0
+          },
+          "battery_temperature_c": 30.0,
+          "thermal_status": 0,
+          "temperature_samples_c": [
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0
+          ],
+          "thermal_samples": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "gpu_before": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 877265,
+              "total": 1003508,
+              "reported_percent": 87.419831232038
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_after": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 875092,
+              "total": 1006388,
+              "reported_percent": 86.95373951199736
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_reads_outside_measurement": true,
+          "selector_verified": true,
+          "low_priority_verified": true
+        },
+        {
+          "arm": "B",
+          "mode": "0",
+          "vector": "1",
+          "runtime120_records": 8,
+          "seconds": 8.040798425674438,
+          "submission_wall_time_fps": 114.12713130633952,
+          "direct_completion_proxy_fps": 114.4872653426082,
+          "client_fps": {
+            "n": 918,
+            "p01": 59.99922293,
+            "p50": 119.999245,
+            "p95": 120.0175145,
+            "p99": 120.03492455,
+            "max": 121.656815
+          },
+          "source_fps": {
+            "n": 918,
+            "p01": 114.20653370000001,
+            "p50": 121.83088,
+            "p95": 123.945151,
+            "p99": 124.6498806,
+            "max": 130.93633
+          },
+          "payload_mbps": {
+            "n": 918,
+            "p01": 951.7077558000001,
+            "p50": 1015.243,
+            "p95": 1032.861754,
+            "p99": 1038.7343658,
+            "max": 1091.1206
+          },
+          "encode_ms": {
+            "n": 918,
+            "p01": 1.859731,
+            "p50": 1.9796500000000001,
+            "p95": 2.08482,
+            "p99": 2.140266,
+            "max": 3.0398
+          },
+          "network_estimate_ms": {
+            "n": 918,
+            "p01": 3.6620850399999996,
+            "p50": 4.6336665,
+            "p95": 7.00783945,
+            "p99": 10.760562120000003,
+            "max": 28.328685
+          },
+          "estimated_pipeline_ms": {
+            "n": 918,
+            "p01": 48.42362001,
+            "p50": 56.68708650000001,
+            "p95": 65.00326549999998,
+            "p99": 67.8797908,
+            "max": 73.40499
+          },
+          "gpu_decode_ms": {
+            "n": 859,
+            "p01": 3.936855174,
+            "p50": 6.0830727,
+            "p95": 7.6353019,
+            "p99": 8.10742682,
+            "max": 8.497604
+          },
+          "decode_to_fence_ms": {
+            "n": 859,
+            "p01": 6.46267684,
+            "p50": 8.15974,
+            "p95": 9.7105792,
+            "p99": 10.298577959999994,
+            "max": 10.761981
+          },
+          "convert_ms": {
+            "n": 859,
+            "p01": 0.711592668,
+            "p50": 0.8435416,
+            "p95": 1.8448853899999997,
+            "p99": 2.2977770079999993,
+            "max": 2.9521875
+          },
+          "record_ms": {
+            "n": 859,
+            "p01": 0.38646263999999997,
+            "p50": 0.53026,
+            "p95": 0.7592451999999998,
+            "p99": 0.9010159799999995,
+            "max": 1.18427
+          },
+          "eye_cpu_ms": {
+            "n": 854,
+            "p01": 1.33254739,
+            "p50": 1.6515629,
+            "p95": 2.420930285,
+            "p99": 2.5757257980000006,
+            "max": 2.699584
+          },
+          "target_gap_ms": {
+            "n": 916,
+            "p01": 5.4568572,
+            "p50": 8.3353655,
+            "p95": 16.58248825,
+            "p99": 19.4547755,
+            "max": 24.943597
+          },
+          "decoder_queue_ms": {
+            "n": 918,
+            "p01": 0.01478007,
+            "p50": 1.987422,
+            "p95": 4.680352,
+            "p99": 4.924097460000002,
+            "max": 7.860366000000001
+          },
+          "vsync_queue_ms": {
+            "n": 918,
+            "p01": 9.12101083,
+            "p50": 14.393277000000001,
+            "p95": 16.04437305,
+            "p99": 17.92861131,
+            "max": 18.207068
+          },
+          "stages": {
+            "Dequant": {
+              "intervals": 8,
+              "mean_of_interval_averages_ms": 2.885,
+              "min_average_ms": 2.554,
+              "max_average_ms": 3.302
+            },
+            "iDWT": {
+              "intervals": 8,
+              "mean_of_interval_averages_ms": 3.13775,
+              "min_average_ms": 2.365,
+              "max_average_ms": 3.505
+            }
+          },
+          "effective_probe": {
+            "wait_us": 4000,
+            "ready_active": false,
+            "packet_grace_us": 0,
+            "windows": 7,
+            "margin": [
+              118,
+              35,
+              260,
+              164,
+              92,
+              136,
+              0
+            ],
+            "late": [
+              16,
+              7,
+              27,
+              26,
+              14,
+              35,
+              3
+            ],
+            "timed_windows": 7,
+            "timed_taken": 805,
+            "interval_s": 7.026000022888184,
+            "taken": 805,
+            "empty": 128,
+            "late_taken": 128,
+            "late_superseded": 0,
+            "superseded": 7,
+            "selected_source_frame_rate_fps": 114.5744374292057,
+            "taken_per_window": 115.0,
+            "superseded_per_window": 1.0,
+            "late_taken_fraction": 1.0
+          },
+          "battery_temperature_c": 30.0,
+          "thermal_status": 0,
+          "temperature_samples_c": [
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0
+          ],
+          "thermal_samples": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "gpu_before": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 913741,
+              "total": 1004822,
+              "reported_percent": 90.9356084958331
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_after": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 870902,
+              "total": 1001105,
+              "reported_percent": 86.99407155093621
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_reads_outside_measurement": true,
+          "selector_verified": true,
+          "low_priority_verified": true
+        },
+        {
+          "arm": "A",
+          "mode": "0",
+          "vector": "0",
+          "runtime120_records": 8,
+          "seconds": 8.040745258331299,
+          "submission_wall_time_fps": 114.50364873659505,
+          "direct_completion_proxy_fps": 114.98094171024336,
+          "client_fps": {
+            "n": 921,
+            "p01": 59.999546,
+            "p50": 119.999245,
+            "p95": 120.02007,
+            "p99": 120.06564279999999,
+            "max": 120.21181
+          },
+          "source_fps": {
+            "n": 921,
+            "p01": 114.060204,
+            "p50": 121.60272,
+            "p95": 123.89271,
+            "p99": 125.56918399999999,
+            "max": 131.88959
+          },
+          "payload_mbps": {
+            "n": 921,
+            "p01": 950.4882719999999,
+            "p50": 1013.34176,
+            "p95": 1032.4247,
+            "p99": 1046.3951679999998,
+            "max": 1099.0643
+          },
+          "encode_ms": {
+            "n": 921,
+            "p01": 1.85816,
+            "p50": 1.9743,
+            "p95": 2.0971,
+            "p99": 2.15036,
+            "max": 2.2444
+          },
+          "network_estimate_ms": {
+            "n": 921,
+            "p01": 3.7550536,
+            "p50": 4.5600700000000005,
+            "p95": 6.012428,
+            "p99": 8.016831999999999,
+            "max": 13.08821
+          },
+          "estimated_pipeline_ms": {
+            "n": 921,
+            "p01": 50.663174399999996,
+            "p50": 59.085246,
+            "p95": 59.20004,
+            "p99": 67.313446,
+            "max": 67.483515
+          },
+          "gpu_decode_ms": {
+            "n": 924,
+            "p01": 4.120678872,
+            "p50": 6.5947395,
+            "p95": 7.708794194999999,
+            "p99": 8.207077420000001,
+            "max": 8.609219
+          },
+          "decode_to_fence_ms": {
+            "n": 924,
+            "p01": 7.23556696,
+            "p50": 8.158516500000001,
+            "p95": 9.608394599999999,
+            "p99": 10.557003969999998,
+            "max": 10.90073
+          },
+          "convert_ms": {
+            "n": 924,
+            "p01": 0.706385908,
+            "p50": 0.77419269,
+            "p95": 1.7884738749999998,
+            "p99": 2.1813973190000002,
+            "max": 2.4238021
+          },
+          "record_ms": {
+            "n": 924,
+            "p01": 0.3812078,
+            "p50": 0.49510350000000003,
+            "p95": 0.7242476,
+            "p99": 0.8753039999999999,
+            "max": 2.397396
+          },
+          "eye_cpu_ms": {
+            "n": 914,
+            "p01": 1.3878431999999998,
+            "p50": 1.6963285,
+            "p95": 2.2671849499999994,
+            "p99": 2.5971004960000004,
+            "max": 3.181719
+          },
+          "target_gap_ms": {
+            "n": 920,
+            "p01": 5.993599659999999,
+            "p50": 8.333881,
+            "p95": 11.358675499999997,
+            "p99": 16.7243164,
+            "max": 16.789013
+          },
+          "decoder_queue_ms": {
+            "n": 921,
+            "p01": 0.017719199999999997,
+            "p50": 3.545573,
+            "p95": 4.727657,
+            "p99": 4.879260599999999,
+            "max": 8.593595
+          },
+          "vsync_queue_ms": {
+            "n": 921,
+            "p01": 9.232318600000001,
+            "p50": 14.237673,
+            "p95": 16.511809999999997,
+            "p99": 17.410840399999994,
+            "max": 17.8553
+          },
+          "stages": {
+            "Dequant": {
+              "intervals": 8,
+              "mean_of_interval_averages_ms": 2.81125,
+              "min_average_ms": 2.292,
+              "max_average_ms": 3.074
+            },
+            "iDWT": {
+              "intervals": 8,
+              "mean_of_interval_averages_ms": 3.4855,
+              "min_average_ms": 3.154,
+              "max_average_ms": 3.985
+            }
+          },
+          "effective_probe": {
+            "wait_us": 4000,
+            "ready_active": false,
+            "packet_grace_us": 0,
+            "windows": 7,
+            "margin": [
+              86,
+              36,
+              110,
+              66,
+              166,
+              344,
+              1
+            ],
+            "late": [
+              9,
+              9,
+              17,
+              14,
+              27,
+              35,
+              0
+            ],
+            "timed_windows": 7,
+            "timed_taken": 809,
+            "interval_s": 7.034999847412109,
+            "taken": 809,
+            "empty": 111,
+            "late_taken": 111,
+            "late_superseded": 0,
+            "superseded": 10,
+            "selected_source_frame_rate_fps": 114.99644883398231,
+            "taken_per_window": 115.57142857142857,
+            "superseded_per_window": 1.4285714285714286,
+            "late_taken_fraction": 1.0
+          },
+          "battery_temperature_c": 30.0,
+          "thermal_status": 0,
+          "temperature_samples_c": [
+            32.0,
+            32.0,
+            32.0,
+            32.0,
+            32.0,
+            32.0,
+            32.0
+          ],
+          "thermal_samples": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "gpu_before": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 915490,
+              "total": 1010604,
+              "reported_percent": 90.5884006000372
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_after": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 882134,
+              "total": 1008873,
+              "reported_percent": 87.43756647268783
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_reads_outside_measurement": true,
+          "selector_verified": true,
+          "low_priority_verified": true
+        },
+        {
+          "arm": "C",
+          "mode": "128-row",
+          "vector": "1",
+          "runtime120_records": 8,
+          "seconds": 8.03986668586731,
+          "submission_wall_time_fps": 116.51336140787993,
+          "direct_completion_proxy_fps": 116.99016703375561,
+          "client_fps": {
+            "n": 937,
+            "p01": 60.00025176,
+            "p50": 119.999245,
+            "p95": 120.02478880000001,
+            "p99": 120.0644504,
+            "max": 121.40978
+          },
+          "source_fps": {
+            "n": 937,
+            "p01": 113.6500556,
+            "p50": 121.8769,
+            "p95": 123.86816,
+            "p99": 125.34627,
+            "max": 132.17024
+          },
+          "payload_mbps": {
+            "n": 937,
+            "p01": 947.070462,
+            "p50": 1015.62656,
+            "p95": 1032.2201,
+            "p99": 1044.53754,
+            "max": 1101.4031
+          },
+          "encode_ms": {
+            "n": 937,
+            "p01": 1.817964,
+            "p50": 1.9684,
+            "p95": 2.0813,
+            "p99": 2.162668,
+            "max": 2.5797
+          },
+          "network_estimate_ms": {
+            "n": 937,
+            "p01": 3.66802612,
+            "p50": 4.727709,
+            "p95": 6.2292168,
+            "p99": 7.426584439999997,
+            "max": 10.025232
+          },
+          "estimated_pipeline_ms": {
+            "n": 937,
+            "p01": 49.7589308,
+            "p50": 58.20796,
+            "p95": 58.3239742,
+            "p99": 66.376688,
+            "max": 69.30859000000001
+          },
+          "gpu_decode_ms": {
+            "n": 949,
+            "p01": 3.676602,
+            "p50": 6.2652082,
+            "p95": 6.95620824,
+            "p99": 7.56803928,
+            "max": 8.773334
+          },
+          "decode_to_fence_ms": {
+            "n": 949,
+            "p01": 6.56585916,
+            "p50": 7.973959,
+            "p95": 9.207896799999999,
+            "p99": 9.83064896,
+            "max": 10.747449
+          },
+          "convert_ms": {
+            "n": 949,
+            "p01": 0.7251603919999999,
+            "p50": 0.8199479,
+            "p95": 1.95564582,
+            "p99": 2.2763353119999996,
+            "max": 2.561302
+          },
+          "record_ms": {
+            "n": 949,
+            "p01": 0.36400628,
+            "p50": 0.495209,
+            "p95": 0.7377502,
+            "p99": 0.88086108,
+            "max": 1.07474
+          },
+          "eye_cpu_ms": {
+            "n": 935,
+            "p01": 1.355806,
+            "p50": 1.702657,
+            "p95": 2.4096249199999997,
+            "p99": 2.617086966,
+            "max": 2.9160938
+          },
+          "target_gap_ms": {
+            "n": 936,
+            "p01": 7.92862575,
+            "p50": 8.3358865,
+            "p95": 8.5847145,
+            "p99": 16.65358995,
+            "max": 16.760158
+          },
+          "decoder_queue_ms": {
+            "n": 937,
+            "p01": 0.01596448,
+            "p50": 3.692917,
+            "p95": 5.708282199999999,
+            "p99": 7.238856719999991,
+            "max": 12.180209
+          },
+          "vsync_queue_ms": {
+            "n": 937,
+            "p01": 9.26247856,
+            "p50": 14.468788,
+            "p95": 15.6423816,
+            "p99": 17.382282720000003,
+            "max": 17.814027
+          },
+          "stages": {
+            "Dequant": {
+              "intervals": 8,
+              "mean_of_interval_averages_ms": 2.838,
+              "min_average_ms": 2.508,
+              "max_average_ms": 3.254
+            },
+            "iDWT": {
+              "intervals": 8,
+              "mean_of_interval_averages_ms": 3.051375,
+              "min_average_ms": 2.726,
+              "max_average_ms": 3.361
+            }
+          },
+          "effective_probe": {
+            "wait_us": 4000,
+            "ready_active": false,
+            "packet_grace_us": 0,
+            "windows": 7,
+            "margin": [
+              112,
+              29,
+              119,
+              38,
+              121,
+              401,
+              2
+            ],
+            "late": [
+              19,
+              12,
+              19,
+              18,
+              24,
+              20,
+              0
+            ],
+            "timed_windows": 7,
+            "timed_taken": 822,
+            "interval_s": 7.016999959945679,
+            "taken": 822,
+            "empty": 112,
+            "late_taken": 112,
+            "late_superseded": 0,
+            "superseded": 12,
+            "selected_source_frame_rate_fps": 117.14407933477648,
+            "taken_per_window": 117.42857142857143,
+            "superseded_per_window": 1.7142857142857142,
+            "late_taken_fraction": 1.0
+          },
+          "battery_temperature_c": 32.0,
+          "thermal_status": 0,
+          "temperature_samples_c": [
+            32.0,
+            32.0,
+            32.0,
+            32.0,
+            32.0,
+            32.0,
+            32.0
+          ],
+          "thermal_samples": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "gpu_before": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 920720,
+              "total": 1009090,
+              "reported_percent": 91.24260472306732
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_after": {
+            "gpu_clock_hz": 599000000,
+            "gpubusy": {
+              "active": 875051,
+              "total": 1005889,
+              "reported_percent": 86.99279940430803
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_reads_outside_measurement": true,
+          "selector_verified": true,
+          "low_priority_verified": true
+        },
+        {
+          "arm": "A",
+          "mode": "0",
+          "vector": "0",
+          "runtime120_records": 8,
+          "seconds": 8.040625810623169,
+          "submission_wall_time_fps": 114.55496409833424,
+          "direct_completion_proxy_fps": 114.79933741990084,
+          "client_fps": {
+            "n": 921,
+            "p01": 59.9986232,
+            "p50": 119.99942,
+            "p95": 120.01425,
+            "p99": 120.06361000000001,
+            "max": 120.19333
+          },
+          "source_fps": {
+            "n": 921,
+            "p01": 113.57337799999999,
+            "p50": 121.51554,
+            "p95": 123.89578,
+            "p99": 125.50006199999999,
+            "max": 131.11143
+          },
+          "payload_mbps": {
+            "n": 921,
+            "p01": 946.431468,
+            "p50": 1012.61523,
+            "p95": 1032.4503,
+            "p99": 1045.819188,
+            "max": 1092.5798
+          },
+          "encode_ms": {
+            "n": 921,
+            "p01": 1.8481,
+            "p50": 1.9792,
+            "p95": 2.095,
+            "p99": 2.13854,
+            "max": 2.1814999999999998
+          },
+          "network_estimate_ms": {
+            "n": 921,
+            "p01": 3.7439158,
+            "p50": 4.8531010000000006,
+            "p95": 6.894278,
+            "p99": 10.5271496,
+            "max": 17.656883
+          },
+          "estimated_pipeline_ms": {
+            "n": 921,
+            "p01": 53.223809,
+            "p50": 56.060337000000004,
+            "p95": 64.45262,
+            "p99": 64.58139320000001,
+            "max": 70.06291
+          },
+          "gpu_decode_ms": {
+            "n": 863,
+            "p01": 3.979554112,
+            "p50": 6.4490623,
+            "p95": 7.4682705,
+            "p99": 8.0309395,
+            "max": 8.646093
+          },
+          "decode_to_fence_ms": {
+            "n": 863,
+            "p01": 6.9118338800000005,
+            "p50": 8.141772,
+            "p95": 9.6521675,
+            "p99": 10.10085958,
+            "max": 10.777918
+          },
+          "convert_ms": {
+            "n": 863,
+            "p01": 0.6985322504,
+            "p50": 0.8016146,
+            "p95": 1.8605676599999998,
+            "p99": 2.346668754,
+            "max": 2.7929165
+          },
+          "record_ms": {
+            "n": 863,
+            "p01": 0.39406886,
+            "p50": 0.514375,
+            "p95": 0.7426828999999999,
+            "p99": 0.88217574,
+            "max": 1.037135
+          },
+          "eye_cpu_ms": {
+            "n": 858,
+            "p01": 1.389183153,
+            "p50": 1.64559895,
+            "p95": 2.4435189999999998,
+            "p99": 2.6610812139999998,
+            "max": 3.045052
+          },
+          "target_gap_ms": {
+            "n": 919,
+            "p01": 3.2751267399999993,
+            "p50": 8.33474,
+            "p95": 13.8803188,
+            "p99": 18.880036039999837,
+            "max": 22.863752
+          },
+          "decoder_queue_ms": {
+            "n": 921,
+            "p01": 0.014333600000000002,
+            "p50": 1.4867190000000001,
+            "p95": 4.294270999999999,
+            "p99": 6.098313199999991,
+            "max": 7.8775
+          },
+          "vsync_queue_ms": {
+            "n": 921,
+            "p01": 9.1798966,
+            "p50": 14.550175,
+            "p95": 16.00144,
+            "p99": 17.811634199999997,
+            "max": 18.278890999999998
+          },
+          "stages": {
+            "Dequant": {
+              "intervals": 8,
+              "mean_of_interval_averages_ms": 3.044375,
+              "min_average_ms": 2.827,
+              "max_average_ms": 3.198
+            },
+            "iDWT": {
+              "intervals": 8,
+              "mean_of_interval_averages_ms": 2.9768749999999997,
+              "min_average_ms": 2.562,
+              "max_average_ms": 3.333
+            }
+          },
+          "effective_probe": {
+            "wait_us": 4000,
+            "ready_active": false,
+            "packet_grace_us": 0,
+            "windows": 7,
+            "margin": [
+              105,
+              67,
+              477,
+              80,
+              41,
+              40,
+              0
+            ],
+            "late": [
+              19,
+              14,
+              23,
+              13,
+              17,
+              31,
+              2
+            ],
+            "timed_windows": 7,
+            "timed_taken": 810,
+            "interval_s": 7.025000095367432,
+            "taken": 810,
+            "empty": 119,
+            "late_taken": 119,
+            "late_superseded": 0,
+            "superseded": 6,
+            "selected_source_frame_rate_fps": 115.30248953792139,
+            "taken_per_window": 115.71428571428571,
+            "superseded_per_window": 0.8571428571428571,
+            "late_taken_fraction": 1.0
+          },
+          "battery_temperature_c": 32.0,
+          "thermal_status": 0,
+          "temperature_samples_c": [
+            32.0,
+            32.0,
+            33.0,
+            33.0,
+            33.0,
+            33.0,
+            33.0
+          ],
+          "thermal_samples": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "gpu_before": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 913835,
+              "total": 1006893,
+              "reported_percent": 90.75790575562647
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_after": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 865377,
+              "total": 1002704,
+              "reported_percent": 86.30433308334264
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_reads_outside_measurement": true,
+          "selector_verified": true,
+          "low_priority_verified": true
+        },
+        {
+          "arm": "B",
+          "mode": "0",
+          "vector": "1",
+          "runtime120_records": 8,
+          "seconds": 8.039121866226196,
+          "submission_wall_time_fps": 114.42116092718247,
+          "direct_completion_proxy_fps": 114.89578423847094,
+          "client_fps": {
+            "n": 920,
+            "p01": 59.99724409,
+            "p50": 119.99992,
+            "p95": 120.0174047,
+            "p99": 120.03548895,
+            "max": 120.10808
+          },
+          "source_fps": {
+            "n": 920,
+            "p01": 113.6376211,
+            "p50": 121.5620675,
+            "p95": 123.7129217,
+            "p99": 124.9816244,
+            "max": 131.78703
+          },
+          "payload_mbps": {
+            "n": 920,
+            "p01": 946.9667843999999,
+            "p50": 1013.00297,
+            "p95": 1030.926525,
+            "p99": 1041.4988713999999,
+            "max": 1098.2098
+          },
+          "encode_ms": {
+            "n": 920,
+            "p01": 1.830298,
+            "p50": 1.9849999999999999,
+            "p95": 2.095805,
+            "p99": 2.137991,
+            "max": 3.0617
+          },
+          "network_estimate_ms": {
+            "n": 920,
+            "p01": 3.7422887300000003,
+            "p50": 4.596068000000001,
+            "p95": 5.88620225,
+            "p99": 8.375209609999988,
+            "max": 12.435654000000001
+          },
+          "estimated_pipeline_ms": {
+            "n": 920,
+            "p01": 50.17823064,
+            "p50": 58.763177,
+            "p95": 61.633810749999995,
+            "p99": 61.67094579,
+            "max": 69.7452
+          },
+          "gpu_decode_ms": {
+            "n": 865,
+            "p01": 3.9290875119999997,
+            "p50": 6.0586457,
+            "p95": 7.49631244,
+            "p99": 8.02374556,
+            "max": 8.66625
+          },
+          "decode_to_fence_ms": {
+            "n": 865,
+            "p01": 6.5899754,
+            "p50": 8.126407,
+            "p95": 9.653334,
+            "p99": 10.402028160000002,
+            "max": 10.844793
+          },
+          "convert_ms": {
+            "n": 865,
+            "p01": 0.7202187416,
+            "p50": 0.7941666,
+            "p95": 1.84602076,
+            "p99": 2.315406256,
+            "max": 2.6641145
+          },
+          "record_ms": {
+            "n": 865,
+            "p01": 0.37896643999999996,
+            "p50": 0.565313,
+            "p95": 0.7922918,
+            "p99": 0.898158,
+            "max": 1.046666
+          },
+          "eye_cpu_ms": {
+            "n": 858,
+            "p01": 1.3683744800000002,
+            "p50": 1.62278595,
+            "p95": 2.418242415,
+            "p99": 2.64368042,
+            "max": 3.238073
+          },
+          "target_gap_ms": {
+            "n": 919,
+            "p01": 5.46764574,
+            "p50": 8.336616,
+            "p95": 11.553318299999772,
+            "p99": 16.73972878,
+            "max": 19.525106
+          },
+          "decoder_queue_ms": {
+            "n": 920,
+            "p01": 0.00534183,
+            "p50": 2.9495575,
+            "p95": 4.5158382999999995,
+            "p99": 5.521352249999997,
+            "max": 17.036928
+          },
+          "vsync_queue_ms": {
+            "n": 920,
+            "p01": 8.96392339,
+            "p50": 14.4227615,
+            "p95": 15.949319049999996,
+            "p99": 17.498673799999995,
+            "max": 18.115956
+          },
+          "stages": {
+            "Dequant": {
+              "intervals": 8,
+              "mean_of_interval_averages_ms": 2.728125,
+              "min_average_ms": 2.12,
+              "max_average_ms": 3.115
+            },
+            "iDWT": {
+              "intervals": 8,
+              "mean_of_interval_averages_ms": 3.250875,
+              "min_average_ms": 3.083,
+              "max_average_ms": 3.439
+            }
+          },
+          "effective_probe": {
+            "wait_us": 4000,
+            "ready_active": false,
+            "packet_grace_us": 0,
+            "windows": 7,
+            "margin": [
+              210,
+              56,
+              78,
+              53,
+              222,
+              187,
+              0
+            ],
+            "late": [
+              31,
+              28,
+              45,
+              30,
+              43,
+              36,
+              0
+            ],
+            "timed_windows": 7,
+            "timed_taken": 806,
+            "interval_s": 7.019999980926514,
+            "taken": 806,
+            "empty": 213,
+            "late_taken": 213,
+            "late_superseded": 0,
+            "superseded": 8,
+            "selected_source_frame_rate_fps": 114.81481512676906,
+            "taken_per_window": 115.14285714285714,
+            "superseded_per_window": 1.1428571428571428,
+            "late_taken_fraction": 1.0
+          },
+          "battery_temperature_c": 33.0,
+          "thermal_status": 0,
+          "temperature_samples_c": [
+            33.0,
+            33.0,
+            33.0,
+            33.0,
+            33.0,
+            33.0,
+            34.0
+          ],
+          "thermal_samples": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "gpu_before": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 915151,
+              "total": 1011468,
+              "reported_percent": 90.47750398430796
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_after": {
+            "gpu_clock_hz": 599000000,
+            "gpubusy": {
+              "active": 886106,
+              "total": 1002936,
+              "reported_percent": 88.35120087423326
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_reads_outside_measurement": true,
+          "selector_verified": true,
+          "low_priority_verified": true
+        },
+        {
+          "arm": "A",
+          "mode": "0",
+          "vector": "0",
+          "runtime120_records": 8,
+          "seconds": 8.038845300674438,
+          "submission_wall_time_fps": 114.39209049906484,
+          "direct_completion_proxy_fps": 114.83466165910953,
+          "client_fps": {
+            "n": 920,
+            "p01": 59.99836907,
+            "p50": 119.99900199999999,
+            "p95": 120.0228037,
+            "p99": 120.06595515,
+            "max": 120.58225
+          },
+          "source_fps": {
+            "n": 920,
+            "p01": 113.87576,
+            "p50": 121.748555,
+            "p95": 123.9572908,
+            "p99": 124.43302779999999,
+            "max": 130.3832
+          },
+          "payload_mbps": {
+            "n": 920,
+            "p01": 948.9513,
+            "p50": 1014.557,
+            "p95": 1032.96288,
+            "p99": 1036.9272919999999,
+            "max": 1086.5114
+          },
+          "encode_ms": {
+            "n": 920,
+            "p01": 1.895652,
+            "p50": 1.98875,
+            "p95": 2.0969100000000003,
+            "p99": 2.1433169999999997,
+            "max": 2.2313
+          },
+          "network_estimate_ms": {
+            "n": 920,
+            "p01": 3.81490222,
+            "p50": 4.6431685,
+            "p95": 6.062631399999998,
+            "p99": 8.585961129999992,
+            "max": 11.292431
+          },
+          "estimated_pipeline_ms": {
+            "n": 920,
+            "p01": 50.47296677,
+            "p50": 58.793273,
+            "p95": 64.2903002,
+            "p99": 67.1566411,
+            "max": 69.925025
+          },
+          "gpu_decode_ms": {
+            "n": 926,
+            "p01": 3.948880175,
+            "p50": 6.472682000000001,
+            "p95": 7.506627625,
+            "p99": 8.007461000000001,
+            "max": 8.521823
+          },
+          "decode_to_fence_ms": {
+            "n": 926,
+            "p01": 6.864765500000001,
+            "p50": 8.164219,
+            "p95": 9.6692195,
+            "p99": 10.51028775,
+            "max": 10.973022
+          },
+          "convert_ms": {
+            "n": 926,
+            "p01": 0.7093489475,
+            "p50": 0.78864585,
+            "p95": 1.844505125,
+            "p99": 2.308385325,
+            "max": 2.8014061
+          },
+          "record_ms": {
+            "n": 926,
+            "p01": 0.39846375,
+            "p50": 0.538906,
+            "p95": 0.76563775,
+            "p99": 0.9093487499999999,
+            "max": 1.018698
+          },
+          "eye_cpu_ms": {
+            "n": 914,
+            "p01": 1.366668746,
+            "p50": 1.69197905,
+            "p95": 2.305680015,
+            "p99": 2.5560587139999997,
+            "max": 3.2002609
+          },
+          "target_gap_ms": {
+            "n": 919,
+            "p01": 5.47351938,
+            "p50": 8.335209,
+            "p95": 11.346303399999996,
+            "p99": 17.041733539999978,
+            "max": 25.033388
+          },
+          "decoder_queue_ms": {
+            "n": 920,
+            "p01": 0.00775499,
+            "p50": 1.9583860000000002,
+            "p95": 4.55643305,
+            "p99": 4.76481248,
+            "max": 8.94823
+          },
+          "vsync_queue_ms": {
+            "n": 920,
+            "p01": 9.48065223,
+            "p50": 14.4946475,
+            "p95": 16.1083053,
+            "p99": 17.52629537,
+            "max": 17.815392
+          },
+          "stages": {
+            "Dequant": {
+              "intervals": 8,
+              "mean_of_interval_averages_ms": 2.807375,
+              "min_average_ms": 2.168,
+              "max_average_ms": 3.102
+            },
+            "iDWT": {
+              "intervals": 8,
+              "mean_of_interval_averages_ms": 3.30125,
+              "min_average_ms": 2.885,
+              "max_average_ms": 3.924
+            }
+          },
+          "effective_probe": {
+            "wait_us": 4000,
+            "ready_active": false,
+            "packet_grace_us": 0,
+            "windows": 7,
+            "margin": [
+              111,
+              40,
+              270,
+              61,
+              136,
+              186,
+              2
+            ],
+            "late": [
+              12,
+              11,
+              24,
+              24,
+              21,
+              35,
+              1
+            ],
+            "timed_windows": 7,
+            "timed_taken": 806,
+            "interval_s": 7.01800012588501,
+            "taken": 806,
+            "empty": 128,
+            "late_taken": 127,
+            "late_superseded": 1,
+            "superseded": 10,
+            "selected_source_frame_rate_fps": 114.8475328501592,
+            "taken_per_window": 115.14285714285714,
+            "superseded_per_window": 1.4285714285714286,
+            "late_taken_fraction": 0.9921875
+          },
+          "battery_temperature_c": 34.0,
+          "thermal_status": 0,
+          "temperature_samples_c": [
+            34.0,
+            34.0,
+            34.0,
+            34.0,
+            34.0,
+            34.0,
+            34.0
+          ],
+          "thermal_samples": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "gpu_before": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 911907,
+              "total": 1004340,
+              "reported_percent": 90.79664257124081
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_after": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 869343,
+              "total": 1000436,
+              "reported_percent": 86.89641316386056
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_reads_outside_measurement": true,
+          "selector_verified": true,
+          "low_priority_verified": true
+        }
+      ]
+    },
+    {
+      "pattern": "ABBA",
+      "measure_seconds": 12.0,
+      "settle_seconds": 2.0,
+      "stage_diagnostics": false,
+      "source_eye": [
+        2080,
+        2208
+      ],
+      "steamvr_recommended_eye": [
+        3448,
+        3628
+      ],
+      "effective_video": {
+        "preferred_codec": {
+          "variant": "PyroWave"
+        },
+        "transcoding_view_resolution": {
+          "Scale": 1.0,
+          "Absolute": {
+            "width": 2080,
+            "height": {
+              "set": true,
+              "content": 2208
+            }
+          },
+          "variant": "Absolute"
+        },
+        "emulated_headset_view_resolution": {
+          "Scale": 1.0,
+          "Absolute": {
+            "width": 3072,
+            "height": {
+              "set": true,
+              "content": 3216
+            }
+          },
+          "variant": "Absolute"
+        },
+        "pyrowave": {
+          "light_foveated_encoding": false,
+          "chroma_444": false,
+          "transport": {
+            "variant": "Tcp"
+          },
+          "wavelet": {
+            "variant": "Haar"
+          },
+          "decode_path": {
+            "variant": "Compute"
+          }
+        },
+        "foveated_encoding": {
+          "enabled": false,
+          "content": {
+            "force_enable": false,
+            "center_size_x": 0.2,
+            "center_size_y": 0.178,
+            "center_shift_x": 0.0,
+            "center_shift_y": 0.0,
+            "edge_ratio_x": 3.0,
+            "edge_ratio_y": 4.0,
+            "follow_gaze": false
+          }
+        },
+        "clientside_foveation": {
+          "enabled": false,
+          "content": {
+            "mode": {
+              "Static": {
+                "level": {
+                  "variant": "High"
+                }
+              },
+              "Dynamic": {
+                "max_level": {
+                  "variant": "High"
+                }
+              },
+              "variant": "Dynamic"
+            },
+            "vertical_offset_deg": 0.0
+          }
+        },
+        "openvr_geometry": {
+          "eye_resolution_width": 2080,
+          "eye_resolution_height": 2208,
+          "target_eye_resolution_width": 3072,
+          "target_eye_resolution_height": 3232,
+          "enable_foveated_encoding": false
+        }
+      },
+      "clock_offset_drift_s": 0.0023925304412841797,
+      "blocks": [
+        {
+          "arm": "A",
+          "mode": "0",
+          "vector": "0",
+          "runtime120_records": 12,
+          "seconds": 12.03764033317566,
+          "submission_wall_time_fps": 118.48098810873176,
+          "direct_completion_proxy_fps": 118.46521407940733,
+          "client_fps": {
+            "n": 1427,
+            "p01": 60.00273412,
+            "p50": 119.99998,
+            "p95": 120.0180035,
+            "p99": 120.05683746,
+            "max": 120.66281
+          },
+          "source_fps": {
+            "n": 1427,
+            "p01": 113.0582957,
+            "p50": 120.93507,
+            "p95": 124.902579,
+            "p99": 126.581448,
+            "max": 130.05762
+          },
+          "payload_mbps": {
+            "n": 1427,
+            "p01": 942.1391619999999,
+            "p50": 1007.77805,
+            "p95": 1040.84013,
+            "p99": 1054.830545,
+            "max": 1083.7981
+          },
+          "encode_ms": {
+            "n": 1427,
+            "p01": 1.8025499999999999,
+            "p50": 1.9949,
+            "p95": 2.09317,
+            "p99": 2.1294060000000004,
+            "max": 2.3173
+          },
+          "network_estimate_ms": {
+            "n": 1427,
+            "p01": 3.74489346,
+            "p50": 4.692831,
+            "p95": 6.4517273,
+            "p99": 8.03837046,
+            "max": 10.674242
+          },
+          "estimated_pipeline_ms": {
+            "n": 1427,
+            "p01": 36.528695,
+            "p50": 44.853583,
+            "p95": 47.6556131,
+            "p99": 50.4631072,
+            "max": 50.512902
+          },
+          "gpu_decode_ms": {
+            "n": 1444,
+            "p01": 4.73204259,
+            "p50": 5.8862238,
+            "p95": 6.723314995,
+            "p99": 6.80858189,
+            "max": 6.907708
+          },
+          "decode_to_fence_ms": {
+            "n": 1444,
+            "p01": 6.51177923,
+            "p50": 7.895989999999999,
+            "p95": 8.25588685,
+            "p99": 8.41494623,
+            "max": 8.686147
+          },
+          "convert_ms": {
+            "n": 1444,
+            "p01": 0.6934749862,
+            "p50": 0.766223925,
+            "p95": 1.4902942799999999,
+            "p99": 1.6372677059999998,
+            "max": 2.7127082
+          },
+          "record_ms": {
+            "n": 1444,
+            "p01": 0.37997036,
+            "p50": 0.513047,
+            "p95": 0.7427286499999999,
+            "p99": 0.8451128299999997,
+            "max": 1.165938
+          },
+          "eye_cpu_ms": {
+            "n": 1426,
+            "p01": 1.352864575,
+            "p50": 1.5842975,
+            "p95": 1.893255825,
+            "p99": 2.2719532499999997,
+            "max": 2.422448
+          },
+          "target_gap_ms": {
+            "n": 1426,
+            "p01": 2.736992,
+            "p50": 8.333021500000001,
+            "p95": 11.16380375,
+            "p99": 16.599832,
+            "max": 19.388596
+          },
+          "decoder_queue_ms": {
+            "n": 1427,
+            "p01": 0.0863241,
+            "p50": 2.645417,
+            "p95": 4.7380214,
+            "p99": 4.909151860000001,
+            "max": 7.61922
+          },
+          "vsync_queue_ms": {
+            "n": 1427,
+            "p01": 8.951073319999999,
+            "p50": 14.381179,
+            "p95": 15.090131600000001,
+            "p99": 15.441538160000002,
+            "max": 17.900923
+          },
+          "stages": {},
+          "effective_probe": {
+            "wait_us": 4000,
+            "ready_active": false,
+            "packet_grace_us": 0,
+            "windows": 11,
+            "margin": [
+              30,
+              21,
+              487,
+              80,
+              222,
+              467,
+              0
+            ],
+            "late": [
+              1,
+              1,
+              2,
+              4,
+              11,
+              16,
+              0
+            ],
+            "timed_windows": 11,
+            "timed_taken": 1307,
+            "interval_s": 11.041000127792358,
+            "taken": 1307,
+            "empty": 35,
+            "late_taken": 35,
+            "late_superseded": 0,
+            "superseded": 18,
+            "selected_source_frame_rate_fps": 118.37695723868576,
+            "taken_per_window": 118.81818181818181,
+            "superseded_per_window": 1.6363636363636365,
+            "late_taken_fraction": 1.0
+          },
+          "battery_temperature_c": 34.0,
+          "thermal_status": 0,
+          "temperature_samples_c": [
+            34.0,
+            34.0,
+            34.0,
+            34.0,
+            34.0,
+            34.0,
+            34.0,
+            34.0,
+            34.0,
+            34.0
+          ],
+          "thermal_samples": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "gpu_before": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 867898,
+              "total": 1005778,
+              "reported_percent": 86.29120939213226
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_after": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 870428,
+              "total": 1000559,
+              "reported_percent": 86.99417025882532
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_reads_outside_measurement": true,
+          "selector_verified": true,
+          "low_priority_verified": true
+        },
+        {
+          "arm": "B",
+          "mode": "0",
+          "vector": "1",
+          "runtime120_records": 12,
+          "seconds": 12.039212703704834,
+          "submission_wall_time_fps": 115.40278058409285,
+          "direct_completion_proxy_fps": 116.27545848324553,
+          "client_fps": {
+            "n": 1389,
+            "p01": 60.00035108,
+            "p50": 119.99946,
+            "p95": 120.0157336,
+            "p99": 120.0350892,
+            "max": 121.06231
+          },
+          "source_fps": {
+            "n": 1389,
+            "p01": 114.0830626,
+            "p50": 121.94974,
+            "p95": 123.9323236,
+            "p99": 124.88961879999998,
+            "max": 131.67424
+          },
+          "payload_mbps": {
+            "n": 1389,
+            "p01": 950.6787632,
+            "p50": 1016.2335,
+            "p95": 1032.75484,
+            "p99": 1040.7321431999999,
+            "max": 1097.2699
+          },
+          "encode_ms": {
+            "n": 1389,
+            "p01": 1.758376,
+            "p50": 1.8727,
+            "p95": 1.96226,
+            "p99": 1.9960399999999994,
+            "max": 2.0372
+          },
+          "network_estimate_ms": {
+            "n": 1389,
+            "p01": 3.7243533600000003,
+            "p50": 4.703342,
+            "p95": 7.2242488,
+            "p99": 11.577303399999996,
+            "max": 33.0747
+          },
+          "estimated_pipeline_ms": {
+            "n": 1389,
+            "p01": 48.21022228,
+            "p50": 56.58603,
+            "p95": 64.876592,
+            "p99": 67.70318119999999,
+            "max": 81.63149
+          },
+          "gpu_decode_ms": {
+            "n": 1406,
+            "p01": 3.9469193500000004,
+            "p50": 5.857656,
+            "p95": 7.2588669999999995,
+            "p99": 8.003237300000002,
+            "max": 8.75
+          },
+          "decode_to_fence_ms": {
+            "n": 1406,
+            "p01": 6.37744065,
+            "p50": 7.969322999999999,
+            "p95": 9.387162250000001,
+            "p99": 10.267623400000002,
+            "max": 11.104116
+          },
+          "convert_ms": {
+            "n": 1406,
+            "p01": 0.719127555,
+            "p50": 0.82414061,
+            "p95": 1.749387925,
+            "p99": 2.2351171200000017,
+            "max": 3.9784894
+          },
+          "record_ms": {
+            "n": 1406,
+            "p01": 0.3838567,
+            "p50": 0.5116665,
+            "p95": 0.74924475,
+            "p99": 0.8755263500000005,
+            "max": 1.234948
+          },
+          "eye_cpu_ms": {
+            "n": 1386,
+            "p01": 1.362414085,
+            "p50": 1.60612,
+            "p95": 2.2989975,
+            "p99": 2.5829016200000003,
+            "max": 3.549115
+          },
+          "target_gap_ms": {
+            "n": 1387,
+            "p01": 5.49179466,
+            "p50": 8.334063,
+            "p95": 11.1685112,
+            "p99": 16.7008341,
+            "max": 30.914535
+          },
+          "decoder_queue_ms": {
+            "n": 1389,
+            "p01": 0.007243920000000001,
+            "p50": 2.78151,
+            "p95": 4.7208548,
+            "p99": 4.925899239999998,
+            "max": 8.191511
+          },
+          "vsync_queue_ms": {
+            "n": 1389,
+            "p01": 8.90501544,
+            "p50": 14.549934,
+            "p95": 16.174105,
+            "p99": 17.78076596,
+            "max": 18.346775
+          },
+          "stages": {},
+          "effective_probe": {
+            "wait_us": 4000,
+            "ready_active": false,
+            "packet_grace_us": 0,
+            "windows": 11,
+            "margin": [
+              179,
+              41,
+              206,
+              242,
+              196,
+              414,
+              1
+            ],
+            "late": [
+              19,
+              16,
+              36,
+              32,
+              42,
+              45,
+              1
+            ],
+            "timed_windows": 11,
+            "timed_taken": 1279,
+            "interval_s": 11.04200005531311,
+            "taken": 1279,
+            "empty": 191,
+            "late_taken": 191,
+            "late_superseded": 0,
+            "superseded": 20,
+            "selected_source_frame_rate_fps": 115.83046491514732,
+            "taken_per_window": 116.27272727272727,
+            "superseded_per_window": 1.8181818181818181,
+            "late_taken_fraction": 1.0
+          },
+          "battery_temperature_c": 34.0,
+          "thermal_status": 0,
+          "temperature_samples_c": [
+            34.0,
+            34.0,
+            34.0,
+            34.0,
+            34.0,
+            34.0,
+            34.0,
+            34.0,
+            34.0,
+            34.0
+          ],
+          "thermal_samples": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "gpu_before": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 907916,
+              "total": 1000740,
+              "reported_percent": 90.72446389671643
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_after": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 856462,
+              "total": 1000521,
+              "reported_percent": 85.60160156558433
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_reads_outside_measurement": true,
+          "selector_verified": true,
+          "low_priority_verified": true
+        },
+        {
+          "arm": "B",
+          "mode": "0",
+          "vector": "1",
+          "runtime120_records": 12,
+          "seconds": 12.038702249526978,
+          "submission_wall_time_fps": 116.25385616838344,
+          "direct_completion_proxy_fps": 116.58038445782634,
+          "client_fps": {
+            "n": 1399,
+            "p01": 60.00092882,
+            "p50": 119.999405,
+            "p95": 120.0158086,
+            "p99": 120.03484288,
+            "max": 120.41108
+          },
+          "source_fps": {
+            "n": 1399,
+            "p01": 113.8057023,
+            "p50": 121.63822,
+            "p95": 123.7951624,
+            "p99": 124.7868608,
+            "max": 130.78563
+          },
+          "payload_mbps": {
+            "n": 1399,
+            "p01": 948.3674540000001,
+            "p50": 1013.63757,
+            "p95": 1031.61181,
+            "p99": 1039.875872,
+            "max": 1089.8648
+          },
+          "encode_ms": {
+            "n": 1399,
+            "p01": 1.745946,
+            "p50": 1.8922999999999999,
+            "p95": 1.9678999999999998,
+            "p99": 2.014112,
+            "max": 2.0488
+          },
+          "network_estimate_ms": {
+            "n": 1399,
+            "p01": 3.7295398600000005,
+            "p50": 4.602282,
+            "p95": 5.839629199999999,
+            "p99": 6.814128579999998,
+            "max": 12.421079
+          },
+          "estimated_pipeline_ms": {
+            "n": 1399,
+            "p01": 48.8510512,
+            "p50": 57.143062,
+            "p95": 62.920013,
+            "p99": 65.67222220000001,
+            "max": 65.77963000000001
+          },
+          "gpu_decode_ms": {
+            "n": 1415,
+            "p01": 4.628753004,
+            "p50": 6.4014063,
+            "p95": 7.058067299999999,
+            "p99": 7.739235249999999,
+            "max": 8.431146
+          },
+          "decode_to_fence_ms": {
+            "n": 1415,
+            "p01": 6.780174120000001,
+            "p50": 7.994376,
+            "p95": 9.3640534,
+            "p99": 9.95904608,
+            "max": 10.947761
+          },
+          "convert_ms": {
+            "n": 1415,
+            "p01": 0.718563482,
+            "p50": 0.7959375,
+            "p95": 1.77704684,
+            "p99": 2.2935488579999994,
+            "max": 3.7305207
+          },
+          "record_ms": {
+            "n": 1415,
+            "p01": 0.39010206000000003,
+            "p50": 0.499219,
+            "p95": 0.6980473,
+            "p99": 0.7942922799999997,
+            "max": 1.014895
+          },
+          "eye_cpu_ms": {
+            "n": 1397,
+            "p01": 1.32423556,
+            "p50": 1.5534381,
+            "p95": 2.17073016,
+            "p99": 2.4723918399999993,
+            "max": 3.250365
+          },
+          "target_gap_ms": {
+            "n": 1398,
+            "p01": 5.490257880000001,
+            "p50": 8.338464,
+            "p95": 11.16066285,
+            "p99": 16.67841538,
+            "max": 19.514117
+          },
+          "decoder_queue_ms": {
+            "n": 1399,
+            "p01": 0.00806572,
+            "p50": 3.9952090000000005,
+            "p95": 4.8367452,
+            "p99": 5.562177039999999,
+            "max": 8.128698
+          },
+          "vsync_queue_ms": {
+            "n": 1399,
+            "p01": 8.593549739999998,
+            "p50": 14.27535,
+            "p95": 15.616667499999998,
+            "p99": 17.560836,
+            "max": 18.031497
+          },
+          "stages": {},
+          "effective_probe": {
+            "wait_us": 4000,
+            "ready_active": false,
+            "packet_grace_us": 0,
+            "windows": 11,
+            "margin": [
+              124,
+              10,
+              88,
+              147,
+              256,
+              660,
+              1
+            ],
+            "late": [
+              15,
+              13,
+              28,
+              22,
+              37,
+              41,
+              0
+            ],
+            "timed_windows": 11,
+            "timed_taken": 1286,
+            "interval_s": 11.034000158309937,
+            "taken": 1286,
+            "empty": 156,
+            "late_taken": 156,
+            "late_superseded": 0,
+            "superseded": 17,
+            "selected_source_frame_rate_fps": 116.54884733996369,
+            "taken_per_window": 116.9090909090909,
+            "superseded_per_window": 1.5454545454545454,
+            "late_taken_fraction": 1.0
+          },
+          "battery_temperature_c": 34.0,
+          "thermal_status": 0,
+          "temperature_samples_c": [
+            35.0,
+            35.0,
+            35.0,
+            35.0,
+            35.0,
+            35.0,
+            35.0,
+            35.0,
+            35.0,
+            35.0,
+            35.0
+          ],
+          "thermal_samples": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "gpu_before": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 910365,
+              "total": 1000381,
+              "reported_percent": 91.0018283034164
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_after": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 862983,
+              "total": 1007309,
+              "reported_percent": 85.67212245696206
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_reads_outside_measurement": true,
+          "selector_verified": true,
+          "low_priority_verified": true
+        },
+        {
+          "arm": "A",
+          "mode": "0",
+          "vector": "0",
+          "runtime120_records": 12,
+          "seconds": 12.04111909866333,
+          "submission_wall_time_fps": 115.51172644373298,
+          "direct_completion_proxy_fps": 116.08425963129395,
+          "client_fps": {
+            "n": 1391,
+            "p01": 59.999301,
+            "p50": 119.99998,
+            "p95": 120.012908,
+            "p99": 120.0263935,
+            "max": 120.295006
+          },
+          "source_fps": {
+            "n": 1391,
+            "p01": 113.95906839999999,
+            "p50": 121.80714,
+            "p95": 123.82213999999999,
+            "p99": 124.51052399999999,
+            "max": 131.88437
+          },
+          "payload_mbps": {
+            "n": 1391,
+            "p01": 949.645554,
+            "p50": 1015.0452,
+            "p95": 1031.8366500000002,
+            "p99": 1037.573104,
+            "max": 1099.0209
+          },
+          "encode_ms": {
+            "n": 1391,
+            "p01": 1.7406,
+            "p50": 1.8871,
+            "p95": 1.96105,
+            "p99": 2.01475,
+            "max": 2.1178999999999997
+          },
+          "network_estimate_ms": {
+            "n": 1391,
+            "p01": 3.7598008999999997,
+            "p50": 4.531286,
+            "p95": 5.773934499999999,
+            "p99": 7.4325433999999735,
+            "max": 23.806332
+          },
+          "estimated_pipeline_ms": {
+            "n": 1391,
+            "p01": 50.124705,
+            "p50": 58.63405,
+            "p95": 61.473386500000004,
+            "p99": 61.515789,
+            "max": 78.14385
+          },
+          "gpu_decode_ms": {
+            "n": 1403,
+            "p01": 4.66001458,
+            "p50": 6.0373435,
+            "p95": 7.322135369999998,
+            "p99": 8.030879,
+            "max": 8.697239
+          },
+          "decode_to_fence_ms": {
+            "n": 1403,
+            "p01": 6.69467688,
+            "p50": 8.036199,
+            "p95": 9.3550423,
+            "p99": 10.403726260000001,
+            "max": 11.067137
+          },
+          "convert_ms": {
+            "n": 1403,
+            "p01": 0.71921873,
+            "p50": 0.7777083,
+            "p95": 1.7770937199999997,
+            "p99": 2.191301026,
+            "max": 3.3491144
+          },
+          "record_ms": {
+            "n": 1403,
+            "p01": 0.39490328,
+            "p50": 0.604323,
+            "p95": 0.8640727999999994,
+            "p99": 0.9927870000000001,
+            "max": 1.191198
+          },
+          "eye_cpu_ms": {
+            "n": 1386,
+            "p01": 1.35139325,
+            "p50": 1.5831515,
+            "p95": 2.3542836,
+            "p99": 2.544265350000001,
+            "max": 2.917084
+          },
+          "target_gap_ms": {
+            "n": 1389,
+            "p01": 5.49732616,
+            "p50": 8.334168,
+            "p95": 11.1700738,
+            "p99": 16.75445408,
+            "max": 25.019586
+          },
+          "decoder_queue_ms": {
+            "n": 1391,
+            "p01": 0.014979200000000002,
+            "p50": 3.577031,
+            "p95": 4.5378905,
+            "p99": 4.720599799999998,
+            "max": 7.418959
+          },
+          "vsync_queue_ms": {
+            "n": 1391,
+            "p01": 8.9873502,
+            "p50": 14.338996,
+            "p95": 15.684068,
+            "p99": 17.5162562,
+            "max": 18.144589
+          },
+          "stages": {},
+          "effective_probe": {
+            "wait_us": 4000,
+            "ready_active": false,
+            "packet_grace_us": 0,
+            "windows": 11,
+            "margin": [
+              150,
+              81,
+              91,
+              92,
+              379,
+              488,
+              0
+            ],
+            "late": [
+              20,
+              19,
+              20,
+              22,
+              34,
+              43,
+              1
+            ],
+            "timed_windows": 11,
+            "timed_taken": 1281,
+            "interval_s": 11.045000076293945,
+            "taken": 1281,
+            "empty": 159,
+            "late_taken": 159,
+            "late_superseded": 1,
+            "superseded": 16,
+            "selected_source_frame_rate_fps": 115.98008068369597,
+            "taken_per_window": 116.45454545454545,
+            "superseded_per_window": 1.4545454545454546,
+            "late_taken_fraction": 0.99375
+          },
+          "battery_temperature_c": 35.0,
+          "thermal_status": 0,
+          "temperature_samples_c": [
+            35.0,
+            35.0,
+            35.0,
+            35.0,
+            35.0,
+            35.0,
+            35.0,
+            35.0,
+            35.0,
+            35.0
+          ],
+          "thermal_samples": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "gpu_before": {
+            "gpu_clock_hz": 640000000,
+            "gpubusy": {
+              "active": 906728,
+              "total": 1000972,
+              "reported_percent": 90.58475162142398
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_after": {
+            "gpu_clock_hz": 599000000,
+            "gpubusy": {
+              "active": 886992,
+              "total": 1003221,
+              "reported_percent": 88.41441716232016
+            },
+            "status": "parsed",
+            "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+          },
+          "gpu_reads_outside_measurement": true,
+          "selector_verified": true,
+          "low_priority_verified": true
+        }
+      ]
+    }
+  ],
+  "normal_restoration_errors": [],
+  "performance_acceptance": false,
+  "default_promoted": false,
+  "decision": "Keep vector dequant disabled. Stage-enabled decode medians suggested a small gain, but dequant averages overlap and diagnostic-off GPU/completion/delivery did not improve consistently. No sustained screen justified.",
+  "limitations": [
+    "Short8/12-second stationary blocks, not sustained gameplay/thermal or headset quality acceptance",
+    "Submission/completion/queue selection counters do not measure unique optical fresh frames",
+    "Stationary-head ALVR total/network estimates are confounded; no optical motion-to-photon measurement",
+    "GPU clock/load are uncalibrated physical-driver endpoints outside measurements, not continuous or per-app utilization",
+    "Session/restart phase and GPU DVFS vary; one baseline ended599MHz while other endpoints640MHz",
+    "Granite stage values are delayed interval averages including preemption, not per-frame percentiles",
+    "Explicit chart source stayed2080x2208 although the driver target/SteamVR recommendation was larger; this is not a higher-source-quality comparison"
+  ]
+}
