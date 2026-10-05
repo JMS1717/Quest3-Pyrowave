@@ -27,7 +27,7 @@ resume paused hardware work or unattended workers.
 | Item | Evidence / limitation |
 | --- | --- |
 | Public release | [alpha.7](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.7), matching `.15` APK/server |
-| Development pair | Reviewed `.39`, built from `55489d8`, installed October 4 after matching CI/artifact/default GPU checks and a Surface creation-only screen. Tiny Vulkan swapchain creation/destruction passed; no Surface image was presented. Surface and decode-stage probes stay off by default; wait/LOW-priority behavior from `.33` remains. `.38` (`a259b23`) and older matching pairs are retained; recheck installation and CI before hardware work |
+| Development pair | Reviewed `.40` (`a356edb`), matching CI all jobs passed; installed after exact baseline GPU readbacks. Its static Surface API/fence/shutdown screen passed, but screenshot orientation failed. `.41` (`700f30f`) corrects the diagnostic upload rows and is building; recheck CI, artifact and live state. Normal video remains on the GLES bridge. `.39`/`.38` and older matching pairs are retained |
 | User feedback | Positive manual playtest after overlay/OpenXR repairs; not sustained FPS, optical latency or broad game acceptance |
 | Best short native screens | `.33` at 120 Hz / 1000 Mbps / 4:2:0: about 116–118 displayed target FPS (2.4–4.8 lost/s across sessions, `.34` unfiltered arm included) with the default wait and LOW decode priority. Without the priority it was 110–114, and without the wait 107–110 ([fresh-frame loss](FRESHNESS.md), [decode priority](DECODE-PRIORITY.md)). Stationary chart, not sustained gameplay |
 | Baseline recommendation | Haar/Compute, full-frame native encode, USB/TCP, 120 Hz request, 1000 Mbps, 4:2:0; experimental fence paths off |
@@ -53,18 +53,23 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 ## Highest-value next experiment
 
-**Latest update, October 4 evening:** awake `.38` stage diagnostics show both
-dequantization (~2.6–2.8 ms) and inverse transform (~3.2–3.6 ms) contribute.
-The diagnostic does not improve delivery and stays off. `.38` restarted-client
-controls averaged about 116–117 submission/completion events per second, with
-p1 near 60; sustained smooth native 120 remains unmet. Read
-[the live diagnostic comparison](DECODE-STAGE-PROBE.md#awake-vr-comparison).
-The next bounded step is a separate static asymmetric image using `.39`'s
-[verified Surface creation path](SURFACE-PROBE.md#quest-3-creation-result),
-before decoded presentation. A Surface
-handle cannot enter the existing OpenXR eye acquire/release loop. Validate
-WSI lifecycle, visibility/STOPPING rules, color, image identity and pose pairing
-before removing a copy. The following entries document earlier hypotheses.
+**Latest update, October 4 late evening:** `.40`'s tiny static Surface image
+passed one-shot Vulkan enqueue, layer submission, both fences and orderly
+STOPPING retirement on Quest 3. A private compositor screenshot exposed a
+vertical flip. `.41` corrects rows only for that diagnostic in the existing
+GLES-bound session; verify the matching pair and orientation before advancing.
+Read [the result and remaining gates](SURFACE-CHART.md#quest-3-result-lifecycle-passed-orientation-rejected).
+This screen found no speedup and does not establish live decoded-video identity,
+color fidelity or pose/content pairing. The normal GLES path is retained.
+
+Awake `.38` stage diagnostics showed dequantization (~2.6�2.8 ms) and inverse
+transform (~3.2�3.6 ms) both contribute. Diagnostics remain off. Restarts yield
+roughly 115�118 submission/completion events per second with p1 near 60; smooth
+sustained native 120 remains unmet. Read
+[the stage comparison](DECODE-STAGE-PROBE.md#awake-vr-comparison).
+A Surface handle cannot enter the ordinary OpenXR eye acquire/release loop.
+Establish exact decoded-image selection and matching pose before replacing that
+loop. The following entries document earlier hypotheses.
 
 **Update 2026-10-04 (evening):** removing the convert pass is not possible
 this way: Quest 3 gralloc has no R8 AHardwareBuffer, so GLES cannot sample the
