@@ -24,7 +24,7 @@ SteamVR integration, tracking, controllers and audio.
 
 | Track | What to expect |
 | --- | --- |
-| **Published preview: alpha.7 / `.15`** | Downloadable matching APK and Windows server. Earlier direct-eye-copy preview; it does **not** include every later development change. |
+| **Published preview: alpha.8 / `.51`** | Matching APK and Windows server with bounded frame waiting, automatic decode priority, independent resolution controls and safety fixes. [Release notes](docs/RELEASE-alpha.8.md) |
 | **Development: `.51`** | [PR #3](https://github.com/JMS1717/Quest3-Pyrowave/pull/3) merged native lifetime fixes, publication tests and producer diagnostics. [All four CI jobs passed](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37327925015) for the integrated runtime sources. |
 | **Working experimental target** | **2080 × 2208 per eye · 120 Hz · 1000 Mbps · 4:2:0 · no foveated encoding**, with Vulkan Compute decoding. Sustained acceptance is still pending. |
 | **Defaults preserved** | Conservative 400 Mbps / 72 Hz candidate; 4:2:0, TCP and Quest 3 Auto → Compute. Development keeps synchronous decoding and the 4 ms selection wait. |
@@ -57,15 +57,15 @@ a matched quality or latency advantage over those codecs or Virtual Desktop.
 
 ## Download a matching build
 
-The latest published preview is **[v0.1.0-alpha.7](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.7)**.
+The latest published preview is **[v0.1.0-alpha.8](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.8)**.
 
 | Download | Purpose |
 | --- | --- |
-| [**Quest APK**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.7/Quest3-Pyrowave-dev.apk) | Install on the Quest 3. |
-| [**Windows server ZIP**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.7/Quest3-Pyrowave-Windows.zip) | Dashboard, SteamVR driver and required bundled files. |
-| [**SHA-256 checksums**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.7/SHA256SUMS.txt) | Verify the downloads. |
+| [**Quest APK**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.8/Quest3-Pyrowave-dev.apk) | Install on the Quest 3. |
+| [**Windows server ZIP**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.8/Quest3-Pyrowave-Windows.zip) | Dashboard, SteamVR driver and required bundled files. |
+| [**SHA-256 checksums**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.8/SHA256SUMS.txt) | Verify the downloads. |
 
-Read the [alpha.7 release notes](docs/RELEASE-alpha.7.md) for its setup and optional
+Read the [alpha.8 release notes](docs/RELEASE-alpha.8.md) for its setup and optional
 direct-eye-copy mode. For development builds, choose a **successful full run** in
 [GitHub Actions](https://github.com/JMS1717/Quest3-Pyrowave/actions/workflows/ci.yml)
 and download both `Quest3-Pyrowave-Android` and `Quest3-Pyrowave-Windows` artifacts
