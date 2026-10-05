@@ -12,7 +12,6 @@ def main():
     root = Path(__file__).resolve().parent
     for source, header, symbol in [('convert.vert', 'convert_vert_spv.h', 'CONVERT_VERT_SPV'),
                                     ('convert.frag', 'convert_frag_spv.h', 'CONVERT_FRAG_SPV'),
-                                    ('fuse_color.frag', 'fuse_color_frag_spv.h', 'FUSE_COLOR_FRAG_SPV'),
                                     ('ycbcr_to_rgba.comp', 'ycbcr_to_rgba_spv.h', 'YCBCR_TO_RGBA_SPV')]:
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / 'shader.spv'

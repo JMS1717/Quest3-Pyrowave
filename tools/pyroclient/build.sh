@@ -26,7 +26,7 @@ $CXX $FLAGS "$HERE/ready_fence_gpu_test.cpp" "$HERE/gpu_readback_gles.cpp" \
 $CXX $FLAGS "$HERE/prerecord_gpu_test.cpp" "$HERE/gpu_readback_gles.cpp" \
     "$HERE/gpu_readback_android.cpp" -o "$HERE/prerecord_gpu_test" \
     -L"$HERE" -lpyroclient -L"$PW/build-android" -lpyrowave-shared -landroid -llog -lEGL -lGLESv3 -lz
-# Exact-pixel fused color gate; on the Quest run it with the default GATE_MIN_PSNR=30.
-$CXX $FLAGS "$HERE/fuse_color_gate.cpp" -o "$HERE/fuse_color_gate" \
+# Fused dequant + level-0 Haar exact-pixel gate; on the Quest run it with the default GATE_MIN_PSNR=30.
+$CXX $FLAGS "$HERE/dequant_haar_gate.cpp" -o "$HERE/dequant_haar_gate" \
     -L"$PW/build-android" -lpyrowave-shared -lvulkan
-echo "BUILD_OK -> $HERE/libpyroclient.so $HERE/pyroclient_test $HERE/release_fence_gpu_test $HERE/ready_fence_gpu_test $HERE/fuse_color_gate"
+echo "BUILD_OK -> $HERE/libpyroclient.so $HERE/pyroclient_test $HERE/release_fence_gpu_test $HERE/ready_fence_gpu_test $HERE/dequant_haar_gate"

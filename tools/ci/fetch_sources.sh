@@ -46,8 +46,6 @@ git -C "$dest/pyrowave/Granite" submodule update -q --init --recursive --depth 1
 git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-cdf53-haar-experiments2-3.patch"
 git -C "$dest/pyrowave" apply --binary "$repo/patches/quest3-pyrowave.patch"
 git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-prerecord-api.patch"
-# Optional final-luma skip for fused color (debug.q3pw.fuse_color); default behaviour unchanged.
-git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-final-luma.patch"
 # Optional fused dequant + level-0 Haar (debug.q3pw.dequant_haar), with its embedded shaders.
 git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-fused-dequant-haar.patch"
 

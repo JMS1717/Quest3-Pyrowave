@@ -1,49 +1,52 @@
 diff --git a/pyrowave-shared.def b/pyrowave-shared.def
-index b71c2c6..fc44470 100644
+index 4fe4529..96a5a1e 100644
 --- a/pyrowave-shared.def
 +++ b/pyrowave-shared.def
-@@ -48,4 +48,5 @@ EXPORTS
- 
- 	pyrowave_decoder_set_idwt_enabled
- 	pyrowave_decoder_set_final_luma_store
+@@ -42,6 +42,7 @@ EXPORTS
+ 	pyrowave_decoder_push_packet
+ 	pyrowave_decoder_decode_is_ready
+ 	pyrowave_decoder_decode_is_ready_with_sideband
 +	pyrowave_decoder_set_fused_dequant_haar
- 	pyrowave_decoder_get_wavelet_view
+ 	pyrowave_decoder_decode_gpu_buffer
+ 	pyrowave_decoder_decode_cpu_buffer_synchronous
+ 	pyrowave_decoder_destroy
 diff --git a/pyrowave.h b/pyrowave.h
-index d57aa23..b909113 100644
+index 3f988a7..fad0c92 100644
 --- a/pyrowave.h
 +++ b/pyrowave.h
-@@ -540,6 +540,11 @@ PYROWAVE_PUBLIC_API int pyrowave_decoder_prerecord_upload_fits(pyrowave_decoder
-  * layer 0 then holds the level-1 reconstruction (LL). Chroma planes are still written.
-  * Returns PYROWAVE_ERROR_INVALID_ARGUMENT for any other configuration. Default 1. */
- PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_final_luma_store(pyrowave_decoder decoder, int enabled);
-+/* Haar, 4:2:0, compute path, precision 1 only. enabled=1 decodes the level-0 luma bands inside the
-+ * final inverse Haar pass, so they are never stored to or reloaded from the wavelet image. The luma
-+ * plane is still written. Incompatible with set_final_luma_store(0); returns
-+ * PYROWAVE_ERROR_INVALID_ARGUMENT for any unsupported combination. Default 0. */
-+PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_fused_dequant_haar(pyrowave_decoder decoder, int enabled);
+@@ -537,6 +537,12 @@ PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_timestamp_recording(pyr
+ PYROWAVE_PUBLIC_API int pyrowave_decoder_prerecord_upload_fits(pyrowave_decoder decoder);
  PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_get_wavelet_view(pyrowave_decoder decoder, int component, int level,
                                                                       VkImageView *view, VkFormat *format);
++/* XRW: Haar, 4:2:0, compute path, precision 1 only. enabled=1 decodes the level-0 luma bands
++ * inside the final inverse Haar pass, so they are never stored to or reloaded from the wavelet
++ * image; the luma plane is still written. Do not combine with a caller that reconstructs level-0
++ * luma from the wavelet image. PYROWAVE_ERROR_NOT_IMPLEMENTED, unchanged, for any other mode.
++ * Default 0. */
++PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_fused_dequant_haar(pyrowave_decoder decoder, int enabled);
  
+ typedef struct pyrowave_decoder_create_info
+ {
 diff --git a/pyrowave_c.cpp b/pyrowave_c.cpp
-index 9983ed2..8141871 100644
+index e41bd9d..d343705 100644
 --- a/pyrowave_c.cpp
 +++ b/pyrowave_c.cpp
-@@ -1414,6 +1414,13 @@ pyrowave_result pyrowave_decoder_set_final_luma_store(pyrowave_decoder decoder,
- 	return decoder->decoder.set_final_luma_store(enabled != 0) ? PYROWAVE_SUCCESS : PYROWAVE_ERROR_INVALID_ARGUMENT;
+@@ -1418,6 +1418,13 @@ pyrowave_result pyrowave_decoder_get_wavelet_view(pyrowave_decoder decoder, int
+ 	return *view != VK_NULL_HANDLE ? PYROWAVE_SUCCESS : PYROWAVE_ERROR_INVALID_ARGUMENT;
  }
  
 +pyrowave_result pyrowave_decoder_set_fused_dequant_haar(pyrowave_decoder decoder, int enabled)
 +{
 +	if (!decoder)
 +		return PYROWAVE_ERROR_INVALID_ARGUMENT;
-+	return decoder->decoder.set_fused_dequant_haar(enabled != 0) ? PYROWAVE_SUCCESS : PYROWAVE_ERROR_INVALID_ARGUMENT;
++	return decoder->decoder.set_fused_dequant_haar(enabled != 0) ? PYROWAVE_SUCCESS : PYROWAVE_ERROR_NOT_IMPLEMENTED;
 +}
 +
- pyrowave_result pyrowave_decoder_get_wavelet_view(pyrowave_decoder decoder, int component, int level,
-                                                   VkImageView *view, VkFormat *format)
- {
+ pyrowave_result
+ pyrowave_decoder_decode_gpu_buffer(pyrowave_decoder decoder,
+                                    const pyrowave_gpu_sync_operation *acquire,
 diff --git a/pyrowave_decoder.cpp b/pyrowave_decoder.cpp
-index 0e40f5d..1d58c78 100644
+index 53fc80d..e864432 100644
 --- a/pyrowave_decoder.cpp
 +++ b/pyrowave_decoder.cpp
 @@ -24,6 +24,14 @@ struct DequantizerPushData
@@ -61,32 +64,34 @@ index 0e40f5d..1d58c78 100644
  struct Decoder::Impl final : public WaveletBuffers
  {
  	bool fused_haar = getenv("PYROWAVE_FUSED_HAAR") && strcmp(getenv("PYROWAVE_FUSED_HAAR"), "1") == 0;
-@@ -46,6 +54,14 @@ struct Decoder::Impl final : public WaveletBuffers
- 		// final step is simple enough for a caller to reproduce exactly.
- 		return haar && !fragment_path && !fused_haar && chroma == ChromaSubsampling::Chroma420;
- 	}
-+	// XRW: decode the level-0 luma bands inside the final inverse Haar (wavelet_dequant_haar0).
-+	// Its FP16 rounding mirrors precision 1, where level 0 is stored as R16F.
+@@ -67,6 +75,16 @@ struct Decoder::Impl final : public WaveletBuffers
+ 	bool dequant(CommandBuffer &cmd);
+ 	bool idwt(CommandBuffer &cmd, const ViewBuffers &views);
+ 	bool idwt_fragment(CommandBuffer &cmd, const ViewBuffers &views);
++	// XRW: decode the level-0 luma bands inside the final inverse Haar (wavelet_dequant_haar0)
++	// instead of storing them to the wavelet image and reloading them. Its FP16 rounding mirrors
++	// precision 1, where level 0 is stored as R16F. Haar 4:2:0 compute only; default false.
 +	bool fused_dequant_haar = false;
 +	bool can_fuse_dequant_haar() const
 +	{
-+		return can_skip_final_luma() && Configuration::get().get_precision() == 1;
++		return haar && chroma == ChromaSubsampling::Chroma420 && !fragment_path && !fused_haar &&
++		       Configuration::get().get_precision() == 1;
 +	}
 +	bool dequant_haar_final(CommandBuffer &cmd, const ViewBuffers &views);
+ 	void init_block_meta() override;
+ 	void clear();
  
- 	BufferHandle dequant_offset_buffer, payload_data;
- 	BufferViewHandle payload_u32_view, payload_u16_view, payload_u8_view;
-@@ -370,6 +386,9 @@ bool Decoder::Impl::dequant(CommandBuffer &cmd)
+@@ -363,6 +381,9 @@ bool Decoder::Impl::dequant(CommandBuffer &cmd)
  			// Ignore top-level CbCr when doing 420 subsampling.
  			if (level == 0 && component != 0 && chroma == ChromaSubsampling::Chroma420)
  				continue;
 +			// The fused final pass decodes top-level luma itself.
-+			if (level == 0 && component == 0 && fused_dequant_haar)
++			if (level == 0 && component == 0 && fused_dequant_haar && idwt_enabled)
 +				continue;
  
  			char label[128];
  			snprintf(label, sizeof(label), "level %d - component %d", level, component);
-@@ -435,6 +454,56 @@ bool Decoder::Impl::dequant(CommandBuffer &cmd)
+@@ -428,6 +449,56 @@ bool Decoder::Impl::dequant(CommandBuffer &cmd)
  	return true;
  }
  
@@ -143,55 +148,53 @@ index 0e40f5d..1d58c78 100644
  bool Decoder::Impl::idwt_fragment(CommandBuffer &cmd, const ViewBuffers &views)
  {
  	const auto add_discard = [&](const Vulkan::Image *img) {
-@@ -819,6 +888,11 @@ bool Decoder::Impl::idwt(CommandBuffer &cmd, const ViewBuffers &views)
- 					cmd.end_region();
- 				}
- 			}
-+			else if (fused_dequant_haar)
-+			{
-+				if (!dequant_haar_final(cmd, views))
-+					return false;
-+			}
- 			else if (final_luma_store)
- 			{
- 				cmd.set_storage_texture(0, 1, *views.planes[0]);
-@@ -1144,12 +1218,21 @@ void Decoder::set_idwt_enabled(bool enabled)
+@@ -785,6 +856,16 @@ bool Decoder::Impl::idwt(CommandBuffer &cmd, const ViewBuffers &views)
  
- bool Decoder::set_final_luma_store(bool enabled)
- {
--	if (!enabled && !impl->can_skip_final_luma())
-+	if (!enabled && (!impl->can_skip_final_luma() || impl->fused_dequant_haar))
- 		return false;
- 	impl->final_luma_store = enabled;
- 	return true;
+ 	for (int input_level = DecompositionLevels - 1; input_level >= 0; input_level--)
+ 	{
++		// For 4:2:0 the level-0 iteration is only the final luma pass, which the fused kernel replaces.
++		if (input_level == 0 && fused_dequant_haar)
++		{
++			if (!dequant_haar_final(cmd, views))
++				return false;
++			cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
++			            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
++			continue;
++		}
++
+ 		// Transposed.
+ 		push.resolution.x = component_layer_views[0][input_level]->get_view_height();
+ 		push.resolution.y = component_layer_views[0][input_level]->get_view_width();
+@@ -1159,6 +1240,14 @@ bool Decoder::push_packet(const void *data, size_t size)
+ 	return impl->push_packet(data, size);
  }
  
 +bool Decoder::set_fused_dequant_haar(bool enabled)
 +{
-+	// Mutually exclusive with skipping the final luma store: both replace the same pass.
-+	if (enabled && (!impl->can_fuse_dequant_haar() || !impl->final_luma_store))
++	if (enabled && !impl->can_fuse_dequant_haar())
 +		return false;
 +	impl->fused_dequant_haar = enabled;
 +	return true;
 +}
 +
- VkImageView Decoder::get_wavelet_view(int component, int level) const
+ bool Decoder::decode(Vulkan::CommandBuffer &cmd, const ViewBuffers &views)
  {
- 	if (component < 0 || component >= NumComponents || level < 0 || level >= DecompositionLevels)
+ 	return impl->decode(cmd, views);
 diff --git a/pyrowave_decoder.hpp b/pyrowave_decoder.hpp
-index 7420c17..4b1afab 100644
+index 1e96040..bd23230 100644
 --- a/pyrowave_decoder.hpp
 +++ b/pyrowave_decoder.hpp
-@@ -47,6 +47,9 @@ public:
- 	// Haar 4:2:0 compute only: skip the final luma store so the caller can reconstruct
- 	// luma level 0 from get_wavelet_view(0, 0) in its own color pass. Default true.
- 	bool set_final_luma_store(bool enabled);
-+	// Haar 4:2:0 compute, precision 1, final luma store on: decode the level-0 luma bands inside
-+	// the final inverse Haar pass instead of storing and reloading them. Default false.
-+	bool set_fused_dequant_haar(bool enabled);
- 	// Diagnostic pre-recording excludes unsubmitted timestamp queries. Default true.
- 	void set_timestamp_recording(bool enabled);
+@@ -49,6 +49,10 @@ public:
  	bool prerecord_upload_fits() const;
+ 	VkImageView get_wavelet_view(int component, int level) const;
+ 	VkFormat get_wavelet_format(int level) const;
++	// XRW: Haar 4:2:0 compute, precision 1 only. Decode the level-0 luma bands inside the final
++	// inverse Haar pass instead of storing and reloading them; the luma plane is still written.
++	// Returns false, unchanged, for any other mode. Default false.
++	bool set_fused_dequant_haar(bool enabled);
+ 
+ 	// A more refined version of decode_is_ready() that allows a bit more control.
+ 	// The default is num_pristine_bands = 2 (the next-to-final LL band) and minimum_packet_ratio = 0.9.
 diff --git a/shaders/quest3-manifest.json b/shaders/quest3-manifest.json
 index e2d2471..be43392 100644
 --- a/shaders/quest3-manifest.json

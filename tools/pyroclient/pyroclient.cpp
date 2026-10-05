@@ -27,7 +27,6 @@
 #include "ycbcr_to_rgba_spv.h"
 #include "convert_vert_spv.h"
 #include "convert_frag_spv.h"
-#include "fuse_color_frag_spv.h"
 
 #define TAG "pyroclient"
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
@@ -142,14 +141,6 @@ struct pyroclient {
     VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
     VkPipeline pipeline = VK_NULL_HANDLE;
     VkPipeline fragment_pipeline = VK_NULL_HANDLE;
-    bool fuse_color = false;
-    // Experiment: decode the level-0 luma bands inside the final Haar pass (debug.q3pw.dequant_haar).
-    bool dequant_haar = false;
-    VkDescriptorSetLayout fuse_set_layout = VK_NULL_HANDLE;
-    VkPipelineLayout fuse_layout = VK_NULL_HANDLE;
-    VkPipeline fuse_pipeline = VK_NULL_HANDLE;
-    VkDescriptorPool fuse_pool = VK_NULL_HANDLE;
-    VkDescriptorSet fuse_set = VK_NULL_HANDLE;
     VkRenderPass convert_render_pass = VK_NULL_HANDLE;
     bool fragment_convert = false;
     bool fragment_min_usage = false; // optional sampled/color-only imported output
@@ -190,7 +181,6 @@ struct pyroclient {
     bool create_planes();
     bool create_convert();
     bool create_fragment_convert();
-    bool create_fuse_color();
     bool create_slot(Slot &s);
     bool record_and_submit(Slot &s, pyroclient_frame_info *info, int *ready_fd = nullptr, bool defer_finish = false);
     bool finish_pending(pyroclient_frame_info *info);
@@ -434,11 +424,12 @@ bool pyroclient::create_planes() {
     di.fragment_path = fragment_path;
     di.wavelet = haar ? PYROWAVE_WAVELET_HAAR : legall53 ? PYROWAVE_WAVELET_CDF53 : PYROWAVE_WAVELET_CDF97;
     PW_TRY(pyrowave_decoder_create(&di, &decoder));
-    // Fused color: the decoder leaves luma level 0 in its wavelet image and the
-    // conversion pass reconstructs it. Unsupported decoder modes keep the plane.
-    if (fuse_color && pyrowave_decoder_set_final_luma_store(decoder, 0) != PYROWAVE_SUCCESS) {
-        LOGE("[Q3PW_FUSE_COLOR] decoder cannot skip final luma (fragment or fused Haar path); separate conversion");
-        fuse_color = false;
+    // Experiment: decode the level-0 luma bands inside the final Haar pass. The decoder refuses,
+    // and keeps the separate passes, for anything but Haar 4:2:0 compute at precision 1.
+    char dequant_haar_prop[PROP_VALUE_MAX] = {};
+    if (__system_property_get("debug.q3pw.dequant_haar", dequant_haar_prop) > 0 && !strcmp(dequant_haar_prop, "1")) {
+        const bool applied = pyrowave_decoder_set_fused_dequant_haar(decoder, 1) == PYROWAVE_SUCCESS;
+        LOGI("[Q3PW_DEQUANT_HAAR] requested=1 applied=%d", applied ? 1 : 0);
     }
     return true;
 }
@@ -535,82 +526,6 @@ bool pyroclient::create_fragment_convert() {
     VkResult result = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &fragment_pipeline);
     for (auto module : modules) vkDestroyShaderModule(device, module, nullptr);
     return result == VK_SUCCESS;
-}
-
-bool pyroclient::create_fuse_color() {
-    VkDescriptorSetLayoutBinding b[3] = {};
-    for (int i = 0; i < 3; i++) {
-        b[i].binding = i; b[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        b[i].descriptorCount = 1; b[i].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-    }
-    VkDescriptorSetLayoutCreateInfo li = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-    li.bindingCount = 3; li.pBindings = b;
-    VK_TRY(vkCreateDescriptorSetLayout(device, &li, nullptr, &fuse_set_layout));
-    VkPushConstantRange pc = { VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int32_t) * 2 };
-    VkPipelineLayoutCreateInfo pli = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-    pli.setLayoutCount = 1; pli.pSetLayouts = &fuse_set_layout;
-    pli.pushConstantRangeCount = 1; pli.pPushConstantRanges = &pc;
-    VK_TRY(vkCreatePipelineLayout(device, &pli, nullptr, &fuse_layout));
-
-    VkShaderModule modules[2] = {};
-    VkShaderModuleCreateInfo sm = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
-    sm.codeSize = sizeof(CONVERT_VERT_SPV); sm.pCode = CONVERT_VERT_SPV;
-    VK_TRY(vkCreateShaderModule(device, &sm, nullptr, &modules[0]));
-    sm.codeSize = sizeof(FUSE_COLOR_FRAG_SPV); sm.pCode = FUSE_COLOR_FRAG_SPV;
-    VkResult created = vkCreateShaderModule(device, &sm, nullptr, &modules[1]);
-    if (created != VK_SUCCESS) { vkDestroyShaderModule(device, modules[0], nullptr); return false; }
-    VkPipelineShaderStageCreateInfo stages[2] = {};
-    for (int i = 0; i < 2; i++) {
-        stages[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        stages[i].stage = i ? VK_SHADER_STAGE_FRAGMENT_BIT : VK_SHADER_STAGE_VERTEX_BIT;
-        stages[i].module = modules[i]; stages[i].pName = "main";
-    }
-    VkPipelineVertexInputStateCreateInfo vertex = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-    VkPipelineInputAssemblyStateCreateInfo assembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
-    assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    VkViewport viewport = {0, 0, float(width), float(height), 0, 1};
-    VkRect2D scissor = {{0, 0}, {width, height}};
-    VkPipelineViewportStateCreateInfo vp = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
-    vp.viewportCount = 1; vp.pViewports = &viewport; vp.scissorCount = 1; vp.pScissors = &scissor;
-    VkPipelineRasterizationStateCreateInfo raster = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
-    raster.polygonMode = VK_POLYGON_MODE_FILL; raster.cullMode = VK_CULL_MODE_NONE; raster.lineWidth = 1;
-    VkPipelineMultisampleStateCreateInfo samples = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
-    samples.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-    VkPipelineColorBlendAttachmentState blend = {}; blend.colorWriteMask = 0xf;
-    VkPipelineColorBlendStateCreateInfo blends = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
-    blends.attachmentCount = 1; blends.pAttachments = &blend;
-    VkGraphicsPipelineCreateInfo pipeline_info = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-    pipeline_info.stageCount = 2; pipeline_info.pStages = stages; pipeline_info.pVertexInputState = &vertex;
-    pipeline_info.pInputAssemblyState = &assembly; pipeline_info.pViewportState = &vp;
-    pipeline_info.pRasterizationState = &raster; pipeline_info.pMultisampleState = &samples;
-    pipeline_info.pColorBlendState = &blends; pipeline_info.layout = fuse_layout;
-    pipeline_info.renderPass = convert_render_pass;
-    VkResult result = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &fuse_pipeline);
-    for (auto module : modules) vkDestroyShaderModule(device, module, nullptr);
-    if (result != VK_SUCCESS) { LOGE("fuse color pipeline: %d", (int)result); return false; }
-
-    VkDescriptorPoolSize ps = { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 3 };
-    VkDescriptorPoolCreateInfo dpi = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
-    dpi.maxSets = 1; dpi.poolSizeCount = 1; dpi.pPoolSizes = &ps;
-    VK_TRY(vkCreateDescriptorPool(device, &dpi, nullptr, &fuse_pool));
-    VkDescriptorSetAllocateInfo sa = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-    sa.descriptorPool = fuse_pool; sa.descriptorSetCount = 1; sa.pSetLayouts = &fuse_set_layout;
-    VK_TRY(vkAllocateDescriptorSets(device, &sa, &fuse_set));
-    VkImageView wavelet = VK_NULL_HANDLE;
-    PW_TRY(pyrowave_decoder_get_wavelet_view(decoder, 0, 0, &wavelet, nullptr));
-    VkDescriptorImageInfo info[3] = {};
-    info[0].sampler = sampler; info[0].imageView = wavelet; info[0].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-    info[1].sampler = sampler; info[1].imageView = planes[1].view; info[1].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-    info[2].sampler = sampler; info[2].imageView = planes[2].view; info[2].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-    VkWriteDescriptorSet w[3] = {};
-    for (int i = 0; i < 3; i++) {
-        w[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET; w[i].dstSet = fuse_set; w[i].dstBinding = i;
-        w[i].descriptorCount = 1; w[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        w[i].pImageInfo = &info[i];
-    }
-    vkUpdateDescriptorSets(device, 3, w, 0, nullptr);
-    LOGI("[Q3PW_FUSE_COLOR] pipeline ready %ux%u rgba8_attachment=1", width, height);
-    return true;
 }
 
 static bool write_set(VkDevice device, VkSampler sampler, const Plane planes[3], VkImageView out,
@@ -818,23 +733,14 @@ bool pyroclient::record_commands(Slot &s) {
     s.first_use = false;
 
     const int32_t convert_params[2] = { full_range ? 0 : 1, chroma_filter };
-    if (fuse_color) {
-        VkMemoryBarrier mb = { VK_STRUCTURE_TYPE_MEMORY_BARRIER };
-        mb.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-        mb.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                             0, 1, &mb, 0, nullptr, 0, nullptr);
-    }
     if (fragment_convert) {
         VkRenderPassBeginInfo begin = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
         begin.renderPass = convert_render_pass; begin.framebuffer = s.framebuffer;
         begin.renderArea.extent = {width, height};
         vkCmdBeginRenderPass(cmd, &begin, VK_SUBPASS_CONTENTS_INLINE);
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, fuse_color ? fuse_pipeline : fragment_pipeline);
-        const VkShaderStageFlags push_stages = fuse_color ? VK_SHADER_STAGE_FRAGMENT_BIT
-                                                          : (VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
-        vkCmdPushConstants(cmd, fuse_color ? fuse_layout : pipeline_layout, push_stages, 0, sizeof convert_params, convert_params);
-        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, fuse_color ? fuse_layout : pipeline_layout, 0, 1, fuse_color ? &fuse_set : &s.set, 0, nullptr);
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, fragment_pipeline);
+        vkCmdPushConstants(cmd, pipeline_layout, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof convert_params, convert_params);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, 1, &s.set, 0, nullptr);
         vkCmdDraw(cmd, 3, 1, 0, 0);
         vkCmdEndRenderPass(cmd);
     } else if (storage_on_ahb) {
@@ -995,10 +901,6 @@ void pyroclient::destroy() {
     for (Plane &p : planes) killPlane(p);
     killPlane(scratch);
     if (pipeline) vkDestroyPipeline(device, pipeline, nullptr);
-    if (fuse_pipeline) vkDestroyPipeline(device, fuse_pipeline, nullptr);
-    if (fuse_layout) vkDestroyPipelineLayout(device, fuse_layout, nullptr);
-    if (fuse_pool) vkDestroyDescriptorPool(device, fuse_pool, nullptr);
-    if (fuse_set_layout) vkDestroyDescriptorSetLayout(device, fuse_set_layout, nullptr);
     if (fragment_pipeline) vkDestroyPipeline(device, fragment_pipeline, nullptr);
     if (convert_render_pass) vkDestroyRenderPass(device, convert_render_pass, nullptr);
     if (pipeline_layout) vkDestroyPipelineLayout(device, pipeline_layout, nullptr);
@@ -1055,16 +957,6 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
     c->width = width; c->height = height; c->chroma444 = chroma444 != 0; c->full_range = full_range != 0;
     c->legall53 = wavelet == 53;
     c->haar = wavelet == 2;
-    char fuse_prop[PROP_VALUE_MAX] = {};
-    if (c->haar && !c->chroma444 && __system_property_get("debug.q3pw.fuse_color", fuse_prop) > 0 && !strcmp(fuse_prop, "1"))
-        c->fuse_color = true;
-    LOGI("[Q3PW_FUSE_COLOR] requested=%d debug.q3pw.fuse_color=%s", c->fuse_color ? 1 : 0, fuse_prop[0] ? fuse_prop : "unset");
-    char dequant_haar_prop[PROP_VALUE_MAX] = {};
-    if (c->haar && !c->chroma444 && __system_property_get("debug.q3pw.dequant_haar", dequant_haar_prop) > 0 &&
-        !strcmp(dequant_haar_prop, "1"))
-        c->dequant_haar = true;
-    LOGI("[Q3PW_DEQUANT_HAAR] requested=%d debug.q3pw.dequant_haar=%s", c->dequant_haar ? 1 : 0,
-         dequant_haar_prop[0] ? dequant_haar_prop : "unset");
     c->decode_path_hint = decode_path;
     c->low_queue_priority = low_queue_priority != 0;
     char stage_prop[PROP_VALUE_MAX] = {};
@@ -1105,21 +997,6 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
             }
         }
         LOGI("RGBA conversion: %s", c->fragment_convert ? "fragment" : "compute fallback");
-        if (c->fuse_color && (!c->fragment_convert || !c->create_fuse_color())) {
-            // Never leave the decoder skipping a plane that the separate pass reads.
-            LOGE("[Q3PW_FUSE_COLOR] fragment fusion unavailable; separate conversion");
-            if (pyrowave_decoder_set_final_luma_store(c->decoder, 1) != PYROWAVE_SUCCESS) {
-                c->destroy(); delete c; return nullptr;
-            }
-            c->fuse_color = false;
-        }
-        LOGI("[Q3PW_FUSE_COLOR] applied=%d", c->fuse_color ? 1 : 0);
-        // Both experiments replace the same final pass, so fused color takes precedence.
-        if (c->dequant_haar) {
-            c->dequant_haar = !c->fuse_color && pyrowave_decoder_set_fused_dequant_haar(c->decoder, 1) == PYROWAVE_SUCCESS;
-            LOGI("[Q3PW_DEQUANT_HAAR] applied=%d%s", c->dequant_haar ? 1 : 0,
-                 c->fuse_color ? " (fuse_color takes precedence)" : "");
-        }
         char minimal_prop[PROP_VALUE_MAX] = {};
         const bool requested = __system_property_get("debug.q3pw.fragment_min_usage", minimal_prop) > 0
             && !strcmp(minimal_prop, "1");
