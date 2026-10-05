@@ -214,7 +214,7 @@ index ae00ce8..bb2bda6 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.49"
++version = "20.13.0-quest3.pyro.50"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -4271,7 +4271,7 @@ index b87dfe9..9a909cf 100644
              upscaling: config.settings.video.upscaling.as_option().cloned(),
              force_software_decoder: config.settings.video.force_software_decoder,
              max_buffering_frames: config.settings.video.max_buffering_frames,
-@@ -88,16 +86,44 @@ pub struct StreamContext {
+@@ -88,16 +86,45 @@ pub struct StreamContext {
      view_reference_space: Arc<xr::Space>,
      swapchains: [xr::Swapchain<xr::OpenGlEs>; 2],
      last_good_view_params: [ViewParams; 2],
@@ -4295,6 +4295,7 @@ index b87dfe9..9a909cf 100644
 +    event_wait_stats: [u64; 4], // eligible calls, condvar calls, pending seen, fallback calls
 +    packet_grace_budget: Duration,
 +    frame_wait_stats: [u64; 4], // waits, ready hits, total microseconds, max microseconds
++    miss_stats: [u64; 2], // empty expiries: idle with no input, still decoding
 +    frame_wait_last_log: Instant,
 +    pre_wait_poll: bool,
 +    pending_frame_selected_at: Option<Instant>,
@@ -4343,7 +4344,7 @@ index b87dfe9..9a909cf 100644
              input_thread: None,
              input_thread_running,
              config,
-@@ -235,8 +259,35 @@ impl StreamContext {
+@@ -235,8 +259,36 @@ impl StreamContext {
              renderer,
              decoder: None,
              pending_frame: None,
@@ -4353,6 +4354,7 @@ index b87dfe9..9a909cf 100644
 +            event_wait_stats: [0; 4],
 +            packet_grace_budget: latest_wait::packet_grace(&crate::extra_extensions::perf_settings::system_property("debug.q3pw.packet_grace_us")),
 +            frame_wait_stats: [0; 4],
++            miss_stats: [0; 2],
 +            frame_wait_last_log: Instant::now(),
 +            pre_wait_poll: crate::extra_extensions::perf_settings::system_property(
 +                "debug.q3pw.pre_wait_poll",
@@ -4475,7 +4477,7 @@ index b87dfe9..9a909cf 100644
      }
  
      pub fn render(
-@@ -364,15 +480,145 @@ impl StreamContext {
+@@ -364,15 +480,151 @@ impl StreamContext {
          frame_interval: Duration,
          vsync_time: Duration,
      ) -> (ProjectionLayerBuilder, Duration) {
@@ -4563,7 +4565,8 @@ index b87dfe9..9a909cf 100644
 +                if frame_result.is_none() {
 +                    frame_result = source.get_frame();
 +                }
-+                latest_wait_observed = Some((started.elapsed().as_micros() as u64, frame_result.is_some()));
++                let still_decoding = frame_result.is_none() && source.decode_in_flight();
++                latest_wait_observed = Some((started.elapsed().as_micros() as u64, frame_result.is_some(), still_decoding));
 +            }
 +            while copy_ready && !latest_only && frame_result.is_none() && Instant::now() < frame_poll_deadline {
                  thread::sleep(Duration::from_micros(500));
@@ -4571,17 +4574,22 @@ index b87dfe9..9a909cf 100644
 +            }
 +        }
 +
-+        if let Some((elapsed_us, hit)) = latest_wait_observed {
++        if let Some((elapsed_us, hit, still_decoding)) = latest_wait_observed {
 +            self.frame_wait_stats[0] += 1;
 +            self.frame_wait_stats[1] += hit as u64;
 +            self.frame_wait_stats[2] += elapsed_us;
 +            self.frame_wait_stats[3] = self.frame_wait_stats[3].max(elapsed_us);
++            if !hit {
++                self.miss_stats[usize::from(latest_wait::empty_wait_class(still_decoding) == "still_decoding")] += 1;
++            }
 +            if self.frame_wait_last_log.elapsed() >= Duration::from_secs(1) {
 +                alvr_graphics::log_quest_experiment(format!(
-+                    "[Q3PW_FRAME_WAIT] budget_us={} waits={} hits={} mean_us={:.1} max_us={}",
++                    "[Q3PW_FRAME_WAIT] budget_us={} waits={} hits={} mean_us={:.1} max_us={} idle_no_input={} still_decoding={}",
 +                    latest_wait_budget.as_micros(), self.frame_wait_stats[0], self.frame_wait_stats[1],
-+                    self.frame_wait_stats[2] as f64 / self.frame_wait_stats[0] as f64, self.frame_wait_stats[3]));
++                    self.frame_wait_stats[2] as f64 / self.frame_wait_stats[0] as f64, self.frame_wait_stats[3],
++                    self.miss_stats[0], self.miss_stats[1]));
 +                self.frame_wait_stats = [0; 4];
++                self.miss_stats = [0; 2];
 +                alvr_graphics::log_quest_experiment(format!(
 +                    "[Q3PW_EVENT_WAIT] requested={} calls={} condvar_waits={} pending_seen={} fallback_calls={}",
 +                    self.frame_wait_event as u8, self.event_wait_stats[0], self.event_wait_stats[1],

@@ -11,11 +11,23 @@ pub fn continue_wait(elapsed: Duration, budget: Duration, grace: Duration, decod
     elapsed < budget && (decoding || elapsed < grace.min(budget))
 }
 
+/// A half-frame wait that ends with no frame is either a decode still on the GPU
+/// or an idle decoder with no complete input. These are different misses.
+pub fn empty_wait_class(decoding: bool) -> &'static str {
+    if decoding { "still_decoding" } else { "idle_no_input" }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     fn us(value: u64) -> Duration {
         Duration::from_micros(value)
+    }
+
+    #[test]
+    fn empty_expiry_separates_a_busy_decoder_from_no_input() {
+        assert_eq!(empty_wait_class(true), "still_decoding");
+        assert_eq!(empty_wait_class(false), "idle_no_input");
     }
 
     #[test]
