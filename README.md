@@ -28,13 +28,18 @@ passed exact GPU checks and lower transform cost, but remain optional: repeated
 short screens still miss some 120 Hz intervals. The published preview remains
 alpha.7. These notes do not establish sustained fresh 120 FPS.
 
+Latest experiments: vector dequantization and
+[publication notifications](https://github.com/JMS1717/Quest3-Pyrowave/blob/experiment/publication-event/docs/PUBLICATION-EVENT.md)
+passed correctness/build checks but found no consistent delivery gain. Both
+remain disabled; measured findings are published rather than changing defaults.
+
 > **Research preview, not a finished Virtual Desktop replacement.** Real SteamVR
 > video, audio and tracking work in tested setups. Sustained 120 fresh FPS at
 > native resolution, broad gameplay compatibility and lower latency than Virtual
 > Desktop are still goals. Start with the published matching APK/server pair.
 
 [Developer / AI handoff](docs/HANDOFF.md): current bottleneck, source layout,
-pending fence experiment, validation and continuation guide.
+measured experiments, validation and continuation guide.
 
 ## What you get
 
