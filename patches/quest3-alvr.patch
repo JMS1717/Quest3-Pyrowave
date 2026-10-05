@@ -206,7 +206,7 @@ index 7cead7b..18ad9d0 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..1c0b3a5 100644
+index ae00ce8..4f41ac5 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..1c0b3a5 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.34"
++version = "20.13.0-quest3.pyro.35"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -2848,7 +2848,7 @@ index 7765bb4..b102615 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..eb90e70 100644
+index a0fd36f..38eeeb9 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -4,6 +4,8 @@ mod graphics;
@@ -2918,7 +2918,21 @@ index a0fd36f..eb90e70 100644
      #[cfg(target_os = "android")]
      let galaxy_xr = alvr_system_info::model_name() == "SM-I610";
      #[cfg(not(target_os = "android"))]
-@@ -198,6 +235,8 @@ pub fn entry_point() {
+@@ -176,6 +213,13 @@ pub fn entry_point() {
+         available_extensions.khr_vulkan_enable2,
+         available_extensions.khr_opengl_es_enable,
+     );
++    alvr_common::error!(
++        "[Q3PW_SURFACE] android_surface_swapchain={} fb_surface_create={} fb_surface_update={} other={:?}",
++        advertised_extension_names.iter().any(|e| e == "XR_KHR_android_surface_swapchain"),
++        advertised_extension_names.iter().any(|e| e == "XR_FB_android_surface_swapchain_create"),
++        advertised_extension_names.iter().any(|e| e == "XR_FB_swapchain_update_state_android_surface"),
++        advertised_extension_names.iter().filter(|e| e.contains("surface") || e.contains("SURFACE") || e.contains("vulkan")).collect::<Vec<_>>(),
++    );
+ 
+     // todo: switch to vulkan
+     assert!(available_extensions.khr_opengl_es_enable);
+@@ -198,6 +242,8 @@ pub fn entry_point() {
      exts.ext_local_floor = available_extensions.ext_local_floor;
      exts.fb_body_tracking = available_extensions.fb_body_tracking;
      exts.fb_color_space = available_extensions.fb_color_space;
@@ -2927,7 +2941,7 @@ index a0fd36f..eb90e70 100644
      exts.fb_display_refresh_rate = available_extensions.fb_display_refresh_rate;
      exts.fb_eye_tracking_social = available_extensions.fb_eye_tracking_social;
      exts.fb_face_tracking2 = available_extensions.fb_face_tracking2;
-@@ -287,15 +326,31 @@ pub fn entry_point() {
+@@ -287,15 +333,31 @@ pub fn entry_point() {
          let early_poll = extra_extensions::perf_settings::early_poll_enabled();
          alvr_common::error!("[EARLYPOLL] decoded frame polled before xrWaitFrame: {early_poll}");
  
@@ -2964,7 +2978,7 @@ index a0fd36f..eb90e70 100644
              }
          } else {
              alvr_common::error!("[PERF] XR_EXT_performance_settings not advertised");
-@@ -313,19 +368,37 @@ pub fn entry_point() {
+@@ -313,19 +375,37 @@ pub fn entry_point() {
              views_config[0].recommended_image_rect_height,
          );
  
@@ -3006,7 +3020,7 @@ index a0fd36f..eb90e70 100644
  
          // Whether anything is correcting for the ~26 ms the runtime predicts ahead. If the
          // compositor does not timewarp and ALVR does not either -- 20.13.0 hardcodes
-@@ -354,8 +427,10 @@ pub fn entry_point() {
+@@ -354,8 +434,10 @@ pub fn entry_point() {
              exts.fb_foveation,
              advertised_extension_names.len(),
          );
@@ -3019,7 +3033,7 @@ index a0fd36f..eb90e70 100644
  
          if exts.fb_color_space {
              xr_session
-@@ -365,8 +440,8 @@ pub fn entry_point() {
+@@ -365,8 +447,8 @@ pub fn entry_point() {
  
          let capabilities = ClientCapabilities {
              default_view_resolution,
@@ -3030,7 +3044,7 @@ index a0fd36f..eb90e70 100644
              encoder_high_profile: galaxy_xr || platform != Platform::Unknown,
              encoder_10_bits: galaxy_xr || platform != Platform::Unknown,
              encoder_av1: matches!(
-@@ -392,9 +467,16 @@ pub fn entry_point() {
+@@ -392,9 +474,16 @@ pub fn entry_point() {
              Rc::clone(&graphics_context),
              Arc::clone(&interaction_context),
              platform,
@@ -3048,7 +3062,7 @@ index a0fd36f..eb90e70 100644
          let lobby_body_tracking_config = BodyTrackingSourcesConfig {
              body_tracking_fb: Switch::Disabled,
              body_tracking_bd: Switch::Enabled(BodyTrackingBDConfig::BodyTracking {
-@@ -412,11 +494,16 @@ pub fn entry_point() {
+@@ -412,11 +501,16 @@ pub fn entry_point() {
              .select_sources(&lobby_interaction_sources);
  
          let mut session_running = false;
@@ -3066,7 +3080,7 @@ index a0fd36f..eb90e70 100644
          // Budget for the pre-xrWaitFrame poll: the previous frame's period, 72 Hz until known.
          let mut poll_interval = Duration::from_micros(13_889);
          'render_loop: loop {
-@@ -432,7 +519,17 @@ pub fn entry_point() {
+@@ -432,7 +526,17 @@ pub fn entry_point() {
                                  .begin(xr::ViewConfigurationType::PRIMARY_STEREO)
                                  .unwrap();
  
@@ -3085,7 +3099,7 @@ index a0fd36f..eb90e70 100644
  
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
  
-@@ -440,6 +537,7 @@ pub fn entry_point() {
+@@ -440,6 +544,7 @@ pub fn entry_point() {
                          }
                          xr::SessionState::STOPPING => {
                              session_running = false;
@@ -3093,7 +3107,7 @@ index a0fd36f..eb90e70 100644
  
                              passthrough_layer = None;
  
-@@ -494,7 +592,29 @@ pub fn entry_point() {
+@@ -494,7 +599,29 @@ pub fn entry_point() {
                          lobby.update_hud_message(&message);
                      }
                      ClientCoreEvent::StreamingStarted(config) => {
@@ -3123,7 +3137,7 @@ index a0fd36f..eb90e70 100644
  
                          let context = StreamContext::new(
                              Arc::clone(&core_context),
-@@ -512,6 +632,8 @@ pub fn entry_point() {
+@@ -512,6 +639,8 @@ pub fn entry_point() {
                          stream_context = Some(context);
                      }
                      ClientCoreEvent::StreamingStopped => {
@@ -3132,7 +3146,7 @@ index a0fd36f..eb90e70 100644
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -562,13 +684,23 @@ pub fn entry_point() {
+@@ -562,13 +691,23 @@ pub fn entry_point() {
                  }
              }
  
@@ -3157,7 +3171,7 @@ index a0fd36f..eb90e70 100644
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -576,12 +708,49 @@ pub fn entry_point() {
+@@ -576,12 +715,49 @@ pub fn entry_point() {
                      panic!();
                  }
              };
@@ -3208,7 +3222,7 @@ index a0fd36f..eb90e70 100644
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +774,15 @@ pub fn entry_point() {
+@@ -605,15 +781,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -3233,7 +3247,7 @@ index a0fd36f..eb90e70 100644
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,13 +790,16 @@ pub fn entry_point() {
+@@ -621,13 +797,16 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -3251,7 +3265,7 @@ index a0fd36f..eb90e70 100644
  
              if !frame_state.should_render {
                  xr_frame_stream
-@@ -654,22 +826,76 @@ pub fn entry_point() {
+@@ -654,22 +833,76 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
@@ -3336,7 +3350,7 @@ index a0fd36f..eb90e70 100644
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +924,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +931,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {

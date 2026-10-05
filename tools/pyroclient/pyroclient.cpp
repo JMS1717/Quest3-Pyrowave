@@ -90,6 +90,7 @@ struct pyroclient {
     bool legall53 = false;      // Experiment 2: CDF 5/3 instead of 9/7 (compute path only)
     int decode_path_hint = 0;   // dashboard setting: 0 auto, 1 fragment, 2 compute
     bool low_queue_priority = false;
+    int32_t chroma_filter = 0; // 1 = Catmull-Rom chroma upsample
 
     VkInstance instance = VK_NULL_HANDLE;
     VkPhysicalDevice gpu = VK_NULL_HANDLE;
@@ -418,7 +419,7 @@ bool pyroclient::create_convert() {
     VkDescriptorSetLayoutCreateInfo li = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
     li.bindingCount = 4; li.pBindings = b;
     VK_TRY(vkCreateDescriptorSetLayout(device, &li, nullptr, &set_layout));
-    VkPushConstantRange pc = { VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int32_t) };
+    VkPushConstantRange pc = { VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int32_t) * 2 };
     VkPipelineLayoutCreateInfo pli = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
     pli.setLayoutCount = 1; pli.pSetLayouts = &set_layout;
     pli.pushConstantRangeCount = 1; pli.pPushConstantRanges = &pc;
@@ -695,27 +696,27 @@ bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info, int *re
                   s.first_use ? VK_QUEUE_FAMILY_IGNORED : family);
     s.first_use = false;
 
-    const int32_t limited = full_range ? 0 : 1;
+    const int32_t convert_params[2] = { full_range ? 0 : 1, chroma_filter };
     if (fragment_convert) {
         VkRenderPassBeginInfo begin = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
         begin.renderPass = convert_render_pass; begin.framebuffer = s.framebuffer;
         begin.renderArea.extent = {width, height};
         vkCmdBeginRenderPass(cmd, &begin, VK_SUBPASS_CONTENTS_INLINE);
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, fragment_pipeline);
-        vkCmdPushConstants(cmd, pipeline_layout, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof limited, &limited);
+        vkCmdPushConstants(cmd, pipeline_layout, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof convert_params, convert_params);
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, 1, &s.set, 0, nullptr);
         vkCmdDraw(cmd, 3, 1, 0, 0);
         vkCmdEndRenderPass(cmd);
     } else if (storage_on_ahb) {
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-        vkCmdPushConstants(cmd, pipeline_layout, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof limited, &limited);
+        vkCmdPushConstants(cmd, pipeline_layout, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof convert_params, convert_params);
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline_layout, 0, 1, &s.set, 0, nullptr);
         vkCmdDispatch(cmd, (width + 7) / 8, (height + 7) / 8, 1);
     } else {
         image_barrier(cmd, scratch.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 0,
                       VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-        vkCmdPushConstants(cmd, pipeline_layout, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof limited, &limited);
+        vkCmdPushConstants(cmd, pipeline_layout, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof convert_params, convert_params);
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline_layout, 0, 1, &scratch_set, 0, nullptr);
         vkCmdDispatch(cmd, (width + 7) / 8, (height + 7) / 8, 1);
         image_barrier(cmd, scratch.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
@@ -872,6 +873,10 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
     c->haar = wavelet == 2;
     c->decode_path_hint = decode_path;
     c->low_queue_priority = low_queue_priority != 0;
+    char chroma_prop[PROP_VALUE_MAX] = {};
+    __system_property_get("debug.q3pw.chroma_filter", chroma_prop);
+    c->chroma_filter = !strcmp(chroma_prop, "catmull") ? 1 : 0;
+    LOGI("[Q3PW_CHROMA_FILTER] requested=%s applied=%d", chroma_prop[0] ? chroma_prop : "unset", c->chroma_filter);
     c->ring.resize(ring_size < 2 ? 2 : ring_size);
     if (!c->create_device() || !c->create_planes() || !c->create_convert()) { c->destroy(); delete c; return nullptr; }
 

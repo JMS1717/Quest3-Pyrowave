@@ -11,7 +11,8 @@ def main():
     args = parser.parse_args()
     root = Path(__file__).resolve().parent
     for source, header, symbol in [('convert.vert', 'convert_vert_spv.h', 'CONVERT_VERT_SPV'),
-                                    ('convert.frag', 'convert_frag_spv.h', 'CONVERT_FRAG_SPV')]:
+                                    ('convert.frag', 'convert_frag_spv.h', 'CONVERT_FRAG_SPV'),
+                                    ('ycbcr_to_rgba.comp', 'ycbcr_to_rgba_spv.h', 'YCBCR_TO_RGBA_SPV')]:
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / 'shader.spv'
             subprocess.run([args.glslc, '-O', '--target-env=vulkan1.1', str(root/source), '-o', str(out)], check=True)

@@ -2,14 +2,39 @@
 layout(set = 0, binding = 0) uniform sampler2D planeY;
 layout(set = 0, binding = 1) uniform sampler2D planeCb;
 layout(set = 0, binding = 2) uniform sampler2D planeCr;
-layout(push_constant) uniform Params { int limitedRange; } params;
+layout(push_constant) uniform Params { int limitedRange; int chromaFilter; } params;
 layout(location = 0) out vec4 color;
+
+float catmull(float a, float b, float c, float d, float t) {
+    return b + 0.5 * t * (c - a + t * (2.0 * a - 5.0 * b + 4.0 * c - d + t * (3.0 * (b - c) + d - a)));
+}
+
+float sample_chroma(sampler2D plane, vec2 uv) {
+    if (params.chromaFilter == 0)
+        return textureLod(plane, uv, 0.0).r;
+    vec2 size = vec2(textureSize(plane, 0));
+    vec2 coord = uv * size - 0.5;
+    vec2 f = fract(coord);
+    ivec2 i0 = ivec2(floor(coord));
+    ivec2 last = ivec2(size) - 1;
+    float col[4];
+    for (int x = 0; x < 4; x++) {
+        float row[4];
+        for (int y = 0; y < 4; y++) {
+            ivec2 p = clamp(i0 + ivec2(x - 1, y - 1), ivec2(0), last);
+            row[y] = texelFetch(plane, p, 0).r;
+        }
+        col[x] = catmull(row[0], row[1], row[2], row[3], f.y);
+    }
+    return catmull(col[0], col[1], col[2], col[3], f.x);
+}
+
 void main() {
     ivec2 coord = ivec2(gl_FragCoord.xy);
     vec2 uv = (vec2(coord) + 0.5) / vec2(textureSize(planeY, 0));
     float Y = texelFetch(planeY, coord, 0).r;
-    float Cb = textureLod(planeCb, uv, 0.0).r;
-    float Cr = textureLod(planeCr, uv, 0.0).r;
+    float Cb = sample_chroma(planeCb, uv);
+    float Cr = sample_chroma(planeCr, uv);
     if (params.limitedRange != 0) {
         Y = (Y - 16.0 / 255.0) * (255.0 / 219.0);
         Cb = (Cb - 128.0 / 255.0) * (255.0 / 224.0);
