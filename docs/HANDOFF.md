@@ -24,6 +24,10 @@ resume paused hardware work or unattended workers.
 
 ## Current engineering state
 
+Latest [LOW+async comparison](ASYNC-LOW.md) verifies actual GPU-fence polling:
+CPU eye-render time fell ~1.63→0.59 ms, but eye completions stayed ~117/s and
+p1 near 60. Keep synchronous default; no sustained or optical acceptance.
+
 | Item | Evidence / limitation |
 | --- | --- |
 | Public release | [alpha.7](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.7), matching `.15` APK/server |

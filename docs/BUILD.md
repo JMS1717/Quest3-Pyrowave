@@ -154,3 +154,12 @@ steps and dispatch a new build. Artifacts remain tied to their exact CI commit.
 ---
 
 [![Support Quest3-Pyrowave](https://img.shields.io/badge/Support_Quest3--Pyrowave-PayPal-0070BA?logo=paypal&logoColor=white)](https://www.paypal.com/paypalme/jasonselsley)
+## CI scope
+
+Main-branch pushes containing only Markdown and `results/` findings skip the
+automatic APK/server workflow. Pull-request checks retain their existing scope.
+Use **Actions → Quest3-Pyrowave → Run workflow** for an explicit full build,
+or select `tests_only` for regression checks without native builds. Native input,
+tooling, preset and workflow changes still trigger normal builds. Cancelling a
+run also cancels its native build jobs. A skipped build produces no newly
+validated matching artifacts; retain the recorded provenance of the tested pair.
