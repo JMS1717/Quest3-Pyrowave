@@ -70,8 +70,8 @@ jobs:
           /tmp/light-foveation-test tools/foveation/light.glsl /tmp/light-foveation-reference.txt
   dequant_haar_gate:
     # Software Vulkan (lavapipe) proves the fused dequant + level-0 Haar kernel writes the same
-    # planes as the separate dequant and final Haar passes for the same bitstream. Lavapipe
-    # does not decode PyroWave faithfully, so luma PSNR is reported but not gated here.
+    # planes as the separate dequant and final Haar passes for the same bitstream, and that the
+    # decode stays above 30 dB luma PSNR against the source.
     runs-on: ubuntu-24.04
     needs: tests
     steps:
@@ -100,12 +100,12 @@ jobs:
           set -o pipefail
           grep -m1 'model name' /proc/cpuinfo || true
           grep -o -m1 'avx512[a-z]*' /proc/cpuinfo | head -n 1 || echo "no avx512"
-          # The encoder needs 16-64 lane subgroups (512-bit lavapipe vectors). Decode runs in a
-          # second process at 256 bits: 512-bit decode is blank or crashes on CPUs without
-          # AVX-512. Lavapipe also crashes in the linear-texture and texel-buffer payload reads,
-          # so decode uses the SSBO payload variants (PYROWAVE_FORCE_SSBO).
-          GATE_ENCODE_ONLY=1 LP_NATIVE_VECTOR_WIDTH=512 /tmp/dequant_haar_gate 512 320 131072
-          GATE_DECODE_ONLY=1 LP_NATIVE_VECTOR_WIDTH=256 PYROWAVE_NO_LINEAR_TEX=1 PYROWAVE_FORCE_SSBO=1 GATE_MIN_PSNR=0 \
+          # PyroWave's encoder and dequant need 16-64 lane subgroups, so lavapipe runs with
+          # 512-bit vectors (16 lanes); at 256 bits the dequant scan is wrong by design. Lavapipe
+          # returns zero from texture and texel-buffer fetches in lanes 8-15 of shaders that use
+          # subgroup size control, and its linear-texture payload path crashes, so decode reads
+          # payloads through SSBOs (PYROWAVE_FORCE_SSBO). This configuration decodes faithfully.
+          LP_NATIVE_VECTOR_WIDTH=512 PYROWAVE_NO_LINEAR_TEX=1 PYROWAVE_FORCE_SSBO=1 \
             /tmp/dequant_haar_gate 512 320 131072 | tee /tmp/dequant_haar_gate.txt
           grep -q DEQUANT_HAAR_GATE_PASS /tmp/dequant_haar_gate.txt
   publication_tests:
