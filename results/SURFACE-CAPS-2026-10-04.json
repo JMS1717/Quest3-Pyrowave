@@ -1,0 +1,87 @@
+{
+  "date": "2026-10-04 America/New_York",
+  "source_commit": "7aa00eb4b8de1e0726feb0f8c6d473b0962cf29d",
+  "ci_run": 37253589683,
+  "version": "20.13.0-quest3.pyro.37",
+  "full_matching_pair_reviewed": true,
+  "native_libraries_identical_to_reviewed36": true,
+  "advertised_extensions": {
+    "XR_KHR_android_surface_swapchain": true,
+    "XR_FB_android_surface_swapchain_create": true,
+    "XR_FB_swapchain_update_state_android_surface": true,
+    "XR_KHR_vulkan_enable": true,
+    "XR_KHR_vulkan_enable2": true
+  },
+  "probe_reads_known_extension_fields": true,
+  "settings": {
+    "encoded_eye": [
+      2080,
+      2208
+    ],
+    "runtime_hz": 120,
+    "mbps": 1000,
+    "chroma": "420",
+    "wavelet": "Haar",
+    "decoder": "Compute",
+    "transport": "USB/TCP",
+    "foveated_encoding": false
+  },
+  "screen_seconds": 15.040168046951294,
+  "submission_wall_fps": 118.73416653424859,
+  "direct_completion_proxy_fps": 118.7535049357239,
+  "client_fps": {
+    "n": 1785,
+    "p01": 60.00372648,
+    "p50": 119.99999,
+    "p95": 120.020444,
+    "p99": 120.0649062,
+    "max": 120.498535
+  },
+  "gpu_decode_ms": {
+    "n": 1866,
+    "p01": 4.7069918600000005,
+    "p50": 6.5271354,
+    "p95": 6.76420585,
+    "p99": 6.840895714999999,
+    "max": 7.2259893
+  },
+  "decode_to_fence_ms": {
+    "n": 1866,
+    "p01": 6.840839900000001,
+    "p50": 8.02198,
+    "p95": 8.28392,
+    "p99": 8.390555899999999,
+    "max": 8.885625
+  },
+  "eye_cpu_ms": {
+    "n": 1846,
+    "p01": 1.41667665,
+    "p50": 1.68085995,
+    "p95": 1.97296875,
+    "p99": 2.3307736899999996,
+    "max": 2.7385418
+  },
+  "payload_mbps": {
+    "n": 1785,
+    "p01": 944.467256,
+    "p50": 1009.4261,
+    "p95": 1038.039594,
+    "p99": 1052.2481544,
+    "max": 1106.184
+  },
+  "clock_alignment": {
+    "device_minus_host_before_s": 1.2606470584869385,
+    "device_minus_host_after_s": 1.2620630264282227,
+    "uncertainty_before_s": 0.012623071670532227,
+    "uncertainty_after_s": 0.014174699783325195
+  },
+  "normal_restoration_errors": [],
+  "decision": "Android Surface and Vulkan bindings are advertised. Next a capability-gated static Vulkan WSI Surface prototype, preserving GLES fallback; no shipping-presenter change yet.",
+  "limitations": [
+    "Advertisement does not prove swapchain creation, Vulkan WSI compatibility or frame/pose pairing",
+    "One short stationary baseline, not sustained/gameplay or opticalFPS/MTP acceptance",
+    "Current presenter remains leased AHB to GLES eye copies",
+    "Prior other-list-only capability logs falsely reported unsupported; no support inference should use them"
+  ],
+  "performance_acceptance": false
+}

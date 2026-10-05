@@ -30,3 +30,19 @@ duplicate or unsupported intervals, and reports stage averages without inventing
 percentiles. Complete source coverage, matching artifacts, completion counters,
 frame pacing, payload and thermal checks remain necessary for live comparisons.
 No optical latency or sustained120Hz acceptance is implied.
+
+## Standalone calibration
+
+The cloud-built `.38` Android component passed exact small/native default RGBA
+readback. A native-size off/on/off screen then completed240 measured decodes
+after10 warmups per arm, with every final GPU readback byte-identical to the
+existing asymmetric reference. The enabled probe reported dequantization4.356ms
+and inverse transform4.766ms in its one post-startup interval. Reporting did not
+meaningfully change the control completion times (~12.2ms).
+
+The headset was asleep without compositor load; clocks were not sampled.
+These costs do **not** establish the awake120Hz budget. They confirm that both
+stages contribute and that the diagnostic functions. Android client/tests and
+component hash/certificate/library consistency passed; full Windows/terminal CI
+review was pending at collection, and no APK was deployed by this standalone
+screen. [Calibration evidence](../results/DECODE-STAGE-GPU-2026-10-04.json).

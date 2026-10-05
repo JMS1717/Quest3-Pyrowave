@@ -1,0 +1,139 @@
+{
+  "date": "2026-10-04 America/New_York",
+  "source_commit": "a259b2386a490a1d89e5d3f81b1f9be2195f0698",
+  "ci_run": 37254490099,
+  "scope": "Standalone Android-only component calibration before full Windows/CI review; no APK deployment or VR streaming",
+  "eye_encoded": [
+    2080,
+    2208
+  ],
+  "chroma": "420",
+  "decoder": "Haar Compute",
+  "arms": [
+    {
+      "stage_probe": 0,
+      "measured_frames": 240,
+      "warmup_frames": 10,
+      "exact_reference_match": true,
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 240,
+        "complete": 240,
+        "decode_best_ms": 9.245416,
+        "convert_best_ms": 1.715573,
+        "fence_p50_ms": 12.241251,
+        "fence_p99_ms": 12.458595,
+        "fence_mean_ms": 12.252072,
+        "fence_max_ms": 12.532449,
+        "warmup_frames": 10,
+        "warmup_max_fence_ms": 187.629289,
+        "gpu_decode_p50_ms": 9.285208,
+        "gpu_decode_p99_ms": 9.356666,
+        "convert_p50_ms": 1.72776,
+        "record_p50_ms": 0.945,
+        "wait_p50_ms": 11.282658
+      },
+      "temperature_c": 32.0,
+      "thermal_status": 0,
+      "wakefulness": "Asleep"
+    },
+    {
+      "stage_probe": 1,
+      "measured_frames": 240,
+      "warmup_frames": 10,
+      "exact_reference_match": true,
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 240,
+        "complete": 240,
+        "decode_best_ms": 9.245052,
+        "convert_best_ms": 1.71474,
+        "fence_p50_ms": 12.214272,
+        "fence_p99_ms": 12.524741,
+        "fence_mean_ms": 12.239417,
+        "fence_max_ms": 12.959897,
+        "warmup_frames": 10,
+        "warmup_max_fence_ms": 210.141896,
+        "gpu_decode_p50_ms": 9.285989,
+        "gpu_decode_p99_ms": 9.383281,
+        "convert_p50_ms": 1.729583,
+        "record_p50_ms": 0.929792,
+        "wait_p50_ms": 11.277814
+      },
+      "temperature_c": 32.0,
+      "thermal_status": 0,
+      "wakefulness": "Asleep"
+    },
+    {
+      "stage_probe": 0,
+      "measured_frames": 240,
+      "warmup_frames": 10,
+      "exact_reference_match": true,
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 240,
+        "complete": 240,
+        "decode_best_ms": 9.247656,
+        "convert_best_ms": 1.71651,
+        "fence_p50_ms": 12.212136,
+        "fence_p99_ms": 12.421303,
+        "fence_mean_ms": 12.219571,
+        "fence_max_ms": 12.562762,
+        "warmup_frames": 10,
+        "warmup_max_fence_ms": 189.779759,
+        "gpu_decode_p50_ms": 9.290677,
+        "gpu_decode_p99_ms": 9.362864,
+        "convert_p50_ms": 1.729062,
+        "record_p50_ms": 0.920886,
+        "wait_p50_ms": 11.279688
+      },
+      "temperature_c": 32.0,
+      "thermal_status": 0,
+      "wakefulness": "Asleep"
+    }
+  ],
+  "stages": {
+    "status": "parsed",
+    "malformed_records": 0,
+    "stages": {
+      "Dequant": {
+        "intervals": 1,
+        "mean_of_interval_averages_ms": 4.356,
+        "min_average_ms": 4.356,
+        "max_average_ms": 4.356
+      },
+      "iDWT": {
+        "intervals": 1,
+        "mean_of_interval_averages_ms": 4.766,
+        "min_average_ms": 4.766,
+        "max_average_ms": 4.766
+      }
+    },
+    "records": [
+      {
+        "complete": 240,
+        "stage": "Dequant",
+        "average_ms": 4.356
+      },
+      {
+        "complete": 240,
+        "stage": "iDWT",
+        "average_ms": 4.766
+      }
+    ],
+    "scope": "Existing Granite stage GPU averages per frame context, reported every120 completed decodes. Delayed context collection and preemption can affect averages. Startup interval omitted. Not per-frame percentile, completion, optical latency or FPS evidence.",
+    "performance_acceptance": false
+  },
+  "normal_restoration_errors": [],
+  "decision": "Reporting functions and preserves GPU reference pixels. Keep diagnostic defaultOFF; live calibration needed before optimization choice.",
+  "limitations": [
+    "Headset asleep, no compositor load; clocks not sampled, costs do not establish awake native120 budget",
+    "Only one post-startup interval per stage; no per-frame percentiles or sustained evidence",
+    "Stage intervals use recorded device log time/PID; host/device clocks differ",
+    "Clock offset subsequently measured about+1.26s; earlier host-bounded log samples have alignment uncertainty",
+    "Pixel output exactly matches existing native asymmetric reference in all3arms",
+    "Android client/tests passed and component hash/cert/library consistency checked; Windows build and full terminalCI review pending at collection",
+    "No optical latency, freshFPS or visual-quality acceptance"
+  ],
+  "performance_acceptance": false
+}

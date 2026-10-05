@@ -14,6 +14,18 @@ That excludes extensions already known to the
 Its all-false result cannot establish lack of support. `.37` reads the three
 named extension fields; runtime advertisement still needs on-device verification.
 
+The reviewed matching `.37` pair subsequently confirmed all three Surface
+extension fields **true** on Quest3, alongside both Vulkan bindings. Its short
+native120 baseline recorded118.73 submission events/s and118.75 direct eye
+completions/s. This establishes advertisement, not creation/presentation or a
+performance gain. [Device capability evidence](../results/SURFACE-CAPS-2026-10-04.json).
+
+Next prototype a small static asymmetric Surface on a separate optional path:
+verify OpenXR Surface creation, JNI/ANativeWindow lifetime, Vulkan WSI support,
+formats and acquire/present synchronization before feeding decoded planes.
+Retain the current GLES renderer as fallback. Only after pixel, eye-edge and
+pose/content pairing checks should a live comparison remove the RGBA eye copy.
+
 An Android Surface swapchain requires a different ownership path: its images
 cannot be enumerated, acquired, waited or released with the ordinary OpenXR
 swapchain calls. The application submits through the Surface and stops all
