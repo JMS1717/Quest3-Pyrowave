@@ -467,8 +467,10 @@ static Outputs run_case(const Vk &vk, const std::vector<uint32_t> &idwt_spirv, c
     out.fused.assign(bytes + rgba_bytes, bytes + 2 * rgba_bytes);
     out.control.assign(bytes + 2 * rgba_bytes, bytes + 3 * rgba_bytes);
 
-    // CPU model of inverse_haar_pairs() + R8 store: FP32 arithmetic, FP16 intermediates, RNE.
-    int model_mismatch = 0, model_worst = 0;
+    // CPU models of inverse_haar_pairs() + R8 store (FP32 arithmetic, round-to-nearest store), with
+    // and without the FP16 round trips. A driver may fold f32->f16->f32 away under Vulkan's relaxed
+    // float rules, so report which model the reference followed; either must hold to 1 LSB.
+    int mismatch[2] = {}, worst[2] = {};
     for (uint32_t y = 0; y < c.h; y++)
         for (uint32_t x = 0; x < c.w; x++) {
             const size_t k = (size_t)(y / 2) * cw + x / 2, layer = (size_t)cw * ch;
@@ -476,15 +478,20 @@ static Outputs run_case(const Vk &vk, const std::vector<uint32_t> &idwt_spirv, c
             const float vertical = from_half(wavelet[2 * layer + k]), diagonal = from_half(wavelet[3 * layer + k]);
             const float low_even = a - 0.5f * vertical, low_odd = low_even + vertical;
             const float high_even = horizontal - 0.5f * diagonal, high_odd = high_even + diagonal;
-            const float low = round_half((y & 1) ? low_odd : low_even), high = round_half((y & 1) ? high_odd : high_even);
-            const float even = low - 0.5f * high, odd = even + high;
-            float v = round_half((x & 1) ? odd : even) + 0.5f;
-            v = v < 0.0f ? 0.0f : v > 1.0f ? 1.0f : v;
-            const int expect = (int)std::nearbyint(v * 255.0f), got = out.y[(size_t)y * c.w + x];
-            if (expect != got) { model_mismatch++; model_worst = std::max(model_worst, std::abs(expect - got)); }
+            const int got = out.y[(size_t)y * c.w + x];
+            for (int rounded = 0; rounded < 2; rounded++) {
+                auto r = [&](float v) { return rounded ? round_half(v) : v; };
+                const float low = r((y & 1) ? low_odd : low_even), high = r((y & 1) ? high_odd : high_even);
+                const float even = low - 0.5f * high, odd = even + high;
+                float v = r((x & 1) ? odd : even) + 0.5f;
+                v = v < 0.0f ? 0.0f : v > 1.0f ? 1.0f : v;
+                const int d = std::abs((int)std::nearbyint(v * 255.0f) - got);
+                if (d) { mismatch[rounded]++; worst[rounded] = std::max(worst[rounded], d); }
+            }
         }
-    printf("  reference luma vs CPU model: %d of %u differ, worst %d LSB\n", model_mismatch, c.w * c.h, model_worst);
-    REQUIRE(model_worst <= 1, "reference iDWT output does not match the Haar model: harness or wiring fault");
+    printf("  reference luma vs CPU model: FP16 round trips kept %d differ (worst %d), folded %d differ (worst %d), of %u\n",
+           mismatch[1], worst[1], mismatch[0], worst[0], c.w * c.h);
+    REQUIRE(std::min(worst[0], worst[1]) <= 1, "reference iDWT output does not match the Haar model: harness or wiring fault");
 
     vkDestroyFence(vk.device, fence, nullptr);
     vkDestroyCommandPool(vk.device, cmd_pool, nullptr);
