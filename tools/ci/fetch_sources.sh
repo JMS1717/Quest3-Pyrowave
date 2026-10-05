@@ -44,5 +44,7 @@ git -C "$dest/pyrowave/Granite" submodule update -q --init --recursive --depth 1
 git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-cdf53-haar-experiments2-3.patch"
 git -C "$dest/pyrowave" apply --binary "$repo/patches/quest3-pyrowave.patch"
 git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-prerecord-api.patch"
+# Optional final-luma skip for fused color (debug.q3pw.fuse_color); default behaviour unchanged.
+git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-final-luma.patch"
 
 echo "sources ready in $dest: ALVR ${ALVR_BASE%${ALVR_BASE#???????}}, pyrowave ${PYROWAVE_BASE%${PYROWAVE_BASE#???????}}, Granite ${GRANITE_COMMIT%${GRANITE_COMMIT#???????}}"

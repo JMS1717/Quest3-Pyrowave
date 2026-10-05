@@ -1,7 +1,9 @@
 import unittest
 from unittest.mock import patch
 from tools.quest3.control import foveation
-from tools.quest3.foveation import axis, forward, inverse, stereo_uv, math_report
+import math
+import struct
+from tools.quest3.foveation import PROFILES, axis, encoded_eye, forward, inverse, stereo_uv, math_report
 
 
 class LightFoveationTests(unittest.TestCase):
@@ -73,4 +75,92 @@ class LightFoveationTests(unittest.TestCase):
         s['openvr']['foveation_center_size_x'] = .800000011920929
         self.assertEqual(evidence(s, [{'pyrowave': {'encoded_width': 3904, 'encoded_height': 2080}}])['status'], 'verified')
         s['openvr']['foveation_center_shift_x'] = .1
+        self.assertEqual(evidence(s)['status'], 'mismatch')
+
+
+def _f32(x):
+    return struct.unpack('f', struct.pack('f', x))[0]
+
+
+def _rust_encoded(size, center, edge):
+    # alvr/graphics/src/stream.rs foveated_encoding_shader_constants: all f32.
+    w, c, e = _f32(size), _f32(center), _f32(edge)
+    edge_size = _f32(w - _f32(c * w))
+    aligned = _f32(1 - _f32(_f32(math.ceil(_f32(edge_size / _f32(e * 2))) * _f32(e * 2)) / w))
+    scale = _f32(aligned + _f32(_f32(1 - aligned) / e))
+    return math.ceil(_f32(_f32(scale * w) / 32)) * 32
+
+
+def _cpp_encoded(size, center, edge):
+    # server_openvr/cpp/platform/win32/FFR.cpp CalculateFoveationVars: float storage, double literals.
+    w, c, e = _f32(size), _f32(center), _f32(edge)
+    edge_size = _f32(w - _f32(c * w))
+    aligned = _f32(1. - math.ceil(edge_size / (e * 2.)) * (e * 2.) / w)
+    scale = _f32(aligned + (1. - aligned) / e)
+    return math.ceil(_f32(_f32(scale * w) / _f32(32.))) * 32
+
+
+class FoveationProfileTests(unittest.TestCase):
+    def test_profile_geometry_at_native_quest_size(self):
+        expected = {'light': ([1952, 2080], 11.59), 'balanced': ([1824, 1920], 23.75),
+                    'strong': ([1664, 1792], 35.07)}
+        for profile, (eye, savings) in expected.items():
+            r = math_report(profile=profile, hz=207)
+            self.assertEqual(r['encoded_eye'], eye)
+            self.assertAlmostEqual(r['encoded_pixel_savings_percent'], savings, delta=0.01)
+            self.assertEqual(r['mode'], profile)
+
+    def test_client_server_and_model_sizes_agree_for_every_profile(self):
+        # A disagreement would decode one size and un-warp another: misregistered eyes.
+        for profile, (center, edge) in PROFILES.items():
+            for size in range(512, 4097, 8):
+                model = axis(size, profile)['encoded']
+                self.assertEqual(_rust_encoded(size, center, edge), model, (profile, size))
+                self.assertEqual(_cpp_encoded(size, center, edge), model, (profile, size))
+
+    def test_roundtrip_and_full_density_center_for_every_profile(self):
+        for profile in PROFILES:
+            for size in (2080, 2208, 3072, 3232):
+                a = axis(size, profile)
+                for u in [n / 1024 for n in range(1025)] + [a['lo'], a['hi']]:
+                    self.assertAlmostEqual(forward(inverse(u, a), a), u, places=9)
+            a = axis(2080, profile)
+            self.assertAlmostEqual((inverse(.5 + 1 / 2080, a) - inverse(.5, a)) * a['encoded'], 1)
+
+    def test_unknown_profile_is_rejected(self):
+        with self.assertRaises(ValueError):
+            encoded_eye((2080, 2208), 'extreme')
+
+    def test_profile_toggle_writes_both_settings_and_reads_back(self):
+        old = {'session_settings': {'video': {'pyrowave': {'light_foveated_encoding': False,
+               'foveation_profile': {'variant': 'Light'}}}}}
+        new = {'session_settings': {'video': {'pyrowave': {'light_foveated_encoding': True,
+               'foveation_profile': {'variant': 'Strong'}}}}}
+        with patch('tools.quest3.control.session', side_effect=[old, new]), patch('tools.quest3.control.set_values') as write:
+            result = foveation('light', 'strong')
+        write.assert_called_once_with({'session_settings.video.pyrowave.light_foveated_encoding': True,
+            'session_settings.video.pyrowave.foveation_profile.variant': 'Strong'})
+        self.assertEqual((result['profile'], result['previous_profile']), ('strong', 'light'))
+
+    def test_profile_requires_a_server_with_the_setting(self):
+        old = {'session_settings': {'video': {'pyrowave': {'light_foveated_encoding': False}}}}
+        with patch('tools.quest3.control.session', return_value=old), patch('tools.quest3.control.set_values') as write:
+            with self.assertRaises(ValueError):
+                foveation('light', 'strong')
+            write.assert_not_called()
+
+    def test_geometry_check_uses_the_negotiated_profile(self):
+        from tools.quest3.resolution import evidence
+        from tests.test_resolution import settings
+        s = settings()
+        s['light_foveated_encoding'] = True
+        s['foveation_profile'] = 'strong'
+        s['openvr'].update(enable_foveated_encoding=True,
+            foveation_center_size_x=.6, foveation_center_size_y=.6,
+            foveation_center_shift_x=0, foveation_center_shift_y=0,
+            foveation_edge_ratio_x=2.0, foveation_edge_ratio_y=2.0)
+        r = evidence(s, [{'pyrowave': {'encoded_width': 3328, 'encoded_height': 1792}}])
+        self.assertEqual(r['status'], 'verified')
+        self.assertEqual(r['expected_decode_eye'], [1664, 1792])
+        s['foveation_profile'] = 'light'
         self.assertEqual(evidence(s)['status'], 'mismatch')

@@ -1,0 +1,100 @@
+diff --git a/pyrowave-shared.def b/pyrowave-shared.def
+index 4fe4529..b71c2c6 100644
+--- a/pyrowave-shared.def
++++ b/pyrowave-shared.def
+@@ -47,4 +47,5 @@ EXPORTS
+ 	pyrowave_decoder_destroy
+ 
+ 	pyrowave_decoder_set_idwt_enabled
++	pyrowave_decoder_set_final_luma_store
+ 	pyrowave_decoder_get_wavelet_view
+diff --git a/pyrowave.h b/pyrowave.h
+index 3f988a7..d57aa23 100644
+--- a/pyrowave.h
++++ b/pyrowave.h
+@@ -535,6 +535,11 @@ PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_timestamp_recording(pyr
+ // After validated complete push, before recording; permits only existing upload
+ // capacity, including robustness padding. 0 means defer growth until GPU drain.
+ PYROWAVE_PUBLIC_API int pyrowave_decoder_prerecord_upload_fits(pyrowave_decoder decoder);
++/* Haar, 4:2:0, compute path only (not fused Haar). enabled=0 skips the final luma store:
++ * the caller reconstructs luma level 0 from pyrowave_decoder_get_wavelet_view(0, 0), whose
++ * layer 0 then holds the level-1 reconstruction (LL). Chroma planes are still written.
++ * Returns PYROWAVE_ERROR_INVALID_ARGUMENT for any other configuration. Default 1. */
++PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_final_luma_store(pyrowave_decoder decoder, int enabled);
+ PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_get_wavelet_view(pyrowave_decoder decoder, int component, int level,
+                                                                      VkImageView *view, VkFormat *format);
+ 
+diff --git a/pyrowave_c.cpp b/pyrowave_c.cpp
+index e41bd9d..9983ed2 100644
+--- a/pyrowave_c.cpp
++++ b/pyrowave_c.cpp
+@@ -1407,6 +1407,13 @@ pyrowave_result pyrowave_decoder_set_idwt_enabled(pyrowave_decoder decoder, int
+ 	return PYROWAVE_SUCCESS;
+ }
+ 
++pyrowave_result pyrowave_decoder_set_final_luma_store(pyrowave_decoder decoder, int enabled)
++{
++	if (!decoder)
++		return PYROWAVE_ERROR_INVALID_ARGUMENT;
++	return decoder->decoder.set_final_luma_store(enabled != 0) ? PYROWAVE_SUCCESS : PYROWAVE_ERROR_INVALID_ARGUMENT;
++}
++
+ pyrowave_result pyrowave_decoder_get_wavelet_view(pyrowave_decoder decoder, int component, int level,
+                                                   VkImageView *view, VkFormat *format)
+ {
+diff --git a/pyrowave_decoder.cpp b/pyrowave_decoder.cpp
+index 53fc80d..0e40f5d 100644
+--- a/pyrowave_decoder.cpp
++++ b/pyrowave_decoder.cpp
+@@ -39,6 +39,13 @@ struct Decoder::Impl final : public WaveletBuffers
+     }();
+ 	bool timestamp_recording = true;
+ 	bool idwt_enabled = true;   // XRW Experiment 3
++	bool final_luma_store = true; // false: caller reconstructs luma level 0 (Haar 4:2:0 compute).
++	bool can_skip_final_luma() const
++	{
++		// The fused Haar kernel writes every level itself, and only the pair-local Haar
++		// final step is simple enough for a caller to reproduce exactly.
++		return haar && !fragment_path && !fused_haar && chroma == ChromaSubsampling::Chroma420;
++	}
+ 
+ 	BufferHandle dequant_offset_buffer, payload_data;
+ 	BufferViewHandle payload_u32_view, payload_u16_view, payload_u8_view;
+@@ -812,7 +819,7 @@ bool Decoder::Impl::idwt(CommandBuffer &cmd, const ViewBuffers &views)
+ 					cmd.end_region();
+ 				}
+ 			}
+-			else
++			else if (final_luma_store)
+ 			{
+ 				cmd.set_storage_texture(0, 1, *views.planes[0]);
+ 				cmd.begin_region("iDWT final");
+@@ -1135,6 +1142,14 @@ void Decoder::set_idwt_enabled(bool enabled)
+ 	impl->idwt_enabled = enabled;
+ }
+ 
++bool Decoder::set_final_luma_store(bool enabled)
++{
++	if (!enabled && !impl->can_skip_final_luma())
++		return false;
++	impl->final_luma_store = enabled;
++	return true;
++}
++
+ VkImageView Decoder::get_wavelet_view(int component, int level) const
+ {
+ 	if (component < 0 || component >= NumComponents || level < 0 || level >= DecompositionLevels)
+diff --git a/pyrowave_decoder.hpp b/pyrowave_decoder.hpp
+index 1e96040..7420c17 100644
+--- a/pyrowave_decoder.hpp
++++ b/pyrowave_decoder.hpp
+@@ -44,6 +44,9 @@ public:
+ 	// XRW Experiment 3: record dequant only (no iDWT) so an external reconstruction kernel can
+ 	// read the wavelet image; and expose that image's per-component, per-level array views.
+ 	void set_idwt_enabled(bool enabled);
++	// Haar 4:2:0 compute only: skip the final luma store so the caller can reconstruct
++	// luma level 0 from get_wavelet_view(0, 0) in its own color pass. Default true.
++	bool set_final_luma_store(bool enabled);
+ 	// Diagnostic pre-recording excludes unsubmitted timestamp queries. Default true.
+ 	void set_timestamp_recording(bool enabled);
+ 	bool prerecord_upload_fits() const;

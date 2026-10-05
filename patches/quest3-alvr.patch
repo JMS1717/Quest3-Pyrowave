@@ -206,7 +206,7 @@ index 7cead7b..18ad9d0 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..bb2bda6 100644
+index ae00ce8..cacc39e 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -4237,7 +4237,7 @@ index 0000000..766b412
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..9a909cf 100644
+index b87dfe9..4608015 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -1,3 +1,6 @@
@@ -4266,7 +4266,7 @@ index b87dfe9..9a909cf 100644
 +            // matching server. Never revive arbitrary stale generic FFE settings.
 +            foveated_encoding_config: (config.negotiated_config.enable_foveated_encoding
 +                && config.settings.video.pyrowave.light_foveated_encoding)
-+                .then(alvr_session::pyrowave_light_foveation),
++                .then(|| alvr_session::pyrowave_foveation(config.settings.video.pyrowave.foveation_profile)),
 +            clientside_foveation_config: None,
              upscaling: config.settings.video.upscaling.as_option().cloned(),
              force_software_decoder: config.settings.video.force_software_decoder,
@@ -4321,7 +4321,7 @@ index b87dfe9..9a909cf 100644
  }
  
  impl StreamContext {
-@@ -115,12 +141,6 @@ impl StreamContext {
+@@ -115,12 +143,6 @@ impl StreamContext {
  
          let xr_exts = xr_session.instance().exts();
  
@@ -4334,7 +4334,7 @@ index b87dfe9..9a909cf 100644
          let foveation_profile = if let Some(config) = &config.clientside_foveation_config {
              if xr_exts.fb_swapchain_update_state.is_some()
                  && xr_exts.fb_foveation.is_some()
-@@ -228,6 +248,10 @@ impl StreamContext {
+@@ -228,6 +250,10 @@ impl StreamContext {
              view_reference_space,
              swapchains,
              last_good_view_params: [ViewParams::default(); 2],
@@ -4345,7 +4345,7 @@ index b87dfe9..9a909cf 100644
              input_thread: None,
              input_thread_running,
              config,
-@@ -235,8 +259,36 @@ impl StreamContext {
+@@ -235,8 +261,36 @@ impl StreamContext {
              renderer,
              decoder: None,
              pending_frame: None,
@@ -4382,7 +4382,7 @@ index b87dfe9..9a909cf 100644
          this.update_reference_space();
  
          this
-@@ -310,6 +361,24 @@ impl StreamContext {
+@@ -310,6 +364,24 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
@@ -4407,7 +4407,7 @@ index b87dfe9..9a909cf 100644
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +407,42 @@ impl StreamContext {
+@@ -338,12 +410,42 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -4452,7 +4452,7 @@ index b87dfe9..9a909cf 100644
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +454,25 @@ impl StreamContext {
+@@ -355,8 +457,25 @@ impl StreamContext {
          }
      }
  
@@ -4478,7 +4478,7 @@ index b87dfe9..9a909cf 100644
      }
  
      pub fn render(
-@@ -364,15 +480,151 @@ impl StreamContext {
+@@ -364,15 +483,151 @@ impl StreamContext {
          frame_interval: Duration,
          vsync_time: Duration,
      ) -> (ProjectionLayerBuilder, Duration) {
@@ -4632,7 +4632,7 @@ index b87dfe9..9a909cf 100644
              }
          }
  
-@@ -401,37 +647,80 @@ impl StreamContext {
+@@ -401,37 +656,80 @@ impl StreamContext {
              ]);
          }
  
@@ -4743,7 +4743,7 @@ index b87dfe9..9a909cf 100644
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +782,8 @@ impl StreamContext {
+@@ -493,6 +791,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
@@ -5454,7 +5454,7 @@ index 0000000..bc6bee0
 +}
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000..ce89759
+index 0000000..1d8ca6c
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
 @@ -0,0 +1,461 @@
@@ -5611,8 +5611,8 @@ index 0000000..ce89759
 +                    gl.uniform_2_f32(Some(&location("ffe_c2")?), values[4], values[5]);
 +                    gl.uniform_4_f32_slice(Some(&location("ffe_p[0]")?), params);
 +                    gl.uniform_2_f32(Some(&location("ffe_half_texel")?), 0.25 / encoded.x as f32, 0.5 / encoded.y as f32);
-+                    import_diagnostic(4, format!("[Q3PW_LIGHT_FFE] direct=true expanded_eye={}x{} encoded_eye={}x{} center=0.8 edge=1.5 fixed=true",
-+                        config.resolution.x, config.resolution.y, encoded.x, encoded.y));
++                    import_diagnostic(4, format!("[Q3PW_LIGHT_FFE] direct=true expanded_eye={}x{} encoded_eye={}x{} edge={:.2}x{:.2} fixed=true",
++                        config.resolution.x, config.resolution.y, encoded.x, encoded.y, values[2], values[3]));
 +                }
 +                for eye in 0..2 {
 +                    if config.textures[eye].is_empty() {
@@ -6633,7 +6633,7 @@ index febd2c3..779de33 100644
          );
      }
 diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
-index 737b7d0..9f1548c 100644
+index 737b7d0..6dd3014 100644
 --- a/alvr/graphics/src/stream.rs
 +++ b/alvr/graphics/src/stream.rs
 @@ -1,10 +1,10 @@
@@ -6677,7 +6677,7 @@ index 737b7d0..9f1548c 100644
  
 +        let direct_eye_config = (base_view_resolution == target_view_resolution
 +            && (foveated_encoding.is_none()
-+                || foveated_encoding.as_ref() == Some(&alvr_session::pyrowave_light_foveation()))
++                || foveated_encoding.as_ref().is_some_and(alvr_session::is_pyrowave_foveation))
 +            && upscaling.is_none()
 +            && matches!(target_format, glow::SRGB8_ALPHA8 | glow::RGBA8))
 +            .then(|| DirectEyeConfig { textures: swapchain_textures.clone(),
@@ -7043,7 +7043,7 @@ index 81f2f8e..869fa77 100644
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da..e6686ad 100644
+index fc176da..c2327ae 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -53,7 +53,8 @@ pub struct VideoPacket {
@@ -7083,7 +7083,7 @@ index fc176da..e6686ad 100644
 +    // cannot re-enable the old arbitrary warp or alter this profile.
 +    let light = alvr_session::pyrowave_light_foveation_enabled(settings.video.preferred_codec,
 +        settings.video.pyrowave.light_foveated_encoding, true)
-+        .then(alvr_session::pyrowave_light_foveation);
++        .then(|| alvr_session::pyrowave_foveation(settings.video.pyrowave.foveation_profile));
 +    let enable_foveated_encoding = light.is_some();
 +    let foveation_center_size_x = light.as_ref().map_or(0.0, |c| c.center_size_x);
 +    let foveation_center_size_y = light.as_ref().map_or(0.0, |c| c.center_size_y);
@@ -8350,7 +8350,7 @@ index 84100dc..65236d3 100644
  
  /// The profile whose every assignment the session (`session_settings` as JSON) currently holds,
 diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
-index 985a4d0..8a4d440 100644
+index 985a4d0..3033230 100644
 --- a/alvr/session/src/beta_tests.rs
 +++ b/alvr/session/src/beta_tests.rs
 @@ -31,7 +31,7 @@ fn video_shows_only_codec_experiment_controls() {
@@ -8362,7 +8362,7 @@ index 985a4d0..8a4d440 100644
      );
      assert_eq!(
          names(entries, Visibility::Advanced),
-@@ -49,36 +49,32 @@ fn video_shows_only_codec_experiment_controls() {
+@@ -49,36 +49,33 @@ fn video_shows_only_codec_experiment_controls() {
  fn codec_picker_offers_pyrowave_and_h264_only() {
      assert_eq!(
          visible_variants(&schema(), &["video", "preferred_codec"]).unwrap(),
@@ -8383,7 +8383,8 @@ index 985a4d0..8a4d440 100644
 +            "transport",
 +            "wavelet",
 +            "decode_path",
-+            "light_foveated_encoding"
++            "light_foveated_encoding",
++            "foveation_profile"
 +        ])
      );
      assert_eq!(
@@ -8411,7 +8412,7 @@ index 985a4d0..8a4d440 100644
  }
  
  #[test]
-@@ -133,8 +129,11 @@ fn default_settings() -> Settings {
+@@ -133,8 +130,11 @@ fn default_settings() -> Settings {
  fn fresh_install_streams_the_recommended_profile() {
      let s = default_settings();
      assert_eq!(s.video.preferred_codec, CodecType::PyroWave);
@@ -8425,7 +8426,7 @@ index 985a4d0..8a4d440 100644
      for size in [
          &s.video.transcoding_view_resolution,
          &s.video.emulated_headset_view_resolution,
-@@ -142,33 +141,27 @@ fn fresh_install_streams_the_recommended_profile() {
+@@ -142,33 +142,27 @@ fn fresh_install_streams_the_recommended_profile() {
          assert!(matches!(
              size,
              FrameSize::Absolute {
@@ -8466,7 +8467,7 @@ index 985a4d0..8a4d440 100644
  }
  
  // Applies session-style assignments the way the dashboard's SetValues does.
-@@ -198,13 +191,10 @@ fn profile(name: &str) -> StreamingProfile {
+@@ -198,13 +192,10 @@ fn profile(name: &str) -> StreamingProfile {
  #[test]
  fn profiles_are_named_for_testers() {
      let profiles = streaming_profiles();
@@ -8484,7 +8485,7 @@ index 985a4d0..8a4d440 100644
  }
  
  #[test]
-@@ -218,13 +208,16 @@ fn recommended_profile_is_the_fresh_install() {
+@@ -218,13 +209,16 @@ fn recommended_profile_is_the_fresh_install() {
  fn h264_profile_is_the_measured_b15_cell() {
      let s = apply(&profile(H264_PROFILE));
      assert_eq!(s.video.preferred_codec, CodecType::H264);
@@ -8505,7 +8506,7 @@ index 985a4d0..8a4d440 100644
          }
      ));
      assert_eq!(s.video.max_buffering_frames, 1.5);
-@@ -233,20 +226,20 @@ fn h264_profile_is_the_measured_b15_cell() {
+@@ -233,20 +227,20 @@ fn h264_profile_is_the_measured_b15_cell() {
          EncoderQualityPresetNvidia::P1
      );
      assert_eq!(s.video.encoder_config.entropy_coding, EntropyCoding::Cavlc);
@@ -8535,7 +8536,7 @@ index 985a4d0..8a4d440 100644
  }
  
  fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
-@@ -261,21 +254,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
+@@ -261,21 +255,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
  fn effective_config_follows_settings_without_env() {
      let e = pyrowave_effective(&default_settings(), &env(&[]));
      assert!(e.enabled);
@@ -8562,7 +8563,7 @@ index 985a4d0..8a4d440 100644
      assert!(e.wavelet_53);
      assert_eq!(e.decode_path, PyroWaveDecodePath::Fragment);
  }
-@@ -284,6 +277,7 @@ fn effective_config_follows_a_non_default_setting() {
+@@ -284,6 +278,7 @@ fn effective_config_follows_a_non_default_setting() {
  fn research_env_overrides_win_and_are_reported() {
      let mut s = default_settings();
      s.video.preferred_codec = CodecType::H264;
@@ -8570,7 +8571,7 @@ index 985a4d0..8a4d440 100644
      let e = pyrowave_effective(
          &s,
          &env(&[
-@@ -302,8 +296,7 @@ fn research_env_overrides_win_and_are_reported() {
+@@ -302,8 +297,7 @@ fn research_env_overrides_win_and_are_reported() {
          vec![
              "ALVR_PYROWAVE",
              "ALVR_PYROWAVE_UDP",
@@ -8580,7 +8581,7 @@ index 985a4d0..8a4d440 100644
          ]
      );
  }
-@@ -320,8 +313,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
+@@ -320,8 +314,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
      let line = pyrowave_effective(&default_settings(), &env(&[])).to_string();
      assert_eq!(
          line,
@@ -8591,7 +8592,7 @@ index 985a4d0..8a4d440 100644
      );
  }
  
-@@ -398,6 +391,7 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
+@@ -398,6 +392,7 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
          "pyrowave_enabled",
          "pyrowave_udp",
          "pyrowave_wavelet_53",
@@ -8599,7 +8600,7 @@ index 985a4d0..8a4d440 100644
          "pyrowave_decode_path",
      ] {
          openvr.remove(key).expect(key);
-@@ -410,3 +404,20 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
+@@ -410,3 +405,20 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
          "upgrading must not forget the paired headset"
      );
  }
@@ -8637,7 +8638,7 @@ index d7d0dbb..d382c8f 100644
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99..2e69a5b 100644
+index 1009e99..fdfc8cc 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -8689,7 +8690,7 @@ index 1009e99..2e69a5b 100644
  }
  
  #[repr(u8)]
-@@ -618,7 +618,6 @@ pub enum PyroWaveWavelet {
+@@ -618,34 +618,92 @@ pub enum PyroWaveWavelet {
  #[schema(gui = "button_group")]
  pub enum PyroWaveDecodePath {
      // The driver heuristic, which picks the fragment path on Qualcomm. Kept for research.
@@ -8697,14 +8698,34 @@ index 1009e99..2e69a5b 100644
      Auto = 0,
      Compute = 2,
      Fragment = 1,
-@@ -626,26 +625,48 @@ pub enum PyroWaveDecodePath {
+ }
  
++/// Fixed, non-gaze peripheral profiles. Balanced and strong exist to measure the
++/// Quest decode budget for 144/207 Hz; only light has in-headset screens so far.
++#[repr(u8)]
++#[derive(SettingsSchema, Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq, Default)]
++#[schema(gui = "button_group")]
++pub enum PyroWaveFoveationProfile {
++    #[default]
++    #[schema(strings(display_name = "Light (80% center, 1.5x)"))]
++    Light = 0,
++    #[schema(strings(display_name = "Balanced (68% center, 1.75x, candidate)"))]
++    Balanced = 1,
++    #[schema(strings(display_name = "Strong (60% center, 2x, candidate)"))]
++    Strong = 2,
++}
++
  #[derive(SettingsSchema, Serialize, Deserialize, Clone, PartialEq, Debug)]
  pub struct PyroWaveConfig {
 +    #[serde(default)]
 +    #[schema(strings(display_name = "Light peripheral encoding (experimental)", help = "Fixed 80% center width/height, gentle 1.5x edge compression. Reduces encoded pixels; reconstructed view stays full size. Quest 3 matched client required. Compare quality and pacing; restart SteamVR. Off preserves full-frame encoding."))]
 +    #[schema(flag = "steamvr-restart")]
 +    pub light_foveated_encoding: bool,
++
++    #[serde(default)]
++    #[schema(strings(display_name = "Peripheral encoding profile (experimental)", help = "Used only when peripheral encoding is on. Light: about 12% fewer encoded pixels. Balanced: about 24%. Strong: about 35%. Balanced and Strong are decode-budget candidates for 144/207 Hz without in-headset quality acceptance. Restart SteamVR."))]
++    #[schema(flag = "steamvr-restart")]
++    pub foveation_profile: PyroWaveFoveationProfile,
 +
 +    #[serde(default)]
 +    #[schema(strings(display_name = "Full chroma (4:4:4)", help = "Off: 4:2:0, half-width and half-height chroma with full-resolution luma. On: 4:4:4. Restart SteamVR after changing this."))]
@@ -8734,22 +8755,39 @@ index 1009e99..2e69a5b 100644
      pub decode_path: PyroWaveDecodePath,
  }
  
-+/// Only this fixed, mild profile is exposed by Quest3-Pyrowave. Generic stale
-+/// foveation/force-enable/gaze/environment settings cannot modify its geometry.
++/// Only these fixed profiles are exposed by Quest3-Pyrowave. Generic stale
++/// foveation/force-enable/gaze/environment settings cannot modify their geometry.
 +pub fn pyrowave_light_foveation_enabled(codec: CodecType, requested: bool, supported: bool) -> bool {
 +    codec == CodecType::PyroWave && requested && supported
 +}
 +
-+pub fn pyrowave_light_foveation() -> FoveatedEncodingConfig {
-+    FoveatedEncodingConfig { force_enable: false, center_size_x: 0.8, center_size_y: 0.8,
-+        center_shift_x: 0.0, center_shift_y: 0.0, edge_ratio_x: 1.5, edge_ratio_y: 1.5,
++pub fn pyrowave_foveation(profile: PyroWaveFoveationProfile) -> FoveatedEncodingConfig {
++    // Keep in step with tools/quest3/foveation.py PROFILES.
++    let (center, edge) = match profile {
++        PyroWaveFoveationProfile::Light => (0.8, 1.5),
++        PyroWaveFoveationProfile::Balanced => (0.68, 1.75),
++        PyroWaveFoveationProfile::Strong => (0.6, 2.0),
++    };
++    FoveatedEncodingConfig { force_enable: false, center_size_x: center, center_size_y: center,
++        center_shift_x: 0.0, center_shift_y: 0.0, edge_ratio_x: edge, edge_ratio_y: edge,
 +        follow_gaze: false }
++}
++
++pub fn pyrowave_light_foveation() -> FoveatedEncodingConfig {
++    pyrowave_foveation(PyroWaveFoveationProfile::Light)
++}
++
++/// True only for one of the fixed profiles above, never an arbitrary FFE config.
++pub fn is_pyrowave_foveation(config: &FoveatedEncodingConfig) -> bool {
++    [PyroWaveFoveationProfile::Light, PyroWaveFoveationProfile::Balanced, PyroWaveFoveationProfile::Strong]
++        .into_iter()
++        .any(|profile| *config == pyrowave_foveation(profile))
 +}
 +
  #[repr(u8)]
  #[derive(SettingsSchema, Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
  #[schema(gui = "button_group")]
-@@ -799,23 +820,20 @@ pub struct VideoConfig {
+@@ -799,23 +857,20 @@ pub struct VideoConfig {
      pub bitrate: BitrateConfig,
  
      #[schema(strings(
@@ -8778,7 +8816,7 @@ index 1009e99..2e69a5b 100644
      pub foveated_encoding: Switch<FoveatedEncodingConfig>,
  
      #[schema(flag = "steamvr-restart")]
-@@ -1663,15 +1681,15 @@ pub struct Settings {
+@@ -1663,15 +1718,15 @@ pub struct Settings {
  }
  
  pub fn session_settings_default() -> SettingsDefault {
@@ -8797,7 +8835,7 @@ index 1009e99..2e69a5b 100644
              },
          },
      };
-@@ -1742,7 +1760,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1742,7 +1797,7 @@ pub fn session_settings_default() -> SettingsDefault {
              adapter_index: 0,
              transcoding_view_resolution: view_resolution.clone(),
              emulated_headset_view_resolution: view_resolution,
@@ -8806,11 +8844,14 @@ index 1009e99..2e69a5b 100644
              max_buffering_frames: 1.5,
              buffering_history_weight: 0.90,
              enforce_server_frame_pacing: true,
-@@ -1796,14 +1814,16 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1796,14 +1851,19 @@ pub fn session_settings_default() -> SettingsDefault {
                  variant: CodecTypeDefaultVariant::PyroWave,
              },
              pyrowave: PyroWaveConfigDefault {
 +                light_foveated_encoding: false,
++                foveation_profile: PyroWaveFoveationProfileDefault {
++                    variant: PyroWaveFoveationProfileDefaultVariant::Light,
++                },
 +                chroma_444: false,
                  transport: PyroWaveTransportDefault {
 -                    variant: PyroWaveTransportDefaultVariant::Udp,
@@ -8825,7 +8866,7 @@ index 1009e99..2e69a5b 100644
                  },
              },
              encoder_config: EncoderConfigDefault {
-@@ -1901,7 +1921,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1901,7 +1961,7 @@ pub fn session_settings_default() -> SettingsDefault {
                  }
              },
              foveated_encoding: SwitchDefault {
@@ -8834,7 +8875,7 @@ index 1009e99..2e69a5b 100644
                  content: FoveatedEncodingConfigDefault {
                      force_enable: false,
                      center_size_x: 0.20,
-@@ -1910,7 +1930,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1910,7 +1970,7 @@ pub fn session_settings_default() -> SettingsDefault {
                      center_shift_y: 0.0,
                      edge_ratio_x: 3.,
                      edge_ratio_y: 4.,
@@ -8843,7 +8884,7 @@ index 1009e99..2e69a5b 100644
                  },
              },
              clientside_foveation: SwitchDefault {
-@@ -2066,7 +2086,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2066,7 +2126,7 @@ pub fn session_settings_default() -> SettingsDefault {
                                  content: vec![],
                              },
                          },
@@ -8852,7 +8893,7 @@ index 1009e99..2e69a5b 100644
                      },
                      extra_openvr_props: default_custom_openvr_props,
                      button_mappings: OptionalDefault {
-@@ -2179,16 +2199,12 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2179,16 +2239,12 @@ pub fn session_settings_default() -> SettingsDefault {
                  content: DiscoveryConfigDefault {
                      // Beta: no pairing step. The pre-release protocol ID already keeps stock
                      // ALVR clients out; turn this off to approve each headset by hand.
@@ -8872,7 +8913,7 @@ index 1009e99..2e69a5b 100644
              },
              wired_client_autolaunch: true,
              web_server_port: 8082,
-@@ -2211,7 +2227,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2211,7 +2267,7 @@ pub fn session_settings_default() -> SettingsDefault {
              server_recv_buffer_bytes: socket_buffer.clone(),
              client_send_buffer_bytes: socket_buffer.clone(),
              client_recv_buffer_bytes: socket_buffer,
@@ -8881,7 +8922,7 @@ index 1009e99..2e69a5b 100644
              avoid_video_glitching: true,
              minimum_idr_interval_ms: 100,
              enable_on_connect_script: false,
-@@ -2262,7 +2278,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2262,7 +2318,7 @@ pub fn session_settings_default() -> SettingsDefault {
              },
              steamvr_launcher: SteamvrLauncherDefault {
                  driver_launch_action: DriverLaunchActionDefault {
@@ -8890,7 +8931,7 @@ index 1009e99..2e69a5b 100644
                  },
                  open_close_steamvr_with_dashboard: false,
              },
-@@ -2287,3 +2303,30 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2287,3 +2343,48 @@ pub fn session_settings_default() -> SettingsDefault {
          },
      }
  }
@@ -8919,5 +8960,23 @@ index 1009e99..2e69a5b 100644
 +            "chroma_444":false, "transport":"Tcp", "wavelet":"Haar", "decode_path":"Compute"
 +        })).unwrap();
 +        assert!(!old.light_foveated_encoding);
++        assert_eq!(old.foveation_profile, PyroWaveFoveationProfile::Light);
++    }
++    #[test]
++    fn stronger_profiles_are_fixed_and_recognized() {
++        assert_eq!(crate::SessionConfig::default().to_settings().video.pyrowave.foveation_profile,
++            PyroWaveFoveationProfile::Light);
++        for (profile, center, edge) in [(PyroWaveFoveationProfile::Light, 0.8, 1.5),
++            (PyroWaveFoveationProfile::Balanced, 0.68, 1.75), (PyroWaveFoveationProfile::Strong, 0.6, 2.0)] {
++            let config = pyrowave_foveation(profile);
++            assert_eq!((config.center_size_x, config.center_size_y), (center, center));
++            assert_eq!((config.edge_ratio_x, config.edge_ratio_y), (edge, edge));
++            assert_eq!((config.center_shift_x, config.center_shift_y), (0.0, 0.0));
++            assert!(!config.follow_gaze && !config.force_enable);
++            assert!(is_pyrowave_foveation(&config));
++        }
++        let mut arbitrary = pyrowave_light_foveation();
++        arbitrary.edge_ratio_x = 3.0;
++        assert!(!is_pyrowave_foveation(&arbitrary));
 +    }
 +}
