@@ -66,6 +66,17 @@ does not claim a faster client. Every empty expiry was a decode that had not
 published after 4 ms. Convert is too small to close that gap, and a different
 presenter cannot publish a frame the GPU has not finished.
 
-`.50` stayed installed after the verified run. Virtual Desktop remained the only
-registered driver, saved settings stayed 144 Hz / 2000 Mbps / 4:4:4, and SteamVR
-was stopped. Native 120 sustained and optical latency remain unmet.
+`.50` stayed installed after that classification. A later `.51` build
+(`682a348`) keeps the 4000 µs default and allows an explicit 6000 µs wait,
+leaving 2000 µs for the eye copy. One same-session ABBA at 120 Hz
+(`phase32-20261005T134501Z`) logged `budget_us=4000` on A and `6000` on B.
+Unique targets were 117.7/s versus 117.9/s and lost targets 2.3/s versus 2.1/s.
+The paired difference was inside one block of noise. Compositor stale counts
+were about 54 on the 4 ms blocks and about 126 on the 6 ms blocks, and eye-copy
+p90 rose by 0.43 ms on both longer-wait blocks. Keep the 4 ms default. The
+frames that arrive after 4 ms are already displayed on a later slot; holding
+the selection open to catch them makes the compositor repeat instead.
+
+Virtual Desktop remained the only registered driver, saved settings stayed
+144 Hz / 2000 Mbps / 4:4:4, and SteamVR was stopped. `.51` is the installed
+client. Native 120 sustained and optical latency remain unmet.

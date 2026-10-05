@@ -36,10 +36,16 @@ jobs:
           /tmp/latest-wait-test
           rustc --edition=2021 --test tools/fences/native_ready_test.rs -o /tmp/native-ready-test
           /tmp/native-ready-test
+          rustc --edition=2021 --test tools/quest3/producer_opportunity.rs -o /tmp/producer-opportunity-test
+          /tmp/producer-opportunity-test
+          rustc --edition=2021 --test tools/quest3/producer_prerecord.rs -o /tmp/producer-prerecord-test
+          /tmp/producer-prerecord-test
       - name: CPU source-chart scale and stripe regression (no VR)
         run: |
           python3 -m pip install --disable-pip-version-check -r tools/requirements-test.txt
           python3 -m tools.quest3.scene_pattern_test -v
+      - name: Bounded producer reservation and cancellation (CPU only)
+        run: g++ -std=c++17 -Wall -Wextra -Werror tools/pyroclient/prerecord_state_test.cpp -o /tmp/prerecord-state && /tmp/prerecord-state
       - name: Release-fence ownership and generation regression
         run: g++ -std=c++17 -Wall -Wextra -Werror -pthread tools/pyroclient/release_fence_registry_test.cpp -o /tmp/release-fence-test && /tmp/release-fence-test
       - run: g++ -std=c++17 -Wall -Werror tools/pyroclient/decode_path_test.cpp -o /tmp/decode-path && /tmp/decode-path
@@ -58,10 +64,34 @@ jobs:
           python3 -m tools.foveation.gpu_fixture /tmp/light-foveation-reference.txt
           g++ -std=c++17 -O2 -Wall -Wextra -Werror tools/pyroclient/gpu_readback_gles.cpp tools/foveation/gpu_test.cpp -lEGL -lGLESv2 -o /tmp/light-foveation-test
           /tmp/light-foveation-test tools/foveation/light.glsl /tmp/light-foveation-reference.txt
-  client:
+  publication_tests:
     runs-on: ubuntu-24.04
     needs: tests
-    if: ${{ !cancelled() && inputs.tests_only != true && (needs.tests.result == 'success' || needs.tests.result == 'skipped') }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct production decoder source
+        run: sh tools/ci/fetch_sources.sh "$XRWIRED_INPUTS/research"
+      - name: Linux client library prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential pkg-config libclang-dev libasound2-dev libpipewire-0.3-dev libspa-0.2-dev libgtk-3-dev libxrandr-dev libunwind-dev
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ws/research/ALVR-20.13.0/target/release
+          key: q3pw-publication-v1-${{ runner.os }}-${{ env.RUST_TOOLCHAIN }}-${{ github.sha }}
+          restore-keys: |
+            q3pw-publication-v1-${{ runner.os }}-${{ env.RUST_TOOLCHAIN }}-
+      - name: Production frame-slot races and Unix descriptor ownership
+        working-directory: ws/research/ALVR-20.13.0
+        run: cargo +"$RUST_TOOLCHAIN" test --release -p alvr_client_core --lib
+  client:
+    runs-on: ubuntu-24.04
+    needs: [tests, publication_tests]
+    if: ${{ !cancelled() && inputs.tests_only != true && needs.tests.result == 'success' && needs.publication_tests.result == 'success' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -149,7 +179,7 @@ jobs:
           (cd /tmp/quest3-notices && zip -qr "$GITHUB_WORKSPACE/out/LICENSES.zip" LICENSES)
           cp "$XRWIRED_INPUTS/research/ALVR-20.13.0/build/alvr_client_android/alvr_client_android.apk" out/Quest3-Pyrowave-dev.apk
           cp "$XRWIRED_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" out/
-          cp tools/pyrowave_android/pyrowave_android tools/udptest/udprecv-android tools/pyroclient/pyroclient_test tools/pyroclient/release_fence_gpu_test tools/pyroclient/ready_fence_gpu_test tools/pyroclient/libpyroclient.so "$XRWIRED_INPUTS/research/pyrowave/build-android/libpyrowave-shared.so" out/
+          cp tools/pyroclient/prerecord_gpu_test tools/pyrowave_android/pyrowave_android tools/udptest/udprecv-android tools/pyroclient/pyroclient_test tools/pyroclient/release_fence_gpu_test tools/pyroclient/ready_fence_gpu_test tools/pyroclient/libpyroclient.so "$XRWIRED_INPUTS/research/pyrowave/build-android/libpyrowave-shared.so" out/
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs out/Quest3-Pyrowave-dev.apk > out/APK-CERTIFICATE.txt
           (cd out && sha256sum * > SHA256SUMS.txt)
       - uses: actions/upload-artifact@v4
@@ -169,8 +199,8 @@ jobs:
           key: ${{ steps.cargo_client_cache.outputs.cache-primary-key }}
   streamer:
     runs-on: windows-2022
-    needs: tests
-    if: ${{ !cancelled() && inputs.tests_only != true && (needs.tests.result == 'success' || needs.tests.result == 'skipped') }}
+    needs: [tests, publication_tests]
+    if: ${{ !cancelled() && inputs.tests_only != true && needs.tests.result == 'success' && needs.publication_tests.result == 'success' }}
     env:
       LIBCLANG_PATH: C:\Program Files\LLVM\bin
     steps:

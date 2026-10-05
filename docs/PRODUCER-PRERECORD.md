@@ -198,3 +198,18 @@ this experimental worker, give its native decoder a Rust ownership guard: the
 current manual destructor handles normal exit, but environment unwind tests do
 not prove native cleanup after a Rust panic. Shared GPU resources still prohibit
 overlapping two decode submissions without a separate lifetime design.
+
+## `.49` cleanup repair: build candidate, not a performance change
+
+The worker now declares a native ownership guard after its allocation environment
+scope. Normal return and Rust panic both clear in-flight state and destroy the
+native decoder before restoring the environment. Constructor failure has no
+native owner. This replaces the previous manual normal-exit destructor; ordinary
+submission, preparation, completion and output timing are unchanged.
+
+The same production helper's CPU test verifies exactly one cleanup callback and
+that the allocation environment remains active during cleanup on normal return
+and unwind. It does not inject a GPU fault or establish real native panic-time
+teardown; matching Android compilation/artifact review remains required. Native
+libraries are unchanged by this Rust-only repair. Keep prerecord off and retain
+the measured `.48` installed pair until review. No FPS/latency gain is claimed.

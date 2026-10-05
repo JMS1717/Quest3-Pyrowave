@@ -23,4 +23,7 @@ $CXX $FLAGS "$HERE/release_fence_gpu_test.cpp" "$HERE/gpu_readback_gles.cpp" \
 $CXX $FLAGS "$HERE/ready_fence_gpu_test.cpp" "$HERE/gpu_readback_gles.cpp" \
     "$HERE/gpu_readback_android.cpp" -o "$HERE/ready_fence_gpu_test" \
     -L"$HERE" -lpyroclient -L"$PW/build-android" -lpyrowave-shared -landroid -llog -lEGL -lGLESv3 -lz
+$CXX $FLAGS "$HERE/prerecord_gpu_test.cpp" "$HERE/gpu_readback_gles.cpp" \
+    "$HERE/gpu_readback_android.cpp" -o "$HERE/prerecord_gpu_test" \
+    -L"$HERE" -lpyroclient -L"$PW/build-android" -lpyrowave-shared -landroid -llog -lEGL -lGLESv3 -lz
 echo "BUILD_OK -> $HERE/libpyroclient.so $HERE/pyroclient_test $HERE/release_fence_gpu_test $HERE/ready_fence_gpu_test"

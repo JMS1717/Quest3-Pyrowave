@@ -42,8 +42,8 @@ static uint32_t crc(const std::vector<unsigned char> &pixels) {
     return uint32_t(crc32(0, pixels.data(), uInt(pixels.size())));
 }
 int main(int argc, char **argv) {
-    if (argc < 3 || argc > 6) {
-        fprintf(stderr, "usage: %s A.wave B.wave [haar|97] [repeats=3] [draws=16]\n", argv[0]);
+    if (argc < 3 || argc > 7) {
+        fprintf(stderr, "usage: %s A.wave B.wave [haar|97] [repeats=3] [draws=16] [queue=default|low]\n", argv[0]);
         return 2;
     }
     int wavelet = argc > 3 && !strcmp(argv[3], "97") ? 97 : 2;
@@ -51,13 +51,15 @@ int main(int argc, char **argv) {
     int repeats = argc > 4 ? atoi(argv[4]) : 3;
     int draws = argc > 5 ? atoi(argv[5]) : 16;
     if (repeats < 1 || repeats > 8 || draws < 1 || draws > 128) return 2;
+    if (argc > 6 && strcmp(argv[6], "default") && strcmp(argv[6], "low")) return 2;
+    const bool low_priority = argc > 6 && !strcmp(argv[6], "low");
     Wave a, b;
     if (!load(argv[1], a) || !load(argv[2], b)) return 2;
     for (int i = 0; i < 5; ++i) if (a.params[i] != b.params[i]) return 2;
     int width=a.params[0], height=a.params[1];
     if (width <= 0 || height <= 0 || uint64_t(width)*height*4 > 256ull*1024*1024) return 2;
-    pyroclient *client = pyroclient_create_ex(width, height, a.params[3] == 1,
-                                             a.params[4], 3, wavelet, 2);
+    pyroclient *client = pyroclient_create_prioritized(width, height, a.params[3] == 1,
+                                             a.params[4], 3, wavelet, 2, low_priority);
     if (!client) return 1;
     const std::unique_ptr<pyroclient, decltype(&pyroclient_destroy)> owned(client, &pyroclient_destroy);
     AHardwareBuffer *buffer=nullptr;
@@ -111,7 +113,8 @@ int main(int argc, char **argv) {
     }
     printf("{\"probe\":\"release_fd_gpu_reuse\",\"width\":%d,\"height\":%d,\"repeats\":%d,"
            "\"draws_per_read\":%d,\"attached_fds\":%d,\"source_reuses\":%d,\"unsignaled_at_export\":%d,"
-           "\"a_crc32\":\"%08x\",\"b_crc32\":\"%08x\",\"exact_a_and_b\":true}\n",
-           width,height,repeats,draws,attached,reused,pending_at_export,crc(reference_a),crc(reference_b));
+           "\"a_crc32\":\"%08x\",\"b_crc32\":\"%08x\",\"queue_requested\":\"%s\",\"exact_a_and_b\":true}\n",
+           width,height,repeats,draws,attached,reused,pending_at_export,crc(reference_a),crc(reference_b),
+           low_priority ? "low" : "default");
     return 0;
 }

@@ -24,19 +24,12 @@ resume paused hardware work or unattended workers.
 
 ## Current engineering state
 
-**Paused by owner October 5.** Overnight automation and the local CI watcher
-are stopped. Fresh property/session and physical-proximity readbacks passed;
-Virtual Desktop is the only registered project-independent driver, with no VR
-server, Quest client or capture worker left running. Do not automatically resume.
-
-A separate [`.49` safety cleanup commit](https://github.com/JMS1717/Quest3-Pyrowave/commit/28e194101799ec07351dfe033645c2cd402cea54)
-adds native ownership so destruction precedes allocation-environment restoration
-on normal return and Rust unwind. Six production helper tests (including cleanup
-order), 115 Python tests, Rust parsing and a 92-file pinned reconstruction passed.
-[Matching cloud build](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37303701652)
-was still pending when work stopped; full artifact review and device acceptance
-remain pending. It is not installed or promoted, and claims no performance gain.
-Installed `.48` and older matching pairs are preserved. No new release.
+PR #3 integrates diagnostics and safety work while keeping the experiments off.
+See the [integration review and excluded Haar candidate](PR-3-REVIEW.md).
+The owner's Codex hardware pause remains in effect; merging source does not
+resume unattended tests. Installed-build statements below are historical records,
+not fresh device readbacks. The [scorecard](WHOLE-STACK-SCORECARD.md) records the
+later `.50`/`.51` screens and the reported `.51` installation.
 
 The `.48` prerecord worker is now active and measured, but **not promoted**.
 All matching builds passed; actual native activation, preparation and direct-only
@@ -104,7 +97,33 @@ were idle. Unique targets stayed 117.7/s with 3.9 lost/s. GPU decode was about
 prerecord, async copy, release fences, or another wait sweep, and do not build
 a presenter to recover these misses. Two concurrent GPU decodes remain unsafe
 with current shared scratch/query/upload lifetimes. The open lever is shortening
-that 5.9 ms GPU decode.
+that 5.9 ms GPU decode. An explicit 6 ms wait was measured on `.51` and is not
+the default: unique targets did not move, and compositor stale counts roughly
+doubled.
+
+**Haar [3,2] live, October 5:** Reviewed `.52` (`f3a7184`) was measured, then
+the branch removed that candidate. See [the format defect](PR-3-REVIEW.md).
+Binding 2 is declared `r16f` while the final plane is `R8`. A 12 s off/on/off
+at 120 Hz, 1000 Mbps, 4:2:0, 4160×2208 still ran: GPU decode went from 5.91 ms
+to 6.37 ms p50, unique targets from about 118/s to 112/s, and lost targets from
+about 2.3/s to 7.6/s. The flag was restored off. The standalone −50% result was
+a different device, a locked 788 MHz clock, and 4:4:4 with no compositor. On
+Quest the GPU sat at 640 MHz and about 87% busy, with roughly 700 preemptions
+per second. Drop this port. A corrected shader needs an exact-pixel proof
+before another live comparison. Adreno reports a 64-lane compute subgroup and
+32 KB of shared memory; that does not explain the 5.9 ms, and retuning this
+[3,2] port is not justified.
+
+**Reported fused final color, October 5:** `.53` (`656a81b`) skips the final luma Haar
+store when `debug.q3pw.fuse_color=1` and writes RGBA from that wavelet plus the
+4:2:0 chroma planes in the existing fragment pass. A 12 s off/on/off at 120 Hz,
+1000 Mbps, 4:2:0, 4160×2208: combined GPU decode+convert 6.62 ms to 5.40 ms
+p50 (−18%), fence 7.94 ms to 6.89 ms (−13%), lost targets about 3.8/s to 1.7/s.
+Unique targets moved only about 117/s to 118/s. These are preliminary reported
+short-screen results, not sustained or exact-pixel acceptance. That implementation
+is preserved on `experiment/fuse-color-review` and excluded from this integration;
+`debug.q3pw.fuse_color` is not implemented by the integrated `.51` decoder. Require
+exact-pixel and setting-lifetime checks before proposing it for integration.
 Native 120 sustained/optical acceptance remains unmet. The historical evidence
 below records earlier hypotheses; completed experiments are not pending work.
 

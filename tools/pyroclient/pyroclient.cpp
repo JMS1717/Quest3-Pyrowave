@@ -1,8 +1,12 @@
+#include <algorithm>
 // See pyroclient.h. Ported from tools/pyrowave_android/main.cpp, which proved every step here on
 // the Adreno 740; the harness stays as the record and the scoring tool.
 #include "pyroclient.h"
 #include "decode_path.h"
 #include "release_fence_registry.h"
+#include "prerecord_state.h"
+#include <thread>
+#include <utility>
 
 #include <android/hardware_buffer.h>
 #include <android/log.h>
@@ -154,13 +158,31 @@ struct pyroclient {
     VkFence fence = VK_NULL_HANDLE;
     VkQueryPool queries = VK_NULL_HANDLE;
     bool planes_initialised = false;
+    // Standalone prototype only. ALVR does not call enable or these APIs yet.
+    bool prerecord_enabled = false;
+    std::thread::id prerecord_owner;
+    q3pw::PrerecordState prerecord;
+    VkCommandBuffer spare_cmd = VK_NULL_HANDLE;
+    bool prepared_first_use = false, prepared_planes_initialised = false;
+    std::chrono::steady_clock::time_point prepared_begin, prepared_end, pending_record_done;
+    double prepared_queue_ms = 0;
+    bool prerecord_owned() const { return prerecord_enabled && prerecord_owner == std::this_thread::get_id(); }
+    std::array<bool, 3> protected_slots(AHardwareBuffer *a, AHardwareBuffer *b) const {
+        return {ring[0].ahb == a || ring[0].ahb == b, ring[1].ahb == a || ring[1].ahb == b,
+                ring[2].ahb == a || ring[2].ahb == b};
+    }
+    bool record_commands(Slot &s);
+    bool submit_recorded(Slot &s, bool wait_released, pyroclient_frame_info *info, int *ready_fd,
+                         std::chrono::steady_clock::time_point begin,
+                         std::chrono::steady_clock::time_point recorded, bool defer_finish);
+    bool abandon_prepared(uint64_t generation);
 
     bool create_device();
     bool create_planes();
     bool create_convert();
     bool create_fragment_convert();
     bool create_slot(Slot &s);
-    bool record_and_submit(Slot &s, pyroclient_frame_info *info, int *ready_fd = nullptr);
+    bool record_and_submit(Slot &s, pyroclient_frame_info *info, int *ready_fd = nullptr, bool defer_finish = false);
     bool finish_pending(pyroclient_frame_info *info);
     void destroy();
 };
@@ -626,7 +648,7 @@ static void image_barrier(VkCommandBuffer cmd, VkImage img, VkImageLayout from, 
     vkCmdPipelineBarrier(cmd, srcS, dstS, 0, 0, nullptr, 0, nullptr, 1, &b);
 }
 
-bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info, int *ready_fd) {
+bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info, int *ready_fd, bool defer_finish) {
     if (release_poisoned || pending_submission) return false;
     const auto t0 = std::chrono::steady_clock::now();
     bool wait_released = false;
@@ -657,6 +679,11 @@ bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info, int *re
         }
     }
     VK_TRY(vkResetFences(device, 1, &fence));
+    if (!record_commands(s)) return false;
+    return submit_recorded(s, wait_released, info, ready_fd, t0, std::chrono::steady_clock::now(), defer_finish);
+}
+
+bool pyroclient::record_commands(Slot &s) {
     VK_TRY(vkResetCommandBuffer(cmd, 0));
     VkCommandBufferBeginInfo bi = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
     bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -738,6 +765,13 @@ bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info, int *re
                   outStage, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, family, VK_QUEUE_FAMILY_FOREIGN_EXT);
 
     VK_TRY(vkEndCommandBuffer(cmd));
+    return true;
+}
+
+bool pyroclient::submit_recorded(Slot &s, bool wait_released, pyroclient_frame_info *info, int *ready_fd,
+                                std::chrono::steady_clock::time_point t0,
+                                std::chrono::steady_clock::time_point recorded, bool defer_finish) {
+    if (pending_submission || release_poisoned) return false;
     VkSubmitInfo si = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
     // Wait before the FOREIGN acquire barrier as well as any writes. Preserve
     // the existing image-family/layout transitions; a semaphore does not replace them.
@@ -753,6 +787,14 @@ bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info, int *re
     VK_TRY(vkQueueSubmit(queue, 1, &si, fence));
     pending_submission = true;
     pending_begin = t0; pending_submit = t_submit;
+    // Legacy metrics keep their existing boundary. Prototype reports queue delay
+    // separately and total still includes it; it cannot be called a decode gain.
+    pending_record_done = prerecord_enabled ? recorded : t_submit;
+    prepared_queue_ms = prerecord_enabled ? std::chrono::duration<double, std::milli>(t_submit - recorded).count() : 0;
+    if (defer_finish) {
+        if (info) info->record_ms = std::chrono::duration<double, std::milli>(recorded - t0).count();
+        return true; // No output publication/completion until finish_pending.
+    }
     if (early) {
         VkSemaphoreGetFdInfoKHR exported = { VK_STRUCTURE_TYPE_SEMAPHORE_GET_FD_INFO_KHR };
         exported.semaphore = ready_semaphore;
@@ -776,6 +818,7 @@ bool pyroclient::record_and_submit(Slot &s, pyroclient_frame_info *info, int *re
 }
 
 bool pyroclient::finish_pending(pyroclient_frame_info *info) {
+    if (prerecord_enabled && (!prerecord_owned() || !info)) return false;
     if (release_poisoned) return false;
     if (!pending_submission) return true;
     const VkResult completed = vkWaitForFences(device, 1, &fence, VK_TRUE, 1000ull * 1000 * 1000);
@@ -783,22 +826,30 @@ bool pyroclient::finish_pending(pyroclient_frame_info *info) {
         // A timeout is not completion: never reset an outstanding command/fence
         // or recycle shared Granite staging/planes after this failure.
         release_poisoned = true;
+        if (prerecord_enabled) prerecord.poisoned = true;
         LOGE("[Q3PW_READY_FD] completion failed=%d; decoder poisoned", int(completed));
         return false;
     }
-    pending_submission = false;
-
     const auto t_fence = std::chrono::steady_clock::now();
     if (info) {
-        info->record_ms = std::chrono::duration<double, std::milli>(pending_submit - pending_begin).count();
+        info->record_ms = std::chrono::duration<double, std::milli>(pending_record_done - pending_begin).count();
         info->wait_ms = std::chrono::duration<double, std::milli>(t_fence - pending_submit).count();
         uint64_t t[3] = {};
         if (vkGetQueryPoolResults(device, queries, 0, 3, sizeof t, t, sizeof(uint64_t),
                                   VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT) == VK_SUCCESS) {
             info->decode_ms = double(t[1] - t[0]) * ns_per_tick / 1e6;
             info->convert_ms = double(t[2] - t[1]) * ns_per_tick / 1e6;
+        } else if (prerecord_enabled) {
+            release_poisoned = true;
+            prerecord.poisoned = true;
+            LOGE("[Q3PW_PRERECORD] completion query collection failed; stopped");
+            return false;
         }
         info->total_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - pending_begin).count();
+    }
+    pending_submission = false;
+    if (prerecord_enabled && !prerecord.complete_active(true)) {
+        release_poisoned = true; return false;
     }
     // Reporting reads already-collected Granite frame-context intervals; it
     // does not add GPU queries or claim per-frame percentiles. Only call after
@@ -818,6 +869,12 @@ bool pyroclient::finish_pending(pyroclient_frame_info *info) {
 
 void pyroclient::destroy() {
     if (device) vkDeviceWaitIdle(device);
+    // B has never been submitted. Reset its borrowed command before Granite can
+    // advance/destruct its retained staging context. No unexecuted Granite GPU
+    // queries exist: the prototype disabled those before the first recording.
+    if (prerecord_enabled && prerecord.prepared.slot < 3 && spare_cmd) {
+        vkResetCommandBuffer(spare_cmd, 0);
+    }
     if (ready_semaphore) vkDestroySemaphore(device, ready_semaphore, nullptr);
     if (decoder) pyrowave_decoder_destroy(decoder);
     for (Slot &s : ring) {
@@ -976,7 +1033,7 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
 
 extern "C" int pyroclient_push_packet(pyroclient *c, const void *data, size_t size) {
     if (!c || !data || !size) return -1;
-    if (c->pending_submission || c->release_poisoned) return -3;
+    if (c->pending_submission || c->release_poisoned || c->prerecord_enabled) return -3;
     pyrowave_result r = pyrowave_decoder_push_packet(c->decoder, data, size);
     if (r != PYROWAVE_SUCCESS) return -2;
     return pyrowave_decoder_decode_is_ready(c->decoder, false) ? 1 : 0;
@@ -1000,7 +1057,7 @@ extern "C" int pyroclient_submit_guarded(pyroclient *c, AHardwareBuffer **out, p
     if (ready_fd) *ready_fd = -1;
     if (!c || !out) return -1;
     *out = nullptr;
-    if (c->pending_submission || c->release_poisoned) return -6;
+    if (c->pending_submission || c->release_poisoned || c->prerecord_enabled) return -6;
     // Partial reconstruction requires pristine low-frequency bands. The old UDP caller
     // decoded arbitrary packet subsets, which can make the entire picture disappear.
     // Both transports now require a fully validated frame before recording GPU work.
@@ -1029,7 +1086,7 @@ extern "C" int pyroclient_finish_pending(pyroclient *c, pyroclient_frame_info *i
     return c && c->finish_pending(info) ? 0 : -1;
 }
 extern "C" void pyroclient_clear(pyroclient *c) {
-    if (c && !c->pending_submission && !c->release_poisoned) pyrowave_decoder_clear(c->decoder);
+    if (c && !c->pending_submission && !c->release_poisoned && !c->prerecord_enabled) pyrowave_decoder_clear(c->decoder);
 }
 
 extern "C" uint64_t pyroclient_output_release_token(AHardwareBuffer *buffer) {
@@ -1040,3 +1097,130 @@ extern "C" int pyroclient_attach_release_fd(AHardwareBuffer *buffer, uint64_t to
 }
 
 extern "C" void pyroclient_destroy(pyroclient *c) { if (!c) return; c->destroy(); delete c; }
+
+
+// Explicit standalone diagnostic APIs. None are invoked by the installed ALVR
+// path. Single producer owner, no early publication, exactly three output slots.
+extern "C" int pyroclient_prerecord_enable(pyroclient *c) {
+    if (!c || c->pending_submission || c->release_poisoned || c->prerecord_enabled ||
+        !c->planes_initialised || !std::all_of(c->ring.begin(), c->ring.end(), [](const Slot &s) { return !s.first_use; }) ||
+        !c->haar || c->chroma444 || c->fragment_path ||
+        c->ready_fences || c->release_fences || c->decode_stage_probe || c->ring.size()!=3 ||
+        !getenv("PYROWAVE_NO_LINEAR_TEX") || strcmp(getenv("PYROWAVE_NO_LINEAR_TEX"), "1")) return -1;
+    VkCommandBufferAllocateInfo ca = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+    ca.commandPool=c->pool; ca.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY; ca.commandBufferCount=1;
+    if (vkAllocateCommandBuffers(c->device,&ca,&c->spare_cmd)!=VK_SUCCESS) return -2;
+    if (pyrowave_decoder_set_timestamp_recording(c->decoder,0)!=PYROWAVE_SUCCESS) return -2;
+    c->prerecord_owner=std::this_thread::get_id();
+    c->prerecord_enabled=true;
+    LOGI("[Q3PW_PRERECORD_SETUP] explicit_api=1 warmed_slots=3 max_gpu=1 max_prepared=1 granite_gpu_stage_queries=0 completion_queries=1");
+    return 0;
+}
+
+extern "C" int pyroclient_prerecord_start(pyroclient *c, const void *data, size_t size,
+                                          AHardwareBuffer **out, pyroclient_frame_info *info,
+                                          AHardwareBuffer *a, AHardwareBuffer *b) {
+    if (out) *out=nullptr;
+    if (!c || !out || !info || !data || !size || !c->prerecord_owned() ||
+        c->release_poisoned || c->pending_submission || c->prerecord.prepared.slot<3) return -6;
+    auto ticket=c->prerecord.start(c->protected_slots(a,b));
+    if (ticket.slot==3) return -4;
+    pyrowave_decoder_clear(c->decoder);
+    if (pyrowave_decoder_push_packet(c->decoder,data,size)!=PYROWAVE_SUCCESS ||
+        !pyrowave_decoder_decode_is_ready(c->decoder,false)) {
+        c->prerecord.reject_unsubmitted_start(ticket);
+        return -3;
+    }
+    *info={}; info->complete=1;
+    if (!c->record_and_submit(c->ring[ticket.slot],info,nullptr,true)) {
+        c->release_poisoned=true; c->prerecord.poisoned=true; return -2;
+    }
+    *out=c->ring[ticket.slot].ahb;
+    return 0; // Output remains reserved and MUST NOT be read/published yet.
+}
+
+extern "C" int pyroclient_prerecord_pending_status(pyroclient *c) {
+    if (!c || !c->prerecord_owned() || c->release_poisoned || !c->pending_submission) return -1;
+    auto status=vkGetFenceStatus(c->device,c->fence);
+    if (status==VK_NOT_READY) return 0;
+    if (status==VK_SUCCESS) return 1; // finish_pending still must collect queries.
+    c->release_poisoned=true; c->prerecord.poisoned=true; return -2;
+}
+
+extern "C" int pyroclient_prerecord_prepare(pyroclient *c, const void *data, size_t size,
+                                            AHardwareBuffer *a, AHardwareBuffer *b, uint64_t *generation) {
+    if (generation) *generation=0;
+    if (!c || !data || !size || !generation || !c->prerecord_owned() || c->release_poisoned ||
+        !c->pending_submission || c->prerecord.prepared.slot<3) return -6;
+    auto ticket=c->prerecord.prepare(c->protected_slots(a,b));
+    if (ticket.slot==3) return -4;
+    if (pyrowave_device_next_context_ready(c->pyro)!=1) {
+        c->prerecord.abandon(ticket); return 0; // Defer, never blind context advance.
+    }
+    // The old packet's uploads are already copied/retained in its Granite context.
+    // Fixed geometry is checked by PyroWave's sequence parser. GPU execution of
+    // shared payload/offset/wavelet/planes remains serial. Growth is denied below.
+    pyrowave_decoder_clear(c->decoder);
+    if (pyrowave_decoder_push_packet(c->decoder,data,size)!=PYROWAVE_SUCCESS ||
+        !pyrowave_decoder_decode_is_ready(c->decoder,false)) {
+        c->prerecord.abandon(ticket); return -3;
+    }
+    if (pyrowave_decoder_prerecord_upload_fits(c->decoder)!=1) {
+        c->prerecord.abandon(ticket);
+        return -7; // Growth is deferred to a synchronous start AFTER A completes.
+    }
+    Slot &s=c->ring[ticket.slot];
+    c->prepared_first_use=s.first_use;
+    c->prepared_planes_initialised=c->planes_initialised;
+    c->prepared_begin=std::chrono::steady_clock::now();
+    std::swap(c->cmd,c->spare_cmd);
+    bool recorded=c->record_commands(s);
+    std::swap(c->cmd,c->spare_cmd);
+    c->prepared_end=std::chrono::steady_clock::now();
+    if (!recorded) {
+        vkResetCommandBuffer(c->spare_cmd,0);
+        s.first_use=c->prepared_first_use; c->planes_initialised=c->prepared_planes_initialised;
+        c->release_poisoned=true; c->prerecord.poisoned=true; return -2;
+    }
+    *generation=ticket.generation;
+    return 1; // B recorded; A may still be running; B has not been submitted.
+}
+
+bool pyroclient::abandon_prepared(uint64_t generation) {
+    auto ticket=prerecord.prepared;
+    if (!prerecord_owned() || release_poisoned || ticket.slot==3 || ticket.generation!=generation) return false;
+    // Never advance the context until the unsubmitted borrowed command is reset.
+    if (vkResetCommandBuffer(spare_cmd,0)!=VK_SUCCESS) {
+        release_poisoned=true; prerecord.poisoned=true; return false;
+    }
+    ring[ticket.slot].first_use=prepared_first_use;
+    planes_initialised=prepared_planes_initialised;
+    pyrowave_decoder_clear(decoder);
+    // Staging/views stay retained in this context. No resource is recycled now;
+    // future checked advance retires it, after the older actual submission.
+    return prerecord.abandon(ticket);
+}
+
+extern "C" int pyroclient_prerecord_cancel(pyroclient *c, uint64_t generation) {
+    return c && c->abandon_prepared(generation) ? 0 : -1;
+}
+
+extern "C" int pyroclient_prerecord_submit(pyroclient *c, uint64_t generation,
+                                          AHardwareBuffer **out, pyroclient_frame_info *info) {
+    if (out) *out=nullptr;
+    if (!c || !out || !info || !c->prerecord_owned() || c->release_poisoned || c->pending_submission) return -6;
+    auto ticket=c->prerecord.prepared;
+    if (ticket.slot==3 || ticket.generation!=generation || !c->prerecord.submit(ticket)) return -4;
+    std::swap(c->cmd,c->spare_cmd); // Old active command was fence-verified, now spare.
+    *info={}; info->complete=1;
+    if (vkResetFences(c->device,1,&c->fence)!=VK_SUCCESS ||
+        !c->submit_recorded(c->ring[ticket.slot],false,info,nullptr,c->prepared_begin,c->prepared_end,true)) {
+        c->release_poisoned=true; c->prerecord.poisoned=true; return -2;
+    }
+    *out=c->ring[ticket.slot].ahb;
+    return 0;
+}
+
+extern "C" double pyroclient_prerecord_queue_ms(pyroclient *c) {
+    return c && c->prerecord_owned() ? c->prepared_queue_ms : -1;
+}
