@@ -93,6 +93,20 @@ def foveation(mode, profile=None):
         result.update(profile=profile, previous_profile=pyro['foveation_profile']['variant'].lower())
     return result
 
+def latency_stamp(enabled):
+    """Toggle the server's optical latency stamp (diagnostic only; see docs/OPTICAL-LATENCY.md)."""
+    before = session()
+    pyro = before['session_settings']['video']['pyrowave']
+    if 'latency_stamp' not in pyro:
+        raise ValueError('The latency stamp requires a matching server with the latency_stamp setting')
+    previous = bool(pyro['latency_stamp'])
+    set_values({'session_settings.video.pyrowave.latency_stamp': bool(enabled)})
+    after = session()['session_settings']['video']['pyrowave']
+    if after['latency_stamp'] != bool(enabled):
+        raise RuntimeError('Latency stamp setting rejected')
+    return {'latency_stamp': bool(enabled), 'previous': previous,
+            'settings_verified': True, 'steamvr_restart_required': True}
+
 def resolution(render_eye=None, encode_eye=None, profile=None):
     if profile is not None:
         if render_eye is not None or encode_eye is not None:
@@ -195,6 +209,8 @@ def main():
     r.add_argument('--profile',choices=tuple(profiles()))
     f=sub.add_parser('foveation');f.add_argument('--mode',choices=['off','light'],required=True)
     f.add_argument('--profile',choices=['light','balanced','strong'])
+    ls=sub.add_parser('latency-stamp',help='Diagnostic clock stamp in each eye; requires a SteamVR restart')
+    ls.add_argument('--state',choices=['on','off'],required=True)
     u=sub.add_parser('usb');g=u.add_mutually_exclusive_group(required=True)
     g.add_argument('--enable',action='store_true');g.add_argument('--disable',action='store_true')
     c=sub.add_parser('apply');c.add_argument('--codec',choices=['PyroWave','H264','Hevc','AV1'],default='PyroWave')
@@ -206,6 +222,7 @@ def main():
     if a.cmd=='restart':restart(a.steamvr,a.streamer);return
     if a.cmd=='resolution':print(json.dumps(resolution(a.render_eye,a.encode_eye,a.profile)));return
     if a.cmd=='foveation':print(json.dumps(foveation(a.mode,a.profile)));return
+    if a.cmd=='latency-stamp':print(json.dumps(latency_stamp(a.state=='on')));return
     if a.cmd=='usb':usb(a.enable);print('USB mode enabled; restart SteamVR if transport changed' if a.enable else 'USB mode disabled');return
     if a.cmd=='apply':print(json.dumps(apply(a.codec,a.mbps,a.hz,a.decode_path,json.loads(Path(a.capabilities).read_text()),a.chroma,a.transport,a.wavelet)));return
     s=session();v=s['session_settings']['video'];clients=s.get('client_connections',{})

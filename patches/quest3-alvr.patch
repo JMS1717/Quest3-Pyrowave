@@ -3239,10 +3239,14 @@ index 7765bb4..b102615 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..0cba1f1 100644
+index a0fd36f..d7c137f 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
-@@ -4,7 +4,11 @@ mod graphics;
+@@ -1,10 +1,15 @@
+ mod c_api;
++mod cadence_probe;
+ mod extra_extensions;
+ mod graphics;
  mod interaction;
  mod lobby;
  mod passthrough;
@@ -3254,7 +3258,7 @@ index a0fd36f..0cba1f1 100644
  
  use crate::stream::ParsedStreamConfig;
  use alvr_client_core::{ClientCapabilities, ClientCoreContext, ClientCoreEvent};
-@@ -28,7 +32,7 @@ use interaction::{InteractionContext, InteractionSourcesConfig};
+@@ -28,7 +33,7 @@ use interaction::{InteractionContext, InteractionSourcesConfig};
  use lobby::Lobby;
  use openxr as xr;
  use passthrough::PassthroughLayer;
@@ -3263,7 +3267,7 @@ index a0fd36f..0cba1f1 100644
  use stream::StreamContext;
  
  fn from_xr_vec3(v: xr::Vector3f) -> Vec3 {
-@@ -117,6 +121,26 @@ fn default_view() -> xr::View {
+@@ -117,6 +122,26 @@ fn default_view() -> xr::View {
  }
  
  // This exists to circumvent dead-code analysis
@@ -3290,7 +3294,7 @@ index a0fd36f..0cba1f1 100644
  fn create_session(
      xr_instance: &xr::Instance,
      xr_system: xr::SystemId,
-@@ -137,6 +161,21 @@ pub fn entry_point() {
+@@ -137,6 +162,21 @@ pub fn entry_point() {
      alvr_client_core::init_logging();
  
      let platform = alvr_system_info::platform();
@@ -3312,7 +3316,7 @@ index a0fd36f..0cba1f1 100644
      #[cfg(target_os = "android")]
      let galaxy_xr = alvr_system_info::model_name() == "SM-I610";
      #[cfg(not(target_os = "android"))]
-@@ -176,6 +215,13 @@ pub fn entry_point() {
+@@ -176,6 +216,13 @@ pub fn entry_point() {
          available_extensions.khr_vulkan_enable2,
          available_extensions.khr_opengl_es_enable,
      );
@@ -3326,7 +3330,7 @@ index a0fd36f..0cba1f1 100644
  
      // todo: switch to vulkan
      assert!(available_extensions.khr_opengl_es_enable);
-@@ -198,6 +244,8 @@ pub fn entry_point() {
+@@ -198,6 +245,8 @@ pub fn entry_point() {
      exts.ext_local_floor = available_extensions.ext_local_floor;
      exts.fb_body_tracking = available_extensions.fb_body_tracking;
      exts.fb_color_space = available_extensions.fb_color_space;
@@ -3335,7 +3339,7 @@ index a0fd36f..0cba1f1 100644
      exts.fb_display_refresh_rate = available_extensions.fb_display_refresh_rate;
      exts.fb_eye_tracking_social = available_extensions.fb_eye_tracking_social;
      exts.fb_face_tracking2 = available_extensions.fb_face_tracking2;
-@@ -212,6 +260,8 @@ pub fn entry_point() {
+@@ -212,6 +261,8 @@ pub fn entry_point() {
      #[cfg(target_os = "android")]
      {
          exts.khr_android_create_instance = true;
@@ -3344,7 +3348,7 @@ index a0fd36f..0cba1f1 100644
      }
      exts.khr_convert_timespec_time = true;
      exts.khr_opengl_es_enable = true;
-@@ -263,6 +313,14 @@ pub fn entry_point() {
+@@ -263,6 +314,14 @@ pub fn entry_point() {
  
          let (xr_session, mut xr_frame_waiter, mut xr_frame_stream) =
              create_session(&xr_instance, xr_system, &graphics_context);
@@ -3359,7 +3363,7 @@ index a0fd36f..0cba1f1 100644
  
          let views_config = xr_instance
              .enumerate_view_configuration_views(
-@@ -287,15 +345,31 @@ pub fn entry_point() {
+@@ -287,15 +346,31 @@ pub fn entry_point() {
          let early_poll = extra_extensions::perf_settings::early_poll_enabled();
          alvr_common::error!("[EARLYPOLL] decoded frame polled before xrWaitFrame: {early_poll}");
  
@@ -3396,7 +3400,7 @@ index a0fd36f..0cba1f1 100644
              }
          } else {
              alvr_common::error!("[PERF] XR_EXT_performance_settings not advertised");
-@@ -313,19 +387,37 @@ pub fn entry_point() {
+@@ -313,19 +388,37 @@ pub fn entry_point() {
              views_config[0].recommended_image_rect_height,
          );
  
@@ -3438,7 +3442,7 @@ index a0fd36f..0cba1f1 100644
  
          // Whether anything is correcting for the ~26 ms the runtime predicts ahead. If the
          // compositor does not timewarp and ALVR does not either -- 20.13.0 hardcodes
-@@ -354,8 +446,10 @@ pub fn entry_point() {
+@@ -354,8 +447,10 @@ pub fn entry_point() {
              exts.fb_foveation,
              advertised_extension_names.len(),
          );
@@ -3451,7 +3455,7 @@ index a0fd36f..0cba1f1 100644
  
          if exts.fb_color_space {
              xr_session
-@@ -365,8 +459,8 @@ pub fn entry_point() {
+@@ -365,8 +460,8 @@ pub fn entry_point() {
  
          let capabilities = ClientCapabilities {
              default_view_resolution,
@@ -3462,7 +3466,7 @@ index a0fd36f..0cba1f1 100644
              encoder_high_profile: galaxy_xr || platform != Platform::Unknown,
              encoder_10_bits: galaxy_xr || platform != Platform::Unknown,
              encoder_av1: matches!(
-@@ -392,9 +486,16 @@ pub fn entry_point() {
+@@ -392,9 +487,16 @@ pub fn entry_point() {
              Rc::clone(&graphics_context),
              Arc::clone(&interaction_context),
              platform,
@@ -3480,13 +3484,19 @@ index a0fd36f..0cba1f1 100644
          let lobby_body_tracking_config = BodyTrackingSourcesConfig {
              body_tracking_fb: Switch::Disabled,
              body_tracking_bd: Switch::Enabled(BodyTrackingBDConfig::BodyTracking {
-@@ -412,11 +513,17 @@ pub fn entry_point() {
+@@ -412,11 +514,23 @@ pub fn entry_point() {
              .select_sources(&lobby_interaction_sources);
  
          let mut session_running = false;
 +        let mut surface_visible = false;
 +        let mut refresh_probe = None;
 +        let mut refresh_probed = false;
++        // Lobby-only no-decode cadence screen, once per app launch; see cadence_probe.rs.
++        let cadence_request = (platform == Platform::Quest3).then(|| cadence_probe::parse_request(
++            &extra_extensions::perf_settings::system_property("debug.q3pw.cadence_probe"))).flatten();
++        let mut cadence_probe = None::<cadence_probe::CadenceProbe>;
++        let mut cadence_started = false;
++        let cadence_epoch = Instant::now();
 +        let mut requested_refresh_rate = None::<f32>;
          let mut stream_context = None::<StreamContext>;
          let mut passthrough_layer = None;
@@ -3499,7 +3509,7 @@ index a0fd36f..0cba1f1 100644
          // Budget for the pre-xrWaitFrame poll: the previous frame's period, 72 Hz until known.
          let mut poll_interval = Duration::from_micros(13_889);
          'render_loop: loop {
-@@ -432,14 +539,31 @@ pub fn entry_point() {
+@@ -432,14 +546,32 @@ pub fn entry_point() {
                                  .begin(xr::ViewConfigurationType::PRIMARY_STEREO)
                                  .unwrap();
  
@@ -3529,10 +3539,11 @@ index a0fd36f..0cba1f1 100644
 +                            } // Drain producer before xrEndSession.
                              session_running = false;
 +                            refresh_probe = None;
++                            cadence_probe = None;
  
                              passthrough_layer = None;
  
-@@ -447,6 +571,8 @@ pub fn entry_point() {
+@@ -447,6 +579,8 @@ pub fn entry_point() {
  
                              xr_session.end().unwrap();
                          }
@@ -3541,10 +3552,13 @@ index a0fd36f..0cba1f1 100644
                          xr::SessionState::EXITING => break 'render_loop,
                          xr::SessionState::LOSS_PENDING => break 'render_loop,
                          _ => (),
-@@ -494,7 +620,29 @@ pub fn entry_point() {
+@@ -494,7 +628,32 @@ pub fn entry_point() {
                          lobby.update_hud_message(&message);
                      }
                      ClientCoreEvent::StreamingStarted(config) => {
++                        if cadence_probe.take().is_some() {
++                            error!("[Q3PW_CADENCE] aborted=stream_started");
++                        }
 +                        if let Some(overlay) = &mut performance_overlay { overlay.set_stream(&config); }
                          let config = ParsedStreamConfig::new(&config);
 +                        // The runtime may reject a previously confirmed mode after OS/thermal changes.
@@ -3571,7 +3585,7 @@ index a0fd36f..0cba1f1 100644
  
                          let context = StreamContext::new(
                              Arc::clone(&core_context),
-@@ -512,6 +660,8 @@ pub fn entry_point() {
+@@ -512,6 +671,8 @@ pub fn entry_point() {
                          stream_context = Some(context);
                      }
                      ClientCoreEvent::StreamingStopped => {
@@ -3580,7 +3594,7 @@ index a0fd36f..0cba1f1 100644
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -562,13 +712,23 @@ pub fn entry_point() {
+@@ -562,13 +723,36 @@ pub fn entry_point() {
                  }
              }
  
@@ -3600,12 +3614,25 @@ index a0fd36f..0cba1f1 100644
 +            if let Some(probe) = &mut refresh_probe {
 +                probe.request_next(&xr_session);
 +            }
++            if let Some((hz, seconds)) = cadence_request.filter(|_| {
++                !cadence_started && refresh_probed && stream_context.is_none() && exts.fb_display_refresh_rate
++            }) {
++                cadence_started = true;
++                let restore = xr_session.get_display_refresh_rate().unwrap_or(90.0);
++                match xr_session.request_display_refresh_rate(hz) {
++                    Ok(()) => {
++                        error!("[Q3PW_CADENCE] target_hz={hz} seconds={seconds} restore_hz={restore} started=true");
++                        cadence_probe = Some(cadence_probe::CadenceProbe::new(hz, seconds, restore));
++                    }
++                    Err(err) => error!("[Q3PW_CADENCE] target_hz={hz} request_rejected={err:?}"),
++                }
++            }
 +
 +            let wait_started = loop_probe.then(Instant::now);
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -576,12 +736,49 @@ pub fn entry_point() {
+@@ -576,12 +760,64 @@ pub fn entry_point() {
                      panic!();
                  }
              };
@@ -3613,6 +3640,21 @@ index a0fd36f..0cba1f1 100644
              let frame_interval =
                  Duration::from_nanos(frame_state.predicted_display_period.as_nanos() as _);
              poll_interval = frame_interval;
++            if let Some(probe) = &mut cadence_probe {
++                if let Some(line) = probe.observe(
++                    cadence_epoch.elapsed().as_nanos() as u64,
++                    frame_state.predicted_display_time.as_nanos(),
++                    frame_state.predicted_display_period.as_nanos() as u64,
++                ) {
++                    error!("{line}");
++                }
++                if probe.finished() {
++                    let restore = probe.restore_hz();
++                    let restored = xr_session.request_display_refresh_rate(restore).is_ok();
++                    error!("[Q3PW_CADENCE] restore_hz={restore} restored={restored}");
++                    cadence_probe = None;
++                }
++            }
 +            if let Some(probe) = &mut refresh_probe {
 +                if let Some(rates) =
 +                    probe.observe(&xr_session, frame_state.predicted_display_period.as_nanos())
@@ -3656,7 +3698,7 @@ index a0fd36f..0cba1f1 100644
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +802,15 @@ pub fn entry_point() {
+@@ -605,15 +841,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -3681,7 +3723,7 @@ index a0fd36f..0cba1f1 100644
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,13 +818,16 @@ pub fn entry_point() {
+@@ -621,13 +857,16 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -3699,7 +3741,7 @@ index a0fd36f..0cba1f1 100644
  
              if !frame_state.should_render {
                  xr_frame_stream
-@@ -654,22 +854,89 @@ pub fn entry_point() {
+@@ -654,22 +893,89 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
@@ -3797,7 +3839,7 @@ index a0fd36f..0cba1f1 100644
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +965,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +1004,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
@@ -7043,7 +7085,7 @@ index 81f2f8e..869fa77 100644
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da..c2327ae 100644
+index fc176da..711aae5 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -53,7 +53,8 @@ pub struct VideoPacket {
@@ -7094,17 +7136,18 @@ index fc176da..c2327ae 100644
  
      let mut brightness = 0.0;
      let mut contrast = 0.0;
-@@ -240,7 +234,9 @@ fn openvr_config_with_env(
+@@ -240,7 +234,10 @@ fn openvr_config_with_env(
          pyrowave_enabled: pyrowave.enabled,
          pyrowave_udp: pyrowave.udp,
          pyrowave_wavelet_53: pyrowave.wavelet_53,
 +        pyrowave_wavelet_haar: pyrowave.wavelet_haar,
          pyrowave_decode_path: pyrowave.decode_path as u32,
 +        pyrowave_chroma_444: settings.video.pyrowave.chroma_444,
++        pyrowave_latency_stamp: settings.video.pyrowave.latency_stamp,
          _controller_profile,
          _server_impl_debug: settings.extra.logging.debug_groups.server_impl,
          _client_impl_debug: settings.extra.logging.debug_groups.client_impl,
-@@ -629,6 +625,14 @@ fn connection_pipeline(
+@@ -629,6 +626,14 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -7119,7 +7162,7 @@ index fc176da..c2327ae 100644
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +653,9 @@ fn connection_pipeline(
+@@ -649,18 +654,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -7141,7 +7184,7 @@ index fc176da..c2327ae 100644
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -802,6 +797,10 @@ fn connection_pipeline(
+@@ -802,6 +798,10 @@ fn connection_pipeline(
          proto_socket.split(STREAMING_RECV_TIMEOUT).to_con()?;
  
      let mut new_openvr_config = contruct_openvr_config(session_manager_lock.session());
@@ -7152,7 +7195,7 @@ index fc176da..c2327ae 100644
      new_openvr_config.eye_resolution_width = stream_view_resolution.x;
      new_openvr_config.eye_resolution_height = stream_view_resolution.y;
      new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
-@@ -869,10 +868,11 @@ fn connection_pipeline(
+@@ -869,10 +869,11 @@ fn connection_pipeline(
  
      // PyroWave over UDP: a plain socket to the client's address. The same resolution fills
      // openvr_config for the C++ encoder, so the two sides cannot disagree.
@@ -7168,7 +7211,7 @@ index fc176da..c2327ae 100644
      if pyrowave.enabled {
          info!("{pyrowave}");
      }
-@@ -1102,7 +1102,10 @@ fn connection_pipeline(
+@@ -1102,7 +1103,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -7180,7 +7223,7 @@ index fc176da..c2327ae 100644
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1118,7 @@ fn connection_pipeline(
+@@ -1115,6 +1119,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -7188,7 +7231,7 @@ index fc176da..c2327ae 100644
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1135,14 @@ fn connection_pipeline(
+@@ -1131,6 +1136,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -7203,7 +7246,7 @@ index fc176da..c2327ae 100644
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1299,6 +1311,9 @@ fn connection_pipeline(
+@@ -1299,6 +1312,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -7213,7 +7256,7 @@ index fc176da..c2327ae 100644
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1552,9 +1567,10 @@ mod beta_tests {
+@@ -1552,9 +1568,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -7499,31 +7542,35 @@ index 1f84992..3bd71b9 100644
 +    }
 +}
 diff --git a/alvr/server_openvr/cpp/alvr_server/Settings.cpp b/alvr/server_openvr/cpp/alvr_server/Settings.cpp
-index e729ffa..e2f1e79 100644
+index e729ffa..931d63d 100644
 --- a/alvr/server_openvr/cpp/alvr_server/Settings.cpp
 +++ b/alvr/server_openvr/cpp/alvr_server/Settings.cpp
-@@ -65,6 +65,8 @@ void Settings::Load() {
+@@ -65,7 +65,10 @@ void Settings::Load() {
          m_pyrowaveEnabled = config.get("pyrowave_enabled").get<bool>();
          m_pyrowaveUdp = config.get("pyrowave_udp").get<bool>();
          m_pyrowaveWavelet53 = config.get("pyrowave_wavelet_53").get<bool>();
 +        m_pyrowaveWaveletHaar = config.get("pyrowave_wavelet_haar").get<bool>();
 +        m_pyrowaveChroma444 = config.get("pyrowave_chroma_444").get<bool>();
          m_pyrowaveDecodePath = (int32_t)config.get("pyrowave_decode_path").get<int64_t>();
++        m_pyrowaveLatencyStamp = config.get("pyrowave_latency_stamp").get<bool>();
          m_h264Profile = (int32_t)config.get("h264_profile").get<int64_t>();
          m_rateControlMode = (uint32_t)config.get("rate_control_mode").get<int64_t>();
+         m_fillerData = config.get("filler_data").get<bool>();
 diff --git a/alvr/server_openvr/cpp/alvr_server/Settings.h b/alvr/server_openvr/cpp/alvr_server/Settings.h
-index 7bed823..c3b4f9e 100644
+index 7bed823..c8ec82f 100644
 --- a/alvr/server_openvr/cpp/alvr_server/Settings.h
 +++ b/alvr/server_openvr/cpp/alvr_server/Settings.h
-@@ -44,6 +44,8 @@ public:
+@@ -44,7 +44,10 @@ public:
      bool m_pyrowaveEnabled = false;
      bool m_pyrowaveUdp = false;
      bool m_pyrowaveWavelet53 = false;
 +    bool m_pyrowaveWaveletHaar = false;
 +    bool m_pyrowaveChroma444 = false;
      int m_pyrowaveDecodePath = 0; // 0 auto, 1 fragment, 2 compute
++    bool m_pyrowaveLatencyStamp = false; // diagnostic clock stamp, tools/latency/latency_stamp.h
      int m_h264Profile;
      bool m_use10bitEncoder;
+     bool m_useFullRangeEncoding;
 diff --git a/alvr/server_openvr/cpp/alvr_server/shader/CompressAxisAlignedPixelShader.hlsl b/alvr/server_openvr/cpp/alvr_server/shader/CompressAxisAlignedPixelShader.hlsl
 index e77a8ab..a41aea8 100644
 --- a/alvr/server_openvr/cpp/alvr_server/shader/CompressAxisAlignedPixelShader.hlsl
@@ -7575,18 +7622,34 @@ index 5aae602..2f68f66 100644
      try {
          Debug("Try to use VideoEncoderNVENC.\n");
 diff --git a/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp b/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
-index 3b23460..668f121 100644
+index 3b23460..b346b60 100644
 --- a/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
 +++ b/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
-@@ -5,6 +5,7 @@
+@@ -3,8 +3,10 @@
+ #include "alvr_server/Settings.h"
+ #include "alvr_server/Utils.h"
  #include "alvr_server/bindings.h"
++#include "latency_stamp.h"
  
  #include <cstdlib>
 +#include <cstring>
  
  extern uint64_t g_DriverTestMode;
  
-@@ -552,9 +553,9 @@ bool FrameRender::Startup() {
+@@ -188,6 +190,12 @@ bool FrameRender::Startup() {
+     m_viewport.TopLeftX = 0;
+     m_viewport.TopLeftY = 0;
+ 
++    if (Settings::Instance().m_pyrowaveLatencyStamp) {
++        // ClearView needs D3D11.1; without it the stamp stays off instead of failing the stream.
++        m_pD3DRender->GetContext()->QueryInterface(IID_PPV_ARGS(m_stampContext.ReleaseAndGetAddressOf()));
++        Warn("[Q3PW_LATENCY_STAMP] requested=1 applied=%d\n", m_stampContext ? 1 : 0);
++    }
++
+     // Left eye scissor
+     m_scissorL.bottom = 0.0f;
+     m_scissorL.left = 0.0f;
+@@ -552,9 +560,9 @@ bool FrameRender::Startup() {
          m_pStagingTexture = yuvTexture;
      }
  
@@ -7599,7 +7662,7 @@ index 3b23460..668f121 100644
      enablePlanarYuv = PyroWaveEnabled() && !Settings::Instance().m_enableHdr;
      if (enablePlanarYuv) {
          uint32_t texWidth, texHeight;
-@@ -647,6 +648,37 @@ bool FrameRender::Startup() {
+@@ -647,6 +655,37 @@ bool FrameRender::Startup() {
              planarTargets,
              planarParamBuffer.Get()
          );
@@ -7637,7 +7700,19 @@ index 3b23460..668f121 100644
      }
  
      Debug("Staging Texture created\n");
-@@ -992,6 +1024,12 @@ bool FrameRender::RenderFrame(
+@@ -974,6 +1013,11 @@ bool FrameRender::RenderFrame(
+         );
+     }
+ 
++    // Stamp the composed eyes, before color correction, foveation and YCbCr conversion.
++    if (m_stampContext) {
++        DrawLatencyStamp();
++    }
++
+     // Restore full viewport/scissor rect for the rest
+     m_pD3DRender->GetContext()->RSSetViewports(1, &m_viewport);
+     m_pD3DRender->GetContext()->RSSetScissorRects(1, &m_scissor);
+@@ -992,6 +1036,12 @@ bool FrameRender::RenderFrame(
  
      if (enablePlanarYuv) {
          m_planarPipeline->Render();
@@ -7650,7 +7725,40 @@ index 3b23460..668f121 100644
      }
  
      m_pD3DRender->GetContext()->Flush();
-@@ -1003,7 +1041,8 @@ ComPtr<ID3D11Texture2D> FrameRender::GetTexture() { return m_pStagingTexture; }
+@@ -999,11 +1049,41 @@ bool FrameRender::RenderFrame(
+     return true;
+ }
+ 
++void FrameRender::DrawLatencyStamp() {
++    // Same clock as tools/quest3/latency_clock.py: floor(QPC * 1000 / frequency).
++    LARGE_INTEGER now, frequency;
++    QueryPerformanceCounter(&now);
++    QueryPerformanceFrequency(&frequency);
++    const uint64_t f = (uint64_t)frequency.QuadPart, t = (uint64_t)now.QuadPart;
++    const uint64_t ms = t / f * 1000 + t % f * 1000 / f;
++    const FLOAT black[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
++    const FLOAT white[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
++    for (const D3D11_VIEWPORT* eye : { &m_viewportL, &m_viewportR }) {
++        const q3pw_latency::Stamp stamp = q3pw_latency::make_stamp((int32_t)eye->TopLeftX,
++            (int32_t)eye->TopLeftY, (uint32_t)eye->Width, (uint32_t)eye->Height, ms, m_stampFrame);
++        D3D11_RECT rects[q3pw_latency::kMaxLit];
++        auto toRect = [](const q3pw_latency::Rect& r) {
++            D3D11_RECT out = { r.left, r.top, r.right, r.bottom };
++            return out;
++        };
++        rects[0] = toRect(stamp.background);
++        m_stampContext->ClearView(m_pRenderTargetView.Get(), black, rects, 1);
++        for (int i = 0; i < stamp.lit_count; i++) {
++            rects[i] = toRect(stamp.lit[i]);
++        }
++        if (stamp.lit_count > 0) {
++            m_stampContext->ClearView(m_pRenderTargetView.Get(), white, rects, (UINT)stamp.lit_count);
++        }
++    }
++    m_stampFrame++;
++}
++
+ ComPtr<ID3D11Texture2D> FrameRender::GetTexture() { return m_pStagingTexture; }
  
  void FrameRender::GetPlanarTextures(ID3D11Texture2D* out[3]) {
      for (int i = 0; i < 3; i++) {
@@ -7661,10 +7769,18 @@ index 3b23460..668f121 100644
  }
  
 diff --git a/alvr/server_openvr/cpp/platform/win32/FrameRender.h b/alvr/server_openvr/cpp/platform/win32/FrameRender.h
-index 8136dda..8a395c8 100644
+index 8136dda..bdae909 100644
 --- a/alvr/server_openvr/cpp/platform/win32/FrameRender.h
 +++ b/alvr/server_openvr/cpp/platform/win32/FrameRender.h
-@@ -69,7 +69,7 @@ public:
+@@ -5,6 +5,7 @@
+ #include <string>
+ 
+ #include <d3d11.h>
++#include <d3d11_1.h>
+ #include <d3dcompiler.h>
+ #include <directxcolors.h>
+ #include <directxmath.h>
+@@ -69,7 +70,7 @@ public:
  
      ComPtr<ID3D11Texture2D> GetTexture();
  
@@ -7673,7 +7789,7 @@ index 8136dda..8a395c8 100644
      /// path is off. Shared textures, so they can be imported by a Vulkan encoder.
      void GetPlanarTextures(ID3D11Texture2D* out[3]);
      bool HasPlanarTextures() const { return enablePlanarYuv; }
-@@ -125,6 +125,8 @@ private:
+@@ -125,9 +126,16 @@ private:
      std::unique_ptr<d3d_render_utils::RenderPipelineYUV> m_yuvPipeline;
  
      ComPtr<ID3D11Texture2D> m_planarTextures[3];
@@ -7682,6 +7798,14 @@ index 8136dda..8a395c8 100644
      std::unique_ptr<d3d_render_utils::RenderPipelinePlanar> m_planarPipeline;
      bool enablePlanarYuv = false;
  
++    // Optical latency stamp (video.pyrowave.latency_stamp): null when off or without D3D11.1.
++    ComPtr<ID3D11DeviceContext1> m_stampContext;
++    uint64_t m_stampFrame = 0;
++    void DrawLatencyStamp();
++
+     static bool SetGpuPriority(ID3D11Device* device) {
+         typedef enum _D3DKMT_SCHEDULINGPRIORITYCLASS {
+             D3DKMT_SCHEDULINGPRIORITYCLASS_IDLE,
 diff --git a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
 index fc0632b..356d833 100644
 --- a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
@@ -8350,7 +8474,7 @@ index 84100dc..65236d3 100644
  
  /// The profile whose every assignment the session (`session_settings` as JSON) currently holds,
 diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
-index 985a4d0..3033230 100644
+index 985a4d0..fb066a8 100644
 --- a/alvr/session/src/beta_tests.rs
 +++ b/alvr/session/src/beta_tests.rs
 @@ -31,7 +31,7 @@ fn video_shows_only_codec_experiment_controls() {
@@ -8362,7 +8486,7 @@ index 985a4d0..3033230 100644
      );
      assert_eq!(
          names(entries, Visibility::Advanced),
-@@ -49,36 +49,33 @@ fn video_shows_only_codec_experiment_controls() {
+@@ -49,36 +49,34 @@ fn video_shows_only_codec_experiment_controls() {
  fn codec_picker_offers_pyrowave_and_h264_only() {
      assert_eq!(
          visible_variants(&schema(), &["video", "preferred_codec"]).unwrap(),
@@ -8384,7 +8508,8 @@ index 985a4d0..3033230 100644
 +            "wavelet",
 +            "decode_path",
 +            "light_foveated_encoding",
-+            "foveation_profile"
++            "foveation_profile",
++            "latency_stamp"
 +        ])
      );
      assert_eq!(
@@ -8412,7 +8537,7 @@ index 985a4d0..3033230 100644
  }
  
  #[test]
-@@ -133,8 +130,11 @@ fn default_settings() -> Settings {
+@@ -133,8 +131,11 @@ fn default_settings() -> Settings {
  fn fresh_install_streams_the_recommended_profile() {
      let s = default_settings();
      assert_eq!(s.video.preferred_codec, CodecType::PyroWave);
@@ -8426,7 +8551,7 @@ index 985a4d0..3033230 100644
      for size in [
          &s.video.transcoding_view_resolution,
          &s.video.emulated_headset_view_resolution,
-@@ -142,33 +142,27 @@ fn fresh_install_streams_the_recommended_profile() {
+@@ -142,33 +143,27 @@ fn fresh_install_streams_the_recommended_profile() {
          assert!(matches!(
              size,
              FrameSize::Absolute {
@@ -8467,7 +8592,7 @@ index 985a4d0..3033230 100644
  }
  
  // Applies session-style assignments the way the dashboard's SetValues does.
-@@ -198,13 +192,10 @@ fn profile(name: &str) -> StreamingProfile {
+@@ -198,13 +193,10 @@ fn profile(name: &str) -> StreamingProfile {
  #[test]
  fn profiles_are_named_for_testers() {
      let profiles = streaming_profiles();
@@ -8485,7 +8610,7 @@ index 985a4d0..3033230 100644
  }
  
  #[test]
-@@ -218,13 +209,16 @@ fn recommended_profile_is_the_fresh_install() {
+@@ -218,13 +210,16 @@ fn recommended_profile_is_the_fresh_install() {
  fn h264_profile_is_the_measured_b15_cell() {
      let s = apply(&profile(H264_PROFILE));
      assert_eq!(s.video.preferred_codec, CodecType::H264);
@@ -8506,7 +8631,7 @@ index 985a4d0..3033230 100644
          }
      ));
      assert_eq!(s.video.max_buffering_frames, 1.5);
-@@ -233,20 +227,20 @@ fn h264_profile_is_the_measured_b15_cell() {
+@@ -233,20 +228,20 @@ fn h264_profile_is_the_measured_b15_cell() {
          EncoderQualityPresetNvidia::P1
      );
      assert_eq!(s.video.encoder_config.entropy_coding, EntropyCoding::Cavlc);
@@ -8536,7 +8661,7 @@ index 985a4d0..3033230 100644
  }
  
  fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
-@@ -261,21 +255,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
+@@ -261,21 +256,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
  fn effective_config_follows_settings_without_env() {
      let e = pyrowave_effective(&default_settings(), &env(&[]));
      assert!(e.enabled);
@@ -8563,7 +8688,7 @@ index 985a4d0..3033230 100644
      assert!(e.wavelet_53);
      assert_eq!(e.decode_path, PyroWaveDecodePath::Fragment);
  }
-@@ -284,6 +278,7 @@ fn effective_config_follows_a_non_default_setting() {
+@@ -284,6 +279,7 @@ fn effective_config_follows_a_non_default_setting() {
  fn research_env_overrides_win_and_are_reported() {
      let mut s = default_settings();
      s.video.preferred_codec = CodecType::H264;
@@ -8571,7 +8696,7 @@ index 985a4d0..3033230 100644
      let e = pyrowave_effective(
          &s,
          &env(&[
-@@ -302,8 +297,7 @@ fn research_env_overrides_win_and_are_reported() {
+@@ -302,8 +298,7 @@ fn research_env_overrides_win_and_are_reported() {
          vec![
              "ALVR_PYROWAVE",
              "ALVR_PYROWAVE_UDP",
@@ -8581,7 +8706,7 @@ index 985a4d0..3033230 100644
          ]
      );
  }
-@@ -320,8 +314,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
+@@ -320,8 +315,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
      let line = pyrowave_effective(&default_settings(), &env(&[])).to_string();
      assert_eq!(
          line,
@@ -8592,7 +8717,7 @@ index 985a4d0..3033230 100644
      );
  }
  
-@@ -398,6 +392,7 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
+@@ -398,6 +393,7 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
          "pyrowave_enabled",
          "pyrowave_udp",
          "pyrowave_wavelet_53",
@@ -8600,7 +8725,7 @@ index 985a4d0..3033230 100644
          "pyrowave_decode_path",
      ] {
          openvr.remove(key).expect(key);
-@@ -410,3 +405,20 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
+@@ -410,3 +406,20 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
          "upgrading must not forget the paired headset"
      );
  }
@@ -8622,10 +8747,10 @@ index 985a4d0..3033230 100644
 +    assert!(!e.wavelet_53);
 +}
 diff --git a/alvr/session/src/lib.rs b/alvr/session/src/lib.rs
-index d7d0dbb..d382c8f 100644
+index d7d0dbb..cb4d315 100644
 --- a/alvr/session/src/lib.rs
 +++ b/alvr/session/src/lib.rs
-@@ -119,7 +119,11 @@ pub struct OpenvrConfig {
+@@ -119,7 +119,13 @@ pub struct OpenvrConfig {
      #[serde(default)]
      pub pyrowave_wavelet_53: bool,
      #[serde(default)]
@@ -8634,11 +8759,13 @@ index d7d0dbb..d382c8f 100644
      pub pyrowave_decode_path: u32,
 +    #[serde(default)]
 +    pub pyrowave_chroma_444: bool,
++    #[serde(default)]
++    pub pyrowave_latency_stamp: bool,
  
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99..fdfc8cc 100644
+index 1009e99..de9d8e9 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -8690,7 +8817,7 @@ index 1009e99..fdfc8cc 100644
  }
  
  #[repr(u8)]
-@@ -618,34 +618,92 @@ pub enum PyroWaveWavelet {
+@@ -618,32 +618,95 @@ pub enum PyroWaveWavelet {
  #[schema(gui = "button_group")]
  pub enum PyroWaveDecodePath {
      // The driver heuristic, which picks the fragment path on Qualcomm. Kept for research.
@@ -8753,8 +8880,13 @@ index 1009e99..fdfc8cc 100644
      ))]
      #[schema(flag = "steamvr-restart")]
      pub decode_path: PyroWaveDecodePath,
- }
- 
++
++    #[serde(default)]
++    #[schema(strings(display_name = "Optical latency stamp (diagnostic)", help = "Draws the PC performance-counter clock (ms) and two frame-parity squares just below the center of each eye. Film a monitor running tools/quest3/latency_clock.py next to a headset lens to measure composition-to-photon latency. Leave off for play. Restart SteamVR."))]
++    #[schema(flag = "steamvr-restart")]
++    pub latency_stamp: bool,
++}
++
 +/// Only these fixed profiles are exposed by Quest3-Pyrowave. Generic stale
 +/// foveation/force-enable/gaze/environment settings cannot modify their geometry.
 +pub fn pyrowave_light_foveation_enabled(codec: CodecType, requested: bool, supported: bool) -> bool {
@@ -8782,12 +8914,10 @@ index 1009e99..fdfc8cc 100644
 +    [PyroWaveFoveationProfile::Light, PyroWaveFoveationProfile::Balanced, PyroWaveFoveationProfile::Strong]
 +        .into_iter()
 +        .any(|profile| *config == pyrowave_foveation(profile))
-+}
-+
+ }
+ 
  #[repr(u8)]
- #[derive(SettingsSchema, Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
- #[schema(gui = "button_group")]
-@@ -799,23 +857,20 @@ pub struct VideoConfig {
+@@ -799,23 +862,20 @@ pub struct VideoConfig {
      pub bitrate: BitrateConfig,
  
      #[schema(strings(
@@ -8816,7 +8946,7 @@ index 1009e99..fdfc8cc 100644
      pub foveated_encoding: Switch<FoveatedEncodingConfig>,
  
      #[schema(flag = "steamvr-restart")]
-@@ -1663,15 +1718,15 @@ pub struct Settings {
+@@ -1663,15 +1723,15 @@ pub struct Settings {
  }
  
  pub fn session_settings_default() -> SettingsDefault {
@@ -8835,7 +8965,7 @@ index 1009e99..fdfc8cc 100644
              },
          },
      };
-@@ -1742,7 +1797,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1742,7 +1802,7 @@ pub fn session_settings_default() -> SettingsDefault {
              adapter_index: 0,
              transcoding_view_resolution: view_resolution.clone(),
              emulated_headset_view_resolution: view_resolution,
@@ -8844,7 +8974,7 @@ index 1009e99..fdfc8cc 100644
              max_buffering_frames: 1.5,
              buffering_history_weight: 0.90,
              enforce_server_frame_pacing: true,
-@@ -1796,14 +1851,19 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1796,15 +1856,21 @@ pub fn session_settings_default() -> SettingsDefault {
                  variant: CodecTypeDefaultVariant::PyroWave,
              },
              pyrowave: PyroWaveConfigDefault {
@@ -8864,9 +8994,11 @@ index 1009e99..fdfc8cc 100644
 -                    variant: PyroWaveDecodePathDefaultVariant::Compute,
 +                    variant: PyroWaveDecodePathDefaultVariant::Auto,
                  },
++                latency_stamp: false,
              },
              encoder_config: EncoderConfigDefault {
-@@ -1901,7 +1961,7 @@ pub fn session_settings_default() -> SettingsDefault {
+                 gui_collapsed: true,
+@@ -1901,7 +1967,7 @@ pub fn session_settings_default() -> SettingsDefault {
                  }
              },
              foveated_encoding: SwitchDefault {
@@ -8875,7 +9007,7 @@ index 1009e99..fdfc8cc 100644
                  content: FoveatedEncodingConfigDefault {
                      force_enable: false,
                      center_size_x: 0.20,
-@@ -1910,7 +1970,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1910,7 +1976,7 @@ pub fn session_settings_default() -> SettingsDefault {
                      center_shift_y: 0.0,
                      edge_ratio_x: 3.,
                      edge_ratio_y: 4.,
@@ -8884,7 +9016,7 @@ index 1009e99..fdfc8cc 100644
                  },
              },
              clientside_foveation: SwitchDefault {
-@@ -2066,7 +2126,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2066,7 +2132,7 @@ pub fn session_settings_default() -> SettingsDefault {
                                  content: vec![],
                              },
                          },
@@ -8893,7 +9025,7 @@ index 1009e99..fdfc8cc 100644
                      },
                      extra_openvr_props: default_custom_openvr_props,
                      button_mappings: OptionalDefault {
-@@ -2179,16 +2239,12 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2179,16 +2245,12 @@ pub fn session_settings_default() -> SettingsDefault {
                  content: DiscoveryConfigDefault {
                      // Beta: no pairing step. The pre-release protocol ID already keeps stock
                      // ALVR clients out; turn this off to approve each headset by hand.
@@ -8913,7 +9045,7 @@ index 1009e99..fdfc8cc 100644
              },
              wired_client_autolaunch: true,
              web_server_port: 8082,
-@@ -2211,7 +2267,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2211,7 +2273,7 @@ pub fn session_settings_default() -> SettingsDefault {
              server_recv_buffer_bytes: socket_buffer.clone(),
              client_send_buffer_bytes: socket_buffer.clone(),
              client_recv_buffer_bytes: socket_buffer,
@@ -8922,7 +9054,7 @@ index 1009e99..fdfc8cc 100644
              avoid_video_glitching: true,
              minimum_idr_interval_ms: 100,
              enable_on_connect_script: false,
-@@ -2262,7 +2318,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2262,7 +2324,7 @@ pub fn session_settings_default() -> SettingsDefault {
              },
              steamvr_launcher: SteamvrLauncherDefault {
                  driver_launch_action: DriverLaunchActionDefault {
@@ -8931,7 +9063,7 @@ index 1009e99..fdfc8cc 100644
                  },
                  open_close_steamvr_with_dashboard: false,
              },
-@@ -2287,3 +2343,48 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2287,3 +2349,50 @@ pub fn session_settings_default() -> SettingsDefault {
          },
      }
  }
@@ -8961,6 +9093,8 @@ index 1009e99..fdfc8cc 100644
 +        })).unwrap();
 +        assert!(!old.light_foveated_encoding);
 +        assert_eq!(old.foveation_profile, PyroWaveFoveationProfile::Light);
++        assert!(!old.latency_stamp);
++        assert!(!crate::SessionConfig::default().to_settings().video.pyrowave.latency_stamp);
 +    }
 +    #[test]
 +    fn stronger_profiles_are_fixed_and_recognized() {

@@ -98,6 +98,18 @@ comparative GPU reconstruction-cost result and is excluded from acceptance.
 Temporary properties were restored with readback, and the proximity automation
 was disabled; no thermal safeguards were changed.
 
+## Stronger profile candidates
+
+`video.pyrowave.foveation_profile` selects the fixed geometry used when peripheral
+encoding is on. Light (80% center, 1.5x) is the default and the only profile with
+headset screens. Balanced (68% center, 1.75x) encodes 1824x1920 per eye from native
+2080x2208, about 24% fewer pixels. Strong (60% center, 2x) encodes 1664x1792, about
+35% fewer. Both are decode-budget candidates for 144/207 Hz without perceptual or
+sustained-performance acceptance. Their constants were chosen so the client's f32
+sizing and the server's mixed float/double sizing agree for every 8-pixel eye size
+from 512 to 4096 (tests/test_foveation.py). `python -m tools.quest3.control foveation
+--mode light --profile strong` selects one; see [PATH-TO-207.md](PATH-TO-207.md).
+
 ## Mapping safeguards and inspiration
 
 The implementation adapts the existing MIT-licensed

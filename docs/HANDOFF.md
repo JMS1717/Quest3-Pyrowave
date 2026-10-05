@@ -84,6 +84,12 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 ## Highest-value next experiment
 
+**207 Hz branch (October 5, no hardware run):** [PATH-TO-207.md](PATH-TO-207.md) adds
+Balanced and Strong peripheral profiles (about 24% and 35% fewer encoded pixels,
+candidates), fused final color behind `debug.q3pw.fuse_color` with a software
+exact-pixel gate, an optical latency stamp and a no-decode cadence probe. Its
+hardware plan starts with the Quest fused-color gate and the 207 Hz lobby cadence.
+
 Use the [next overnight plan](NEXT-OVERNIGHT.md) and the
 [October 5 scorecard](WHOLE-STACK-SCORECARD.md). The server already submits
 about 120 frames/s. About 3 unique targets/s are still missed after the
