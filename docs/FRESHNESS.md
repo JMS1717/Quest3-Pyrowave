@@ -107,3 +107,34 @@ resolve a gain of this size.
 
 Not yet shown: gameplay, perceptual smoothness, optical latency, or sustained
 thermal behavior with the default wait.
+
+## Overnight continuation: packet-arrival grace (`.36`, experimental)
+
+An October 4/5 takeover baseline on the reviewed `.34` pair measured 118.21,
+118.05 and 117.96 displayed target FPS in three 15-second blocks. Each block
+used native encode, runtime120, 1000 Mbps, 4:2:0, LOW decode priority and the
+default 4000 µs wait. No image cache or compositor filter was enabled. Source
+was the normalized stationary chart at 2080x2208 per eye. This confirms the
+short-screen baseline; it does not establish sustained gameplay acceptance.
+See [baseline evidence](../results/OVERNIGHT-BASELINE-2026-10-04.json).
+
+The remaining misses can include a packet arriving just after selection, when
+no decode is yet in flight. Candidate `.36` adds **default-off**
+`debug.q3pw.packet_grace_us`: allow up to 1000 µs for a packet to enter decode
+while the ready queue is empty. Once decoding starts, the existing wait can
+continue. Grace stays **inside** the current wait budget, capped at 4000 µs and
+half a display period; `frame_wait_us=0` disables both. It does not introduce a
+new frame queue, bypass a buffer lease or change producer synchronization.
+OS scheduling can still overshoot a sleep, as with the existing wait.
+
+The property is re-read about once per second for same-session comparisons.
+`[Q3PW_FRESH]` logs `packet_grace_us`; the parser separates those configurations
+and discards their transition windows. Malformed, negative or overflowing
+values disable grace. Excessive valid values clamp to 1000 µs.
+
+This is a hypothesis, **not a measured improvement**. After matching build and
+correctness review, compare 0/250/500/1000 µs at unchanged source, bitrate,
+chroma, refresh, queue priority, overlay and thermal conditions. Reject it if
+fresh FPS/pacing, client completion, compositor lead or latency regress. A
+stationary-head total estimate can change because of pose-history matching;
+compare client-side stages and matched game-time estimates separately.

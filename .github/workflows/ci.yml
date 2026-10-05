@@ -27,6 +27,8 @@ jobs:
           /tmp/ready-wait-test
           rustc --edition=2021 --test tools/fences/ready_frames.rs -o /tmp/ready-frames-test
           /tmp/ready-frames-test
+          rustc --edition=2021 --test tools/fences/latest_wait.rs -o /tmp/latest-wait-test
+          /tmp/latest-wait-test
           rustc --edition=2021 --test tools/fences/native_ready_test.rs -o /tmp/native-ready-test
           /tmp/native-ready-test
       - name: CPU source-chart scale and stripe regression (no VR)

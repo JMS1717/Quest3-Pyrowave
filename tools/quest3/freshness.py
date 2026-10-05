@@ -102,7 +102,7 @@ def windows(lines, start, end, pid, settle_windows=1):
             fields = dict(re.findall(r'(\w+)=(\d+)(?=\s|$)', body))
             margin = _histogram(re.search(r'margin=\[([^\]]*)\]', body)[1])
             late = _histogram(re.search(r'late=\[([^\]]*)\]', body)[1])
-            config = (int(fields['wait_us']), int(fields['ready']))
+            config = (int(fields['wait_us']), int(fields['ready']), int(fields.get('packet_grace_us', 0)))
             counts = {k: int(fields[k]) for k in ('taken', 'empty', 'late_taken', 'late_superseded', 'superseded')}
             if sum(margin) != counts['taken'] or counts['late_taken'] + counts['late_superseded'] > sum(late) + 1:
                 raise ValueError('Inconsistent window')
@@ -122,9 +122,9 @@ def windows(lines, start, end, pid, settle_windows=1):
         g['margin'] = [a + b for a, b in zip(g['margin'], margin)]
         g['late'] = [a + b for a, b in zip(g['late'], late)]
     result = []
-    for (wait_us, ready), g in sorted(groups.items()):
+    for (wait_us, ready, packet_grace_us), g in sorted(groups.items()):
         n = g['windows']
-        result.append({'wait_us': wait_us, 'ready_active': bool(ready), **g,
+        result.append({'wait_us': wait_us, 'ready_active': bool(ready), 'packet_grace_us': packet_grace_us, **g,
                        'taken_per_window': g['taken'] / n, 'superseded_per_window': g['superseded'] / n,
                        'late_taken_fraction': g['late_taken'] / max(1, g['late_taken'] + g['late_superseded'])})
     return {'status': 'invalid_records' if malformed else 'parsed' if result else 'no_probe_records',

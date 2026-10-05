@@ -30,6 +30,7 @@ cp "$repo/tools/foveation/light.glsl" "$dest/ALVR-20.13.0/alvr/graphics/resource
 cp "$repo/tools/fences/native_ready.rs" "$dest/ALVR-20.13.0/alvr/graphics/src/native_ready.rs"
 cp "$repo/tools/fences/ready_wait.rs" "$dest/ALVR-20.13.0/alvr/graphics/src/ready_wait.rs"
 cp "$repo/tools/fences/ready_frames.rs" "$dest/ALVR-20.13.0/alvr/client_core/src/video_decoder/ready_frames.rs"
+cp "$repo/tools/fences/latest_wait.rs" "$dest/ALVR-20.13.0/alvr/client_openxr/src/latest_wait.rs"
 
 checkout https://github.com/Themaister/pyrowave "$dest/pyrowave" "$PYROWAVE_BASE"
 # pyrowave's checkout_granite.sh pins a newer Granite (9d44761), which spiked encoder p99 to 14 ms;

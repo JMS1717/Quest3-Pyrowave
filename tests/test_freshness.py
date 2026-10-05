@@ -63,6 +63,13 @@ class WindowTests(unittest.TestCase):
         self.assertEqual(r['status'], 'no_probe_records')
         self.assertEqual(r['foreign_process_records'], 1)
 
+    def test_packet_grace_switch_is_separate_and_excludes_transition(self):
+        grace = fresh().replace('ready=0', 'ready=0 packet_grace_us=500')
+        log = [line(fresh(), 10), line(fresh(), 11), line(grace, 12), line(grace, 13)]
+        r = windows(log, 9, 16, 42)
+        self.assertEqual(r['status'], 'parsed')
+        self.assertEqual([(g['packet_grace_us'], g['windows']) for g in r['configurations']], [(0, 1), (500, 1)])
+
     def test_inconsistent_or_malformed_windows_invalidate(self):
         bad = fresh().replace('taken=110', 'taken=111', 1)
         for record in (line(bad), line(fresh().replace('margin=[', 'margin=[1, ')), fresh()):

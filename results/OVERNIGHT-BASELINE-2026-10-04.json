@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "date": "2026-10-04 America/New_York",
+  "scope": "Three short stationary-chart blocks; displayed target timestamps, not optical FPS/MTP",
+  "native_build": {
+    "iteration": 34,
+    "source_commit": "28582899348ac35b1a638b91f20b638097d19352",
+    "ci_run": 37245940089,
+    "installed_apk_hash_matches_review": true
+  },
+  "config": {
+    "encode_eye": [
+      2080,
+      2208
+    ],
+    "source_eye": [
+      2080,
+      2208
+    ],
+    "refresh_hz": 120,
+    "mbps": 1000,
+    "chroma": "420",
+    "wavelet": "Haar",
+    "decode": "Compute",
+    "transport": "USB/TCP",
+    "foveation": false,
+    "wait_us": 4000,
+    "queue_priority": "LOW",
+    "image_cache": false,
+    "layer_filter": false
+  },
+  "blocks": [
+    {
+      "measured_seconds": 15,
+      "displayed_target_fps": 118.20517124644002,
+      "lost_target_frames_per_s": 1.927980858350259,
+      "native_gpu_p50_ms": {
+        "gpu_decode_ms": 6.1180205,
+        "fence_ms": 7.937397,
+        "convert_ms": 0.61354166,
+        "eye_acquire_wait_ms": 0.005937,
+        "eye_render_ms": 1.576771,
+        "eye_release_ms": 0.003177,
+        "wait_ms": 7.410418
+      },
+      "native_gpu_p90_ms": {
+        "gpu_decode_ms": 6.894271,
+        "fence_ms": 8.236928,
+        "convert_ms": 0.7321354,
+        "eye_acquire_wait_ms": 0.008593,
+        "eye_render_ms": 1.7950001,
+        "eye_release_ms": 0.0042189998,
+        "wait_ms": 7.718907
+      },
+      "health": {
+        "battery_percent": 39,
+        "battery_temperature_c": 39.0,
+        "thermal_status": 0
+      }
+    },
+    {
+      "measured_seconds": 15,
+      "displayed_target_fps": 118.04990751112788,
+      "lost_target_frames_per_s": 1.9276167330082818,
+      "native_gpu_p50_ms": {
+        "gpu_decode_ms": 6.6640625,
+        "fence_ms": 7.999375,
+        "convert_ms": 0.6230208,
+        "eye_acquire_wait_ms": 0.006875,
+        "eye_render_ms": 1.660625,
+        "eye_release_ms": 0.003541,
+        "wait_ms": 7.509167
+      },
+      "native_gpu_p90_ms": {
+        "gpu_decode_ms": 6.8415623,
+        "fence_ms": 8.17922,
+        "convert_ms": 0.7083854,
+        "eye_acquire_wait_ms": 0.009219,
+        "eye_render_ms": 1.8848441,
+        "eye_release_ms": 0.004948,
+        "wait_ms": 7.698491
+      },
+      "health": {
+        "battery_percent": 39,
+        "battery_temperature_c": 39.0,
+        "thermal_status": 0
+      }
+    },
+    {
+      "measured_seconds": 15,
+      "displayed_target_fps": 117.95866737348494,
+      "lost_target_frames_per_s": 2.0636109980688677,
+      "native_gpu_p50_ms": {
+        "gpu_decode_ms": 6.400052,
+        "fence_ms": 7.843073,
+        "convert_ms": 0.6477083,
+        "eye_acquire_wait_ms": 0.006406,
+        "eye_render_ms": 1.561563,
+        "eye_release_ms": 0.0038540002,
+        "wait_ms": 7.364115
+      },
+      "native_gpu_p90_ms": {
+        "gpu_decode_ms": 6.888073,
+        "fence_ms": 8.19823,
+        "convert_ms": 1.3733854,
+        "eye_acquire_wait_ms": 0.009843,
+        "eye_render_ms": 1.8543229,
+        "eye_release_ms": 0.005833,
+        "wait_ms": 7.728334
+      },
+      "health": {
+        "battery_percent": 39,
+        "battery_temperature_c": 40.0,
+        "thermal_status": 0
+      }
+    }
+  ],
+  "source_coverage_verified": true,
+  "normal_restoration_errors": [],
+  "original_driver_list_restored": true,
+  "temporary_properties_restored": true,
+  "limitations": [
+    "Not an A/B improvement result",
+    "Not sustained acceptance or human image acceptance",
+    "Stationary pose-history matching confounds total estimated latency",
+    "Independent restorer was armed before mutations; normal cleanup verified, forced-death recovery not yet live-tested"
+  ],
+  "performance_acceptance": false,
+  "optical_latency_measured": false
+}
