@@ -22,6 +22,15 @@ remain opt-in. The measured 6000 microsecond wait remains rejected as a default.
   changes a process-wide decoder environment variable and has no matching exact-pixel
   proof in this PR. Its commit remains available for a separate, corrected
   experiment; this review does not erase prior work.
+- Kept the later `debug.q3pw.fuse_color` candidate from `656a81b` on
+  [`experiment/fuse-color-review`](https://github.com/JMS1717/Quest3-Pyrowave/tree/experiment/fuse-color-review).
+  It arrived during review and has no matching exact-pixel test. Its constructor
+  sets `PYROWAVE_FUSE_COLOR` process-wide without restoring the previous value,
+  and interactions with existing fused-Haar and prerecord modes need explicit
+  coverage. Those are separate review requirements, not a measured performance
+  verdict. The integration's runtime sources remain identical to `3de60f1`,
+  whose four CI jobs passed in run `37324391808`; the final PR head is checked
+  again before merging. The later historical Haar-regression note is retained.
 
 ## Acceptance and next work
 
