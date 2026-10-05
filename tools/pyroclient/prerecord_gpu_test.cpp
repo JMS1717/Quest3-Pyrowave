@@ -77,6 +77,7 @@ int main(int argc,char **argv) {
         if(pyroclient_push_packet(c,a.bytes.data(),a.bytes.size())!=1 ||
            pyroclient_decode(c,&slots[i],&info)!=0 || !info.complete || !slots[i]) return fail("warm slots");
         if(!readback_android_buffer(slots[i],false,actual,error)||actual!=ref_a) return fail("baseline pixels");
+        if(i<2 && pyroclient_prerecord_enable(c)!=-1) return fail("partly warmed enable accepted");
     }
     if(slots[0]==slots[1]||slots[1]==slots[2]||slots[0]==slots[2]) return fail("ring not distinct");
     if(pyroclient_prerecord_enable(c)!=0) return fail("enable inactive");
@@ -160,5 +161,5 @@ int main(int argc,char **argv) {
            "\"max_prepared\":1,\"outstanding_teardown\":true,\"exact_pixels\":true,"
            "\"growth_rejected_while_pending\":true,\"drained_growth_exact\":true,"
            "\"granite_stage_timestamps\":false,\"completion_queries\":true,\"largest_proof_queue_ms\":%.6f,"
-           "\"performance_benchmark\":false}\n",a.p[0],a.p[1],prepared,canceled,exact,before,after,exhausted,wrong_owner,largest_queue);
+           "\"partly_warmed_enable_rejected\":true,\"performance_benchmark\":false}\n",a.p[0],a.p[1],prepared,canceled,exact,before,after,exhausted,wrong_owner,largest_queue);
 }
