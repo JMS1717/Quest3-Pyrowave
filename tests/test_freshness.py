@@ -46,6 +46,21 @@ class GapTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             gaps(graph_rows([frame(1), frame(1)]), 120)
 
+    def test_duplicate_tracking_ids_do_not_inflate_unique_rate(self):
+        r = gaps(graph_rows([frame(0), frame(1), frame(1), frame(2)]), 120)
+        self.assertEqual(r['duplicate_target_timestamps'], 1)
+        self.assertEqual(r['sub_half_period_intervals'], 1)
+        self.assertAlmostEqual(r['unique_target_timestamp_rate_fps'], 120, places=4)
+        self.assertAlmostEqual(r['displayed_target_fps'], 180, places=4)
+
+    def test_jittered_tracking_times_do_not_claim_exact_loss(self):
+        rows = graph_rows([frame(i) for i in (0, .4, 2, 3)])
+        r = gaps(rows, 120)
+        self.assertEqual(r['step_histogram'], {'0': 1, '1': 1, '2': 1})
+        self.assertAlmostEqual(r['displayed_target_fps'], 120, places=4)
+        self.assertGreater(r['lost_target_frames_per_s'], 0)
+        self.assertIn('not an exact drop counter', r['scope'])
+
 
 class WindowTests(unittest.TestCase):
     def test_groups_alternating_configurations_and_skips_switch_windows(self):

@@ -145,3 +145,41 @@ both were byte-identical to the existing asymmetric golden references. This
 checks that the optional chroma-filter addition preserves default pixels; it
 does not validate Catmull-Rom quality or its performance.
 [GPU regression evidence](../results/DEFAULT-CONVERT-GPU-2026-10-04.json).
+
+### Measured packet-grace result
+
+On the reviewed `.36` pair, four rotating 8-second blocks per arm in one client
+session gave the following rates. All arms kept native resolution, runtime120,
+1000 Mbps, 4:2:0, LOW priority and the default 4000 µs wait. The source interval
+covered every block and effective grace settings were verified from probe logs.
+
+| Packet grace | Submission events/s (wall time) | Direct eye completions/s | Client instantaneous FPS p1 |
+| --- | ---: | ---: | ---: |
+| 0 µs | 117.59 | 117.64 | 60.00 |
+| 250 µs | 117.49 | 117.46 | 60.00 |
+| 500 µs | 117.68 | 117.76 | 60.00 |
+| 1000 µs | 117.17 | 117.15 | 60.00 |
+
+**Keep grace disabled.** The 500 µs difference is within control variation;
+1000 µs reduced average delivery. No arm removed missed display periods. Actual
+payload medians were about 1008–1010 Mbps. Battery temperature stayed 37–40 °C
+with thermal status0. These are short stationary screens, not sustained or
+gameplay acceptance. [All blocks and limitations](../results/PACKET-GRACE-LIVE-2026-10-04.json).
+
+### Timestamp interpretation correction
+
+ALVR's target timestamps identify tracking poses; they are not a consecutive
+encoded-frame counter. This capture contains occasional duplicates and
+sub-half-period target gaps from tracking jitter. The legacy
+`displayed_target_fps` field is an event-rate proxy over target time;
+`lost_target_frames_per_s` is a rounded-gap estimate, **not an exact dropped-frame
+count**. Older tables using those fields should be read with that qualification.
+The offline parser now reports duplicate IDs, sub-half-period gaps and the rate
+of distinct tracking IDs separately. Distinct IDs still do not prove unique
+video contents. Compare submission wall-time rate, matching direct-completion
+counters and instantaneous client FPS/pacing together; none measures optical FPS.
+
+The `.35` surface probe also looked only in `ExtensionSet.other`, which excludes
+extensions known to the Rust bindings. Its all-false log cannot rule out Android
+surface swapchains. `.37` reads the three named fields from the pinned openxr
+bindings; this is a diagnostic correction, with existing rendering unchanged.

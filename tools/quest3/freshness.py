@@ -1,9 +1,9 @@
 """Fresh-frame loss analysis from saved captures. No headset access.
 
-`gaps` reads dashboard GraphStatistics events (one per frame that reached the
-client compositor). A target-timestamp step of two display periods means one
-server frame never displayed. The decoder-queue time of displayed frames is the
-margin between publication and the render loop's selection.
+`gaps` reads dashboard GraphStatistics submission events. Target timestamps are
+tracking/pose identifiers, not a consecutive video frame counter: they can jitter
+or repeat. Rounded target gaps estimate missing slots; they do not count actual
+dropped or optically displayed frames. Decoder queue is publication-to-selection.
 
 `windows` reads optional `[Q3PW_FRESH]` logcat windows (`debug.q3pw.fresh_probe=1`)
 and groups them by the wait budget / ready-publication configuration active
@@ -56,16 +56,20 @@ def gaps(rows, refresh_hz):
     near = lambda rs, k: statistics.median(ms(rs, k)) if rs else None
     keys = ('network_s', 'decoder_s', 'decoder_queue_s')
     lost = sum(max(0, s - 1) for s in steps)
+    unique = len({r['target_timestamp_ns'] for r in rows})
     return {
         'status': 'parsed',
         'frames': len(rows),
         'span_s': span,
         'displayed_target_fps': (len(rows) - 1) / span,
+        'unique_target_timestamp_rate_fps': (unique - 1) / span,
+        'duplicate_target_timestamps': len(rows) - unique,
+        'sub_half_period_intervals': steps.count(0),
         'lost_target_frames_per_s': lost / span,
         'step_histogram': {str(s): steps.count(s) for s in sorted(set(steps))},
         'percentiles_ms': {k: [_pct(ms(rows, k), p) for p in (5, 50, 95)] for k in keys},
         'median_ms_before_and_after_gaps': {k: [near(before, k), near(after, k)] for k in keys},
-        'scope': 'Displayed frames only: frames never selected report no statistics. Decoder queue is publication-to-selection margin, not optical latency.',
+        'scope': 'Legacy displayed_target_fps is GraphStatistics event rate over target time, not unique or optical FPS. Target timestamps identify tracking poses and may jitter/repeat. lost_target_frames_per_s is a rounded-gap estimate, not an exact drop counter. Sub-half-period gaps make rounded loss differ from refresh minus event rate. Use wall-time submission and matching direct-completion counters too. Decoder queue is publication-to-selection, not optical latency.',
         'performance_acceptance': False, 'optical_latency_measured': False,
     }
 

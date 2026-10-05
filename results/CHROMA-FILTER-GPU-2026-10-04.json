@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-04 America/New_York",
+  "source_commit": "0cd83fe586d31640dabd948cd8ac90e5aeeaee23",
+  "ci_run": 37249423645,
+  "scope": "Standalone native-stereo conversion cost screen; repeat fixture, no VR compositor load",
+  "encoded_stereo_size": [
+    4160,
+    2208
+  ],
+  "chroma": "420",
+  "wavelet": "Haar",
+  "requested_decode_path": "Compute",
+  "arms": [
+    {
+      "filter": "bilinear",
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 40,
+        "complete": 40,
+        "decode_best_ms": 4.4775,
+        "convert_best_ms": 0.916823,
+        "fence_p50_ms": 7.806147,
+        "fence_p99_ms": 8.194063,
+        "fence_mean_ms": 7.754164,
+        "fence_max_ms": 8.214115,
+        "warmup_frames": 10,
+        "warmup_max_fence_ms": 250.232212,
+        "gpu_decode_p50_ms": 5.22901,
+        "gpu_decode_p99_ms": 6.218021,
+        "convert_p50_ms": 0.981562,
+        "record_p50_ms": 0.662969,
+        "wait_p50_ms": 7.10573
+      },
+      "battery_temperature_c": 37.0,
+      "thermal_status": 0
+    },
+    {
+      "filter": "catmull",
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 40,
+        "complete": 40,
+        "decode_best_ms": 4.283489,
+        "convert_best_ms": 4.737396,
+        "fence_p50_ms": 12.422033,
+        "fence_p99_ms": 13.145522,
+        "fence_mean_ms": 12.195999,
+        "fence_max_ms": 13.266616,
+        "warmup_frames": 10,
+        "warmup_max_fence_ms": 250.189088,
+        "gpu_decode_p50_ms": 5.203542,
+        "gpu_decode_p99_ms": 6.255729,
+        "convert_p50_ms": 6.063437,
+        "record_p50_ms": 0.66724,
+        "wait_p50_ms": 11.781095
+      },
+      "battery_temperature_c": 37.0,
+      "thermal_status": 0
+    },
+    {
+      "filter": "bilinear",
+      "metrics": {
+        "requested_decode_path": "compute",
+        "iterations": 40,
+        "complete": 40,
+        "decode_best_ms": 5.121927,
+        "convert_best_ms": 0.932812,
+        "fence_p50_ms": 7.804584,
+        "fence_p99_ms": 8.352085,
+        "fence_mean_ms": 7.74202,
+        "fence_max_ms": 9.134532,
+        "warmup_frames": 10,
+        "warmup_max_fence_ms": 245.286899,
+        "gpu_decode_p50_ms": 5.258802,
+        "gpu_decode_p99_ms": 6.126979,
+        "convert_p50_ms": 0.979792,
+        "record_p50_ms": 0.64901,
+        "wait_p50_ms": 7.049688
+      },
+      "battery_temperature_c": 37.0,
+      "thermal_status": 0
+    }
+  ],
+  "normal_restoration_errors": [],
+  "policy": "Keep full Catmull-Rom optional/off for120Hz; large conversion-cost regression. No optical or image-quality acceptance.",
+  "limitations": [
+    "One off/on/off screen,40 measured frames after10warmups per arm",
+    "No liveVR freshFPS/framepacing/optical latency measurements",
+    "Clocks not sampled; native/decode costs and control conversion costs were similar",
+    "Applied native startup logs not retained; shell property readbacks checked and reviewed native source implements these values",
+    "Catmull image correctness/visible quality not accepted"
+  ],
+  "performance_acceptance": false
+}

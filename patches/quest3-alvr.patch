@@ -206,7 +206,7 @@ index 7cead7b..18ad9d0 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..68d8441 100644
+index ae00ce8..10415ee 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..68d8441 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.36"
++version = "20.13.0-quest3.pyro.37"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -2848,7 +2848,7 @@ index 7765bb4..b102615 100644
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36f..38eeeb9 100644
+index a0fd36f..5b84439 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -4,6 +4,8 @@ mod graphics;
@@ -2924,9 +2924,9 @@ index a0fd36f..38eeeb9 100644
      );
 +    alvr_common::error!(
 +        "[Q3PW_SURFACE] android_surface_swapchain={} fb_surface_create={} fb_surface_update={} other={:?}",
-+        advertised_extension_names.iter().any(|e| e == "XR_KHR_android_surface_swapchain"),
-+        advertised_extension_names.iter().any(|e| e == "XR_FB_android_surface_swapchain_create"),
-+        advertised_extension_names.iter().any(|e| e == "XR_FB_swapchain_update_state_android_surface"),
++        available_extensions.khr_android_surface_swapchain,
++        available_extensions.fb_android_surface_swapchain_create,
++        available_extensions.fb_swapchain_update_state_android_surface,
 +        advertised_extension_names.iter().filter(|e| e.contains("surface") || e.contains("SURFACE") || e.contains("vulkan")).collect::<Vec<_>>(),
 +    );
  
