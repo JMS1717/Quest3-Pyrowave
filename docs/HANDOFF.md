@@ -53,6 +53,17 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 ## Highest-value next experiment
 
+**Latest rejection, October 5:** the reviewed `.43` vector-dequant branch passed
+all matching builds and six exact GPU checks (baseline/vector/combined at two
+sizes). Stage-enabled medians suggested small headroom, but the diagnostic-off
+repeat found no consistent GPU, completion or delivery gain. Keep it disabled;
+do not repeat unchanged screens. [Implementation and measured findings](https://github.com/JMS1717/Quest3-Pyrowave/blob/experiment/dequant-vector/docs/DEQUANT-VECTOR.md).
+Main retains `.42`; `.43` stays a documented experiment with matching artifacts.
+Next investigate CPU publication notifications in place of repeated50µs selection
+sleeps, while preserving the current bounded wait, ready-FD and buffer-lease rules.
+Any candidate needs race/ownership tests, matching builds and controlled live
+comparison; a notification itself does not establish GPU or optical completion.
+
 **Latest kernel screen, October 5:** `.42` row-wise Haar lowered inverse-transform
 stage averages to 2.8–3.0 ms versus roughly 3.1–3.6 ms, but delivery still overlaps
 115–118 completion events/s with p1 near60. Candidates ended at599MHz and controls
