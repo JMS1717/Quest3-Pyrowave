@@ -5,6 +5,8 @@
 #                        with Granite (and its submodules) at GRANITE_COMMIT
 # Both patches are cumulative: base + one patch reproduces the measured clone exactly.
 # Usage: tools/ci/fetch_sources.sh <dest>
+# Q3PW_PYROWAVE_ONLY=1 reconstructs just the patched pyrowave tree, without ALVR or Granite, for
+# shader-level checks that need only its sources and generated slangmosh.hpp.
 set -eu
 : "${ALVR_BASE:=7eda092dbf0002281410a4222683ec228700cffb}"
 : "${PYROWAVE_BASE:=d2997ac172bdc00e29c58e3f2938acb7e94580bf}"
@@ -22,6 +24,8 @@ checkout() {  # <url> <dir> <commit>
     git -C "$2" checkout -q FETCH_HEAD
 }
 
+pyrowave_only=${Q3PW_PYROWAVE_ONLY:-0}
+if [ "$pyrowave_only" != 1 ]; then
 checkout https://github.com/alvr-org/ALVR "$dest/ALVR-20.13.0" "$ALVR_BASE"
 git -C "$dest/ALVR-20.13.0" submodule update -q --init --recursive --depth 1   # openvr headers
 git -C "$dest/ALVR-20.13.0" apply --binary "$repo/patches/alvr-20.13.0-server-instrumentation.patch"
@@ -35,18 +39,23 @@ cp "$repo/tools/fences/latest_wait.rs" "$dest/ALVR-20.13.0/alvr/client_openxr/sr
 cp "$repo/tools/quest3/cadence_probe.rs" "$dest/ALVR-20.13.0/alvr/client_openxr/src/cadence_probe.rs"
 cp "$repo/tools/quest3/producer_opportunity.rs" "$dest/ALVR-20.13.0/alvr/client_core/src/video_decoder/producer_opportunity.rs"
 cp "$repo/tools/quest3/producer_prerecord.rs" "$dest/ALVR-20.13.0/alvr/client_core/src/video_decoder/producer_prerecord.rs"
+fi
 
 checkout https://github.com/Themaister/pyrowave "$dest/pyrowave" "$PYROWAVE_BASE"
+if [ "$pyrowave_only" != 1 ]; then
 # pyrowave's checkout_granite.sh pins a newer Granite (9d44761), which spiked encoder p99 to 14 ms;
 # the measurements used 842d9d5, cloned here with all of its submodules.
 checkout https://github.com/Themaister/Granite "$dest/pyrowave/Granite" "$GRANITE_COMMIT"
 git -C "$dest/pyrowave/Granite" submodule update -q --init --recursive --depth 1
 [ "$(git -C "$dest/pyrowave/Granite" rev-parse HEAD)" = "$GRANITE_COMMIT" ] \
     || { echo "Granite is not at $GRANITE_COMMIT"; exit 1; }
+fi
 git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-cdf53-haar-experiments2-3.patch"
 git -C "$dest/pyrowave" apply --binary "$repo/patches/quest3-pyrowave.patch"
 git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-prerecord-api.patch"
+git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-fuse-color.patch"
 # Optional fused dequant + level-0 Haar (debug.q3pw.dequant_haar), with its embedded shaders.
 git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-fused-dequant-haar.patch"
 
+[ "$pyrowave_only" != 1 ] || { echo "pyrowave-only sources ready in $dest/pyrowave (${PYROWAVE_BASE%${PYROWAVE_BASE#???????}})"; exit 0; }
 echo "sources ready in $dest: ALVR ${ALVR_BASE%${ALVR_BASE#???????}}, pyrowave ${PYROWAVE_BASE%${PYROWAVE_BASE#???????}}, Granite ${GRANITE_COMMIT%${GRANITE_COMMIT#???????}}"

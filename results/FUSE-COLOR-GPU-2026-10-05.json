@@ -1,0 +1,1061 @@
+{
+ "date": "2026-10-05 America/New_York",
+ "authorization": "owner-authorized hardware testing, owner away; standalone pyroclient_test only for these checks",
+ "scope": "Standalone single-process GPU decode + GLES readback on Quest 3 (headset asleep, AC power). Exact-pixel correctness of debug.q3pw.fuse_color against the two-pass path of the same libraries. Timings are standalone stage times, not live VR, sustained FPS or optical latency.",
+ "fixtures": {
+  "small_stereo": [
+   512,
+   320
+  ],
+  "native_stereo": [
+   4160,
+   2208
+  ],
+  "chroma": "420",
+  "range": "limited",
+  "wavelet": "Haar",
+  "decode_path": "Compute",
+  "precision": 1,
+  "source": "saved haar-pair-reference asymmetric fixtures (same as HAAR-PAIRS-GPU-2026-10-05)"
+ },
+ "command": "PYROWAVE_WAVELET=haar pyroclient_test input.wave out.rgba 80 compute 10 1 gpu 0",
+ "properties_held": {
+  "debug.q3pw.haar_pairs": "0",
+  "debug.q3pw.haar_fused": "0",
+  "debug.q3pw.dequant_batch": "0",
+  "debug.q3pw.convert_compute": "0",
+  "debug.xrwired.pyro_precision": "1"
+ },
+ "properties_restored_with_readback": true,
+ "first_review_build": {
+  "source_commit": "d3a782a40d8709f118493165237c6c4b2ddb89c0",
+  "ci_run": 37348675177,
+  "exact": false,
+  "comparisons": [
+   {
+    "pattern": "asymmetric",
+    "chroma": "bilinear",
+    "arm": "on",
+    "vs": "off",
+    "identical": false,
+    "pixels_differ": 11,
+    "max_channel_error": 1,
+    "pixels": 163840
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma": "bilinear",
+    "arm": "off2",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 163840
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma": "bilinear",
+    "arm": "on2",
+    "vs": "off",
+    "identical": false,
+    "pixels_differ": 11,
+    "max_channel_error": 1,
+    "pixels": 163840
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma": "catmull",
+    "arm": "on",
+    "vs": "off",
+    "identical": false,
+    "pixels_differ": 9,
+    "max_channel_error": 1,
+    "pixels": 163840
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma": "catmull",
+    "arm": "off2",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 163840
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma": "catmull",
+    "arm": "on2",
+    "vs": "off",
+    "identical": false,
+    "pixels_differ": 9,
+    "max_channel_error": 1,
+    "pixels": 163840
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma": "bilinear",
+    "arm": "on",
+    "vs": "off",
+    "identical": false,
+    "pixels_differ": 502,
+    "max_channel_error": 2,
+    "pixels": 9185280
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma": "bilinear",
+    "arm": "off2",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 9185280
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma": "bilinear",
+    "arm": "on2",
+    "vs": "off",
+    "identical": false,
+    "pixels_differ": 502,
+    "max_channel_error": 2,
+    "pixels": 9185280
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma": "catmull",
+    "arm": "on",
+    "vs": "off",
+    "identical": false,
+    "pixels_differ": 540,
+    "max_channel_error": 2,
+    "pixels": 9185280
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma": "catmull",
+    "arm": "off2",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 9185280
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma": "catmull",
+    "arm": "on2",
+    "vs": "off",
+    "identical": false,
+    "pixels_differ": 540,
+    "max_channel_error": 2,
+    "pixels": 9185280
+   }
+  ],
+  "finding": "FP16 rounding only where idwt.comp converts left odd-row luma one step off on Adreno; k/255 in the shader moved single RGB channels by one step."
+ },
+ "diagnostic_variants": {
+  "note": "Locally built libpyroclient.so variants (not committed), fused colour on, bilinear chroma, compared with the two-pass output of the d3a782a libraries. luma_mode 0: FP16 round trips as idwt.comp writes them; 1: none (the unreviewed 656a81b form); 2: all Haar arithmetic in float16_t; 3: every lifting output rounded to FP16. yconv 0: k/255; 1: unpackUnorm4x8; 2/3: FP16 RTE/RTZ; 5: k*(1/255); 7: k*257/65535; 8/9: optimization barrier; 10: fetch from a 256x1 R8 identity table. uv/precise: chroma coordinate forms and no-contraction colour maths.",
+  "rows": [
+   {
+    "luma_mode": 0,
+    "yconv": 0,
+    "asymmetric": {
+     "pixels_differ": 11,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 502,
+     "max": 2
+    }
+   },
+   {
+    "luma_mode": 0,
+    "yconv": 1,
+    "asymmetric": {
+     "pixels_differ": 11,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 502,
+     "max": 2
+    }
+   },
+   {
+    "luma_mode": 1,
+    "yconv": 0,
+    "asymmetric": {
+     "pixels_differ": 278,
+     "max": 2
+    },
+    "native-asymmetric": {
+     "pixels_differ": 6010,
+     "max": 2
+    }
+   },
+   {
+    "luma_mode": 1,
+    "yconv": 1,
+    "asymmetric": {
+     "pixels_differ": 278,
+     "max": 2
+    },
+    "native-asymmetric": {
+     "pixels_differ": 6010,
+     "max": 2
+    }
+   },
+   {
+    "luma_mode": 2,
+    "yconv": 0,
+    "asymmetric": {
+     "pixels_differ": 5,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 166,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 2,
+    "yconv": 1,
+    "asymmetric": {
+     "pixels_differ": 5,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 166,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 0,
+    "asymmetric": {
+     "pixels_differ": 5,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 166,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 1,
+    "asymmetric": {
+     "pixels_differ": 5,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 166,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 0,
+    "asymmetric": {
+     "pixels_differ": 5,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 166,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 2,
+    "asymmetric": {
+     "pixels_differ": 9065,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 518416,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 3,
+    "asymmetric": {
+     "pixels_differ": 17221,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 963054,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 0,
+    "uv": 1,
+    "precise": 0,
+    "asymmetric": {
+     "pixels_differ": 5,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 166,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 0,
+    "uv": 2,
+    "precise": 0,
+    "asymmetric": {
+     "pixels_differ": 5,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 166,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 0,
+    "uv": 3,
+    "precise": 0,
+    "asymmetric": {
+     "pixels_differ": 5,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 166,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 0,
+    "uv": 0,
+    "precise": 1,
+    "asymmetric": {
+     "pixels_differ": 5,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 180,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 0,
+    "uv": 3,
+    "precise": 1,
+    "asymmetric": {
+     "pixels_differ": 5,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 180,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 5,
+    "uv": 0,
+    "precise": 0,
+    "asymmetric": {
+     "pixels_differ": 5,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 166,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 7,
+    "uv": 0,
+    "precise": 0,
+    "asymmetric": {
+     "pixels_differ": 7,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 286,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 8,
+    "uv": 0,
+    "precise": 0,
+    "asymmetric": {
+     "pixels_differ": 3,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 96,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 9,
+    "uv": 0,
+    "precise": 0,
+    "asymmetric": {
+     "pixels_differ": 3,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 96,
+     "max": 1
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 10,
+    "uv": 0,
+    "precise": 0,
+    "asymmetric": {
+     "pixels_differ": 0,
+     "max": 0
+    },
+    "native-asymmetric": {
+     "pixels_differ": 0,
+     "max": 0
+    }
+   },
+   {
+    "luma_mode": 2,
+    "yconv": 10,
+    "uv": 0,
+    "precise": 0,
+    "asymmetric": {
+     "pixels_differ": 0,
+     "max": 0
+    },
+    "native-asymmetric": {
+     "pixels_differ": 0,
+     "max": 0
+    }
+   },
+   {
+    "luma_mode": 3,
+    "yconv": 0,
+    "uv": 0,
+    "precise": 0,
+    "asymmetric": {
+     "pixels_differ": 5,
+     "max": 1
+    },
+    "native-asymmetric": {
+     "pixels_differ": 166,
+     "max": 1
+    }
+   }
+  ]
+ },
+ "final_build": {
+  "version": "20.13.0-quest3.pyro.54",
+  "source_commit": "7460906520b10bff428cfa6d07867d2116329631",
+  "ci_run": 37351760288,
+  "apk_sha256": "951cbb0370f5cbdc44a59fed434d26fa0f028a59d0e4f80a266d794e528e9c5b",
+  "native_libraries_sha256": {
+   "libpyroclient.so": "a4e19e81537c7b99a07158cd5fc1bb3a067bab1e5d57aa7a7ffe6c42eb43742e",
+   "libpyrowave-shared.so": "4b67527fdc3c7196ecc6749c4ab8464bd9f40868750f0105ba819fc8fb71f77d",
+   "libc++_shared.so": "f9992c4ba6b7c5a716e3a202fceb1ce029d6a2b0605838ac6b3219f489dd7970"
+  },
+  "signed_with_stable_project_certificate": true,
+  "exact": true,
+  "comparisons": [
+   {
+    "pattern": "asymmetric",
+    "chroma": "bilinear",
+    "arm": "on",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 163840
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma": "bilinear",
+    "arm": "off2",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 163840
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma": "bilinear",
+    "arm": "on2",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 163840
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma": "catmull",
+    "arm": "on",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 163840
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma": "catmull",
+    "arm": "off2",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 163840
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma": "catmull",
+    "arm": "on2",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 163840
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma": "bilinear",
+    "arm": "on",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 9185280
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma": "bilinear",
+    "arm": "off2",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 9185280
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma": "bilinear",
+    "arm": "on2",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 9185280
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma": "catmull",
+    "arm": "on",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 9185280
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma": "catmull",
+    "arm": "off2",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 9185280
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma": "catmull",
+    "arm": "on2",
+    "vs": "off",
+    "identical": true,
+    "pixels_differ": 0,
+    "max_channel_error": 0,
+    "pixels": 9185280
+   }
+  ],
+  "runs": [
+   {
+    "pattern": "asymmetric",
+    "chroma_filter": "bilinear",
+    "arm": "off",
+    "fuse_color_property": "0",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=0 active=0 (not requested) default_off=true",
+    "fp16_variant": null,
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 1.018594,
+    "convert_p50_ms": 0.049062,
+    "fence_p50_ms": 1.640729,
+    "fence_p99_ms": 1.797969,
+    "readback_method": "gles_external_rgba8",
+    "width": 512,
+    "height": 320,
+    "raw_rgba_crc32": "c0e656fb",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma_filter": "bilinear",
+    "arm": "on",
+    "fuse_color_property": "1",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=1 active=1 (eligible) default_off=true",
+    "fp16_variant": "1",
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 0.961198,
+    "convert_p50_ms": 0.075052,
+    "fence_p50_ms": 1.607135,
+    "fence_p99_ms": 1.86,
+    "readback_method": "gles_external_rgba8",
+    "width": 512,
+    "height": 320,
+    "raw_rgba_crc32": "c0e656fb",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma_filter": "bilinear",
+    "arm": "off2",
+    "fuse_color_property": "0",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=0 active=0 (not requested) default_off=true",
+    "fp16_variant": null,
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 1.017031,
+    "convert_p50_ms": 0.04875,
+    "fence_p50_ms": 1.646771,
+    "fence_p99_ms": 1.812864,
+    "readback_method": "gles_external_rgba8",
+    "width": 512,
+    "height": 320,
+    "raw_rgba_crc32": "c0e656fb",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma_filter": "bilinear",
+    "arm": "on2",
+    "fuse_color_property": "1",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=1 active=1 (eligible) default_off=true",
+    "fp16_variant": "1",
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 0.95599,
+    "convert_p50_ms": 0.074896,
+    "fence_p50_ms": 1.628437,
+    "fence_p99_ms": 1.858959,
+    "readback_method": "gles_external_rgba8",
+    "width": 512,
+    "height": 320,
+    "raw_rgba_crc32": "c0e656fb",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma_filter": "catmull",
+    "arm": "off",
+    "fuse_color_property": "0",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=0 active=0 (not requested) default_off=true",
+    "fp16_variant": null,
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 1.017396,
+    "convert_p50_ms": 0.221354,
+    "fence_p50_ms": 1.850834,
+    "fence_p99_ms": 1.998385,
+    "readback_method": "gles_external_rgba8",
+    "width": 512,
+    "height": 320,
+    "raw_rgba_crc32": "a8961afc",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma_filter": "catmull",
+    "arm": "on",
+    "fuse_color_property": "1",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=1 active=1 (eligible) default_off=true",
+    "fp16_variant": "1",
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 0.963698,
+    "convert_p50_ms": 0.240052,
+    "fence_p50_ms": 1.798282,
+    "fence_p99_ms": 1.989844,
+    "readback_method": "gles_external_rgba8",
+    "width": 512,
+    "height": 320,
+    "raw_rgba_crc32": "a8961afc",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma_filter": "catmull",
+    "arm": "off2",
+    "fuse_color_property": "0",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=0 active=0 (not requested) default_off=true",
+    "fp16_variant": null,
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 1.017083,
+    "convert_p50_ms": 0.221302,
+    "fence_p50_ms": 1.845625,
+    "fence_p99_ms": 2.080365,
+    "readback_method": "gles_external_rgba8",
+    "width": 512,
+    "height": 320,
+    "raw_rgba_crc32": "a8961afc",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   },
+   {
+    "pattern": "asymmetric",
+    "chroma_filter": "catmull",
+    "arm": "on2",
+    "fuse_color_property": "1",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=1 active=1 (eligible) default_off=true",
+    "fp16_variant": "1",
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 0.963073,
+    "convert_p50_ms": 0.240208,
+    "fence_p50_ms": 1.790469,
+    "fence_p99_ms": 1.919948,
+    "readback_method": "gles_external_rgba8",
+    "width": 512,
+    "height": 320,
+    "raw_rgba_crc32": "a8961afc",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma_filter": "bilinear",
+    "arm": "off",
+    "fuse_color_property": "0",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=0 active=0 (not requested) default_off=true",
+    "fp16_variant": null,
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 9.285729,
+    "convert_p50_ms": 1.728021,
+    "fence_p50_ms": 12.244533,
+    "fence_p99_ms": 12.499376,
+    "readback_method": "gles_external_rgba8",
+    "width": 4160,
+    "height": 2208,
+    "raw_rgba_crc32": "aad9df7c",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma_filter": "bilinear",
+    "arm": "on",
+    "fuse_color_property": "1",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=1 active=1 (eligible) default_off=true",
+    "fp16_variant": "1",
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 7.415416,
+    "convert_p50_ms": 2.704896,
+    "fence_p50_ms": 11.348074,
+    "fence_p99_ms": 11.664064,
+    "readback_method": "gles_external_rgba8",
+    "width": 4160,
+    "height": 2208,
+    "raw_rgba_crc32": "aad9df7c",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma_filter": "bilinear",
+    "arm": "off2",
+    "fuse_color_property": "0",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=0 active=0 (not requested) default_off=true",
+    "fp16_variant": null,
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 9.289635,
+    "convert_p50_ms": 1.733906,
+    "fence_p50_ms": 12.247189,
+    "fence_p99_ms": 12.497137,
+    "readback_method": "gles_external_rgba8",
+    "width": 4160,
+    "height": 2208,
+    "raw_rgba_crc32": "aad9df7c",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma_filter": "bilinear",
+    "arm": "on2",
+    "fuse_color_property": "1",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=1 active=1 (eligible) default_off=true",
+    "fp16_variant": "1",
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 7.424375,
+    "convert_p50_ms": 2.705937,
+    "fence_p50_ms": 11.35724,
+    "fence_p99_ms": 11.551147,
+    "readback_method": "gles_external_rgba8",
+    "width": 4160,
+    "height": 2208,
+    "raw_rgba_crc32": "aad9df7c",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma_filter": "catmull",
+    "arm": "off",
+    "fuse_color_property": "0",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=0 active=0 (not requested) default_off=true",
+    "fp16_variant": null,
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 8.474635,
+    "convert_p50_ms": 9.509427,
+    "fence_p50_ms": 19.282867,
+    "fence_p99_ms": 19.461408,
+    "readback_method": "gles_external_rgba8",
+    "width": 4160,
+    "height": 2208,
+    "raw_rgba_crc32": "346c7031",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma_filter": "catmull",
+    "arm": "on",
+    "fuse_color_property": "1",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=1 active=1 (eligible) default_off=true",
+    "fp16_variant": "1",
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 5.796562,
+    "convert_p50_ms": 9.393594,
+    "fence_p50_ms": 16.408074,
+    "fence_p99_ms": 16.667658,
+    "readback_method": "gles_external_rgba8",
+    "width": 4160,
+    "height": 2208,
+    "raw_rgba_crc32": "346c7031",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma_filter": "catmull",
+    "arm": "off2",
+    "fuse_color_property": "0",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=0 active=0 (not requested) default_off=true",
+    "fp16_variant": null,
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 6.105312,
+    "convert_p50_ms": 7.156354,
+    "fence_p50_ms": 14.351929,
+    "fence_p99_ms": 14.485418,
+    "readback_method": "gles_external_rgba8",
+    "width": 4160,
+    "height": 2208,
+    "raw_rgba_crc32": "346c7031",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   },
+   {
+    "pattern": "native-asymmetric",
+    "chroma_filter": "catmull",
+    "arm": "on2",
+    "fuse_color_property": "1",
+    "native_decision": "[Q3PW_FUSE_COLOR] requested=1 active=1 (eligible) default_off=true",
+    "fp16_variant": "1",
+    "iterations": 80,
+    "complete": 80,
+    "gpu_decode_p50_ms": 4.969531,
+    "convert_p50_ms": 7.810677,
+    "fence_p50_ms": 13.892189,
+    "fence_p99_ms": 14.253647,
+    "readback_method": "gles_external_rgba8",
+    "width": 4160,
+    "height": 2208,
+    "raw_rgba_crc32": "346c7031",
+    "health": {
+     "thermal_status": 0,
+     "battery_level": 100,
+     "battery_c": 27.0
+    }
+   }
+  ]
+ },
+ "standalone_timing_53_vs_54": {
+  "note": "Native stereo fixture, bilinear chroma, 200 iterations after 20 warm-up, no readback, two repeats, headset asleep. v53 = unreviewed 656a81b build, v54 = this review. Stage times, not delivered FPS.",
+  "rows": [
+   {
+    "set": "v53",
+    "repeat": 0,
+    "fuse": "0",
+    "gpu_decode_p50_ms": 9.287812,
+    "gpu_decode_p99_ms": 9.371458,
+    "convert_p50_ms": 1.732135,
+    "fence_p50_ms": 12.241772,
+    "fence_p99_ms": 12.627085,
+    "fence_mean_ms": 12.223567
+   },
+   {
+    "set": "v53",
+    "repeat": 0,
+    "fuse": "1",
+    "gpu_decode_p50_ms": 7.420573,
+    "gpu_decode_p99_ms": 7.500625,
+    "convert_p50_ms": 2.559115,
+    "fence_p50_ms": 11.190678,
+    "fence_p99_ms": 11.457761,
+    "fence_mean_ms": 11.174483
+   },
+   {
+    "set": "v54",
+    "repeat": 0,
+    "fuse": "0",
+    "gpu_decode_p50_ms": 9.289479,
+    "gpu_decode_p99_ms": 9.385989,
+    "convert_p50_ms": 1.731771,
+    "fence_p50_ms": 12.197397,
+    "fence_p99_ms": 12.462501,
+    "fence_mean_ms": 12.163678
+   },
+   {
+    "set": "v54",
+    "repeat": 0,
+    "fuse": "1",
+    "gpu_decode_p50_ms": 7.423385,
+    "gpu_decode_p99_ms": 7.494896,
+    "convert_p50_ms": 2.705312,
+    "fence_p50_ms": 11.309063,
+    "fence_p99_ms": 11.652345,
+    "fence_mean_ms": 11.281634
+   },
+   {
+    "set": "v53",
+    "repeat": 1,
+    "fuse": "0",
+    "gpu_decode_p50_ms": 9.289948,
+    "gpu_decode_p99_ms": 9.380625,
+    "convert_p50_ms": 1.731094,
+    "fence_p50_ms": 12.197397,
+    "fence_p99_ms": 12.598751,
+    "fence_mean_ms": 12.164424
+   },
+   {
+    "set": "v53",
+    "repeat": 1,
+    "fuse": "1",
+    "gpu_decode_p50_ms": 7.417448,
+    "gpu_decode_p99_ms": 7.505156,
+    "convert_p50_ms": 2.559115,
+    "fence_p50_ms": 11.167866,
+    "fence_p99_ms": 11.482033,
+    "fence_mean_ms": 11.097166
+   },
+   {
+    "set": "v54",
+    "repeat": 1,
+    "fuse": "0",
+    "gpu_decode_p50_ms": 9.287396,
+    "gpu_decode_p99_ms": 9.357344,
+    "convert_p50_ms": 1.728646,
+    "fence_p50_ms": 12.27698,
+    "fence_p99_ms": 12.764168,
+    "fence_mean_ms": 12.320032
+   },
+   {
+    "set": "v54",
+    "repeat": 1,
+    "fuse": "1",
+    "gpu_decode_p50_ms": 7.413333,
+    "gpu_decode_p99_ms": 7.477916,
+    "convert_p50_ms": 2.704948,
+    "fence_p50_ms": 11.325209,
+    "fence_p99_ms": 11.635157,
+    "fence_mean_ms": 11.318377
+   }
+  ]
+ }
+}

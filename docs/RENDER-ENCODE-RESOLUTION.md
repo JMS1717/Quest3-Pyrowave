@@ -37,8 +37,53 @@ Verified against pinned ALVR `7eda092` and our reconstructed patched tree:
 
 The direct-eye requirement for equal encoded/output eye size refers to the
 **Quest's decoded frame versus its output swapchain**, not the SteamVR source.
-There is already a PC downsampling/composition pass; no added intermediate
-texture or new resampling filter is necessary.
+There is already a PC downsampling/composition pass, so no intermediate texture
+is needed. Its filter was the weak point; see the next section.
+
+## Game render above the stream (Virtual Desktop style)
+
+Like Virtual Desktop's separate SteamVR resolution, the game render size and the
+stream size are independent settings. Raising the game render size costs PC GPU
+time only: the stream, the bitrate's per-frame byte budget and the Quest's decode
+work all stay at the stream size.
+
+| | Before | Now |
+| --- | --- | --- |
+| Composition filter | One bilinear tap per stream pixel (mip 0 only, so the anisotropic sampler acts as bilinear). At 3072→2080 it weights source pixels unevenly and lets detail above the stream's Nyquist fold back as moiré. | `tools/downsample/frame_downsample.hlsl`: a Catmull-Rom kernel widened to each pixel's source footprint (from UV derivatives, up to 3x per axis), clamped to the submitted eye bounds. Identity when both sizes match. |
+| Dashboard | One "render scale" preset (50–100 %) set **both** fields to the same size, so there was no way to render above the panel. | "Stream resolution" (50–100 % of panel) sets only the stream; "Game render resolution" (100–200 % per axis) sets only the SteamVR recommendation. |
+| Streaming profiles | Pinned both fields to the profile's size. | Pin the stream only; a chosen game render size survives a profile change. |
+
+The filter setting is `video.pyrowave.render_downsample_filter` (`Adaptive`
+default, `Bilinear` = the previous single tap, kept for A/B) and applies to every
+codec. It needs a SteamVR restart. If the runtime compile fails, the driver logs an
+error and keeps the single tap; the Windows build also compiles it with `fxc` so a
+shader error fails CI. The driver log prints the active sizes and filter:
+`[FrameRender] game render WxH per eye -> stream WxH per eye (R x per axis), ... downsample`.
+
+CPU model results (`tools/downsample/reference.py`, `tests/test_downsample.py`; one
+axis, exact for the separable 2-D shader). Response is relative amplitude after
+3072→2080; 1400 cycles cannot be shown at 2080 pixels and should be removed:
+
+| Source frequency | Single tap | Adaptive |
+| ---: | ---: | ---: |
+| 400 cycles (kept) | 0.95 | 0.98 |
+| 900 cycles (near stream Nyquist) | 0.76 | 0.65 |
+| 1400 cycles (aliases to 680) | **0.59** | **0.15** |
+
+Against a box-filtered ground truth of an edge-heavy test signal, RMS error was
+0.137 rendering at 2080, 0.101 rendering at 3072 with the single tap, and 0.091
+with the adaptive filter. Most of the gain is from rendering more pixels; the
+filter mainly removes the moiré. Fetches per output pixel: up to 3x3 at 1:1 (all
+zero-weight but one when aligned), 5x5 at 1.48x, 7x7 from 2x. PC GPU cost is
+estimated at well under a millisecond at 2x2080x2208 but has not been measured.
+
+Keep SteamVR's own render resolution at a custom 100 %: SteamVR's automatic
+setting multiplies the recommendation again. Footprints above 3x per axis are
+filtered as 3x (under-filtered, never skipped).
+
+| Change | Reason | Before | After | Headset result | Status |
+| --- | --- | --- | --- | --- | --- |
+| Adaptive downsample + split render/stream controls | Higher-than-native render should add detail without bandwidth or Quest decode cost | 1 tap, both sizes tied in the dashboard | Footprint-wide Catmull-Rom; independent controls | Not tested (hardware paused). Planned: `supersampled150`, `control downsample` adaptive/bilinear/adaptive, same scene, text/fence detail plus server encoder and compositor time | CONTINUE |
 
 Our server rounds **both** axes up to multiples of 32. A request for
 3072x3216 therefore becomes a **3072x3232 recommendation**. The encode request
@@ -76,9 +121,9 @@ These commands leave the existing refresh, bitrate, wavelet, chroma, decoder,
 transport and foveation settings alone. They do not enable 120 Hz implicitly.
 Use your current best 4:2:0/noFFE/no-client-upscaling configuration for both.
 The comparison manifest is `presets/resolution-comparison.json`; 1000 Mbps /120 Hz
-remains an experimental target. Existing dashboard overall resolution/render
-scale profiles still assign both fields together: apply those first, then the
-independent resolution command. Existing defaults are preserved.
+remains an experimental target. The dashboard's stream and game render
+resolution presets each set one field only, and streaming profiles set only the
+stream. Existing defaults are preserved.
 
 ## Quick old/new benchmark
 

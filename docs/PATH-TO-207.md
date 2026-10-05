@@ -18,43 +18,44 @@ full-frame passes.
 | Change | Expected effect | Checked off-device | Status |
 |---|---|---|---|
 | Balanced (68% center, 1.75x) and Strong (60% center, 2x) peripheral profiles, `video.pyrowave.foveation_profile` | Encoded pixels per eye drop by 23.8% (1824x1920) and 35.1% (1664x1792), versus 11.6% for Light. If decode scales the way Light's did, Strong is about 3.8 ms (est.) | Rust server (C++ sizing), Rust client and the Python model agree for every eye width from 512 to 4096. Light geometry is unchanged | CONTINUE: candidates, not accepted |
-| Fused dequant + level-0 Haar: `pyrowave_decoder_set_fused_dequant_haar` plus `wavelet_dequant_haar0.comp`, opt-in with `debug.q3pw.dequant_haar=1` | Decodes the three level-0 luma bands inside the final Haar pass, so their R16F store and reload disappear: about 6.9M coefficient stores and 6.9M loads per 4160x2208 frame (est.), plus one dispatch. Holding three bands in registers may lower occupancy, so the net effect is unknown | `dequant_haar_gate` on lavapipe: every level-0 coefficient matches the separate dequant within one FP16 step, which rules out indexing and band-order errors. 220 of 163,840 luma pixels (0.13%) differ by one 8-bit step and chroma is identical; the exact rounding cause is unconfirmed | EXPERIMENT: Quest timing and exact-pixel run pending |
+| Fused final color, opt-in with `debug.q3pw.fuse_color=1`. The integrated implementation is #4's, see [FUSE-COLOR.md](FUSE-COLOR.md); this branch's own version was not taken | Removes one full-resolution luma write and read | Byte-exact on Quest at 512x320 and 4160x2208. Live A/B at 120 Hz: no delivered gain, fence unchanged | STOP as a 120 Hz lever; keep off. Retest only within a 207 Hz budget |
+| Fused dequant + level-0 Haar: `pyrowave_decoder_set_fused_dequant_haar` plus `wavelet_dequant_haar0.comp`, opt-in with `debug.q3pw.dequant_haar=1` | Decodes the three level-0 luma bands inside the final Haar pass, so their R16F store and reload disappear: about 6.9M coefficient stores and 6.9M loads per 4160x2208 frame (est.), plus one dispatch. Holding three bands in registers may lower occupancy, so the net effect is unknown | `dequant_haar_gate` on lavapipe with 16-lane subgroups, where the current path decodes faithfully (54.3 dB against the source): fused output matches it within one 8-bit luma step, in 301 of 163,840 pixels (0.18%), with identical chroma, and a flat frame is exact. The cause of the one-step differences is unconfirmed | EXPERIMENT: Quest timing and exact-pixel run pending |
 | Optical latency stamp, `video.pyrowave.latency_stamp` ([OPTICAL-LATENCY.md](OPTICAL-LATENCY.md)) | First real composition-to-photon number | The layout round-trips through a rasterizer for eye sizes 512 to 4096 | New diagnostic |
 | No-decode cadence probe, `debug.q3pw.cadence_probe=207` | Shows whether the runtime itself sustains 207 Hz with the lobby only | Counter and summary logic unit-tested | New diagnostic |
 
-Light stays the default profile and fused dequant stays off by default. No default has
-changed.
+Light stays the default profile, and fused color and fused dequant stay off by default. No
+default has changed.
 
-Fused final color is not part of this branch. Draft PR #4 (`review/fuse-color-exact`) owns
-it and has the owner-authorized hardware result: byte-exact on the Quest, with no live gain
-(fence p50 unchanged, unique targets/s slightly lower), so it stays off. Fused color and
-fused dequant both replace the final luma pass. If both land, the client must never enable
-them together, because fused color reads level-0 luma bands that fused dequant never stores.
-Each PyroWave patch applies cleanly with or without the other, in either order.
+Fused color and fused dequant both replace the final luma pass. The client refuses fused
+dequant while fused color is active, because fused color samples level-0 luma bands that
+fused dequant never stores. Each PyroWave patch applies cleanly with or without the other.
 
 ## Hardware session (needs the owner's go-ahead)
 
 Run these in order. Each step can reject a candidate on its own. Short screens cannot prove
 sustained FPS, thermal stability or optical latency.
 
-1. **Fused dequant exact-pixel proof on Adreno.** Push the artifact's `dequant_haar_gate`,
-   `libpyrowave-shared.so` and `libc++_shared.so` to `/data/local/tmp/q3pw/`, then run
-   `LD_LIBRARY_PATH=. ./dequant_haar_gate`. This covers 512x320 and 4160x2208 with a 30 dB
-   luma PSNR floor, at most one 8-bit step of luma difference and identical chroma. It must
-   print `DEQUANT_HAAR_GATE_PASS` before any streaming A/B. Record `luma_differing`, because
-   zero would make it byte-identical. If only the PSNR floor fails, rerun with
-   `GATE_DUMP_DIR=.` and inspect the source, current and fused PGM files before blaming
-   either path. Lavapipe cannot answer this question: its PyroWave decode is unfaithful
-   (8 to 13 dB) and crashes on some inputs.
+1. **Exact-pixel proofs on Adreno.** Fused color is done in #4 (October 5): byte-exact on both
+   saved stereo fixtures; see [FUSE-COLOR.md](FUSE-COLOR.md) for the device scripts. For fused
+   dequant, push the artifact's `dequant_haar_gate`, `libpyrowave-shared.so` and
+   `libc++_shared.so` to `/data/local/tmp/q3pw/`, then run `LD_LIBRARY_PATH=. ./dequant_haar_gate`.
+   This covers 512x320 and 4160x2208 with a 30 dB luma PSNR floor, at most one 8-bit step of
+   luma difference and identical chroma. It must print `DEQUANT_HAAR_GATE_PASS` before any
+   streaming A/B. Record `luma_differing`, because zero would make it byte-identical. If only
+   the PSNR floor fails, rerun with `GATE_DUMP_DIR=.` and inspect the source, current and fused
+   PGM files before blaming either path. Lavapipe agrees within one step but cannot show
+   Adreno's FP16 rounding.
 2. **No-decode 207 Hz cadence.** With the PC streamer stopped, run
    `adb shell setprop debug.q3pw.cadence_probe 207` and relaunch the APK. Read the
    `[Q3PW_CADENCE]` and `[Q3PW_CADENCE_SUMMARY]` lines, then clear the property. If the
    lobby alone skips slots at 207, decoder work cannot be the only limit.
 3. **120 Hz A/B at native resolution** (interleaved, same session): Light versus Strong,
-   then `debug.q3pw.dequant_haar` off versus on. Record decode stages, displayed FPS, lost
-   frames and a peripheral-text look for each profile. Dequant time should fall and iDWT
-   time rise for fused dequant; only their sum matters.
-4. **207 Hz screen** with Strong, plus fused dequant if it won step 3. Report runtime acceptance,
+   then `debug.q3pw.dequant_haar` off versus on (fused color already showed no 120 Hz gain in
+   #4). Record decode stages, displayed FPS, lost frames and a peripheral-text look for each
+   profile. Dequant time should fall and iDWT time rise for fused dequant; only their sum
+   matters.
+4. **207 Hz screen** with Strong, plus one fused pass: fused color, or fused dequant if it won
+   step 3. The client never runs both. Report runtime acceptance,
    decode budget and live delivery as three separate results.
 5. **Optical latency** at the best stable rate, following [OPTICAL-LATENCY.md](OPTICAL-LATENCY.md).
 
