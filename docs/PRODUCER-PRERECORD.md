@@ -119,3 +119,29 @@ The installed `.45` streaming pair was retained. Temporary properties, session
 values and physical proximity behavior were restored with readback; Virtual
 Desktop registration was preserved. This is a correctness milestone, **not a
 measured FPS or latency improvement**. Keep the normal synchronous path as default.
+
+## `.47` integration screen: excluded, allocation guard worked
+
+[Matching `.47` builds](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37294992783)
+passed all four jobs and 53 production Linux tests. Renewed small/native Quest
+checks passed on fragment and compute conversion, including rejection after
+only one or two output slots were warmed. Default readbacks stayed exact.
+[Sanitized results and matching hashes](../results/PRODUCER-PRERECORD-47-2026-10-05.json).
+
+The subsequent four 12-second same-session control/prepare windows are **all
+excluded**. Rust eligibility passed, but native enable rejected the configuration;
+the worker stayed on ordinary decoding. No actual preparation or experimental
+timing rows exist, so comparing their FPS would be misleading.
+
+Source review found that ALVR had not established the required
+`PYROWAVE_NO_LINEAR_TEX=1` environment before native allocation. The standalone
+fixtures had done so. Candidate `.48` scopes that setting to the eligible single
+decoder, restores its prior value after native destruction/constructor failure,
+and leaves the default worker alone. Portable tests cover prior-value, unset and
+unwind restoration. Matching builds, exact native-library identity and an actual
+`enabled=1` streaming screen remain required. This correction is not yet accepted.
+
+Both native and streaming phases ended normally with original property/session
+readbacks and physical proximity restored. Virtual Desktop registration and old
+matching pairs remain preserved. Installed `.47` stays on default decoding with
+the experimental mode off. No release or default performance promotion.

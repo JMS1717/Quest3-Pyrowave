@@ -24,6 +24,12 @@ resume paused hardware work or unattended workers.
 
 ## Current engineering state
 
+The `.47` prerecord worker screen is **excluded**: native enable rejected the
+missing allocation precondition and all four windows stayed on the default path.
+Small/native `.47` correctness and partial-warm rejection passed. `.48` scopes
+the allocation environment before construction; matching builds and actual
+streaming activation are pending. See [prerecord findings](PRODUCER-PRERECORD.md).
+
 [One-submission prerecord prototype](PRODUCER-PRERECORD.md): matching .46
 builds and small/native Quest exact-pixel checks passed for fragment and compute
 conversion, including cancellation, capacity growth and outstanding teardown.
