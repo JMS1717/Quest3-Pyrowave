@@ -21,6 +21,11 @@ extern "C" {
 typedef struct AHardwareBuffer AHardwareBuffer;
 typedef struct pyroclient pyroclient;
 
+// Creation-only Android Surface/Vulkan WSI diagnostic. Requires valid borrowed
+// JavaVM and Surface jobject. Retains/releases its own JNI/window references,
+// destroys all Vulkan objects before return; never acquires/submits/presents.
+int pyroclient_probe_android_surface(void *java_vm, void *java_surface);
+
 typedef struct pyroclient_frame_info {
     double decode_ms;    // GPU time of PyroWave's decode (timestamp queries)
     double convert_ms;   // GPU time of the YCbCr->RGBA pass, i.e. the GLES bridge

@@ -12,7 +12,7 @@ CXX="$ndk_bin/clang++ --target=aarch64-linux-android29"
 FLAGS="-std=c++17 -O2 -Wall -Wextra -Wno-missing-field-initializers -I$PW -I$PW/Granite/third_party/khronos/vulkan-headers/include"
 $CXX $FLAGS -shared -fPIC -Wl,-soname,libpyroclient.so \
     -Wl,--version-script="$HERE/exports.map" \
-    "$HERE/pyroclient.cpp" -o "$HERE/libpyroclient.so" \
+    "$HERE/pyroclient.cpp" "$HERE/surface_probe.cpp" -o "$HERE/libpyroclient.so" \
     -L"$PW/build-android" -lpyrowave-shared -lvulkan -landroid -llog
 $CXX $FLAGS "$HERE/pyroclient_test.cpp" "$HERE/gpu_readback_gles.cpp" \
     "$HERE/gpu_readback_android.cpp" -o "$HERE/pyroclient_test" \
