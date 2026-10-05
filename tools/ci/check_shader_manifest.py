@@ -4,7 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 
-FILES = ("shaders/wavelet_dequant.comp", "shaders/dwt_quant_scale.h", "shaders/constants.h", "shaders/idwt.comp", "shaders/idwt_haar_fused.comp", "shaders/dwt.comp", "shaders/dwt_common.h",
+FILES = ("shaders/wavelet_dequant.comp", "shaders/dwt_quant_scale.h", "shaders/constants.h", "shaders/idwt.comp", "shaders/idwt_haar_fused.comp", "shaders/idwt_haar_pairs.comp", "shaders/dwt.comp", "shaders/dwt_common.h",
          "shaders/dwt_swizzle.h", "shaders/slangmosh.json", "shaders/slangmosh.hpp")
 
 def manifest(root):
