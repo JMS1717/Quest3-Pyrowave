@@ -1,6 +1,13 @@
 # Whole-stack scorecard, October 5
 
-**The PC is already sending about 120 frames/s. The residual miss is on the
+Latest `.55` integration: short native120/1000/420/noFFE screens delivered about
+119 unique targets/s; 207 Hz no-decode cadence reached 206.9 FPS. Strong foveation
+completion was 7.12 ms, while reconstruction cost rose. Adaptive PC downsampling
+showed weaker tail pacing and stays optional. [PR #9 measurements and limits](PR-9-REVIEW.md).
+Native120 sustained and optical latency remain unmet. The diagnosis below is
+from earlier `.48`–`.50` captures, not a new `.55` bottleneck classification.
+
+**In those earlier captures, the PC was already sending about 120 frames/s. The residual miss is on the
 Quest: about 3–4 displayed target frames/s are repeats. A later `.50` window
 showed every steady-state empty wait expired while decode was still running,
 not because the decoder was idle.**
@@ -78,8 +85,8 @@ frames that arrive after 4 ms are already displayed on a later slot; holding
 the selection open to catch them makes the compositor repeat instead.
 
 Virtual Desktop remained the only registered driver, saved settings stayed
-144 Hz / 2000 Mbps / 4:4:4, and SteamVR was stopped. `.51` is the installed
-client. Native 120 sustained and optical latency remain unmet.
+144 Hz / 2000 Mbps / 4:4:4, and SteamVR was stopped. `.51` was then the installed
+client; the tested `.55` pair is now installed. Native 120 sustained and optical latency remain unmet.
 
 ## Fused colour, `.54`
 

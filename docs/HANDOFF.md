@@ -364,3 +364,21 @@ Commit/push only to `JMS1717/Quest3-Pyrowave` as JMS1717 with the configured
 noreply email. Retain upstream credits/licenses and PayPal support links. Keep
 raw captures, sessions, serials, keys and rollback material private. Passing CI
 alone does not justify a release or a performance claim.
+
+
+## October 5 `.55` integration completed
+
+[PR #9](https://github.com/JMS1717/Quest3-Pyrowave/pull/9) merged after the signed
+`2b289f8` install and 26 valid short comparison windows. The corrected 207 Hz
+no-decode probe reached 206.9 FPS/15s; no 207 streaming or optical proof. Optional
+profiles decode less but Strong completion 7.12 ms still misses 4.83 ms. Adaptive
+filter tail pacing was weaker, so amended `9da8560` keeps Bilinear fresh/legacy
+defaults and explicit Adaptive choices. All five signed CI jobs and matching-pair
+review passed; all three native decoder libraries EXACT tested2b. [Report](PR-9-REVIEW.md).
+
+Temporary hardware settings/proximity were restored and VD registration retained.
+Tested2b pair remains installed, amended pair available but not deployed. Old
+pairs and private evidence are preserved. Sustained native120/gameplay, menu
+Apply/restart, perceptual quality and optical latency remain acceptance gates.
+PR8's later fused-dequant follow-up533dfc4 remains separate/draft against main;
+these integration results do not validate its new kernel.

@@ -2294,5 +2294,25 @@
     "project_unregistered": true,
     "temporary_proximity_removed": true,
     "old_matching_pairs_preserved": true
+  },
+  "amended_integration": {
+    "source": "9da8560a279b9bad25b4c7eec0ca6a58c9052b10",
+    "merge_commit": "aee7a69618bdfab7a922ec273825e089a2e75516",
+    "signed_ci_run": 37375168471,
+    "all_five_jobs_passed": true,
+    "linux_python_tests_passed": 155,
+    "production_tests_passed": 67,
+    "fresh_and_legacy_bilinear_test_passed": true,
+    "signing_certificate_verified": true,
+    "all_three_native_libraries_exact_tested_2b": true,
+    "compiled_ffe_shader_sha256": "15a04a0022a722d95fdbfd91eb8bdc7e67b5e0c1d6d8c500519ac14c49d65980",
+    "artifact_sha256": {
+      "apk": "cdb400d6a3a1d63af4555a8684e173c0613cef4c92f12fe0b56a5f3ebf6a8f94",
+      "windows_zip": "831034ef281b1155f4a92c89500506a2b189e185a853a03663a2e74462ef3970"
+    },
+    "runtime_amendment": "Bilinear fresh/legacy/native fallback defaults only; explicit Adaptive preserved",
+    "pair_reviewed_not_deployed": true,
+    "installed_tested_pair_source": "2b289f8c7d5e2eef010bf564266fe7830d6c6f75",
+    "dequant_followup_pr8_not_included": true
   }
 }

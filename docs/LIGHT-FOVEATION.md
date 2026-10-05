@@ -10,15 +10,15 @@ fewer encoded/decoded pixels; it does not reduce the game's rendering workload.
 
 The fixed center occupies approximately **80% of each eye's width and height**,
 with full sampling density there. A smooth ALVR spatial remapping compresses the
-remaining outer bands with a gentle **1.5Ã— edge ratio**. Neither eye follows gaze,
+remaining outer bands with a gentle **1.5× edge ratio**. Neither eye follows gaze,
 and both shifts are zero. The Quest reconstructs the original expanded view in
 the existing direct-eye draw, preserving its color/range handling and buffer
 ownership. There is no extra full-frame reconstruction pass in that direct path.
 
 | Native120 / 4:2:0 comparison | Full frame | Light mode |
 | --- | --- | --- |
-| Expanded view per eye | 2080Ã—2208 | 2080Ã—2208 |
-| Encoded/decoded pixels per eye | 2080Ã—2208 | 1952Ã—2080 |
+| Expanded view per eye | 2080×2208 | 2080×2208 |
+| Encoded/decoded pixels per eye | 2080×2208 | 1952×2080 |
 | Raw stereo 8-bit 4:2:0 bytes/frame | 13,777,920 | 12,180,480 |
 | 1000 Mbps / 120 Hz payload budget | 1,041,666.7 bytes/frame | 1,041,666.7 bytes/frame |
 
@@ -32,7 +32,7 @@ in-headset acceptance remains necessary.
 ## Enable and compare
 
 Use a matching `.28` or newer APK/Windows pair; the published alpha.7 pair has no
-light-mode setting. In the development dashboard, open **Video â†’ PyroWave â†’ Light
+light-mode setting. In the development dashboard, open **Video → PyroWave → Light
 peripheral encoding (experimental)**. Restart SteamVR after changing it.
 
 ```powershell
@@ -45,7 +45,7 @@ python -m tools.quest3.foveation --eye 2080 2208 --hz 120 --mbps 1000
 
 The toggle verifies setting readback; it does not claim the running stream has
 changed before restart. Captures verify the driver's fixed parameters and actual
-3904Ã—2080 stereo decode dimensions. Unsupported clients negotiate the full-frame
+3904×2080 stereo decode dimensions. Unsupported clients negotiate the full-frame
 fallback. Old generic FFE/force-enable/gaze overrides cannot select a different
 warp, and ordinary full-frame presets reset this explicit light switch.
 

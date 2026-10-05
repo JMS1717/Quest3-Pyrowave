@@ -25,7 +25,7 @@ SteamVR integration, tracking, controllers and audio.
 | Track | What to expect |
 | --- | --- |
 | **Published preview: alpha.8 / `.51`** | Matching APK and Windows server with bounded frame waiting, automatic decode priority, independent resolution controls and safety fixes. [Release notes](docs/RELEASE-alpha.8.md) |
-| **Development: `.55`** | [PR #9](https://github.com/JMS1717/Quest3-Pyrowave/pull/9) integrates overlay modes, independent game/stream controls, optional foveation profiles and diagnostics. Signed `2b289f8` passed all five CI jobs and short Quest screens near 119 fresh FPS; the amended head keeps Bilinear as the default. [Measurements and limits](docs/PR-9-REVIEW.md). |
+| **Development: `.55`** | [PR #9](https://github.com/JMS1717/Quest3-Pyrowave/pull/9) integrates overlay modes, independent game/stream controls, optional foveation profiles and diagnostics. Tested `2b289f8` passed short Quest screens near 119 fresh FPS. Amended `9da8560` passed all five signed CI jobs and artifact review; Bilinear stays the default. [Measurements and limits](docs/PR-9-REVIEW.md). |
 | **Working experimental target** | **2080 × 2208 per eye · 120 Hz · 1000 Mbps · 4:2:0 · no foveated encoding**, with Vulkan Compute decoding. Sustained acceptance is still pending. |
 | **Defaults preserved** | Conservative 400 Mbps / 72 Hz candidate; 4:2:0, TCP and Quest 3 Auto → Compute. Development keeps synchronous decoding and the 4 ms selection wait. |
 
