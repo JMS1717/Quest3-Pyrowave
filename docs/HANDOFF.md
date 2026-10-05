@@ -90,7 +90,9 @@ were idle. Unique targets stayed 117.7/s with 3.9 lost/s. GPU decode was about
 prerecord, async copy, release fences, or another wait sweep, and do not build
 a presenter to recover these misses. Two concurrent GPU decodes remain unsafe
 with current shared scratch/query/upload lifetimes. The open lever is shortening
-that 5.9 ms GPU decode.
+that 5.9 ms GPU decode. An explicit 6 ms wait was measured on `.51` and is not
+the default: unique targets did not move, and compositor stale counts roughly
+doubled.
 Native 120 sustained/optical acceptance remains unmet. The historical evidence
 below records earlier hypotheses; completed experiments are not pending work.
 
