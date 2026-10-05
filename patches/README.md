@@ -31,6 +31,11 @@ Two traps when regenerating, both of which have silently produced a patch that d
 | `openxr-sdk-2b99fec-hello_xr.patch` | `KhronosGroup/OpenXR-SDK-Source` | `2b99fec` | the `hello_xr` distortion-grid / stereo decoder test app (9 files); the repo's `.gitattributes` makes checkouts CRLF, so compare ignoring line endings |
 | `alvr-20.14.1-galaxy-xr-client.stale-20260919.patch` | — | — | superseded snapshot, kept for reference only |
 
+CI builds pyrowave from `d2997ac` plus, in order, `pyrowave-cdf53-haar-experiments2-3.patch`,
+`quest3-pyrowave.patch`, `pyrowave-prerecord-api.patch` and `pyrowave-fuse-color.patch`
+(`tools/ci/fetch_sources.sh`). The last one adds only the per-decoder, default-off
+`pyrowave_decoder_set_skip_final_luma_idwt()` option; see [FUSE-COLOR](../docs/FUSE-COLOR.md).
+
 ## Notes
 
 `alvr-20.13.0-server-instrumentation.patch` began as a streamer-only patch beside the client patch.
