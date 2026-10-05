@@ -1,8 +1,9 @@
 # One-shot Vulkan Surface chart (`.40` / `.41`)
 
 Status: **default-off diagnostic**. `.40` passed API lifecycle checks on Quest 3,
-but its compositor image was vertically inverted. `.41` corrects the static
-upload rows; matching builds and a new visual check are required. Normal PyroWave decoding, video projection and the GLES eye renderer
+but its compositor image was vertically inverted. Reviewed `.41` corrected the
+static upload rows and passed the screenshot orientation and lifecycle checks.
+Normal PyroWave decoding, video projection and the GLES eye renderer
 are unchanged. This is a prerequisite experiment for removing that copy, not
 an optimized video path or a latency claim.
 
@@ -110,3 +111,24 @@ order and corner colors, with a CPU regression for both RGBA/BGRA and output
 bounds. It does not change video decode, eye mapping or shaders. A future
 Vulkan-bound session must establish its own orientation convention. Full-resolution
 color handling and decoded-frame/pose selection remain unresolved.
+
+## `.41` orientation confirmation
+
+The October 5 matching `.41` pair passed all CI jobs, artifact/signing/version
+checks and exact small/native baseline GPU readbacks. The first capture showed
+white/yellow above cyan/magenta in both eyes. Its shutdown verifier rejected the
+limited 4000-line log tail because startup records had fallen out; the independent
+restorer returned to `.40` without errors. The full continuously saved capture
+subsequently passed the unchanged process/clock/lifecycle reader, including both
+fences, STOPPING and ordered retirement.
+
+The harness now reads its continuous filtered log. A shorter on/off confirmation
+(two eight-second windows, two-second settling) passed orientation and lifecycle,
+left `.41` installed and restored all temporary settings and VD registration
+without errors. Submission rates were 117.63/113.78 events/s, eye-completion proxies
+117.55/113.66, p1 near60, temperature35/33°C and thermal status0. Separate restarts,
+short samples and unmatched GPU clocks prevent any causal speedup claim. Screenshot
+correctness is not in-headset or colorimetric acceptance, full-resolution decoded
+Surface presentation, pose matching or optical latency.
+[Sanitized confirmation](../results/SURFACE-CHART-2026-10-05.json),
+[matching build](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37261571795).

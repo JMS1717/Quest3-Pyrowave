@@ -153,8 +153,8 @@ Current presentation research checks an optional
 [Android Surface/Vulkan WSI path](docs/SURFACE-PROBE.md) that could eventually
 avoid the GLES eye copy. Extension advertisement and tiny object creation are
 verified. A [one-shot static Surface image](docs/SURFACE-CHART.md) passed fence
-retirement and shutdown, but exposed a vertical flip being corrected in the
-diagnostic. Decoded-video identity, pose pairing and sustained performance remain
+retirement and shutdown; `.41` corrected its vertical flip and passed a compositor
+screenshot check. Decoded-video identity, pose pairing and sustained performance remain
 unverified. It is not a measured speedup or replacement presenter yet. Earlier synchronization research examined a
 [Nightfall-inspired native-fence handoff](docs/NIGHTFALL-SYNC-REVIEW.md).
 The `.26` release-fence experiment passed GPU reuse checks and reduced CPU copy

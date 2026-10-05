@@ -27,7 +27,7 @@ resume paused hardware work or unattended workers.
 | Item | Evidence / limitation |
 | --- | --- |
 | Public release | [alpha.7](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.7), matching `.15` APK/server |
-| Development pair | Reviewed `.40` (`a356edb`), matching CI all jobs passed; installed after exact baseline GPU readbacks. Its static Surface API/fence/shutdown screen passed, but screenshot orientation failed. `.41` (`700f30f`) corrects the diagnostic upload rows and is building; recheck CI, artifact and live state. Normal video remains on the GLES bridge. `.39`/`.38` and older matching pairs are retained |
+| Development pair | Reviewed `.41` (`700f30f`), all matching CI jobs and exact baseline GPU readbacks passed. Static Surface screenshot orientation and ordered fence/STOPPING retirement verified October5. Normal video remains on the GLES bridge; diagnostic stays off. `.40`/`.39`/`.38` and older pairs retained. Recheck actual installation before hardware work |
 | User feedback | Positive manual playtest after overlay/OpenXR repairs; not sustained FPS, optical latency or broad game acceptance |
 | Best short native screens | `.33` at 120 Hz / 1000 Mbps / 4:2:0: about 116–118 displayed target FPS (2.4–4.8 lost/s across sessions, `.34` unfiltered arm included) with the default wait and LOW decode priority. Without the priority it was 110–114, and without the wait 107–110 ([fresh-frame loss](FRESHNESS.md), [decode priority](DECODE-PRIORITY.md)). Stationary chart, not sustained gameplay |
 | Baseline recommendation | Haar/Compute, full-frame native encode, USB/TCP, 120 Hz request, 1000 Mbps, 4:2:0; experimental fence paths off |
@@ -53,11 +53,12 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 ## Highest-value next experiment
 
-**Latest update, October 4 late evening:** `.40`'s tiny static Surface image
+**Latest update, October 5:** `.40`'s tiny static Surface image
 passed one-shot Vulkan enqueue, layer submission, both fences and orderly
 STOPPING retirement on Quest 3. A private compositor screenshot exposed a
-vertical flip. `.41` corrects rows only for that diagnostic in the existing
-GLES-bound session; verify the matching pair and orientation before advancing.
+vertical flip. `.41` corrected rows only for that diagnostic in the existing
+GLES-bound session. Matching builds, exact default GPU readbacks, screenshot
+orientation and orderly shutdown passed; video/pose identity remains unverified.
 Read [the result and remaining gates](SURFACE-CHART.md#quest-3-result-lifecycle-passed-orientation-rejected).
 This screen found no speedup and does not establish live decoded-video identity,
 color fidelity or pose/content pairing. The normal GLES path is retained.
