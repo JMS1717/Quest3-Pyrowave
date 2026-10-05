@@ -53,10 +53,34 @@ jobs:
           python3 -m tools.foveation.gpu_fixture /tmp/light-foveation-reference.txt
           g++ -std=c++17 -O2 -Wall -Wextra -Werror tools/pyroclient/gpu_readback_gles.cpp tools/foveation/gpu_test.cpp -lEGL -lGLESv2 -o /tmp/light-foveation-test
           /tmp/light-foveation-test tools/foveation/light.glsl /tmp/light-foveation-reference.txt
-  client:
+  publication_tests:
     runs-on: ubuntu-24.04
     needs: tests
-    if: ${{ always() && inputs.tests_only != true && (needs.tests.result == 'success' || needs.tests.result == 'skipped') }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct production decoder source
+        run: sh tools/ci/fetch_sources.sh "$XRWIRED_INPUTS/research"
+      - name: Linux client library prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential pkg-config libclang-dev libasound2-dev libpipewire-0.3-dev libspa-0.2-dev libgtk-3-dev libxrandr-dev libunwind-dev
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ws/research/ALVR-20.13.0/target/release
+          key: q3pw-publication-v1-${{ runner.os }}-${{ env.RUST_TOOLCHAIN }}-${{ github.sha }}
+          restore-keys: |
+            q3pw-publication-v1-${{ runner.os }}-${{ env.RUST_TOOLCHAIN }}-
+      - name: Production frame-slot races and Unix descriptor ownership
+        working-directory: ws/research/ALVR-20.13.0
+        run: cargo +"$RUST_TOOLCHAIN" test --release -p alvr_client_core --lib
+  client:
+    runs-on: ubuntu-24.04
+    needs: [tests, publication_tests]
+    if: ${{ !cancelled() && inputs.tests_only != true && needs.tests.result == 'success' && needs.publication_tests.result == 'success' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -164,8 +188,8 @@ jobs:
           key: ${{ steps.cargo_client_cache.outputs.cache-primary-key }}
   streamer:
     runs-on: windows-2022
-    needs: tests
-    if: ${{ always() && inputs.tests_only != true && (needs.tests.result == 'success' || needs.tests.result == 'skipped') }}
+    needs: [tests, publication_tests]
+    if: ${{ !cancelled() && inputs.tests_only != true && needs.tests.result == 'success' && needs.publication_tests.result == 'success' }}
     env:
       LIBCLANG_PATH: C:\Program Files\LLVM\bin
     steps:

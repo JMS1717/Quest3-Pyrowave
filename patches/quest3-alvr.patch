@@ -206,7 +206,7 @@ index 7cead7b..18ad9d0 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..9747446 100644
+index ae00ce8..cd7bb1c 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..9747446 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.42"
++version = "20.13.0-quest3.pyro.44"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -668,7 +668,7 @@ index f764033..d636442 100644
                          decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
                      }
 diff --git a/alvr/client_core/src/video_decoder/mod.rs b/alvr/client_core/src/video_decoder/mod.rs
-index 4d2e699..d0209b3 100644
+index 4d2e699..af64743 100644
 --- a/alvr/client_core/src/video_decoder/mod.rs
 +++ b/alvr/client_core/src/video_decoder/mod.rs
 @@ -1,14 +1,18 @@
@@ -743,7 +743,7 @@ index 4d2e699..d0209b3 100644
      if complete {
          FrameDecision::DecodeComplete
      } else if age < deadline {
-@@ -130,22 +150,230 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
+@@ -130,22 +150,269 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
      let mean = samples.iter().sum::<f32>() / n as f32;
      format!(
          "min {:.2} mean {:.2} p50 {:.2} p95 {:.2} p99 {:.2} max {:.2}",
@@ -787,6 +787,13 @@ index 4d2e699..d0209b3 100644
 -    inner: alvr_common::parking_lot::Mutex<Option<(Duration, usize)>>,
 +    inner: alvr_common::parking_lot::Mutex<FrameSlotState>,
 +    producer_ready: alvr_common::parking_lot::Condvar,
++    consumer_ready: alvr_common::parking_lot::Condvar,
++}
++
++#[derive(Debug)]
++pub struct PublicationWait {
++    pub pending: bool,
++    pub condvar_calls: u64,
 +}
 +
 +#[derive(Default)]
@@ -807,6 +814,10 @@ index 4d2e699..d0209b3 100644
 +    pending_was_late: bool,
 +    empty_since: Option<Instant>,
 +    in_flight: bool,
++    #[cfg(test)]
++    consumer_waiters: usize,
++    #[cfg(test)]
++    consumer_park_count: u64,
 +    freshness: Freshness,
  }
  
@@ -847,14 +858,21 @@ index 4d2e699..d0209b3 100644
 +    }
 +    fn publish_inner(&self, timestamp: Duration, buffer: usize, order: Option<u64>, token: u64) -> bool {
 +        let mut state = self.inner.lock();
-+        Self::publish_locked(&mut state, timestamp, buffer, order, token)
++        let published = Self::publish_locked(&mut state, timestamp, buffer, order, token);
++        self.consumer_ready.notify_all();
++        published
 +    }
 +    #[cfg(unix)]
 +    pub fn publish_ready_fenced(&self, timestamp: Duration, buffer: usize, order: u64,
 +                                token: u64, ready_fd: std::os::fd::OwnedFd) -> bool {
 +        let mut state = self.inner.lock();
-+        if !Self::publish_locked(&mut state, timestamp, buffer, Some(order), token) { return false; }
++        if !Self::publish_locked(&mut state, timestamp, buffer, Some(order), token) {
++            self.consumer_ready.notify_all();
++            return false;
++        }
 +        state.ready_fds.replace_pending(Some(ready_fd));
++        // Attach the descriptor before the waiting consumer can observe pending.
++        self.consumer_ready.notify_all();
 +        true
 +    }
 +    fn publish_locked(state: &mut FrameSlotState, timestamp: Duration, buffer: usize,
@@ -893,9 +911,30 @@ index 4d2e699..d0209b3 100644
 +    /// A producer has accepted a complete frame and will publish or reject it.
 +    pub fn mark_in_flight(&self) {
 +        self.inner.lock().in_flight = true;
++        self.consumer_ready.notify_all();
 +    }
 +    pub fn clear_in_flight(&self) {
 +        self.inner.lock().in_flight = false;
++        self.consumer_ready.notify_all();
++    }
++    /// CPU publication notification only. Does not dequeue, lease a buffer, move
++    /// a ready FD or establish GPU completion. Predicate and registration share
++    /// the publication mutex, so a publication before parking cannot be lost.
++    pub fn wait_for_pending(&self, started: Instant, budget: Duration, grace: Duration) -> PublicationWait {
++        let mut state = self.inner.lock();
++        let mut condvar_calls = 0;
++        while state.pending.is_none() {
++            let permitted = if state.in_flight { budget } else { grace.min(budget) };
++            let remaining = permitted.saturating_sub(started.elapsed());
++            if remaining.is_zero() { break; }
++            condvar_calls += 1;
++            #[cfg(test)]
++            { state.consumer_waiters += 1; state.consumer_park_count += 1; }
++            self.consumer_ready.wait_for(&mut state, remaining);
++            #[cfg(test)]
++            { state.consumer_waiters -= 1; }
++        }
++        PublicationWait { pending: state.pending.is_some(), condvar_calls }
 +    }
 +    pub fn in_flight(&self) -> bool {
 +        self.inner.lock().in_flight
@@ -979,7 +1018,7 @@ index 4d2e699..d0209b3 100644
      }
  }
  
-@@ -203,6 +431,53 @@ pub struct VideoDecoderSource {
+@@ -203,6 +470,64 @@ pub struct VideoDecoderSource {
  }
  
  impl VideoDecoderSource {
@@ -1021,6 +1060,17 @@ index 4d2e699..d0209b3 100644
 +        false
 +    }
 +
++    /// Single-worker PyroWave TCP only. CPU publication, not GPU completion.
++    pub fn wait_frame_publication(&self, started: Instant, budget: Duration,
++                                  grace: Duration) -> Option<PublicationWait> {
++        #[cfg(target_os = "android")]
++        if let SourceInner::PyroWave(source) = &self.inner {
++            return source.wait_frame_publication(started, budget, grace);
++        }
++        let _ = (started, budget, grace);
++        None
++    }
++
 +    /// Quest PyroWave TCP only: publication/selection timing since the previous call.
 +    pub fn take_freshness(&self) -> Option<Freshness> {
 +        #[cfg(target_os = "android")]
@@ -1033,7 +1083,7 @@ index 4d2e699..d0209b3 100644
      /// If a frame is available, return the timestamp and the AHardwareBuffer.
      pub fn get_frame(&mut self) -> Option<(Duration, *mut std::ffi::c_void)> {
          #[cfg(target_os = "android")]
-@@ -229,7 +504,9 @@ fn logcat_info(tag: &str, message: &str) {
+@@ -229,7 +554,9 @@ fn logcat_info(tag: &str, message: &str) {
      }
      let tag = std::ffi::CString::new(tag).unwrap_or_default();
      let text = std::ffi::CString::new(message).unwrap_or_default();
@@ -1044,7 +1094,7 @@ index 4d2e699..d0209b3 100644
  }
  
  // report_frame_decoded: (target_timestamp: Duration) -> ()
-@@ -249,7 +526,9 @@ pub fn create_decoder(
+@@ -249,7 +576,9 @@ pub fn create_decoder(
              }
          }
          if config.codec == CodecType::PyroWave
@@ -1055,10 +1105,180 @@ index 4d2e699..d0209b3 100644
          {
              let (sink, source) = pyrowave_udp::video_decoder_split(
                  config.clone(),
-@@ -304,6 +583,22 @@ pub fn create_decoder(
+@@ -304,6 +633,192 @@ pub fn create_decoder(
  mod tests {
      use super::*;
  
++    fn wait_until_consumer_parked(slot: &FrameSlot) {
++        let deadline = Instant::now() + Duration::from_secs(1);
++        loop {
++            // This mutex cannot be acquired until Condvar atomically registers
++            // its waiter and releases it. The count is test-only instrumentation.
++            if slot.inner.lock().consumer_waiters != 0 { return; }
++            assert!(Instant::now() < deadline, "consumer never parked");
++            std::thread::yield_now();
++        }
++    }
++
++    #[test]
++    fn publication_before_wait_preserves_pending_and_existing_lease() {
++        let slot = FrameSlot::default();
++        assert!(slot.publish_fenced(Duration::ZERO, 0x10, 1, 11));
++        slot.take();
++        assert!(slot.publish_fenced(Duration::ZERO, 0x20, 2, 22));
++        let waited = slot.wait_for_pending(Instant::now(), Duration::ZERO, Duration::ZERO);
++        assert!(waited.pending);
++        assert_eq!(waited.condvar_calls, 0);
++        assert_eq!(slot.protected_buffers(), [0x10, 0x20]);
++        assert_eq!(slot.leased_release_token(0x10), 11);
++        assert_eq!(slot.take(), Some((Duration::ZERO, 0x20)));
++        assert_eq!(slot.leased_release_token(0x20), 22);
++    }
++
++    #[test]
++    fn publication_wakes_registered_consumer_without_dequeueing() {
++        let slot = std::sync::Arc::new(FrameSlot::default());
++        slot.mark_in_flight();
++        let other = slot.clone();
++        let (tx, rx) = std::sync::mpsc::channel();
++        let worker = std::thread::spawn(move || {
++            tx.send(other.wait_for_pending(Instant::now(), Duration::from_secs(2), Duration::ZERO)).unwrap();
++        });
++        wait_until_consumer_parked(&slot);
++        assert!(slot.publish_fenced(Duration::ZERO, 0x20, 2, 22));
++        let waited = rx.recv_timeout(Duration::from_secs(1)).unwrap();
++        assert!(waited.pending);
++        assert!(waited.condvar_calls > 0);
++        worker.join().unwrap();
++        assert_eq!(slot.protected_buffers(), [0, 0x20]);
++        assert_eq!(slot.leased_release_token(0x20), 0);
++    }
++
++    #[test]
++    fn failed_decode_wakes_without_spending_remaining_budget() {
++        let slot = std::sync::Arc::new(FrameSlot::default());
++        slot.mark_in_flight();
++        let other = slot.clone();
++        let (tx, rx) = std::sync::mpsc::channel();
++        let worker = std::thread::spawn(move || {
++            tx.send(other.wait_for_pending(Instant::now(), Duration::from_secs(2), Duration::ZERO)).unwrap();
++        });
++        wait_until_consumer_parked(&slot);
++        slot.clear_in_flight();
++        let waited = rx.recv_timeout(Duration::from_secs(1)).unwrap();
++        assert!(!waited.pending);
++        assert!(waited.condvar_calls > 0);
++        worker.join().unwrap();
++        assert_eq!(slot.protected_buffers(), [0, 0]);
++    }
++
++    #[test]
++    fn expired_budget_and_idle_without_grace_return_without_waiting() {
++        let slot = FrameSlot::default();
++        assert!(!slot.wait_for_pending(Instant::now(), Duration::from_secs(2), Duration::ZERO).pending);
++        slot.mark_in_flight();
++        assert!(!slot.wait_for_pending(Instant::now() - Duration::from_secs(1), Duration::from_millis(4), Duration::ZERO).pending);
++        assert_eq!(slot.inner.lock().consumer_waiters, 0);
++    }
++
++    #[test]
++    fn spurious_wake_rechecks_predicate_without_consuming_or_resetting_wait() {
++        let slot = std::sync::Arc::new(FrameSlot::default());
++        slot.mark_in_flight();
++        let other = slot.clone();
++        let (tx, rx) = std::sync::mpsc::channel();
++        let worker = std::thread::spawn(move || {
++            tx.send(other.wait_for_pending(Instant::now(), Duration::from_secs(2), Duration::ZERO)).unwrap();
++        });
++        wait_until_consumer_parked(&slot);
++        slot.consumer_ready.notify_all();
++        let deadline = Instant::now() + Duration::from_secs(1);
++        loop {
++            let state = slot.inner.lock();
++            if state.consumer_waiters == 1 && state.consumer_park_count >= 2 { break; }
++            drop(state);
++            assert!(Instant::now() < deadline, "spurious wake was not rechecked");
++            std::thread::yield_now();
++        }
++        assert!(matches!(rx.try_recv(), Err(std::sync::mpsc::TryRecvError::Empty)));
++        assert!(slot.publish_ordered(Duration::ZERO, 0x20, 1));
++        let waited = rx.recv_timeout(Duration::from_secs(1)).unwrap();
++        assert!(waited.pending && waited.condvar_calls >= 2);
++        worker.join().unwrap();
++    }
++
++    #[test]
++    fn grace_wakes_on_decode_start_and_extends_only_to_original_total_budget() {
++        let slot = std::sync::Arc::new(FrameSlot::default());
++        let other = slot.clone();
++        let (tx, rx) = std::sync::mpsc::channel();
++        let worker = std::thread::spawn(move || {
++            tx.send(other.wait_for_pending(Instant::now(), Duration::from_secs(2), Duration::from_secs(1))).unwrap();
++        });
++        wait_until_consumer_parked(&slot);
++        slot.mark_in_flight();
++        let deadline = Instant::now() + Duration::from_secs(1);
++        loop {
++            let state = slot.inner.lock();
++            if state.consumer_waiters == 1 && state.consumer_park_count >= 2 { break; }
++            drop(state);
++            assert!(Instant::now() < deadline, "decode start did not wake grace waiter");
++            std::thread::yield_now();
++        }
++        assert!(slot.publish_ordered(Duration::ZERO, 0x20, 1));
++        let waited = rx.recv_timeout(Duration::from_secs(1)).unwrap();
++        assert!(waited.pending && waited.condvar_calls >= 2);
++        worker.join().unwrap();
++        // An expired original deadline never acquires a fresh grace window.
++        assert_eq!(slot.take(), Some((Duration::ZERO, 0x20)));
++        assert!(!slot.wait_for_pending(Instant::now() - Duration::from_secs(1),
++            Duration::from_millis(4), Duration::from_millis(1)).pending);
++    }
++
++    #[test]
++    fn parked_consumer_times_out_if_producer_never_publishes() {
++        let slot = FrameSlot::default();
++        slot.mark_in_flight();
++        let waited = slot.wait_for_pending(Instant::now(), Duration::from_millis(2), Duration::ZERO);
++        assert!(!waited.pending && waited.condvar_calls > 0);
++        assert_eq!(slot.protected_buffers(), [0, 0]);
++    }
++
++    #[cfg(unix)]
++    #[test]
++    fn ready_descriptor_is_attached_before_event_consumer_and_remains_once_only() {
++        use std::os::unix::net::UnixStream;
++        let slot = FrameSlot::default();
++        let (fd, _peer) = UnixStream::pair().unwrap();
++        assert!(slot.publish_ready_fenced(Duration::ZERO, 0x20, 1, 22, fd.into()));
++        assert!(slot.wait_for_pending(Instant::now(), Duration::ZERO, Duration::ZERO).pending);
++        assert!(slot.take_ready_fd(0x20).is_none()); // Waiting is not leasing.
++        slot.take();
++        assert!(slot.take_ready_fd(0x20).is_some());
++        assert!(slot.take_ready_fd(0x20).is_none());
++    }
++
++    #[cfg(unix)]
++    #[test]
++    fn parked_consumer_observes_attached_ready_descriptor_after_publication() {
++        use std::os::unix::net::UnixStream;
++        let slot = std::sync::Arc::new(FrameSlot::default());
++        slot.mark_in_flight();
++        let other = slot.clone();
++        let worker = std::thread::spawn(move || {
++            let waited = other.wait_for_pending(Instant::now(), Duration::from_secs(2), Duration::ZERO);
++            assert!(waited.pending && waited.condvar_calls > 0);
++            assert!(other.take_ready_fd(0x20).is_none());
++            assert_eq!(other.take(), Some((Duration::ZERO, 0x20)));
++            assert!(other.take_ready_fd(0x20).is_some());
++            assert!(other.take_ready_fd(0x20).is_none());
++        });
++        wait_until_consumer_parked(&slot);
++        let (fd, _peer) = UnixStream::pair().unwrap();
++        assert!(slot.publish_ready_fenced(Duration::ZERO, 0x20, 1, 22, fd.into()));
++        worker.join().unwrap();
++    }
++
 +    #[test]
 +    fn release_token_stays_with_the_lease_across_superseding() {
 +        let slot = FrameSlot::default();
@@ -1078,7 +1298,7 @@ index 4d2e699..d0209b3 100644
      #[test]
      fn config_round_trips_the_encoder_blob() {
          let mut buf = Vec::new();
-@@ -312,53 +607,97 @@ mod tests {
+@@ -312,53 +827,97 @@ mod tests {
          buf.push(1);
          buf.push(0);
          let c = parse_pyrowave_config(&buf).unwrap();
@@ -1189,7 +1409,7 @@ index 4d2e699..d0209b3 100644
          assert_eq!(dist(&mut Vec::new()), "-");
      }
  
-@@ -392,4 +731,145 @@ mod tests {
+@@ -392,4 +951,145 @@ mod tests {
          assert_eq!(slot.take(), Some((Duration::from_millis(2), 0x20)));
          assert!(slot.take().is_none());
      }
@@ -1336,7 +1556,7 @@ index 4d2e699..d0209b3 100644
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601..3120693 100644
+index 2e22601..aa75f31 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -1445,7 +1665,7 @@ index 2e22601..3120693 100644
          self.pending.ready.notify_one();
          Ok(true)
      }
-@@ -71,13 +106,34 @@ impl VideoDecoderSink {
+@@ -71,13 +106,39 @@ impl VideoDecoderSink {
  pub struct VideoDecoderSource {
      running: Arc<AtomicBool>,
      pending: Arc<Pending>,
@@ -1470,6 +1690,11 @@ index 2e22601..3120693 100644
 +    pub fn decode_in_flight(&self) -> bool {
 +        self.decoded.in_flight()
 +    }
++    pub fn wait_frame_publication(&self, started: std::time::Instant, budget: Duration,
++                                  grace: Duration) -> Option<super::PublicationWait> {
++        // The two-worker in-flight bit is approximate; retain its legacy poll.
++        (self.threads.len() == 1).then(|| self.decoded.wait_for_pending(started, budget, grace))
++    }
 +    pub fn take_freshness(&self) -> super::Freshness {
 +        self.decoded.take_freshness()
 +    }
@@ -1482,7 +1707,7 @@ index 2e22601..3120693 100644
      }
  }
  
-@@ -85,7 +141,7 @@ impl Drop for VideoDecoderSource {
+@@ -85,7 +146,7 @@ impl Drop for VideoDecoderSource {
      fn drop(&mut self) {
          self.running.store(false, Ordering::Relaxed);
          self.pending.ready.notify_all();
@@ -1491,7 +1716,7 @@ index 2e22601..3120693 100644
              t.join().ok();
          }
      }
-@@ -99,18 +155,64 @@ pub fn video_decoder_split(
+@@ -99,18 +160,64 @@ pub fn video_decoder_split(
      let pending = Arc::new(Pending {
          frame: Mutex::new(None),
          ready: Condvar::new(),
@@ -1559,7 +1784,7 @@ index 2e22601..3120693 100644
                      cfg.width,
                      cfg.height,
                      cfg.chroma444 as i32,
-@@ -118,6 +220,7 @@ pub fn video_decoder_split(
+@@ -118,6 +225,7 @@ pub fn video_decoder_split(
                      3,
                      cfg.wavelet as i32,
                      cfg.decode_path as i32,
@@ -1567,7 +1792,7 @@ index 2e22601..3120693 100644
                  )
              };
              if client.is_null() {
-@@ -129,63 +232,133 @@ pub fn video_decoder_split(
+@@ -129,63 +237,133 @@ pub fn video_decoder_split(
                  return;
              }
              let mut frames: u64 = 0;
@@ -3846,7 +4071,7 @@ index 0000000..766b412
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe9..ef9fe65 100644
+index b87dfe9..9a909cf 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -1,3 +1,6 @@
@@ -3880,7 +4105,7 @@ index b87dfe9..ef9fe65 100644
              upscaling: config.settings.video.upscaling.as_option().cloned(),
              force_software_decoder: config.settings.video.force_software_decoder,
              max_buffering_frames: config.settings.video.max_buffering_frames,
-@@ -88,16 +86,42 @@ pub struct StreamContext {
+@@ -88,16 +86,44 @@ pub struct StreamContext {
      view_reference_space: Arc<xr::Space>,
      swapchains: [xr::Swapchain<xr::OpenGlEs>; 2],
      last_good_view_params: [ViewParams; 2],
@@ -3900,6 +4125,8 @@ index b87dfe9..ef9fe65 100644
 +    /// Its existing native-buffer lease remains protected until the eye copy is ready.
      pending_frame: Option<(Duration, *mut std::ffi::c_void)>,
 +    frame_wait_budget: Duration,
++    frame_wait_event: bool,
++    event_wait_stats: [u64; 4], // eligible calls, condvar calls, pending seen, fallback calls
 +    packet_grace_budget: Duration,
 +    frame_wait_stats: [u64; 4], // waits, ready hits, total microseconds, max microseconds
 +    frame_wait_last_log: Instant,
@@ -3926,7 +4153,7 @@ index b87dfe9..ef9fe65 100644
  }
  
  impl StreamContext {
-@@ -115,12 +139,6 @@ impl StreamContext {
+@@ -115,12 +141,6 @@ impl StreamContext {
  
          let xr_exts = xr_session.instance().exts();
  
@@ -3939,7 +4166,7 @@ index b87dfe9..ef9fe65 100644
          let foveation_profile = if let Some(config) = &config.clientside_foveation_config {
              if xr_exts.fb_swapchain_update_state.is_some()
                  && xr_exts.fb_foveation.is_some()
-@@ -228,6 +246,10 @@ impl StreamContext {
+@@ -228,6 +248,10 @@ impl StreamContext {
              view_reference_space,
              swapchains,
              last_good_view_params: [ViewParams::default(); 2],
@@ -3950,11 +4177,14 @@ index b87dfe9..ef9fe65 100644
              input_thread: None,
              input_thread_running,
              config,
-@@ -235,8 +257,28 @@ impl StreamContext {
+@@ -235,8 +259,35 @@ impl StreamContext {
              renderer,
              decoder: None,
              pending_frame: None,
 +            frame_wait_budget: frame_wait_budget_property(),
++            frame_wait_event: platform == Platform::Quest3 &&
++                crate::extra_extensions::perf_settings::system_property("debug.q3pw.frame_wait_event") == "1",
++            event_wait_stats: [0; 4],
 +            packet_grace_budget: latest_wait::packet_grace(&crate::extra_extensions::perf_settings::system_property("debug.q3pw.packet_grace_us")),
 +            frame_wait_stats: [0; 4],
 +            frame_wait_last_log: Instant::now(),
@@ -3976,10 +4206,14 @@ index b87dfe9..ef9fe65 100644
 +            "[Q3PW_PRE_WAIT] requested={} (requires Quest3 PyroWave and early_poll)",
 +            this.pre_wait_poll,
 +        ));
++        alvr_graphics::log_quest_experiment(format!(
++            "[Q3PW_EVENT_WAIT_SETUP] requested={} default_off=true single_worker_tcp_only=true max_budget_us=4000 lease_unchanged=true",
++            this.frame_wait_event as u8,
++        ));
          this.update_reference_space();
  
          this
-@@ -310,6 +352,24 @@ impl StreamContext {
+@@ -310,6 +361,24 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
@@ -4004,7 +4238,7 @@ index b87dfe9..ef9fe65 100644
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +398,42 @@ impl StreamContext {
+@@ -338,12 +407,42 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -4049,7 +4283,7 @@ index b87dfe9..ef9fe65 100644
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +445,25 @@ impl StreamContext {
+@@ -355,8 +454,25 @@ impl StreamContext {
          }
      }
  
@@ -4075,7 +4309,7 @@ index b87dfe9..ef9fe65 100644
      }
  
      pub fn render(
-@@ -364,15 +471,130 @@ impl StreamContext {
+@@ -364,15 +480,145 @@ impl StreamContext {
          frame_interval: Duration,
          vsync_time: Duration,
      ) -> (ProjectionLayerBuilder, Duration) {
@@ -4144,10 +4378,20 @@ index b87dfe9..ef9fe65 100644
 +            // immediate-repeat path.
 +            if copy_ready && latest_only && frame_result.is_none() && !latest_wait_budget.is_zero() {
 +                let started = Instant::now();
-+                while frame_result.is_none() && latest_wait::continue_wait(
-+                    started.elapsed(), latest_wait_budget, self.packet_grace_budget, source.decode_in_flight()) {
-+                    thread::sleep(Duration::from_micros(50));
++                let event_result = self.frame_wait_event.then(||
++                    source.wait_frame_publication(started, latest_wait_budget, self.packet_grace_budget)).flatten();
++                if let Some(waited) = event_result {
++                    self.event_wait_stats[0] += 1;
++                    self.event_wait_stats[1] += waited.condvar_calls;
++                    self.event_wait_stats[2] += waited.pending as u64;
 +                    frame_result = source.get_frame();
++                } else {
++                    if self.frame_wait_event { self.event_wait_stats[3] += 1; }
++                    while frame_result.is_none() && latest_wait::continue_wait(
++                        started.elapsed(), latest_wait_budget, self.packet_grace_budget, source.decode_in_flight()) {
++                        thread::sleep(Duration::from_micros(50));
++                        frame_result = source.get_frame();
++                    }
 +                }
 +                // Publication clears the in-flight flag; take a frame published after the last poll.
 +                if frame_result.is_none() {
@@ -4172,6 +4416,11 @@ index b87dfe9..ef9fe65 100644
 +                    latest_wait_budget.as_micros(), self.frame_wait_stats[0], self.frame_wait_stats[1],
 +                    self.frame_wait_stats[2] as f64 / self.frame_wait_stats[0] as f64, self.frame_wait_stats[3]));
 +                self.frame_wait_stats = [0; 4];
++                alvr_graphics::log_quest_experiment(format!(
++                    "[Q3PW_EVENT_WAIT] requested={} calls={} condvar_waits={} pending_seen={} fallback_calls={}",
++                    self.frame_wait_event as u8, self.event_wait_stats[0], self.event_wait_stats[1],
++                    self.event_wait_stats[2], self.event_wait_stats[3]));
++                self.event_wait_stats = [0; 4];
 +                self.frame_wait_last_log = Instant::now();
 +            }
 +        }
@@ -4208,7 +4457,7 @@ index b87dfe9..ef9fe65 100644
              }
          }
  
-@@ -401,37 +623,80 @@ impl StreamContext {
+@@ -401,37 +647,80 @@ impl StreamContext {
              ]);
          }
  
@@ -4258,7 +4507,9 @@ index b87dfe9..ef9fe65 100644
 +            self.swapchains[1]
 +                .wait_image(xr::Duration::INFINITE)
 +                .unwrap();
-+
+ 
+-        self.swapchains[0].release_image().unwrap();
+-        self.swapchains[1].release_image().unwrap();
 +            let render_start = Instant::now();
 +            let acquire_wait_ms = acquire_start.elapsed().as_secs_f32() * 1000.0;
 +
@@ -4285,9 +4536,7 @@ index b87dfe9..ef9fe65 100644
 +                    self.config.passthrough.as_ref(),
 +                )
 +            };
- 
--        self.swapchains[0].release_image().unwrap();
--        self.swapchains[1].release_image().unwrap();
++
 +            if !buffer_ptr.is_null() {
 +                if let Some(fence) = self.renderer.take_release_fence() {
 +                    let buffer = fence.buffer as *mut std::ffi::c_void;
@@ -4319,7 +4568,7 @@ index b87dfe9..ef9fe65 100644
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +758,8 @@ impl StreamContext {
+@@ -493,6 +782,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
