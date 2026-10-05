@@ -27,6 +27,14 @@ shared float16_t s[2][32][33];
 
 ivec2 bc(ivec2 c) { return push.swap_xy != 0 ? c.yx : c; }
 
+float fetch1(sampler2DArray tex, ivec2 c, int layer)
+{
+    ivec2 sz = textureSize(tex, 0).xy;
+    if (c.x < 0 || c.y < 0 || c.x >= sz.x || c.y >= sz.y)
+        return 0.0;
+    return texelFetch(tex, ivec3(c, layer), 0).x;
+}
+
 void main()
 {
     const uint lid = gl_LocalInvocationIndex;
@@ -38,7 +46,7 @@ void main()
     {
         int x = int(idx) % n, y = int(idx) / n;
         ivec2 c = bc(wg * n + ivec2(x, y));
-        s[0][y][x] = float16_t(texelFetch(uLL, ivec3(c, push.ll_layer), 0).x);
+        s[0][y][x] = float16_t(fetch1(uLL, c, push.ll_layer));
     }
     barrier();
 
@@ -55,9 +63,9 @@ void main()
             int x = int(q) % n, y = int(q) / n;
             ivec2 c = bc(wg * n + ivec2(x, y));
             float16_t a  = s[src][y][x];
-            float16_t lh = float16_t(texelFetch(uDetail[j], ivec3(c, push.swap_bands != 0 ? 2 : 1), 0).x);
-            float16_t hl = float16_t(texelFetch(uDetail[j], ivec3(c, push.swap_bands != 0 ? 1 : 2), 0).x);
-            float16_t hh = float16_t(texelFetch(uDetail[j], ivec3(c, 3), 0).x);
+            float16_t lh = float16_t(fetch1(uDetail[j], c, push.swap_bands != 0 ? 2 : 1));
+            float16_t hl = float16_t(fetch1(uDetail[j], c, push.swap_bands != 0 ? 1 : 2));
+            float16_t hh = float16_t(fetch1(uDetail[j], c, 3));
             // Inverse lifting along y on the two column pairs, then along x on the two row pairs.
             float16_t top = a - float16_t(0.5) * hl;      float16_t bottom = top + hl;
             float16_t topB = lh - float16_t(0.5) * hh;    float16_t bottomB = topB + hh;
@@ -77,9 +85,13 @@ void main()
     for (uint idx = lid; idx < uint(n * n); idx += 64u)
     {
         int x = int(idx) % n, y = int(idx) / n;
+        ivec2 p = wg * n + ivec2(x, y);
+        ivec2 osz = imageSize(uOutput).xy;
+        if (p.x >= osz.x || p.y >= osz.y)
+            continue;
         float v = float(s[src][y][x]);
         if (push.final_r8 != 0)
             v += 0.5;
-        imageStore(uOutput, wg * n + ivec2(x, y), vec4(v));
+        imageStore(uOutput, p, vec4(v));
     }
 }

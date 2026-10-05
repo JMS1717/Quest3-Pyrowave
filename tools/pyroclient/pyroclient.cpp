@@ -25,6 +25,7 @@
 
 #include "pyrowave.h"
 #include "ycbcr_to_rgba_spv.h"
+#include "../pyrowave_android/haar_fused_spv.h"
 #include "convert_vert_spv.h"
 #include "convert_frag_spv.h"
 
@@ -150,6 +151,17 @@ struct pyroclient {
     Plane scratch;                 // else convert writes here and a copy follows
     VkDescriptorSet scratch_set = VK_NULL_HANDLE;
 
+    // Experiment 3 H2 [3,2]. Off unless debug.q3pw.haar_h2=1. This is not the old all-levels fused kernel.
+    bool haar_h2 = false;
+    bool h2_temps_ready = false;
+    VkDescriptorSetLayout h2_set_layout = VK_NULL_HANDLE;
+    VkPipelineLayout h2_layout = VK_NULL_HANDLE;
+    VkPipeline h2_pipeline = VK_NULL_HANDLE;
+    VkDescriptorPool h2_pool = VK_NULL_HANDLE;
+    VkDescriptorSet h2_sets[2][3] = {};
+    Plane h2_temp[3];
+    VkImageView h2_temp_array[3] = {};
+
     std::vector<Slot> ring;
     uint32_t next_slot = 0;
 
@@ -179,6 +191,8 @@ struct pyroclient {
 
     bool create_device();
     bool create_planes();
+    bool create_haar_h2();
+    bool record_haar_h2();
     bool create_convert();
     bool create_fragment_convert();
     bool create_slot(Slot &s);
@@ -424,6 +438,148 @@ bool pyroclient::create_planes() {
     di.fragment_path = fragment_path;
     di.wavelet = haar ? PYROWAVE_WAVELET_HAAR : legall53 ? PYROWAVE_WAVELET_CDF53 : PYROWAVE_WAVELET_CDF97;
     PW_TRY(pyrowave_decoder_create(&di, &decoder));
+    return true;
+}
+
+bool pyroclient::create_haar_h2() {
+    if (!haar_h2) return true;
+    if (!haar) { LOGE("[Q3PW_HAAR_H2] requires the Haar wavelet"); return false; }
+    PW_TRY(pyrowave_decoder_set_idwt_enabled(decoder, 0));
+
+    VkPhysicalDeviceSubgroupProperties subgroup = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES };
+    VkPhysicalDeviceProperties2 props2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, &subgroup };
+    vkGetPhysicalDeviceProperties2(gpu, &props2);
+    VkPhysicalDeviceProperties props;
+    vkGetPhysicalDeviceProperties(gpu, &props);
+    LOGI("[Q3PW_HAAR_H2] topology luma=3,2 chroma420=2,2 subgroup=%u compute_subgroups=%d shared_max=%u",
+         subgroup.subgroupSize,
+         (subgroup.supportedStages & VK_SHADER_STAGE_COMPUTE_BIT) ? 1 : 0,
+         props.limits.maxComputeSharedMemorySize);
+
+    for (int i = 0; i < 3; i++) {
+        const uint32_t tw = (planes[i].width + 3u) / 4u;
+        const uint32_t th = (planes[i].height + 3u) / 4u;
+        if (!create_plain_image(gpu, device, VK_FORMAT_R16_SFLOAT, tw, th,
+                                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT, h2_temp[i]))
+            return false;
+        VkImageViewCreateInfo vi = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+        vi.image = h2_temp[i].image; vi.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+        vi.format = VK_FORMAT_R16_SFLOAT;
+        vi.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+        VK_TRY(vkCreateImageView(device, &vi, nullptr, &h2_temp_array[i]));
+    }
+
+    VkDescriptorSetLayoutBinding fb[3] = {};
+    fb[0] = { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr };
+    fb[1] = { 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 5, VK_SHADER_STAGE_COMPUTE_BIT, nullptr };
+    fb[2] = { 2, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr };
+    VkDescriptorSetLayoutCreateInfo fl = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
+    fl.bindingCount = 3; fl.pBindings = fb;
+    VK_TRY(vkCreateDescriptorSetLayout(device, &fl, nullptr, &h2_set_layout));
+    VkPushConstantRange pcr = { VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(int) * 7 };
+    VkPipelineLayoutCreateInfo fpl = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+    fpl.setLayoutCount = 1; fpl.pSetLayouts = &h2_set_layout;
+    fpl.pushConstantRangeCount = 1; fpl.pPushConstantRanges = &pcr;
+    VK_TRY(vkCreatePipelineLayout(device, &fpl, nullptr, &h2_layout));
+    VkShaderModuleCreateInfo fsm = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
+    fsm.codeSize = sizeof(HAAR_FUSED_SPV); fsm.pCode = HAAR_FUSED_SPV;
+    VkShaderModule fmod = VK_NULL_HANDLE;
+    VK_TRY(vkCreateShaderModule(device, &fsm, nullptr, &fmod));
+    VkComputePipelineCreateInfo fcp = { VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
+    fcp.stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    fcp.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT; fcp.stage.module = fmod; fcp.stage.pName = "main";
+    fcp.layout = h2_layout;
+    const VkResult pipe = vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &fcp, nullptr, &h2_pipeline);
+    vkDestroyShaderModule(device, fmod, nullptr);
+    if (pipe != VK_SUCCESS) { LOGE("haar h2 pipeline failed: %d", (int)pipe); return false; }
+
+    VkDescriptorPoolSize fps[2] = {
+        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 6 * 2 * 3 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 2 * 3 },
+    };
+    VkDescriptorPoolCreateInfo fpc = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
+    fpc.maxSets = 6; fpc.poolSizeCount = 2; fpc.pPoolSizes = fps;
+    VK_TRY(vkCreateDescriptorPool(device, &fpc, nullptr, &h2_pool));
+
+    for (int stage = 0; stage < 2; stage++) {
+        for (int c = 0; c < 3; c++) {
+            const bool full = chroma444 || c == 0;
+            const int k = stage == 0 ? (full ? 3 : 2) : 2;
+            const int ll_level = stage == 0 ? 4 : -1;
+            const int details[5] = {
+                stage == 0 ? 4 : (full ? 1 : 2),
+                stage == 0 ? (full ? 3 : 3) : (full ? 0 : 1),
+                stage == 0 && full ? 2 : -1,
+                -1, -1
+            };
+            VkDescriptorSetAllocateInfo sa = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
+            sa.descriptorPool = h2_pool; sa.descriptorSetCount = 1; sa.pSetLayouts = &h2_set_layout;
+            VK_TRY(vkAllocateDescriptorSets(device, &sa, &h2_sets[stage][c]));
+            VkDescriptorImageInfo ll = {};
+            ll.sampler = sampler; ll.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+            if (ll_level >= 0) {
+                PW_TRY(pyrowave_decoder_get_wavelet_view(decoder, c, ll_level, &ll.imageView, nullptr));
+            } else {
+                ll.imageView = h2_temp_array[c];
+            }
+            VkDescriptorImageInfo detail[5] = {};
+            for (int j = 0; j < 5; j++) {
+                int level = details[j] >= 0 ? details[j] : (ll_level >= 0 ? ll_level : 4);
+                detail[j].sampler = sampler; detail[j].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+                PW_TRY(pyrowave_decoder_get_wavelet_view(decoder, c, level, &detail[j].imageView, nullptr));
+            }
+            VkDescriptorImageInfo out = {};
+            out.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+            out.imageView = stage == 0 ? h2_temp[c].view : planes[c].view;
+            VkWriteDescriptorSet w[3] = {};
+            w[0] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, h2_sets[stage][c], 0, 0, 1,
+                     VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &ll, nullptr, nullptr };
+            w[1] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, h2_sets[stage][c], 1, 0, 5,
+                     VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, detail, nullptr, nullptr };
+            w[2] = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, h2_sets[stage][c], 2, 0, 1,
+                     VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, &out, nullptr, nullptr };
+            vkUpdateDescriptorSets(device, 3, w, 0, nullptr);
+        }
+    }
+    LOGI("[Q3PW_HAAR_H2] pipeline ready %ux%u", width, height);
+    return true;
+}
+
+bool pyroclient::record_haar_h2() {
+    if (!h2_temps_ready) {
+        VkImageMemoryBarrier tb[3] = {};
+        for (int i = 0; i < 3; i++) {
+            tb[i].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            tb[i].oldLayout = VK_IMAGE_LAYOUT_UNDEFINED; tb[i].newLayout = VK_IMAGE_LAYOUT_GENERAL;
+            tb[i].dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
+            tb[i].srcQueueFamilyIndex = tb[i].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            tb[i].image = h2_temp[i].image;
+            tb[i].subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+        }
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                             0, 0, nullptr, 0, nullptr, 3, tb);
+        h2_temps_ready = true;
+    }
+    struct Push { int levels, ll_layer, swap_xy, swap_bands, final_r8, tile_in, wide; };
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, h2_pipeline);
+    for (int stage = 0; stage < 2; stage++) {
+        if (stage == 1) {
+            VkMemoryBarrier mb = { VK_STRUCTURE_TYPE_MEMORY_BARRIER };
+            mb.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT; mb.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                                 0, 1, &mb, 0, nullptr, 0, nullptr);
+        }
+        for (int c = 0; c < 3; c++) {
+            const bool full = chroma444 || c == 0;
+            const int k = stage == 0 ? (full ? 3 : 2) : 2;
+            Push pc = { k, 0, 0, 0, stage == 1 ? 1 : 0, 32 >> k, 0 };
+            vkCmdPushConstants(cmd, h2_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pc), &pc);
+            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, h2_layout, 0, 1, &h2_sets[stage][c], 0, nullptr);
+            const uint32_t ow = stage == 0 ? h2_temp[c].width : planes[c].width;
+            const uint32_t oh = stage == 0 ? h2_temp[c].height : planes[c].height;
+            vkCmdDispatch(cmd, (ow + 31u) / 32u, (oh + 31u) / 32u, 1);
+        }
+    }
     return true;
 }
 
@@ -704,6 +860,7 @@ bool pyroclient::record_commands(Slot &s) {
     pyrowave_result dr = pyrowave_decoder_decode_gpu_buffer(decoder, nullptr, nullptr, &buffers);
     pyrowave_device_set_command_buffer(pyro, VK_NULL_HANDLE);
     if (dr != PYROWAVE_SUCCESS) { LOGE("decode_gpu_buffer: %d", (int)dr); return false; }
+    if (haar_h2 && !record_haar_h2()) return false;
     vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queries, 1);
 
     for (int i = 0; i < 3; i++)
@@ -893,6 +1050,18 @@ void pyroclient::destroy() {
     };
     for (Plane &p : planes) killPlane(p);
     killPlane(scratch);
+    if (h2_pipeline) vkDestroyPipeline(device, h2_pipeline, nullptr);
+    if (h2_layout) vkDestroyPipelineLayout(device, h2_layout, nullptr);
+    if (h2_pool) vkDestroyDescriptorPool(device, h2_pool, nullptr);
+    if (h2_set_layout) vkDestroyDescriptorSetLayout(device, h2_set_layout, nullptr);
+    for (int i = 0; i < 3; i++) {
+        if (h2_temp_array[i]) vkDestroyImageView(device, h2_temp_array[i], nullptr);
+        if (h2_temp[i].view) vkDestroyImageView(device, h2_temp[i].view, nullptr);
+        if (h2_temp[i].image) vkDestroyImage(device, h2_temp[i].image, nullptr);
+        if (h2_temp[i].memory) vkFreeMemory(device, h2_temp[i].memory, nullptr);
+        h2_temp[i] = {};
+        h2_temp_array[i] = VK_NULL_HANDLE;
+    }
     if (pipeline) vkDestroyPipeline(device, pipeline, nullptr);
     if (fragment_pipeline) vkDestroyPipeline(device, fragment_pipeline, nullptr);
     if (convert_render_pass) vkDestroyRenderPass(device, convert_render_pass, nullptr);
@@ -950,6 +1119,14 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
     c->width = width; c->height = height; c->chroma444 = chroma444 != 0; c->full_range = full_range != 0;
     c->legall53 = wavelet == 53;
     c->haar = wavelet == 2;
+    char h2_prop[PROP_VALUE_MAX] = {};
+    if (c->haar && __system_property_get("debug.q3pw.haar_h2", h2_prop) > 0 && !strcmp(h2_prop, "1")) {
+        c->haar_h2 = true;
+        setenv("PYROWAVE_FUSED_HAAR", "0", 1);
+        LOGI("[Q3PW_HAAR_H2] requested=1 old_fused_forced_off=1");
+    } else {
+        LOGI("[Q3PW_HAAR_H2] requested=0");
+    }
     c->decode_path_hint = decode_path;
     c->low_queue_priority = low_queue_priority != 0;
     char stage_prop[PROP_VALUE_MAX] = {};
@@ -961,7 +1138,7 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
     c->chroma_filter = !strcmp(chroma_prop, "catmull") ? 1 : 0;
     LOGI("[Q3PW_CHROMA_FILTER] requested=%s applied=%d", chroma_prop[0] ? chroma_prop : "unset", c->chroma_filter);
     c->ring.resize(ring_size < 2 ? 2 : ring_size);
-    if (!c->create_device() || !c->create_planes() || !c->create_convert()) { c->destroy(); delete c; return nullptr; }
+    if (!c->create_device() || !c->create_planes() || !c->create_convert() || !c->create_haar_h2()) { c->destroy(); delete c; return nullptr; }
 
     // Does this driver take STORAGE usage on an imported AHB image? Ask before creating the ring.
     {
@@ -1104,7 +1281,7 @@ extern "C" void pyroclient_destroy(pyroclient *c) { if (!c) return; c->destroy()
 extern "C" int pyroclient_prerecord_enable(pyroclient *c) {
     if (!c || c->pending_submission || c->release_poisoned || c->prerecord_enabled ||
         !c->planes_initialised || !std::all_of(c->ring.begin(), c->ring.end(), [](const Slot &s) { return !s.first_use; }) ||
-        !c->haar || c->chroma444 || c->fragment_path ||
+        !c->haar || c->chroma444 || c->fragment_path || c->haar_h2 ||
         c->ready_fences || c->release_fences || c->decode_stage_probe || c->ring.size()!=3 ||
         !getenv("PYROWAVE_NO_LINEAR_TEX") || strcmp(getenv("PYROWAVE_NO_LINEAR_TEX"), "1")) return -1;
     VkCommandBufferAllocateInfo ca = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
