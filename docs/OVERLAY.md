@@ -1,5 +1,65 @@
 # Client performance overlay
 
+## Development build .54: overlay modes and headset settings menu
+
+Not released and not yet tested in a headset. Released `.51` behaves as described
+in the sections after this one. Preview images are rendered by the same CPU code
+the headset uses (`PANEL_PREVIEW=<dir> cargo test -p alvr_graphics preview_dump`),
+over a flat background:
+
+| Compact (default) | Full | Settings menu |
+| --- | --- | --- |
+| ![compact](images/overlay-compact.png) | ![full](images/overlay-full.png) | ![menu](images/headset-menu.png) |
+
+**Controls.**
+
+- **Click both thumbsticks** and release: Compact strip → Full panel → Hidden → Compact.
+  Release both sticks before the next click.
+- **Hold both thumbsticks** for about 0.7 s: open or close the settings menu. A hold does
+  not also change the overlay mode.
+- In the menu, either stick moves up/down between rows and left/right changes a value
+  (holding repeats). **A or X** selects, **B or Y** closes without applying.
+
+**Compact** shows delivered (fresh) FPS against the refresh rate, ALVR's estimated
+latency and PyroWave GPU decode time. **Full** adds bitrate, a 30-second delivered-FPS
+graph against the refresh rate, and the detailed counters the `.51` panel listed.
+Colors are fixed thresholds, not acceptance results: FPS green at ≥97% of the refresh
+rate and amber at ≥85%; latency green at ≤30 ms and amber at ≤45 ms (estimated, not
+optical); GPU decode green at ≤70% and amber at ≤90% of the frame period.
+
+**Menu.** Rows: refresh rate (only the rates this headset confirmed at startup),
+bitrate (100–2000 Mbps in 50 Mbps steps), stream size per eye (50–100% of the
+2064×2208 panel in 10% steps), game render size per eye (100–200% in 25% steps; the PC
+filters it down to the stream size, so it costs PC GPU time only), chroma (PyroWave
+only) and overlay mode. The size steps match the dashboard's scales. Changed values show in amber. **Apply** sends only
+the fields you changed. The PC checks every value against the same ranges and the
+headset's confirmed rates, rejects the whole request if any value is out of range,
+and saves the rest to the session as a dashboard edit would. Bitrate takes effect
+live (constant-Mbps mode). Any other change ends the stream with ALVR's normal
+"restarting" message; the headset reconnects, and SteamVR restarts only if the
+OpenVR configuration changed, through the same dashboard path used today. A streamer
+without menu support never answers; after 3 s the menu says so.
+
+While the menu is open the game sees every controller button and stick released;
+when it closes, the game receives the current state. Head and controller tracking
+continue. The menu is placed 1 m ahead at the head's yaw when opened and stays put
+in LOCAL space (head-locked if tracking is invalid); a recenter re-anchors it.
+
+**Cost.** Panels are rasterized on a worker thread at most twice a second (on each
+input change while the menu is open). The render loop only uploads a finished image
+into the quad swapchain, so the `.51` per-redraw CPU text work no longer runs on it.
+`[Q3PW_OVERLAY_DRAW]` keeps its fields (`text_cpu_ms` now measures building the view on
+the render thread) and adds `raster_worker_ms`. No per-frame GPU work is added: as
+before there is one quad layer, reused by the compositor between updates. None of
+this has been measured on a Quest; the `.24` on/off screens below remain the only
+overlay overhead data.
+
+`debug.q3pw.overlay_visible` still works: `0` hides, `1` shows Full if the
+controller mode is Hidden (otherwise the controller's mode), unset follows the
+controllers.
+
+## Released .51 behavior
+
 The Quest app displays a head-relative OpenXR quad below the center of view, at
 1.2 m depth, visible in both eyes. The panel is rendered locally alongside the video;
 its text is not compressed into the PC stream. It is **on by default for development**.
