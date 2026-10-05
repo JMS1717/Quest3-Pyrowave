@@ -28,9 +28,10 @@ rate and amber at ≥85%; latency green at ≤30 ms and amber at ≤45 ms (estim
 optical); GPU decode green at ≤70% and amber at ≤90% of the frame period.
 
 **Menu.** Rows: refresh rate (only the rates this headset confirmed at startup),
-bitrate (100–2000 Mbps in 50 Mbps steps), stream size per eye and game render size
-per eye (percent of the 2064×2208 panel; 50–150% and 50–200% in 5% steps), chroma
-(PyroWave only) and overlay mode. Changed values show in amber. **Apply** sends only
+bitrate (100–2000 Mbps in 50 Mbps steps), stream size per eye (50–100% of the
+2064×2208 panel in 10% steps), game render size per eye (100–200% in 25% steps; the PC
+filters it down to the stream size, so it costs PC GPU time only), chroma (PyroWave
+only) and overlay mode. The size steps match the dashboard's scales. Changed values show in amber. **Apply** sends only
 the fields you changed. The PC checks every value against the same ranges and the
 headset's confirmed rates, rejects the whole request if any value is out of range,
 and saves the rest to the session as a dashboard edit would. Bitrate takes effect

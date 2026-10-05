@@ -586,10 +586,10 @@ index 90a7c0a..a273f7f 100644
  
 diff --git a/alvr/client_core/src/performance.rs b/alvr/client_core/src/performance.rs
 new file mode 100644
-index 0000000..feed5f3
+index 0000000..3597eec
 --- /dev/null
 +++ b/alvr/client_core/src/performance.rs
-@@ -0,0 +1,749 @@
+@@ -0,0 +1,754 @@
 +//! Client overlay and headset menu logic; independent of graphics and OpenXR so the controller
 +//! gestures and the menu can be regression tested on any platform.
 +use alvr_session::headset_settings::{
@@ -1283,6 +1283,11 @@ index 0000000..feed5f3
 +            press(&mut m, LEFT);
 +        }
 +        assert_eq!(m.values().stream_percent, STREAM_PERCENT.0);
++        press(&mut m, DOWN);
++        for _ in 0..100 {
++            press(&mut m, RIGHT);
++        }
++        assert_eq!(m.values().render_percent, RENDER_PERCENT.1);
 +        let request = m.request();
 +        assert!(alvr_session::headset_settings::plan(
 +            &request,
@@ -10449,10 +10454,10 @@ index 985a4d0..8a4d440 100644
 +}
 diff --git a/alvr/session/src/headset_settings.rs b/alvr/session/src/headset_settings.rs
 new file mode 100644
-index 0000000..c5549ef
+index 0000000..2c2e482
 --- /dev/null
 +++ b/alvr/session/src/headset_settings.rs
-@@ -0,0 +1,322 @@
+@@ -0,0 +1,334 @@
 +//! Settings the headset menu may change, and how the server turns a request into session edits.
 +//! The client never names a session path: it sends typed fields, and only the assignments built
 +//! here reach `set_values`, after each value is checked against a fixed range.
@@ -10465,8 +10470,11 @@ index 0000000..c5549ef
 +use serde_json as json;
 +
 +pub const BITRATE_MBPS: (u64, u64, u64) = (100, 2000, 50);
-+pub const STREAM_PERCENT: (u32, u32, u32) = (50, 150, 5);
-+pub const RENDER_PERCENT: (u32, u32, u32) = (50, 200, 5);
++/// Matches the dashboard's stream scales. Above 100% adds Quest decode work with no panel benefit.
++pub const STREAM_PERCENT: (u32, u32, u32) = (50, 100, 10);
++/// Matches the dashboard's game render scales. The PC filters the render down to the stream size,
++/// so this costs PC GPU time only.
++pub const RENDER_PERCENT: (u32, u32, u32) = (100, 200, 25);
 +
 +/// Every field is optional; `None` leaves that setting alone.
 +#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
@@ -10663,7 +10671,7 @@ index 0000000..c5549ef
 +            refresh_hz: Some(90.0),
 +            bitrate_mbps: Some(600),
 +            chroma_444: Some(true),
-+            stream_percent: Some(85),
++            stream_percent: Some(80),
 +            render_percent: Some(150),
 +        };
 +        let p = plan(&request, &settings(), &[90.0, 120.0]).unwrap();
@@ -10671,7 +10679,7 @@ index 0000000..c5549ef
 +        assert!(matches!(s.video.bitrate.mode, BitrateMode::ConstantMbps(600)));
 +        assert_eq!(s.video.preferred_fps, 90.0);
 +        assert!(s.video.pyrowave.chroma_444);
-+        assert!(size_matches(&s.video.transcoding_view_resolution, 85));
++        assert!(size_matches(&s.video.transcoding_view_resolution, 80));
 +        assert!(size_matches(&s.video.emulated_headset_view_resolution, 150));
 +        // Applying the same request again changes nothing
 +        let again = plan(&request, &s, &[90.0, 120.0]).unwrap();
@@ -10736,6 +10744,15 @@ index 0000000..c5549ef
 +            },
 +            HeadsetSettingsRequest {
 +                render_percent: Some(103),
++                ..Default::default()
++            },
++            // stream above the panel and game render below it are outside the contract
++            HeadsetSettingsRequest {
++                stream_percent: Some(110),
++                ..Default::default()
++            },
++            HeadsetSettingsRequest {
++                render_percent: Some(75),
 +                ..Default::default()
 +            },
 +        ] {
