@@ -24,18 +24,20 @@ resume paused hardware work or unattended workers.
 
 ## Current engineering state
 
-The `.47` prerecord worker screen is **excluded**: native enable rejected the
-missing allocation precondition and all four windows stayed on the default path.
-Small/native `.47` correctness and partial-warm rejection passed. `.48` scopes
-the allocation environment before construction; matching builds and actual
-streaming activation are pending. See [prerecord findings](PRODUCER-PRERECORD.md).
+The `.48` prerecord worker is now active and measured, but **not promoted**.
+All matching builds passed; actual native activation, preparation and direct-only
+eye completions were verified. Same-session ABBA eye completion proxies stayed
+116–117/s and p1 near 60; preparation worsened native completion tails to about
+12.3 ms p99 versus 8.5–8.6 ms control. Keep sync default and prerecord off.
+Estimated latency shifted about one runtime interval, not an optical gain.
+See [measurements, hashes and limitations](PRODUCER-PRERECORD.md).
 
-[One-submission prerecord prototype](PRODUCER-PRERECORD.md): matching .46
-builds and small/native Quest exact-pixel checks passed for fragment and compute
-conversion, including cancellation, capacity growth and outstanding teardown.
-Standalone only; no ALVR worker call site or streaming gain yet. Installed .45
-retained. Next integrate a default-off, bounded latest-frame worker that preserves
-the existing post-publication wait and complete-frame/pose association.
+Installed reviewed `.48` is left with the mode off; temporary properties and
+both sessions were restored, physical proximity restored, Virtual Desktop-only
+driver registration and no VR/client/capture workers verified. Older pairs remain.
+Native libraries EXACT `.47` reuse its small/native exact-pixel proofs including
+partial-warm rejection. `.47` streaming windows remain excluded for inactive
+allocation. Source fixture was native-sized; no supersampling quality claim.
 
 Latest [LOW+release handoff](RELEASE-LOW.md) confirms exact native-size fenced
 reuse and active GPU imports. CPU waiting drops ~1 ms and copy deferrals vanish,
@@ -75,14 +77,16 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 ## Highest-value next experiment
 
-**Producer opportunity, October 5:** [measured default-off diagnostic](PRODUCER-OPPORTUNITY.md)
-found next-packet availability during 1365/1440 native calls, mean possible wall-time
-overlap 4.944 ms and post-return output headroom 1422/1440. This is not joint slot
-availability or an FPS gain. Reviewed `.45` matching builds passed all four jobs
-and 48 production tests; native libraries EXACT `.42`/`.44`. Investigate one GPU
-submission plus a conditionally pre-recorded successor, preserving Granite
-recycling, leases, bounded freshness and honest queue timing. Full native120
-remains unmet; sync default unchanged.
+**October 5 next step:** the bounded one-submission prerecord prototype has
+been measured and did not improve fresh delivery/p1. Do not repeat unchanged
+flag/bitrate sweeps. Investigate publication-to-eye scheduling with per-frame
+content timestamp and pose evidence, preserve bounded latency and ordinary
+sync fallback. Add native decoder panic-time ownership before any promotion;
+environment restoration tests alone do not prove native cleanup. Two concurrent
+GPU decodes remain unsafe with current shared scratch/query/upload lifetimes.
+Native 120 sustained/optical acceptance remains unmet. The historical evidence
+below records earlier hypotheses; completed experiments are not pending work.
+
 
 **Producer audit, October 5:** [bounded overlap](PRODUCER-OVERLAP.md) found an
 existing Granite context-readiness method, but it has locking/recycling side
@@ -125,7 +129,7 @@ notification itself does not establish GPU or optical completion.
 
 **Latest kernel screen, October 5:** `.42` row-wise Haar lowered inverse-transform
 stage averages to 2.8–3.0 ms versus roughly 3.1–3.6 ms, but delivery still overlaps
-115–118 completion events/s with p1 near60. Candidates ended at599MHz and controls
+115–118 completion events/s with p1 near 60. Candidates ended at599MHz and controls
 at640MHz. Diagnostic-off repeats suggest a small benefit, insufficient for default
 promotion or sustained120 acceptance. Dequantization remains about2.6–3.0ms.
 Read [source, matching build, exact GPU checks and three comparisons](HAAR-PAIRS.md).
