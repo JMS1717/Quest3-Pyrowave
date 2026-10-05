@@ -90,6 +90,8 @@ struct pyroclient {
     bool legall53 = false;      // Experiment 2: CDF 5/3 instead of 9/7 (compute path only)
     int decode_path_hint = 0;   // dashboard setting: 0 auto, 1 fragment, 2 compute
     bool low_queue_priority = false;
+    bool decode_stage_probe = false; // Existing Granite timestamps; diagnostic only.
+    uint64_t stage_probe_completions = 0;
     int32_t chroma_filter = 0; // 1 = Catmull-Rom chroma upsample
 
     VkInstance instance = VK_NULL_HANDLE;
@@ -798,6 +800,19 @@ bool pyroclient::finish_pending(pyroclient_frame_info *info) {
         }
         info->total_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - pending_begin).count();
     }
+    // Reporting reads already-collected Granite frame-context intervals; it
+    // does not add GPU queries or claim per-frame percentiles. Only call after
+    // completion, on this decoder's worker. First interval includes startup.
+    if (decode_stage_probe && ++stage_probe_completions % 120 == 0) {
+        pyrowave_device_report_performance_stats(pyro, [](void *userdata, const char *message) {
+            const auto *client = static_cast<const pyroclient *>(userdata);
+            if (!strncmp(message, "Dequant:", 8) || !strncmp(message, "iDWT:", 5) ||
+                !strncmp(message, "iDWT fragment:", 14)) {
+                LOGI("[Q3PW_DECODE_STAGE] complete=%llu %s",
+                     (unsigned long long)client->stage_probe_completions, message);
+            }
+        }, this, true);
+    }
     return true;
 }
 
@@ -873,6 +888,10 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
     c->haar = wavelet == 2;
     c->decode_path_hint = decode_path;
     c->low_queue_priority = low_queue_priority != 0;
+    char stage_prop[PROP_VALUE_MAX] = {};
+    __system_property_get("debug.q3pw.decode_stages", stage_prop);
+    c->decode_stage_probe = !strcmp(stage_prop, "1");
+    LOGI("[Q3PW_DECODE_STAGE_SETUP] enabled=%d interval_decodes=120", c->decode_stage_probe);
     char chroma_prop[PROP_VALUE_MAX] = {};
     __system_property_get("debug.q3pw.chroma_filter", chroma_prop);
     c->chroma_filter = !strcmp(chroma_prop, "catmull") ? 1 : 0;

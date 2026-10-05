@@ -1,0 +1,370 @@
+{
+  "date": "2026-10-04 America/New_York",
+  "source_commit": "01d56b002f951714e5d2046273ce1774cdac86a6",
+  "ci_run": 37250973797,
+  "version": "20.13.0-quest3.pyro.36",
+  "scope": "Private harness health-sampling overhead, same-session ABBAAB three12s blocks each",
+  "settings": {
+    "eye": [
+      2080,
+      2208
+    ],
+    "runtime_hz": 120,
+    "target_mbps": 1000,
+    "chroma": "420",
+    "decoder": "Haar Compute",
+    "queue_priority": "LOW",
+    "frame_wait_us": 4000,
+    "packet_grace_us": 0,
+    "transport": "USB/TCP",
+    "foveated_encoding": false
+  },
+  "source_covers_all_blocks": true,
+  "same_client_pid": true,
+  "blocks": [
+    {
+      "arm": "A",
+      "health_interval_s": 2,
+      "seconds": 12.037968397140503,
+      "submission_fps": 117.16013149610697,
+      "completion_proxy_fps": 117.38726376251448,
+      "p1_client_fps": 59.9998248,
+      "eye_cpu_ms": {
+        "n": 1407,
+        "p01": 1.34395738,
+        "p50": 1.632032,
+        "p95": 2.0783283000000004,
+        "p99": 2.4338372800000005,
+        "max": 2.841615
+      },
+      "decode_to_fence_ms": {
+        "n": 1425,
+        "p01": 6.53976496,
+        "p50": 7.974115,
+        "p95": 8.460907200000001,
+        "p99": 9.573118359999999,
+        "max": 10.625418
+      },
+      "gpu_decode_ms": {
+        "n": 1425,
+        "p01": 4.0118083680000005,
+        "p50": 5.947083,
+        "p95": 6.76519776,
+        "p99": 7.52994144,
+        "max": 8.425521
+      },
+      "convert_ms": {
+        "n": 1425,
+        "p01": 0.699447892,
+        "p50": 0.7727604,
+        "p95": 1.5379583599999997,
+        "p99": 1.826877008,
+        "max": 2.8791146
+      },
+      "payload_mbps": {
+        "n": 1409,
+        "p01": 944.178872,
+        "p50": 1010.89555,
+        "p95": 1038.67356,
+        "p99": 1048.9881072,
+        "max": 1106.3014
+      },
+      "guard_calls": 6,
+      "health_reads": 6,
+      "guard_total_wall_ms": 1530.2441120147705,
+      "temperature_c": 35.0,
+      "thermal_status": 0
+    },
+    {
+      "arm": "B",
+      "health_interval_s": 10,
+      "seconds": 12.043177366256714,
+      "submission_fps": 116.75805691911496,
+      "completion_proxy_fps": 116.77055209131245,
+      "p1_client_fps": 59.99831615,
+      "eye_cpu_ms": {
+        "n": 1405,
+        "p01": 1.2985144160000002,
+        "p50": 1.60349,
+        "p95": 2.1716147999999995,
+        "p99": 2.3939516640000003,
+        "max": 2.6559372
+      },
+      "decode_to_fence_ms": {
+        "n": 1426,
+        "p01": 6.41155025,
+        "p50": 7.949089,
+        "p95": 8.241732500000001,
+        "p99": 8.35515725,
+        "max": 8.672813
+      },
+      "gpu_decode_ms": {
+        "n": 1426,
+        "p01": 4.0312631,
+        "p50": 5.896640550000001,
+        "p95": 6.740937075,
+        "p99": 6.8116795,
+        "max": 7.041146
+      },
+      "convert_ms": {
+        "n": 1426,
+        "p01": 0.6937760075,
+        "p50": 0.7785937,
+        "p95": 1.49721355,
+        "p99": 1.612903625,
+        "max": 2.3917708
+      },
+      "payload_mbps": {
+        "n": 1406,
+        "p01": 941.564238,
+        "p50": 1010.93235,
+        "p95": 1041.8798875,
+        "p99": 1058.7052525000001,
+        "max": 1115.1994
+      },
+      "guard_calls": 6,
+      "health_reads": 1,
+      "guard_total_wall_ms": 570.6453323364258,
+      "temperature_c": 35.0,
+      "thermal_status": 0
+    },
+    {
+      "arm": "B",
+      "health_interval_s": 10,
+      "seconds": 12.03968095779419,
+      "submission_fps": 115.78904600257196,
+      "completion_proxy_fps": 116.26677535962804,
+      "p1_client_fps": 59.99868086,
+      "eye_cpu_ms": {
+        "n": 1400,
+        "p01": 1.30968018,
+        "p50": 1.6113805,
+        "p95": 2.22108645,
+        "p99": 2.404205738,
+        "max": 2.578021
+      },
+      "decode_to_fence_ms": {
+        "n": 1417,
+        "p01": 6.41035268,
+        "p50": 7.958594,
+        "p95": 8.2408448,
+        "p99": 8.343652639999998,
+        "max": 8.569741
+      },
+      "gpu_decode_ms": {
+        "n": 1417,
+        "p01": 3.9978291400000003,
+        "p50": 5.903229,
+        "p95": 6.7397914,
+        "p99": 6.814776695999999,
+        "max": 6.8980727
+      },
+      "convert_ms": {
+        "n": 1417,
+        "p01": 0.6968124736,
+        "p50": 0.78229165,
+        "p95": 1.50757284,
+        "p99": 1.6123520919999996,
+        "max": 2.5333333
+      },
+      "payload_mbps": {
+        "n": 1394,
+        "p01": 938.8230398,
+        "p50": 1010.30108,
+        "p95": 1040.5561500000001,
+        "p99": 1055.2903701999999,
+        "max": 1107.8163
+      },
+      "guard_calls": 6,
+      "health_reads": 1,
+      "guard_total_wall_ms": 503.0815601348877,
+      "temperature_c": 35.0,
+      "thermal_status": 0
+    },
+    {
+      "arm": "A",
+      "health_interval_s": 2,
+      "seconds": 12.038443565368652,
+      "submission_fps": 114.85108069887535,
+      "completion_proxy_fps": 114.78695372098714,
+      "p1_client_fps": 59.99838466,
+      "eye_cpu_ms": {
+        "n": 1381,
+        "p01": 1.2903228,
+        "p50": 1.6187501,
+        "p95": 2.269219,
+        "p99": 2.45030272,
+        "max": 2.7367191
+      },
+      "decode_to_fence_ms": {
+        "n": 1396,
+        "p01": 6.366253100000001,
+        "p50": 7.9499225,
+        "p95": 8.265561250000001,
+        "p99": 8.40514155,
+        "max": 8.884271
+      },
+      "gpu_decode_ms": {
+        "n": 1396,
+        "p01": 4.0040542100000005,
+        "p50": 5.884843549999999,
+        "p95": 6.738619775,
+        "p99": 6.80682559,
+        "max": 7.323125
+      },
+      "convert_ms": {
+        "n": 1396,
+        "p01": 0.6935546779999999,
+        "p50": 0.7863021,
+        "p95": 1.504544275,
+        "p99": 1.68190361,
+        "max": 2.7179165
+      },
+      "payload_mbps": {
+        "n": 1382,
+        "p01": 938.392016,
+        "p50": 1008.4366150000001,
+        "p95": 1042.771752,
+        "p99": 1061.9371274,
+        "max": 1106.419
+      },
+      "guard_calls": 6,
+      "health_reads": 6,
+      "guard_total_wall_ms": 1576.2157440185547,
+      "temperature_c": 35.0,
+      "thermal_status": 0
+    },
+    {
+      "arm": "A",
+      "health_interval_s": 2,
+      "seconds": 12.0387704372406,
+      "submission_fps": 116.25351504766323,
+      "completion_proxy_fps": 116.24442397143103,
+      "p1_client_fps": 59.99959426,
+      "eye_cpu_ms": {
+        "n": 1458,
+        "p01": 1.2841277,
+        "p50": 1.59593745,
+        "p95": 1.9671661649999999,
+        "p99": 2.3059063000000006,
+        "max": 2.941719
+      },
+      "decode_to_fence_ms": {
+        "n": 1479,
+        "p01": 6.44228894,
+        "p50": 7.926407,
+        "p95": 8.2408133,
+        "p99": 8.35177258,
+        "max": 8.587658
+      },
+      "gpu_decode_ms": {
+        "n": 1479,
+        "p01": 3.9799853780000003,
+        "p50": 5.859375,
+        "p95": 6.715812329999999,
+        "p99": 6.778661420000001,
+        "max": 6.969427
+      },
+      "convert_ms": {
+        "n": 1479,
+        "p01": 0.6994916392,
+        "p50": 0.79291666,
+        "p95": 1.51114058,
+        "p99": 1.6166103240000003,
+        "max": 2.5665624
+      },
+      "payload_mbps": {
+        "n": 1399,
+        "p01": 937.0622542,
+        "p50": 1007.57094,
+        "p95": 1046.61293,
+        "p99": 1066.0103,
+        "max": 1134.7436
+      },
+      "guard_calls": 6,
+      "health_reads": 6,
+      "guard_total_wall_ms": 1658.3166122436523,
+      "temperature_c": 36.0,
+      "thermal_status": 0
+    },
+    {
+      "arm": "B",
+      "health_interval_s": 10,
+      "seconds": 12.0394868850708,
+      "submission_fps": 116.70686089619777,
+      "completion_proxy_fps": 116.63819374723678,
+      "p1_client_fps": 59.99931483,
+      "eye_cpu_ms": {
+        "n": 1522,
+        "p01": 1.299523959,
+        "p50": 1.6034375,
+        "p95": 2.1912219500000005,
+        "p99": 2.387086862,
+        "max": 2.684532
+      },
+      "decode_to_fence_ms": {
+        "n": 1545,
+        "p01": 6.40797788,
+        "p50": 7.956771,
+        "p95": 8.2425322,
+        "p99": 8.386661,
+        "max": 8.867137
+      },
+      "gpu_decode_ms": {
+        "n": 1545,
+        "p01": 4.04296262,
+        "p50": 5.877239,
+        "p95": 6.711927,
+        "p99": 6.790151772,
+        "max": 7.27401
+      },
+      "convert_ms": {
+        "n": 1545,
+        "p01": 0.699812496,
+        "p50": 0.78979164,
+        "p95": 1.5092187199999998,
+        "p99": 1.6879228999999993,
+        "max": 2.6267707
+      },
+      "payload_mbps": {
+        "n": 1404,
+        "p01": 935.9087648,
+        "p50": 1005.91678,
+        "p95": 1041.8134425,
+        "p99": 1062.59759,
+        "max": 1115.4382
+      },
+      "guard_calls": 6,
+      "health_reads": 1,
+      "guard_total_wall_ms": 445.1618194580078,
+      "temperature_c": 36.0,
+      "thermal_status": 0
+    }
+  ],
+  "per_arm_mean": {
+    "A": {
+      "submission_fps": 116.08824241421519,
+      "completion_proxy_fps": 116.13954715164422,
+      "p1_client_fps": 59.99926790666667,
+      "guard_total_wall_ms": 1588.2588227589924,
+      "health_reads": 6
+    },
+    "B": {
+      "submission_fps": 116.4179879392949,
+      "completion_proxy_fps": 116.5585070660591,
+      "p1_client_fps": 59.998770613333335,
+      "guard_total_wall_ms": 506.29623730977374,
+      "health_reads": 1
+    }
+  },
+  "normal_restoration_errors": [],
+  "decision": "No meaningful improvement from10s health polling; keep conservative2s default. Focus/STOP/deadline checked equally often in both arms. No headset property differences.",
+  "limitations": [
+    "Short stationary screen, not sustained/image/optical acceptance",
+    "Health reads maximum10s with <42C/thermal0 headroom; identical holds/thermal protection",
+    "Guard wall time includes focus/proximity renewal and hostADB overhead, not proven stream blocking",
+    "Session variance greater than small observed average difference",
+    "Neither wall-time submission nor eye completion proxy establishes optical or unique-content FPS"
+  ],
+  "performance_acceptance": false
+}
