@@ -68,7 +68,14 @@ second submission, a second preparation, missing completion-query collection,
 foreign-owner calls, stale cancellation and a fully occupied ring. It tests
 continued context reuse after cancellation and outstanding A+B teardown. At
 native width it requires A's fence to remain unsignaled after at least one B
-preparation. A matching source-built executable/library set is required.
+preparation. It pads unused coefficient-packet tails to force upload growth,
+requires rejection before recording while A is pending, then checks exact A and
+exact B after a drained synchronous growth fallback. An independent 30-second
+native alarm bounds a query or destructor hang; interrupted runs cannot report
+success. A matching source-built executable/library set is required.
+
+The one-submitted-decode limit refers to frame computation; Granite's internal
+completion-coverage submissions and the diagnostic GLES readbacks still exist.
 
 The proof deliberately reads A before submitting B, increasing B's queue delay.
 It is **not a throughput benchmark**. `total_ms` includes preparation-to-submit

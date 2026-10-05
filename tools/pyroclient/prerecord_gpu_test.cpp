@@ -15,6 +15,7 @@
 #include <memory>
 #include <thread>
 #include <vector>
+#include <unistd.h>
 
 struct Wave {int32_t p[8]{}; std::vector<unsigned char> bytes;};
 static bool load(const char *path, Wave &w) {
@@ -27,6 +28,10 @@ static bool load(const char *path, Wave &w) {
 }
 int main(int argc,char **argv) {
     if(argc!=3) {fprintf(stderr,"usage: %s A.wave B.wave (Haar/Compute/420; ready/release OFF)\n",argv[0]);return 2;}
+    // Native-only ownership watchdog: a query-retirement/teardown deadlock must
+    // not outlive the private host phase. Default SIGALRM terminates this probe
+    // only; interrupted execution cannot emit a successful terminal result.
+    alarm(30);
     Wave a,b; if(!load(argv[1],a)||!load(argv[2],b)) return 2;
     for(int i=0;i<5;++i) if(a.p[i]!=b.p[i]) return 2;
     if(a.p[3]==1 || a.p[0]<=0 || a.p[1]<=0 || uint64_t(a.p[0])*a.p[1]*4>256ull*1024*1024) return 2;
@@ -143,7 +148,7 @@ int main(int argc,char **argv) {
     if(a.p[0]>=4096 && after==0) return fail("native preparation never overlapped an unsignaled A");
     printf("{\"probe\":\"prerecord_serial_gpu\",\"width\":%d,\"height\":%d,\"prepared\":%d,\"canceled\":%d,"
            "\"exact_frames\":%d,\"unsignaled_before_prepare\":%d,\"unsignaled_after_prepare\":%d,"
-           "\"slot_exhaustion_rejections\":%d,\"foreign_owner_rejections\":%d,\"max_gpu_submissions\":1,"
+           "\"slot_exhaustion_rejections\":%d,\"foreign_owner_rejections\":%d,\"max_submitted_decodes\":1,"
            "\"max_prepared\":1,\"outstanding_teardown\":true,\"exact_pixels\":true,"
            "\"growth_rejected_while_pending\":true,\"drained_growth_exact\":true,"
            "\"granite_stage_timestamps\":false,\"completion_queries\":true,\"largest_proof_queue_ms\":%.6f,"
