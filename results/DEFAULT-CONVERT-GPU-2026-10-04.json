@@ -1,0 +1,48 @@
+{
+  "source_commit": "0cd83fe586d31640dabd948cd8ac90e5aeeaee23",
+  "ci_run": 37249423645,
+  "scope": "Standalone default conversion GPU regression; no VR/performance acceptance",
+  "results": [
+    {
+      "pattern": "asymmetric",
+      "exact_reference_match": true,
+      "bytes": 655360,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 512,
+        "height": 320,
+        "bytes": 655360,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "c0e656fb",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    },
+    {
+      "pattern": "native-asymmetric",
+      "exact_reference_match": true,
+      "bytes": 36741120,
+      "metadata": {
+        "schema_version": 1,
+        "readback_complete": true,
+        "readback_method": "gles_external_rgba8",
+        "width": 4160,
+        "height": 2208,
+        "bytes": 36741120,
+        "source_ahb_usage": 268436224,
+        "row_order": "texture_v0_first",
+        "flip_y": false,
+        "raw_rgba_crc32": "aad9df7c",
+        "outside_decode_timing": true,
+        "producer_complete": true
+      }
+    }
+  ],
+  "settings_unchanged": true,
+  "performance_acceptance": false,
+  "optical_latency_measured": false
+}

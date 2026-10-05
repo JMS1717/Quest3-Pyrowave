@@ -138,3 +138,10 @@ chroma, refresh, queue priority, overlay and thermal conditions. Reject it if
 fresh FPS/pacing, client completion, compositor lead or latency regress. A
 stationary-head total estimate can change because of pose-history matching;
 compare client-side stages and matched game-time estimates separately.
+
+Before deployment, the reviewed `.35` native libraries (inherited by `.36`)
+passed default conversion GPU readback at 512x320 and native stereo4160x2208:
+both were byte-identical to the existing asymmetric golden references. This
+checks that the optional chroma-filter addition preserves default pixels; it
+does not validate Catmull-Rom quality or its performance.
+[GPU regression evidence](../results/DEFAULT-CONVERT-GPU-2026-10-04.json).
