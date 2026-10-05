@@ -1,0 +1,239 @@
+{
+  "date": "2026-10-05",
+  "version": "20.13.0-quest3.pyro.45",
+  "source_commit": "60799c84f1507551de2cf07fbc8c7be45fed0260",
+  "ci_run": 37282120519,
+  "apk_sha256": "9003011c04def03456e7ecb9c45546bbbab42edb2a0b0b84c72f6ccaa3bb0d49",
+  "windows_zip_sha256": "d459cf3b3918d9790c20a79564a22d16a781b3d0eac04ff6afe88881d649276e",
+  "native_libraries_sha256": {
+    "libpyroclient.so": "0789460fc35ed2388d1397655ab2c3018445426b389619a3c1f195f84a0b8362",
+    "libpyrowave-shared.so": "4725d9ea5450b4c77c4b6a85c0989346cab66a6d1a2c9b47422e9814b54426f1",
+    "libc++_shared.so": "f9992c4ba6b7c5a716e3a202fceb1ce029d6a2b0605838ac6b3219f489dd7970"
+  },
+  "all_matching_jobs_passed": true,
+  "native_libraries_identical_to_reviewed44_and42": true,
+  "linux_production_tests_passed": 48,
+  "configuration": {
+    "encoded_and_source_per_eye": [
+      2080,
+      2208
+    ],
+    "runtime_hz": 120,
+    "target_mbps": 1000,
+    "chroma": "420",
+    "foveation": false,
+    "wavelet": "Haar",
+    "decode_path": "Compute",
+    "decode_priority": "LOW verified",
+    "transport": "USB/ADB TCP",
+    "workers": 1,
+    "frame_wait_us": 4000,
+    "packet_grace_us": 0,
+    "ready_fd": false,
+    "release_fd": false,
+    "async_eye_copy": false,
+    "decode_handoff": false,
+    "event_wait": false,
+    "producer_probe": true
+  },
+  "measure_seconds": 12.03781795501709,
+  "settle_seconds": 3,
+  "source_coverage_verified": true,
+  "clock_offset_drift_s": 0.002010345458984375,
+  "actual_probe_setup_verified": true,
+  "observations": {
+    "status": "parsed",
+    "interval_records": 12,
+    "malformed_records": 0,
+    "totals": {
+      "calls": 1440,
+      "pending": 1376,
+      "ready_before": 2,
+      "arrived_during": 1365,
+      "arrived_after": 9,
+      "overlap_sum_us": 7119129,
+      "overlap_max_us": 8200,
+      "call_sum_us": 11463568,
+      "headroom_at_snapshot": 1422
+    },
+    "mean_possible_overlap_us_per_call": 4943.839583333333,
+    "scope": "120-call aggregates selected by log timestamp and PID can straddle capture edges. Latest-packet availability bounds native-call wall time, not GPU waits or optical latency. Output headroom is a separate post-return snapshot, not a reservation or a joint overlap observation.",
+    "performance_acceptance": false
+  },
+  "context_metrics": {
+    "submission_wall_time_fps": 117.77177833038303,
+    "direct_completion_proxy_fps": 117.52182988001559,
+    "client_fps": {
+      "n": 1418,
+      "p01": 60.00398417,
+      "p50": 119.99998,
+      "p95": 120.01123,
+      "p99": 120.02312581999999,
+      "max": 120.222046
+    },
+    "record_ms": {
+      "n": 1435,
+      "p01": 0.41088912,
+      "p50": 0.560677,
+      "p95": 0.8590831,
+      "p99": 1.06053418,
+      "max": 1.273958
+    },
+    "decode_to_fence_ms": {
+      "n": 1435,
+      "p01": 6.91841598,
+      "p50": 7.991928,
+      "p95": 8.3264125,
+      "p99": 8.636960179999999,
+      "max": 9.219011
+    },
+    "gpu_decode_ms": {
+      "n": 1435,
+      "p01": 4.721042604,
+      "p50": 5.8922915,
+      "p95": 6.7525312,
+      "p99": 6.878941526000001,
+      "max": 7.32776
+    },
+    "convert_ms": {
+      "n": 1435,
+      "p01": 0.7107479219999999,
+      "p50": 0.79286456,
+      "p95": 1.53671871,
+      "p99": 1.6500145000000004,
+      "max": 2.5359375
+    },
+    "eye_copy_counters": {
+      "direct_eye_copies": 1236,
+      "staging_eye_copies": 0,
+      "completed_eye_copies": 1236,
+      "pending_eye_copy_deferrals": 0
+    },
+    "gpu_before": {
+      "gpu_clock_hz": 640000000,
+      "gpubusy": {
+        "active": 858442,
+        "total": 1002835,
+        "reported_percent": 85.6015196916741
+      },
+      "status": "parsed",
+      "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+    },
+    "gpu_after": {
+      "gpu_clock_hz": 640000000,
+      "gpubusy": {
+        "active": 877602,
+        "total": 1009884,
+        "reported_percent": 86.90126786838884
+      },
+      "status": "parsed",
+      "scope": "Physical GPU clock and driver-reported active/total endpoint, not per-app utilization or a continuously sampled interval. Shared counter semantics are not calibrated."
+    },
+    "temperature_samples_c": [
+      29.0,
+      29.0,
+      29.0,
+      30.0,
+      30.0,
+      30.0,
+      30.0,
+      30.0,
+      30.0
+    ],
+    "thermal_samples": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "payload_mbps": {
+      "n": 1418,
+      "p01": 929.1752558,
+      "p50": 1007.3616999999999,
+      "p95": 1049.748995,
+      "p99": 1072.0236118,
+      "max": 1630.3589
+    },
+    "encode_ms": {
+      "n": 1418,
+      "p01": 1.010217,
+      "p50": 2.1712499999999997,
+      "p95": 2.3640600000000003,
+      "p99": 2.442015,
+      "max": 6.4849
+    },
+    "network_estimate_ms": {
+      "n": 1418,
+      "p01": 3.65785129,
+      "p50": 4.262179,
+      "p95": 5.802766999999998,
+      "p99": 9.64333307999999,
+      "max": 32.457831999999996
+    },
+    "estimated_pipeline_ms": {
+      "n": 1418,
+      "p01": 36.72068694,
+      "p50": 45.131316999999996,
+      "p95": 47.9646825,
+      "p99": 48.04660534,
+      "max": 67.45494000000001
+    },
+    "eye_cpu_ms": {
+      "n": 1417,
+      "p01": 1.379129724,
+      "p50": 1.5927081,
+      "p95": 2.2137406000000004,
+      "p99": 2.3617167999999995,
+      "max": 2.859167
+    },
+    "decoder_queue_ms": {
+      "n": 1418,
+      "p01": 0.06920498,
+      "p50": 3.48987,
+      "p95": 4.7005268000000004,
+      "p99": 5.052379519999996,
+      "max": 7.653802000000001
+    },
+    "vsync_queue_ms": {
+      "n": 1418,
+      "p01": 8.59092833,
+      "p50": 14.394881,
+      "p95": 15.423719849999998,
+      "p99": 16.971092789999986,
+      "max": 18.190663
+    }
+  },
+  "compositor_image": {
+    "privately_viewed": true,
+    "upright_correct_left_right": true,
+    "pulse_tick_in_both_eyes": 156,
+    "pulse_tick_present_in_source": true,
+    "continuous_pose_pixel_or_in_headset_acceptance": false
+  },
+  "restoration": {
+    "errors": [],
+    "independent_restorer_exited": true,
+    "fresh_original_property_readback_verified": true,
+    "proximity_restored": true,
+    "virtual_desktop_preserved": true,
+    "project_driver_unregistered": true
+  },
+  "default_changed": false,
+  "performance_acceptance": false,
+  "decision": "Investigate conditional CPU pre-recording with one GPU submission; observed packet opportunity is not an FPS or latency gain.",
+  "limitations": [
+    "One short stationary diagnostic, not repeated or sustained gameplay acceptance",
+    "120-call aggregates selected by timestamp can straddle window edges",
+    "Latest pending packet observations omit any earlier pending replacements",
+    "Native-call remaining wall time is not isolated GPU waiting or achievable speedup",
+    "Headroom is a separate post-return snapshot, not proof of joint opportunity, mid-call availability or a reservation",
+    "Instrumented FPS is context only; compare performance with diagnostics off",
+    "One matching screenshot endpoint is not continuous decoded content/pose or optical latency proof",
+    "Battery29-30C and GPU640MHz endpoints do not establish sustained thermal behavior or per-app utilization"
+  ]
+}

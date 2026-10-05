@@ -82,3 +82,40 @@ in-headset quality benefit. ALVR network latency is a residual estimate, and
 completed copies/submissions do not prove optical FPS or motion-to-photon.
 P1 nominal FPS stayed near 60; sustained fresh 120 FPS remains unmet.
 See [complete sanitized distributions](../results/BITRATE-USB-LIVE-2026-10-02.json).
+
+## Current native120 payload isolation, October5
+
+The reviewed `.44` pair passed all matching builds and production decoder tests;
+its native libraries are byte-identical to GPU-verified `.42`. One continuous
+Quest session used2080×2208/eye, confirmed120Hz, Haar/Compute4:2:0, no foveation,
+LOW decode priority, synchronous direct eye copy, one TCP worker and the existing
+4ms selection wait. Stage diagnostics and event waiting were off. Bitrate changed
+live through1000/800/600/800/1000, with3 seconds settling and12-second windows.
+No client restart or screenshot occurred between windows.
+
+Source coverage, PID/clock alignment, runtime120 and unchanged codec/geometry
+were verified. Every recorded encoder directive matched its target, and **every
+captured serialized frame fit the aligned per-frame byte cap**. These settings
+fit the payload math; that does not establish their120Hz timing or visual budget.
+
+| Target Mbps | Median ALVR payload-rate estimate Mbps | Frame cap / largest frame bytes | Eye completions/s | GPU decode p50/p95 ms | Decode-to-fence p50/p95 ms | Client FPS p1 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1000 | 1006.1 | 1,041,664 / 1,041,652 | 118.08 | 5.90 / 6.73 | 7.95 / 8.29 | 60.0 |
+| 800 | 806.6 | 833,332 / 833,308 | 118.39 | 6.02 / 6.93 | 8.05 / 8.42 | 60.0 |
+| 600 | 606.0 | 625,000 / 624,992 | 118.66 | 6.68 / 6.91 | 8.10 / 8.37 | 60.0 |
+| 800 | 806.8 | 833,332 / 833,308 | 117.49 | 5.71 / 6.62 | 7.83 / 8.16 | 60.0 |
+| 1000 | 1008.0 | 1,041,664 / 1,041,652 | 118.10 | 6.05 / 6.73 | 7.98 / 8.30 | 60.0 |
+
+**Keep1000Mbps as the default.** The controls agree near118.1 eye completions/s;
+800 varied118.4→117.5, while the single600 block reached118.7. P1 stays near60;
+none establishes sustained fresh120. Neither GPU nor completion time decreased
+consistently with payload. GPU endpoints shifted599/640MHz, so DVFS and timing
+remain confounds. Extra link capacity or lower rate alone has not removed the
+remaining completion/presentation bottleneck. Avoid an unchanged rate sweep.
+
+Temperatures stayed31–33°C, thermal status0, AC powered. All temporary settings,
+proximity and driver registrations restored without errors, preserving VD. A
+single final1000 compositor image retained correct eye mapping/orientation;
+lower-bitrate and in-headset quality acceptance were not tested. ALVR total/network
+latency estimates with a stationary headset are not optical motion-to-photon.
+[Sanitized metrics, exact byte budgets and package provenance](../results/PAYLOAD-NATIVE120-2026-10-05.json).

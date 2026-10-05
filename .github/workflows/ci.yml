@@ -2,6 +2,11 @@ name: Quest3-Pyrowave
 on:
   push:
     branches: [main]
+    # Findings do not change the reconstructed native inputs. Explicit dispatch
+    # remains available for regression-only or full matching artifact builds.
+    paths-ignore:
+      - '**.md'
+      - 'results/**'
   pull_request:
   workflow_dispatch:
     inputs:
