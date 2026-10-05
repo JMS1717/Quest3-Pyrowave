@@ -19,11 +19,14 @@ USB or Wi-Fi, tune the stream, and measure where every millisecond goes.
 
 [Latest manual playtest and setup fixes](docs/PLAYTEST-2026-10-02.md): optional
 larger PC source, mild sharpening, the overlay override fix and the OpenXR game
-launch fix. The latest reviewed development pair is `.39`, with optional decode
+launch fix. The latest reviewed development pair is `.42`, with optional decode
 stage and Surface diagnostics off by default. It retains the `.33` improvements: wait up to half a frame
 for a frame that is still decoding ([measured gain](docs/FRESHNESS.md)) and at
 ≤120 Hz / 4:2:0 lowers decode priority so the eye copy is not stuck behind it
-([measured gain](docs/DECODE-PRIORITY.md)). The published preview remains alpha.7. These notes do not establish sustained fresh 120 FPS.
+([measured gain](docs/DECODE-PRIORITY.md)). Dedicated [Haar kernels](docs/HAAR-PAIRS.md)
+passed exact GPU checks and lower transform cost, but remain optional: repeated
+short screens still miss some 120 Hz intervals. The published preview remains
+alpha.7. These notes do not establish sustained fresh 120 FPS.
 
 > **Research preview, not a finished Virtual Desktop replacement.** Real SteamVR
 > video, audio and tracking work in tested setups. Sustained 120 fresh FPS at

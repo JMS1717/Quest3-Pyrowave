@@ -27,7 +27,7 @@ resume paused hardware work or unattended workers.
 | Item | Evidence / limitation |
 | --- | --- |
 | Public release | [alpha.7](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.7), matching `.15` APK/server |
-| Development pair | Reviewed `.41` (`700f30f`), all matching CI jobs and exact baseline GPU readbacks passed. Static Surface screenshot orientation and ordered fence/STOPPING retirement verified October5. Normal video remains on the GLES bridge; diagnostic stays off. `.40`/`.39`/`.38` and older pairs retained. Recheck actual installation before hardware work |
+| Development pair | Reviewed `.42` (`ef1e8cc`), all matching CI jobs and exact default/three candidate GPU readbacks passed. Dedicated Haar kernels remain off by default after three short comparisons; see [findings](HAAR-PAIRS.md). `.41` static Surface orientation/lifecycle passed; normal video remains on GLES. Older matching pairs retained. Recheck actual installation before hardware work |
 | User feedback | Positive manual playtest after overlay/OpenXR repairs; not sustained FPS, optical latency or broad game acceptance |
 | Best short native screens | `.33` at 120 Hz / 1000 Mbps / 4:2:0: about 116–118 displayed target FPS (2.4–4.8 lost/s across sessions, `.34` unfiltered arm included) with the default wait and LOW decode priority. Without the priority it was 110–114, and without the wait 107–110 ([fresh-frame loss](FRESHNESS.md), [decode priority](DECODE-PRIORITY.md)). Stationary chart, not sustained gameplay |
 | Baseline recommendation | Haar/Compute, full-frame native encode, USB/TCP, 120 Hz request, 1000 Mbps, 4:2:0; experimental fence paths off |
@@ -53,6 +53,15 @@ state before testing; the private handoff includes a fresh disk snapshot.
 
 ## Highest-value next experiment
 
+**Latest kernel screen, October 5:** `.42` row-wise Haar lowered inverse-transform
+stage averages to 2.8–3.0 ms versus roughly 3.1–3.6 ms, but delivery still overlaps
+115–118 completion events/s with p1 near60. Candidates ended at599MHz and controls
+at640MHz. Diagnostic-off repeats suggest a small benefit, insufficient for default
+promotion or sustained120 acceptance. Dequantization remains about2.6–3.0ms.
+Read [source, matching build, exact GPU checks and three comparisons](HAAR-PAIRS.md).
+Next examine dequant shader work or remove the GLES bridge with exact image/pose
+ownership. Avoid repeating the same screens without a new hypothesis.
+
 **Latest update, October 5:** `.40`'s tiny static Surface image
 passed one-shot Vulkan enqueue, layer submission, both fences and orderly
 STOPPING retirement on Quest 3. A private compositor screenshot exposed a
@@ -63,9 +72,9 @@ Read [the result and remaining gates](SURFACE-CHART.md#quest-3-result-lifecycle-
 This screen found no speedup and does not establish live decoded-video identity,
 color fidelity or pose/content pairing. The normal GLES path is retained.
 
-Awake `.38` stage diagnostics showed dequantization (~2.6�2.8 ms) and inverse
-transform (~3.2�3.6 ms) both contribute. Diagnostics remain off. Restarts yield
-roughly 115�118 submission/completion events per second with p1 near 60; smooth
+Awake `.38` stage diagnostics showed dequantization (~2.6–2.8 ms) and inverse
+transform (~3.2–3.6 ms) both contribute. Diagnostics remain off. Restarts yield
+roughly 115–118 submission/completion events per second with p1 near 60; smooth
 sustained native 120 remains unmet. Read
 [the stage comparison](DECODE-STAGE-PROBE.md#awake-vr-comparison).
 A Surface handle cannot enter the ordinary OpenXR eye acquire/release loop.
