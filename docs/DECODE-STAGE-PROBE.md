@@ -46,3 +46,33 @@ stages contribute and that the diagnostic functions. Android client/tests and
 component hash/certificate/library consistency passed; full Windows/terminal CI
 review was pending at collection, and no APK was deployed by this standalone
 screen. [Calibration evidence](../results/DECODE-STAGE-GPU-2026-10-04.json).
+
+## Awake VR comparison
+
+The matching `.38` APK/server passed all cloud jobs, artifact hash/certificate
+checks and default GPU readback before deployment. A continuous native-size
+chart covered six restarted-client blocks in ABBAAB order: three12-second
+blocks each with the diagnostic disabled/enabled, at120Hz,1000Mbps,4:2:0,
+Haar/Compute and LOW queue priority. Foveation and experimental filters stayed
+off. Read-only device/PC clock alignment was applied to process-specific logs.
+
+| Measurement | Probe off | Probe on |
+| --- | ---: | ---: |
+| Mean submission events / second | 116.64 | 116.11 |
+| Mean completed direct eye copies / second | 116.83 | 116.48 |
+| Median block p1 instantaneous client FPS | 60.00 | 60.00 |
+| Median block payload bitrate | 1008.6Mbps | 1013.3Mbps |
+
+Each enabled block yielded12 post-startup stage intervals. The three block
+means were2.74/2.65/2.81ms for Dequant and3.56/3.16/3.16ms for iDWT. Both
+stages warrant attention; inverse transform was usually larger in this screen.
+These delayed frame-context averages include GPU scheduling and do not describe
+percentiles or necessarily sum to the current-frame decode total.
+
+Keep reporting **off by default**. The small rate difference could reflect
+reporting overhead or restart/phase variation; this experiment establishes no
+speedup. Battery temperature was34–36°C with thermal status0; clocks were not
+sampled. Mean rates near117 do not override the missed periods visible in p1.
+Stationary pose-history estimates cannot establish a causal total-latency
+change or optical motion-to-photon. Source/process coverage and restoration
+passed. [All blocks and limitations](../results/DECODE-STAGE-LIVE-2026-10-04.json).

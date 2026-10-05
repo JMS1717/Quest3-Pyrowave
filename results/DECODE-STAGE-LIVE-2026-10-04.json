@@ -1,0 +1,891 @@
+{
+  "date": "2026-10-04 America/New_York",
+  "source_commit": "a259b2386a490a1d89e5d3f81b1f9be2195f0698",
+  "ci_run": 37254490099,
+  "version": "20.13.0-quest3.pyro.38",
+  "scope": "Restarted-client ABBAAB short awake VR diagnostic comparison",
+  "settings": {
+    "source_eye": [
+      2080,
+      2208
+    ],
+    "encoded_eye": [
+      2080,
+      2208
+    ],
+    "runtime_hz": 120,
+    "target_mbps": 1000,
+    "chroma": "420",
+    "wavelet": "Haar",
+    "decoder": "Vulkan Compute",
+    "queue_priority": "LOW",
+    "transport": "USB/TCP",
+    "foveated_encoding": false,
+    "frame_wait_us": 4000,
+    "packet_grace_us": 0,
+    "image_cache": false,
+    "chroma_filter": "bilinear",
+    "compositor_filter": "off"
+  },
+  "pattern": "ABBAAB",
+  "nominal_measure_s": 12,
+  "settle_s": 2,
+  "source_interval_covers_all_blocks": true,
+  "client_restarted_each_block": true,
+  "device_log_clock_alignment": {
+    "method": "Read-only minimum-roundtrip midpoint before/after capture",
+    "device_minus_host_before_s": 1.2682867050170898,
+    "device_minus_host_after_s": 1.2689688205718994,
+    "drift_s": 0.0006821155548095703
+  },
+  "blocks": [
+    {
+      "arm": "A",
+      "probe_enabled": false,
+      "seconds": 12.037835359573364,
+      "submission_wall_time_fps": 118.08885306780792,
+      "direct_completion_proxy_fps": 117.99897261113954,
+      "target_event_rate_fps": 118.06047016442876,
+      "unique_tracking_id_rate_fps": 118.06047016442876,
+      "duplicate_tracking_ids": 0,
+      "client_fps": {
+        "n": 1421,
+        "p01": 60.000626,
+        "p50": 119.99983,
+        "p95": 120.0162,
+        "p99": 120.0548512,
+        "max": 120.38748
+      },
+      "target_gap_ms": {
+        "n": 1420,
+        "p01": 5.51673635,
+        "p50": 8.333204,
+        "p95": 8.55854055,
+        "p99": 16.64857151,
+        "max": 16.893335
+      },
+      "payload_mbps": {
+        "n": 1421,
+        "p01": 937.897288,
+        "p50": 1009.1816,
+        "p95": 1045.49414,
+        "p99": 1058.5249199999998,
+        "max": 1084.9412
+      },
+      "gpu_decode_ms": {
+        "n": 1446,
+        "p01": 4.671486815,
+        "p50": 6.524036150000001,
+        "p95": 6.774648425,
+        "p99": 6.85595835,
+        "max": 7.2635417
+      },
+      "decode_to_fence_ms": {
+        "n": 1446,
+        "p01": 6.6552767,
+        "p50": 8.019324000000001,
+        "p95": 8.2848185,
+        "p99": 8.413500599999999,
+        "max": 9.007292
+      },
+      "convert_ms": {
+        "n": 1446,
+        "p01": 0.695505198,
+        "p50": 0.75955728,
+        "p95": 1.49610675,
+        "p99": 1.5828906599999997,
+        "max": 2.2178125
+      },
+      "eye_cpu_ms": {
+        "n": 1421,
+        "p01": 1.2450316799999999,
+        "p50": 1.508125,
+        "p95": 1.972135,
+        "p99": 2.2204067999999997,
+        "max": 2.4690108
+      },
+      "client_compositor_ms": {
+        "n": 1421,
+        "p01": 1.264532,
+        "p50": 1.531771,
+        "p95": 1.9951040000000002,
+        "p99": 2.2420942,
+        "max": 2.4950520000000003
+      },
+      "decoder_queue_ms": {
+        "n": 1421,
+        "p01": 0.031489800000000005,
+        "p50": 4.345625,
+        "p95": 4.871042,
+        "p99": 5.1089584,
+        "max": 7.371980000000001
+      },
+      "vsync_queue_ms": {
+        "n": 1421,
+        "p01": 8.8131576,
+        "p50": 14.253527,
+        "p95": 15.33257,
+        "p99": 16.9703344,
+        "max": 17.981945
+      },
+      "battery_temperature_c": 34.0,
+      "thermal_status": 0,
+      "effective_probe": {
+        "wait_us": 4000,
+        "ready_active": false,
+        "packet_grace_us": 0,
+        "windows": 11,
+        "margin": [
+          65,
+          14,
+          38,
+          100,
+          162,
+          926,
+          0
+        ],
+        "late": [
+          15,
+          3,
+          8,
+          12,
+          20,
+          22,
+          0
+        ],
+        "timed_windows": 11,
+        "timed_taken": 1305,
+        "interval_s": 11.049000024795532,
+        "taken": 1305,
+        "empty": 80,
+        "late_taken": 80,
+        "late_superseded": 0,
+        "superseded": 21,
+        "selected_source_frame_rate_fps": 118.11023595541623,
+        "taken_per_window": 118.63636363636364,
+        "superseded_per_window": 1.9090909090909092,
+        "late_taken_fraction": 1.0
+      },
+      "stage_interval_averages": {}
+    },
+    {
+      "arm": "B",
+      "probe_enabled": true,
+      "seconds": 12.03684401512146,
+      "submission_wall_time_fps": 116.66729240975145,
+      "direct_completion_proxy_fps": 117.28118372855938,
+      "target_event_rate_fps": 116.674004998655,
+      "unique_tracking_id_rate_fps": 116.674004998655,
+      "duplicate_tracking_ids": 0,
+      "client_fps": {
+        "n": 1404,
+        "p01": 60.00101564,
+        "p50": 119.999245,
+        "p95": 120.0178185,
+        "p99": 120.04111725,
+        "max": 120.59237
+      },
+      "target_gap_ms": {
+        "n": 1403,
+        "p01": 5.46714226,
+        "p50": 8.335418,
+        "p95": 11.1740995,
+        "p99": 16.67622386,
+        "max": 19.593283
+      },
+      "payload_mbps": {
+        "n": 1404,
+        "p01": 950.380224,
+        "p50": 1013.7979,
+        "p95": 1031.83407,
+        "p99": 1040.5882660000002,
+        "max": 1093.5692
+      },
+      "gpu_decode_ms": {
+        "n": 1301,
+        "p01": 4.053073,
+        "p50": 6.559323,
+        "p95": 7.069479,
+        "p99": 7.850156,
+        "max": 8.978125
+      },
+      "decode_to_fence_ms": {
+        "n": 1301,
+        "p01": 7.091095,
+        "p50": 8.051198,
+        "p95": 9.219689,
+        "p99": 9.864948,
+        "max": 10.971095
+      },
+      "convert_ms": {
+        "n": 1301,
+        "p01": 0.69598955,
+        "p50": 0.7678125,
+        "p95": 1.7433853,
+        "p99": 2.219427,
+        "max": 4.1836457
+      },
+      "eye_cpu_ms": {
+        "n": 1283,
+        "p01": 1.253272118,
+        "p50": 1.530053,
+        "p95": 2.2500892,
+        "p99": 2.449756500000003,
+        "max": 3.4824479
+      },
+      "client_compositor_ms": {
+        "n": 1404,
+        "p01": 1.28132075,
+        "p50": 1.551328,
+        "p95": 2.248192499999999,
+        "p99": 2.4678361900000003,
+        "max": 3.509219
+      },
+      "decoder_queue_ms": {
+        "n": 1404,
+        "p01": 0.015545020000000001,
+        "p50": 4.434454000000001,
+        "p95": 5.271818499999998,
+        "p99": 5.7873673,
+        "max": 8.418438
+      },
+      "vsync_queue_ms": {
+        "n": 1404,
+        "p01": 8.95860914,
+        "p50": 14.2696085,
+        "p95": 16.840389149999996,
+        "p99": 17.701987910000003,
+        "max": 18.33412
+      },
+      "battery_temperature_c": 34.0,
+      "thermal_status": 0,
+      "effective_probe": {
+        "wait_us": 4000,
+        "ready_active": false,
+        "packet_grace_us": 0,
+        "windows": 11,
+        "margin": [
+          105,
+          26,
+          46,
+          55,
+          158,
+          902,
+          1
+        ],
+        "late": [
+          13,
+          10,
+          7,
+          28,
+          35,
+          34,
+          0
+        ],
+        "timed_windows": 11,
+        "timed_taken": 1293,
+        "interval_s": 11.051000118255615,
+        "taken": 1293,
+        "empty": 127,
+        "late_taken": 127,
+        "late_superseded": 0,
+        "superseded": 19,
+        "selected_source_frame_rate_fps": 117.00298490306217,
+        "taken_per_window": 117.54545454545455,
+        "superseded_per_window": 1.7272727272727273,
+        "late_taken_fraction": 1.0
+      },
+      "stage_interval_averages": {
+        "Dequant": {
+          "intervals": 12,
+          "mean_of_interval_averages_ms": 2.7394166666666666,
+          "min_average_ms": 2.297,
+          "max_average_ms": 3.056
+        },
+        "iDWT": {
+          "intervals": 12,
+          "mean_of_interval_averages_ms": 3.55925,
+          "min_average_ms": 3.222,
+          "max_average_ms": 3.869
+        }
+      }
+    },
+    {
+      "arm": "B",
+      "probe_enabled": true,
+      "seconds": 12.036081790924072,
+      "submission_wall_time_fps": 115.99142111510437,
+      "direct_completion_proxy_fps": 116.28047856574834,
+      "target_event_rate_fps": 115.92694168689941,
+      "unique_tracking_id_rate_fps": 115.92694168689941,
+      "duplicate_tracking_ids": 0,
+      "client_fps": {
+        "n": 1396,
+        "p01": 59.99904825,
+        "p50": 119.999815,
+        "p95": 120.01070250000001,
+        "p99": 120.01798,
+        "max": 120.434296
+      },
+      "target_gap_ms": {
+        "n": 1395,
+        "p01": 5.555328879999999,
+        "p50": 8.335,
+        "p95": 8.5826104,
+        "p99": 16.68668164,
+        "max": 24.998961
+      },
+      "payload_mbps": {
+        "n": 1396,
+        "p01": 949.383203,
+        "p50": 1013.04613,
+        "p95": 1032.59103,
+        "p99": 1038.6264,
+        "max": 1102.0294
+      },
+      "gpu_decode_ms": {
+        "n": 1465,
+        "p01": 3.967668624,
+        "p50": 5.9952083,
+        "p95": 7.22287488,
+        "p99": 7.87358906,
+        "max": 8.7448435
+      },
+      "decode_to_fence_ms": {
+        "n": 1465,
+        "p01": 6.3942,
+        "p50": 7.94422,
+        "p95": 9.2700114,
+        "p99": 10.138518,
+        "max": 10.945054
+      },
+      "convert_ms": {
+        "n": 1465,
+        "p01": 0.713718712,
+        "p50": 0.770625,
+        "p95": 1.75869788,
+        "p99": 2.2470562799999945,
+        "max": 2.781875
+      },
+      "eye_cpu_ms": {
+        "n": 1453,
+        "p01": 1.21375376,
+        "p50": 1.422552,
+        "p95": 2.0568231599999995,
+        "p99": 2.376352296,
+        "max": 3.038021
+      },
+      "client_compositor_ms": {
+        "n": 1396,
+        "p01": 1.2313436,
+        "p50": 1.4431515,
+        "p95": 2.0456114999999997,
+        "p99": 2.3906276999999996,
+        "max": 2.866407
+      },
+      "decoder_queue_ms": {
+        "n": 1396,
+        "p01": 0.010843350000000002,
+        "p50": 1.8436460000000001,
+        "p95": 4.9288545,
+        "p99": 5.414567899999998,
+        "max": 6.575781999999999
+      },
+      "vsync_queue_ms": {
+        "n": 1396,
+        "p01": 9.02298745,
+        "p50": 14.2910275,
+        "p95": 15.766429249999998,
+        "p99": 17.427555299999998,
+        "max": 18.171392
+      },
+      "battery_temperature_c": 35.0,
+      "thermal_status": 0,
+      "effective_probe": {
+        "wait_us": 4000,
+        "ready_active": false,
+        "packet_grace_us": 0,
+        "windows": 11,
+        "margin": [
+          193,
+          104,
+          393,
+          82,
+          135,
+          380,
+          0
+        ],
+        "late": [
+          32,
+          21,
+          25,
+          22,
+          28,
+          37,
+          1
+        ],
+        "timed_windows": 11,
+        "timed_taken": 1287,
+        "interval_s": 11.051999807357788,
+        "taken": 1287,
+        "empty": 166,
+        "late_taken": 166,
+        "late_superseded": 0,
+        "superseded": 12,
+        "selected_source_frame_rate_fps": 116.44951343042814,
+        "taken_per_window": 117.0,
+        "superseded_per_window": 1.0909090909090908,
+        "late_taken_fraction": 1.0
+      },
+      "stage_interval_averages": {
+        "Dequant": {
+          "intervals": 12,
+          "mean_of_interval_averages_ms": 2.647333333333333,
+          "min_average_ms": 2.243,
+          "max_average_ms": 3.086
+        },
+        "iDWT": {
+          "intervals": 12,
+          "mean_of_interval_averages_ms": 3.1619166666666665,
+          "min_average_ms": 2.902,
+          "max_average_ms": 3.446
+        }
+      }
+    },
+    {
+      "arm": "A",
+      "probe_enabled": false,
+      "seconds": 12.037774085998535,
+      "submission_wall_time_fps": 115.97226452910263,
+      "direct_completion_proxy_fps": 116.33005099172414,
+      "target_event_rate_fps": 115.92511977387117,
+      "unique_tracking_id_rate_fps": 115.92511977387117,
+      "duplicate_tracking_ids": 0,
+      "client_fps": {
+        "n": 1395,
+        "p01": 59.99969062,
+        "p50": 119.99932,
+        "p95": 120.01122,
+        "p99": 120.03000704,
+        "max": 120.68713
+      },
+      "target_gap_ms": {
+        "n": 1394,
+        "p01": 5.548870529999999,
+        "p50": 8.334141,
+        "p95": 11.1247667,
+        "p99": 16.67626449,
+        "max": 19.450679
+      },
+      "payload_mbps": {
+        "n": 1395,
+        "p01": 932.20612,
+        "p50": 1008.55866,
+        "p95": 1046.2424,
+        "p99": 1061.583196,
+        "max": 1106.2134
+      },
+      "gpu_decode_ms": {
+        "n": 1471,
+        "p01": 4.0265779,
+        "p50": 5.8004165,
+        "p95": 7.0693748,
+        "p99": 7.84498398,
+        "max": 8.513854
+      },
+      "decode_to_fence_ms": {
+        "n": 1471,
+        "p01": 6.3434641,
+        "p50": 7.888178,
+        "p95": 9.259975,
+        "p99": 10.005678099999999,
+        "max": 10.943699
+      },
+      "convert_ms": {
+        "n": 1471,
+        "p01": 0.70006769,
+        "p50": 0.8069271,
+        "p95": 1.8003645,
+        "p99": 2.2975363799999995,
+        "max": 3.9596353
+      },
+      "eye_cpu_ms": {
+        "n": 1451,
+        "p01": 1.294323,
+        "p50": 1.4964069,
+        "p95": 2.2000260000000003,
+        "p99": 2.4572655,
+        "max": 2.921354
+      },
+      "client_compositor_ms": {
+        "n": 1395,
+        "p01": 1.32451672,
+        "p50": 1.51698,
+        "p95": 2.2007763999999996,
+        "p99": 2.46216414,
+        "max": 2.967084
+      },
+      "decoder_queue_ms": {
+        "n": 1395,
+        "p01": 0.022355379999999998,
+        "p50": 2.573125,
+        "p95": 4.7933543,
+        "p99": 5.972508059999998,
+        "max": 6.9217189999999995
+      },
+      "vsync_queue_ms": {
+        "n": 1395,
+        "p01": 9.395576,
+        "p50": 14.386757,
+        "p95": 15.696445099999998,
+        "p99": 17.59380716,
+        "max": 17.997015
+      },
+      "battery_temperature_c": 35.0,
+      "thermal_status": 0,
+      "effective_probe": {
+        "wait_us": 4000,
+        "ready_active": false,
+        "packet_grace_us": 0,
+        "windows": 11,
+        "margin": [
+          89,
+          26,
+          162,
+          421,
+          299,
+          288,
+          0
+        ],
+        "late": [
+          8,
+          12,
+          17,
+          15,
+          21,
+          39,
+          0
+        ],
+        "timed_windows": 11,
+        "timed_taken": 1285,
+        "interval_s": 11.026000022888184,
+        "taken": 1285,
+        "empty": 112,
+        "late_taken": 111,
+        "late_superseded": 1,
+        "superseded": 20,
+        "selected_source_frame_rate_fps": 116.54271697193442,
+        "taken_per_window": 116.81818181818181,
+        "superseded_per_window": 1.8181818181818181,
+        "late_taken_fraction": 0.9910714285714286
+      },
+      "stage_interval_averages": {}
+    },
+    {
+      "arm": "A",
+      "probe_enabled": false,
+      "seconds": 12.036494255065918,
+      "submission_wall_time_fps": 115.85892013462534,
+      "direct_completion_proxy_fps": 116.17440922010618,
+      "target_event_rate_fps": 115.92223062584516,
+      "unique_tracking_id_rate_fps": 115.92223062584516,
+      "duplicate_tracking_ids": 0,
+      "client_fps": {
+        "n": 1394,
+        "p01": 60.00017195,
+        "p50": 119.99991800000001,
+        "p95": 120.010995,
+        "p99": 120.03370389999999,
+        "max": 120.543945
+      },
+      "target_gap_ms": {
+        "n": 1393,
+        "p01": 8.221219640000001,
+        "p50": 8.333698,
+        "p95": 8.4109064,
+        "p99": 16.688937120000002,
+        "max": 25.005523
+      },
+      "payload_mbps": {
+        "n": 1394,
+        "p01": 939.6374979999999,
+        "p50": 1008.2353,
+        "p95": 1039.573515,
+        "p99": 1059.0599639999998,
+        "max": 1119.0482
+      },
+      "gpu_decode_ms": {
+        "n": 1419,
+        "p01": 3.962662426,
+        "p50": 5.8353643,
+        "p95": 7.004390699999999,
+        "p99": 7.7613009979999985,
+        "max": 8.537865
+      },
+      "decode_to_fence_ms": {
+        "n": 1419,
+        "p01": 6.3217555800000005,
+        "p50": 7.95224,
+        "p95": 9.159923199999998,
+        "p99": 9.88525722,
+        "max": 10.608438
+      },
+      "convert_ms": {
+        "n": 1419,
+        "p01": 0.7200281004000001,
+        "p50": 0.7936979,
+        "p95": 1.7757812599999998,
+        "p99": 2.281335444,
+        "max": 4.031198
+      },
+      "eye_cpu_ms": {
+        "n": 1399,
+        "p01": 1.190783098,
+        "p50": 1.407656,
+        "p95": 2.1312130999999996,
+        "p99": 2.4124456179999996,
+        "max": 2.654167
+      },
+      "client_compositor_ms": {
+        "n": 1394,
+        "p01": 1.21264011,
+        "p50": 1.423646,
+        "p95": 2.1334191999999996,
+        "p99": 2.4225756099999995,
+        "max": 2.677501
+      },
+      "decoder_queue_ms": {
+        "n": 1394,
+        "p01": 0.0051569300000000005,
+        "p50": 2.3198179999999997,
+        "p95": 5.13422135,
+        "p99": 6.290952319999996,
+        "max": 7.496668
+      },
+      "vsync_queue_ms": {
+        "n": 1394,
+        "p01": 9.178448580000001,
+        "p50": 14.4148345,
+        "p95": 15.704079049999999,
+        "p99": 17.701020039999996,
+        "max": 18.241685
+      },
+      "battery_temperature_c": 36.0,
+      "thermal_status": 0,
+      "effective_probe": {
+        "wait_us": 4000,
+        "ready_active": false,
+        "packet_grace_us": 0,
+        "windows": 11,
+        "margin": [
+          145,
+          21,
+          261,
+          352,
+          118,
+          386,
+          0
+        ],
+        "late": [
+          20,
+          12,
+          18,
+          35,
+          41,
+          39,
+          1
+        ],
+        "timed_windows": 11,
+        "timed_taken": 1283,
+        "interval_s": 11.03600001335144,
+        "taken": 1283,
+        "empty": 166,
+        "late_taken": 166,
+        "late_superseded": 0,
+        "superseded": 21,
+        "selected_source_frame_rate_fps": 116.25588967450312,
+        "taken_per_window": 116.63636363636364,
+        "superseded_per_window": 1.9090909090909092,
+        "late_taken_fraction": 1.0
+      },
+      "stage_interval_averages": {}
+    },
+    {
+      "arm": "B",
+      "probe_enabled": true,
+      "seconds": 12.03849196434021,
+      "submission_wall_time_fps": 115.67386003724683,
+      "direct_completion_proxy_fps": 115.89018554693344,
+      "target_event_rate_fps": 115.62512815871139,
+      "unique_tracking_id_rate_fps": 115.37593607216245,
+      "duplicate_tracking_ids": 3,
+      "client_fps": {
+        "n": 1393,
+        "p01": 59.99994512,
+        "p50": 119.99987,
+        "p95": 120.013478,
+        "p99": 120.0315744,
+        "max": 120.130936
+      },
+      "target_gap_ms": {
+        "n": 1389,
+        "p01": 5.43554668,
+        "p50": 8.334793,
+        "p95": 11.297594399999998,
+        "p99": 16.770332919999998,
+        "max": 27.744794
+      },
+      "payload_mbps": {
+        "n": 1393,
+        "p01": 948.8247200000001,
+        "p50": 1013.29254,
+        "p95": 1032.92636,
+        "p99": 1052.3391639999998,
+        "max": 1090.7208
+      },
+      "gpu_decode_ms": {
+        "n": 1466,
+        "p01": 4.0435312,
+        "p50": 6.0234635,
+        "p95": 7.0441012249999995,
+        "p99": 7.91641645,
+        "max": 8.766666
+      },
+      "decode_to_fence_ms": {
+        "n": 1466,
+        "p01": 6.559063,
+        "p50": 8.063647,
+        "p95": 9.3767455,
+        "p99": 9.927131549999997,
+        "max": 10.820522
+      },
+      "convert_ms": {
+        "n": 1466,
+        "p01": 0.700549451,
+        "p50": 0.78796875,
+        "p95": 1.7890104,
+        "p99": 2.1715989899999992,
+        "max": 2.9757812
+      },
+      "eye_cpu_ms": {
+        "n": 1447,
+        "p01": 1.30688058,
+        "p50": 1.545156,
+        "p95": 2.27258357,
+        "p99": 2.4918030379999996,
+        "max": 3.550834
+      },
+      "client_compositor_ms": {
+        "n": 1393,
+        "p01": 1.3274412,
+        "p50": 1.5620829999999999,
+        "p95": 2.2794791999999995,
+        "p99": 2.5157756399999993,
+        "max": 3.574428
+      },
+      "decoder_queue_ms": {
+        "n": 1393,
+        "p01": 0.01456204,
+        "p50": 2.8576040000000003,
+        "p95": 4.760938400000001,
+        "p99": 5.368007479999995,
+        "max": 6.864636
+      },
+      "vsync_queue_ms": {
+        "n": 1393,
+        "p01": 8.95888364,
+        "p50": 14.470662,
+        "p95": 15.766860399999999,
+        "p99": 17.321945319999998,
+        "max": 18.331788000000003
+      },
+      "battery_temperature_c": 36.0,
+      "thermal_status": 0,
+      "effective_probe": {
+        "wait_us": 4000,
+        "ready_active": false,
+        "packet_grace_us": 0,
+        "windows": 11,
+        "margin": [
+          129,
+          18,
+          259,
+          248,
+          205,
+          422,
+          0
+        ],
+        "late": [
+          19,
+          13,
+          22,
+          20,
+          35,
+          40,
+          1
+        ],
+        "timed_windows": 11,
+        "timed_taken": 1281,
+        "interval_s": 11.03600001335144,
+        "taken": 1281,
+        "empty": 150,
+        "late_taken": 150,
+        "late_superseded": 0,
+        "superseded": 18,
+        "selected_source_frame_rate_fps": 116.07466459317108,
+        "taken_per_window": 116.45454545454545,
+        "superseded_per_window": 1.6363636363636365,
+        "late_taken_fraction": 1.0
+      },
+      "stage_interval_averages": {
+        "Dequant": {
+          "intervals": 12,
+          "mean_of_interval_averages_ms": 2.8100833333333335,
+          "min_average_ms": 2.273,
+          "max_average_ms": 3.183
+        },
+        "iDWT": {
+          "intervals": 12,
+          "mean_of_interval_averages_ms": 3.1574166666666668,
+          "min_average_ms": 2.498,
+          "max_average_ms": 3.721
+        }
+      }
+    }
+  ],
+  "per_arm": {
+    "A": {
+      "probe_enabled": false,
+      "blocks": 3,
+      "submission_wall_time_fps_mean": 116.64001257717862,
+      "direct_completion_proxy_fps_mean": 116.83447760765662,
+      "target_event_rate_fps_mean": 116.63594018804837,
+      "client_fps_p01_median": 60.00017195,
+      "payload_p50_mbps_median": 1008.55866
+    },
+    "B": {
+      "probe_enabled": true,
+      "blocks": 3,
+      "submission_wall_time_fps_mean": 116.11085785403422,
+      "direct_completion_proxy_fps_mean": 116.48394928041373,
+      "target_event_rate_fps_mean": 116.07535828142193,
+      "client_fps_p01_median": 59.99994512,
+      "payload_p50_mbps_median": 1013.29254
+    }
+  },
+  "normal_restoration_errors": [],
+  "decision": "Keep diagnostic off by default. Both dequantization and inverse transform are material costs; no performance improvement is claimed.",
+  "limitations": [
+    "Short stationary chart, not sustained gameplay or in-headset image acceptance",
+    "Restart/phase variation and diagnostic publication overhead can affect this comparison",
+    "Stage numbers are delayed Granite frame-context interval averages, not per-frame percentiles",
+    "Stage GPU intervals include scheduling/preemption; they need not sum to one current-frame GPU total",
+    "Tracking IDs may repeat/jitter; rates and eye counters are not unique optical display FPS",
+    "Client FPS p01 near60 still shows missed periods despite average rates near116",
+    "Stationary pose-history total latency is confounded and excluded from causal claims",
+    "Battery temperature34-36C, thermal status0; GPU clocks not sampled",
+    "Periodic ADB health/focus polling may perturb USB streaming"
+  ],
+  "performance_acceptance": false,
+  "optical_latency_measured": false
+}
