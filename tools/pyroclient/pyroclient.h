@@ -95,6 +95,33 @@ int pyroclient_attach_release_fd(AHardwareBuffer *buffer, uint64_t token, int fd
 // Throw away whatever is queued (e.g. a frame whose deadline passed).
 void pyroclient_clear(pyroclient *c);
 
+// Standalone, default-OFF producer pre-record prototype. No ALVR call site yet.
+// Exclusive creating worker; warm at least one synchronous frame before enable.
+// Requires Haar/compute/420, 3 slots, PYROWAVE_NO_LINEAR_TEX=1, ready/release/stage
+// probes off. Geometry frozen by decoder. Granite stage timestamps disabled for
+// BOTH control and preparation; native GPU/completion queries remain enabled.
+int pyroclient_prerecord_enable(pyroclient *c);
+// start/submit return reserved, UNFINISHED output. Do not read/publish before
+// finish_pending succeeds with query collection. Only one GPU submission exists.
+int pyroclient_prerecord_start(pyroclient *c, const void *data, size_t size,
+                              AHardwareBuffer **out, pyroclient_frame_info *info,
+                              AHardwareBuffer *protected_a, AHardwareBuffer *protected_b);
+// 0 pending, 1 fence signaled (still requires finish_pending), negative failure.
+int pyroclient_prerecord_pending_status(pyroclient *c);
+// prepare: 1 recorded, 0 context not ready, -4 no free output, -7 upload growth
+// deferred until the earlier GPU submission completes; otherwise error.
+// Snapshot must protect every possible consumer output. Caller MUST choose latest
+// packet and cancel a superseded prepared frame; no FIFO growth permitted.
+int pyroclient_prerecord_prepare(pyroclient *c, const void *data, size_t size,
+                                AHardwareBuffer *protected_a, AHardwareBuffer *protected_b,
+                                uint64_t *generation);
+int pyroclient_prerecord_cancel(pyroclient *c, uint64_t generation);
+int pyroclient_prerecord_submit(pyroclient *c, uint64_t generation,
+                               AHardwareBuffer **out, pyroclient_frame_info *info);
+// Preparation-to-submit delay. frame_info.total_ms INCLUDES this delay; record_ms
+// excludes it; wait_ms begins at actual submission. Never subtract to claim MTP.
+double pyroclient_prerecord_queue_ms(pyroclient *c);
+
 void pyroclient_destroy(pyroclient *c);
 
 #ifdef __cplusplus

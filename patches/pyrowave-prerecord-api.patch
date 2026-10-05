@@ -1,0 +1,175 @@
+diff --git a/pyrowave-shared.def b/pyrowave-shared.def
+index 6a686a9..4fe4529 100644
+--- a/pyrowave-shared.def
++++ b/pyrowave-shared.def
+@@ -6,6 +6,9 @@ EXPORTS
+ 	pyrowave_create_device_by_compat
+ 	pyrowave_create_device
+ 	pyrowave_device_set_command_buffer
++	pyrowave_device_next_context_ready
++	pyrowave_decoder_set_timestamp_recording
++	pyrowave_decoder_prerecord_upload_fits
+ 	pyrowave_device_report_performance_stats
+ 	pyrowave_device_get_vk_device_handles
+ 	pyrowave_device_confirm_interop_support
+diff --git a/pyrowave.h b/pyrowave.h
+index f74438b..3f988a7 100644
+--- a/pyrowave.h
++++ b/pyrowave.h
+@@ -183,6 +183,11 @@ PYROWAVE_PUBLIC_API void pyrowave_device_get_vk_device_handles(
+ // Decoder: VK_QUEUE_COMPUTE_BIT (if using normal path), VK_QUEUE_GRAPHICS_BIT (if using fragment path).
+ PYROWAVE_PUBLIC_API void
+ pyrowave_device_set_command_buffer(pyrowave_device device, VkCommandBuffer cmd);
++// Single borrowed-command owner only. May acquire Granite's frame lock and
++// recycle completed fences. 1 means the next context's GPU fence is ready;
++// 0 means defer (including device failure), -1 invalid input. Call immediately
++// before decode_gpu_buffer; no other managed recording/context advance allowed.
++PYROWAVE_PUBLIC_API int pyrowave_device_next_context_ready(pyrowave_device device);
+ 
+ // When an explicit command buffer is not used, controls which queue family is preferred for encode or decode operations.
+ // This is typically used to select between graphics or async compute encoding.
+@@ -523,6 +528,13 @@ pyrowave_encoder_destroy(pyrowave_encoder encoder);
+  * wavelet image (compute path only). The views are 2D-array views (layers LL, LH, HL, HH) of
+  * mip `level` (0 = finest) for `component`, valid while the decoder lives, in GENERAL layout. */
+ PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_idwt_enabled(pyrowave_decoder decoder, int enabled);
++// Exclusive worker, between recordings. Disables only Granite stage timestamp
++// recording, not the caller's completion queries or GPU computation. Required
++// for explicitly canceled, unsubmitted borrowed commands in the prototype.
++PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_timestamp_recording(pyrowave_decoder decoder, int enabled);
++// After validated complete push, before recording; permits only existing upload
++// capacity, including robustness padding. 0 means defer growth until GPU drain.
++PYROWAVE_PUBLIC_API int pyrowave_decoder_prerecord_upload_fits(pyrowave_decoder decoder);
+ PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_get_wavelet_view(pyrowave_decoder decoder, int component, int level,
+                                                                      VkImageView *view, VkFormat *format);
+ 
+diff --git a/pyrowave_c.cpp b/pyrowave_c.cpp
+index 31b36bb..e41bd9d 100644
+--- a/pyrowave_c.cpp
++++ b/pyrowave_c.cpp
+@@ -44,6 +44,12 @@ struct pyrowave_device_opaque
+ 	CommandBuffer::Type queue_type = CommandBuffer::Type::Generic;
+ };
+ 
++int pyrowave_device_next_context_ready(pyrowave_device device)
++{
++    if (!device || device->cmd) return -1;
++    return device->device.next_frame_context_is_non_blocking() ? 1 : 0;
++}
++
+ void pyrowave_device_set_command_buffer(pyrowave_device device, VkCommandBuffer cmd)
+ {
+ 	device->cmd = cmd;
+@@ -1381,6 +1387,18 @@ bool pyrowave_decoder_decode_is_ready_with_sideband(pyrowave_decoder decoder, bo
+ 	                                        active_block_mask, word_count);
+ }
+ 
++int pyrowave_decoder_prerecord_upload_fits(pyrowave_decoder decoder)
++{
++    return decoder && decoder->decoder.prerecord_upload_fits() ? 1 : 0;
++}
++
++pyrowave_result pyrowave_decoder_set_timestamp_recording(pyrowave_decoder decoder, int enabled)
++{
++    if (!decoder) return PYROWAVE_ERROR_INVALID_ARGUMENT;
++    decoder->decoder.set_timestamp_recording(enabled != 0);
++    return PYROWAVE_SUCCESS;
++}
++
+ pyrowave_result pyrowave_decoder_set_idwt_enabled(pyrowave_decoder decoder, int enabled)
+ {
+ 	if (!decoder)
+diff --git a/pyrowave_decoder.cpp b/pyrowave_decoder.cpp
+index e806798..53fc80d 100644
+--- a/pyrowave_decoder.cpp
++++ b/pyrowave_decoder.cpp
+@@ -37,6 +37,7 @@ struct Decoder::Impl final : public WaveletBuffers
+         if (!strcmp(value, "128-row")) return 3;
+         return 0;
+     }();
++	bool timestamp_recording = true;
+ 	bool idwt_enabled = true;   // XRW Experiment 3
+ 
+ 	BufferHandle dequant_offset_buffer, payload_data;
+@@ -339,7 +340,7 @@ bool Decoder::Impl::dequant(CommandBuffer &cmd)
+ 		cmd.set_program(shaders.wavelet_dequant[0]);
+ 
+ 	cmd.begin_region("DWT dequant");
+-	auto start_dequant = cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
++	auto start_dequant = timestamp_recording ? cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT) : QueryPoolHandle{};
+ 
+ 	cmd.image_barrier(*wavelet_img_high_res, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL,
+ 	                  VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0,
+@@ -419,7 +420,7 @@ bool Decoder::Impl::dequant(CommandBuffer &cmd)
+ 	            fragment_path ? VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT : VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+ 	            VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
+ 
+-	auto end_dequant = cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
++	auto end_dequant = timestamp_recording ? cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT) : QueryPoolHandle{};
+ 	cmd.end_region();
+ 	cmd.enable_subgroup_size_control(false);
+ 	device->register_time_interval("GPU", std::move(start_dequant), std::move(end_dequant), "Dequant");
+@@ -458,7 +459,7 @@ bool Decoder::Impl::idwt_fragment(CommandBuffer &cmd, const ViewBuffers &views)
+ 	}
+ 	cmd.end_barrier_batch();
+ 
+-	auto start_idwt = cmd.write_timestamp(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
++	auto start_idwt = timestamp_recording ? cmd.write_timestamp(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT) : QueryPoolHandle{};
+ 
+ 	struct Push
+ 	{
+@@ -732,7 +733,7 @@ bool Decoder::Impl::idwt_fragment(CommandBuffer &cmd, const ViewBuffers &views)
+ 		cmd.end_region();
+ 	}
+ 
+-	auto end_idwt = cmd.write_timestamp(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
++	auto end_idwt = timestamp_recording ? cmd.write_timestamp(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT) : QueryPoolHandle{};
+ 	device->register_time_interval("GPU", std::move(start_idwt), std::move(end_idwt), "iDWT fragment");
+ 
+ 	cmd.set_specialization_constant_mask(0);
+@@ -774,7 +775,7 @@ bool Decoder::Impl::idwt(CommandBuffer &cmd, const ViewBuffers &views)
+ 	cmd.set_program(shaders.idwt[Configuration::get().get_precision()]);
+ 	cmd.enable_subgroup_size_control(false);
+ 
+-	auto start_idwt = cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
++	auto start_idwt = timestamp_recording ? cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT) : QueryPoolHandle{};
+ 
+ 	struct
+ 	{
+@@ -847,7 +848,7 @@ bool Decoder::Impl::idwt(CommandBuffer &cmd, const ViewBuffers &views)
+ 		            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
+ 	}
+ 
+-	auto end_idwt = cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
++	auto end_idwt = timestamp_recording ? cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT) : QueryPoolHandle{};
+ 	device->register_time_interval("GPU", std::move(start_idwt), std::move(end_idwt), "iDWT");
+ 	return true;
+ }
+@@ -1174,3 +1175,14 @@ bool Decoder::decode_is_ready(bool allow_partial_frame, int num_pristine_bands,
+ 	return impl->decode_is_ready(allow_partial_frame, num_pristine_bands, minimum_packet_ratio, active_block_mask, word_count);
+ }
+ }
++
++namespace PyroWave {
++void Decoder::set_timestamp_recording(bool enabled) { impl->timestamp_recording = enabled; }
++bool Decoder::prerecord_upload_fits() const {
++    if (!impl->payload_data) return false;
++    const uint64_t capacity = impl->payload_data->get_create_info().size;
++    // Same +16 robustness padding as upload_payload. No growth/replacement of
++    // GPU payload storage while the preceding submission is outstanding.
++    return capacity >= 16 && impl->payload_data_cpu.size() <= (capacity - 16) / sizeof(uint32_t);
++}
++}
+diff --git a/pyrowave_decoder.hpp b/pyrowave_decoder.hpp
+index 5f6da99..1e96040 100644
+--- a/pyrowave_decoder.hpp
++++ b/pyrowave_decoder.hpp
+@@ -44,6 +44,9 @@ public:
+ 	// XRW Experiment 3: record dequant only (no iDWT) so an external reconstruction kernel can
+ 	// read the wavelet image; and expose that image's per-component, per-level array views.
+ 	void set_idwt_enabled(bool enabled);
++	// Diagnostic pre-recording excludes unsubmitted timestamp queries. Default true.
++	void set_timestamp_recording(bool enabled);
++	bool prerecord_upload_fits() const;
+ 	VkImageView get_wavelet_view(int component, int level) const;
+ 	VkFormat get_wavelet_format(int level) const;
+ 

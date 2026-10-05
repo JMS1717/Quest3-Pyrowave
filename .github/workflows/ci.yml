@@ -37,6 +37,8 @@ jobs:
         run: |
           python3 -m pip install --disable-pip-version-check -r tools/requirements-test.txt
           python3 -m tools.quest3.scene_pattern_test -v
+      - name: Bounded producer reservation and cancellation (CPU only)
+        run: g++ -std=c++17 -Wall -Wextra -Werror tools/pyroclient/prerecord_state_test.cpp -o /tmp/prerecord-state && /tmp/prerecord-state
       - name: Release-fence ownership and generation regression
         run: g++ -std=c++17 -Wall -Wextra -Werror -pthread tools/pyroclient/release_fence_registry_test.cpp -o /tmp/release-fence-test && /tmp/release-fence-test
       - run: g++ -std=c++17 -Wall -Werror tools/pyroclient/decode_path_test.cpp -o /tmp/decode-path && /tmp/decode-path
@@ -170,7 +172,7 @@ jobs:
           (cd /tmp/quest3-notices && zip -qr "$GITHUB_WORKSPACE/out/LICENSES.zip" LICENSES)
           cp "$XRWIRED_INPUTS/research/ALVR-20.13.0/build/alvr_client_android/alvr_client_android.apk" out/Quest3-Pyrowave-dev.apk
           cp "$XRWIRED_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" out/
-          cp tools/pyrowave_android/pyrowave_android tools/udptest/udprecv-android tools/pyroclient/pyroclient_test tools/pyroclient/release_fence_gpu_test tools/pyroclient/ready_fence_gpu_test tools/pyroclient/libpyroclient.so "$XRWIRED_INPUTS/research/pyrowave/build-android/libpyrowave-shared.so" out/
+          cp tools/pyroclient/prerecord_gpu_test tools/pyrowave_android/pyrowave_android tools/udptest/udprecv-android tools/pyroclient/pyroclient_test tools/pyroclient/release_fence_gpu_test tools/pyroclient/ready_fence_gpu_test tools/pyroclient/libpyroclient.so "$XRWIRED_INPUTS/research/pyrowave/build-android/libpyrowave-shared.so" out/
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs out/Quest3-Pyrowave-dev.apk > out/APK-CERTIFICATE.txt
           (cd out && sha256sum * > SHA256SUMS.txt)
       - uses: actions/upload-artifact@v4
