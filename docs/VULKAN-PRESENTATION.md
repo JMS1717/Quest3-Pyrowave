@@ -6,6 +6,28 @@ Morning .23 Quest logs advertise `XR_KHR_vulkan_enable` and
 session, stream projection and performance quad are GLES. Advertised bindings
 do not establish a working Vulkan session, sustained FPS or latency.
 
+## Android Surface alternative: capability and ordering caveats
+
+The `.35`/`.36` `[Q3PW_SURFACE]` probe checked only `ExtensionSet.other`.
+That excludes extensions already known to the
+[pinned openxr bindings](https://github.com/Ralith/openxrs/blob/9270509d23dc774b43a8b7289e8adf69fcac6828/openxr/src/generated.rs).
+Its all-false result cannot establish lack of support. `.37` reads the three
+named extension fields; runtime advertisement still needs on-device verification.
+
+An Android Surface swapchain requires a different ownership path: its images
+cannot be enumerated, acquired, waited or released with the ordinary OpenXR
+swapchain calls. The application submits through the Surface and stops all
+producer writes before ending a stopping session. A Vulkan WSI implementation
+therefore cannot substitute this handle into the current eye-copy loop.
+[Khronos Surface swapchain requirements](https://github.com/KhronosGroup/OpenXR-Docs/blob/main/specification/sources/chapters/extensions/khr/khr_android_surface_swapchain.adoc).
+
+The FB create extension can request synchronous BufferQueue mode, which can
+block the producer, or timestamp-based compositor buffer selection. Neither
+flag automatically proves a content/pose match or low latency. Validate
+presentation timestamps, image identity and projection poses together before
+calling this a replacement for the current leased ring.
+[Khronos FB create semantics](https://github.com/KhronosGroup/OpenXR-Docs/blob/main/specification/sources/chapters/extensions/fb/fb_android_surface_swapchain_create.adoc).
+
 ## Why investigate presentation
 
 At native resolution the saved stage counters complete about 120 decodes/s,
