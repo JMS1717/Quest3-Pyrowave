@@ -19,7 +19,8 @@ USB or Wi-Fi, tune the stream, and measure where every millisecond goes.
 
 [Latest manual playtest and setup fixes](docs/PLAYTEST-2026-10-02.md): optional
 larger PC source, mild sharpening, the overlay override fix and the OpenXR game
-launch fix. The tested development pair is `.33`. It waits up to half a frame
+launch fix. The latest reviewed development pair is `.38`, with optional decode
+stage diagnostics off by default. It retains the `.33` improvements: wait up to half a frame
 for a frame that is still decoding ([measured gain](docs/FRESHNESS.md)) and at
 ≤120 Hz / 4:2:0 lowers decode priority so the eye copy is not stuck behind it
 ([measured gain](docs/DECODE-PRIORITY.md)). The published preview remains alpha.7. These notes do not establish sustained fresh 120 FPS.
@@ -130,6 +131,8 @@ only and preserves bitrate, refresh, chroma and decoder settings.
 
 | Observation | Evidence and limits |
 | --- | --- |
+| Recent native 120 Hz screens averaged **116–119 submission/completion events per second** | `.37`/`.38`, 2080x2208 per eye, 1000 Mbps, 4:2:0, no foveation. p1 instantaneous client FPS remained near 60: smooth sustained 120 is unmet. These counters are not unique optical frames. [Latest comparison](results/DECODE-STAGE-LIVE-2026-10-04.json), [earlier screen](results/SURFACE-CAPS-2026-10-04.json) |
+| Awake GPU stage intervals averaged **2.6–2.8 ms dequantization** and **3.2–3.6 ms inverse transform** | Both stages are material costs. Delayed interval averages, not frame percentiles; diagnostic remains off. [Method and findings](docs/DECODE-STAGE-PROBE.md#awake-vr-comparison) |
 | Native USB streaming reached about **112-113 fresh FPS** in the best short `.21` screens | 2080x2208 per eye, requested 120 Hz, 4:2:0, 1000 Mbps. [Results](results/OUTPUT-BRIDGE-LIVE-2026-10-02.json) |
 | Producer completed about **120 decodes/s**, while eye copies completed about **112-113/s** | Superseded outputs account for the counted gap. This does not prove its synchronization cause. [Counters](results/OUTPUT-SLOT-LOSS-2026-10-02.json) |
 | Later short captures varied, rather than consistently matching the best run | Frame selection: ~97-110 FPS; `.25` timer calibration: ~99-108 FPS. Dynamic clocks and thermal state matter. [Selection](results/FRAME-SELECTION-LIVE-2026-10-02.json), [timer](results/EYE-GPU-LIVE-2026-10-02.json) |
@@ -146,7 +149,11 @@ motion-to-photon result. No quality/latency win over Virtual Desktop is establis
 refresh does not imply that many fresh streamed frames. 240 Hz is a separate
 display-scaling experiment and was rejected on the tested setup.
 
-Current synchronization research examines a
+Current presentation research checks an optional
+[Android Surface/Vulkan WSI path](docs/SURFACE-PROBE.md) that could eventually
+avoid the GLES eye copy. Extension advertisement is verified; object creation,
+presentation and pose/content pairing are separate gates. It is not a measured
+speedup or a replacement presenter yet. Earlier synchronization research examined a
 [Nightfall-inspired native-fence handoff](docs/NIGHTFALL-SYNC-REVIEW.md).
 The `.26` release-fence experiment passed GPU reuse checks and reduced CPU copy
 time, but **did not improve delivered FPS** in a short live comparison. It stays

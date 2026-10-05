@@ -51,8 +51,8 @@ screen. [Calibration evidence](../results/DECODE-STAGE-GPU-2026-10-04.json).
 
 The matching `.38` APK/server passed all cloud jobs, artifact hash/certificate
 checks and default GPU readback before deployment. A continuous native-size
-chart covered six restarted-client blocks in ABBAAB order: three12-second
-blocks each with the diagnostic disabled/enabled, at120Hz,1000Mbps,4:2:0,
+chart covered six restarted-client blocks in ABBAAB order: three 12-second
+blocks each with the diagnostic disabled/enabled, at 120 Hz, 1000 Mbps, 4:2:0,
 Haar/Compute and LOW queue priority. Foveation and experimental filters stayed
 off. Read-only device/PC clock alignment was applied to process-specific logs.
 
@@ -63,8 +63,8 @@ off. Read-only device/PC clock alignment was applied to process-specific logs.
 | Median block p1 instantaneous client FPS | 60.00 | 60.00 |
 | Median block payload bitrate | 1008.6Mbps | 1013.3Mbps |
 
-Each enabled block yielded12 post-startup stage intervals. The three block
-means were2.74/2.65/2.81ms for Dequant and3.56/3.16/3.16ms for iDWT. Both
+Each enabled block yielded 12 post-startup stage intervals. The three block
+means were 2.74/2.65/2.81 ms for Dequant and 3.56/3.16/3.16 ms for iDWT. Both
 stages warrant attention; inverse transform was usually larger in this screen.
 These delayed frame-context averages include GPU scheduling and do not describe
 percentiles or necessarily sum to the current-frame decode total.

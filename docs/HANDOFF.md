@@ -27,7 +27,7 @@ resume paused hardware work or unattended workers.
 | Item | Evidence / limitation |
 | --- | --- |
 | Public release | [alpha.7](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.7), matching `.15` APK/server |
-| Development pair | Reviewed `.34`, built from `2858289`: `.33` plus opt-in compositor filtering (`debug.q3pw.layer_filter`, off by default); native libraries byte-identical to `.33`. Installed October 4 after a live A/B. `.33` (`8fb4656`: bounded frame wait on by default; LOW decode queue priority at ≤120 Hz / 4:2:0) and `.32`/`.31`/`.30`/`.29` pairs retained. Recheck installation before hardware work |
+| Development pair | Reviewed `.38`, built from `a259b23`, installed October 4 after matching CI/artifact/default GPU checks and a live diagnostic comparison. Decode stage reporting is opt-in and off by default; wait/LOW-priority behavior from `.33` remains. `.39` (`55489d8`) is a default-off Surface creation-only candidate, not a presenter. Older matching pairs are retained; recheck installation and CI before hardware work |
 | User feedback | Positive manual playtest after overlay/OpenXR repairs; not sustained FPS, optical latency or broad game acceptance |
 | Best short native screens | `.33` at 120 Hz / 1000 Mbps / 4:2:0: about 116–118 displayed target FPS (2.4–4.8 lost/s across sessions, `.34` unfiltered arm included) with the default wait and LOW decode priority. Without the priority it was 110–114, and without the wait 107–110 ([fresh-frame loss](FRESHNESS.md), [decode priority](DECODE-PRIORITY.md)). Stationary chart, not sustained gameplay |
 | Baseline recommendation | Haar/Compute, full-frame native encode, USB/TCP, 120 Hz request, 1000 Mbps, 4:2:0; experimental fence paths off |
@@ -52,6 +52,18 @@ state before testing; the private handoff includes a fresh disk snapshot.
 6. [OpenXR routing](OPENXR.md), [overlay](OVERLAY.md), [light foveation](LIGHT-FOVEATION.md).
 
 ## Highest-value next experiment
+
+**Latest update, October 4 evening:** awake `.38` stage diagnostics show both
+dequantization (~2.6–2.8 ms) and inverse transform (~3.2–3.6 ms) contribute.
+The diagnostic does not improve delivery and stays off. `.38` restarted-client
+controls averaged about 116–117 submission/completion events per second, with
+p1 near 60; sustained smooth native 120 remains unmet. Read
+[the live diagnostic comparison](DECODE-STAGE-PROBE.md#awake-vr-comparison).
+The next bounded step is `.39`'s [Surface creation probe](SURFACE-PROBE.md),
+then a separate static asymmetric image before decoded presentation. A Surface
+handle cannot enter the existing OpenXR eye acquire/release loop. Validate
+WSI lifecycle, visibility/STOPPING rules, color, image identity and pose pairing
+before removing a copy. The following entries document earlier hypotheses.
 
 **Update 2026-10-04 (evening):** removing the convert pass is not possible
 this way: Quest 3 gralloc has no R8 AHardwareBuffer, so GLES cannot sample the

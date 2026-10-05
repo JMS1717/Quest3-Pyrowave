@@ -7,7 +7,7 @@ attempting a static image or decoded-video path.
 
 Set `debug.q3pw.surface_probe=1` before launching the client. Other values leave
 it off. Only a requested probe enables the advertised KHR Surface extension.
-After creating the GLES OpenXR session, it creates a separate64×32 Surface
+After creating the GLES OpenXR session, it creates a separate 64×32 Surface
 swapchain, obtains its Android window and creates a separate Vulkan instance,
 present-capable graphics device and tiny WSI swapchain. It enumerates image
 count, formats, usage and extent capabilities, then destroys every object.
@@ -24,7 +24,7 @@ Look for `[Q3PW_SURFACE_WSI] created=true ... submitted=false` followed by
 OpenXR creation alone or Vulkan Surface creation alone are insufficient to claim
 the entire probe passed. Missing/failed records mean unknown or rejected.
 The creation probe rejects unexpectedly large extents/image counts and requires
-an8-bit UNORM SRGB-nonlinear Surface format. Format acceptance does not validate
+an 8-bit UNORM SRGB-nonlinear Surface format. Format acceptance does not validate
 range/gamma, image orientation or color appearance.
 
 Validate a saved startup log using the recorded client process and device-clock
@@ -34,7 +34,7 @@ interval (include startup, since the probe runs before video begins):
 python -m tools.quest3.surface_probe client.log --start DEVICE_START_EPOCH --end DEVICE_END_EPOCH --pid CLIENT_PID
 ```
 
-The reader requires one ordered creation/destruction pair with native result0.
+The reader requires one ordered creation/destruction pair with native result 0.
 Wrong-process and out-of-window records are excluded; partial, duplicated,
 reordered, malformed or mixed failure/success records cannot pass. Missing
 records remain unknown. A passing report verifies reported object creation and
