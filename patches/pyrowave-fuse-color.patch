@@ -42,19 +42,27 @@ index e41bd9ddbb7d75bc5a7bd0bdbbe06b1a7c1ec5dd..7c26c87b70112c74d91ecd9d905e332d
  {
  	if (!decoder)
 diff --git a/pyrowave_decoder.cpp b/pyrowave_decoder.cpp
-index 53fc80d562622d004b249cf9d710692ec06210d6..a392b1874b49d831ec687f05ca2219563d4f0bea 100644
+index 53fc80d562622d004b249cf9d710692ec06210d6..f07a7891402f8e26694fea35cb321d38089170e8 100644
 --- a/pyrowave_decoder.cpp
 +++ b/pyrowave_decoder.cpp
-@@ -39,6 +39,8 @@ struct Decoder::Impl final : public WaveletBuffers
+@@ -39,6 +39,16 @@ struct Decoder::Impl final : public WaveletBuffers
      }();
  	bool timestamp_recording = true;
  	bool idwt_enabled = true;   // XRW Experiment 3
 +	// Q3PW fuse_color: the caller reconstructs final 4:2:0 Haar luma with colour conversion.
 +	bool skip_final_luma_idwt = false;
++	// The caller's shader mirrors only the original pair-local Haar pass with FP32 math and
++	// FP16 storage. Fused multilevel Haar, dedicated pair kernels, other precisions, 4:4:4 and
++	// the fragment path keep their own final pass, so refuse rather than leave luma unwritten.
++	bool final_luma_idwt_skippable() const
++	{
++		return haar && chroma == ChromaSubsampling::Chroma420 && !fragment_path && !fused_haar &&
++		       haar_pairs_mode == 0 && Configuration::get().get_precision() == 1;
++	}
  
  	BufferHandle dequant_offset_buffer, payload_data;
  	BufferViewHandle payload_u32_view, payload_u16_view, payload_u8_view;
-@@ -812,7 +814,7 @@ bool Decoder::Impl::idwt(CommandBuffer &cmd, const ViewBuffers &views)
+@@ -812,7 +822,7 @@ bool Decoder::Impl::idwt(CommandBuffer &cmd, const ViewBuffers &views)
  					cmd.end_region();
  				}
  			}
@@ -63,18 +71,13 @@ index 53fc80d562622d004b249cf9d710692ec06210d6..a392b1874b49d831ec687f05ca221956
  			{
  				cmd.set_storage_texture(0, 1, *views.planes[0]);
  				cmd.begin_region("iDWT final");
-@@ -1135,6 +1137,19 @@ void Decoder::set_idwt_enabled(bool enabled)
+@@ -1135,6 +1145,14 @@ void Decoder::set_idwt_enabled(bool enabled)
  	impl->idwt_enabled = enabled;
  }
  
 +bool Decoder::set_skip_final_luma_idwt(bool enabled)
 +{
-+	// The caller's shader mirrors only the original pair-local Haar pass with FP32 math and
-+	// FP16 storage. Fused multilevel Haar, dedicated pair kernels, other precisions, 4:4:4 and
-+	// the fragment path keep their own final pass, so refuse rather than leave luma unwritten.
-+	if (enabled && (!impl->haar || impl->chroma != ChromaSubsampling::Chroma420 || impl->fragment_path ||
-+	                impl->fused_haar || impl->haar_pairs_mode != 0 ||
-+	                Configuration::get().get_precision() != 1))
++	if (enabled && !impl->final_luma_idwt_skippable())
 +		return false;
 +	impl->skip_final_luma_idwt = enabled;
 +	return true;

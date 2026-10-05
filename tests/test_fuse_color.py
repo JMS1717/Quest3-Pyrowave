@@ -66,11 +66,12 @@ class FuseColorLifetimeTests(unittest.TestCase):
 
     def test_decoder_refuses_modes_the_shader_does_not_mirror(self):
         patch = (ROOT / 'patches/pyrowave-fuse-color.patch').read_text()
-        guard = re.search(r'if \(enabled && \((.*?)\)\)\n\+\t\treturn false;', patch, re.S)
+        guard = re.search(r'bool final_luma_idwt_skippable\(\) const\n\+\t\{\n\+\t\treturn (.*?);', patch, re.S)
         self.assertIsNotNone(guard)
-        for condition in ('!impl->haar', 'Chroma420', 'impl->fragment_path', 'impl->fused_haar',
-                          'impl->haar_pairs_mode != 0', 'get_precision() != 1'):
+        for condition in ('haar &&', 'chroma == ChromaSubsampling::Chroma420', '!fragment_path', '!fused_haar',
+                          'haar_pairs_mode == 0', 'get_precision() == 1'):
             self.assertIn(condition, guard.group(1))
+        self.assertIn('if (enabled && !impl->final_luma_idwt_skippable())\n+\t\treturn false;', patch)
 
     def test_prerecord_prototype_refuses_fused_colour(self):
         text = (ROOT / 'tools/pyroclient/pyroclient.cpp').read_text()
