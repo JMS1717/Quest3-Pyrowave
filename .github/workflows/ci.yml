@@ -49,6 +49,8 @@ jobs:
       - name: Release-fence ownership and generation regression
         run: g++ -std=c++17 -Wall -Wextra -Werror -pthread tools/pyroclient/release_fence_registry_test.cpp -o /tmp/release-fence-test && /tmp/release-fence-test
       - run: g++ -std=c++17 -Wall -Werror tools/pyroclient/decode_path_test.cpp -o /tmp/decode-path && /tmp/decode-path
+      - name: Experimental fused-colour eligibility and mode interactions (CPU only)
+        run: g++ -std=c++17 -Wall -Wextra -Werror tools/pyroclient/fuse_color_policy_test.cpp -o /tmp/fuse-color-policy && /tmp/fuse-color-policy
       - name: Surface chart orientation and channel order (CPU only)
         run: g++ -std=c++17 -Wall -Wextra -Werror tools/pyroclient/surface_chart_pixels_test.cpp -o /tmp/surface-chart-pixels && /tmp/surface-chart-pixels
       - name: Software GLES readback correctness (no Quest hardware)
@@ -64,6 +66,30 @@ jobs:
           python3 -m tools.foveation.gpu_fixture /tmp/light-foveation-reference.txt
           g++ -std=c++17 -O2 -Wall -Wextra -Werror tools/pyroclient/gpu_readback_gles.cpp tools/foveation/gpu_test.cpp -lEGL -lGLESv2 -o /tmp/light-foveation-test
           /tmp/light-foveation-test tools/foveation/light.glsl /tmp/light-foveation-reference.txt
+  fuse_color_exact:
+    # Default-off debug.q3pw.fuse_color must reproduce the shipped iDWT + convert bytes exactly.
+    # Software Vulkan proves shader logic, formats, edges and wiring; not Adreno rounding or speed.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct patched PyroWave shaders only
+        run: Q3PW_PYROWAVE_ONLY=1 sh tools/ci/fetch_sources.sh /tmp/fuse-src
+      - name: Mesa lavapipe and the Khronos validation layer
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends mesa-vulkan-drivers libvulkan-dev vulkan-validationlayers
+      - name: Fused colour pass versus shipped two-pass output, both FP16 variants (no headset)
+        run: |
+          ls /usr/share/vulkan/icd.d/
+          icd=$(ls /usr/share/vulkan/icd.d/lvp_icd*.json | head -n 1)
+          test -n "$icd"
+          export VK_DRIVER_FILES="$icd" VK_ICD_FILENAMES="$icd"
+          for v in 0 1; do
+            python3 tools/pyroclient/extract_pyrowave_spirv.py /tmp/fuse-src/pyrowave/shaders/slangmosh.hpp idwt 1 "$v" "/tmp/idwt-fp16-$v.spv"
+          done
+          g++ -std=c++17 -O2 -Wall -Wextra -Wno-missing-field-initializers -Werror tools/pyroclient/fuse_color_vk_test.cpp -lvulkan -o /tmp/fuse-color-vk-test
+          /tmp/fuse-color-vk-test /tmp/idwt-fp16-0.spv 0
+          /tmp/fuse-color-vk-test /tmp/idwt-fp16-1.spv 1
   publication_tests:
     runs-on: ubuntu-24.04
     needs: tests

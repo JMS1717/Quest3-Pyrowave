@@ -214,7 +214,7 @@ index ae00ce8..bb2bda6 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.51"
++version = "20.13.0-quest3.pyro.54"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]

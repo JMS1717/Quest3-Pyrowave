@@ -1,0 +1,103 @@
+diff --git a/pyrowave-shared.def b/pyrowave-shared.def
+index 4fe4529342fc91b009f0d74b86ea33d2214fa970..63567fcf81f0b12a40730d645a2ddab34c475f5b 100644
+--- a/pyrowave-shared.def
++++ b/pyrowave-shared.def
+@@ -47,4 +47,5 @@ EXPORTS
+ 	pyrowave_decoder_destroy
+ 
+ 	pyrowave_decoder_set_idwt_enabled
++	pyrowave_decoder_set_skip_final_luma_idwt
+ 	pyrowave_decoder_get_wavelet_view
+diff --git a/pyrowave.h b/pyrowave.h
+index 3f988a7db27bf46e982d8ea6dd957ae10393129d..50f185533bf89cd8827672f5380d021152f1cedf 100644
+--- a/pyrowave.h
++++ b/pyrowave.h
+@@ -532,6 +532,10 @@ PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_idwt_enabled(pyrowave_d
+ // recording, not the caller's completion queries or GPU computation. Required
+ // for explicitly canceled, unsubmitted borrowed commands in the prototype.
+ PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_timestamp_recording(pyrowave_decoder decoder, int enabled);
++// Q3PW fuse_color, exclusive worker between recordings: skip the final 4:2:0 Haar luma iDWT and
++// leave plane 0 unwritten for a caller that reconstructs it from the level-0 wavelet view.
++// Per decoder (no environment); NOT_IMPLEMENTED and unchanged for any other mode.
++PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_skip_final_luma_idwt(pyrowave_decoder decoder, int enabled);
+ // After validated complete push, before recording; permits only existing upload
+ // capacity, including robustness padding. 0 means defer growth until GPU drain.
+ PYROWAVE_PUBLIC_API int pyrowave_decoder_prerecord_upload_fits(pyrowave_decoder decoder);
+diff --git a/pyrowave_c.cpp b/pyrowave_c.cpp
+index e41bd9ddbb7d75bc5a7bd0bdbbe06b1a7c1ec5dd..7c26c87b70112c74d91ecd9d905e332d3ab175f6 100644
+--- a/pyrowave_c.cpp
++++ b/pyrowave_c.cpp
+@@ -1399,6 +1399,13 @@ pyrowave_result pyrowave_decoder_set_timestamp_recording(pyrowave_decoder decode
+     return PYROWAVE_SUCCESS;
+ }
+ 
++pyrowave_result pyrowave_decoder_set_skip_final_luma_idwt(pyrowave_decoder decoder, int enabled)
++{
++	if (!decoder)
++		return PYROWAVE_ERROR_INVALID_ARGUMENT;
++	return decoder->decoder.set_skip_final_luma_idwt(enabled != 0) ? PYROWAVE_SUCCESS : PYROWAVE_ERROR_NOT_IMPLEMENTED;
++}
++
+ pyrowave_result pyrowave_decoder_set_idwt_enabled(pyrowave_decoder decoder, int enabled)
+ {
+ 	if (!decoder)
+diff --git a/pyrowave_decoder.cpp b/pyrowave_decoder.cpp
+index 53fc80d562622d004b249cf9d710692ec06210d6..f07a7891402f8e26694fea35cb321d38089170e8 100644
+--- a/pyrowave_decoder.cpp
++++ b/pyrowave_decoder.cpp
+@@ -39,6 +39,16 @@ struct Decoder::Impl final : public WaveletBuffers
+     }();
+ 	bool timestamp_recording = true;
+ 	bool idwt_enabled = true;   // XRW Experiment 3
++	// Q3PW fuse_color: the caller reconstructs final 4:2:0 Haar luma with colour conversion.
++	bool skip_final_luma_idwt = false;
++	// The caller's shader mirrors only the original pair-local Haar pass with FP32 math and
++	// FP16 storage. Fused multilevel Haar, dedicated pair kernels, other precisions, 4:4:4 and
++	// the fragment path keep their own final pass, so refuse rather than leave luma unwritten.
++	bool final_luma_idwt_skippable() const
++	{
++		return haar && chroma == ChromaSubsampling::Chroma420 && !fragment_path && !fused_haar &&
++		       haar_pairs_mode == 0 && Configuration::get().get_precision() == 1;
++	}
+ 
+ 	BufferHandle dequant_offset_buffer, payload_data;
+ 	BufferViewHandle payload_u32_view, payload_u16_view, payload_u8_view;
+@@ -812,7 +822,7 @@ bool Decoder::Impl::idwt(CommandBuffer &cmd, const ViewBuffers &views)
+ 					cmd.end_region();
+ 				}
+ 			}
+-			else
++			else if (!skip_final_luma_idwt)
+ 			{
+ 				cmd.set_storage_texture(0, 1, *views.planes[0]);
+ 				cmd.begin_region("iDWT final");
+@@ -1135,6 +1145,14 @@ void Decoder::set_idwt_enabled(bool enabled)
+ 	impl->idwt_enabled = enabled;
+ }
+ 
++bool Decoder::set_skip_final_luma_idwt(bool enabled)
++{
++	if (enabled && !impl->final_luma_idwt_skippable())
++		return false;
++	impl->skip_final_luma_idwt = enabled;
++	return true;
++}
++
+ VkImageView Decoder::get_wavelet_view(int component, int level) const
+ {
+ 	if (component < 0 || component >= NumComponents || level < 0 || level >= DecompositionLevels)
+diff --git a/pyrowave_decoder.hpp b/pyrowave_decoder.hpp
+index 1e96040542965fd7a4ce6af6dead5295572f7b8f..f16a9e1fcfca243f5ef107d2a5ed484c8d02c38a 100644
+--- a/pyrowave_decoder.hpp
++++ b/pyrowave_decoder.hpp
+@@ -46,6 +46,10 @@ public:
+ 	void set_idwt_enabled(bool enabled);
+ 	// Diagnostic pre-recording excludes unsubmitted timestamp queries. Default true.
+ 	void set_timestamp_recording(bool enabled);
++	// Q3PW fuse_color: skip the final 4:2:0 luma iDWT; plane 0 is then left unwritten and the
++	// caller reconstructs it from get_wavelet_view(0, 0). Per decoder, default false. Returns
++	// false, unchanged, for any mode other than plain Haar / compute / precision 1.
++	bool set_skip_final_luma_idwt(bool enabled);
+ 	bool prerecord_upload_fits() const;
+ 	VkImageView get_wavelet_view(int component, int level) const;
+ 	VkFormat get_wavelet_format(int level) const;
