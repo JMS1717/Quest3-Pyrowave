@@ -206,7 +206,7 @@ index 7cead7b..18ad9d0 100644
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce8..0d0062d 100644
+index ae00ce8..40f59b6 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce8..0d0062d 100644
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.46"
++version = "20.13.0-quest3.pyro.47"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -668,16 +668,18 @@ index f764033..d636442 100644
                          decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
                      }
 diff --git a/alvr/client_core/src/video_decoder/mod.rs b/alvr/client_core/src/video_decoder/mod.rs
-index 4d2e699..585adf2 100644
+index 4d2e699..7fea2be 100644
 --- a/alvr/client_core/src/video_decoder/mod.rs
 +++ b/alvr/client_core/src/video_decoder/mod.rs
-@@ -1,14 +1,20 @@
+@@ -1,14 +1,22 @@
 +#[cfg(unix)]
 +mod ready_frames;
  #[cfg(target_os = "android")]
  mod android;
 +#[cfg(any(target_os = "android", test))]
 +mod producer_opportunity;
++#[cfg(any(target_os = "android", test))]
++mod producer_prerecord;
  #[cfg(target_os = "android")]
  mod pyrowave;
  #[cfg(target_os = "android")]
@@ -693,7 +695,7 @@ index 4d2e699..585adf2 100644
  
  /// The DecoderConfig payload the server's PyroWave encoder sends in place of SPS/PPS:
  /// u32 width, u32 height, u8 chroma444, u8 full_range, little endian.
-@@ -53,7 +59,10 @@ impl PyroWaveConfig {
+@@ -53,7 +61,10 @@ impl PyroWaveConfig {
  pub fn parse_pyrowave_config(buffer: &[u8]) -> Result<PyroWaveConfig> {
      use alvr_common::anyhow::bail;
      if buffer.len() < 10 {
@@ -705,7 +707,7 @@ index 4d2e699..585adf2 100644
      }
      let width = u32::from_le_bytes(buffer[0..4].try_into().unwrap());
      let height = u32::from_le_bytes(buffer[4..8].try_into().unwrap());
-@@ -68,7 +77,11 @@ pub fn parse_pyrowave_config(buffer: &[u8]) -> Result<PyroWaveConfig> {
+@@ -68,7 +79,11 @@ pub fn parse_pyrowave_config(buffer: &[u8]) -> Result<PyroWaveConfig> {
          0
      };
      // Byte 13 (Experiment 2): 0 = CDF 9/7, 1 = CDF 5/3. Absent on older servers.
@@ -718,7 +720,7 @@ index 4d2e699..585adf2 100644
      let decode_path = match buffer.get(14) {
          Some(&path @ (1 | 2)) => path,
          _ => 0,
-@@ -79,7 +92,11 @@ pub fn parse_pyrowave_config(buffer: &[u8]) -> Result<PyroWaveConfig> {
+@@ -79,7 +94,11 @@ pub fn parse_pyrowave_config(buffer: &[u8]) -> Result<PyroWaveConfig> {
          chroma444: buffer[8] != 0,
          full_range: buffer[9] != 0,
          udp,
@@ -731,7 +733,7 @@ index 4d2e699..585adf2 100644
          wavelet,
          decode_path,
      })
-@@ -99,7 +116,12 @@ pub enum FrameDecision {
+@@ -99,7 +118,12 @@ pub enum FrameDecision {
      Drop,
  }
  
@@ -745,7 +747,7 @@ index 4d2e699..585adf2 100644
      if complete {
          FrameDecision::DecodeComplete
      } else if age < deadline {
-@@ -130,22 +152,269 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
+@@ -130,22 +154,269 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
      let mean = samples.iter().sum::<f32>() / n as f32;
      format!(
          "min {:.2} mean {:.2} p50 {:.2} p95 {:.2} p99 {:.2} max {:.2}",
@@ -1020,7 +1022,7 @@ index 4d2e699..585adf2 100644
      }
  }
  
-@@ -203,6 +472,64 @@ pub struct VideoDecoderSource {
+@@ -203,6 +474,64 @@ pub struct VideoDecoderSource {
  }
  
  impl VideoDecoderSource {
@@ -1085,7 +1087,7 @@ index 4d2e699..585adf2 100644
      /// If a frame is available, return the timestamp and the AHardwareBuffer.
      pub fn get_frame(&mut self) -> Option<(Duration, *mut std::ffi::c_void)> {
          #[cfg(target_os = "android")]
-@@ -229,7 +556,9 @@ fn logcat_info(tag: &str, message: &str) {
+@@ -229,7 +558,9 @@ fn logcat_info(tag: &str, message: &str) {
      }
      let tag = std::ffi::CString::new(tag).unwrap_or_default();
      let text = std::ffi::CString::new(message).unwrap_or_default();
@@ -1096,7 +1098,7 @@ index 4d2e699..585adf2 100644
  }
  
  // report_frame_decoded: (target_timestamp: Duration) -> ()
-@@ -249,7 +578,9 @@ pub fn create_decoder(
+@@ -249,7 +580,9 @@ pub fn create_decoder(
              }
          }
          if config.codec == CodecType::PyroWave
@@ -1107,7 +1109,7 @@ index 4d2e699..585adf2 100644
          {
              let (sink, source) = pyrowave_udp::video_decoder_split(
                  config.clone(),
-@@ -304,6 +635,192 @@ pub fn create_decoder(
+@@ -304,6 +637,192 @@ pub fn create_decoder(
  mod tests {
      use super::*;
  
@@ -1300,7 +1302,7 @@ index 4d2e699..585adf2 100644
      #[test]
      fn config_round_trips_the_encoder_blob() {
          let mut buf = Vec::new();
-@@ -312,53 +829,97 @@ mod tests {
+@@ -312,53 +831,97 @@ mod tests {
          buf.push(1);
          buf.push(0);
          let c = parse_pyrowave_config(&buf).unwrap();
@@ -1411,7 +1413,7 @@ index 4d2e699..585adf2 100644
          assert_eq!(dist(&mut Vec::new()), "-");
      }
  
-@@ -392,4 +953,145 @@ mod tests {
+@@ -392,4 +955,145 @@ mod tests {
          assert_eq!(slot.take(), Some((Duration::from_millis(2), 0x20)));
          assert!(slot.take().is_none());
      }
@@ -1558,7 +1560,7 @@ index 4d2e699..585adf2 100644
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601..569dd56 100644
+index 2e22601..8a77bc3 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -1574,7 +1576,7 @@ index 2e22601..569dd56 100644
  use super::{parse_pyrowave_config, FrameSlot, VideoDecoderConfig};
  use alvr_common::{
      anyhow::{bail, Result},
-@@ -14,13 +14,25 @@ use alvr_common::{
+@@ -14,13 +14,31 @@ use alvr_common::{
  use std::{
      ffi::c_void,
      sync::{
@@ -1592,6 +1594,12 @@ index 2e22601..569dd56 100644
 +/// `debug.q3pw.ready_fd_active`, polled about once per second when ready publication
 +/// was enabled at startup: `0` uses synchronous publication on the same decoder, so an
 +/// A/B comparison can alternate within one session. Anything else keeps early publication.
++fn prerecord_active_property() -> bool {
++    let mut value = [0u8; 92];
++    let len = unsafe { libc::__system_property_get(c"debug.q3pw.prerecord_active".as_ptr(), value.as_mut_ptr().cast()) };
++    len == 1 && value[0] == b'1'
++}
++
 +fn ready_active_property() -> bool {
 +    let mut value = [0u8; 92];
 +    let len = unsafe {
@@ -1603,7 +1611,7 @@ index 2e22601..569dd56 100644
  #[repr(C)]
  struct PyroClient {
      _private: [u8; 0],
-@@ -33,36 +45,64 @@ struct FrameInfo {
+@@ -33,36 +51,74 @@ struct FrameInfo {
      convert_ms: f64,
      total_ms: f64,
      complete: i32,
@@ -1637,6 +1645,16 @@ index 2e22601..569dd56 100644
 +    fn pyroclient_submit_guarded(c: *mut PyroClient, out: *mut *mut c_void,
 +        info: *mut FrameInfo, protected_a: *mut c_void, protected_b: *mut c_void, ready_fd: *mut i32) -> i32;
 +    fn pyroclient_finish_pending(c: *mut PyroClient, info: *mut FrameInfo) -> i32;
++    fn pyroclient_prerecord_enable(c: *mut PyroClient) -> i32;
++    fn pyroclient_prerecord_start(c: *mut PyroClient, data: *const u8, size: usize,
++        out: *mut *mut c_void, info: *mut FrameInfo, a: *mut c_void, b: *mut c_void) -> i32;
++    fn pyroclient_prerecord_pending_status(c: *mut PyroClient) -> i32;
++    fn pyroclient_prerecord_prepare(c: *mut PyroClient, data: *const u8, size: usize,
++        a: *mut c_void, b: *mut c_void, generation: *mut u64) -> i32;
++    fn pyroclient_prerecord_cancel(c: *mut PyroClient, generation: u64) -> i32;
++    fn pyroclient_prerecord_submit(c: *mut PyroClient, generation: u64,
++        out: *mut *mut c_void, info: *mut FrameInfo) -> i32;
++    fn pyroclient_prerecord_queue_ms(c: *mut PyroClient) -> f64;
 +    fn pyroclient_output_release_token(buffer: *mut c_void) -> u64;
 +    fn pyroclient_attach_release_fd(buffer: *mut c_void, token: u64, fd: i32) -> i32;
  }
@@ -1672,7 +1690,7 @@ index 2e22601..569dd56 100644
          self.pending.ready.notify_one();
          Ok(true)
      }
-@@ -71,13 +111,39 @@ impl VideoDecoderSink {
+@@ -71,13 +127,39 @@ impl VideoDecoderSink {
  pub struct VideoDecoderSource {
      running: Arc<AtomicBool>,
      pending: Arc<Pending>,
@@ -1714,7 +1732,7 @@ index 2e22601..569dd56 100644
      }
  }
  
-@@ -85,7 +151,7 @@ impl Drop for VideoDecoderSource {
+@@ -85,7 +167,7 @@ impl Drop for VideoDecoderSource {
      fn drop(&mut self) {
          self.running.store(false, Ordering::Relaxed);
          self.pending.ready.notify_all();
@@ -1723,7 +1741,7 @@ index 2e22601..569dd56 100644
              t.join().ok();
          }
      }
-@@ -99,18 +165,69 @@ pub fn video_decoder_split(
+@@ -99,18 +181,79 @@ pub fn video_decoder_split(
      let pending = Arc::new(Pending {
          frame: Mutex::new(None),
          ready: Condvar::new(),
@@ -1778,6 +1796,16 @@ index 2e22601..569dd56 100644
 +        cfg.chroma444,
 +    );
 +    super::logcat_info("PYROWAVE", &format!("[Q3PW_PRIORITY] policy refresh_hz={refresh_hz} chroma444={} low={low_priority}", cfg.chroma444));
++    let prerecord_len = unsafe { libc::__system_property_get(c"debug.q3pw.prerecord_mode".as_ptr(), property.as_mut_ptr().cast()) };
++    let prerecord_requested = prerecord_len == 1 && property[0] == b'1';
++    let other_mode = handoff || ready_requested || release_requested || async_requested || producer_probe ||
++        [c"debug.q3pw.frame_wait_event", c"debug.q3pw.decode_stages", c"debug.q3pw.surface_probe", c"debug.q3pw.surface_chart"].iter().any(|name| {
++            let n=unsafe { libc::__system_property_get(name.as_ptr(),property.as_mut_ptr().cast()) }; n==1 && property[0]==b'1'
++        });
++    let prerecord_requested = super::producer_prerecord::allowed(prerecord_requested, workers,
++        cfg.width==4160 && cfg.height==2208 && !cfg.chroma444 && cfg.wavelet==2 && cfg.decode_path==2,
++        low_priority, other_mode);
++    super::logcat_info("PYROWAVE", &format!("[Q3PW_PRERECORD_POLICY] eligible={} native420_single_low_worker=true", prerecord_requested as u8));
 +    let report_frame_decoded = Arc::new(report_frame_decoded);
 +    let mut threads = Vec::with_capacity(workers);
 +    for worker_index in 0..workers {
@@ -1796,7 +1824,7 @@ index 2e22601..569dd56 100644
                      cfg.width,
                      cfg.height,
                      cfg.chroma444 as i32,
-@@ -118,6 +235,7 @@ pub fn video_decoder_split(
+@@ -118,6 +261,7 @@ pub fn video_decoder_split(
                      3,
                      cfg.wavelet as i32,
                      cfg.decode_path as i32,
@@ -1804,11 +1832,23 @@ index 2e22601..569dd56 100644
                  )
              };
              if client.is_null() {
-@@ -128,64 +246,149 @@ pub fn video_decoder_split(
+@@ -128,64 +272,246 @@ pub fn video_decoder_split(
                  )));
                  return;
              }
 +            let mut opportunities = super::producer_opportunity::Opportunity::default();
++            let mut warmed = Vec::with_capacity(3);
++            let mut prerecord_enabled = false;
++            let mut prerecord_disabled = !prerecord_requested;
++            let mut prepared: Option<super::producer_prerecord::Prepared> = None;
++            let mut prepared_count = 0u64;
++            let mut prepared_submitted = 0u64;
++            let mut prepared_canceled = 0u64;
++            let mut prepare_deferred = 0u64;
++            let mut probe_frames=0u64;
++            let mut queue_sum=0.0; let mut queue_max=0.0f64;
++            let mut record_sum=0.0; let mut completion_sum=0.0; let mut gpu_sum=0.0;
++            let mut arm_prepared=0u64; let mut arm_control=0u64;
              let mut frames: u64 = 0;
 -            let mut failures: u64 = 0;
              let mut sum_total = 0.0f64;
@@ -1820,8 +1860,33 @@ index 2e22601..569dd56 100644
 +            decoded.set_ready_active(ready_active);
 +            telemetry_started.call_once(|| super::telemetry::start(cfg.width, cfg.height));
              while running.load(Ordering::Relaxed) {
+-                let next = {
 +                if !decoded.wait_producer_ready(|| running.load(Ordering::Relaxed)) { break; }
-                 let next = {
++                if !prerecord_disabled && !prerecord_enabled && warmed.len()==3 {
++                    if unsafe { pyroclient_prerecord_enable(client) } == 0 {
++                        prerecord_enabled=true;
++                        super::logcat_info("PYROWAVE", "[Q3PW_PRERECORD_WORKER] enabled=1 warmed_slots=3 max_gpu=1 max_prepared=1 completion_queries=1 stage_queries=0 wait_preserved=1");
++                    } else {
++                        // Enable failure precedes any experimental start; preserve baseline.
++                        prerecord_disabled=true;
++                        super::logcat_info("PYROWAVE", "[Q3PW_PRERECORD_WORKER] enabled=0 native_gate_rejected=1");
++                    }
++                }
++                let active = prerecord_enabled && prerecord_active_property();
++                // Recheck while holding the ingress lock AFTER the ordinary publication wait.
++                // New arrival cancels B, even across receive-order wrap. No FIFO growth.
++                let cancel = super::producer_prerecord::cancel_before_submit(prepared,
++                    pending.frame.lock().is_some(),active);
++                if let Some(old)=cancel {
++                    if unsafe { pyroclient_prerecord_cancel(client,old.generation) } != 0 {
++                        report_frame_decoded(Err(alvr_common::anyhow::anyhow!("PyroWave prepared cancellation failed"))); break;
++                    }
++                    prepared=None; prepared_canceled+=1; pending.skipped.fetch_add(1,Ordering::Relaxed);
++                }
++                let submitting_prepared=prepared.take();
++                let next = if let Some(p)=submitting_prepared {
++                    Some((p.timestamp,Vec::new(),p.order,None))
++                } else {
                      let mut slot = pending.frame.lock();
                      while slot.is_none() && running.load(Ordering::Relaxed) {
 -                        pending.ready.wait_for(&mut slot, Duration::from_millis(100));
@@ -1835,6 +1900,9 @@ index 2e22601..569dd56 100644
 +                let Some((timestamp, data, order, _received_at)) = next else {
                      continue;
                  };
+-                let pushed = unsafe { pyroclient_push_packet(client, data.as_ptr(), data.len()) };
+-                if pushed < 0 {
+-                    warn!("PyroWave: push_packet failed ({pushed})");
 +                decoded.mark_in_flight();
 +                if ready_requested && ready_checked.elapsed() >= Duration::from_secs(1) {
 +                    ready_checked = Instant::now();
@@ -1847,10 +1915,8 @@ index 2e22601..569dd56 100644
 +                }
 +                // TCP restores one whole codec frame. Do not carry any rejected frame's
 +                // state into the next submission, including sequence-counter wraparound.
-+                unsafe { pyroclient_clear(client) };
-                 let pushed = unsafe { pyroclient_push_packet(client, data.as_ptr(), data.len()) };
--                if pushed < 0 {
--                    warn!("PyroWave: push_packet failed ({pushed})");
++                if !prerecord_enabled { unsafe { pyroclient_clear(client) }; }
++                let pushed = if prerecord_enabled { 1 } else { unsafe { pyroclient_push_packet(client, data.as_ptr(), data.len()) } };
 +                if pushed != 1 {
 +                    warn!("PyroWave: complete TCP frame rejected by codec ({pushed})");
 +                    decoded.clear_in_flight();
@@ -1865,7 +1931,12 @@ index 2e22601..569dd56 100644
 +                let mut ready_fd = -1;
 +                let native_start = producer_probe.then(Instant::now);
 +                let rc = unsafe {
-+                    if ready_active { pyroclient_submit_guarded(client, &mut out, &mut info,
++                    if let Some(p)=submitting_prepared {
++                        pyroclient_prerecord_submit(client,p.generation,&mut out,&mut info)
++                    } else if prerecord_enabled {
++                        pyroclient_prerecord_start(client,data.as_ptr(),data.len(),&mut out,&mut info,
++                            protected[0] as *mut c_void,protected[1] as *mut c_void)
++                    } else if ready_active { pyroclient_submit_guarded(client, &mut out, &mut info,
 +                        protected[0] as *mut c_void, protected[1] as *mut c_void, &mut ready_fd) }
 +                    else { pyroclient_decode_guarded(
 +                        client,
@@ -1875,6 +1946,48 @@ index 2e22601..569dd56 100644
 +                        protected[1] as *mut c_void,
 +                    ) }
 +                };
++                if submitting_prepared.is_some() && rc==0 { prepared_submitted+=1; }
++                if prerecord_enabled && rc==0 && !out.is_null() {
++                    let wait_begin=Instant::now();
++                    let mut attempted=false;
++                    let mut status=unsafe { pyroclient_prerecord_pending_status(client) };
++                    while status==0 && running.load(Ordering::Relaxed) && wait_begin.elapsed()<Duration::from_secs(1) {
++                        if active && !attempted && prepared.is_none() {
++                            // Release the ingress mutex BEFORE native recording or restoration.
++                            let candidate = { let mut slot=pending.frame.lock(); slot.take() };
++                            if let Some(packet)=candidate {
++                                attempted=true;
++                                let guard=decoded.protected_buffers();
++                                let mut generation=0;
++                                let result=unsafe { pyroclient_prerecord_prepare(client,packet.1.as_ptr(),packet.1.len(),
++                                    guard[0] as *mut c_void,guard[1] as *mut c_void,&mut generation) };
++                                if result==1 {
++                                    prepared=Some(super::producer_prerecord::Prepared { timestamp:packet.0,order:packet.2,generation });
++                                    prepared_count+=1;
++                                } else if matches!(result,0|-4|-7) {
++                                    prepare_deferred+=1;
++                                    let mut slot=pending.frame.lock();
++                                    if !super::producer_prerecord::restore_deferred(&mut slot,packet) { pending.skipped.fetch_add(1,Ordering::Relaxed); }
++                                } else if result == -3 {
++                                    // Invalid complete input was never submitted; A is still valid.
++                                    totals.lock().1+=1;
++                                } else {
++                                    // The decoder may be poisoned. Drain below; never publish this A.
++                                    status=-2; break;
++                                }
++                            }
++                        }
++                        thread::sleep(Duration::from_micros(100));
++                        status=unsafe { pyroclient_prerecord_pending_status(client) };
++                    }
++                    // Fence status alone is insufficient: query collection releases native ownership.
++                    let finished=unsafe { pyroclient_finish_pending(client,&mut info) };
++                    if status<0 || status==0 || finished!=0 || !running.load(Ordering::Relaxed) {
++                        decoded.clear_in_flight();
++                        if running.load(Ordering::Relaxed) { report_frame_decoded(Err(alvr_common::anyhow::anyhow!("PyroWave prerecord completion stopped"))); }
++                        break;
++                    }
++                }
 +                let native_end = producer_probe.then(Instant::now);
 +                // Wrap immediately: rejection, superseding and teardown all close.
 +                let ready_fd = (ready_fd >= 0).then(|| unsafe { OwnedFd::from_raw_fd(ready_fd) });
@@ -1883,7 +1996,7 @@ index 2e22601..569dd56 100644
 -                    failures += 1;
 +                    decoded.clear_in_flight();
 +                    totals.lock().1 += 1;
-+                    if matches!(rc, -2 | -5 | -6) {
++                    if matches!(rc, -2 | -5 | -6) || submitting_prepared.is_some() || (prerecord_enabled && rc != -3 && rc != -4) {
 +                        report_frame_decoded(Err(alvr_common::anyhow::anyhow!("PyroWave native submission failed; decoder stopped ({rc})")));
 +                        break;
 +                    }
@@ -1923,7 +2036,19 @@ index 2e22601..569dd56 100644
 +                if published {
 +                    report_frame_decoded(Ok(timestamp));
 +                }
++                if !warmed.contains(&(out as usize)) && warmed.len()<3 { warmed.push(out as usize); }
                  frames += 1;
++                if prerecord_enabled {
++                    probe_frames+=1;
++                    let queue=unsafe { pyroclient_prerecord_queue_ms(client) };
++                    queue_sum+=queue; queue_max=queue_max.max(queue);
++                    record_sum+=info.record_ms; completion_sum+=info.total_ms; gpu_sum+=info.decode_ms+info.convert_ms;
++                    if active { arm_prepared+=1; } else { arm_control+=1; }
++                    if probe_frames%120==0 {
++                        super::logcat_info("PYROWAVE", &format!("[Q3PW_PRERECORD] completed={probe_frames} prepared={prepared_count} submitted={prepared_submitted} canceled={prepared_canceled} deferred={prepare_deferred} rows=120 arm_prepare={arm_prepared} arm_control={arm_control} queue_mean_ms={:.6} queue_max_ms={queue_max:.6} record_mean_ms={:.6} completion_mean_ms={:.6} gpu_mean_ms={:.6} max_gpu=1",queue_sum/120.0,record_sum/120.0,completion_sum/120.0,gpu_sum/120.0));
++                        queue_sum=0.0;queue_max=0.0;record_sum=0.0;completion_sum=0.0;gpu_sum=0.0;arm_prepared=0;arm_control=0;
++                    }
++                }
                  sum_total += info.total_ms;
 -                // TCP delivers every frame whole: all complete, nothing partial or dropped here
 -                super::telemetry::record_frame(info.decode_ms as f32, info.total_ms as f32);
@@ -1952,6 +2077,8 @@ index 2e22601..569dd56 100644
                      );
                  }
              }
++            if let Some(p)=prepared.take() { unsafe { pyroclient_prerecord_cancel(client,p.generation) }; }
++            decoded.clear_in_flight();
              unsafe { pyroclient_destroy(client) };
          }
 -    });

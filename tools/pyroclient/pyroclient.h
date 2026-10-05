@@ -95,8 +95,8 @@ int pyroclient_attach_release_fd(AHardwareBuffer *buffer, uint64_t token, int fd
 // Throw away whatever is queued (e.g. a frame whose deadline passed).
 void pyroclient_clear(pyroclient *c);
 
-// Standalone, default-OFF producer pre-record prototype. No ALVR call site yet.
-// Exclusive creating worker; warm at least one synchronous frame before enable.
+// Default-OFF producer pre-record prototype. Explicit single-worker ALVR mode only.
+// Exclusive creating worker; warm all THREE actual output slots before enable.
 // Requires Haar/compute/420, 3 slots, PYROWAVE_NO_LINEAR_TEX=1, ready/release/stage
 // probes off. Geometry frozen by decoder. Granite stage timestamps disabled for
 // BOTH control and preparation; native GPU/completion queries remain enabled.

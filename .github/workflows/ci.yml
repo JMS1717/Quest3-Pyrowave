@@ -33,6 +33,8 @@ jobs:
           /tmp/native-ready-test
           rustc --edition=2021 --test tools/quest3/producer_opportunity.rs -o /tmp/producer-opportunity-test
           /tmp/producer-opportunity-test
+          rustc --edition=2021 --test tools/quest3/producer_prerecord.rs -o /tmp/producer-prerecord-test
+          /tmp/producer-prerecord-test
       - name: CPU source-chart scale and stripe regression (no VR)
         run: |
           python3 -m pip install --disable-pip-version-check -r tools/requirements-test.txt

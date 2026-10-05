@@ -1,3 +1,4 @@
+#include <algorithm>
 // See pyroclient.h. Ported from tools/pyrowave_android/main.cpp, which proved every step here on
 // the Adreno 740; the harness stays as the record and the scoring tool.
 #include "pyroclient.h"
@@ -1102,7 +1103,8 @@ extern "C" void pyroclient_destroy(pyroclient *c) { if (!c) return; c->destroy()
 // path. Single producer owner, no early publication, exactly three output slots.
 extern "C" int pyroclient_prerecord_enable(pyroclient *c) {
     if (!c || c->pending_submission || c->release_poisoned || c->prerecord_enabled ||
-        !c->planes_initialised || !c->haar || c->chroma444 || c->fragment_path ||
+        !c->planes_initialised || !std::all_of(c->ring.begin(), c->ring.end(), [](const Slot &s) { return !s.first_use; }) ||
+        !c->haar || c->chroma444 || c->fragment_path ||
         c->ready_fences || c->release_fences || c->decode_stage_probe || c->ring.size()!=3 ||
         !getenv("PYROWAVE_NO_LINEAR_TEX") || strcmp(getenv("PYROWAVE_NO_LINEAR_TEX"), "1")) return -1;
     VkCommandBufferAllocateInfo ca = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
@@ -1111,7 +1113,7 @@ extern "C" int pyroclient_prerecord_enable(pyroclient *c) {
     if (pyrowave_decoder_set_timestamp_recording(c->decoder,0)!=PYROWAVE_SUCCESS) return -2;
     c->prerecord_owner=std::this_thread::get_id();
     c->prerecord_enabled=true;
-    LOGI("[Q3PW_PRERECORD_SETUP] standalone_only=1 max_gpu=1 max_prepared=1 granite_gpu_stage_queries=0 completion_queries=1");
+    LOGI("[Q3PW_PRERECORD_SETUP] explicit_api=1 warmed_slots=3 max_gpu=1 max_prepared=1 granite_gpu_stage_queries=0 completion_queries=1");
     return 0;
 }
 
