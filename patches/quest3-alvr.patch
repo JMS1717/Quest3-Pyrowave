@@ -10043,7 +10043,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..869fa779ca44f72241dd5b2423600cba
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da39833633bc7fbac803ebe345c7832fbdb..e28d10535dabb746a234a47094274c83c8b8b243 100644
+index fc176da39833633bc7fbac803ebe345c7832fbdb..59287b8df906824033e1b807b03ebe60b89f7d20 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -53,7 +53,61 @@ pub struct VideoPacket {
@@ -10187,13 +10187,15 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..e28d10535dabb746a234a47094274c83
              ) {
                  Ok(status) => status,
                  Err(e) => {
-@@ -471,6 +530,14 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -471,6 +530,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
          thread.join().ok();
      }
  
 +    // Quest3-Pyrowave: put back any headset display/GPU values the wired helper changed, so
 +    // other VR apps do not inherit the 240 Hz scaled mode. Best effort; the next start retries.
-+    if let Some(connection) = &wired_connection {
++    // A restart this server requested keeps them: the next instance would only re-apply them.
++    let self_restart = crate::SELF_RESTART_REQUESTED.load(std::sync::atomic::Ordering::Relaxed);
++    if let Some(connection) = wired_connection.as_ref().filter(|_| !self_restart) {
 +        if let Err(e) = connection.restore_display() {
 +            warn!("Could not restore the Quest display values: {e:?}");
 +        }
@@ -10202,7 +10204,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..e28d10535dabb746a234a47094274c83
      alvr_common::dbg_connection!("handshake_loop: End");
  }
  
-@@ -629,6 +696,19 @@ fn connection_pipeline(
+@@ -629,6 +698,19 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -10222,7 +10224,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..e28d10535dabb746a234a47094274c83
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +729,9 @@ fn connection_pipeline(
+@@ -649,18 +731,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -10244,7 +10246,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..e28d10535dabb746a234a47094274c83
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -802,6 +873,10 @@ fn connection_pipeline(
+@@ -802,6 +875,10 @@ fn connection_pipeline(
          proto_socket.split(STREAMING_RECV_TIMEOUT).to_con()?;
  
      let mut new_openvr_config = contruct_openvr_config(session_manager_lock.session());
@@ -10255,7 +10257,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..e28d10535dabb746a234a47094274c83
      new_openvr_config.eye_resolution_width = stream_view_resolution.x;
      new_openvr_config.eye_resolution_height = stream_view_resolution.y;
      new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
-@@ -869,10 +944,11 @@ fn connection_pipeline(
+@@ -869,10 +946,11 @@ fn connection_pipeline(
  
      // PyroWave over UDP: a plain socket to the client's address. The same resolution fills
      // openvr_config for the C++ encoder, so the two sides cannot disagree.
@@ -10271,7 +10273,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..e28d10535dabb746a234a47094274c83
      if pyrowave.enabled {
          info!("{pyrowave}");
      }
-@@ -1102,7 +1178,10 @@ fn connection_pipeline(
+@@ -1102,7 +1180,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -10283,7 +10285,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..e28d10535dabb746a234a47094274c83
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1194,7 @@ fn connection_pipeline(
+@@ -1115,6 +1196,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -10291,7 +10293,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..e28d10535dabb746a234a47094274c83
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1211,14 @@ fn connection_pipeline(
+@@ -1131,6 +1213,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -10306,7 +10308,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..e28d10535dabb746a234a47094274c83
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1184,6 +1272,7 @@ fn connection_pipeline(
+@@ -1184,6 +1274,7 @@ fn connection_pipeline(
          let disconnect_notif = Arc::clone(&disconnect_notif);
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
@@ -10314,7 +10316,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..e28d10535dabb746a234a47094274c83
          move || {
              let mut disconnection_deadline = Instant::now() + KEEPALIVE_TIMEOUT;
              while is_streaming(&client_hostname) {
-@@ -1299,6 +1388,9 @@ fn connection_pipeline(
+@@ -1299,6 +1390,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -10324,7 +10326,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..e28d10535dabb746a234a47094274c83
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1378,6 +1470,22 @@ fn connection_pipeline(
+@@ -1378,6 +1472,22 @@ fn connection_pipeline(
                              };
  
                          match reserved {
@@ -10347,7 +10349,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..e28d10535dabb746a234a47094274c83
                              ReservedClientControlPacket::CustomInteractionProfile {
                                  input_ids,
                                  ..
-@@ -1552,9 +1660,10 @@ mod beta_tests {
+@@ -1552,9 +1662,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -10361,10 +10363,31 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..e28d10535dabb746a234a47094274c83
  
      #[test]
 diff --git a/alvr/server_core/src/lib.rs b/alvr/server_core/src/lib.rs
-index efa67b1d107def4e3e6d9cec00e6056dbece2380..b79e5bdf26d035bf9fdce6917e030410daa2e55a 100644
+index efa67b1d107def4e3e6d9cec00e6056dbece2380..ed3c31b5b43d9d9a178673a059250e1aba9312d1 100644
 --- a/alvr/server_core/src/lib.rs
 +++ b/alvr/server_core/src/lib.rs
-@@ -527,7 +527,10 @@ impl ServerCoreContext {
+@@ -54,6 +54,12 @@ use tracking::TrackingManager;
+ 
+ static FILESYSTEM_LAYOUT: OnceLock<afs::Layout> = OnceLock::new();
+ 
++/// Set when this server asked the dashboard to restart SteamVR. The shutdown that follows is a
++/// restart, so the wired helper keeps the Quest display values for the next server instead of
++/// restoring and re-applying them (two client restarts and a panel round trip).
++pub(crate) static SELF_RESTART_REQUESTED: std::sync::atomic::AtomicBool =
++    std::sync::atomic::AtomicBool::new(false);
++
+ pub fn initialize_environment(layout: afs::Layout) {
+     FILESYSTEM_LAYOUT.set(layout).unwrap();
+ }
+@@ -153,6 +159,7 @@ pub fn notify_restart_driver() {
+         .next()
+         .is_some()
+     {
++        SELF_RESTART_REQUESTED.store(true, std::sync::atomic::Ordering::Relaxed);
+         alvr_events::send_event(EventType::ServerRequestsSelfRestart);
+     } else {
+         error!("Cannot restart SteamVR. No dashboard process found on local device.");
+@@ -527,7 +534,10 @@ impl ServerCoreContext {
              self.connection_context
                  .bitrate_manager
                  .lock()
@@ -11477,7 +11500,7 @@ index a0356d3dd4231a40ffe4b1bce4fb9b1427528aeb..230c7517ac3165b6b9f75cd0fe6c1d0c
  public:
      VideoEncoderPyroWave(
 diff --git a/alvr/server_openvr/src/lib.rs b/alvr/server_openvr/src/lib.rs
-index 861f726c74e38cec9058513ab412ceb08ae2e8bf..713a470f89645e6d7d8a93db68ff726257e95102 100644
+index 861f726c74e38cec9058513ab412ceb08ae2e8bf..e277d11fe8271552f711118c8c26c817b4d4cbf8 100644
 --- a/alvr/server_openvr/src/lib.rs
 +++ b/alvr/server_openvr/src/lib.rs
 @@ -50,6 +50,7 @@ use std::{
@@ -11488,6 +11511,52 @@ index 861f726c74e38cec9058513ab412ceb08ae2e8bf..713a470f89645e6d7d8a93db68ff7262
      alvr_session::beta::pyrowave_effective(
          &alvr_server_core::settings(),
          &alvr_session::beta::process_env,
+@@ -663,6 +664,36 @@ extern "C" fn report_present(timestamp_ns: u64, offset_ns: u64) {
+     }
+ }
+ 
++/// `ALVR_PACING_SPIN_US=<u64>`: sleep until this long before the virtual vsync, then spin the rest.
++/// `thread::sleep` overshoots by a fraction of a millisecond on Windows, so frame starts jittered
++/// about +/-0.45 ms (p5-p95, 240 Hz) and at 144 Hz the median interval was 7.03 ms for a 6.94 ms
++/// period: the self-correcting clock then skipped frames (142.3 instead of 144 per second). Spinning
++/// costs at most this long of one core per frame. Default 0 keeps the plain sleep.
++static PACING_SPIN: Lazy<Duration> = Lazy::new(|| {
++    Duration::from_micros(
++        std::env::var("ALVR_PACING_SPIN_US")
++            .ok()
++            .and_then(|v| v.parse::<u64>().ok())
++            .unwrap_or(0)
++            .min(3000),
++    )
++});
++
++/// Sleep for `duration`, spinning the final `spin` of it for a precise wake-up.
++fn precise_sleep(duration: Duration, spin: Duration) {
++    if spin.is_zero() {
++        thread::sleep(duration);
++        return;
++    }
++    let deadline = Instant::now() + duration;
++    if let Some(coarse) = duration.checked_sub(spin) {
++        thread::sleep(coarse);
++    }
++    while Instant::now() < deadline {
++        std::hint::spin_loop();
++    }
++}
++
+ extern "C" fn wait_for_vsync() {
+     // Default 120Hz-ish wait if StatisticsManager isn't up.
+     // We use 120Hz-ish so that SteamVR doesn't accidentally get
+@@ -680,7 +711,7 @@ extern "C" fn wait_for_vsync() {
+             .video
+             .enforce_server_frame_pacing
+         {
+-            thread::sleep((duration + *PACING_DELAY).saturating_sub(*PACING_HEADROOM));
++            precise_sleep((duration + *PACING_DELAY).saturating_sub(*PACING_HEADROOM), *PACING_SPIN);
+         } else {
+             thread::yield_now();
+         }
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
 index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8b479a47a 100644
 --- a/alvr/session/src/beta.rs
