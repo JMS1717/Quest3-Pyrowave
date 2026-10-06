@@ -94,7 +94,10 @@ state before testing; the private handoff includes a fresh disk snapshot.
 Balanced and Strong peripheral profiles (about 24% and 35% fewer encoded pixels,
 candidates), an optical latency stamp and a no-decode cadence probe. Fused final
 colour is #4's Quest-verified implementation ([FUSE-COLOR.md](FUSE-COLOR.md)): byte-exact,
-no live 120 Hz gain, off. The hardware plan now starts with the 207 Hz lobby cadence.
+no live 120 Hz gain, off. #8 adds an experimental fused dequant + level-0 Haar kernel behind
+`debug.q3pw.dequant_haar` with a software exact-pixel gate; the client refuses it while fused
+colour is active. The hardware plan starts with the Quest `dequant_haar_gate` and the 207 Hz
+lobby cadence.
 
 Use the [next overnight plan](NEXT-OVERNIGHT.md) and the
 [October 5 scorecard](WHOLE-STACK-SCORECARD.md). The server already submits

@@ -96,6 +96,46 @@ jobs:
           g++ -std=c++17 -O2 -Wall -Wextra -Wno-missing-field-initializers -Werror tools/pyroclient/fuse_color_vk_test.cpp -lvulkan -o /tmp/fuse-color-vk-test
           /tmp/fuse-color-vk-test /tmp/idwt-fp16-0.spv 0
           /tmp/fuse-color-vk-test /tmp/idwt-fp16-1.spv 1
+  dequant_haar_gate:
+    # Software Vulkan (lavapipe) proves the fused dequant + level-0 Haar kernel writes the same
+    # planes as the separate dequant and final Haar passes for the same bitstream, and that the
+    # decode stays above 30 dB luma PSNR against the source.
+    runs-on: ubuntu-24.04
+    needs: tests
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct production decoder source
+        run: sh tools/ci/fetch_sources.sh "$XRWIRED_INPUTS/research"
+      - name: Software Vulkan and native build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends cmake ninja-build mesa-vulkan-drivers libvulkan-dev
+      - name: Linux PyroWave library
+        run: |
+          PW="$XRWIRED_INPUTS/research/pyrowave"
+          python3 tools/ci/check_shader_manifest.py "$PW"
+          cmake -S "$PW" -B "$PW/build-linux" -G Ninja -DCMAKE_BUILD_TYPE=Release -DPYROWAVE_DEVEL=OFF -DPYROWAVE_FP32_MATH=ON
+          cmake --build "$PW/build-linux" --target pyrowave-shared
+      - name: Fused dequant exact-pixel gate (lavapipe, no headset)
+        env:
+          GATE_PACKET_DIR: /tmp/dequant-haar-gate
+        run: |
+          PW="$XRWIRED_INPUTS/research/pyrowave"
+          g++ -std=c++17 -O2 -Wall -Wextra -Wno-missing-field-initializers -I"$PW" -I"$PW/Granite/third_party/khronos/vulkan-headers/include" \
+            tools/pyroclient/dequant_haar_gate.cpp -o /tmp/dequant_haar_gate -L"$PW/build-linux" -lpyrowave-shared -lvulkan -Wl,-rpath,"$PW/build-linux"
+          export VK_ICD_FILENAMES=$(ls /usr/share/vulkan/icd.d/lvp_icd*.json | head -n 1)
+          mkdir -p "$GATE_PACKET_DIR"
+          set -o pipefail
+          grep -m1 'model name' /proc/cpuinfo || true
+          grep -o -m1 'avx512[a-z]*' /proc/cpuinfo | head -n 1 || echo "no avx512"
+          # PyroWave's encoder and dequant need 16-64 lane subgroups, so lavapipe runs with
+          # 512-bit vectors (16 lanes); at 256 bits the dequant scan is wrong by design. Lavapipe
+          # returns zero from texture and texel-buffer fetches in lanes 8-15 of shaders that use
+          # subgroup size control, and its linear-texture payload path crashes, so decode reads
+          # payloads through SSBOs (PYROWAVE_FORCE_SSBO). This configuration decodes faithfully.
+          LP_NATIVE_VECTOR_WIDTH=512 PYROWAVE_NO_LINEAR_TEX=1 PYROWAVE_FORCE_SSBO=1 \
+            /tmp/dequant_haar_gate 512 320 131072 | tee /tmp/dequant_haar_gate.txt
+          grep -q DEQUANT_HAAR_GATE_PASS /tmp/dequant_haar_gate.txt
   publication_tests:
     runs-on: ubuntu-24.04
     needs: tests
@@ -211,7 +251,7 @@ jobs:
           (cd /tmp/quest3-notices && zip -qr "$GITHUB_WORKSPACE/out/LICENSES.zip" LICENSES)
           cp "$XRWIRED_INPUTS/research/ALVR-20.13.0/build/alvr_client_android/alvr_client_android.apk" out/Quest3-Pyrowave-dev.apk
           cp "$XRWIRED_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" out/
-          cp tools/pyroclient/prerecord_gpu_test tools/pyrowave_android/pyrowave_android tools/udptest/udprecv-android tools/pyroclient/pyroclient_test tools/pyroclient/release_fence_gpu_test tools/pyroclient/ready_fence_gpu_test tools/pyroclient/libpyroclient.so "$XRWIRED_INPUTS/research/pyrowave/build-android/libpyrowave-shared.so" out/
+          cp tools/pyroclient/prerecord_gpu_test tools/pyrowave_android/pyrowave_android tools/udptest/udprecv-android tools/pyroclient/pyroclient_test tools/pyroclient/dequant_haar_gate tools/pyroclient/release_fence_gpu_test tools/pyroclient/ready_fence_gpu_test tools/pyroclient/libpyroclient.so "$XRWIRED_INPUTS/research/pyrowave/build-android/libpyrowave-shared.so" out/
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs out/Quest3-Pyrowave-dev.apk > out/APK-CERTIFICATE.txt
           (cd out && sha256sum * > SHA256SUMS.txt)
       - uses: actions/upload-artifact@v4
