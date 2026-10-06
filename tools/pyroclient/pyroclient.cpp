@@ -1290,6 +1290,18 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
         const bool explicit_v2 = __system_property_get("debug.q3pw.cdf53v2", v2_prop) > 0 &&
                                  v2_prop[0] >= '0' && v2_prop[0] <= '3' && !v2_prop[1];
         c->cdf53v2_requested = explicit_v2 ? v2_prop[0] - '0' : 3;
+        // A/B only: debug.q3pw.packed_levels "2" keeps the quad-packed layout to levels 0-1 (default
+        // levels 0-3) for haar32 mode 2-3 and Decoder V2 mode 3.
+        char packed_prop[PROP_VALUE_MAX] = {};
+        if (__system_property_get("debug.q3pw.packed_levels", packed_prop) > 0 &&
+            (!strcmp(packed_prop, "2") || !strcmp(packed_prop, "4"))) {
+            setenv("PYROWAVE_HAAR32_PACKED_LEVELS", packed_prop, 1);
+            setenv("PYROWAVE_V2_PACKED_LEVELS", packed_prop, 1);
+        } else {
+            unsetenv("PYROWAVE_HAAR32_PACKED_LEVELS");
+            unsetenv("PYROWAVE_V2_PACKED_LEVELS");
+        }
+        LOGI("[Q3PW_PACKED_LEVELS] %s", packed_prop[0] ? packed_prop : "default");
     }
     c->ring.resize(ring_size < 2 ? 2 : ring_size);
     if (!c->create_device() || !c->create_planes() || !c->create_convert()) { c->destroy(); delete c; return nullptr; }
