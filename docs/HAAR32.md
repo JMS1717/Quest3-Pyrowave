@@ -97,6 +97,8 @@ GPU level default, thermal status 0. Fresh = newly decoded frames shown per seco
 | | **mode 3** | **180.4 / 178.5** | **2.77** | **5.17** | **3.78** |
 | 0 vs 3 | mode 0 | 121.5 / 120.3 | 5.55 | 7.94 | 5.76 |
 | | **mode 3** | **174.9 / 160.1** | **2.96** | **5.45** | **3.94** |
+| 3 vs 0, PC render 3072x3216 per eye, Adaptive downscale to 2080x2208 | mode 3 | 174.8 (mean) | 2.90 | - | - |
+| | mode 0 | 120.1 (mean) | 5.58 | - | - |
 
 Mode 3 delivers 160-180 fresh frames/s at 207 Hz against about 120 for mode 0 (+40-50 %), and
 ALVR's pipeline-latency estimate fell from 39.3 to 34.6 ms in the 1-vs-3 cell (an estimate, not
