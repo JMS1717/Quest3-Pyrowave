@@ -31,6 +31,8 @@ struct Arm {
     const char *env_value = nullptr;
     // Luma plane is RGBA8 at half size, one 2x2 pixel quad per texel (decoder mode 3).
     bool packed_luma = false;
+    // Plane 1 is RG8 holding Cb and Cr (decoder mode 4); plane 2 is passed but not written.
+    bool dual_chroma = false;
 };
 
 pyrowave_result no_change(pyrowave_decoder) { return PYROWAVE_SUCCESS; }
@@ -39,6 +41,7 @@ const Arm ARMS[] = {
     { "haar32", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 1); } },
     { "haar32q", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 2); } },
     { "haar32qo", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 3); }, nullptr, nullptr, true },
+    { "haar32qd", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 4); }, nullptr, nullptr, true, true },
     // Decoder V2 register-only inverse CDF 5/3; run with AB_WAVELET=53 so the base decodes 5/3 too.
     { "cdf53v2", [](pyrowave_decoder d) { return pyrowave_decoder_set_cdf53v2(d, 1); } },
     { "cdf53v2q", [](pyrowave_decoder d) { return pyrowave_decoder_set_cdf53v2(d, 2); }, nullptr, nullptr, true },
@@ -61,6 +64,7 @@ struct Session {
     VkQueryPool queries = VK_NULL_HANDLE;
     bool initialized_layout = false;
     bool packed_luma = false;
+    bool dual_chroma = false;
 };
 
 Session create_session(const Gpu &g, uint32_t w, uint32_t h, const Arm *arm,
@@ -81,12 +85,14 @@ Session create_session(const Gpu &g, uint32_t w, uint32_t h, const Arm *arm,
     s.packed_luma = arm && arm->packed_luma;
     const VkFormat luma_format = s.packed_luma ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R8_UNORM;
     s.planes[0] = s.packed_luma ? create_image(g, luma_format, w / 2, h / 2, usage) : create_image(g, luma_format, w, h, usage);
-    s.planes[1] = create_image(g, VK_FORMAT_R8_UNORM, w / 2, h / 2, usage);
+    s.dual_chroma = arm && arm->dual_chroma;
+    const VkFormat chroma_format = s.dual_chroma ? VK_FORMAT_R8G8_UNORM : VK_FORMAT_R8_UNORM;
+    s.planes[1] = create_image(g, chroma_format, w / 2, h / 2, usage);
     s.planes[2] = create_image(g, VK_FORMAT_R8_UNORM, w / 2, h / 2, usage);
     for (int i = 0; i < 3; i++) {
         pyrowave_image_view &v = s.buffers.planes[i];
         v.image = s.planes[i].image; v.width = int(s.planes[i].width); v.height = int(s.planes[i].height);
-        v.image_format = v.view_format = i == 0 ? luma_format : VK_FORMAT_R8_UNORM;
+        v.image_format = v.view_format = i == 0 ? luma_format : i == 1 ? chroma_format : VK_FORMAT_R8_UNORM;
         v.mip_level = 0; v.layer = 0; v.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
         v.swizzle = VK_COMPONENT_SWIZZLE_IDENTITY; v.layout = VK_IMAGE_LAYOUT_GENERAL;
     }
@@ -125,7 +131,8 @@ double decode(const Gpu &g, Session &s, const std::vector<std::vector<uint8_t>> 
     if (readback) {
         for (int i = 0; i < 3; i++) {
             offsets[i] = total;
-            total += VkDeviceSize(s.planes[i].width) * s.planes[i].height * (i == 0 && s.packed_luma ? 4 : 1);
+            total += VkDeviceSize(s.planes[i].width) * s.planes[i].height *
+                     (i == 0 && s.packed_luma ? 4 : i == 1 && s.dual_chroma ? 2 : 1);
         }
         VkBufferCreateInfo bi = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
         bi.size = total; bi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
@@ -191,6 +198,16 @@ double decode(const Gpu &g, Session &s, const std::vector<std::vector<uint8_t>> 
                 for (size_t y = 0; y < th * 2; y++)
                     for (size_t x = 0; x < tw * 2; x++)
                         (*readback)[i][y * tw * 2 + x] = base[((y / 2) * tw + x / 2) * 4 + (x & 1) + 2 * (y & 1)];
+            } else if (i == 1 && s.dual_chroma) {
+                // Split RG back into the Cb and Cr planes.
+                (*readback)[1].resize(tw * th);
+                (*readback)[2].resize(tw * th);
+                for (size_t k = 0; k < tw * th; k++) {
+                    (*readback)[1][k] = base[2 * k];
+                    (*readback)[2][k] = base[2 * k + 1];
+                }
+            } else if (i == 2 && s.dual_chroma) {
+                continue;
             } else
                 (*readback)[i].assign(base, base + tw * th);
         }
@@ -250,16 +267,18 @@ double percentile(std::vector<double> v, double p) {
 // arms decode different bitstreams. Prints each arm's luma PSNR against the synthetic source.
 int run_wavelets(uint32_t w, uint32_t h, size_t bytes, int blocks, int frames, bool stages) {
     struct WArm { const char *name; pyrowave_wavelet wavelet; const Arm *arm; bool fragment; };
-    const Arm *mode3 = nullptr, *v2 = nullptr, *v2q = nullptr, *v2qp = nullptr;
+    const Arm *mode3 = nullptr, *mode4 = nullptr, *v2 = nullptr, *v2q = nullptr, *v2qp = nullptr;
     for (const Arm &a : ARMS)
     {
         if (!strcmp(a.name, "haar32qo")) mode3 = &a;
+        if (!strcmp(a.name, "haar32qd")) mode4 = &a;
         if (!strcmp(a.name, "cdf53v2")) v2 = &a;
         if (!strcmp(a.name, "cdf53v2q")) v2q = &a;
         if (!strcmp(a.name, "cdf53v2qp")) v2qp = &a;
     }
     const WArm warms[] = { { "haar", PYROWAVE_WAVELET_HAAR, nullptr, false },
                            { "haar_mode3", PYROWAVE_WAVELET_HAAR, mode3, false },
+                           { "haar_mode4", PYROWAVE_WAVELET_HAAR, mode4, false },
                            { "cdf53", PYROWAVE_WAVELET_CDF53, nullptr, false },
                            { "cdf97", PYROWAVE_WAVELET_CDF97, nullptr, false },
                            { "cdf97_frag", PYROWAVE_WAVELET_CDF97, nullptr, true },

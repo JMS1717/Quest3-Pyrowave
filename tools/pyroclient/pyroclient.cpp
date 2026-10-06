@@ -153,6 +153,8 @@ struct pyroclient {
     int cdf53v2_requested = 0;
     int cdf53v2_mode = 0;
     bool packed_luma = false;
+    // Haar mode 4: plane 1 is RG8 holding Cb and Cr; plane 2 is allocated but not written.
+    bool dual_chroma = false;
 
     // Conversion pass.
     VkSampler sampler = VK_NULL_HANDLE;
@@ -529,14 +531,16 @@ bool pyroclient::create_planes() {
     cdf53v2_mode = 0;
     for (int mode = legall53 ? cdf53v2_requested : 0; mode > 0 && !cdf53v2_mode; mode--)
         if (pyrowave_decoder_set_cdf53v2(decoder, mode) == PYROWAVE_SUCCESS) cdf53v2_mode = mode;
-    packed_luma = haar32_mode == 3 || cdf53v2_mode >= 2;
-    LOGI("[Q3PW_HAAR32] requested=%d active=%d packed_luma=%d", haar32_requested, haar32_mode, packed_luma ? 1 : 0);
+    packed_luma = haar32_mode >= 3 || cdf53v2_mode >= 2;
+    dual_chroma = haar32_mode == 4;
+    LOGI("[Q3PW_HAAR32] requested=%d active=%d packed_luma=%d dual_chroma=%d", haar32_requested, haar32_mode,
+         packed_luma ? 1 : 0, dual_chroma ? 1 : 0);
     LOGI("[Q3PW_CDF53V2] requested=%d active=%d", legall53 ? cdf53v2_requested : 0, cdf53v2_mode);
 
     const uint32_t cw = chroma444 ? width : width / 2, ch = chroma444 ? height : height / 2;
     for (int i = 0; i < 3; i++) {
         const bool packed = i == 0 && packed_luma;
-        const VkFormat format = packed ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R8_UNORM;
+        const VkFormat format = packed ? VK_FORMAT_R8G8B8A8_UNORM : i == 1 && dual_chroma ? VK_FORMAT_R8G8_UNORM : VK_FORMAT_R8_UNORM;
         if (!create_plain_image(gpu, device, format, packed ? width / 2 : i ? cw : width, packed ? height / 2 : i ? ch : height,
                                 VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
                                     | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
@@ -583,9 +587,9 @@ bool pyroclient::create_convert() {
     cpi.stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     cpi.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT; cpi.stage.module = module; cpi.stage.pName = "main";
     // Constant 0: the luma plane is packed (see create_planes).
-    const VkBool32 packed_constant = packed_luma ? VK_TRUE : VK_FALSE;
-    const VkSpecializationMapEntry packed_entry = { 0, 0, sizeof(VkBool32) };
-    const VkSpecializationInfo packed_info = { 1, &packed_entry, sizeof(VkBool32), &packed_constant };
+    const VkBool32 packed_constant[2] = { packed_luma ? VK_TRUE : VK_FALSE, dual_chroma ? VK_TRUE : VK_FALSE };
+    const VkSpecializationMapEntry packed_entry[2] = { { 0, 0, sizeof(VkBool32) }, { 1, sizeof(VkBool32), sizeof(VkBool32) } };
+    const VkSpecializationInfo packed_info = { 2, packed_entry, sizeof packed_constant, packed_constant };
     cpi.stage.pSpecializationInfo = &packed_info;
     cpi.layout = pipeline_layout;
     VkResult pr = vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &cpi, nullptr, &pipeline);
@@ -623,9 +627,9 @@ bool pyroclient::create_fragment_convert() {
     VkResult created = vkCreateShaderModule(device, &sm, nullptr, &modules[1]);
     if (created != VK_SUCCESS) { vkDestroyShaderModule(device, modules[0], nullptr); return false; }
     // Fragment constant 0: the luma plane is packed (see create_planes).
-    const VkBool32 packed_constant = packed_luma ? VK_TRUE : VK_FALSE;
-    const VkSpecializationMapEntry packed_entry = { 0, 0, sizeof(VkBool32) };
-    const VkSpecializationInfo packed_info = { 1, &packed_entry, sizeof(VkBool32), &packed_constant };
+    const VkBool32 packed_constant[2] = { packed_luma ? VK_TRUE : VK_FALSE, dual_chroma ? VK_TRUE : VK_FALSE };
+    const VkSpecializationMapEntry packed_entry[2] = { { 0, 0, sizeof(VkBool32) }, { 1, sizeof(VkBool32), sizeof(VkBool32) } };
+    const VkSpecializationInfo packed_info = { 2, packed_entry, sizeof packed_constant, packed_constant };
     VkPipelineShaderStageCreateInfo stages[2] = {};
     for (int i = 0; i < 2; i++) {
         stages[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -1277,12 +1281,12 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
     char fuse_prop[PROP_VALUE_MAX] = {};
     __system_property_get("debug.q3pw.fuse_color", fuse_prop);
     {
-        // Multilevel Haar (docs/HAAR32.md), default mode 3; "0" to "3" selects a mode. Fused colour
+        // Multilevel Haar (docs/HAAR32.md), default mode 3; "0" to "4" selects a mode. Fused colour
         // and fused dequant replace passes it owns, so requesting either turns the default off.
         char haar32_prop[PROP_VALUE_MAX] = {}, dequant_haar_prop[PROP_VALUE_MAX] = {};
         __system_property_get("debug.q3pw.dequant_haar", dequant_haar_prop);
         const bool explicit_mode = __system_property_get("debug.q3pw.haar32", haar32_prop) > 0 &&
-                                   haar32_prop[0] >= '0' && haar32_prop[0] <= '3' && !haar32_prop[1];
+                                   haar32_prop[0] >= '0' && haar32_prop[0] <= '4' && !haar32_prop[1];
         c->haar32_requested = explicit_mode ? haar32_prop[0] - '0'
                               : !strcmp(fuse_prop, "1") || !strcmp(dequant_haar_prop, "1") ? 0 : 3;
         // Decoder V2 for CDF 5/3 (docs/DECODER-V2.md), default mode 3; "0" to "3" selects a mode.
