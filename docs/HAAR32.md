@@ -155,8 +155,9 @@ and 3; `dqprobe`, `h32nostore` and `h32nofetch` are the cost probes (`AB_SKIP_GA
 1. **Dequant: find what costs the remaining ~1.3 ms.** Rejected 2026-10-06: decoding the bit
    planes with three word loads and an 8x8 bit transpose instead of one byte load and 16 bit
    operations per plane (CPU-verified, saved privately as a patch). Standalone, mode 3 with it ran
-   3.04 ms against 3.005-3.04 ms without, so the plane loop is not the cost. Probe the per-block
-   header loads, the subgroup scans and the barriers next (`qo_nodqstore`-style probes).
+   3.04 ms against 3.005-3.04 ms without, so the plane loop is not the cost. Mode 3 dequant without its
+   stores measured 1.09 ms (probe, one block at 640 MHz), so stores are now only about 0.25 ms;
+   the rest is per-block header loads, subgroup scans and barriers. Probe those next.
 2. **Chroma stores.** With luma packed, the two R8 chroma planes now take twice the luma plane's
    stores. Interleaving Cb/Cr into one RG8 plane halves them and keeps hardware bilinear upsampling
    in the conversion pass.
