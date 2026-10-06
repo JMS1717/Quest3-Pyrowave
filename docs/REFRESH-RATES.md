@@ -2,7 +2,7 @@
 
 Primary reference: [Meta display refresh documentation](https://developers.meta.com/vr/documentation/unity/unity-set-disp-freq/), updated August 27, 2026.
 
-HorizonOS v2.7+ supports integer 72–207 Hz on Quest 3 through standard refresh requests.
+HorizonOS v2.7+ supports integer 72-207 Hz on Quest 3 through standard refresh requests.
 Quest 3S does not have these extended modes. Legacy enumeration can omit valid modes.
 The APK therefore tests requests rather than adding a hard-coded capability claim.
 
@@ -14,24 +14,48 @@ APK after changing the environment to run a fresh probe. Startup can briefly cha
 
 ## 240 Hz developer experiment
 
-Above 207 Hz the panel requires display scaling: lower-resolution display payload followed by
-hardware upscaling. Fine detail changes even with a full-chroma encoded stream. Keep these results
-separate from full-resolution 207 Hz measurements.
-
-The APK does not set the following properties. A developer can opt into a scoped experiment:
+Above 207 Hz the panel requires display scaling. HorizonOS exposes the 4128x2208 panel modes up to
+207 Hz; 240 Hz exists only as a 3104x1664 mode (1552x1664 per eye) that the panel upscales. Fine
+detail changes even with a full-chroma encoded stream, so keep 240 Hz results separate from
+full-resolution 207 Hz measurements. The APK does not set these properties.
 
 ```powershell
-python -m tools.quest3.refresh_scaling status
-python -m tools.quest3.refresh_scaling enable --state results/local/scaling-before.json
-# Reopen APK, inspect capabilities and capture effective period before streaming measurements.
-python -m tools.quest3.refresh_scaling restore --state results/local/scaling-before.json
+python -m tools.quest3.refresh_scaling --serial <device> status
+python -m tools.quest3.refresh_scaling --serial <device> enable --state results/local/scaling-before.json
+# Reopen the APK, choose 240 Hz on the PC, stream, then:
+python -m tools.quest3.refresh_scaling --serial <device> restore --state results/local/scaling-before.json
 ```
 
-The helper verifies a Quest 3 device, saves both prior values, sets
-`debug.oculus.forceDisplayScaling=1` and `debug.oculus.refreshRate=240`, and restores saved values.
-This is an explicit system-setting change; a property value is not proof of scanout. Do not leave
-the experiment enabled between benchmark sessions. No root, reboot, persistent property or clock
-forcing is required by this recipe.
+`enable` saves both prior values, sets `debug.oculus.forceDisplayScaling=1` and
+`debug.oculus.refreshRate=240`, and confirms the panel mode. `restore` puts the saved values back and
+confirms the panel left the scaled mode. No root, reboot, persistent property or clock forcing.
+Do not leave the experiment enabled between sessions: until it is restored, every VR app, including
+Virtual Desktop, runs in the 240 Hz scaled mode.
+
+### How the override is applied (measured October 6)
+
+- The properties are applied when they **change while the display is awake**. A change made while
+  the headset sleeps is not picked up, and later sleep/wake cycles do not re-read it. The helper
+  wakes the headset first and, if the properties already hold the target, steps through the
+  opposite values so a change event occurs.
+- `dumpsys SurfaceFlinger` can report `activeMode=240` while the panel still runs 4128x2208 at
+  120 Hz. The kernel's `dsi_display_set_mode` log line (`hactive`, `vactive`, `fps`) is the reliable
+  signal, and it is what the helper checks.
+- Once in the scaled mode, restoring the properties while asleep left the panel at 240 Hz through
+  four sleep/wake cycles. Changing them again while awake returned it to 4128x2208 at 120 Hz.
+
+### Runtime and SteamVR acceptance
+
+With the override active, the lobby ran at 240 Hz: `xrGetDisplayRefreshRateFB` reported 240.0,
+`predicted_display_period` was 4,166,816 ns and VrApi logged 240/240 FPS. The request API still
+refuses 240 (`ERROR_DISPLAY_REFRESH_RATE_UNSUPPORTED_FB`), and every other request "succeeds"
+without changing the rate. `.55` therefore confirmed no rate and the server refused a 240 Hz session.
+
+From `.56` the client treats a refused request as confirmed when the runtime already runs that rate
+and three frame periods match. It reports `[80, 240]`, the server accepts `preferred_fps=240`, and
+SteamVR's display frequency is 240: the live session read back `openvr_config.refresh_rate=240` and
+the server rendered and encoded a median 244 frames/s. Streaming results are in
+[HIGH-REFRESH.md](HIGH-REFRESH.md).
 
 Thermal throttling can reduce the rate. `[Q3PW_EFFECTIVE]` records runtime/frame-period changes;
 client FPS and dropped frames establish delivery separately. Physical optical latency requires

@@ -1,0 +1,121 @@
+{
+ "date": "2026-10-06",
+ "source": "79e38af78bade011710075b62476efd000a533df",
+ "ci_run": 37396414259,
+ "device": "Quest 3, Adreno 740 (standalone pyroclient_test / dequant_haar_gate in /data/local/tmp; no APK install)",
+ "property": "debug.q3pw.dequant_haar (PR #8 fused dequant + level-0 Haar), default off",
+ "gate": {
+  "command": "GATE_MIN_PSNR=30 dequant_haar_gate",
+  "exit": 0,
+  "cases": [
+   "unsupported 4:4:4 rejected=1, CDF 9/7 rejected=1",
+   "case 512x320 cap 131072",
+   "luma_psnr=54.31 dB distinct_luma=256 luma_max_diff=1 luma_differing=1203/163840 chroma_max_diff=0 PASS",
+   "case 4160x2208 cap 2083333",
+   "luma_psnr=37.93 dB distinct_luma=256 luma_max_diff=1 luma_differing=1067/9185280 chroma_max_diff=0 PASS"
+  ]
+ },
+ "default_path_identical_to_55": true,
+ "timing_fixture": "saved native stereo Haar fixture, 4160x2208 4:2:0, 80 frames per run, ABBAABBA",
+ "runs": [
+  {
+   "arm": "A",
+   "dequant_haar": "0",
+   "gpu_decode_p50_ms": 5.28526,
+   "gpu_decode_p99_ms": 6.459167,
+   "fence_p50_ms": 7.778907,
+   "fence_p99_ms": 8.849272,
+   "pixels_differ_vs_first_off": null,
+   "max_channel_error": null,
+   "pixels": null
+  },
+  {
+   "arm": "B",
+   "dequant_haar": "1",
+   "gpu_decode_p50_ms": 5.246302,
+   "gpu_decode_p99_ms": 6.255625,
+   "fence_p50_ms": 7.720157,
+   "fence_p99_ms": 8.232293,
+   "pixels_differ_vs_first_off": 336,
+   "max_channel_error": 2,
+   "pixels": 9185280
+  },
+  {
+   "arm": "B",
+   "dequant_haar": "1",
+   "gpu_decode_p50_ms": 5.363958,
+   "gpu_decode_p99_ms": 6.536927,
+   "fence_p50_ms": 7.741094,
+   "fence_p99_ms": 8.793386,
+   "pixels_differ_vs_first_off": 336,
+   "max_channel_error": 2,
+   "pixels": 9185280
+  },
+  {
+   "arm": "A",
+   "dequant_haar": "0",
+   "gpu_decode_p50_ms": 5.44,
+   "gpu_decode_p99_ms": 6.376667,
+   "fence_p50_ms": 7.754219,
+   "fence_p99_ms": 8.217865,
+   "pixels_differ_vs_first_off": 0,
+   "max_channel_error": 0,
+   "pixels": 9185280
+  },
+  {
+   "arm": "A",
+   "dequant_haar": "0",
+   "gpu_decode_p50_ms": 5.3875,
+   "gpu_decode_p99_ms": 6.340104,
+   "fence_p50_ms": 7.761355,
+   "fence_p99_ms": 8.330835,
+   "pixels_differ_vs_first_off": 0,
+   "max_channel_error": 0,
+   "pixels": 9185280
+  },
+  {
+   "arm": "B",
+   "dequant_haar": "1",
+   "gpu_decode_p50_ms": 5.25151,
+   "gpu_decode_p99_ms": 6.485781,
+   "fence_p50_ms": 7.787084,
+   "fence_p99_ms": 8.610626,
+   "pixels_differ_vs_first_off": 336,
+   "max_channel_error": 2,
+   "pixels": 9185280
+  },
+  {
+   "arm": "B",
+   "dequant_haar": "1",
+   "gpu_decode_p50_ms": 5.273125,
+   "gpu_decode_p99_ms": 6.285417,
+   "fence_p50_ms": 7.743803,
+   "fence_p99_ms": 8.424272,
+   "pixels_differ_vs_first_off": 336,
+   "max_channel_error": 2,
+   "pixels": 9185280
+  },
+  {
+   "arm": "A",
+   "dequant_haar": "0",
+   "gpu_decode_p50_ms": 5.151667,
+   "gpu_decode_p99_ms": 6.120156,
+   "fence_p50_ms": 7.743334,
+   "fence_p99_ms": 8.39047,
+   "pixels_differ_vs_first_off": 0,
+   "max_channel_error": 0,
+   "pixels": 9185280
+  }
+ ],
+ "means": {
+  "off": {
+   "gpu_decode_p50_ms": 5.316,
+   "fence_p50_ms": 7.759
+  },
+  "on": {
+   "gpu_decode_p50_ms": 5.284,
+   "fence_p50_ms": 7.748
+  }
+ },
+ "decision": "Correct within one luma step, chroma exact, default path byte-identical; no measurable GPU or fence gain on Adreno. Keep off; no live comparison scheduled."
+}
