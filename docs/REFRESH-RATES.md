@@ -24,6 +24,11 @@ closing SteamVR restores the saved values the same way. **Quest 3: maximum GPU c
 requested and nothing saved, the server issues no extra ADB commands. Over Wi-Fi, or to manage the
 properties by hand, use the helper below.
 
+Waking the headset turns on its proximity automation. From `.59` the server turns it off again
+on every path, including when the headset never wakes or the cable is pulled mid-change. Before
+`.59`, a failed wake returned before that step and left the proximity sensor overridden until a
+later successful change. Unit-tested only; not yet checked on the headset.
+
 Above 207 Hz the panel requires display scaling. HorizonOS exposes the 4128x2208 panel modes up to
 207 Hz; 240 Hz exists only as a 3104x1664 mode (1552x1664 per eye) that the panel upscales. Fine
 detail changes even with a full-chroma encoded stream, so keep 240 Hz results separate from

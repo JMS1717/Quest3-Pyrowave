@@ -206,7 +206,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..18ad9d0230c4dcc30ad7e7d97af279bc
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..b2f3df6436e98f8078a642694ed2338217f4f71b 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..7ccb1f585fe713451452a5e71eb82aa6be57e158 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..b2f3df6436e98f8078a642694ed23382
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.58"
++version = "20.13.0-quest3.pyro.59"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -266,10 +266,10 @@ index a5a446842d4799523d0e06fbfb7253bb13d6c7db..566cdde2b0f58ca90d722104983a4464
          .context("Failed to list ADB devices")?;
 diff --git a/alvr/adb/src/display_override.rs b/alvr/adb/src/display_override.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..c4078aff4257b4b230e3bee390f7bd10d36e5fe5
+index 0000000000000000000000000000000000000000..2afd88c379e470fad2d1d6177994f281a03a4945
 --- /dev/null
 +++ b/alvr/adb/src/display_override.rs
-@@ -0,0 +1,433 @@
+@@ -0,0 +1,456 @@
 +//! Opt-in Quest 3 display and GPU developer properties, managed by the PC over USB.
 +//!
 +//! Measured on Quest 3 (October 2026): HorizonOS applies `debug.oculus.forceDisplayScaling` and
@@ -471,8 +471,11 @@ index 0000000000000000000000000000000000000000..c4078aff4257b4b230e3bee390f7bd10
 +            return Ok(None);
 +        }
 +
-+        Self::wake(shell)?;
++        // The wake enables proximity automation, so it runs inside the block whose end always
++        // hands proximity back: a headset that never wakes, or a cable pulled mid-change, must not
++        // be left ignoring its proximity sensor.
 +        let result = (|| -> Result<bool> {
++            Self::wake(shell)?;
 +            if !display_differs && !mode_ok {
 +                // Only a change is applied: step through the opposite values first.
 +                Self::set(shell, SCALING, if want[0] == "1" { "" } else { "1" })?;
@@ -493,8 +496,10 @@ index 0000000000000000000000000000000000000000..c4078aff4257b4b230e3bee390f7bd10
 +                shell.sleep(Duration::from_millis(500));
 +            }
 +        })();
-+        shell.shell("am broadcast -a com.oculus.vrpowermanager.automation_disable")?;
-+        if !result? {
++        let released = shell.shell("am broadcast -a com.oculus.vrpowermanager.automation_disable");
++        let applied = result?;
++        released?;
++        if !applied {
 +            return Ok(Some("Waiting for the headset display mode to change".into()));
 +        }
 +        self.finish(request)?;
@@ -525,6 +530,7 @@ index 0000000000000000000000000000000000000000..c4078aff4257b4b230e3bee390f7bd10
 +        awake: RefCell<bool>,
 +        mode: RefCell<(u32, u32, u32)>,
 +        applies: bool,
++        wakes: bool,
 +        log: RefCell<Vec<String>>,
 +        clock: RefCell<Instant>,
 +    }
@@ -540,6 +546,7 @@ index 0000000000000000000000000000000000000000..c4078aff4257b4b230e3bee390f7bd10
 +                awake: RefCell::new(awake),
 +                mode: RefCell::new((4128, 2208, 120)),
 +                applies: true,
++                wakes: true,
 +                log: RefCell::new(vec![]),
 +                clock: RefCell::new(Instant::now()),
 +            }
@@ -567,7 +574,7 @@ index 0000000000000000000000000000000000000000..c4078aff4257b4b230e3bee390f7bd10
 +                }
 +                return Ok(String::new());
 +            }
-+            if command == "input keyevent KEYCODE_WAKEUP" {
++            if command == "input keyevent KEYCODE_WAKEUP" && self.wakes {
 +                *self.awake.borrow_mut() = true;
 +            }
 +            if command.contains("mWakefulness") {
@@ -666,6 +673,22 @@ index 0000000000000000000000000000000000000000..c4078aff4257b4b230e3bee390f7bd10
 +        let message = display.ensure(&quest, "serial", ON).unwrap().unwrap();
 +        assert!(message.starts_with("Waiting"));
 +        assert!(path.exists(), "originals stay saved for the restore");
++        let _ = fs::remove_file(path);
++    }
++
++    #[test]
++    fn a_headset_that_never_wakes_gets_proximity_back_and_no_changes() {
++        let mut quest = FakeQuest::new(false);
++        quest.wakes = false;
++        let path = state_path("asleep");
++        let mut display = DisplayOverride::new(path.clone());
++        let error = display.ensure(&quest, "serial", ON).unwrap_err();
++        assert!(error.to_string().contains("did not wake"), "{error}");
++        let log = quest.log.borrow().clone();
++        assert!(log.iter().any(|c| c.ends_with("automation_enable")));
++        assert_eq!(log.last().unwrap(), "am broadcast -a com.oculus.vrpowermanager.automation_disable");
++        assert!(!log.iter().any(|c| c.starts_with("setprop ")), "nothing may change while asleep");
++        assert!(path.exists(), "originals stay saved for the next attempt");
 +        let _ = fs::remove_file(path);
 +    }
 +
@@ -7787,7 +7810,7 @@ index ccc83c870f5f49cdb9491d2b4aa1409198852845..5e14bba15cc864f067f18c469dbba059
                  .options
                  .into_iter()
 diff --git a/alvr/dashboard/src/dashboard/components/test_report.rs b/alvr/dashboard/src/dashboard/components/test_report.rs
-index 3be93190b208e2811ea657244046718f516760da..2a84d8d00ed7b828fc5c890cd9431515069b2755 100644
+index 3be93190b208e2811ea657244046718f516760da..c6baa56d8ed6ed3a8613666363d821159c724ad4 100644
 --- a/alvr/dashboard/src/dashboard/components/test_report.rs
 +++ b/alvr/dashboard/src/dashboard/components/test_report.rs
 @@ -243,6 +243,10 @@ fn effective_settings(settings: &Settings, session_settings: &Value) -> Value {
@@ -10674,7 +10697,7 @@ index e729ffac8a0d64f7f18c0a948dd9eb6c02fdbc99..4d24615d7044550be390cea1b56ebfda
          m_rateControlMode = (uint32_t)config.get("rate_control_mode").get<int64_t>();
          m_fillerData = config.get("filler_data").get<bool>();
 diff --git a/alvr/server_openvr/cpp/alvr_server/Settings.h b/alvr/server_openvr/cpp/alvr_server/Settings.h
-index 7bed823544ba31eeeebde4643e7a2de0de6424ca..8f2ca598f564600742763f41829b3388ebf82f2b 100644
+index 7bed823544ba31eeeebde4643e7a2de0de6424ca..8090f9e7f4b22354ee196ae286e36364c436397a 100644
 --- a/alvr/server_openvr/cpp/alvr_server/Settings.h
 +++ b/alvr/server_openvr/cpp/alvr_server/Settings.h
 @@ -44,7 +44,12 @@ public:
