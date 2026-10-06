@@ -266,10 +266,10 @@ index a5a446842d4799523d0e06fbfb7253bb13d6c7db..566cdde2b0f58ca90d722104983a4464
          .context("Failed to list ADB devices")?;
 diff --git a/alvr/adb/src/display_override.rs b/alvr/adb/src/display_override.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..fca821732c310c31a175b8e51ff84b77bff757b4
+index 0000000000000000000000000000000000000000..c4078aff4257b4b230e3bee390f7bd10d36e5fe5
 --- /dev/null
 +++ b/alvr/adb/src/display_override.rs
-@@ -0,0 +1,414 @@
+@@ -0,0 +1,433 @@
 +//! Opt-in Quest 3 display and GPU developer properties, managed by the PC over USB.
 +//!
 +//! Measured on Quest 3 (October 2026): HorizonOS applies `debug.oculus.forceDisplayScaling` and
@@ -447,9 +447,6 @@ index 0000000000000000000000000000000000000000..fca821732c310c31a175b8e51ff84b77
 +        if saved.is_none() && request == Request::default() {
 +            return Ok(None);
 +        }
-+        if self.verified == Some(request) {
-+            return Ok(None);
-+        }
 +        // A saved state means this module may have changed the panel mode earlier.
 +        let had_saved = saved.is_some();
 +        let current = Self::current(shell)?;
@@ -461,6 +458,11 @@ index 0000000000000000000000000000000000000000..fca821732c310c31a175b8e51ff84b77
 +            }
 +        };
 +        let want = targets(request, &original);
++        // Verified earlier and the values still hold: skip the panel check. A headset reboot
++        // clears the properties, which this comparison notices.
++        if self.verified == Some(request) && current == want {
++            return Ok(None);
++        }
 +        let display_differs = current[..2] != want[..2];
 +        let needs_mode_check = request.scaled_240 || had_saved || display_differs;
 +        let mode_ok = !needs_mode_check || mode_satisfies(request, Self::panel_mode(shell)?);
@@ -668,6 +670,23 @@ index 0000000000000000000000000000000000000000..fca821732c310c31a175b8e51ff84b77
 +    }
 +
 +    #[test]
++    fn reapplies_after_a_headset_reboot_clears_the_properties() {
++        let quest = FakeQuest::new(true);
++        let path = state_path("reboot");
++        let mut display = DisplayOverride::new(path.clone());
++        display.ensure(&quest, "serial", ON).unwrap();
++        assert_eq!(display.ensure(&quest, "serial", ON).unwrap(), None);
++        // Reboot: properties back to defaults, panel at 120 Hz.
++        quest.props.borrow_mut().insert(SCALING.into(), String::new());
++        quest.props.borrow_mut().insert(RATE.into(), String::new());
++        quest.props.borrow_mut().insert(GPU_LEVEL.into(), String::new());
++        *quest.mode.borrow_mut() = (4128, 2208, 120);
++        assert!(display.ensure(&quest, "serial", ON).unwrap().is_some());
++        assert_eq!(*quest.mode.borrow(), (3104, 1664, 240));
++        let _ = fs::remove_file(path);
++    }
++
++    #[test]
 +    fn only_the_running_client_gets_the_override() {
 +        assert_eq!(effective_request(ON, true, false, false), ON);
 +        assert_eq!(effective_request(ON, false, true, false), ON);
@@ -685,7 +704,7 @@ index 0000000000000000000000000000000000000000..fca821732c310c31a175b8e51ff84b77
 +    }
 +}
 diff --git a/alvr/adb/src/lib.rs b/alvr/adb/src/lib.rs
-index 64660b1e8e559354c4fb96d88ec579f08fe243ec..29fef89b45a1283fa670094861846c02bb0979d7 100644
+index 64660b1e8e559354c4fb96d88ec579f08fe243ec..fc8394a232881e3791bedd7bde73ff527e59eee8 100644
 --- a/alvr/adb/src/lib.rs
 +++ b/alvr/adb/src/lib.rs
 @@ -1,12 +1,22 @@
@@ -733,7 +752,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..29fef89b45a1283fa670094861846c02
  }
  
  impl WiredConnection {
-@@ -23,8 +46,28 @@ impl WiredConnection {
+@@ -23,8 +46,39 @@ impl WiredConnection {
          download_progress_callback: impl Fn(usize, Option<usize>),
      ) -> Result<Self> {
          let adb_path = commands::require_adb(layout, download_progress_callback)?;
@@ -755,15 +774,26 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..29fef89b45a1283fa670094861846c02
 +            return Ok(());
 +        };
 +        let shell = AdbShell { adb_path: &self.adb_path, device_serial: &device_serial };
-+        self.display
++        let changed = self
++            .display
 +            .lock()
 +            .unwrap()
 +            .ensure(&shell, &device_serial, display_override::Request::default())?;
++        if changed.is_some() {
++            // A running client probed its rates in the old mode; restart it so the next
++            // session's rate check sees the restored panel.
++            for name in [PACKAGE_NAME_GITHUB_DEV, PACKAGE_NAME_GITHUB_STABLE, PACKAGE_NAME_STORE] {
++                if commands::get_process_id(&self.adb_path, &device_serial, name)?.is_some() {
++                    commands::shell(&self.adb_path, &device_serial, &format!("am force-stop {name}"))?;
++                    commands::start_application(&self.adb_path, &device_serial, name)?;
++                }
++            }
++        }
 +        Ok(())
      }
  
      pub fn setup(
-@@ -33,6 +76,7 @@ impl WiredConnection {
+@@ -33,6 +87,7 @@ impl WiredConnection {
          stream_port: u16,
          client_type: &ClientFlavor,
          client_autolaunch: bool,
@@ -771,7 +801,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..29fef89b45a1283fa670094861846c02
      ) -> Result<WiredConnectionStatus> {
          let Some(device_serial) = commands::list_devices(&self.adb_path)?
              .into_iter()
-@@ -65,6 +109,35 @@ impl WiredConnection {
+@@ -65,6 +120,35 @@ impl WiredConnection {
              ));
          };
  
@@ -807,7 +837,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..29fef89b45a1283fa670094861846c02
          if commands::get_process_id(&self.adb_path, &device_serial, &process_name)?.is_none() {
              if client_autolaunch {
                  commands::start_application(&self.adb_path, &device_serial, &process_name)?;
-@@ -86,14 +159,9 @@ impl WiredConnection {
+@@ -86,14 +170,9 @@ impl WiredConnection {
      }
  }
  
