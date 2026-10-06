@@ -1327,6 +1327,15 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
             LOGI("[Q3PW_DEQUANT_HAAR] requested=1 active=%d (%s)", !strcmp(result, "applied") ? 1 : 0, result);
         }
     }
+    {
+        // Experiment, default off: multilevel inverse Haar in two dispatches per plane. The decoder
+        // refuses it with fused colour, fused dequant and anything but Haar 4:2:0 compute.
+        char haar32_prop[PROP_VALUE_MAX] = {};
+        if (__system_property_get("debug.q3pw.haar32", haar32_prop) > 0 && !strcmp(haar32_prop, "1")) {
+            const bool applied = pyrowave_decoder_set_haar32(c->decoder, 1) == PYROWAVE_SUCCESS;
+            LOGI("[Q3PW_HAAR32] requested=1 active=%d (%s)", applied ? 1 : 0, applied ? "applied" : "decoder refused");
+        }
+    }
     if (!c->storage_on_ahb) {
         if (!create_plain_image(c->gpu, c->device, VK_FORMAT_R8G8B8A8_UNORM, width, height,
                                 VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, c->scratch)) { c->destroy(); delete c; return nullptr; }

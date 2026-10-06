@@ -19,7 +19,7 @@ jobs:
           python3 tools/ci/check_shader_manifest.py "$p" --write
           mkdir out
           cp "$p/shaders/slangmosh.hpp" "$p/shaders/quest3-manifest.json" out/
-          sha256sum "$p/shaders/wavelet_dequant.comp" "$p/shaders/idwt.comp" "$p/shaders/idwt_haar_fused.comp" "$p/shaders/idwt_haar_pairs.comp" "$p/shaders/wavelet_dequant_haar0.comp" > out/SOURCE-SHA256.txt
+          sha256sum "$p/shaders/wavelet_dequant.comp" "$p/shaders/idwt.comp" "$p/shaders/idwt_haar_fused.comp" "$p/shaders/idwt_haar_pairs.comp" "$p/shaders/wavelet_dequant_haar0.comp" "$p/shaders/idwt_haar32.comp" > out/SOURCE-SHA256.txt
       - uses: actions/upload-artifact@v4
         with:
           name: PyroWave-generated-shaders

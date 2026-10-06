@@ -29,4 +29,7 @@ $CXX $FLAGS "$HERE/prerecord_gpu_test.cpp" "$HERE/gpu_readback_gles.cpp" \
 # Fused dequant + level-0 Haar exact-pixel gate; on the Quest run it with the default GATE_MIN_PSNR=30.
 $CXX $FLAGS "$HERE/dequant_haar_gate.cpp" -o "$HERE/dequant_haar_gate" \
     -L"$PW/build-android" -lpyrowave-shared -lvulkan
-echo "BUILD_OK -> $HERE/libpyroclient.so $HERE/pyroclient_test $HERE/release_fence_gpu_test $HERE/ready_fence_gpu_test $HERE/dequant_haar_gate"
+# Decoder variant A/B: exact-pixel gate against the default decoder, then interleaved GPU timing.
+$CXX $FLAGS "$HERE/decoder_ab.cpp" -o "$HERE/decoder_ab" \
+    -L"$PW/build-android" -lpyrowave-shared -lvulkan
+echo "BUILD_OK -> $HERE/libpyroclient.so $HERE/pyroclient_test $HERE/release_fence_gpu_test $HERE/ready_fence_gpu_test $HERE/dequant_haar_gate $HERE/decoder_ab"
