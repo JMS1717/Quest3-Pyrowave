@@ -7349,7 +7349,7 @@ index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..11b465f5173fb9295b7169d1b02389f7
 +    changes
 +}
 diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
-index efb0f8e89507b93f737f085742bd9daec993d444..623401d900584ed86532de4cf1f9fc89080dac34 100644
+index efb0f8e89507b93f737f085742bd9daec993d444..c5d304daade7bf4435d54967d629a5d201c1afea 100644
 --- a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 @@ -323,7 +323,7 @@ pub fn streaming_profile_schema() -> PresetSchemaNode {
@@ -7500,7 +7500,7 @@ index efb0f8e89507b93f737f085742bd9daec993d444..623401d900584ed86532de4cf1f9fc89
  #[cfg(test)]
  mod tests {
      use super::*;
-@@ -447,25 +469,67 @@ mod tests {
+@@ -447,25 +469,70 @@ mod tests {
              .iter()
              .map(|o| o.display_name.as_str())
              .collect::<Vec<_>>();
@@ -7510,6 +7510,9 @@ index efb0f8e89507b93f737f085742bd9daec993d444..623401d900584ed86532de4cf1f9fc89
 +            names,
 +            [
 +                "Quest 3 PyroWave 400 Mbps / 72 Hz candidate",
++                "Quest 3 PyroWave native 120 Hz (measured)",
++                "Quest 3 PyroWave 207 Hz (measured)",
++                "Quest 3 PyroWave 240 Hz scaled panel (measured)",
 +                "Quest 3 PyroWave 600 Mbps / 90 Hz candidate",
 +                "Quest 3 PyroWave 600 Mbps / 120 Hz experiment",
 +                "Quest 3 PyroWave 800 Mbps / 120 Hz experiment",
@@ -7574,7 +7577,7 @@ index efb0f8e89507b93f737f085742bd9daec993d444..623401d900584ed86532de4cf1f9fc89
          let names = schema
              .options
              .iter()
-@@ -474,28 +538,50 @@ mod tests {
+@@ -474,28 +541,50 @@ mod tests {
          assert_eq!(
              names,
              [
@@ -7645,7 +7648,7 @@ index efb0f8e89507b93f737f085742bd9daec993d444..623401d900584ed86532de4cf1f9fc89
      }
  
      #[test]
-@@ -506,7 +592,15 @@ mod tests {
+@@ -506,7 +595,15 @@ mod tests {
              .iter()
              .map(|o| o.display_name.as_str())
              .collect::<Vec<_>>();
@@ -11382,7 +11385,7 @@ index 861f726c74e38cec9058513ab412ceb08ae2e8bf..713a470f89645e6d7d8a93db68ff7262
          &alvr_server_core::settings(),
          &alvr_session::beta::process_env,
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
-index 84100dc7c01a272de5b0b22b22907127bb5e1e18..c9ad430a498c7d2313b7cd5e68937edb41cecf7a 100644
+index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8b479a47a 100644
 --- a/alvr/session/src/beta.rs
 +++ b/alvr/session/src/beta.rs
 @@ -3,25 +3,94 @@
@@ -11515,8 +11518,9 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..c9ad430a498c7d2313b7cd5e68937edb
 +            height.into(),
 +        ),
 +    ]
-+}
-+
+ }
+ 
+-/// The settings both profiles pin: the measured foveation, buffering, pacing, encoder and
 +/// Stream (encode/decode) resolution choices, as panel percentages. Above the panel only adds
 +/// headset decode work, so the stream tops out at the panel.
 +pub const STREAM_SCALES: [u32; 6] = [50, 60, 70, 80, 90, 100];
@@ -11530,14 +11534,13 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..c9ad430a498c7d2313b7cd5e68937edb
 +/// choice, so picking a profile never throws away a supersampling setting.
 +fn stream_size(percent: u32) -> Vec<(String, json::Value)> {
 +    panel_size_assignments("transcoding_view_resolution", percent)
- }
- 
--/// The settings both profiles pin: the measured foveation, buffering, pacing, encoder and
++}
++
 +/// The settings both profiles pin: uniform rendering, buffering, pacing, encoder and
  /// socket values, so switching profiles never leaves one of them at a tester's experiment.
  fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::Value)> {
      let mut list = vec![
-@@ -56,48 +139,146 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
+@@ -56,48 +139,206 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
          assign("video.bitrate.mode.variant", "ConstantMbps".into()),
          assign("video.bitrate.mode.ConstantMbps", mbps.into()),
          assign("video.preferred_fps", json::json!(fps)),
@@ -11604,14 +11607,59 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..c9ad430a498c7d2313b7cd5e68937edb
      list
  }
  
- pub fn streaming_profiles() -> Vec<StreamingProfile> {
+-pub fn streaming_profiles() -> Vec<StreamingProfile> {
 -    let mut pyrowave = shared("PyroWave", 400, 90.0, 60);
 -    pyrowave.extend([
 -        assign("video.pyrowave.transport.variant", "Udp".into()),
 -        assign("video.pyrowave.wavelet.variant", "Cdf97".into()),
--        assign("video.pyrowave.decode_path.variant", "Compute".into()),
--    ]);
--
++/// Profiles measured on Quest 3 on October 6, 2026 (short stationary-chart screens; see
++/// docs/HIGH-REFRESH.md). Haar/Compute/TCP, 4:2:0, 1000 Mbps; the stream size is explicit
++/// because 1440x1536 is not a panel percentage.
++pub const MEASURED_PROFILES: [(&str, f32, (u32, u32), bool, bool, &str); 3] = [
++    (
++        "Quest 3 PyroWave native 120 Hz (measured)",
++        120.0,
++        (2064, 2208),
++        false,
++        false,
++        "Haar, 4:2:0, 1000 Mbps, full panel; about 119 fresh FPS in short screens, best detail",
++    ),
++    (
++        "Quest 3 PyroWave 207 Hz (measured)",
++        207.0,
++        (1440, 1536),
++        false,
++        true,
++        "Haar, 4:2:0, 1000 Mbps, 1440x1536 per eye, maximum GPU clock over USB; about 196 fresh FPS in short screens",
++    ),
++    (
++        "Quest 3 PyroWave 240 Hz scaled panel (measured)",
++        240.0,
++        (1440, 1536),
++        true,
++        true,
++        "Panel switched to its 240 Hz scaled mode over USB, 1440x1536 per eye, maximum GPU clock; about 223-228 fresh FPS in short screens",
++    ),
++];
++
++fn measured_profile(fps: f32, (width, height): (u32, u32), scaled: bool, gpu: bool) -> Vec<(String, json::Value)> {
++    let mut assignments = shared("PyroWave", 1000, fps, 100);
++    assignments.retain(|(path, _)| !path.starts_with("video.transcoding_view_resolution."));
++    assignments.extend([
++        assign("video.transcoding_view_resolution.variant", "Absolute".into()),
++        assign("video.transcoding_view_resolution.Absolute.width", width.into()),
++        assign("video.transcoding_view_resolution.Absolute.height.set", true.into()),
++        assign("video.transcoding_view_resolution.Absolute.height.content", height.into()),
++        assign("video.pyrowave.chroma_444", false.into()),
++        assign("video.pyrowave.transport.variant", "Tcp".into()),
++        assign("video.pyrowave.wavelet.variant", "Haar".into()),
+         assign("video.pyrowave.decode_path.variant", "Compute".into()),
++        assign("video.pyrowave.quest3_240hz_display_scaling", scaled.into()),
++        assign("video.pyrowave.quest3_max_gpu_clock", gpu.into()),
+     ]);
++    assignments
++}
+ 
 -    vec![
 -        StreamingProfile {
 -            name: RECOMMENDED_PROFILE,
@@ -11624,11 +11672,11 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..c9ad430a498c7d2313b7cd5e68937edb
 -            // Panel-native, 600 Mbps, 72 Hz: the configuration that measured 80 ms
 -            assignments: shared("H264", 600, 72.0, 100),
 -        },
--    ]
++pub fn streaming_profiles() -> Vec<StreamingProfile> {
 +    let mut profiles = Vec::new();
 +    const EXPERIMENT: &str =
 +        "Experimental: full-frame 4:2:0, TCP, 120 Hz; decode/transport budget not validated";
-+    for (name, mbps, fps, subtitle) in [
++    for (index, (name, mbps, fps, subtitle)) in [
 +        (RECOMMENDED_PROFILE, 400, 72.0, RECOMMENDED_SUBTITLE),
 +        (
 +            "Quest 3 PyroWave 600 Mbps / 90 Hz candidate",
@@ -11666,7 +11714,10 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..c9ad430a498c7d2313b7cd5e68937edb
 +            120.0,
 +            EXPERIMENT,
 +        ),
-+    ] {
+     ]
++    .into_iter()
++    .enumerate()
++    {
 +        let mut assignments = shared("PyroWave", mbps, fps, 100);
 +        assignments.extend([
 +            assign("video.pyrowave.chroma_444", false.into()),
@@ -11679,6 +11730,15 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..c9ad430a498c7d2313b7cd5e68937edb
 +            subtitle,
 +            assignments,
 +        });
++        if index == 0 {
++            for (name, fps, size, scaled, gpu, subtitle) in MEASURED_PROFILES {
++                profiles.push(StreamingProfile {
++                    name,
++                    subtitle,
++                    assignments: measured_profile(fps, size, scaled, gpu),
++                });
++            }
++        }
 +    }
 +    for (name, percent) in [
 +        (
@@ -11717,7 +11777,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..c9ad430a498c7d2313b7cd5e68937edb
  }
  
  #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-@@ -186,8 +367,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
+@@ -186,8 +427,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
  #[derive(Clone, Debug, PartialEq)]
  pub struct PyroWaveEffective {
      pub enabled: bool,
@@ -11728,7 +11788,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..c9ad430a498c7d2313b7cd5e68937edb
      pub decode_path: PyroWaveDecodePath,
      pub follow_gaze: bool,
      pub overrides: Vec<&'static str>,
-@@ -211,30 +394,24 @@ pub fn pyrowave_effective(
+@@ -211,30 +454,24 @@ pub fn pyrowave_effective(
          value
      };
  
@@ -11767,7 +11827,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..c9ad430a498c7d2313b7cd5e68937edb
          decode_path: video.pyrowave.decode_path,
          follow_gaze,
          overrides,
-@@ -255,10 +432,11 @@ impl fmt::Display for PyroWaveEffective {
+@@ -255,10 +492,11 @@ impl fmt::Display for PyroWaveEffective {
          };
          write!(
              f,
@@ -11781,7 +11841,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..c9ad430a498c7d2313b7cd5e68937edb
              if self.follow_gaze { "on" } else { "off" },
              if self.overrides.is_empty() {
                  "none".to_owned()
-@@ -279,7 +457,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
+@@ -279,7 +517,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
  }
  
  fn at<'a>(root: &'a json::Value, path: &str) -> Option<&'a json::Value> {
@@ -11792,7 +11852,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..c9ad430a498c7d2313b7cd5e68937edb
  
  /// The profile whose every assignment the session (`session_settings` as JSON) currently holds,
 diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
-index 985a4d04e505ecaf29120bcc61b525476eb7caf2..ff8c883371d3049424883a3e8ed88f17e0022cfb 100644
+index 985a4d04e505ecaf29120bcc61b525476eb7caf2..f25cb53e0c75d44508ecbc24566e2897aede6df2 100644
 --- a/alvr/session/src/beta_tests.rs
 +++ b/alvr/session/src/beta_tests.rs
 @@ -31,7 +31,7 @@ fn video_shows_only_codec_experiment_controls() {
@@ -11917,7 +11977,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..ff8c883371d3049424883a3e8ed88f17
  }
  
  // Applies session-style assignments the way the dashboard's SetValues does.
-@@ -198,13 +200,10 @@ fn profile(name: &str) -> StreamingProfile {
+@@ -198,13 +200,38 @@ fn profile(name: &str) -> StreamingProfile {
  #[test]
  fn profiles_are_named_for_testers() {
      let profiles = streaming_profiles();
@@ -11928,14 +11988,42 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..ff8c883371d3049424883a3e8ed88f17
 -        "Full-chroma experimental wireless VR streaming"
 -    );
 -    assert_eq!(profiles[1].name, "ALVR H.264 (tuned)");
-+    assert_eq!(profiles.len(), 12);
++    assert_eq!(profiles.len(), 15);
 +    assert_eq!(profiles[0].name, RECOMMENDED_PROFILE);
 +    assert_eq!(profiles[0].subtitle, RECOMMENDED_SUBTITLE);
-+    assert_eq!(profiles[9].name, H264_PROFILE);
++    assert_eq!(profiles[1].name, MEASURED_PROFILES[0].0);
++    assert_eq!(profiles[12].name, H264_PROFILE);
++}
++
++#[test]
++fn measured_profiles_pin_what_the_october_6_screens_ran() {
++    let native = apply(&profile(MEASURED_PROFILES[0].0));
++    assert_eq!(native.video.preferred_fps, 120.0);
++    assert_eq!(native.video.pyrowave.wavelet, PyroWaveWavelet::Haar);
++    assert!(!native.video.pyrowave.chroma_444);
++    assert!(!native.video.pyrowave.quest3_240hz_display_scaling && !native.video.pyrowave.quest3_max_gpu_clock);
++    assert!(matches!(native.video.bitrate.mode, BitrateMode::ConstantMbps(1000)));
++
++    let scaled = apply(&profile(MEASURED_PROFILES[2].0));
++    assert_eq!(scaled.video.preferred_fps, 240.0);
++    assert!(scaled.video.pyrowave.quest3_240hz_display_scaling && scaled.video.pyrowave.quest3_max_gpu_clock);
++    assert!(matches!(
++        scaled.video.transcoding_view_resolution,
++        FrameSize::Absolute { width: 1440, height: Some(1536) }
++    ));
++    let mut root = json::to_value(SessionConfig::default().session_settings).unwrap();
++    for (path, value) in profile(MEASURED_PROFILES[1].0).assignments {
++        let mut node = &mut root;
++        for segment in path.split('.') {
++            node = &mut node[segment];
++        }
++        *node = value;
++    }
++    assert_eq!(matching_profile(&root), Some(MEASURED_PROFILES[1].0));
  }
  
  #[test]
-@@ -218,13 +217,16 @@ fn recommended_profile_is_the_fresh_install() {
+@@ -218,13 +245,16 @@ fn recommended_profile_is_the_fresh_install() {
  fn h264_profile_is_the_measured_b15_cell() {
      let s = apply(&profile(H264_PROFILE));
      assert_eq!(s.video.preferred_codec, CodecType::H264);
@@ -11956,7 +12044,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..ff8c883371d3049424883a3e8ed88f17
          }
      ));
      assert_eq!(s.video.max_buffering_frames, 1.5);
-@@ -233,20 +235,66 @@ fn h264_profile_is_the_measured_b15_cell() {
+@@ -233,20 +263,66 @@ fn h264_profile_is_the_measured_b15_cell() {
          EncoderQualityPresetNvidia::P1
      );
      assert_eq!(s.video.encoder_config.entropy_coding, EntropyCoding::Cavlc);
@@ -12032,7 +12120,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..ff8c883371d3049424883a3e8ed88f17
  }
  
  fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
-@@ -261,21 +309,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
+@@ -261,21 +337,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
  fn effective_config_follows_settings_without_env() {
      let e = pyrowave_effective(&default_settings(), &env(&[]));
      assert!(e.enabled);
@@ -12059,7 +12147,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..ff8c883371d3049424883a3e8ed88f17
      assert!(e.wavelet_53);
      assert_eq!(e.decode_path, PyroWaveDecodePath::Fragment);
  }
-@@ -284,6 +332,7 @@ fn effective_config_follows_a_non_default_setting() {
+@@ -284,6 +360,7 @@ fn effective_config_follows_a_non_default_setting() {
  fn research_env_overrides_win_and_are_reported() {
      let mut s = default_settings();
      s.video.preferred_codec = CodecType::H264;
@@ -12067,7 +12155,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..ff8c883371d3049424883a3e8ed88f17
      let e = pyrowave_effective(
          &s,
          &env(&[
-@@ -302,8 +351,7 @@ fn research_env_overrides_win_and_are_reported() {
+@@ -302,8 +379,7 @@ fn research_env_overrides_win_and_are_reported() {
          vec![
              "ALVR_PYROWAVE",
              "ALVR_PYROWAVE_UDP",
@@ -12077,7 +12165,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..ff8c883371d3049424883a3e8ed88f17
          ]
      );
  }
-@@ -320,8 +368,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
+@@ -320,8 +396,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
      let line = pyrowave_effective(&default_settings(), &env(&[])).to_string();
      assert_eq!(
          line,
@@ -12088,7 +12176,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..ff8c883371d3049424883a3e8ed88f17
      );
  }
  
-@@ -398,6 +446,7 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
+@@ -398,6 +474,7 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
          "pyrowave_enabled",
          "pyrowave_udp",
          "pyrowave_wavelet_53",
@@ -12096,7 +12184,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..ff8c883371d3049424883a3e8ed88f17
          "pyrowave_decode_path",
      ] {
          openvr.remove(key).expect(key);
-@@ -410,3 +459,20 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
+@@ -410,3 +487,20 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
          "upgrading must not forget the paired headset"
      );
  }
