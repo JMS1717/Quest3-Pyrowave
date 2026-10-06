@@ -152,9 +152,11 @@ Recommended, not made. Each changes when or how tests gate builds, so it needs t
 
 1. Start `client` and `streamer` without `needs: [tests, publication_tests]`, and rely on reviews
    requiring every job to pass. Saves about 3 minutes.
-2. Move the Windows `cargo test` step into its own parallel job, or run it as one `cargo test`
-   invocation over the listed packages. Feature unification differs slightly in the single
-   invocation. Expected saving: 4–6 minutes.
+2. Move the Windows `cargo test` step into its own parallel job, which takes it off the critical
+   path (expected saving 4–6 minutes). Or run the five `--lib` packages as one `cargo test`
+   invocation. Measured locally from a cold target on `main`'s sources, the seven separate runs
+   took 226 s, versus 175 s for one five-package run plus the `server_io` and `dashboard` runs
+   (−23%), with the same tests passing. Feature unification differs slightly in the combined run.
 3. In CI, restore cached timestamps for files whose content matches the cached build, using the same
    manifest as `sync_tree`, so unchanged workspace crates are reused. Before relying on it, verify
    that unchanged sources produce byte-identical native libraries with and without it.
