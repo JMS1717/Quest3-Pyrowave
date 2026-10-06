@@ -148,6 +148,10 @@ struct pyroclient {
     // conversion shaders unpack (packed_luma).
     int haar32_requested = 0;
     int haar32_mode = 0;
+    // debug.q3pw.cdf53v2: requested and applied Decoder V2 mode for CDF 5/3 streams
+    // (docs/DECODER-V2.md). Modes 2 and 3 also write packed luma.
+    int cdf53v2_requested = 0;
+    int cdf53v2_mode = 0;
     bool packed_luma = false;
 
     // Conversion pass.
@@ -522,8 +526,12 @@ bool pyroclient::create_planes() {
     haar32_mode = 0;
     for (int mode = haar32_requested; mode > 0 && !haar32_mode; mode--)
         if (pyrowave_decoder_set_haar32(decoder, mode) == PYROWAVE_SUCCESS) haar32_mode = mode;
-    packed_luma = haar32_mode == 3;
+    cdf53v2_mode = 0;
+    for (int mode = legall53 ? cdf53v2_requested : 0; mode > 0 && !cdf53v2_mode; mode--)
+        if (pyrowave_decoder_set_cdf53v2(decoder, mode) == PYROWAVE_SUCCESS) cdf53v2_mode = mode;
+    packed_luma = haar32_mode == 3 || cdf53v2_mode >= 2;
     LOGI("[Q3PW_HAAR32] requested=%d active=%d packed_luma=%d", haar32_requested, haar32_mode, packed_luma ? 1 : 0);
+    LOGI("[Q3PW_CDF53V2] requested=%d active=%d", legall53 ? cdf53v2_requested : 0, cdf53v2_mode);
 
     const uint32_t cw = chroma444 ? width : width / 2, ch = chroma444 ? height : height / 2;
     for (int i = 0; i < 3; i++) {
@@ -1277,6 +1285,11 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
                                    haar32_prop[0] >= '0' && haar32_prop[0] <= '3' && !haar32_prop[1];
         c->haar32_requested = explicit_mode ? haar32_prop[0] - '0'
                               : !strcmp(fuse_prop, "1") || !strcmp(dequant_haar_prop, "1") ? 0 : 3;
+        // Decoder V2 for CDF 5/3 (docs/DECODER-V2.md), default mode 3; "0" to "3" selects a mode.
+        char v2_prop[PROP_VALUE_MAX] = {};
+        const bool explicit_v2 = __system_property_get("debug.q3pw.cdf53v2", v2_prop) > 0 &&
+                                 v2_prop[0] >= '0' && v2_prop[0] <= '3' && !v2_prop[1];
+        c->cdf53v2_requested = explicit_v2 ? v2_prop[0] - '0' : 3;
     }
     c->ring.resize(ring_size < 2 ? 2 : ring_size);
     if (!c->create_device() || !c->create_planes() || !c->create_convert()) { c->destroy(); delete c; return nullptr; }
