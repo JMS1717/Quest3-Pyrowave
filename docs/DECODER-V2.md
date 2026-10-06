@@ -132,6 +132,33 @@ the compositor preempts decode. In-headset image captures are still pending.
   a neighbour apron that Haar's pair-local transform does not.
 - Bitrate barely matters: V2 at 700 Mbit/s (423 KB cap) decodes in 2.21 ms vs 2.27 at 1000.
 
+## Packing levels 2-3 (both decoders)
+
+Dequant stored levels 2-4 as single R16F texels, eight `imageStore`s per invocation. That was
+about 36% of dequant's store instructions for 7% of the coefficients. Dequant cost probes, p50 at
+690 MHz (wrong output by design):
+
+| | Haar mode 3 | V2 mode 3 |
+|---|---|---|
+| as built (levels 0-1 packed) | 1.72 ms | 2.27 ms |
+| no dequant stores at all | 1.18 | 1.63 |
+| skip only the level 2-4 stores | 1.43 | 1.93 |
+
+Levels 0-3 now pack the same way: dequant writes two RGBA16F quads per invocation. Level 4 stays
+scalar because its bands can be odd-sized; the frame alignment of 32 keeps levels 0-3 even. Each
+non-final pass writes its LL output as quads into the packed image:
+- V2's per-level pass already supported this;
+- haar32's one-level and two-level passes gained it (`store_quad` without the DC shift).
+
+| interleaved, 690 MHz | levels 0-1 packed | levels 0-3 packed |
+|---|---|---|
+| Haar mode 3 | 1.71-1.72 ms | **1.50-1.51** |
+| V2 mode 3 | 2.26 | **1.94-1.96** |
+
+Both exactness gates still pass (max diff 1): `decoder_ab haar32q`, `haar32qo` and `cdf53v2qp`.
+`PYROWAVE_HAAR32_PACKED_LEVELS` / `PYROWAVE_V2_PACKED_LEVELS` = 2 restore the old layout; the client
+sets both from `debug.q3pw.packed_levels` ("2" or "4") for live A/B.
+
 ## Tried and rejected
 
 Each candidate passed the exactness gate unless noted. All were timed interleaved against mode 3.
@@ -165,5 +192,5 @@ python -m tools.quest3.quality_score <clip.y4m> --out <dir> --mbps 700 1000 --wa
 ## Next
 
 1. In-headset captures of V2 against Haar at the owner's settings, with motion.
-2. Quad-pack level 2 in dequant (25 fetches instead of 49 at L2; at most about 0.08 ms).
+2. Live A/B of packed levels 0-3 (`debug.q3pw.packed_levels`).
 3. CDF 9/7 in the same structure, if the remaining +0.4 dB is worth its wider support.
