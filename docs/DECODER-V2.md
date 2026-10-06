@@ -159,6 +159,23 @@ Both exactness gates still pass (max diff 1): `decoder_ab haar32q`, `haar32qo` a
 `PYROWAVE_HAAR32_PACKED_LEVELS` / `PYROWAVE_V2_PACKED_LEVELS` = 2 restore the old layout; the client
 sets both from `debug.q3pw.packed_levels` ("2" or "4") for live A/B.
 
+Live, 2026-10-06. Settings: the owner's (3072x3216 render, 2080x2208 per eye encoded, 207 Hz,
+1000 Mbit/s, 4:2:0, no foveation), `quality_scene` panning at 60 deg/s, 12 s ABBA windows,
+A = `packed_levels` 2, B = 4:
+
+| cell | fresh FPS A (blocks) | fresh FPS B (blocks) | fence p50 A / B | convert p50 A / B |
+|---|---|---|---|---|
+| Haar, haar32 mode 3 | 174.3 (175.4 / 173.2) | **184.1** (184.3 / 183.8) | 5.31 / **4.95** ms | 0.99 / 0.92 ms |
+| CDF 5/3, V2 mode 3 | 137.0 (136.8 / 137.1) | **145.5** (145.8 / 145.3) | 6.81 / **6.41** | 1.82 / 1.78 |
+
+Every B window beat both A windows. Stale frames fell from 33 to 23 per second for Haar and from 71
+to 63 for V2. The in-headset screenshots of every window decode correctly. V2's reported GPU decode
+interval rose (3.52 to 3.81 ms) while its fence fell: the interval is not the critical path once
+the compositor preempts decode, so fresh FPS and the fence are the measures that count.
+
+The RGBA conversion after decode costs 0.92 ms live for Haar and 1.8 ms for V2 with the same
+shader. This is next to look at.
+
 ## Tried and rejected
 
 Each candidate passed the exactness gate unless noted. All were timed interleaved against mode 3.
@@ -192,5 +209,5 @@ python -m tools.quest3.quality_score <clip.y4m> --out <dir> --mbps 700 1000 --wa
 ## Next
 
 1. In-headset captures of V2 against Haar at the owner's settings, with motion.
-2. Live A/B of packed levels 0-3 (`debug.q3pw.packed_levels`).
+2. The RGBA conversion pass: 0.9 ms (Haar) to 1.8 ms (V2) of the live fence.
 3. CDF 9/7 in the same structure, if the remaining +0.4 dB is worth its wider support.
