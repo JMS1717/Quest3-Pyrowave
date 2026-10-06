@@ -22,6 +22,19 @@ supported by evidence. Preserve correctness, rollback and honest measurements;
 the previous agent's process is not mandatory. A handoff does not automatically
 resume paused hardware work or unattended workers.
 
+## October 6 (later): decoder mode 3, 160-180 fresh FPS at 207 Hz native
+
+PR #13 (`claude/haar32`) makes the Haar 4:2:0 decoder default to multilevel Haar with quad-packed
+coefficients and a packed luma plane (`debug.q3pw.haar32`, default 3; see
+[HAAR32.md](HAAR32.md)). Live at 207 Hz, 2080x2208 per eye, 1000 Mbit/s: 160-180 fresh frames/s
+against about 120 before, GPU decode p50 2.8-3.0 ms against 5.55 ms. 207 Hz is the highest rate
+with the full native panel (240 Hz drops the panel to 1552x1664 per eye). Mode 3 needs 4:2:0;
+4:4:4 falls back to the old decoder.
+
+Next, in order (details in HAAR32.md "Next steps"): faster bit-plane decode in dequant (work in
+progress, verified on CPU only), interleaved chroma output, the conversion pass, then queueing.
+The client is still GPU-throughput bound (GPU ~96 %).
+
 ## October 6: 240 Hz streams, higher resolution and refresh measured
 
 `.56` (`79e38af`, signed CI 37396414259, installed) reports a system-forced 240 Hz display to the
