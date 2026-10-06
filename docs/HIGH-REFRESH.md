@@ -65,10 +65,13 @@ awake, confirm the kernel DSI mode) and restores it the same way.
 
 | Lever | Cell | Off | On | Decision |
 | --- | --- | --- | --- | --- |
-| GPU level 7 (`debug.oculus.gpuLevel=7`, 690 MHz vs level 4 at 640 MHz, verified in VrApi) | 240 Hz, 1440x1536, ABBA | 220.8 fresh, fence 4.05 ms, loop 225 | 224.1 fresh, fence 3.89 ms, loop 232 | Small gain at 240 Hz; developer property, not something the APK can request |
+| GPU level 7 (`debug.oculus.gpuLevel=7`, 690 MHz vs level 4 at 640 MHz, verified in VrApi) | 240 Hz, 1440x1536, ABBA | 220.8 fresh, fence 4.05 ms, loop 225 | 224.1 fresh, fence 3.89 ms, loop 232 | Gain wherever decode is GPU-bound. A developer property the APK cannot request: `tools/quest3/gpu_level.py` sets and restores it |
+| GPU level 7 | 240 Hz, 1536x1664, ABBA | 198.9 fresh, loop 205 | 203.8 fresh, loop 218 | |
+| GPU level 7 | 207 Hz, 1664x1760, ABBA | 172.1 fresh, loop 176 | 181.5 fresh, loop 185 | |
+| GPU level 7 | 120 Hz, 2560x2720, ABBA | 89.5 fresh, fence 10.6 ms | 93.2 fresh, fence 10.2 ms | |
 | GPU level 7 | 120 Hz, native, ABBA | 119.1 | 118.8 | No gain where 120 is already reached |
 | LOW decode priority (`debug.q3pw.decode_priority=low`) | 240 Hz, 1440x1536, ABBA | 220.8 fresh, loop 225 | 183.3 fresh, loop 240 | The loop stops missing frames but decode slows to 3.5 ms; keep the >120 Hz default (normal) |
-| Server phase lock (`ALVR_PHASE_LOCK=1`, separate SteamVR starts, off/on/on/off) | 207 Hz, 1440x1536 | 194.1, 200.2 fresh | 196.3, 193.7 fresh | No gain. The controller never converged: it walked the virtual vsync 17-36 ms earlier while the client's decoder queue stayed 1.3-2.0 ms at every phase. At 144 Hz all three lock-on attempts failed to start the test scene because SteamVR Home never finished launching (not seen with the lock off). Not adopted |
+| Server phase lock (`ALVR_PHASE_LOCK=1`, separate SteamVR starts, off/on/on/off) | 207 Hz, 1440x1536 | 194.1, 200.2 fresh | 196.3, 193.7 fresh | No gain. The controller never converged: it walked the virtual vsync 17-36 ms earlier while the client's decoder queue stayed 1.3-2.0 ms at every phase. At 144 Hz all three lock-on starts failed: SteamVR Home (`steamtours.exe`) never finished launching, so SteamVR refused the test scene, and the hung processes outlived SteamVR and also blocked the next lock-off start until they were stopped. Not adopted |
 | PR #8 fused dequant + level-0 Haar | standalone Adreno decode | 5.32 ms decode, 7.76 ms fence | 5.28 ms, 7.75 ms | Correct (gate pass, default path byte-identical to `.55`), no speedup: [results](../results/FUSED-DEQUANT-HAAR-GPU-2026-10-06.json). Keep off |
 
 Under its BOOST performance request the client gets GPU level 4. The governor caps that level at
@@ -81,6 +84,8 @@ and 1664x1760 at 144 Hz.
   fresh frames one for one with decode time.
 - High refresh: **240 Hz with display scaling at 1280x1376-1440x1536 per eye** (223-230 fresh
   frames/s), or **207 Hz at 1440x1536** (196) when full panel resolution matters more than rate.
+  Add GPU level 7 for these and for above-native sizes; battery stayed 38-41 C in 12-second
+  windows, but sustained thermals at 690 MHz are not measured.
 - Avoid 207 Hz at native resolution and 144 Hz at native resolution: both starve the client loop.
 
 ## Not established
