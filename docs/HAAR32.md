@@ -150,12 +150,11 @@ and 3; `dqprobe`, `h32nostore` and `h32nofetch` are the cost probes (`AB_SKIP_GA
 
 ## Next steps (in order)
 
-1. **Faster bit-plane decode in dequant** (work in progress, not on this branch). Dequant is now
-   about 1.3 ms of a 3.0 ms standalone decode. Its plane loop does one dependent byte load and 16
-   bit operations per plane; the replacement loads at most three words and does one 8x8 bit
-   transpose (`FAST_PLANES` specialization constant, `PYROWAVE_DEQUANT_FAST_PLANES=1`). The bit
-   logic is verified on the CPU against the loop; it still needs the `decoder_ab` gate (must be
-   EXACT, it is integer-only) and a standalone A/B, then a live A/B if it saves at least 0.3 ms.
+1. **Dequant: find what costs the remaining ~1.3 ms.** Rejected 2026-10-06: decoding the bit
+   planes with three word loads and an 8x8 bit transpose instead of one byte load and 16 bit
+   operations per plane (CPU-verified, saved privately as a patch). Standalone, mode 3 with it ran
+   3.04 ms against 3.005-3.04 ms without, so the plane loop is not the cost. Probe the per-block
+   header loads, the subgroup scans and the barriers next (`qo_nodqstore`-style probes).
 2. **Chroma stores.** With luma packed, the two R8 chroma planes now take twice the luma plane's
    stores. Interleaving Cb/Cr into one RG8 plane halves them and keeps hardware bilinear upsampling
    in the conversion pass.
