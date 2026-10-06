@@ -22,6 +22,17 @@ supported by evidence. Preserve correctness, rollback and honest measurements;
 the previous agent's process is not mandatory. A handoff does not automatically
 resume paused hardware work or unattended workers.
 
+## October 6: 240 Hz streams, higher resolution and refresh measured
+
+`.56` (`79e38af`, signed CI 37396414259, installed) reports a system-forced 240 Hz display to the
+server, so SteamVR runs at 240 Hz; `tools/quest3/refresh_scaling.py` applies and restores the
+override reliably. 240 Hz exists only as a 3104x1664 panel mode (1552x1664 per eye). Short screens:
+229.7 fresh FPS at 1280x1376 and 222.7 at 1440x1536 per eye; 207 Hz reaches 196 at 1440x1536 but
+only 117 at native size; above native size at 120 Hz the decoder sets the rate (89 at 2560x2720,
+65 at 3072x3216). GPU level 7 helps 240 Hz slightly; LOW priority above 120 Hz, server phase lock
+and PR #8's fused kernel (correct, no speedup) are not adopted. Details and limits:
+[HIGH-REFRESH.md](HIGH-REFRESH.md), [REFRESH-RATES.md](REFRESH-RATES.md).
+
 ## Current engineering state
 
 PR #3 integrates diagnostics and safety work while keeping the experiments off.
@@ -94,7 +105,10 @@ state before testing; the private handoff includes a fresh disk snapshot.
 Balanced and Strong peripheral profiles (about 24% and 35% fewer encoded pixels,
 candidates), an optical latency stamp and a no-decode cadence probe. Fused final
 colour is #4's Quest-verified implementation ([FUSE-COLOR.md](FUSE-COLOR.md)): byte-exact,
-no live 120 Hz gain, off. The hardware plan now starts with the 207 Hz lobby cadence.
+no live 120 Hz gain, off. #8 adds an experimental fused dequant + level-0 Haar kernel behind
+`debug.q3pw.dequant_haar` with a software exact-pixel gate; the client refuses it while fused
+colour is active. The hardware plan starts with the Quest `dequant_haar_gate` and the 207 Hz
+lobby cadence.
 
 Use the [next overnight plan](NEXT-OVERNIGHT.md) and the
 [October 5 scorecard](WHOLE-STACK-SCORECARD.md). The server already submits

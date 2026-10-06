@@ -37,5 +37,5 @@ change) and skipped frames (jumps).
 
 Each video frame is accurate to about one camera frame (4.2 ms at 240 fps) plus a monitor
 refresh. Collect at least 50 pairs across several seconds and report the median and p90 with
-the rate, bitrate, foveation profile and fused-color state. Keep this result separate from
+the rate, bitrate, foveation profile and fused-decode settings. Keep this result separate from
 ALVR's estimate. Neither one replaces the other.

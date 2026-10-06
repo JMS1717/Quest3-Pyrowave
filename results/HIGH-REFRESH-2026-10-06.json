@@ -1,0 +1,2418 @@
+{
+ "date": "2026-10-06",
+ "scope": "Short stationary-chart screens: two 12 s windows per cell (four for ABBA), USB/TCP, 4:2:0, Haar/Compute, no foveated encoding, one synchronous decode worker, stage and eye GPU timers on. Unique fresh FPS is distinct server target timestamps per second. Not sustained, not gameplay, not optical latency.",
+ "panel_modes": {
+  "native": "4128x2208 (2064x2208 per eye), up to 207 Hz",
+  "scaled_240": "3104x1664 (1552x1664 per eye) at 240 Hz with debug.oculus.forceDisplayScaling=1"
+ },
+ "runs": [
+  {
+   "build": "55",
+   "note": "Installed reviewed .55 pair (2b289f8), before the 240 Hz fix",
+   "cells": [
+    {
+     "label": "r120-2080x2208",
+     "refresh_hz": 120,
+     "stream_per_eye": [
+      2080,
+      2208
+     ],
+     "source_per_eye": [
+      2080,
+      2208
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 119.42,
+       "lost_per_s": 0.58,
+       "gpu_decode_p50_ms": 6.18,
+       "gpu_decode_p90_ms": 6.72,
+       "fence_p50_ms": 7.99,
+       "fence_p90_ms": 8.22,
+       "convert_p50_ms": 0.77,
+       "eye_render_p50_ms": 1.73,
+       "vrapi_app_fps": 121.0,
+       "vrapi_gpu_util": 0.87,
+       "compositor_gpu_ms": 0.82,
+       "battery_c": 35.0,
+       "thermal_status": 0,
+       "server_fps": 121.1,
+       "encoder_ms": 2.69,
+       "network_ms": 4.26,
+       "decoder_ms": 11.09,
+       "decoder_queue_ms": 1.78,
+       "estimated_total_latency_ms": 45.8
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 117.84,
+       "lost_per_s": 2.24,
+       "gpu_decode_p50_ms": 6.48,
+       "gpu_decode_p90_ms": 6.8,
+       "fence_p50_ms": 7.97,
+       "fence_p90_ms": 8.26,
+       "convert_p50_ms": 0.74,
+       "eye_render_p50_ms": 1.78,
+       "vrapi_app_fps": 121.0,
+       "vrapi_gpu_util": 0.86,
+       "compositor_gpu_ms": 0.82,
+       "battery_c": 35.0,
+       "thermal_status": 0,
+       "server_fps": 120.4,
+       "encoder_ms": 2.12,
+       "network_ms": 4.16,
+       "decoder_ms": 11.31,
+       "decoder_queue_ms": 1.54,
+       "estimated_total_latency_ms": 49.7
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 118.63,
+       "lost_per_s": 1.41,
+       "gpu_decode_p50_ms": 6.33,
+       "fence_p50_ms": 7.98,
+       "vrapi_app_fps": 121.0
+      }
+     }
+    },
+    {
+     "label": "r120-2560x2720",
+     "refresh_hz": 120,
+     "stream_per_eye": [
+      2560,
+      2720
+     ],
+     "source_per_eye": [
+      2560,
+      2720
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 88.38,
+       "lost_per_s": 31.71,
+       "gpu_decode_p50_ms": 8.45,
+       "gpu_decode_p90_ms": 8.77,
+       "fence_p50_ms": 10.68,
+       "fence_p90_ms": 11.41,
+       "convert_p50_ms": 1.22,
+       "eye_render_p50_ms": 2.52,
+       "vrapi_app_fps": 121.0,
+       "vrapi_gpu_util": 0.9,
+       "compositor_gpu_ms": 0.93,
+       "battery_c": 37.0,
+       "thermal_status": 0,
+       "server_fps": 121.3,
+       "encoder_ms": 3.24,
+       "network_ms": 4.43,
+       "decoder_ms": 15.5,
+       "decoder_queue_ms": 0.19,
+       "estimated_total_latency_ms": 51.6
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 89.96,
+       "lost_per_s": 30.04,
+       "gpu_decode_p50_ms": 7.35,
+       "gpu_decode_p90_ms": 8.72,
+       "fence_p50_ms": 10.55,
+       "fence_p90_ms": 11.48,
+       "convert_p50_ms": 1.25,
+       "eye_render_p50_ms": 2.18,
+       "vrapi_app_fps": 120.0,
+       "vrapi_gpu_util": 0.9,
+       "compositor_gpu_ms": 0.93,
+       "battery_c": 36.0,
+       "thermal_status": 0,
+       "server_fps": 120.7,
+       "encoder_ms": 2.38,
+       "network_ms": 4.13,
+       "decoder_ms": 14.11,
+       "decoder_queue_ms": 0.11,
+       "estimated_total_latency_ms": 55.2
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 89.17,
+       "lost_per_s": 30.87,
+       "gpu_decode_p50_ms": 7.9,
+       "fence_p50_ms": 10.61,
+       "vrapi_app_fps": 120.5
+      }
+     }
+    },
+    {
+     "label": "r120-3072x3216",
+     "refresh_hz": 120,
+     "stream_per_eye": [
+      3072,
+      3216
+     ],
+     "source_per_eye": [
+      3072,
+      3216
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 64.62,
+       "lost_per_s": 55.47,
+       "gpu_decode_p50_ms": 11.99,
+       "gpu_decode_p90_ms": 12.96,
+       "fence_p50_ms": 15.16,
+       "fence_p90_ms": 15.67,
+       "convert_p50_ms": 2.04,
+       "eye_render_p50_ms": 3.28,
+       "vrapi_app_fps": 120.5,
+       "vrapi_gpu_util": 0.92,
+       "compositor_gpu_ms": 1.06,
+       "battery_c": 37.0,
+       "thermal_status": 0,
+       "server_fps": 121.1,
+       "encoder_ms": 3.43,
+       "network_ms": 4.37,
+       "decoder_ms": 20.58,
+       "decoder_queue_ms": 0.6,
+       "estimated_total_latency_ms": 56.9
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 65.38,
+       "lost_per_s": 54.62,
+       "gpu_decode_p50_ms": 11.86,
+       "gpu_decode_p90_ms": 12.9,
+       "fence_p50_ms": 15.08,
+       "fence_p90_ms": 15.58,
+       "convert_p50_ms": 1.93,
+       "eye_render_p50_ms": 3.11,
+       "vrapi_app_fps": 121.0,
+       "vrapi_gpu_util": 0.92,
+       "compositor_gpu_ms": 1.05,
+       "battery_c": 37.0,
+       "thermal_status": 0,
+       "server_fps": 120.7,
+       "encoder_ms": 2.59,
+       "network_ms": 4.0,
+       "decoder_ms": 20.49,
+       "decoder_queue_ms": 0.94,
+       "estimated_total_latency_ms": 58.6
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 65.0,
+       "lost_per_s": 55.04,
+       "gpu_decode_p50_ms": 11.92,
+       "fence_p50_ms": 15.12,
+       "vrapi_app_fps": 120.8
+      }
+     }
+    },
+    {
+     "label": "r144-2080x2208",
+     "refresh_hz": 144,
+     "stream_per_eye": [
+      2080,
+      2208
+     ],
+     "source_per_eye": [
+      2080,
+      2208
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 130.53,
+       "lost_per_s": 13.72,
+       "gpu_decode_p50_ms": 4.79,
+       "gpu_decode_p90_ms": 5.53,
+       "fence_p50_ms": 6.81,
+       "fence_p90_ms": 7.45,
+       "convert_p50_ms": 0.79,
+       "eye_render_p50_ms": 6.4,
+       "vrapi_app_fps": 137.0,
+       "vrapi_gpu_util": 0.94,
+       "compositor_gpu_ms": 0.82,
+       "battery_c": 38.0,
+       "thermal_status": 0,
+       "server_fps": 142.5,
+       "encoder_ms": 2.41,
+       "network_ms": 3.96,
+       "decoder_ms": 10.01,
+       "decoder_queue_ms": 2.01,
+       "estimated_total_latency_ms": 46.7
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 134.94,
+       "lost_per_s": 9.22,
+       "gpu_decode_p50_ms": 4.72,
+       "gpu_decode_p90_ms": 5.46,
+       "fence_p50_ms": 6.63,
+       "fence_p90_ms": 7.37,
+       "convert_p50_ms": 0.78,
+       "eye_render_p50_ms": 6.31,
+       "vrapi_app_fps": 139.0,
+       "vrapi_gpu_util": 0.95,
+       "compositor_gpu_ms": 0.82,
+       "battery_c": 37.0,
+       "thermal_status": 0,
+       "server_fps": 143.0,
+       "encoder_ms": 1.77,
+       "network_ms": 3.87,
+       "decoder_ms": 10.58,
+       "decoder_queue_ms": 2.07,
+       "estimated_total_latency_ms": 49.7
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 132.74,
+       "lost_per_s": 11.47,
+       "gpu_decode_p50_ms": 4.75,
+       "fence_p50_ms": 6.72,
+       "vrapi_app_fps": 138.0
+      }
+     }
+    },
+    {
+     "label": "r144-1664x1760",
+     "refresh_hz": 144,
+     "stream_per_eye": [
+      1664,
+      1760
+     ],
+     "source_per_eye": [
+      1664,
+      1760
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 134.66,
+       "lost_per_s": 9.31,
+       "gpu_decode_p50_ms": 4.64,
+       "gpu_decode_p90_ms": 4.78,
+       "fence_p50_ms": 6.07,
+       "fence_p90_ms": 6.39,
+       "convert_p50_ms": 0.58,
+       "eye_render_p50_ms": 1.4,
+       "vrapi_app_fps": 144.0,
+       "vrapi_gpu_util": 0.82,
+       "compositor_gpu_ms": 0.84,
+       "battery_c": 38.0,
+       "thermal_status": 0,
+       "server_fps": 142.3,
+       "encoder_ms": 2.29,
+       "network_ms": 3.53,
+       "decoder_ms": 6.66,
+       "decoder_queue_ms": 1.06,
+       "estimated_total_latency_ms": 41.2
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 130.54,
+       "lost_per_s": 13.46,
+       "gpu_decode_p50_ms": 4.67,
+       "gpu_decode_p90_ms": 4.82,
+       "fence_p50_ms": 6.09,
+       "fence_p90_ms": 6.41,
+       "convert_p50_ms": 0.58,
+       "eye_render_p50_ms": 1.7,
+       "vrapi_app_fps": 144.0,
+       "vrapi_gpu_util": 0.82,
+       "compositor_gpu_ms": 0.84,
+       "battery_c": 38.0,
+       "thermal_status": 0,
+       "server_fps": 143.0,
+       "encoder_ms": 1.45,
+       "network_ms": 3.61,
+       "decoder_ms": 6.64,
+       "decoder_queue_ms": 1.07,
+       "estimated_total_latency_ms": 41.8
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 132.6,
+       "lost_per_s": 11.39,
+       "gpu_decode_p50_ms": 4.65,
+       "fence_p50_ms": 6.08,
+       "vrapi_app_fps": 144.0
+      }
+     }
+    },
+    {
+     "label": "r207-2080x2208",
+     "refresh_hz": 207,
+     "stream_per_eye": [
+      2080,
+      2208
+     ],
+     "source_per_eye": [
+      2080,
+      2208
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 116.42,
+       "lost_per_s": 91.33,
+       "gpu_decode_p50_ms": 5.63,
+       "gpu_decode_p90_ms": 6.4,
+       "fence_p50_ms": 8.25,
+       "fence_p90_ms": 8.75,
+       "convert_p50_ms": 1.51,
+       "eye_render_p50_ms": 7.73,
+       "vrapi_app_fps": 118.0,
+       "vrapi_gpu_util": 0.97,
+       "compositor_gpu_ms": 0.87,
+       "battery_c": 39.0,
+       "thermal_status": 0,
+       "server_fps": 210.6,
+       "encoder_ms": 1.49,
+       "network_ms": 2.77,
+       "decoder_ms": 11.1,
+       "decoder_queue_ms": 1.97,
+       "estimated_total_latency_ms": 41.1
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 116.7,
+       "lost_per_s": 90.44,
+       "gpu_decode_p50_ms": 5.63,
+       "gpu_decode_p90_ms": 6.43,
+       "fence_p50_ms": 8.23,
+       "fence_p90_ms": 8.72,
+       "convert_p50_ms": 1.11,
+       "eye_render_p50_ms": 7.74,
+       "vrapi_app_fps": 118.0,
+       "vrapi_gpu_util": 0.96,
+       "compositor_gpu_ms": 0.87,
+       "battery_c": 39.0,
+       "thermal_status": 0,
+       "server_fps": 210.1,
+       "encoder_ms": 1.22,
+       "network_ms": 2.68,
+       "decoder_ms": 10.98,
+       "decoder_queue_ms": 1.92,
+       "estimated_total_latency_ms": 44.9
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 116.56,
+       "lost_per_s": 90.88,
+       "gpu_decode_p50_ms": 5.63,
+       "fence_p50_ms": 8.24,
+       "vrapi_app_fps": 118.0
+      }
+     }
+    },
+    {
+     "label": "r207-1664x1760",
+     "refresh_hz": 207,
+     "stream_per_eye": [
+      1664,
+      1760
+     ],
+     "source_per_eye": [
+      1664,
+      1760
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 174.68,
+       "lost_per_s": 33.51,
+       "gpu_decode_p50_ms": 3.4,
+       "gpu_decode_p90_ms": 4.13,
+       "fence_p50_ms": 5.33,
+       "fence_p90_ms": 5.81,
+       "convert_p50_ms": 0.54,
+       "eye_render_p50_ms": 4.88,
+       "vrapi_app_fps": 178.5,
+       "vrapi_gpu_util": 0.92,
+       "compositor_gpu_ms": 0.79,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 209.8,
+       "encoder_ms": 1.45,
+       "network_ms": 2.78,
+       "decoder_ms": 7.65,
+       "decoder_queue_ms": 1.41,
+       "estimated_total_latency_ms": 30.5
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 173.75,
+       "lost_per_s": 34.5,
+       "gpu_decode_p50_ms": 3.39,
+       "gpu_decode_p90_ms": 4.16,
+       "fence_p50_ms": 5.37,
+       "fence_p90_ms": 5.86,
+       "convert_p50_ms": 0.55,
+       "eye_render_p50_ms": 4.94,
+       "vrapi_app_fps": 176.0,
+       "vrapi_gpu_util": 0.92,
+       "compositor_gpu_ms": 0.79,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 212.8,
+       "encoder_ms": 1.67,
+       "network_ms": 2.96,
+       "decoder_ms": 7.89,
+       "decoder_queue_ms": 1.45,
+       "estimated_total_latency_ms": 35.4
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 174.22,
+       "lost_per_s": 34.0,
+       "gpu_decode_p50_ms": 3.4,
+       "fence_p50_ms": 5.35,
+       "vrapi_app_fps": 177.2
+      }
+     }
+    },
+    {
+     "label": "r207-1440x1536",
+     "refresh_hz": 207,
+     "stream_per_eye": [
+      1440,
+      1536
+     ],
+     "source_per_eye": [
+      1440,
+      1536
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 191.79,
+       "lost_per_s": 19.61,
+       "gpu_decode_p50_ms": 2.81,
+       "gpu_decode_p90_ms": 3.6,
+       "fence_p50_ms": 4.5,
+       "fence_p90_ms": 4.81,
+       "convert_p50_ms": 0.41,
+       "eye_render_p50_ms": 3.74,
+       "vrapi_app_fps": 197.0,
+       "vrapi_gpu_util": 0.85,
+       "compositor_gpu_ms": 0.76,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 207.8,
+       "encoder_ms": 1.36,
+       "network_ms": 2.95,
+       "decoder_ms": 6.67,
+       "decoder_queue_ms": 1.11,
+       "estimated_total_latency_ms": 29.9
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 200.63,
+       "lost_per_s": 7.4,
+       "gpu_decode_p50_ms": 2.85,
+       "gpu_decode_p90_ms": 3.59,
+       "fence_p50_ms": 4.52,
+       "fence_p90_ms": 4.83,
+       "convert_p50_ms": 0.41,
+       "eye_render_p50_ms": 2.2,
+       "vrapi_app_fps": 205.0,
+       "vrapi_gpu_util": 0.86,
+       "compositor_gpu_ms": 0.76,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 213.7,
+       "encoder_ms": 1.7,
+       "network_ms": 3.17,
+       "decoder_ms": 7.71,
+       "decoder_queue_ms": 2.45,
+       "estimated_total_latency_ms": 33.5
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 196.21,
+       "lost_per_s": 13.5,
+       "gpu_decode_p50_ms": 2.83,
+       "fence_p50_ms": 4.51,
+       "vrapi_app_fps": 201.0
+      }
+     }
+    },
+    {
+     "label": "r120-2080x2208-return",
+     "refresh_hz": 120,
+     "stream_per_eye": [
+      2080,
+      2208
+     ],
+     "source_per_eye": [
+      2080,
+      2208
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 119.58,
+       "lost_per_s": 0.58,
+       "gpu_decode_p50_ms": 5.95,
+       "gpu_decode_p90_ms": 6.8,
+       "fence_p50_ms": 7.99,
+       "fence_p90_ms": 8.34,
+       "convert_p50_ms": 0.77,
+       "eye_render_p50_ms": 1.75,
+       "vrapi_app_fps": 120.0,
+       "vrapi_gpu_util": 0.86,
+       "compositor_gpu_ms": 0.82,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 121.8,
+       "encoder_ms": 3.32,
+       "network_ms": 4.45,
+       "decoder_ms": 13.07,
+       "decoder_queue_ms": 1.43,
+       "estimated_total_latency_ms": 47.8
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 118.84,
+       "lost_per_s": 1.16,
+       "gpu_decode_p50_ms": 5.8,
+       "gpu_decode_p90_ms": 6.85,
+       "fence_p50_ms": 7.92,
+       "fence_p90_ms": 8.4,
+       "convert_p50_ms": 0.77,
+       "eye_render_p50_ms": 1.68,
+       "vrapi_app_fps": 120.0,
+       "vrapi_gpu_util": 0.86,
+       "compositor_gpu_ms": 0.84,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 121.3,
+       "encoder_ms": 3.34,
+       "network_ms": 4.31,
+       "decoder_ms": 12.58,
+       "decoder_queue_ms": 4.24,
+       "estimated_total_latency_ms": 50.2
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 119.21,
+       "lost_per_s": 0.87,
+       "gpu_decode_p50_ms": 5.87,
+       "fence_p50_ms": 7.95,
+       "vrapi_app_fps": 120.0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "build": "56",
+   "note": "Signed .56 (79e38af): 240 Hz acceptance fix + PR #8 kernel, flag off",
+   "cells": [
+    {
+     "label": "r240-1440x1536",
+     "refresh_hz": 240,
+     "stream_per_eye": [
+      1440,
+      1536
+     ],
+     "source_per_eye": [
+      1440,
+      1536
+     ],
+     "mbps": 1000,
+     "display_scaling": true,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 223.33,
+       "lost_per_s": 17.86,
+       "gpu_decode_p50_ms": 2.66,
+       "gpu_decode_p90_ms": 3.24,
+       "fence_p50_ms": 4.03,
+       "fence_p90_ms": 4.63,
+       "convert_p50_ms": 0.41,
+       "eye_render_p50_ms": 3.61,
+       "vrapi_app_fps": 227.5,
+       "vrapi_gpu_util": 0.91,
+       "compositor_gpu_ms": 0.52,
+       "battery_c": 38.0,
+       "thermal_status": 0,
+       "server_fps": 242.8,
+       "encoder_ms": 0.97,
+       "network_ms": 2.57,
+       "decoder_ms": 6.12,
+       "decoder_queue_ms": 1.32,
+       "estimated_total_latency_ms": 28.2
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 221.98,
+       "lost_per_s": 18.44,
+       "gpu_decode_p50_ms": 2.65,
+       "gpu_decode_p90_ms": 3.24,
+       "fence_p50_ms": 4.05,
+       "fence_p90_ms": 4.61,
+       "convert_p50_ms": 0.41,
+       "eye_render_p50_ms": 3.61,
+       "vrapi_app_fps": 225.5,
+       "vrapi_gpu_util": 0.9,
+       "compositor_gpu_ms": 0.52,
+       "battery_c": 38.0,
+       "thermal_status": 0,
+       "server_fps": 242.1,
+       "encoder_ms": 0.94,
+       "network_ms": 2.54,
+       "decoder_ms": 5.89,
+       "decoder_queue_ms": 1.28,
+       "estimated_total_latency_ms": 30.6
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 222.65,
+       "lost_per_s": 18.15,
+       "gpu_decode_p50_ms": 2.66,
+       "fence_p50_ms": 4.04,
+       "vrapi_app_fps": 226.5
+      }
+     }
+    },
+    {
+     "label": "r240-1536x1664",
+     "refresh_hz": 240,
+     "stream_per_eye": [
+      1536,
+      1664
+     ],
+     "source_per_eye": [
+      1536,
+      1664
+     ],
+     "mbps": 1000,
+     "display_scaling": true,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 199.68,
+       "lost_per_s": 41.07,
+       "gpu_decode_p50_ms": 2.94,
+       "gpu_decode_p90_ms": 3.58,
+       "fence_p50_ms": 4.72,
+       "fence_p90_ms": 5.08,
+       "convert_p50_ms": 0.49,
+       "eye_render_p50_ms": 4.25,
+       "vrapi_app_fps": 203.0,
+       "vrapi_gpu_util": 0.91,
+       "compositor_gpu_ms": 0.52,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 243.5,
+       "encoder_ms": 1.25,
+       "network_ms": 2.47,
+       "decoder_ms": 6.81,
+       "decoder_queue_ms": 1.35,
+       "estimated_total_latency_ms": 27.1
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 200.68,
+       "lost_per_s": 39.95,
+       "gpu_decode_p50_ms": 2.94,
+       "gpu_decode_p90_ms": 3.57,
+       "fence_p50_ms": 4.71,
+       "fence_p90_ms": 5.06,
+       "convert_p50_ms": 0.48,
+       "eye_render_p50_ms": 4.21,
+       "vrapi_app_fps": 203.0,
+       "vrapi_gpu_util": 0.91,
+       "compositor_gpu_ms": 0.52,
+       "battery_c": 39.0,
+       "thermal_status": 0,
+       "server_fps": 244.0,
+       "encoder_ms": 1.5,
+       "network_ms": 2.6,
+       "decoder_ms": 6.82,
+       "decoder_queue_ms": 1.29,
+       "estimated_total_latency_ms": 30.7
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 200.18,
+       "lost_per_s": 40.51,
+       "gpu_decode_p50_ms": 2.94,
+       "fence_p50_ms": 4.71,
+       "vrapi_app_fps": 203.0
+      }
+     }
+    },
+    {
+     "label": "r240-1280x1376",
+     "refresh_hz": 240,
+     "stream_per_eye": [
+      1280,
+      1376
+     ],
+     "source_per_eye": [
+      1280,
+      1376
+     ],
+     "mbps": 1000,
+     "display_scaling": true,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 230.11,
+       "lost_per_s": 10.22,
+       "gpu_decode_p50_ms": 2.49,
+       "gpu_decode_p90_ms": 3.07,
+       "fence_p50_ms": 3.87,
+       "fence_p90_ms": 4.19,
+       "convert_p50_ms": 0.33,
+       "eye_render_p50_ms": 3.21,
+       "vrapi_app_fps": 234.5,
+       "vrapi_gpu_util": 0.85,
+       "compositor_gpu_ms": 0.52,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 243.0,
+       "encoder_ms": 1.14,
+       "network_ms": 2.75,
+       "decoder_ms": 5.88,
+       "decoder_queue_ms": 1.09,
+       "estimated_total_latency_ms": 25.5
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 229.28,
+       "lost_per_s": 12.38,
+       "gpu_decode_p50_ms": 2.49,
+       "gpu_decode_p90_ms": 3.04,
+       "fence_p50_ms": 3.86,
+       "fence_p90_ms": 4.15,
+       "convert_p50_ms": 0.33,
+       "eye_render_p50_ms": 3.21,
+       "vrapi_app_fps": 234.0,
+       "vrapi_gpu_util": 0.84,
+       "compositor_gpu_ms": 0.52,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 243.9,
+       "encoder_ms": 1.49,
+       "network_ms": 2.87,
+       "decoder_ms": 5.97,
+       "decoder_queue_ms": 1.07,
+       "estimated_total_latency_ms": 28.9
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 229.69,
+       "lost_per_s": 11.3,
+       "gpu_decode_p50_ms": 2.49,
+       "fence_p50_ms": 3.86,
+       "vrapi_app_fps": 234.2
+      }
+     }
+    },
+    {
+     "label": "r240-1440x1536-gpu7",
+     "refresh_hz": 240,
+     "stream_per_eye": [
+      1440,
+      1536
+     ],
+     "source_per_eye": [
+      1440,
+      1536
+     ],
+     "mbps": 1000,
+     "display_scaling": true,
+     "arm_overrides": {
+      "A": {
+       "debug.oculus.gpuLevel": ""
+      },
+      "B": {
+       "debug.oculus.gpuLevel": "7"
+      }
+     },
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 221.06,
+       "lost_per_s": 21.85,
+       "gpu_decode_p50_ms": 2.68,
+       "gpu_decode_p90_ms": 3.25,
+       "fence_p50_ms": 4.05,
+       "fence_p90_ms": 4.65,
+       "convert_p50_ms": 0.41,
+       "eye_render_p50_ms": 3.58,
+       "vrapi_app_fps": 225.0,
+       "vrapi_gpu_util": 0.9,
+       "compositor_gpu_ms": 0.52,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 243.3,
+       "encoder_ms": 1.18,
+       "network_ms": 2.5,
+       "decoder_ms": 5.84,
+       "decoder_queue_ms": 1.28,
+       "estimated_total_latency_ms": 25.8
+      },
+      {
+       "arm": "B",
+       "unique_fresh_fps": 224.61,
+       "lost_per_s": 17.61,
+       "gpu_decode_p50_ms": 2.55,
+       "gpu_decode_p90_ms": 2.71,
+       "fence_p50_ms": 3.88,
+       "fence_p90_ms": 4.22,
+       "convert_p50_ms": 0.4,
+       "eye_render_p50_ms": 3.31,
+       "vrapi_app_fps": 230.5,
+       "vrapi_gpu_util": 0.88,
+       "compositor_gpu_ms": 0.51,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 243.7,
+       "encoder_ms": 1.42,
+       "network_ms": 2.77,
+       "decoder_ms": 5.74,
+       "decoder_queue_ms": 1.21,
+       "estimated_total_latency_ms": 28.1
+      },
+      {
+       "arm": "B",
+       "unique_fresh_fps": 223.58,
+       "lost_per_s": 20.36,
+       "gpu_decode_p50_ms": 2.55,
+       "gpu_decode_p90_ms": 2.72,
+       "fence_p50_ms": 3.89,
+       "fence_p90_ms": 4.23,
+       "convert_p50_ms": 0.4,
+       "eye_render_p50_ms": 3.3,
+       "vrapi_app_fps": 233.5,
+       "vrapi_gpu_util": 0.87,
+       "compositor_gpu_ms": 0.51,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 243.8,
+       "encoder_ms": 1.42,
+       "network_ms": 3.14,
+       "decoder_ms": 5.79,
+       "decoder_queue_ms": 1.17,
+       "estimated_total_latency_ms": 28.7
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 220.55,
+       "lost_per_s": 23.52,
+       "gpu_decode_p50_ms": 2.69,
+       "gpu_decode_p90_ms": 3.27,
+       "fence_p50_ms": 4.05,
+       "fence_p90_ms": 4.63,
+       "convert_p50_ms": 0.41,
+       "eye_render_p50_ms": 3.59,
+       "vrapi_app_fps": 225.5,
+       "vrapi_gpu_util": 0.9,
+       "compositor_gpu_ms": 0.52,
+       "battery_c": 41.0,
+       "thermal_status": 0,
+       "server_fps": 244.0,
+       "encoder_ms": 1.42,
+       "network_ms": 2.56,
+       "decoder_ms": 5.85,
+       "decoder_queue_ms": 1.32,
+       "estimated_total_latency_ms": 29.3
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 220.81,
+       "lost_per_s": 22.68,
+       "gpu_decode_p50_ms": 2.68,
+       "fence_p50_ms": 4.05,
+       "vrapi_app_fps": 225.2
+      },
+      "B": {
+       "unique_fresh_fps": 224.09,
+       "lost_per_s": 18.98,
+       "gpu_decode_p50_ms": 2.55,
+       "fence_p50_ms": 3.89,
+       "vrapi_app_fps": 232.0
+      }
+     }
+    },
+    {
+     "label": "r120-2080x2208-gpu7",
+     "refresh_hz": 120,
+     "stream_per_eye": [
+      2080,
+      2208
+     ],
+     "source_per_eye": [
+      2080,
+      2208
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": {
+      "A": {
+       "debug.oculus.gpuLevel": ""
+      },
+      "B": {
+       "debug.oculus.gpuLevel": "7"
+      }
+     },
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 119.47,
+       "lost_per_s": 0.58,
+       "gpu_decode_p50_ms": 5.94,
+       "gpu_decode_p90_ms": 6.78,
+       "fence_p50_ms": 7.98,
+       "fence_p90_ms": 8.34,
+       "convert_p50_ms": 0.78,
+       "eye_render_p50_ms": 1.92,
+       "vrapi_app_fps": 120.5,
+       "vrapi_gpu_util": 0.87,
+       "compositor_gpu_ms": 0.86,
+       "battery_c": 41.0,
+       "thermal_status": 0,
+       "server_fps": 121.5,
+       "encoder_ms": 3.32,
+       "network_ms": 4.55,
+       "decoder_ms": 14.3,
+       "decoder_queue_ms": 1.1,
+       "estimated_total_latency_ms": 51.1
+      },
+      {
+       "arm": "B",
+       "unique_fresh_fps": 118.58,
+       "lost_per_s": 1.41,
+       "gpu_decode_p50_ms": 6.35,
+       "gpu_decode_p90_ms": 6.65,
+       "fence_p50_ms": 7.89,
+       "fence_p90_ms": 8.2,
+       "convert_p50_ms": 0.8,
+       "eye_render_p50_ms": 1.8,
+       "vrapi_app_fps": 120.0,
+       "vrapi_gpu_util": 0.84,
+       "compositor_gpu_ms": 0.83,
+       "battery_c": 41.0,
+       "thermal_status": 0,
+       "server_fps": 121.7,
+       "encoder_ms": 3.34,
+       "network_ms": 4.5,
+       "decoder_ms": 10.45,
+       "decoder_queue_ms": 4.52,
+       "estimated_total_latency_ms": 49.2
+      },
+      {
+       "arm": "B",
+       "unique_fresh_fps": 119.09,
+       "lost_per_s": 1.0,
+       "gpu_decode_p50_ms": 6.35,
+       "gpu_decode_p90_ms": 6.66,
+       "fence_p50_ms": 7.89,
+       "fence_p90_ms": 8.17,
+       "convert_p50_ms": 0.81,
+       "eye_render_p50_ms": 1.79,
+       "vrapi_app_fps": 121.0,
+       "vrapi_gpu_util": 0.85,
+       "compositor_gpu_ms": 0.82,
+       "battery_c": 41.0,
+       "thermal_status": 0,
+       "server_fps": 121.9,
+       "encoder_ms": 3.31,
+       "network_ms": 4.82,
+       "decoder_ms": 10.35,
+       "decoder_queue_ms": 4.55,
+       "estimated_total_latency_ms": 49.2
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 118.67,
+       "lost_per_s": 1.41,
+       "gpu_decode_p50_ms": 6.03,
+       "gpu_decode_p90_ms": 6.8,
+       "fence_p50_ms": 8.01,
+       "fence_p90_ms": 8.33,
+       "convert_p50_ms": 0.77,
+       "eye_render_p50_ms": 1.83,
+       "vrapi_app_fps": 121.0,
+       "vrapi_gpu_util": 0.87,
+       "compositor_gpu_ms": 0.85,
+       "battery_c": 41.0,
+       "thermal_status": 0,
+       "server_fps": 121.3,
+       "encoder_ms": 3.31,
+       "network_ms": 4.37,
+       "decoder_ms": 11.39,
+       "decoder_queue_ms": 1.26,
+       "estimated_total_latency_ms": 45.9
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 119.07,
+       "lost_per_s": 1.0,
+       "gpu_decode_p50_ms": 5.98,
+       "fence_p50_ms": 7.99,
+       "vrapi_app_fps": 120.8
+      },
+      "B": {
+       "unique_fresh_fps": 118.84,
+       "lost_per_s": 1.21,
+       "gpu_decode_p50_ms": 6.35,
+       "fence_p50_ms": 7.89,
+       "vrapi_app_fps": 120.5
+      }
+     }
+    }
+   ]
+  },
+  {
+   "build": "56-early",
+   "note": ".56 first 240 Hz attempt: an ADB health read timed out after 20 s at 240 Hz; harness stopped and restored",
+   "cells": [
+    {
+     "label": "r240-1440x1536",
+     "refresh_hz": 240,
+     "stream_per_eye": [
+      1440,
+      1536
+     ],
+     "source_per_eye": [
+      1440,
+      1536
+     ],
+     "mbps": 1000,
+     "display_scaling": true,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "incomplete",
+     "harness_error": "TimeoutExpired: adb shell dumpsys thermalservice did not answer within 20 s",
+     "restore_errors": []
+    }
+   ]
+  },
+  {
+   "build": "56-early",
+   "note": ".56 240 Hz: first cell captured (panel already in the scaled mode); second cell never entered 240 Hz (override set while asleep)",
+   "cells": [
+    {
+     "label": "r240-1440x1536",
+     "refresh_hz": 240,
+     "stream_per_eye": [
+      1440,
+      1536
+     ],
+     "source_per_eye": [
+      1440,
+      1536
+     ],
+     "mbps": 1000,
+     "display_scaling": true,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 216.02,
+       "lost_per_s": 25.84,
+       "gpu_decode_p50_ms": 2.68,
+       "gpu_decode_p90_ms": 3.29,
+       "fence_p50_ms": 4.07,
+       "fence_p90_ms": 4.69,
+       "convert_p50_ms": 0.42,
+       "eye_render_p50_ms": 3.58,
+       "vrapi_app_fps": 224.5,
+       "vrapi_gpu_util": 0.9,
+       "compositor_gpu_ms": 0.55,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 243.5,
+       "encoder_ms": 1.22,
+       "network_ms": 2.57,
+       "decoder_ms": 5.97,
+       "decoder_queue_ms": 1.32,
+       "estimated_total_latency_ms": 25.0
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 217.18,
+       "lost_per_s": 26.84,
+       "gpu_decode_p50_ms": 2.68,
+       "gpu_decode_p90_ms": 3.29,
+       "fence_p50_ms": 4.05,
+       "fence_p90_ms": 4.63,
+       "convert_p50_ms": 0.42,
+       "eye_render_p50_ms": 3.58,
+       "vrapi_app_fps": 223.0,
+       "vrapi_gpu_util": 0.9,
+       "compositor_gpu_ms": 0.55,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 244.3,
+       "encoder_ms": 1.48,
+       "network_ms": 3.15,
+       "decoder_ms": 5.92,
+       "decoder_queue_ms": 1.23,
+       "estimated_total_latency_ms": 30.8
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 216.6,
+       "lost_per_s": 26.34,
+       "gpu_decode_p50_ms": 2.68,
+       "fence_p50_ms": 4.06,
+       "vrapi_app_fps": 223.8
+      }
+     }
+    },
+    {
+     "label": "r240-1664x1760",
+     "refresh_hz": 240,
+     "stream_per_eye": [
+      1664,
+      1760
+     ],
+     "source_per_eye": [
+      1664,
+      1760
+     ],
+     "mbps": 1000,
+     "display_scaling": true,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "incomplete",
+     "harness_error": "RuntimeError('No stream after relaunch')",
+     "restore_errors": []
+    }
+   ]
+  },
+  {
+   "build": "56-early",
+   "note": ".56 240 Hz with a SurfaceFlinger-based mode check: second cell again stayed at 120 Hz (SurfaceFlinger reported 240)",
+   "cells": [
+    {
+     "label": "r240-1440x1536",
+     "refresh_hz": 240,
+     "stream_per_eye": [
+      1440,
+      1536
+     ],
+     "source_per_eye": [
+      1440,
+      1536
+     ],
+     "mbps": 1000,
+     "display_scaling": true,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 217.9,
+       "lost_per_s": 22.93,
+       "gpu_decode_p50_ms": 2.68,
+       "gpu_decode_p90_ms": 3.28,
+       "fence_p50_ms": 4.05,
+       "fence_p90_ms": 4.62,
+       "convert_p50_ms": 0.41,
+       "eye_render_p50_ms": 3.58,
+       "vrapi_app_fps": 223.5,
+       "vrapi_gpu_util": 0.9,
+       "compositor_gpu_ms": 0.55,
+       "battery_c": 38.0,
+       "thermal_status": 0,
+       "server_fps": 244.0,
+       "encoder_ms": 1.23,
+       "network_ms": 2.92,
+       "decoder_ms": 6.03,
+       "decoder_queue_ms": 1.3,
+       "estimated_total_latency_ms": 26.5
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 219.59,
+       "lost_per_s": 22.36,
+       "gpu_decode_p50_ms": 2.68,
+       "gpu_decode_p90_ms": 3.3,
+       "fence_p50_ms": 4.09,
+       "fence_p90_ms": 4.7,
+       "convert_p50_ms": 0.41,
+       "eye_render_p50_ms": 3.63,
+       "vrapi_app_fps": 223.0,
+       "vrapi_gpu_util": 0.9,
+       "compositor_gpu_ms": 0.55,
+       "battery_c": 38.0,
+       "thermal_status": 0,
+       "server_fps": 244.9,
+       "encoder_ms": 1.48,
+       "network_ms": 2.62,
+       "decoder_ms": 5.95,
+       "decoder_queue_ms": 1.33,
+       "estimated_total_latency_ms": 29.4
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 218.74,
+       "lost_per_s": 22.64,
+       "gpu_decode_p50_ms": 2.68,
+       "fence_p50_ms": 4.07,
+       "vrapi_app_fps": 223.2
+      }
+     }
+    },
+    {
+     "label": "r240-1536x1664",
+     "refresh_hz": 240,
+     "stream_per_eye": [
+      1536,
+      1664
+     ],
+     "source_per_eye": [
+      1536,
+      1664
+     ],
+     "mbps": 1000,
+     "display_scaling": true,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "incomplete",
+     "harness_error": "RuntimeError('No stream after relaunch')",
+     "restore_errors": []
+    }
+   ]
+  },
+  {
+   "build": "56",
+   "note": ".56: LOW decode priority at 240 Hz (ABBA) and ALVR_PHASE_LOCK off/on/on/off phases",
+   "cells": [
+    {
+     "label": "r240-1440x1536-lowprio",
+     "refresh_hz": 240,
+     "stream_per_eye": [
+      1440,
+      1536
+     ],
+     "source_per_eye": [
+      1440,
+      1536
+     ],
+     "mbps": 1000,
+     "display_scaling": true,
+     "arm_overrides": {
+      "A": {
+       "debug.q3pw.decode_priority": ""
+      },
+      "B": {
+       "debug.q3pw.decode_priority": "low"
+      }
+     },
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 220.21,
+       "lost_per_s": 21.01,
+       "gpu_decode_p50_ms": 2.67,
+       "gpu_decode_p90_ms": 3.26,
+       "fence_p50_ms": 4.05,
+       "fence_p90_ms": 4.66,
+       "convert_p50_ms": 0.41,
+       "eye_render_p50_ms": 3.6,
+       "vrapi_app_fps": 225.0,
+       "vrapi_gpu_util": 0.9,
+       "compositor_gpu_ms": 0.53,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 243.1,
+       "encoder_ms": 1.11,
+       "network_ms": 2.6,
+       "decoder_ms": 6.08,
+       "decoder_queue_ms": 1.3,
+       "estimated_total_latency_ms": 30.2
+      },
+      {
+       "arm": "B",
+       "unique_fresh_fps": 183.84,
+       "lost_per_s": 56.24,
+       "gpu_decode_p50_ms": 3.49,
+       "gpu_decode_p90_ms": 4.2,
+       "fence_p50_ms": 5.11,
+       "fence_p90_ms": 5.84,
+       "convert_p50_ms": 0.43,
+       "eye_render_p50_ms": 1.31,
+       "vrapi_app_fps": 240.5,
+       "vrapi_gpu_util": 0.85,
+       "compositor_gpu_ms": 0.54,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 242.1,
+       "encoder_ms": 0.96,
+       "network_ms": 2.52,
+       "decoder_ms": 7.39,
+       "decoder_queue_ms": 0.5,
+       "estimated_total_latency_ms": 28.0
+      },
+      {
+       "arm": "B",
+       "unique_fresh_fps": 182.84,
+       "lost_per_s": 57.15,
+       "gpu_decode_p50_ms": 3.49,
+       "gpu_decode_p90_ms": 4.21,
+       "fence_p50_ms": 5.14,
+       "fence_p90_ms": 5.83,
+       "convert_p50_ms": 0.43,
+       "eye_render_p50_ms": 1.31,
+       "vrapi_app_fps": 240.0,
+       "vrapi_gpu_util": 0.85,
+       "compositor_gpu_ms": 0.55,
+       "battery_c": 41.0,
+       "thermal_status": 0,
+       "server_fps": 242.6,
+       "encoder_ms": 0.92,
+       "network_ms": 2.51,
+       "decoder_ms": 7.38,
+       "decoder_queue_ms": 0.35,
+       "estimated_total_latency_ms": 28.4
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 221.41,
+       "lost_per_s": 18.95,
+       "gpu_decode_p50_ms": 2.69,
+       "gpu_decode_p90_ms": 3.27,
+       "fence_p50_ms": 4.07,
+       "fence_p90_ms": 4.66,
+       "convert_p50_ms": 0.41,
+       "eye_render_p50_ms": 3.64,
+       "vrapi_app_fps": 225.5,
+       "vrapi_gpu_util": 0.91,
+       "compositor_gpu_ms": 0.53,
+       "battery_c": 41.0,
+       "thermal_status": 0,
+       "server_fps": 242.6,
+       "encoder_ms": 0.96,
+       "network_ms": 2.51,
+       "decoder_ms": 6.09,
+       "decoder_queue_ms": 1.34,
+       "estimated_total_latency_ms": 31.2
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 220.81,
+       "lost_per_s": 19.98,
+       "gpu_decode_p50_ms": 2.68,
+       "fence_p50_ms": 4.06,
+       "vrapi_app_fps": 225.2
+      },
+      "B": {
+       "unique_fresh_fps": 183.34,
+       "lost_per_s": 56.7,
+       "gpu_decode_p50_ms": 3.49,
+       "fence_p50_ms": 5.13,
+       "vrapi_app_fps": 240.2
+      }
+     }
+    },
+    {
+     "label": "r207-1440x1536-phaseoff0",
+     "refresh_hz": 207,
+     "stream_per_eye": [
+      1440,
+      1536
+     ],
+     "source_per_eye": [
+      1440,
+      1536
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 191.05,
+       "lost_per_s": 17.11,
+       "gpu_decode_p50_ms": 2.82,
+       "gpu_decode_p90_ms": 3.56,
+       "fence_p50_ms": 4.47,
+       "fence_p90_ms": 4.76,
+       "convert_p50_ms": 0.41,
+       "eye_render_p50_ms": 3.53,
+       "vrapi_app_fps": 200.5,
+       "vrapi_gpu_util": 0.84,
+       "compositor_gpu_ms": 0.76,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 208.9,
+       "encoder_ms": 1.48,
+       "network_ms": 3.15,
+       "decoder_ms": 6.43,
+       "decoder_queue_ms": 1.08,
+       "estimated_total_latency_ms": 28.2
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 197.12,
+       "lost_per_s": 12.37,
+       "gpu_decode_p50_ms": 2.81,
+       "gpu_decode_p90_ms": 3.6,
+       "fence_p50_ms": 4.45,
+       "fence_p90_ms": 4.8,
+       "convert_p50_ms": 0.41,
+       "eye_render_p50_ms": 3.84,
+       "vrapi_app_fps": 198.5,
+       "vrapi_gpu_util": 0.86,
+       "compositor_gpu_ms": 0.76,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 210.8,
+       "encoder_ms": 1.69,
+       "network_ms": 3.14,
+       "decoder_ms": 6.86,
+       "decoder_queue_ms": 1.13,
+       "estimated_total_latency_ms": 34.8
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 194.09,
+       "lost_per_s": 14.74,
+       "gpu_decode_p50_ms": 2.82,
+       "fence_p50_ms": 4.46,
+       "vrapi_app_fps": 199.5
+      }
+     }
+    },
+    {
+     "label": "r207-1440x1536-phaseon1",
+     "refresh_hz": 207,
+     "stream_per_eye": [
+      1440,
+      1536
+     ],
+     "source_per_eye": [
+      1440,
+      1536
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": {
+      "ALVR_PHASE_LOCK": "1"
+     },
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 195.87,
+       "lost_per_s": 13.54,
+       "gpu_decode_p50_ms": 2.81,
+       "gpu_decode_p90_ms": 3.57,
+       "fence_p50_ms": 4.46,
+       "fence_p90_ms": 4.78,
+       "convert_p50_ms": 0.42,
+       "eye_render_p50_ms": 3.91,
+       "vrapi_app_fps": 199.0,
+       "vrapi_gpu_util": 0.86,
+       "compositor_gpu_ms": 0.77,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 212.7,
+       "encoder_ms": 1.35,
+       "network_ms": 2.98,
+       "decoder_ms": 6.54,
+       "decoder_queue_ms": 1.1,
+       "estimated_total_latency_ms": 33.9
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 196.7,
+       "lost_per_s": 11.97,
+       "gpu_decode_p50_ms": 2.81,
+       "gpu_decode_p90_ms": 3.57,
+       "fence_p50_ms": 4.46,
+       "fence_p90_ms": 4.78,
+       "convert_p50_ms": 0.42,
+       "eye_render_p50_ms": 3.85,
+       "vrapi_app_fps": 199.0,
+       "vrapi_gpu_util": 0.86,
+       "compositor_gpu_ms": 0.77,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 211.2,
+       "encoder_ms": 1.0,
+       "network_ms": 2.91,
+       "decoder_ms": 6.88,
+       "decoder_queue_ms": 1.12,
+       "estimated_total_latency_ms": 35.6
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 196.28,
+       "lost_per_s": 12.75,
+       "gpu_decode_p50_ms": 2.81,
+       "fence_p50_ms": 4.46,
+       "vrapi_app_fps": 199.0
+      }
+     }
+    },
+    {
+     "label": "r207-1440x1536-phaseon2",
+     "refresh_hz": 207,
+     "stream_per_eye": [
+      1440,
+      1536
+     ],
+     "source_per_eye": [
+      1440,
+      1536
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": {
+      "ALVR_PHASE_LOCK": "1"
+     },
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 193.02,
+       "lost_per_s": 16.95,
+       "gpu_decode_p50_ms": 2.82,
+       "gpu_decode_p90_ms": 3.58,
+       "fence_p50_ms": 4.48,
+       "fence_p90_ms": 4.8,
+       "convert_p50_ms": 0.42,
+       "eye_render_p50_ms": 3.82,
+       "vrapi_app_fps": 199.0,
+       "vrapi_gpu_util": 0.85,
+       "compositor_gpu_ms": 0.76,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 211.7,
+       "encoder_ms": 1.46,
+       "network_ms": 3.42,
+       "decoder_ms": 6.82,
+       "decoder_queue_ms": 1.07,
+       "estimated_total_latency_ms": 30.7
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 194.42,
+       "lost_per_s": 15.38,
+       "gpu_decode_p50_ms": 2.82,
+       "gpu_decode_p90_ms": 3.57,
+       "fence_p50_ms": 4.46,
+       "fence_p90_ms": 4.81,
+       "convert_p50_ms": 0.41,
+       "eye_render_p50_ms": 3.91,
+       "vrapi_app_fps": 199.5,
+       "vrapi_gpu_util": 0.85,
+       "compositor_gpu_ms": 0.76,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 212.2,
+       "encoder_ms": 1.45,
+       "network_ms": 2.99,
+       "decoder_ms": 6.79,
+       "decoder_queue_ms": 1.08,
+       "estimated_total_latency_ms": 30.1
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 193.72,
+       "lost_per_s": 16.16,
+       "gpu_decode_p50_ms": 2.82,
+       "fence_p50_ms": 4.47,
+       "vrapi_app_fps": 199.2
+      }
+     }
+    },
+    {
+     "label": "r207-1440x1536-phaseoff3",
+     "refresh_hz": 207,
+     "stream_per_eye": [
+      1440,
+      1536
+     ],
+     "source_per_eye": [
+      1440,
+      1536
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 197.11,
+       "lost_per_s": 10.39,
+       "gpu_decode_p50_ms": 2.82,
+       "gpu_decode_p90_ms": 3.58,
+       "fence_p50_ms": 4.49,
+       "fence_p90_ms": 4.8,
+       "convert_p50_ms": 0.41,
+       "eye_render_p50_ms": 3.8,
+       "vrapi_app_fps": 200.0,
+       "vrapi_gpu_util": 0.85,
+       "compositor_gpu_ms": 0.77,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 209.9,
+       "encoder_ms": 1.05,
+       "network_ms": 3.04,
+       "decoder_ms": 7.2,
+       "decoder_queue_ms": 1.14,
+       "estimated_total_latency_ms": 30.9
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 203.26,
+       "lost_per_s": 3.9,
+       "gpu_decode_p50_ms": 2.84,
+       "gpu_decode_p90_ms": 3.59,
+       "fence_p50_ms": 4.51,
+       "fence_p90_ms": 4.8,
+       "convert_p50_ms": 0.41,
+       "eye_render_p50_ms": 3.83,
+       "vrapi_app_fps": 205.5,
+       "vrapi_gpu_util": 0.87,
+       "compositor_gpu_ms": 0.77,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 208.6,
+       "encoder_ms": 0.98,
+       "network_ms": 3.11,
+       "decoder_ms": 7.63,
+       "decoder_queue_ms": 1.21,
+       "estimated_total_latency_ms": 34.7
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 200.19,
+       "lost_per_s": 7.15,
+       "gpu_decode_p50_ms": 2.83,
+       "fence_p50_ms": 4.5,
+       "vrapi_app_fps": 202.8
+      }
+     }
+    },
+    {
+     "label": "r144-1664x1760-phaseoff0",
+     "refresh_hz": 144,
+     "stream_per_eye": [
+      1664,
+      1760
+     ],
+     "source_per_eye": [
+      1664,
+      1760
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 134.14,
+       "lost_per_s": 9.97,
+       "gpu_decode_p50_ms": 4.57,
+       "gpu_decode_p90_ms": 4.74,
+       "fence_p50_ms": 5.99,
+       "fence_p90_ms": 6.32,
+       "convert_p50_ms": 0.58,
+       "eye_render_p50_ms": 1.39,
+       "vrapi_app_fps": 144.0,
+       "vrapi_gpu_util": 0.8,
+       "compositor_gpu_ms": 0.83,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 142.1,
+       "encoder_ms": 2.84,
+       "network_ms": 3.63,
+       "decoder_ms": 6.59,
+       "decoder_queue_ms": 1.08,
+       "estimated_total_latency_ms": 47.1
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 140.59,
+       "lost_per_s": 3.66,
+       "gpu_decode_p50_ms": 3.81,
+       "gpu_decode_p90_ms": 3.95,
+       "fence_p50_ms": 5.26,
+       "fence_p90_ms": 5.99,
+       "convert_p50_ms": 0.56,
+       "eye_render_p50_ms": 1.4,
+       "vrapi_app_fps": 144.0,
+       "vrapi_gpu_util": 0.79,
+       "compositor_gpu_ms": 0.83,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 141.7,
+       "encoder_ms": 2.82,
+       "network_ms": 3.65,
+       "decoder_ms": 5.82,
+       "decoder_queue_ms": 0.86,
+       "estimated_total_latency_ms": 36.5
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 137.37,
+       "lost_per_s": 6.81,
+       "gpu_decode_p50_ms": 4.19,
+       "fence_p50_ms": 5.63,
+       "vrapi_app_fps": 144.0
+      }
+     }
+    },
+    {
+     "label": "r144-1664x1760-phaseon1",
+     "refresh_hz": 144,
+     "stream_per_eye": [
+      1664,
+      1760
+     ],
+     "source_per_eye": [
+      1664,
+      1760
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": {
+      "ALVR_PHASE_LOCK": "1"
+     },
+     "status": "incomplete",
+     "harness_error": "AssertionError('Source exited before ready')",
+     "restore_errors": []
+    }
+   ]
+  },
+  {
+   "build": "56",
+   "note": ".56: rerun of the 144 Hz phase-lock-on cell (SteamVR Home still launching; scene refused)",
+   "cells": [
+    {
+     "label": "r144-1664x1760-phaseon1",
+     "refresh_hz": 144,
+     "stream_per_eye": [
+      1664,
+      1760
+     ],
+     "source_per_eye": [
+      1664,
+      1760
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": {
+      "ALVR_PHASE_LOCK": "1"
+     },
+     "status": "incomplete",
+     "harness_error": "AssertionError('Source exited before ready')",
+     "restore_errors": []
+    }
+   ]
+  },
+  {
+   "build": "56",
+   "note": ".56: second rerun with scene-init retries (SteamVR Home still launching after 30 s)",
+   "cells": [
+    {
+     "label": "r144-1664x1760-phaseon1",
+     "refresh_hz": 144,
+     "stream_per_eye": [
+      1664,
+      1760
+     ],
+     "source_per_eye": [
+      1664,
+      1760
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": null,
+     "server_env": {
+      "ALVR_PHASE_LOCK": "1"
+     },
+     "status": "incomplete",
+     "harness_error": "AssertionError('Source exited before ready')",
+     "restore_errors": []
+    }
+   ]
+  },
+  {
+   "build": "56",
+   "note": ".56: GPU level 7 batch, first start refused by orphaned SteamVR Home processes from earlier phases",
+   "cells": [
+    {
+     "label": "r120-2560x2720-gpu7",
+     "refresh_hz": 120,
+     "stream_per_eye": [
+      2560,
+      2720
+     ],
+     "source_per_eye": [
+      2560,
+      2720
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": {
+      "A": {
+       "debug.oculus.gpuLevel": ""
+      },
+      "B": {
+       "debug.oculus.gpuLevel": "7"
+      }
+     },
+     "server_env": null,
+     "status": "incomplete",
+     "harness_error": "AssertionError('Source exited before ready')",
+     "restore_errors": []
+    }
+   ]
+  },
+  {
+   "build": "56",
+   "note": ".56: GPU level 7 ABBA at GPU-bound cells after the orphans were stopped",
+   "cells": [
+    {
+     "label": "r120-2560x2720-gpu7",
+     "refresh_hz": 120,
+     "stream_per_eye": [
+      2560,
+      2720
+     ],
+     "source_per_eye": [
+      2560,
+      2720
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": {
+      "A": {
+       "debug.oculus.gpuLevel": ""
+      },
+      "B": {
+       "debug.oculus.gpuLevel": "7"
+      }
+     },
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 89.67,
+       "lost_per_s": 30.17,
+       "gpu_decode_p50_ms": 7.43,
+       "gpu_decode_p90_ms": 8.74,
+       "fence_p50_ms": 10.53,
+       "fence_p90_ms": 11.49,
+       "convert_p50_ms": 1.23,
+       "eye_render_p50_ms": 2.24,
+       "vrapi_app_fps": 120.5,
+       "vrapi_gpu_util": 0.91,
+       "compositor_gpu_ms": 0.95,
+       "battery_c": 38.0,
+       "thermal_status": 0,
+       "server_fps": 121.0,
+       "encoder_ms": 3.23,
+       "network_ms": 4.19,
+       "decoder_ms": 14.88,
+       "decoder_queue_ms": 0.11,
+       "estimated_total_latency_ms": 51.2
+      },
+      {
+       "arm": "B",
+       "unique_fresh_fps": 93.41,
+       "lost_per_s": 26.59,
+       "gpu_decode_p50_ms": 7.24,
+       "gpu_decode_p90_ms": 8.36,
+       "fence_p50_ms": 10.18,
+       "fence_p90_ms": 10.92,
+       "convert_p50_ms": 1.31,
+       "eye_render_p50_ms": 2.21,
+       "vrapi_app_fps": 121.0,
+       "vrapi_gpu_util": 0.9,
+       "compositor_gpu_ms": 0.91,
+       "battery_c": 38.0,
+       "thermal_status": 0,
+       "server_fps": 121.1,
+       "encoder_ms": 2.33,
+       "network_ms": 4.58,
+       "decoder_ms": 15.05,
+       "decoder_queue_ms": 0.47,
+       "estimated_total_latency_ms": 49.4
+      },
+      {
+       "arm": "B",
+       "unique_fresh_fps": 93.07,
+       "lost_per_s": 26.93,
+       "gpu_decode_p50_ms": 7.24,
+       "gpu_decode_p90_ms": 8.39,
+       "fence_p50_ms": 10.15,
+       "fence_p90_ms": 11.07,
+       "convert_p50_ms": 1.27,
+       "eye_render_p50_ms": 2.25,
+       "vrapi_app_fps": 120.0,
+       "vrapi_gpu_util": 0.9,
+       "compositor_gpu_ms": 0.93,
+       "battery_c": 39.0,
+       "thermal_status": 0,
+       "server_fps": 120.9,
+       "encoder_ms": 2.34,
+       "network_ms": 4.05,
+       "decoder_ms": 14.44,
+       "decoder_queue_ms": 0.42,
+       "estimated_total_latency_ms": 53.5
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 89.27,
+       "lost_per_s": 30.7,
+       "gpu_decode_p50_ms": 7.49,
+       "gpu_decode_p90_ms": 8.84,
+       "fence_p50_ms": 10.62,
+       "fence_p90_ms": 11.61,
+       "convert_p50_ms": 1.24,
+       "eye_render_p50_ms": 2.24,
+       "vrapi_app_fps": 120.5,
+       "vrapi_gpu_util": 0.91,
+       "compositor_gpu_ms": 0.94,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 121.4,
+       "encoder_ms": 2.34,
+       "network_ms": 4.16,
+       "decoder_ms": 15.62,
+       "decoder_queue_ms": 0.11,
+       "estimated_total_latency_ms": 53.2
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 89.47,
+       "lost_per_s": 30.43,
+       "gpu_decode_p50_ms": 7.46,
+       "fence_p50_ms": 10.57,
+       "vrapi_app_fps": 120.5
+      },
+      "B": {
+       "unique_fresh_fps": 93.24,
+       "lost_per_s": 26.76,
+       "gpu_decode_p50_ms": 7.24,
+       "fence_p50_ms": 10.16,
+       "vrapi_app_fps": 120.5
+      }
+     }
+    },
+    {
+     "label": "r207-1664x1760-gpu7",
+     "refresh_hz": 207,
+     "stream_per_eye": [
+      1664,
+      1760
+     ],
+     "source_per_eye": [
+      1664,
+      1760
+     ],
+     "mbps": 1000,
+     "display_scaling": false,
+     "arm_overrides": {
+      "A": {
+       "debug.oculus.gpuLevel": ""
+      },
+      "B": {
+       "debug.oculus.gpuLevel": "7"
+      }
+     },
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 171.27,
+       "lost_per_s": 35.98,
+       "gpu_decode_p50_ms": 3.42,
+       "gpu_decode_p90_ms": 4.22,
+       "fence_p50_ms": 5.45,
+       "fence_p90_ms": 5.91,
+       "convert_p50_ms": 0.57,
+       "eye_render_p50_ms": 4.95,
+       "vrapi_app_fps": 176.5,
+       "vrapi_gpu_util": 0.93,
+       "compositor_gpu_ms": 0.81,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 212.0,
+       "encoder_ms": 1.38,
+       "network_ms": 2.87,
+       "decoder_ms": 7.86,
+       "decoder_queue_ms": 1.48,
+       "estimated_total_latency_ms": 37.3
+      },
+      {
+       "arm": "B",
+       "unique_fresh_fps": 181.58,
+       "lost_per_s": 25.42,
+       "gpu_decode_p50_ms": 3.23,
+       "gpu_decode_p90_ms": 3.94,
+       "fence_p50_ms": 5.07,
+       "fence_p90_ms": 5.63,
+       "convert_p50_ms": 0.57,
+       "eye_render_p50_ms": 4.65,
+       "vrapi_app_fps": 185.0,
+       "vrapi_gpu_util": 0.92,
+       "compositor_gpu_ms": 0.78,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 210.4,
+       "encoder_ms": 1.09,
+       "network_ms": 2.97,
+       "decoder_ms": 7.53,
+       "decoder_queue_ms": 1.5,
+       "estimated_total_latency_ms": 31.3
+      },
+      {
+       "arm": "B",
+       "unique_fresh_fps": 181.33,
+       "lost_per_s": 25.92,
+       "gpu_decode_p50_ms": 3.23,
+       "gpu_decode_p90_ms": 3.94,
+       "fence_p50_ms": 5.07,
+       "fence_p90_ms": 5.64,
+       "convert_p50_ms": 0.55,
+       "eye_render_p50_ms": 4.66,
+       "vrapi_app_fps": 184.5,
+       "vrapi_gpu_util": 0.92,
+       "compositor_gpu_ms": 0.78,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 209.5,
+       "encoder_ms": 1.12,
+       "network_ms": 2.79,
+       "decoder_ms": 7.39,
+       "decoder_queue_ms": 1.5,
+       "estimated_total_latency_ms": 36.7
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 173.03,
+       "lost_per_s": 34.14,
+       "gpu_decode_p50_ms": 3.39,
+       "gpu_decode_p90_ms": 4.18,
+       "fence_p50_ms": 5.39,
+       "fence_p90_ms": 5.85,
+       "convert_p50_ms": 0.56,
+       "eye_render_p50_ms": 4.92,
+       "vrapi_app_fps": 176.0,
+       "vrapi_gpu_util": 0.93,
+       "compositor_gpu_ms": 0.8,
+       "battery_c": 41.0,
+       "thermal_status": 0,
+       "server_fps": 210.2,
+       "encoder_ms": 1.11,
+       "network_ms": 2.78,
+       "decoder_ms": 7.83,
+       "decoder_queue_ms": 1.48,
+       "estimated_total_latency_ms": 37.2
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 172.15,
+       "lost_per_s": 35.06,
+       "gpu_decode_p50_ms": 3.41,
+       "fence_p50_ms": 5.42,
+       "vrapi_app_fps": 176.2
+      },
+      "B": {
+       "unique_fresh_fps": 181.46,
+       "lost_per_s": 25.67,
+       "gpu_decode_p50_ms": 3.23,
+       "fence_p50_ms": 5.07,
+       "vrapi_app_fps": 184.8
+      }
+     }
+    },
+    {
+     "label": "r240-1536x1664-gpu7",
+     "refresh_hz": 240,
+     "stream_per_eye": [
+      1536,
+      1664
+     ],
+     "source_per_eye": [
+      1536,
+      1664
+     ],
+     "mbps": 1000,
+     "display_scaling": true,
+     "arm_overrides": {
+      "A": {
+       "debug.oculus.gpuLevel": ""
+      },
+      "B": {
+       "debug.oculus.gpuLevel": "7"
+      }
+     },
+     "server_env": null,
+     "status": "captured",
+     "harness_error": null,
+     "restore_errors": [],
+     "blocks": [
+      {
+       "arm": "A",
+       "unique_fresh_fps": 194.66,
+       "lost_per_s": 46.03,
+       "gpu_decode_p50_ms": 2.96,
+       "gpu_decode_p90_ms": 3.59,
+       "fence_p50_ms": 4.71,
+       "fence_p90_ms": 5.07,
+       "convert_p50_ms": 0.49,
+       "eye_render_p50_ms": 4.21,
+       "vrapi_app_fps": 205.0,
+       "vrapi_gpu_util": 0.9,
+       "compositor_gpu_ms": 0.53,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 243.6,
+       "encoder_ms": 1.37,
+       "network_ms": 2.55,
+       "decoder_ms": 6.7,
+       "decoder_queue_ms": 1.26,
+       "estimated_total_latency_ms": 27.1
+      },
+      {
+       "arm": "B",
+       "unique_fresh_fps": 208.74,
+       "lost_per_s": 31.98,
+       "gpu_decode_p50_ms": 2.76,
+       "gpu_decode_p90_ms": 3.33,
+       "fence_p50_ms": 4.28,
+       "fence_p90_ms": 4.79,
+       "convert_p50_ms": 0.46,
+       "eye_render_p50_ms": 3.78,
+       "vrapi_app_fps": 218.5,
+       "vrapi_gpu_util": 0.89,
+       "compositor_gpu_ms": 0.51,
+       "battery_c": 40.0,
+       "thermal_status": 0,
+       "server_fps": 243.9,
+       "encoder_ms": 1.59,
+       "network_ms": 2.71,
+       "decoder_ms": 6.22,
+       "decoder_queue_ms": 1.32,
+       "estimated_total_latency_ms": 30.1
+      },
+      {
+       "arm": "B",
+       "unique_fresh_fps": 198.82,
+       "lost_per_s": 42.29,
+       "gpu_decode_p50_ms": 2.78,
+       "gpu_decode_p90_ms": 3.35,
+       "fence_p50_ms": 4.4,
+       "fence_p90_ms": 4.88,
+       "convert_p50_ms": 0.47,
+       "eye_render_p50_ms": 3.88,
+       "vrapi_app_fps": 217.5,
+       "vrapi_gpu_util": 0.86,
+       "compositor_gpu_ms": 0.51,
+       "battery_c": 41.0,
+       "thermal_status": 0,
+       "server_fps": 244.4,
+       "encoder_ms": 1.58,
+       "network_ms": 2.67,
+       "decoder_ms": 6.34,
+       "decoder_queue_ms": 1.2,
+       "estimated_total_latency_ms": 30.6
+      },
+      {
+       "arm": "A",
+       "unique_fresh_fps": 203.04,
+       "lost_per_s": 37.7,
+       "gpu_decode_p50_ms": 2.93,
+       "gpu_decode_p90_ms": 3.57,
+       "fence_p50_ms": 4.67,
+       "fence_p90_ms": 5.02,
+       "convert_p50_ms": 0.48,
+       "eye_render_p50_ms": 4.21,
+       "vrapi_app_fps": 205.0,
+       "vrapi_gpu_util": 0.91,
+       "compositor_gpu_ms": 0.52,
+       "battery_c": 41.0,
+       "thermal_status": 0,
+       "server_fps": 244.3,
+       "encoder_ms": 1.6,
+       "network_ms": 2.54,
+       "decoder_ms": 6.7,
+       "decoder_queue_ms": 1.26,
+       "estimated_total_latency_ms": 30.5
+      }
+     ],
+     "per_arm": {
+      "A": {
+       "unique_fresh_fps": 198.85,
+       "lost_per_s": 41.86,
+       "gpu_decode_p50_ms": 2.94,
+       "fence_p50_ms": 4.69,
+       "vrapi_app_fps": 205.0
+      },
+      "B": {
+       "unique_fresh_fps": 203.78,
+       "lost_per_s": 37.13,
+       "gpu_decode_p50_ms": 2.77,
+       "fence_p50_ms": 4.34,
+       "vrapi_app_fps": 218.0
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

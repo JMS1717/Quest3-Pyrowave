@@ -22,20 +22,34 @@ full-frame passes.
 |---|---|---|---|
 | Balanced (68% center, 1.75x) and Strong (60% center, 2x) peripheral profiles, `video.pyrowave.foveation_profile` | Encoded pixels per eye drop by 23.8% (1824x1920) and 35.1% (1664x1792), versus 11.6% for Light. Measured Strong GPU decode is 5.08 ms, completion 7.12 ms at 120 Hz; the earlier 3.8 ms scaling estimate was not achieved | Rust server (C++ sizing), Rust client and the Python model agree for every eye width from 512 to 4096. Light geometry is unchanged | CONTINUE: candidates, not accepted |
 | Fused final color, opt-in with `debug.q3pw.fuse_color=1`. The integrated implementation is #4's, see [FUSE-COLOR.md](FUSE-COLOR.md); this branch's own version was not taken | Removes one full-resolution luma write and read | Byte-exact on Quest at 512x320 and 4160x2208. Live A/B at 120 Hz: no delivered gain, fence unchanged | STOP as a 120 Hz lever; keep off. Retest only within a 207 Hz budget |
+| Fused dequant + level-0 Haar: `pyrowave_decoder_set_fused_dequant_haar` plus `wavelet_dequant_haar0.comp`, opt-in with `debug.q3pw.dequant_haar=1` | Decodes the three level-0 luma bands inside the final Haar pass, so their R16F store and reload disappear: about 6.9M coefficient stores and 6.9M loads per 4160x2208 frame (est.), plus one dispatch. Holding three bands in registers may lower occupancy, so the net effect is unknown | `dequant_haar_gate` on lavapipe with 16-lane subgroups, where the current path decodes faithfully (54.3 dB against the source): fused output matches it within one 8-bit luma step, in 301 of 163,840 pixels (0.18%), with identical chroma, and a flat frame is exact. The cause of the one-step differences is unconfirmed | EXPERIMENT: Quest timing and exact-pixel run pending |
 | Optical latency stamp, `video.pyrowave.latency_stamp` ([OPTICAL-LATENCY.md](OPTICAL-LATENCY.md)) | First real composition-to-photon number | The layout round-trips through a rasterizer for eye sizes 512 to 4096 | New diagnostic |
 | No-decode cadence probe, `debug.q3pw.cadence_probe=207` | Shows whether the runtime itself sustains 207 Hz with the lobby only | Counter and summary logic unit-tested | New diagnostic |
 
-Light stays the default profile while foveated encoding and fused color stay off.
+Light stays the default profile while foveated encoding, fused color and fused dequant stay off.
 Bilinear remains the default PC filter after the measured Adaptive pacing concern.
 These optional profiles do not establish native-resolution 207 Hz streaming.
+
+Fused color and fused dequant both replace the final luma pass. The client refuses fused
+dequant while fused color is active, because fused color samples level-0 luma bands that
+fused dequant never stores. Each PyroWave patch applies cleanly with or without the other.
 
 ## Hardware sequence and next gates
 
 Run these in order. Each step can reject a candidate on its own. Short screens cannot prove
 sustained FPS, thermal stability or optical latency.
 
-1. **Fused color exact-pixel proof on Adreno.** Done in #4 (October 5): byte-exact on both
-   saved stereo fixtures; see [FUSE-COLOR.md](FUSE-COLOR.md) for the device scripts.
+1. **Exact-pixel proofs on Adreno.** Fused color is done in #4 (October 5): byte-exact on both
+   saved stereo fixtures; see [FUSE-COLOR.md](FUSE-COLOR.md) for the device scripts. Fused
+   dequant (PR #8) needs a matching signed build first; the .55 integration build does not
+   contain it. Push that build's `dequant_haar_gate`, `libpyrowave-shared.so` and
+   `libc++_shared.so` to `/data/local/tmp/q3pw/`, then run `LD_LIBRARY_PATH=. ./dequant_haar_gate`.
+   This covers 512x320 and 4160x2208 with a 30 dB luma PSNR floor, at most one 8-bit step of
+   luma difference and identical chroma. It must print `DEQUANT_HAAR_GATE_PASS` before any
+   streaming A/B. Record `luma_differing`, because zero would make it byte-identical. If only
+   the PSNR floor fails, rerun with `GATE_DUMP_DIR=.` and inspect the source, current and fused
+   PGM files before blaming either path. Lavapipe agrees within one step but cannot show
+   Adreno's FP16 rounding.
 2. **No-decode 207 Hz cadence.** Short screen complete; sustained cadence remains
    separate. Snapshot and temporarily align `debug.oculus.refreshRate` too: a saved
    120 Hz override masked the first request. With the PC streamer stopped, run
@@ -45,13 +59,16 @@ sustained FPS, thermal stability or optical latency.
 3. **120 Hz profile screen:** Off/Light/Balanced/Strong/Off short cells are complete,
    with owner-interrupted cells excluded and repeated. Sustained and lens checks
    remain. For a new interleaved comparison: Light versus Strong,
-   then fused color off versus on (already no 120 Hz gain, see #4). Record decode stages, displayed FPS, lost frames and a
-   peripheral-text look for each profile.
-4. **207 Hz screen** with Strong and fused color both on. Report runtime acceptance,
+   then `debug.q3pw.dequant_haar` off versus on in an ABBA order (fused color already showed
+   no 120 Hz gain in #4). Record decode stages, displayed FPS, lost frames and a
+   peripheral-text look for each profile. Dequant time should fall and iDWT time rise for
+   fused dequant; only their sum matters.
+4. **207 Hz screen** with Strong, plus one fused pass: fused color, or fused dequant if it won
+   step 3. The client never runs both. Report runtime acceptance,
    decode budget and live delivery as three separate results.
 5. **Optical latency** at the best stable rate, following [OPTICAL-LATENCY.md](OPTICAL-LATENCY.md).
 
 If 207 Hz still misses after step 4, the next levers are Vulkan-native OpenXR presentation
 ([VULKAN-PRESENTATION.md](VULKAN-PRESENTATION.md)), which removes the RGBA bridge and GLES
-copy, and fusing dequant with the level-0 Haar step, which avoids writing and re-reading
-most luma coefficients. Both are larger changes and are not started on this branch.
+copy, and packing four coefficients per texel in the remaining dequant levels. Both are
+larger changes and are not started on this branch.
