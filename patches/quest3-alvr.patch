@@ -266,10 +266,10 @@ index a5a446842d4799523d0e06fbfb7253bb13d6c7db..566cdde2b0f58ca90d722104983a4464
          .context("Failed to list ADB devices")?;
 diff --git a/alvr/adb/src/display_override.rs b/alvr/adb/src/display_override.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..03008a78ceea8a1f62ba1eec38aec10925670603
+index 0000000000000000000000000000000000000000..fca821732c310c31a175b8e51ff84b77bff757b4
 --- /dev/null
 +++ b/alvr/adb/src/display_override.rs
-@@ -0,0 +1,394 @@
+@@ -0,0 +1,414 @@
 +//! Opt-in Quest 3 display and GPU developer properties, managed by the PC over USB.
 +//!
 +//! Measured on Quest 3 (October 2026): HorizonOS applies `debug.oculus.forceDisplayScaling` and
@@ -334,6 +334,18 @@ index 0000000000000000000000000000000000000000..03008a78ceea8a1f62ba1eec38aec109
 +        if request.scaled_240 { SCALED_HZ.to_string() } else { original[1].clone() },
 +        if request.gpu_level_7 { "7".into() } else { original[2].clone() },
 +    ]
++}
++
++/// What to apply this loop iteration. The headset is only changed for the Quest3-Pyrowave client:
++/// while it runs (or is about to be autolaunched, or was just restarted by this module). Otherwise
++/// the request is withdrawn, which restores saved values and is a no-op when nothing was saved, so
++/// another VR app such as Virtual Desktop never inherits a mode it did not ask for.
++pub fn effective_request(request: Request, client_running: bool, autolaunch: bool, recently_restarted: bool) -> Request {
++    if client_running || autolaunch || recently_restarted {
++        request
++    } else {
++        Request::default()
++    }
 +}
 +
 +fn mode_satisfies(request: Request, mode: Option<(u32, u32, u32)>) -> bool {
@@ -656,6 +668,14 @@ index 0000000000000000000000000000000000000000..03008a78ceea8a1f62ba1eec38aec109
 +    }
 +
 +    #[test]
++    fn only_the_running_client_gets_the_override() {
++        assert_eq!(effective_request(ON, true, false, false), ON);
++        assert_eq!(effective_request(ON, false, true, false), ON);
++        assert_eq!(effective_request(ON, false, false, true), ON);
++        assert_eq!(effective_request(ON, false, false, false), Request::default());
++    }
++
++    #[test]
 +    fn refuses_state_saved_for_another_headset() {
 +        let quest = FakeQuest::new(true);
 +        let path = state_path("other");
@@ -665,10 +685,10 @@ index 0000000000000000000000000000000000000000..03008a78ceea8a1f62ba1eec38aec109
 +    }
 +}
 diff --git a/alvr/adb/src/lib.rs b/alvr/adb/src/lib.rs
-index 64660b1e8e559354c4fb96d88ec579f08fe243ec..c79cbba8659550dd532a4ec81fd443d33d09ef68 100644
+index 64660b1e8e559354c4fb96d88ec579f08fe243ec..29fef89b45a1283fa670094861846c02bb0979d7 100644
 --- a/alvr/adb/src/lib.rs
 +++ b/alvr/adb/src/lib.rs
-@@ -1,12 +1,15 @@
+@@ -1,12 +1,22 @@
  pub mod commands;
 +pub mod display_override;
 +#[cfg(windows)]
@@ -682,15 +702,23 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..c79cbba8659550dd532a4ec81fd443d3
      ClientFlavor, PACKAGE_NAME_GITHUB_DEV, PACKAGE_NAME_GITHUB_STABLE, PACKAGE_NAME_STORE,
  };
 -use std::collections::HashSet;
-+use std::{collections::HashSet, sync::Mutex};
++use std::{
++    collections::HashSet,
++    sync::Mutex,
++    time::{Duration, Instant},
++};
++
++/// A client this module restarted counts as running while it comes back up.
++const RESTART_GRACE: Duration = Duration::from_secs(20);
  
  pub enum WiredConnectionStatus {
      Ready,
-@@ -15,6 +18,18 @@ pub enum WiredConnectionStatus {
+@@ -15,6 +25,19 @@ pub enum WiredConnectionStatus {
  
  pub struct WiredConnection {
      adb_path: String,
 +    display: Mutex<display_override::DisplayOverride>,
++    restarted_at: Mutex<Option<Instant>>,
 +}
 +
 +struct AdbShell<'a> {
@@ -705,18 +733,18 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..c79cbba8659550dd532a4ec81fd443d3
  }
  
  impl WiredConnection {
-@@ -23,8 +38,28 @@ impl WiredConnection {
+@@ -23,8 +46,28 @@ impl WiredConnection {
          download_progress_callback: impl Fn(usize, Option<usize>),
      ) -> Result<Self> {
          let adb_path = commands::require_adb(layout, download_progress_callback)?;
 +        let display = Mutex::new(display_override::DisplayOverride::new(
 +            layout.config_dir.join("quest3_display_override.txt"),
 +        ));
++
++        Ok(Self { adb_path, display, restarted_at: Mutex::new(None) })
++    }
  
 -        Ok(Self { adb_path })
-+        Ok(Self { adb_path, display })
-+    }
-+
 +    /// Put back the Quest display/GPU values saved by an earlier request (server shutdown).
 +    pub fn restore_display(&self) -> Result<()> {
 +        let Some(device_serial) = commands::list_devices(&self.adb_path)?
@@ -735,7 +763,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..c79cbba8659550dd532a4ec81fd443d3
      }
  
      pub fn setup(
-@@ -33,6 +68,7 @@ impl WiredConnection {
+@@ -33,6 +76,7 @@ impl WiredConnection {
          stream_port: u16,
          client_type: &ClientFlavor,
          client_autolaunch: bool,
@@ -743,23 +771,35 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..c79cbba8659550dd532a4ec81fd443d3
      ) -> Result<WiredConnectionStatus> {
          let Some(device_serial) = commands::list_devices(&self.adb_path)?
              .into_iter()
-@@ -65,6 +101,23 @@ impl WiredConnection {
+@@ -65,6 +109,35 @@ impl WiredConnection {
              ));
          };
  
 +        // Quest3-Pyrowave opt-in: panel mode and GPU level are read when the client's VR session
 +        // starts, so a running client is restarted after any change.
 +        let shell = AdbShell { adb_path: &self.adb_path, device_serial: &device_serial };
-+        let changed = self
-+            .display
++        let client_running =
++            commands::get_process_id(&self.adb_path, &device_serial, &process_name)?.is_some();
++        let recently_restarted = self
++            .restarted_at
 +            .lock()
 +            .unwrap()
-+            .ensure(&shell, &device_serial, display_request)?;
++            .is_some_and(|at| at.elapsed() < RESTART_GRACE);
++        let request = display_override::effective_request(
++            display_request,
++            client_running,
++            client_autolaunch,
++            recently_restarted,
++        );
++        let changed = self.display.lock().unwrap().ensure(&shell, &device_serial, request)?;
 +        if let Some(message) = changed {
 +            alvr_common::info!("[Q3PW_DISPLAY_OVERRIDE] {message}");
-+            if commands::get_process_id(&self.adb_path, &device_serial, &process_name)?.is_some() {
++            // The client probed its rates at startup; after any change, including a restore,
++            // it must probe again before the server's rate check can pass.
++            if client_running {
 +                commands::shell(&self.adb_path, &device_serial, &format!("am force-stop {process_name}"))?;
 +                commands::start_application(&self.adb_path, &device_serial, &process_name)?;
++                *self.restarted_at.lock().unwrap() = Some(Instant::now());
 +            }
 +            return Ok(WiredConnectionStatus::NotReady(message));
 +        }
@@ -767,7 +807,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..c79cbba8659550dd532a4ec81fd443d3
          if commands::get_process_id(&self.adb_path, &device_serial, &process_name)?.is_none() {
              if client_autolaunch {
                  commands::start_application(&self.adb_path, &device_serial, &process_name)?;
-@@ -86,14 +139,9 @@ impl WiredConnection {
+@@ -86,14 +159,9 @@ impl WiredConnection {
      }
  }
  
