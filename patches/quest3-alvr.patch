@@ -206,7 +206,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..18ad9d0230c4dcc30ad7e7d97af279bc
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..0d059595ad021aa736a7fde7d8771e90455cd608 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..085590da6dd40e6f6abf17f99d567df951633818 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..0d059595ad021aa736a7fde7d8771e90
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.55"
++version = "20.13.0-quest3.pyro.56"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -4207,7 +4207,7 @@ index 7765bb459f73e9d7d5a9f296a498f09a0df43706..1a2b8152c628566294dfb840971d5b3e
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..fa6fc52aceaaa46d34f1fb266e896532d9ce2604 100644
+index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..4a56260e697d881d2f6299b469c834d015b601e9 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -1,10 +1,16 @@
@@ -4543,7 +4543,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..fa6fc52aceaaa46d34f1fb266e896532
  
                          if let Some(stream) = &mut stream_context {
                              stream.update_reference_space();
-@@ -494,7 +637,32 @@ pub fn entry_point() {
+@@ -494,7 +637,40 @@ pub fn entry_point() {
                          lobby.update_hud_message(&message);
                      }
                      ClientCoreEvent::StreamingStarted(config) => {
@@ -4558,6 +4558,13 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..fa6fc52aceaaa46d34f1fb266e896532
 +                            if let Err(err) =
 +                                xr_session.request_display_refresh_rate(config.refresh_rate_hint)
 +                            {
++                                if refresh_probe::runtime_matches(&xr_session, config.refresh_rate_hint) {
++                                    // System override (240 Hz display scaling) already runs this rate.
++                                    error!(
++                                        "[Q3PW_RATE] request={} rejected={err:?} runtime_already=true",
++                                        config.refresh_rate_hint
++                                    );
++                                } else {
 +                                error!(
 +                                    "[Q3PW_RATE] request={} rejected={err:?}",
 +                                    config.refresh_rate_hint
@@ -4565,6 +4572,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..fa6fc52aceaaa46d34f1fb266e896532
 +                                core_context.pause();
 +                                lobby.update_hud_message("Refresh request rejected. Select a supported rate on PC and reopen this app.");
 +                                continue;
++                                }
 +                            }
 +                        }
 +                        requested_refresh_rate = Some(config.refresh_rate_hint);
@@ -4576,7 +4584,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..fa6fc52aceaaa46d34f1fb266e896532
  
                          let context = StreamContext::new(
                              Arc::clone(&core_context),
-@@ -512,6 +680,8 @@ pub fn entry_point() {
+@@ -512,6 +688,8 @@ pub fn entry_point() {
                          stream_context = Some(context);
                      }
                      ClientCoreEvent::StreamingStopped => {
@@ -4585,7 +4593,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..fa6fc52aceaaa46d34f1fb266e896532
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -562,13 +732,36 @@ pub fn entry_point() {
+@@ -562,13 +740,41 @@ pub fn entry_point() {
                  }
              }
  
@@ -4615,6 +4623,11 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..fa6fc52aceaaa46d34f1fb266e896532
 +                        error!("[Q3PW_CADENCE] target_hz={hz} seconds={seconds} restore_hz={restore} started=true");
 +                        cadence_probe = Some(cadence_probe::CadenceProbe::new(hz, seconds, restore));
 +                    }
++                    Err(err) if refresh_probe::runtime_matches(&xr_session, hz) => {
++                        // System override (240 Hz display scaling): the rate is already active.
++                        error!("[Q3PW_CADENCE] target_hz={hz} seconds={seconds} restore_hz={restore} started=true request_rejected={err:?} runtime_already=true");
++                        cadence_probe = Some(cadence_probe::CadenceProbe::new(hz, seconds, restore));
++                    }
 +                    Err(err) => error!("[Q3PW_CADENCE] target_hz={hz} request_rejected={err:?}"),
 +                }
 +            }
@@ -4623,7 +4636,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..fa6fc52aceaaa46d34f1fb266e896532
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -576,12 +769,64 @@ pub fn entry_point() {
+@@ -576,12 +782,65 @@ pub fn entry_point() {
                      panic!();
                  }
              };
@@ -4641,7 +4654,8 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..fa6fc52aceaaa46d34f1fb266e896532
 +                }
 +                if probe.finished() {
 +                    let restore = probe.restore_hz();
-+                    let restored = xr_session.request_display_refresh_rate(restore).is_ok();
++                    let restored = xr_session.request_display_refresh_rate(restore).is_ok()
++                        || refresh_probe::runtime_matches(&xr_session, restore);
 +                    error!("[Q3PW_CADENCE] restore_hz={restore} restored={restored}");
 +                    cadence_probe = None;
 +                }
@@ -4689,7 +4703,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..fa6fc52aceaaa46d34f1fb266e896532
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +850,15 @@ pub fn entry_point() {
+@@ -605,15 +864,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -4714,7 +4728,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..fa6fc52aceaaa46d34f1fb266e896532
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,13 +866,16 @@ pub fn entry_point() {
+@@ -621,13 +880,16 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -4732,7 +4746,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..fa6fc52aceaaa46d34f1fb266e896532
  
              if !frame_state.should_render {
                  xr_frame_stream
-@@ -654,22 +902,89 @@ pub fn entry_point() {
+@@ -654,22 +916,89 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
@@ -4830,7 +4844,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..fa6fc52aceaaa46d34f1fb266e896532
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +1013,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +1027,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
@@ -5613,10 +5627,10 @@ index 0000000000000000000000000000000000000000..594514baa0411df1f4e3c3dbf7506737
 +}
 diff --git a/alvr/client_openxr/src/refresh_probe.rs b/alvr/client_openxr/src/refresh_probe.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..766b4125c6b1ba5edde6818cafc2a20aeca15f0e
+index 0000000000000000000000000000000000000000..eb407d50f1cd67240db4e72850faa12dbfe3bc84
 --- /dev/null
 +++ b/alvr/client_openxr/src/refresh_probe.rs
-@@ -0,0 +1,112 @@
+@@ -0,0 +1,129 @@
 +//! Quest 3 HorizonOS v2.7 permits rates absent from enumeration. Never infer support
 +//! from a property: require request success, runtime frequency and three frame periods.
 +use openxr as xr;
@@ -5638,6 +5652,14 @@ index 0000000000000000000000000000000000000000..766b4125c6b1ba5edde6818cafc2a20a
 +        && actual.is_finite()
 +        && (actual - target).abs() < 0.1
 +        && (1e9 / period_ns as f64 - target as f64).abs() < target as f64 * 0.005
++}
++
++/// True when the runtime already reports `target` (within 0.1 Hz). Used when a request is refused
++/// although a system override already runs the display at that rate.
++pub fn runtime_matches(session: &xr::Session<xr::OpenGlEs>, target: f32) -> bool {
++    session
++        .get_display_refresh_rate()
++        .is_ok_and(|actual| actual.is_finite() && (actual - target).abs() < 0.1)
 +}
 +
 +impl RefreshProbe {
@@ -5664,6 +5686,15 @@ index 0000000000000000000000000000000000000000..766b4125c6b1ba5edde6818cafc2a20a
 +            };
 +            match session.request_display_refresh_rate(target) {
 +                Ok(()) => {
++                    self.current = Some((target, Instant::now()));
++                    self.stable = 0;
++                }
++                Err(err) if runtime_matches(session, target) => {
++                    // A system override (debug.oculus.refreshRate=240 with
++                    // debug.oculus.forceDisplayScaling=1) runs the display at a rate the request API
++                    // refuses. The rate is already active, so confirm it the same way as an accepted
++                    // request: runtime frequency plus three frame periods.
++                    alvr_common::error!("[Q3PW_PROBE] request={target} rejected={err:?} runtime_already=true verifying=true");
 +                    self.current = Some((target, Instant::now()));
 +                    self.stable = 0;
 +                }
