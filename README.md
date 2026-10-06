@@ -26,6 +26,7 @@ SteamVR integration, tracking, controllers and audio.
 | --- | --- |
 | **Published preview: alpha.8 / `.51`** | Matching APK and Windows server with bounded frame waiting, automatic decode priority, independent resolution controls and safety fixes. [Release notes](docs/RELEASE-alpha.8.md) |
 | **Development: `.55`** | [PR #9](https://github.com/JMS1717/Quest3-Pyrowave/pull/9) integrates overlay modes, independent game/stream controls, optional foveation profiles and diagnostics. Tested `2b289f8` passed short Quest screens near 119 fresh FPS. Amended `9da8560` passed all five signed CI jobs and artifact review; Bilinear stays the default. [Measurements and limits](docs/PR-9-REVIEW.md). |
+| **Development: `.57` (PR #10)** | SteamVR runs at **240 Hz**: the PC switches the Quest 3 panel to its 240 Hz scaled mode over USB when 240 Hz is chosen, and restores it afterwards. Three measured streaming profiles (native 120, 207, 240) and eye-image invalidation by default. Short screens: about 119 fresh FPS at native 120 Hz, 196 at 207 Hz and 223-230 at 240 Hz with 1280x1376-1440x1536 per eye. [Results and limits](docs/HIGH-REFRESH.md) |
 | **Working experimental target** | **2080 × 2208 per eye · 120 Hz · 1000 Mbps · 4:2:0 · no foveated encoding**, with Vulkan Compute decoding. Sustained acceptance is still pending. |
 | **Defaults preserved** | Conservative 400 Mbps / 72 Hz candidate; 4:2:0, TCP and Quest 3 Auto → Compute. Development keeps synchronous decoding and the 4 ms selection wait. |
 
@@ -124,7 +125,8 @@ the radio hop, but still includes ADB forwarding, GPU decode and compositor work
 | --- | --- |
 | **Bitrate** | **Settings → Presets**. The slider sets a fixed payload cap; with Auto it sets a maximum. |
 | **Auto bitrate** | Uses network/encoder latency feedback to lower the requested rate when needed. It cannot guarantee FPS or remove a GPU bottleneck. [Details](docs/BITRATE.md) |
-| **Refresh** | Select a runtime-confirmed mode. Restart SteamVR after changing refresh. [Capability detection](docs/REFRESH-RATES.md) |
+| **Profiles** | **Settings → Presets → Streaming profile**: the three "(measured)" profiles set refresh, stream size, wavelet, chroma and bitrate together; the game render resolution is kept. [Measurements](docs/HIGH-REFRESH.md) |
+| **Refresh** | Select a runtime-confirmed mode. Restart SteamVR after changing refresh. 240 Hz needs the Quest 3 scaled panel mode (1552x1664 per eye); choosing 240 Hz turns on **Quest 3: switch to 240 Hz over USB**. [Capability detection](docs/REFRESH-RATES.md) |
 | **Decoder / wavelet** | Quest 3 Auto chooses Compute. Haar/Compute is the measured development recipe; follow the matching build's instructions. [Decoder findings](docs/DECODE-PIPELINE.md) |
 | **Chroma** | Keep **4:2:0** for the baseline. 4:4:4 increased decode cost in the recorded comparison. [Chroma comparison](docs/CHROMA.md) |
 | **Foveation** | Off by default. [Light peripheral encoding](docs/LIGHT-FOVEATION.md) is optional development work, with sustained and in-headset acceptance pending. |
@@ -138,8 +140,9 @@ guaranteed utilization or quality. More bitrate can increase decode and network
 cost. [Profile math and measured bitrate comparisons](docs/BITRATE.md).
 
 90/120 Hz and extended 144/207 Hz requests are runtime-gated. An accepted refresh
-does not imply an equal fresh-frame rate. Experimental 240 Hz was rejected on
-the tested setup; do not assume every OS/runtime exposes the same modes.
+does not imply an equal fresh-frame rate. 240 Hz exists only in the developer
+display-scaling mode, which the PC applies over USB (or `tools/quest3/refresh_scaling.py`
+by hand); do not assume every OS/runtime exposes the same modes.
 
 ### Sharper PC source without a larger Quest decode
 

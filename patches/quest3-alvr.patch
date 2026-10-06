@@ -206,7 +206,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..18ad9d0230c4dcc30ad7e7d97af279bc
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..e4d9612a4ce70cd61c5392d7a5bf1bbf9023d3e0 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..b2f3df6436e98f8078a642694ed2338217f4f71b 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..e4d9612a4ce70cd61c5392d7a5bf1bbf
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.57"
++version = "20.13.0-quest3.pyro.58"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -704,7 +704,7 @@ index 0000000000000000000000000000000000000000..c4078aff4257b4b230e3bee390f7bd10
 +    }
 +}
 diff --git a/alvr/adb/src/lib.rs b/alvr/adb/src/lib.rs
-index 64660b1e8e559354c4fb96d88ec579f08fe243ec..fc8394a232881e3791bedd7bde73ff527e59eee8 100644
+index 64660b1e8e559354c4fb96d88ec579f08fe243ec..63fcbf0d1d62b78075f4662ab718b20371485019 100644
 --- a/alvr/adb/src/lib.rs
 +++ b/alvr/adb/src/lib.rs
 @@ -1,12 +1,22 @@
@@ -732,7 +732,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..fc8394a232881e3791bedd7bde73ff52
  
  pub enum WiredConnectionStatus {
      Ready,
-@@ -15,6 +25,19 @@ pub enum WiredConnectionStatus {
+@@ -15,6 +25,34 @@ pub enum WiredConnectionStatus {
  
  pub struct WiredConnection {
      adb_path: String,
@@ -745,6 +745,21 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..fc8394a232881e3791bedd7bde73ff52
 +    device_serial: &'a str,
 +}
 +
++/// Restart the client after a display change. `monkey`, which `start_application` uses, injects a
++/// random input event after launching; on Quest that event closed the freshly started client.
++fn restart_client(adb_path: &str, device_serial: &str, process_name: &str) -> Result<()> {
++    commands::shell(adb_path, device_serial, &format!("am force-stop {process_name}"))?;
++    let started = commands::shell(
++        adb_path,
++        device_serial,
++        &format!("am start -n {process_name}/android.app.NativeActivity"),
++    )?;
++    if started.contains("Error") {
++        commands::start_application(adb_path, device_serial, process_name)?;
++    }
++    Ok(())
++}
++
 +impl display_override::Shell for AdbShell<'_> {
 +    fn shell(&self, command: &str) -> Result<String> {
 +        commands::shell(self.adb_path, self.device_serial, command)
@@ -752,18 +767,18 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..fc8394a232881e3791bedd7bde73ff52
  }
  
  impl WiredConnection {
-@@ -23,8 +46,39 @@ impl WiredConnection {
+@@ -23,8 +61,38 @@ impl WiredConnection {
          download_progress_callback: impl Fn(usize, Option<usize>),
      ) -> Result<Self> {
          let adb_path = commands::require_adb(layout, download_progress_callback)?;
 +        let display = Mutex::new(display_override::DisplayOverride::new(
 +            layout.config_dir.join("quest3_display_override.txt"),
 +        ));
-+
-+        Ok(Self { adb_path, display, restarted_at: Mutex::new(None) })
-+    }
  
 -        Ok(Self { adb_path })
++        Ok(Self { adb_path, display, restarted_at: Mutex::new(None) })
++    }
++
 +    /// Put back the Quest display/GPU values saved by an earlier request (server shutdown).
 +    pub fn restore_display(&self) -> Result<()> {
 +        let Some(device_serial) = commands::list_devices(&self.adb_path)?
@@ -784,8 +799,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..fc8394a232881e3791bedd7bde73ff52
 +            // session's rate check sees the restored panel.
 +            for name in [PACKAGE_NAME_GITHUB_DEV, PACKAGE_NAME_GITHUB_STABLE, PACKAGE_NAME_STORE] {
 +                if commands::get_process_id(&self.adb_path, &device_serial, name)?.is_some() {
-+                    commands::shell(&self.adb_path, &device_serial, &format!("am force-stop {name}"))?;
-+                    commands::start_application(&self.adb_path, &device_serial, name)?;
++                    restart_client(&self.adb_path, &device_serial, name)?;
 +                }
 +            }
 +        }
@@ -793,7 +807,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..fc8394a232881e3791bedd7bde73ff52
      }
  
      pub fn setup(
-@@ -33,6 +87,7 @@ impl WiredConnection {
+@@ -33,6 +101,7 @@ impl WiredConnection {
          stream_port: u16,
          client_type: &ClientFlavor,
          client_autolaunch: bool,
@@ -801,7 +815,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..fc8394a232881e3791bedd7bde73ff52
      ) -> Result<WiredConnectionStatus> {
          let Some(device_serial) = commands::list_devices(&self.adb_path)?
              .into_iter()
-@@ -65,6 +120,35 @@ impl WiredConnection {
+@@ -65,6 +134,34 @@ impl WiredConnection {
              ));
          };
  
@@ -827,8 +841,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..fc8394a232881e3791bedd7bde73ff52
 +            // The client probed its rates at startup; after any change, including a restore,
 +            // it must probe again before the server's rate check can pass.
 +            if client_running {
-+                commands::shell(&self.adb_path, &device_serial, &format!("am force-stop {process_name}"))?;
-+                commands::start_application(&self.adb_path, &device_serial, &process_name)?;
++                restart_client(&self.adb_path, &device_serial, &process_name)?;
 +                *self.restarted_at.lock().unwrap() = Some(Instant::now());
 +            }
 +            return Ok(WiredConnectionStatus::NotReady(message));
@@ -837,7 +850,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..fc8394a232881e3791bedd7bde73ff52
          if commands::get_process_id(&self.adb_path, &device_serial, &process_name)?.is_none() {
              if client_autolaunch {
                  commands::start_application(&self.adb_path, &device_serial, &process_name)?;
-@@ -86,14 +170,9 @@ impl WiredConnection {
+@@ -86,14 +183,9 @@ impl WiredConnection {
      }
  }
  
@@ -6205,10 +6218,10 @@ index 0000000000000000000000000000000000000000..594514baa0411df1f4e3c3dbf7506737
 +}
 diff --git a/alvr/client_openxr/src/refresh_probe.rs b/alvr/client_openxr/src/refresh_probe.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..eb407d50f1cd67240db4e72850faa12dbfe3bc84
+index 0000000000000000000000000000000000000000..25a3f4df786c83faed48d5763a6388dc972a5e09
 --- /dev/null
 +++ b/alvr/client_openxr/src/refresh_probe.rs
-@@ -0,0 +1,129 @@
+@@ -0,0 +1,150 @@
 +//! Quest 3 HorizonOS v2.7 permits rates absent from enumeration. Never infer support
 +//! from a property: require request success, runtime frequency and three frame periods.
 +use openxr as xr;
@@ -6232,6 +6245,19 @@ index 0000000000000000000000000000000000000000..eb407d50f1cd67240db4e72850faa12d
 +        && (1e9 / period_ns as f64 - target as f64).abs() < target as f64 * 0.005
 +}
 +
++/// Rates to probe. A runtime already above 207 Hz on a rate it does not enumerate is the forced
++/// 240 Hz display-scaling mode: every other request "succeeds" without changing the rate and would
++/// cost the full two-second timeout each, so only the forced rate is verified.
++pub fn probe_rates(enumerated: &[f32], current: f32) -> Vec<f32> {
++    let forced = current.is_finite() && current > 207.5 && !enumerated.iter().any(|r| (r - current).abs() < 0.1);
++    if forced {
++        alvr_common::error!("[Q3PW_PROBE] forced_mode=true runtime_hz={current} probing_only_current=true");
++        vec![current]
++    } else {
++        vec![72.0, 90.0, 120.0, 144.0, 207.0, 240.0]
++    }
++}
++
 +/// True when the runtime already reports `target` (within 0.1 Hz). Used when a request is refused
 +/// although a system override already runs the display at that rate.
 +pub fn runtime_matches(session: &xr::Session<xr::OpenGlEs>, target: f32) -> bool {
@@ -6243,7 +6269,7 @@ index 0000000000000000000000000000000000000000..eb407d50f1cd67240db4e72850faa12d
 +impl RefreshProbe {
 +    pub fn new(enumerated: Vec<f32>, restore: f32) -> Self {
 +        Self {
-+            pending: [72.0, 90.0, 120.0, 144.0, 207.0, 240.0].into(),
++            pending: probe_rates(&enumerated, restore).into(),
 +            current: None,
 +            stable: 0,
 +            confirmed: vec![],
@@ -6336,6 +6362,14 @@ index 0000000000000000000000000000000000000000..eb407d50f1cd67240db4e72850faa12d
 +        assert!(!matches(207.0, 120.0, 4_830_918));
 +        assert!(!matches(240.0, f32::NAN, 4_166_667));
 +        assert!(!matches(240.0, 240.0, 0));
++    }
++
++    #[test]
++    fn forced_240_probes_only_the_current_rate() {
++        let enumerated = [72.0, 80.0, 90.0, 120.0];
++        assert_eq!(super::probe_rates(&enumerated, 240.0), vec![240.0]);
++        assert_eq!(super::probe_rates(&enumerated, 120.0).len(), 6);
++        assert_eq!(super::probe_rates(&enumerated, 207.0).len(), 6);
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
