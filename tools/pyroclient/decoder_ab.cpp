@@ -29,15 +29,23 @@ struct Arm {
     // Decoder environment switch, set only while the arm's decoder is created.
     const char *env_name = nullptr;
     const char *env_value = nullptr;
+    // Luma plane is RGBA8 at half size, one 2x2 pixel quad per texel (decoder mode 3).
+    bool packed_luma = false;
 };
 
 pyrowave_result no_change(pyrowave_decoder) { return PYROWAVE_SUCCESS; }
 
 const Arm ARMS[] = {
     { "haar32", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 1); } },
+    { "haar32q", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 2); } },
+    { "haar32qo", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 3); }, nullptr, nullptr, true },
     // Controls: the default decoder against itself, and the dedicated pair-local Haar kernel.
     { "base", no_change },
     { "pairs64", no_change, "PYROWAVE_HAAR_PAIRS", "64-column" },
+    // Cost probes (wrong output by design; run with AB_SKIP_GATE=1).
+    { "dqprobe", no_change, "PYROWAVE_DEQUANT_PROBE", "1" },
+    { "h32nostore", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 1); }, "PYROWAVE_HAAR32_PROBE", "1" },
+    { "h32nofetch", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 1); }, "PYROWAVE_HAAR32_PROBE", "2" },
 };
 
 struct Session {
@@ -48,6 +56,7 @@ struct Session {
     VkFence fence = VK_NULL_HANDLE;
     VkQueryPool queries = VK_NULL_HANDLE;
     bool initialized_layout = false;
+    bool packed_luma = false;
 };
 
 Session create_session(const Gpu &g, uint32_t w, uint32_t h, const Arm *arm) {
@@ -64,13 +73,15 @@ Session create_session(const Gpu &g, uint32_t w, uint32_t h, const Arm *arm) {
     }
     const VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT |
                                     VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-    s.planes[0] = create_image(g, VK_FORMAT_R8_UNORM, w, h, usage);
+    s.packed_luma = arm && arm->packed_luma;
+    const VkFormat luma_format = s.packed_luma ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R8_UNORM;
+    s.planes[0] = s.packed_luma ? create_image(g, luma_format, w / 2, h / 2, usage) : create_image(g, luma_format, w, h, usage);
     s.planes[1] = create_image(g, VK_FORMAT_R8_UNORM, w / 2, h / 2, usage);
     s.planes[2] = create_image(g, VK_FORMAT_R8_UNORM, w / 2, h / 2, usage);
     for (int i = 0; i < 3; i++) {
         pyrowave_image_view &v = s.buffers.planes[i];
         v.image = s.planes[i].image; v.width = int(s.planes[i].width); v.height = int(s.planes[i].height);
-        v.image_format = VK_FORMAT_R8_UNORM; v.view_format = VK_FORMAT_R8_UNORM;
+        v.image_format = v.view_format = i == 0 ? luma_format : VK_FORMAT_R8_UNORM;
         v.mip_level = 0; v.layer = 0; v.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
         v.swizzle = VK_COMPONENT_SWIZZLE_IDENTITY; v.layout = VK_IMAGE_LAYOUT_GENERAL;
     }
@@ -107,7 +118,10 @@ double decode(const Gpu &g, Session &s, const std::vector<std::vector<uint8_t>> 
     VkDeviceMemory memory = VK_NULL_HANDLE;
     VkDeviceSize offsets[3] = {}, total = 0;
     if (readback) {
-        for (int i = 0; i < 3; i++) { offsets[i] = total; total += VkDeviceSize(s.planes[i].width) * s.planes[i].height; }
+        for (int i = 0; i < 3; i++) {
+            offsets[i] = total;
+            total += VkDeviceSize(s.planes[i].width) * s.planes[i].height * (i == 0 && s.packed_luma ? 4 : 1);
+        }
         VkBufferCreateInfo bi = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
         bi.size = total; bi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         VK_CHECK(vkCreateBuffer(g.device, &bi, nullptr, &buffer));
@@ -165,7 +179,15 @@ double decode(const Gpu &g, Session &s, const std::vector<std::vector<uint8_t>> 
         VK_CHECK(vkMapMemory(g.device, memory, 0, VK_WHOLE_SIZE, 0, &mapped));
         for (int i = 0; i < 3; i++) {
             const uint8_t *base = static_cast<uint8_t *>(mapped) + offsets[i];
-            (*readback)[i].assign(base, base + size_t(s.planes[i].width) * s.planes[i].height);
+            const size_t tw = s.planes[i].width, th = s.planes[i].height;
+            if (i == 0 && s.packed_luma) {
+                // Unpack the 2x2 quads back to a w x h plane for the comparison.
+                (*readback)[i].resize(tw * th * 4);
+                for (size_t y = 0; y < th * 2; y++)
+                    for (size_t x = 0; x < tw * 2; x++)
+                        (*readback)[i][y * tw * 2 + x] = base[((y / 2) * tw + x / 2) * 4 + (x & 1) + 2 * (y & 1)];
+            } else
+                (*readback)[i].assign(base, base + tw * th);
         }
         vkUnmapMemory(g.device, memory);
         vkDestroyBuffer(g.device, buffer, nullptr);
@@ -270,7 +292,7 @@ int main(int argc, char **argv) {
         printf("  luma_psnr=%.3f dB arm_luma_psnr=%.3f dB distinct_luma=%d differing luma=%zu cb=%zu cr=%zu "
                "max_diff=%d %s\n", luma_psnr, psnr(pb[0], y), distinct, dy.differing, dcb.differing, dcr.differing,
                max_diff, max_diff == 0 && pass ? "EXACT" : pass ? "WITHIN" : "FAIL");
-        ok = ok && pass;
+        ok = ok && (pass || (getenv("AB_SKIP_GATE") && !strcmp(getenv("AB_SKIP_GATE"), "1")));
         bench_packets = packets;
     }
     printf(ok ? "DECODER_AB_GATE_PASS\n" : "DECODER_AB_GATE_FAIL\n");

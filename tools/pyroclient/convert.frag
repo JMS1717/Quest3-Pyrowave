@@ -4,6 +4,8 @@ layout(set = 0, binding = 1) uniform sampler2D planeCb;
 layout(set = 0, binding = 2) uniform sampler2D planeCr;
 layout(push_constant) uniform Params { int limitedRange; int chromaFilter; } params;
 layout(location = 0) out vec4 color;
+// Packed luma, as in ycbcr_to_rgba.comp.
+layout(constant_id = 0) const bool PACKED_LUMA = false;
 
 float catmull(float a, float b, float c, float d, float t) {
     return b + 0.5 * t * (c - a + t * (2.0 * a - 5.0 * b + 4.0 * c - d + t * (3.0 * (b - c) + d - a)));
@@ -31,8 +33,9 @@ float sample_chroma(sampler2D plane, vec2 uv) {
 
 void main() {
     ivec2 coord = ivec2(gl_FragCoord.xy);
-    vec2 uv = (vec2(coord) + 0.5) / vec2(textureSize(planeY, 0));
-    float Y = texelFetch(planeY, coord, 0).r;
+    vec2 uv = (vec2(coord) + 0.5) / vec2(textureSize(planeY, 0) * (PACKED_LUMA ? 2 : 1));
+    float Y = PACKED_LUMA ? texelFetch(planeY, coord >> 1, 0)[(coord.x & 1) | ((coord.y & 1) << 1)]
+                          : texelFetch(planeY, coord, 0).r;
     float Cb = sample_chroma(planeCb, uv);
     float Cr = sample_chroma(planeCr, uv);
     if (params.limitedRange != 0) {
