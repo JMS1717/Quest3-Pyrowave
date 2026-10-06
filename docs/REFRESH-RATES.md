@@ -54,7 +54,8 @@ without changing the rate. `.55` therefore confirmed no rate and the server refu
 From `.56` the client treats a refused request as confirmed when the runtime already runs that rate
 and three frame periods match. It reports `[80, 240]`, the server accepts `preferred_fps=240`, and
 SteamVR's display frequency is 240: the live session read back `openvr_config.refresh_rate=240` and
-the server rendered and encoded a median 244 frames/s. Streaming results are in
+the server rendered and encoded an average of 240.6-241.1 frames/s (harmonic mean of the
+per-frame rate; the instantaneous median reads about 243). Streaming results are in
 [HIGH-REFRESH.md](HIGH-REFRESH.md).
 
 Thermal throttling can reduce the rate. `[Q3PW_EFFECTIVE]` records runtime/frame-period changes;

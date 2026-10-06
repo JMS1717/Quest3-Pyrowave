@@ -51,7 +51,7 @@ cell matched the first, so the matrix did not drift thermally (battery 35-41 C, 
   display slot while about 46 slots/s find nothing until the 3.5 ms wait catches a late frame. The
   PC sent 142.3 frames/s. This is arrival jitter at the selection edge, not decode.
 - **240 Hz streams end to end.** 1280x1376 per eye delivered 229.7 fresh frames/s and
-  1440x1536 222.7 with SteamVR at 240 Hz and the server rendering a median 244 frames/s.
+  1440x1536 222.7 with SteamVR at 240 Hz; the server averaged 240.6-241.1 rendered frames/s.
 
 ## 240 Hz: what had to change
 
