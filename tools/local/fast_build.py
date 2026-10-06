@@ -285,6 +285,10 @@ def run(cmd, env, log, cwd=REPO):
     with open(log, "a", encoding="utf-8", errors="replace") as f:
         f.write(f"\n$ {' '.join(map(str, cmd))}\n")
         f.flush()
+        # A PowerShell 7 parent puts its own module directories first in PSModulePath; Windows
+        # PowerShell 5.1 then cannot load Get-FileHash and the shader script fails. Without the
+        # variable, 5.1 uses its own default module path.
+        env = {k: v for k, v in env.items() if k.upper() != "PSMODULEPATH"}
         rc = subprocess.run([str(c) for c in cmd], cwd=cwd, env=env, stdout=f,
                             stderr=subprocess.STDOUT, creationflags=LOW_PRIORITY).returncode
     if rc:

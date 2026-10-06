@@ -206,7 +206,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..18ad9d0230c4dcc30ad7e7d97af279bc
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..9e10823e3e2ad0e0bb239dde7537ce5aaf0d5981 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..f60f9cb21ee2205c0c8acda8d03950de81b4a811 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..9e10823e3e2ad0e0bb239dde7537ce5a
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.60"
++version = "20.13.0-quest3.pyro.61"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -1267,7 +1267,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..8f303dd34280d3b1c5ca8bf31ac9358c
  
 diff --git a/alvr/client_core/src/performance.rs b/alvr/client_core/src/performance.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..3597eec92be7daae055f69de021dfebc4e1b3b08
+index 0000000000000000000000000000000000000000..84fe7d46be55d89ddedb1142df563458028248a4
 --- /dev/null
 +++ b/alvr/client_core/src/performance.rs
 @@ -0,0 +1,754 @@
@@ -1955,7 +1955,7 @@ index 0000000000000000000000000000000000000000..3597eec92be7daae055f69de021dfebc
 +    fn values_stay_inside_server_ranges() {
 +        let mut m = menu();
 +        press(&mut m, DOWN);
-+        for _ in 0..100 {
++        for _ in 0..200 {
 +            press(&mut m, RIGHT);
 +        }
 +        assert_eq!(m.values().bitrate_mbps, BITRATE_MBPS.1);
@@ -4865,7 +4865,7 @@ index 7765bb459f73e9d7d5a9f296a498f09a0df43706..1a2b8152c628566294dfb840971d5b3e
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..4a56260e697d881d2f6299b469c834d015b601e9 100644
+index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd8803191d3cb 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -1,10 +1,16 @@
@@ -5148,7 +5148,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..4a56260e697d881d2f6299b469c834d0
              while let Some(event) = xr_instance.poll_event(&mut event_storage).unwrap() {
                  match event {
                      xr::Event::EventsLost(event) => {
-@@ -432,14 +552,32 @@ pub fn entry_point() {
+@@ -432,14 +552,37 @@ pub fn entry_point() {
                                  .begin(xr::ViewConfigurationType::PRIMARY_STEREO)
                                  .unwrap();
  
@@ -5160,6 +5160,11 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..4a56260e697d881d2f6299b469c834d0
 +                                refresh_probe = Some(refresh_probe::RefreshProbe::new(
 +                                    refresh_rates.clone(),
 +                                    xr_session.get_display_refresh_rate().unwrap_or(90.0),
++                                    refresh_probe::override_rate(
++                                        &extra_extensions::perf_settings::system_property(
++                                            "debug.oculus.refreshRate",
++                                        ),
++                                    ),
 +                                ));
 +                            } else {
 +                                core_context.resume();
@@ -5182,7 +5187,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..4a56260e697d881d2f6299b469c834d0
  
                              passthrough_layer = None;
  
-@@ -447,6 +585,8 @@ pub fn entry_point() {
+@@ -447,6 +590,8 @@ pub fn entry_point() {
  
                              xr_session.end().unwrap();
                          }
@@ -5191,7 +5196,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..4a56260e697d881d2f6299b469c834d0
                          xr::SessionState::EXITING => break 'render_loop,
                          xr::SessionState::LOSS_PENDING => break 'render_loop,
                          _ => (),
-@@ -458,6 +598,9 @@ pub fn entry_point() {
+@@ -458,6 +603,9 @@ pub fn entry_point() {
                          );
  
                          lobby.update_reference_space();
@@ -5201,7 +5206,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..4a56260e697d881d2f6299b469c834d0
  
                          if let Some(stream) = &mut stream_context {
                              stream.update_reference_space();
-@@ -494,7 +637,40 @@ pub fn entry_point() {
+@@ -494,7 +642,40 @@ pub fn entry_point() {
                          lobby.update_hud_message(&message);
                      }
                      ClientCoreEvent::StreamingStarted(config) => {
@@ -5242,7 +5247,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..4a56260e697d881d2f6299b469c834d0
  
                          let context = StreamContext::new(
                              Arc::clone(&core_context),
-@@ -512,6 +688,8 @@ pub fn entry_point() {
+@@ -512,6 +693,8 @@ pub fn entry_point() {
                          stream_context = Some(context);
                      }
                      ClientCoreEvent::StreamingStopped => {
@@ -5251,7 +5256,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..4a56260e697d881d2f6299b469c834d0
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -562,13 +740,41 @@ pub fn entry_point() {
+@@ -562,13 +745,41 @@ pub fn entry_point() {
                  }
              }
  
@@ -5294,7 +5299,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..4a56260e697d881d2f6299b469c834d0
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -576,12 +782,65 @@ pub fn entry_point() {
+@@ -576,12 +787,65 @@ pub fn entry_point() {
                      panic!();
                  }
              };
@@ -5361,7 +5366,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..4a56260e697d881d2f6299b469c834d0
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +864,15 @@ pub fn entry_point() {
+@@ -605,15 +869,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -5386,7 +5391,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..4a56260e697d881d2f6299b469c834d0
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,13 +880,16 @@ pub fn entry_point() {
+@@ -621,13 +885,16 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -5404,7 +5409,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..4a56260e697d881d2f6299b469c834d0
  
              if !frame_state.should_render {
                  xr_frame_stream
-@@ -654,22 +916,89 @@ pub fn entry_point() {
+@@ -654,22 +921,89 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
@@ -5502,7 +5507,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..4a56260e697d881d2f6299b469c834d0
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +1027,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +1032,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
@@ -6285,10 +6290,10 @@ index 0000000000000000000000000000000000000000..594514baa0411df1f4e3c3dbf7506737
 +}
 diff --git a/alvr/client_openxr/src/refresh_probe.rs b/alvr/client_openxr/src/refresh_probe.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..fe19632871fc4e0f601e92bd8d92c43ff2d65e7b
+index 0000000000000000000000000000000000000000..be1205ccfde1989670f4732b16b7982a8a9763d3
 --- /dev/null
 +++ b/alvr/client_openxr/src/refresh_probe.rs
-@@ -0,0 +1,160 @@
+@@ -0,0 +1,185 @@
 +//! Quest 3 HorizonOS v2.7 permits rates absent from enumeration. Never infer support
 +//! from a property: require request success, runtime frequency and three frame periods.
 +use openxr as xr;
@@ -6315,12 +6320,21 @@ index 0000000000000000000000000000000000000000..fe19632871fc4e0f601e92bd8d92c43f
 +/// Rates the probe tries when no system override is active.
 +pub const PROBE_RATES: [f32; 9] = [72.0, 90.0, 120.0, 144.0, 165.0, 180.0, 200.0, 207.0, 240.0];
 +
-+/// Rates to probe. A runtime already on a rate above 120 Hz that it does not enumerate is running a
-+/// system override (`debug.oculus.refreshRate`, natively up to 207 Hz or in the scaled mode above):
-+/// every other request "succeeds" without changing the rate and would cost the full two-second
-+/// timeout each, so only the forced rate is verified.
-+pub fn probe_rates(enumerated: &[f32], current: f32) -> Vec<f32> {
-+    let forced = current.is_finite() && current > 120.5 && !enumerated.iter().any(|r| (r - current).abs() < 0.1);
++/// The rate a system override (`debug.oculus.refreshRate`) pins, if the property holds one.
++pub fn override_rate(property: &str) -> Option<f32> {
++    property.trim().parse::<f32>().ok().filter(|hz| hz.is_finite() && *hz > 0.0)
++}
++
++/// Rates to probe. While a system override (`debug.oculus.refreshRate`, natively up to 207 Hz or
++/// in the scaled mode above) pins the display, every other request "succeeds" without changing the
++/// rate and would cost the full two-second timeout each, so only the forced rate is verified. The
++/// override is recognised from the property when the runtime runs at its rate (this covers forced
++/// rates the runtime also enumerates, such as 144 Hz), or, if the property cannot be read, from a
++/// runtime rate above 120 Hz that is not enumerated.
++pub fn probe_rates(enumerated: &[f32], current: f32, override_hz: Option<f32>) -> Vec<f32> {
++    let unlisted = current > 120.5 && !enumerated.iter().any(|r| (r - current).abs() < 0.1);
++    let pinned = override_hz.is_some_and(|hz| (hz - current).abs() < 0.5);
++    let forced = current.is_finite() && (unlisted || pinned);
 +    if forced {
 +        alvr_common::error!("[Q3PW_PROBE] forced_mode=true runtime_hz={current} probing_only_current=true");
 +        vec![current.round()]
@@ -6338,9 +6352,9 @@ index 0000000000000000000000000000000000000000..fe19632871fc4e0f601e92bd8d92c43f
 +}
 +
 +impl RefreshProbe {
-+    pub fn new(enumerated: Vec<f32>, restore: f32) -> Self {
++    pub fn new(enumerated: Vec<f32>, restore: f32, override_hz: Option<f32>) -> Self {
 +        Self {
-+            pending: probe_rates(&enumerated, restore).into(),
++            pending: probe_rates(&enumerated, restore, override_hz).into(),
 +            current: None,
 +            stable: 0,
 +            confirmed: vec![],
@@ -6437,16 +6451,32 @@ index 0000000000000000000000000000000000000000..fe19632871fc4e0f601e92bd8d92c43f
 +
 +    #[test]
 +    fn a_forced_rate_probes_only_that_rate() {
++        use super::{override_rate, probe_rates};
 +        let enumerated = [72.0, 80.0, 90.0, 120.0];
 +        // Scaled 240 Hz and native forced rates such as 165 or 207 Hz are system overrides.
-+        assert_eq!(super::probe_rates(&enumerated, 240.0), vec![240.0]);
-+        assert_eq!(super::probe_rates(&enumerated, 165.0), vec![165.0]);
-+        assert_eq!(super::probe_rates(&enumerated, 207.0), vec![207.0]);
-+        assert_eq!(super::probe_rates(&enumerated, 180.000_02), vec![180.0]);
++        assert_eq!(probe_rates(&enumerated, 240.0, None), vec![240.0]);
++        assert_eq!(probe_rates(&enumerated, 165.0, None), vec![165.0]);
++        assert_eq!(probe_rates(&enumerated, 207.0, Some(207.0)), vec![207.0]);
++        assert_eq!(probe_rates(&enumerated, 180.000_02, None), vec![180.0]);
++        // An override the runtime also enumerates is still forced when the property names it.
++        assert_eq!(probe_rates(&[72.0, 120.0, 144.0], 144.0, Some(144.0)), vec![144.0]);
++        assert_eq!(probe_rates(&enumerated, 120.0, override_rate("120")), vec![120.0]);
 +        // An enumerated or ordinary current rate probes the full list.
-+        assert_eq!(super::probe_rates(&enumerated, 120.0).len(), 9);
-+        assert_eq!(super::probe_rates(&[72.0, 120.0, 144.0], 144.0).len(), 9);
-+        assert_eq!(super::probe_rates(&enumerated, f32::NAN).len(), 9);
++        assert_eq!(probe_rates(&enumerated, 120.0, None).len(), 9);
++        assert_eq!(probe_rates(&[72.0, 120.0, 144.0], 144.0, None).len(), 9);
++        // A property the runtime is not running (left over, or not yet applied) does not force.
++        assert_eq!(probe_rates(&[72.0, 120.0, 144.0], 144.0, Some(165.0)).len(), 9);
++        assert_eq!(probe_rates(&enumerated, f32::NAN, Some(120.0)).len(), 9);
++    }
++
++    #[test]
++    fn override_property_parsing() {
++        assert_eq!(super::override_rate("165"), Some(165.0));
++        assert_eq!(super::override_rate(" 240
++"), Some(240.0));
++        assert_eq!(super::override_rate(""), None);
++        assert_eq!(super::override_rate("0"), None);
++        assert_eq!(super::override_rate("nan"), None);
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
@@ -7323,7 +7353,7 @@ index 0000000000000000000000000000000000000000..358b58d00e5683ff20e7a17d0195a072
 +    }
 +}
 diff --git a/alvr/dashboard/src/dashboard/components/settings.rs b/alvr/dashboard/src/dashboard/components/settings.rs
-index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..11b465f5173fb9295b7169d1b02389f78aa38423 100644
+index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..47509f0dbfd8d054bc5d071c21a13bf803375169 100644
 --- a/alvr/dashboard/src/dashboard/components/settings.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings.rs
 @@ -4,7 +4,7 @@ use super::{
@@ -7389,7 +7419,7 @@ index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..11b465f5173fb9295b7169d1b02389f7
                              ui.end_row();
  
                              path_value_pairs.extend(self.refresh_rate_preset.ui(ui));
-@@ -241,3 +251,139 @@ impl SettingsTab {
+@@ -241,3 +251,140 @@ impl SettingsTab {
          requests
      }
  }
@@ -7423,7 +7453,8 @@ index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..11b465f5173fb9295b7169d1b02389f7
 +            value: mode["variant"].clone(),
 +        });
 +        if automatic {
-+            let ceiling = mode["ConstantMbps"].as_u64().unwrap_or(400).clamp(5, 2000);
++            let ceiling = mode["ConstantMbps"].as_u64().unwrap_or(400)
++                .clamp(5, alvr_session::headset_settings::MAX_BITRATE_MBPS);
 +            mode["Adaptive"]["max_throughput_mbps"]["enabled"] = json::json!(true);
 +            mode["Adaptive"]["max_throughput_mbps"]["content"] = json::json!(ceiling);
 +            // A minimum floor can prevent recovery from congestion. Leave it opt-in in Video.
@@ -7466,7 +7497,7 @@ index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..11b465f5173fb9295b7169d1b02389f7
 +        "Video bitrate"
 +    });
 +    if ui
-+        .add(egui::Slider::new(&mut mbps, 5..=2000).suffix(" Mbps"))
++        .add(egui::Slider::new(&mut mbps, 5..=alvr_session::headset_settings::MAX_BITRATE_MBPS).suffix(" Mbps"))
 +        .changed()
 +    {
 +        let mut path = vec![
@@ -12467,10 +12498,10 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
 +}
 diff --git a/alvr/session/src/headset_settings.rs b/alvr/session/src/headset_settings.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..2c2e4825e636340112687dc323d88b4b4998e5ef
+index 0000000000000000000000000000000000000000..cc2e5185b2e6892a7d98295c00a10080a22d6682
 --- /dev/null
 +++ b/alvr/session/src/headset_settings.rs
-@@ -0,0 +1,334 @@
+@@ -0,0 +1,343 @@
 +//! Settings the headset menu may change, and how the server turns a request into session edits.
 +//! The client never names a session path: it sends typed fields, and only the assignments built
 +//! here reach `set_values`, after each value is checked against a fixed range.
@@ -12482,7 +12513,10 @@ index 0000000000000000000000000000000000000000..2c2e4825e636340112687dc323d88b4b
 +use serde::{Deserialize, Serialize};
 +use serde_json as json;
 +
-+pub const BITRATE_MBPS: (u64, u64, u64) = (100, 2000, 50);
++/// Highest bitrate any control offers (the schema sliders, the dashboard and the headset menu).
++/// It is a ceiling, not a sustainable rate: measured ADB forwarding carries about 2.5 Gbit/s.
++pub const MAX_BITRATE_MBPS: u64 = 4000;
++pub const BITRATE_MBPS: (u64, u64, u64) = (100, MAX_BITRATE_MBPS, 50);
 +/// Matches the dashboard's stream scales. Above 100% adds Quest decode work with no panel benefit.
 +pub const STREAM_PERCENT: (u32, u32, u32) = (50, 100, 10);
 +/// Matches the dashboard's game render scales. The PC filters the render down to the stream size,
@@ -12652,6 +12686,12 @@ index 0000000000000000000000000000000000000000..2c2e4825e636340112687dc323d88b4b
 +mod tests {
 +    use super::*;
 +    use crate::SessionConfig;
++
++    #[test]
++    fn schema_bitrate_sliders_use_the_shared_ceiling() {
++        let slider = format!("max = {MAX_BITRATE_MBPS}, logarithmic)), suffix = \"Mbps\"");
++        assert_eq!(include_str!("settings.rs").matches(&slider).count(), 3);
++    }
 +
 +    // Applies assignments the way the server's `set_values` does, failing on an unknown path.
 +    fn apply(assignments: &[(String, json::Value)]) -> Settings {
