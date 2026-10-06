@@ -87,7 +87,9 @@ in either direction. Without the key, the build prints a warning: the APK is deb
 Android will refuse it as an update. Keys never enter the repo or the build root.
 
 **Safety.** `build` and `test` refuse to start while `vrserver.exe` or `vrcompositor.exe` is
-running (`--allow-while-vr` overrides this). Compilers run at below-normal priority. Installing or
+running (`--allow-while-vr` overrides this). It cannot see a game that Virtual Desktop runs through
+its own OpenXR runtime without SteamVR, so check that nobody is playing before a manual build.
+Compilers run at below-normal priority. Installing or
 launching a build on the headset still needs current hardware authorization ([AGENTS.md](../AGENTS.md)).
 
 ## How the incremental build stays correct
