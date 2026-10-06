@@ -181,10 +181,14 @@ and 3; `dqprobe`, `h32nostore` and `h32nofetch` are the cost probes (`AB_SKIP_GA
    3.04 ms against 3.005-3.04 ms without, so the plane loop is not the cost. Mode 3 dequant without its
    stores measured 1.09 ms (probe, one block at 640 MHz), so stores are now only about 0.25 ms;
    the rest is per-block header loads, subgroup scans and barriers. Probe those next.
-2. **Chroma stores.** With luma packed, the two R8 chroma planes now take twice the luma plane's
-   stores. Interleaving Cb/Cr into one RG8 plane halves them and keeps hardware bilinear upsampling
-   in the conversion pass.
-3. **Conversion pass** (0.9 ms live in mode 3) and the ALVR eye render it feeds: the next large
-   item, toward Vulkan-native presentation.
+2. **Chroma stores.** Done: mode 4.
+3. **Conversion pass** (0.9 ms live in mode 4, about 37 MB of RGBA8 written per frame) and the ALVR
+   eye render it feeds: the next large item. Rejected 2026-10-06: folding the final luma level into
+   the conversion pass (`debug.q3pw.fuse_color=1` on the packed level 0, mode 4). Decode got
+   cheaper (best 1.78 to 1.67 ms; bench arm 2.03 to 1.72 ms) but the conversion pass went from
+   0.89 to 1.71 ms, and the standalone fence p50 rose from 4.13 to 5.19 ms. Each fragment then
+   fetches four RGBA16F band texels instead of one RGBA8 texel, and the pass is bandwidth-bound.
+   The remaining route is to drop the pass: hand ALVR's GLES eye render the packed luma and chroma
+   buffers and convert to RGB there.
 4. **Queueing.** ALVR's vsync-queue estimate is about 11.4 ms in every arm; the adaptive-buffering
    policies in the optimization plan are the next latency lever once decode has headroom.
