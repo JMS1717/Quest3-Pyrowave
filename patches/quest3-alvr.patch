@@ -7958,10 +7958,10 @@ index 3be93190b208e2811ea657244046718f516760da..c6baa56d8ed6ed3a8613666363d82115
          assert_eq!(r["window"]["frames"], 900);
 diff --git a/alvr/graphics/resources/direct_eye_fragment.glsl b/alvr/graphics/resources/direct_eye_fragment.glsl
 new file mode 100644
-index 0000000000000000000000000000000000000000..901d8fa8216e092e4738ef026991c89f6ba793ba
+index 0000000000000000000000000000000000000000..b664b8244cebd480e2c841109fbf2f6bae735105
 --- /dev/null
 +++ b/alvr/graphics/resources/direct_eye_fragment.glsl
-@@ -0,0 +1,29 @@
+@@ -0,0 +1,34 @@
 +#version 300 es
 +#extension GL_OES_EGL_image_external_essl3 : require
 +precision highp float;
@@ -7972,12 +7972,17 @@ index 0000000000000000000000000000000000000000..901d8fa8216e092e4738ef026991c89f
 +in vec2 uv;
 +out vec4 out_color;
 +// Q3PW_FOVEATION_FUNCTION
++// Q3PW_PRESENT_FUNCTION
 +void main() {
 +    vec2 sample_uv = uv;
 +#ifdef Q3PW_FFE
 +    sample_uv = light_foveated_uv(uv);
 +#endif
++#ifdef Q3PW_PRESENT_YCBCR
++    vec3 color = q3pw_present_sample(sample_uv);
++#else
 +    vec3 color = texture(tex, sample_uv).rgb;
++#endif
 +    if (fix_limited_range != 0)
 +        color = vec3(16.0 / 255.0) + (219.0 / 255.0) * color;
 +    if (srgb_correction != 0) {
@@ -8027,12 +8032,76 @@ index 0000000000000000000000000000000000000000..bc6bee02decfec1a7df24f18e8fd2991
 +@fragment fn fragment_main(in: VertexOutput) -> @location(0) vec4<f32> {
 +    return textureSample(panel, panel_sampler, in.uv);
 +}
+diff --git a/alvr/graphics/resources/present_ycbcr.glsl b/alvr/graphics/resources/present_ycbcr.glsl
+new file mode 100644
+index 0000000000000000000000000000000000000000..df927cd861936954bb556a53dcb14b6244a4d06d
+--- /dev/null
++++ b/alvr/graphics/resources/present_ycbcr.glsl
+@@ -0,0 +1,39 @@
++// PyroWave Haar mode 5 (Quest3-Pyrowave docs/PRESENT-YCBCR.md): `tex` is a frame_size.x x
++// frame_size.y/2 RGBA8 buffer. x < frame_size.x/2 holds luma as 2x2 pixel quads ((0,0), (1,0),
++// (0,1), (1,1) in RGBA); x >= frame_size.x/2 holds the 4:2:0 chroma, one pixel per texel with Cb
++// in R and Cr in G. Full-range BT.709 with bilinear chroma, the conversion pyroclient's convert.frag
++// does in the other modes. The external sampler must filter linearly.
++precision highp float;
++uniform highp vec2 q3pw_frame_size;
++
++float q3pw_luma(highp ivec2 p) {
++    vec4 quad = texture(tex, (vec2(p >> 1) + 0.5) / vec2(q3pw_frame_size.x, q3pw_frame_size.y * 0.5));
++    int i = (p.x & 1) | ((p.y & 1) << 1);
++    return i == 0 ? quad.r : i == 1 ? quad.g : i == 2 ? quad.b : quad.a;
++}
++
++// uv spans the whole frame, both eyes.
++vec3 q3pw_present_sample(highp vec2 uv) {
++    highp vec2 pos = uv * q3pw_frame_size;
++    highp ivec2 last = ivec2(q3pw_frame_size) - 1;
++#ifdef Q3PW_FFE
++    // The foveated mapping is not 1:1, so filter luma like the RGBA path's sampler does.
++    highp vec2 p = pos - 0.5;
++    highp ivec2 i0 = ivec2(floor(p));
++    vec2 f = p - floor(p);
++    float l00 = q3pw_luma(clamp(i0, ivec2(0), last));
++    float l10 = q3pw_luma(clamp(i0 + ivec2(1, 0), ivec2(0), last));
++    float l01 = q3pw_luma(clamp(i0 + ivec2(0, 1), ivec2(0), last));
++    float l11 = q3pw_luma(clamp(i0 + ivec2(1, 1), ivec2(0), last));
++    float Y = mix(mix(l00, l10, f.x), mix(l01, l11, f.x), f.y);
++#else
++    float Y = q3pw_luma(clamp(ivec2(pos), ivec2(0), last));
++#endif
++    // Chroma texel space; clamping to the outer texel centres keeps the filter inside the chroma
++    // half, as CLAMP_TO_EDGE does on a separate plane.
++    highp vec2 half_size = q3pw_frame_size * 0.5;
++    highp vec2 c = clamp(pos * 0.5, vec2(0.5), half_size - 0.5);
++    vec2 chroma = texture(tex, vec2((half_size.x + c.x) / q3pw_frame_size.x, c.y / half_size.y)).rg - 0.5;
++    return clamp(vec3(Y + 1.5748 * chroma.y, Y - 0.1873 * chroma.x - 0.4681 * chroma.y, Y + 1.8556 * chroma.x),
++                 0.0, 1.0);
++}
+diff --git a/alvr/graphics/resources/staging_fragment.glsl b/alvr/graphics/resources/staging_fragment.glsl
+index 7bfba12ca0479598b4060b84664695a82c96411d..7236535dfbd7196f77a29c1e5f9dbc279e211dae 100644
+--- a/alvr/graphics/resources/staging_fragment.glsl
++++ b/alvr/graphics/resources/staging_fragment.glsl
+@@ -10,8 +10,14 @@ const float LIMITED_MAX = 235.0 / 255.0;
+ in vec2 uv;
+ out vec4 out_color;
+ 
++// Q3PW_PRESENT_FUNCTION
++
+ void main() {
++#ifdef Q3PW_PRESENT_YCBCR
++    vec3 color = q3pw_present_sample(uv);
++#else
+     vec3 color = texture(tex, uv).rgb;
++#endif
+ #ifdef FIX_LIMITED_RANGE
+     color = LIMITED_MIN + ((LIMITED_MAX - LIMITED_MIN) * color);
+ #endif
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1d6ba58e3
+index 0000000000000000000000000000000000000000..8113ba2eba3040817beb1580db8fa38a0bd91ea8
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,481 @@
+@@ -0,0 +1,549 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -8048,9 +8117,37 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +extern "C" {
 +    fn AHardwareBuffer_acquire(buffer: *const c_void);
 +    fn AHardwareBuffer_release(buffer: *const c_void);
++    fn AHardwareBuffer_describe(buffer: *const c_void, desc: *mut AHardwareBufferDesc);
 +    fn __android_log_write(priority: i32, tag: *const std::ffi::c_char,
 +                           text: *const std::ffi::c_char) -> i32;
 +    fn __system_property_get(name: *const std::ffi::c_char, value: *mut std::ffi::c_char) -> i32;
++}
++
++#[cfg(target_os = "android")]
++#[repr(C)]
++#[derive(Default)]
++struct AHardwareBufferDesc { width: u32, height: u32, layers: u32, format: u32, usage: u64, stride: u32, rfu0: u32, rfu1: u64 }
++
++/// PyroWave Haar mode 5 hands over packed YCbCr instead of RGBA: one RGBA8 buffer of the full
++/// frame's width (both eyes) and half its height (resources/present_ycbcr.glsl). Any other buffer,
++/// including every MediaCodec frame, is RGBA of the full frame.
++pub(super) fn present_ycbcr_layout(buffer: *const c_void, eye: UVec2) -> bool {
++    #[cfg(target_os = "android")]
++    {
++        if buffer.is_null() { return false; }
++        let mut desc = AHardwareBufferDesc::default();
++        unsafe { AHardwareBuffer_describe(buffer, &mut desc) };
++        desc.width == 2 * eye.x && desc.height * 2 == eye.y
++    }
++    #[cfg(not(target_os = "android"))]
++    { let _ = (buffer, eye); false }
++}
++
++/// Fragment source with the packed-YCbCr sampling compiled in (`present`) or not.
++pub(super) fn present_ycbcr_source(source: &str, present: bool) -> String {
++    if !present { return source.to_owned(); }
++    source.replacen("#version 300 es", "#version 300 es\n#define Q3PW_PRESENT_YCBCR", 1)
++        .replace("// Q3PW_PRESENT_FUNCTION", include_str!("../resources/present_ycbcr.glsl"))
 +}
 +
 +// Discard each eye image before its full-screen draw, so a tiled (GMEM) Adreno pass need not load
@@ -8107,6 +8204,8 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +    resolution: UVec2,
 +    view_idx: gl::UniformLocation,
 +    flip_y: gl::UniformLocation,
++    // The same copy for PyroWave Haar mode 5 buffers: program, view_idx, flip_y.
++    present: Option<(gl::Program, gl::UniformLocation, gl::UniformLocation)>,
 +    flip: bool,
 +    asynchronous: Cell<bool>,
 +    copy_wait_ns: i32,
@@ -8126,7 +8225,7 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +    release_last_log: RefCell<Instant>,
 +}
 +
-+unsafe fn compile_program(gl: &gl::Context, foveation: bool) -> Result<gl::Program, String> {
++unsafe fn compile_program(gl: &gl::Context, foveation: bool, present: bool) -> Result<gl::Program, String> {
 +    let program = gl.create_program()?;
 +    let mut shaders = Vec::new();
 +    let result = (|| {
@@ -8140,6 +8239,7 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +                source.replace("#version 300 es", "#version 300 es\n#define Q3PW_FFE")
 +                    .replace("// Q3PW_FOVEATION_FUNCTION", include_str!("../resources/light_foveation.glsl"))
 +            } else { source.to_owned() };
++            let source = if kind == gl::FRAGMENT_SHADER { present_ycbcr_source(&source, present) } else { source };
 +            gl.shader_source(shader, &source);
 +            gl.compile_shader(shader);
 +            if !gl.get_shader_compile_status(shader) {
@@ -8175,26 +8275,44 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +                config.srgb_correction, config.encoding_gamma));
 +            let invalidate = eye_invalidate_requested();
 +            import_diagnostic(4, format!("[Q3PW_EYE_INVALIDATE] requested={invalidate} active={invalidate}"));
-+            let program = compile_program(gl, config.foveation.is_some())?;
++            let program = compile_program(gl, config.foveation.is_some(), false)?;
++            // Compiled up front so the first mode-5 frame does not stall; without it such frames
++            // take the staging path, which converts them too.
++            let present_program = match compile_program(gl, config.foveation.is_some(), true) {
++                Ok(program) => Some(program),
++                Err(error) => {
++                    import_diagnostic(5, format!("[Q3PW_PRESENT_YCBCR] direct program failed: {error}"));
++                    None
++                }
++            };
 +            let source_texture = match gl.create_texture() {
 +                Ok(texture) => texture,
-+                Err(e) => { gl.delete_program(program); return Err(e); }
++                Err(e) => {
++                    if let Some(present) = present_program { gl.delete_program(present); }
++                    gl.delete_program(program);
++                    return Err(e);
++                }
 +            };
 +            let vertex_array = match gl.create_vertex_array() {
 +                Ok(array) => array,
 +                Err(e) => {
 +                    gl.delete_texture(source_texture);
++                    if let Some(present) = present_program { gl.delete_program(present); }
 +                    gl.delete_program(program);
 +                    return Err(e);
 +                }
 +            };
 +            let mut framebuffers: [Vec<gl::Framebuffer>; 2] = [vec![], vec![]];
-+            let setup = (|| {
++            let frame_size = (2 * config.resolution.x, config.resolution.y);
++            let init_program = |program: gl::Program, present: bool| -> Result<(gl::UniformLocation, gl::UniformLocation), String> {
 +                let location = |name: &str| gl.get_uniform_location(program, name)
 +                    .ok_or_else(|| format!("Direct eye copy missing uniform {name}"));
 +                let view_idx = location("view_idx")?;
 +                let flip_y = location("flip_y")?;
 +                gl.use_program(Some(program));
++                if present {
++                    gl.uniform_2_f32(Some(&location("q3pw_frame_size")?), frame_size.0 as f32, frame_size.1 as f32);
++                }
 +                gl.uniform_1_i32(Some(&location("tex")?), 0);
 +                gl.uniform_1_i32(Some(&location("fix_limited_range")?), config.fix_limited_range as i32);
 +                gl.uniform_1_i32(Some(&location("srgb_correction")?), (config.srgb_correction && !bypass_srgb) as i32);
@@ -8208,6 +8326,19 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +                    import_diagnostic(4, format!("[Q3PW_LIGHT_FFE] direct=true expanded_eye={}x{} encoded_eye={}x{} edge={:.2}x{:.2} fixed=true",
 +                        config.resolution.x, config.resolution.y, encoded.x, encoded.y, values[2], values[3]));
 +                }
++                Ok((view_idx, flip_y))
++            };
++            let present = present_program.and_then(|present| match init_program(present, true) {
++                Ok((view_idx, flip_y)) => Some((present, view_idx, flip_y)),
++                Err(error) => {
++                    import_diagnostic(5, format!("[Q3PW_PRESENT_YCBCR] direct program setup failed: {error}"));
++                    gl.delete_program(present);
++                    None
++                }
++            });
++            import_diagnostic(4, format!("[Q3PW_PRESENT_YCBCR] direct program ready={}", present.is_some()));
++            let setup = (|| {
++                let (view_idx, flip_y) = init_program(program, false)?;
 +                for eye in 0..2 {
 +                    if config.textures[eye].is_empty() {
 +                        return Err("Direct eye copy empty swapchain".into());
@@ -8235,7 +8366,7 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +                    let native_release = NativeRelease::new(&context);
 +                    Ok(Self { context, program, source_texture,
 +                    vertex_array, framebuffers, resolution: config.resolution,
-+                    view_idx, flip_y, flip, asynchronous: Cell::new(asynchronous),
++                    view_idx, flip_y, present, flip, asynchronous: Cell::new(asynchronous),
 +                    image_cache_enabled: Cell::new(image_cache_requested && cfg!(target_os = "android")),
 +                    timer,
 +                    native_release, release_active: Cell::new(true), source_release_token: Cell::new(0),
@@ -8247,6 +8378,7 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +                    for framebuffer in framebuffers.into_iter().flatten() { gl.delete_framebuffer(framebuffer); }
 +                    gl.delete_vertex_array(vertex_array);
 +                    gl.delete_texture(source_texture);
++                    if let Some((present, _, _)) = present { gl.delete_program(present); }
 +                    gl.delete_program(program);
 +                    Err(e)
 +                }
@@ -8414,8 +8546,12 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +        let started = Instant::now();
 +        let cached = self.cached_source_texture(buffer);
 +        let source_texture = cached.unwrap_or(self.source_texture);
++        let (program, view_idx, flip_y) = match &self.present {
++            Some((program, view_idx, flip_y)) if present_ycbcr_layout(buffer, self.resolution) => (program, view_idx, flip_y),
++            _ => (&self.program, &self.view_idx, &self.flip_y),
++        };
 +        let draw = || {
-+            gl.use_program(Some(self.program));
++            gl.use_program(Some(*program));
 +            gl.bind_vertex_array(Some(self.vertex_array));
 +            gl.viewport(0, 0, self.resolution.x as i32, self.resolution.y as i32);
 +            for state in [gl::SCISSOR_TEST, gl::STENCIL_TEST, gl::DEPTH_TEST, gl::BLEND, gl::CULL_FACE] {
@@ -8435,12 +8571,12 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
-+            gl.uniform_1_i32(Some(&self.flip_y), self.flip as i32);
++            gl.uniform_1_i32(Some(flip_y), self.flip as i32);
 +            let query = self.timer.borrow_mut().as_mut().and_then(|timer| timer.begin(gl));
 +            for (eye, &index) in indices.iter().enumerate() {
 +                gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, Some(self.framebuffers[eye][index as usize]));
 +                if self.invalidate { gl.invalidate_framebuffer(gl::DRAW_FRAMEBUFFER, &[gl::COLOR_ATTACHMENT0]); }
-+                gl.uniform_1_i32(Some(&self.view_idx), eye as i32);
++                gl.uniform_1_i32(Some(view_idx), eye as i32);
 +                gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
 +            }
 +            if let Some(index) = query {
@@ -8510,6 +8646,7 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +            for framebuffer in self.framebuffers.iter().flatten() { gl.delete_framebuffer(*framebuffer); }
 +            gl.delete_vertex_array(self.vertex_array);
 +            gl.delete_texture(self.source_texture);
++            if let Some((present, _, _)) = &self.present { gl.delete_program(*present); }
 +            gl.delete_program(self.program);
 +        }
 +    }
@@ -9710,10 +9847,58 @@ index 0000000000000000000000000000000000000000..48250e406a41c41a26bd7b7cbace664e
 +    }
 +}
 diff --git a/alvr/graphics/src/staging.rs b/alvr/graphics/src/staging.rs
-index febd2c3c380f456eb1e695b1748566e8b05c6c4f..779de33ca83d78d9b52c92193b54f60b00056503 100644
+index febd2c3c380f456eb1e695b1748566e8b05c6c4f..798099bca21d6e3d93c58c323f88380f1cae4030 100644
 --- a/alvr/graphics/src/staging.rs
 +++ b/alvr/graphics/src/staging.rs
-@@ -117,7 +117,7 @@ impl StagingRenderer {
+@@ -1,4 +1,4 @@
+-use super::{ck, GraphicsContext};
++use super::{ck, direct_eye::{present_ycbcr_layout, present_ycbcr_source}, GraphicsContext};
+ use crate::GL_TEXTURE_EXTERNAL_OES;
+ use alvr_common::glam::{IVec2, UVec2};
+ use glow::{self as gl, HasContext};
+@@ -52,6 +52,9 @@ pub struct StagingRenderer {
+     context: Rc<GraphicsContext>,
+     program: gl::Program,
+     view_idx_uloc: gl::UniformLocation,
++    // PyroWave Haar mode 5 buffers (packed YCbCr): program and its view_idx.
++    present_program: gl::Program,
++    present_view_idx_uloc: gl::UniformLocation,
+     surface_texture: gl::Texture,
+     framebuffers: [gl::Framebuffer; 2],
+     viewport_size: IVec2,
+@@ -81,6 +84,11 @@ impl StagingRenderer {
+             include_str!("../resources/staging_vertex.glsl"),
+             frag_str.as_str(),
+         );
++        let present_program = create_program(
++            gl,
++            include_str!("../resources/staging_vertex.glsl"),
++            &present_ycbcr_source(&frag_str, true),
++        );
+ 
+         unsafe {
+             // This is an external surface and storage should not be initialized
+@@ -104,12 +112,19 @@ impl StagingRenderer {
+             ck!(gl.bind_framebuffer(gl::FRAMEBUFFER, None));
+ 
+             let view_idx_uloc = ck!(gl.get_uniform_location(program, "view_idx")).unwrap();
++            let present_view_idx_uloc = ck!(gl.get_uniform_location(present_program, "view_idx")).unwrap();
++            ck!(gl.use_program(Some(present_program)));
++            let frame_size_uloc = ck!(gl.get_uniform_location(present_program, "q3pw_frame_size")).unwrap();
++            ck!(gl.uniform_2_f32(Some(&frame_size_uloc), 2.0 * view_resolution.x as f32, view_resolution.y as f32));
++            ck!(gl.use_program(None));
+ 
+             Self {
+                 context,
+                 program,
+                 surface_texture,
+                 view_idx_uloc,
++                present_program,
++                present_view_idx_uloc,
+                 framebuffers: framebuffers.try_into().unwrap(),
+                 viewport_size: view_resolution.as_ivec2(),
+             }
+@@ -117,15 +132,21 @@ impl StagingRenderer {
      }
  
      #[allow(unused_variables)]
@@ -9721,9 +9906,28 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..779de33ca83d78d9b52c92193b54f60b
 +    pub unsafe fn render(&self, hardware_buffer: *mut c_void, wait_for_copy: bool) {
          let gl = &self.context.gl_context;
          self.context.make_current();
++        let present = present_ycbcr_layout(hardware_buffer, self.viewport_size.as_uvec2());
++        let (program, view_idx_uloc) = if present {
++            (self.present_program, &self.present_view_idx_uloc)
++        } else {
++            (self.program, &self.view_idx_uloc)
++        };
  
-@@ -140,6 +140,11 @@ impl StagingRenderer {
-                     ck!(gl.uniform_1_i32(Some(&self.view_idx_uloc), i as i32));
+         self.context.render_ahardwarebuffer_using_texture(
+             hardware_buffer,
+             self.surface_texture,
+             || unsafe {
+-                ck!(gl.use_program(Some(self.program)));
++                ck!(gl.use_program(Some(program)));
+ 
+                 ck!(gl.viewport(0, 0, self.viewport_size.x, self.viewport_size.y));
+                 ck!(gl.disable(gl::SCISSOR_TEST));
+@@ -137,9 +158,14 @@ impl StagingRenderer {
+                     ck!(gl.active_texture(gl::TEXTURE0));
+                     ck!(gl.bind_texture(GL_TEXTURE_EXTERNAL_OES, Some(self.surface_texture)));
+                     ck!(gl.bind_sampler(0, None));
+-                    ck!(gl.uniform_1_i32(Some(&self.view_idx_uloc), i as i32));
++                    ck!(gl.uniform_1_i32(Some(view_idx_uloc), i as i32));
                      ck!(gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4));
                  }
 +                // A PyroWave hardware buffer is reused by a separate Vulkan queue.
@@ -9734,6 +9938,14 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..779de33ca83d78d9b52c92193b54f60b
              },
          );
      }
+@@ -152,6 +178,7 @@ impl Drop for StagingRenderer {
+ 
+         unsafe {
+             ck!(gl.delete_program(self.program));
++            ck!(gl.delete_program(self.present_program));
+             ck!(gl.delete_texture(self.surface_texture));
+             for framebuffer in &self.framebuffers {
+                 ck!(gl.delete_framebuffer(*framebuffer));
 diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
 index 737b7d0053f8a34698696f465c816627e95d9287..6dd30146b4953ef58938730b76b754f4c1a4d613 100644
 --- a/alvr/graphics/src/stream.rs
