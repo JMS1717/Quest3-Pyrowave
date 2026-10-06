@@ -61,6 +61,19 @@ refused the session. `.56` confirms a rate the runtime already runs (three match
 `tools/quest3/refresh_scaling.py` now applies the override the way HorizonOS needs (change while
 awake, confirm the kernel DSI mode) and restores it the same way.
 
+## Estimated latency falls with refresh
+
+ALVR's stage estimate (not optical) for the stationary chart, medians of one window each:
+
+| | Total | Encode | Network | Decode incl. queue | Client compositor | Runtime display queue |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 120 Hz, 2080x2208 | 45.8 ms | 2.7 | 4.3 | 11.1 | 1.8 | 14.2 |
+| 207 Hz, 1440x1536 | 29.9 ms | 1.4 | 3.0 | 6.7 | 3.8 | 12.4 |
+| 240 Hz, 1440x1536 | 28.2 ms | 1.0 | 2.6 | 6.1 | 3.6 | 9.0 |
+
+Smaller frames decode and travel faster, and the runtime's display queue shrinks with the period.
+The server's pose-match term (game time) is unreliable on a stationary headset and is excluded.
+
 ## Levers measured at high refresh
 
 | Lever | Cell | Off | On | Decision |
@@ -70,6 +83,8 @@ awake, confirm the kernel DSI mode) and restores it the same way.
 | GPU level 7 | 207 Hz, 1664x1760, ABBA | 172.1 fresh, loop 176 | 181.5 fresh, loop 185 | |
 | GPU level 7 | 120 Hz, 2560x2720, ABBA | 89.5 fresh, fence 10.6 ms | 93.2 fresh, fence 10.2 ms | |
 | GPU level 7 | 120 Hz, native, ABBA | 119.1 | 118.8 | No gain where 120 is already reached |
+| Eye-image invalidation (`debug.q3pw.eye_invalidate=1`) | 240 Hz, 1440x1536, GPU level 7, ACDDCA | 228.0 fresh, loop 231, 261 stale | 229.5 fresh, loop 235, 136 stale | On by default from `.57` (every eye pixel is redrawn); 120 Hz was 119.65 vs 119.09 in the `.55` acceptance. `debug.q3pw.eye_invalidate=0` disables it |
+| Shorter frame wait (`debug.q3pw.frame_wait_us=1000`) | same cell | 228.0 fresh, loop 231 | 225.1 fresh, loop 230 | Worse; keep the half-period default |
 | LOW decode priority (`debug.q3pw.decode_priority=low`) | 240 Hz, 1440x1536, ABBA | 220.8 fresh, loop 225 | 183.3 fresh, loop 240 | The loop stops missing frames but decode slows to 3.5 ms; keep the >120 Hz default (normal) |
 | Server phase lock (`ALVR_PHASE_LOCK=1`, separate SteamVR starts, off/on/on/off) | 207 Hz, 1440x1536 | 194.1, 200.2 fresh | 196.3, 193.7 fresh | No gain. The controller never converged: it walked the virtual vsync 17-36 ms earlier while the client's decoder queue stayed 1.3-2.0 ms at every phase. At 144 Hz all three lock-on starts failed: SteamVR Home (`steamtours.exe`) never finished launching, so SteamVR refused the test scene, and the hung processes outlived SteamVR and also blocked the next lock-off start until they were stopped. Not adopted |
 | PR #8 fused dequant + level-0 Haar | standalone Adreno decode | 5.32 ms decode, 7.76 ms fence | 5.28 ms, 7.75 ms | Correct (gate pass, default path byte-identical to `.55`), no speedup: [results](../results/FUSED-DEQUANT-HAAR-GPU-2026-10-06.json). Keep off |

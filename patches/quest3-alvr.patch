@@ -206,7 +206,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..18ad9d0230c4dcc30ad7e7d97af279bc
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..085590da6dd40e6f6abf17f99d567df951633818 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..e4d9612a4ce70cd61c5392d7a5bf1bbf9023d3e0 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..085590da6dd40e6f6abf17f99d567df9
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.56"
++version = "20.13.0-quest3.pyro.57"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -230,10 +230,31 @@ index 2c7f4c0e66a358c95f2a27c1102dad08fb307d90..54dbd8b2109a3685a8bb6685142bdbd5
 +[target.'cfg(windows)'.dependencies]
 +windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Security", "Win32_System_Threading"] }
 diff --git a/alvr/adb/src/commands.rs b/alvr/adb/src/commands.rs
-index a5a446842d4799523d0e06fbfb7253bb13d6c7db..cf5a9e3cc19f066daf70c572ec2e0014204a8e7d 100644
+index a5a446842d4799523d0e06fbfb7253bb13d6c7db..566cdde2b0f58ca90d722104983a44648fc80f84 100644
 --- a/alvr/adb/src/commands.rs
 +++ b/alvr/adb/src/commands.rs
-@@ -195,6 +195,9 @@ pub fn start_application(adb_path: &str, device_serial: &str, application_id: &s
+@@ -172,6 +172,20 @@ fn get_platform_tools_url() -> String {
+ ///////////////
+ // Applications
+ 
++/// One `adb shell` command on a pinned device; returns stdout.
++pub fn shell(adb_path: &str, device_serial: &str, command: &str) -> Result<String> {
++    let output = get_command(adb_path, &["-s", device_serial, "shell", command])
++        .output()
++        .context(format!("Failed to run adb shell {command}"))?;
++    if !output.status.success() {
++        return Err(anyhow!(
++            "adb shell {command} failed: {}",
++            String::from_utf8_lossy(&output.stderr)
++        ));
++    }
++    Ok(String::from_utf8_lossy(&output.stdout).into_owned())
++}
++
+ pub fn start_application(adb_path: &str, device_serial: &str, application_id: &str) -> Result<()> {
+     get_command(
+         adb_path,
+@@ -195,6 +209,9 @@ pub fn start_application(adb_path: &str, device_serial: &str, application_id: &s
  // Devices
  
  pub fn list_devices(adb_path: &str) -> Result<Vec<Device>> {
@@ -243,12 +264,413 @@ index a5a446842d4799523d0e06fbfb7253bb13d6c7db..cf5a9e3cc19f066daf70c572ec2e0014
      let output = get_command(adb_path, &["devices", "-l"])
          .output()
          .context("Failed to list ADB devices")?;
+diff --git a/alvr/adb/src/display_override.rs b/alvr/adb/src/display_override.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..03008a78ceea8a1f62ba1eec38aec10925670603
+--- /dev/null
++++ b/alvr/adb/src/display_override.rs
+@@ -0,0 +1,394 @@
++//! Opt-in Quest 3 display and GPU developer properties, managed by the PC over USB.
++//!
++//! Measured on Quest 3 (October 2026): HorizonOS applies `debug.oculus.forceDisplayScaling` and
++//! `debug.oculus.refreshRate` only when they change while the display is awake; a change made
++//! while the headset sleeps is never picked up. SurfaceFlinger can report 240 Hz while the panel
++//! still runs 120 Hz, so the kernel's `dsi_display_set_mode` log line is the readback. 240 Hz
++//! exists only as the 3104x1664 scaled panel mode (1552x1664 per eye). `debug.oculus.gpuLevel` is
++//! read when a VR app starts, so the client is restarted after any change.
++//!
++//! The original values are saved before the first change and restored, the same way, when the
++//! request is withdrawn or the server shuts down. With nothing requested and nothing saved this
++//! module issues no ADB commands at all.
++
++use anyhow::{bail, Result};
++use std::{
++    fs,
++    path::PathBuf,
++    thread,
++    time::{Duration, Instant},
++};
++
++pub const SCALING: &str = "debug.oculus.forceDisplayScaling";
++pub const RATE: &str = "debug.oculus.refreshRate";
++pub const GPU_LEVEL: &str = "debug.oculus.gpuLevel";
++pub const PROPERTIES: [&str; 3] = [SCALING, RATE, GPU_LEVEL];
++/// Rates above this exist only in the scaled panel mode.
++const NATIVE_MAX_HZ: u32 = 207;
++const SCALED_HZ: u32 = 240;
++
++#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
++pub struct Request {
++    /// Panel in the 240 Hz display-scaling mode.
++    pub scaled_240: bool,
++    /// GPU pinned at level 7 (690 MHz on Quest 3).
++    pub gpu_level_7: bool,
++}
++
++pub trait Shell {
++    fn shell(&self, command: &str) -> Result<String>;
++    fn sleep(&self, duration: Duration) {
++        thread::sleep(duration);
++    }
++    fn now(&self) -> Instant {
++        Instant::now()
++    }
++}
++
++/// (width, height, fps) of the last kernel DSI mode set in `text`.
++pub fn parse_panel_mode(text: &str) -> Option<(u32, u32, u32)> {
++    let line = text.lines().rev().find(|l| l.contains("dsi_display_set_mode"))?;
++    let field = |key: &str| -> Option<u32> {
++        let rest = &line[line.find(key)? + key.len()..];
++        rest.split(|c: char| !c.is_ascii_digit()).next()?.parse().ok()
++    };
++    Some((field("hactive=")?, field("vactive=")?, field("fps=")?))
++}
++
++/// The property values the PC wants, given the originals saved before the first change.
++pub fn targets(request: Request, original: &[String; 3]) -> [String; 3] {
++    [
++        if request.scaled_240 { "1".into() } else { original[0].clone() },
++        if request.scaled_240 { SCALED_HZ.to_string() } else { original[1].clone() },
++        if request.gpu_level_7 { "7".into() } else { original[2].clone() },
++    ]
++}
++
++fn mode_satisfies(request: Request, mode: Option<(u32, u32, u32)>) -> bool {
++    match mode {
++        Some((_, _, fps)) if request.scaled_240 => fps == SCALED_HZ,
++        Some((_, _, fps)) => fps <= NATIVE_MAX_HZ,
++        // No mode line left in the log: only the unscaled request can be assumed.
++        None => !request.scaled_240,
++    }
++}
++
++fn valid_value(value: &str) -> bool {
++    value.len() <= 8 && value.chars().all(|c| c.is_ascii_digit())
++}
++
++pub struct DisplayOverride {
++    state_path: PathBuf,
++    verified: Option<Request>,
++}
++
++impl DisplayOverride {
++    pub fn new(state_path: PathBuf) -> Self {
++        Self { state_path, verified: None }
++    }
++
++    fn saved(&self, serial: &str) -> Result<Option<[String; 3]>> {
++        let Ok(text) = fs::read_to_string(&self.state_path) else {
++            return Ok(None);
++        };
++        let mut lines = text.lines();
++        if lines.next() != Some(serial) {
++            bail!("Saved Quest display values belong to another headset: {}", self.state_path.display());
++        }
++        let mut values: [String; 3] = Default::default();
++        for line in lines {
++            if let Some((name, value)) = line.split_once('=') {
++                if let Some(index) = PROPERTIES.iter().position(|p| *p == name) {
++                    values[index] = value.to_owned();
++                }
++            }
++        }
++        Ok(Some(values))
++    }
++
++    fn save(&self, serial: &str, values: &[String; 3]) -> Result<()> {
++        let mut text = format!("{serial}\n");
++        for (name, value) in PROPERTIES.iter().zip(values) {
++            text.push_str(&format!("{name}={value}\n"));
++        }
++        fs::write(&self.state_path, text)?;
++        Ok(())
++    }
++
++    fn current(shell: &impl Shell) -> Result<[String; 3]> {
++        let mut values: [String; 3] = Default::default();
++        for (value, name) in values.iter_mut().zip(PROPERTIES) {
++            *value = shell.shell(&format!("getprop {name}"))?.trim().to_owned();
++        }
++        Ok(values)
++    }
++
++    fn set(shell: &impl Shell, name: &str, value: &str) -> Result<()> {
++        if !PROPERTIES.contains(&name) || !valid_value(value) {
++            bail!("Refusing to set {name}={value}");
++        }
++        shell.shell(&format!("setprop {name} '{value}'"))?;
++        if shell.shell(&format!("getprop {name}"))?.trim() != value {
++            bail!("Headset rejected {name}={value}");
++        }
++        Ok(())
++    }
++
++    fn wake(shell: &impl Shell) -> Result<()> {
++        shell.shell("am broadcast -a com.oculus.vrpowermanager.automation_enable")?;
++        shell.shell("am broadcast -a com.oculus.vrpowermanager.prox_close --ei duration 30000")?;
++        shell.shell("input keyevent KEYCODE_WAKEUP")?;
++        let deadline = shell.now() + Duration::from_secs(8);
++        while !shell.shell("dumpsys power | grep mWakefulness=")?.contains("Awake") {
++            if shell.now() > deadline {
++                bail!("Headset did not wake");
++            }
++            shell.sleep(Duration::from_millis(300));
++        }
++        shell.sleep(Duration::from_millis(1500));
++        Ok(())
++    }
++
++    fn panel_mode(shell: &impl Shell) -> Result<Option<(u32, u32, u32)>> {
++        Ok(parse_panel_mode(&shell.shell(
++            "logcat -d -t 200000 | grep dsi_display_set_mode | tail -1",
++        )?))
++    }
++
++    /// Bring the headset to `request`. `Ok(None)`: nothing to do. `Ok(Some(message))`: values or
++    /// the panel mode changed (or are still changing); restart the client so its refresh probe and
++    /// GPU level see the new state, then call again.
++    pub fn ensure(&mut self, shell: &impl Shell, serial: &str, request: Request) -> Result<Option<String>> {
++        let saved = self.saved(serial)?;
++        if saved.is_none() && request == Request::default() {
++            return Ok(None);
++        }
++        if self.verified == Some(request) {
++            return Ok(None);
++        }
++        // A saved state means this module may have changed the panel mode earlier.
++        let had_saved = saved.is_some();
++        let current = Self::current(shell)?;
++        let original = match saved {
++            Some(values) => values,
++            None => {
++                self.save(serial, &current)?;
++                current.clone()
++            }
++        };
++        let want = targets(request, &original);
++        let display_differs = current[..2] != want[..2];
++        let needs_mode_check = request.scaled_240 || had_saved || display_differs;
++        let mode_ok = !needs_mode_check || mode_satisfies(request, Self::panel_mode(shell)?);
++        if !display_differs && current[2] == want[2] && mode_ok {
++            self.finish(request)?;
++            return Ok(None);
++        }
++
++        Self::wake(shell)?;
++        let result = (|| -> Result<bool> {
++            if !display_differs && !mode_ok {
++                // Only a change is applied: step through the opposite values first.
++                Self::set(shell, SCALING, if want[0] == "1" { "" } else { "1" })?;
++                Self::set(shell, RATE, if want[1] == "240" { "120" } else { "240" })?;
++                shell.sleep(Duration::from_secs(3));
++            }
++            for (name, value) in PROPERTIES.iter().zip(&want) {
++                Self::set(shell, name, value)?;
++            }
++            let deadline = shell.now() + Duration::from_secs(8);
++            loop {
++                if !needs_mode_check || mode_satisfies(request, Self::panel_mode(shell)?) {
++                    return Ok(true);
++                }
++                if shell.now() > deadline {
++                    return Ok(false);
++                }
++                shell.sleep(Duration::from_millis(500));
++            }
++        })();
++        shell.shell("am broadcast -a com.oculus.vrpowermanager.automation_disable")?;
++        if !result? {
++            return Ok(Some("Waiting for the headset display mode to change".into()));
++        }
++        self.finish(request)?;
++        Ok(Some(if request.scaled_240 {
++            "Headset display switched to 240 Hz; restarting the client".into()
++        } else {
++            "Headset display and GPU values updated; restarting the client".into()
++        }))
++    }
++
++    fn finish(&mut self, request: Request) -> Result<()> {
++        if request == Request::default() && self.state_path.exists() {
++            fs::remove_file(&self.state_path)?;
++        }
++        self.verified = Some(request);
++        Ok(())
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use std::{cell::RefCell, collections::HashMap};
++
++    /// Applies the display properties only when they change while awake, like HorizonOS.
++    struct FakeQuest {
++        props: RefCell<HashMap<String, String>>,
++        awake: RefCell<bool>,
++        mode: RefCell<(u32, u32, u32)>,
++        applies: bool,
++        log: RefCell<Vec<String>>,
++        clock: RefCell<Instant>,
++    }
++
++    impl FakeQuest {
++        fn new(awake: bool) -> Self {
++            let props = [(SCALING, ""), (RATE, "120"), (GPU_LEVEL, "")]
++                .iter()
++                .map(|(k, v)| (k.to_string(), v.to_string()))
++                .collect();
++            Self {
++                props: RefCell::new(props),
++                awake: RefCell::new(awake),
++                mode: RefCell::new((4128, 2208, 120)),
++                applies: true,
++                log: RefCell::new(vec![]),
++                clock: RefCell::new(Instant::now()),
++            }
++        }
++        fn prop(&self, name: &str) -> String {
++            self.props.borrow()[name].clone()
++        }
++    }
++
++    impl Shell for FakeQuest {
++        fn shell(&self, command: &str) -> Result<String> {
++            self.log.borrow_mut().push(command.into());
++            if let Some(name) = command.strip_prefix("getprop ") {
++                return Ok(self.props.borrow().get(name).cloned().unwrap_or_default());
++            }
++            if let Some(rest) = command.strip_prefix("setprop ") {
++                let (name, value) = rest.split_once(' ').unwrap();
++                let value = value.trim_matches('\'').to_string();
++                let changed = self.props.borrow().get(name) != Some(&value);
++                self.props.borrow_mut().insert(name.into(), value);
++                if changed && *self.awake.borrow() && self.applies {
++                    let scaled = self.prop(SCALING) == "1";
++                    let rate: u32 = self.prop(RATE).parse().unwrap_or(120);
++                    *self.mode.borrow_mut() = if scaled { (3104, 1664, rate) } else { (4128, 2208, rate.min(207)) };
++                }
++                return Ok(String::new());
++            }
++            if command == "input keyevent KEYCODE_WAKEUP" {
++                *self.awake.borrow_mut() = true;
++            }
++            if command.contains("mWakefulness") {
++                return Ok(format!("mWakefulness={}", if *self.awake.borrow() { "Awake" } else { "Asleep" }));
++            }
++            if command.contains("dsi_display_set_mode") {
++                let (w, h, fps) = *self.mode.borrow();
++                return Ok(format!(
++                    "10-06 21:37:50.275 0 0 I [drm:dsi_display_set_mode [msm_drm]] [msm-dsi-info]: mdp_transfer_time=0, hactive={w}, vactive={h}, fps={fps}, clk_rate=0"
++                ));
++            }
++            Ok(String::new())
++        }
++        fn sleep(&self, duration: Duration) {
++            *self.clock.borrow_mut() += duration;
++        }
++        fn now(&self) -> Instant {
++            *self.clock.borrow()
++        }
++    }
++
++    fn state_path(name: &str) -> PathBuf {
++        let path = std::env::temp_dir().join(format!("q3pw-display-{name}-{}.txt", std::process::id()));
++        let _ = fs::remove_file(&path);
++        path
++    }
++
++    const ON: Request = Request { scaled_240: true, gpu_level_7: true };
++
++    #[test]
++    fn parses_last_dsi_mode() {
++        let text = "x hactive=4128, vactive=2208, fps=120 dsi_display_set_mode\nI [drm:dsi_display_set_mode [msm_drm]] [msm-dsi-info]: mdp_transfer_time=0, hactive=3104, vactive=1664, fps=240, clk_rate=0";
++        assert_eq!(parse_panel_mode(text), Some((3104, 1664, 240)));
++        assert_eq!(parse_panel_mode("nothing"), None);
++    }
++
++    #[test]
++    fn default_request_without_saved_state_issues_no_commands() {
++        let quest = FakeQuest::new(true);
++        let mut display = DisplayOverride::new(state_path("noop"));
++        assert_eq!(display.ensure(&quest, "serial", Request::default()).unwrap(), None);
++        assert!(quest.log.borrow().is_empty());
++    }
++
++    #[test]
++    fn enables_240_by_waking_first_and_restores_originals() {
++        let quest = FakeQuest::new(false);
++        let path = state_path("roundtrip");
++        let mut display = DisplayOverride::new(path.clone());
++        assert!(display.ensure(&quest, "serial", ON).unwrap().is_some());
++        assert_eq!(*quest.mode.borrow(), (3104, 1664, 240));
++        assert_eq!(quest.prop(GPU_LEVEL), "7");
++        let log = quest.log.borrow().clone();
++        let wake = log.iter().position(|c| c == "input keyevent KEYCODE_WAKEUP").unwrap();
++        let first_set = log.iter().position(|c| c.starts_with("setprop ")).unwrap();
++        assert!(wake < first_set, "properties must change while awake");
++        assert_eq!(log.last().unwrap(), "am broadcast -a com.oculus.vrpowermanager.automation_disable");
++        // Verified: the next loop iteration does nothing.
++        assert_eq!(display.ensure(&quest, "serial", ON).unwrap(), None);
++
++        // A new server with 240 Hz no longer selected puts everything back.
++        *quest.awake.borrow_mut() = false;
++        let mut display = DisplayOverride::new(path.clone());
++        assert!(display.ensure(&quest, "serial", Request::default()).unwrap().is_some());
++        assert_eq!(*quest.mode.borrow(), (4128, 2208, 120));
++        assert_eq!((quest.prop(SCALING), quest.prop(RATE), quest.prop(GPU_LEVEL)), (String::new(), "120".into(), String::new()));
++        assert!(!path.exists());
++        quest.log.borrow_mut().clear();
++        assert_eq!(display.ensure(&quest, "serial", Request::default()).unwrap(), None);
++        assert!(quest.log.borrow().is_empty());
++    }
++
++    #[test]
++    fn properties_restored_while_asleep_are_reapplied_by_a_change() {
++        let quest = FakeQuest::new(true);
++        let path = state_path("stuck");
++        let mut display = DisplayOverride::new(path.clone());
++        display.ensure(&quest, "serial", ON).unwrap();
++        // Someone restored the values while the headset slept: the panel stayed at 240 Hz.
++        *quest.awake.borrow_mut() = false;
++        quest.props.borrow_mut().insert(SCALING.into(), String::new());
++        quest.props.borrow_mut().insert(RATE.into(), "120".into());
++        quest.props.borrow_mut().insert(GPU_LEVEL.into(), String::new());
++        let mut display = DisplayOverride::new(path.clone());
++        assert!(display.ensure(&quest, "serial", Request::default()).unwrap().is_some());
++        assert_eq!(*quest.mode.borrow(), (4128, 2208, 120));
++        assert!(!path.exists());
++    }
++
++    #[test]
++    fn reports_waiting_when_the_panel_never_switches() {
++        let mut quest = FakeQuest::new(true);
++        quest.applies = false;
++        let path = state_path("never");
++        let mut display = DisplayOverride::new(path.clone());
++        let message = display.ensure(&quest, "serial", ON).unwrap().unwrap();
++        assert!(message.starts_with("Waiting"));
++        assert!(path.exists(), "originals stay saved for the restore");
++        let _ = fs::remove_file(path);
++    }
++
++    #[test]
++    fn refuses_state_saved_for_another_headset() {
++        let quest = FakeQuest::new(true);
++        let path = state_path("other");
++        DisplayOverride::new(path.clone()).ensure(&quest, "serial-a", ON).unwrap();
++        assert!(DisplayOverride::new(path.clone()).ensure(&quest, "serial-b", Request::default()).is_err());
++        let _ = fs::remove_file(path);
++    }
++}
 diff --git a/alvr/adb/src/lib.rs b/alvr/adb/src/lib.rs
-index 64660b1e8e559354c4fb96d88ec579f08fe243ec..107f43d672969cd937e68730038b18f6dd632889 100644
+index 64660b1e8e559354c4fb96d88ec579f08fe243ec..c79cbba8659550dd532a4ec81fd443d33d09ef68 100644
 --- a/alvr/adb/src/lib.rs
 +++ b/alvr/adb/src/lib.rs
-@@ -1,8 +1,10 @@
+@@ -1,12 +1,15 @@
  pub mod commands;
++pub mod display_override;
 +#[cfg(windows)]
 +mod windows_launcher;
  mod parse;
@@ -259,7 +681,93 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..107f43d672969cd937e68730038b18f6
  use alvr_system_info::{
      ClientFlavor, PACKAGE_NAME_GITHUB_DEV, PACKAGE_NAME_GITHUB_STABLE, PACKAGE_NAME_STORE,
  };
-@@ -86,14 +88,9 @@ impl WiredConnection {
+-use std::collections::HashSet;
++use std::{collections::HashSet, sync::Mutex};
+ 
+ pub enum WiredConnectionStatus {
+     Ready,
+@@ -15,6 +18,18 @@ pub enum WiredConnectionStatus {
+ 
+ pub struct WiredConnection {
+     adb_path: String,
++    display: Mutex<display_override::DisplayOverride>,
++}
++
++struct AdbShell<'a> {
++    adb_path: &'a str,
++    device_serial: &'a str,
++}
++
++impl display_override::Shell for AdbShell<'_> {
++    fn shell(&self, command: &str) -> Result<String> {
++        commands::shell(self.adb_path, self.device_serial, command)
++    }
+ }
+ 
+ impl WiredConnection {
+@@ -23,8 +38,28 @@ impl WiredConnection {
+         download_progress_callback: impl Fn(usize, Option<usize>),
+     ) -> Result<Self> {
+         let adb_path = commands::require_adb(layout, download_progress_callback)?;
++        let display = Mutex::new(display_override::DisplayOverride::new(
++            layout.config_dir.join("quest3_display_override.txt"),
++        ));
+ 
+-        Ok(Self { adb_path })
++        Ok(Self { adb_path, display })
++    }
++
++    /// Put back the Quest display/GPU values saved by an earlier request (server shutdown).
++    pub fn restore_display(&self) -> Result<()> {
++        let Some(device_serial) = commands::list_devices(&self.adb_path)?
++            .into_iter()
++            .filter_map(|d| d.serial)
++            .find(|s| !s.starts_with("127.0.0.1"))
++        else {
++            return Ok(());
++        };
++        let shell = AdbShell { adb_path: &self.adb_path, device_serial: &device_serial };
++        self.display
++            .lock()
++            .unwrap()
++            .ensure(&shell, &device_serial, display_override::Request::default())?;
++        Ok(())
+     }
+ 
+     pub fn setup(
+@@ -33,6 +68,7 @@ impl WiredConnection {
+         stream_port: u16,
+         client_type: &ClientFlavor,
+         client_autolaunch: bool,
++        display_request: display_override::Request,
+     ) -> Result<WiredConnectionStatus> {
+         let Some(device_serial) = commands::list_devices(&self.adb_path)?
+             .into_iter()
+@@ -65,6 +101,23 @@ impl WiredConnection {
+             ));
+         };
+ 
++        // Quest3-Pyrowave opt-in: panel mode and GPU level are read when the client's VR session
++        // starts, so a running client is restarted after any change.
++        let shell = AdbShell { adb_path: &self.adb_path, device_serial: &device_serial };
++        let changed = self
++            .display
++            .lock()
++            .unwrap()
++            .ensure(&shell, &device_serial, display_request)?;
++        if let Some(message) = changed {
++            alvr_common::info!("[Q3PW_DISPLAY_OVERRIDE] {message}");
++            if commands::get_process_id(&self.adb_path, &device_serial, &process_name)?.is_some() {
++                commands::shell(&self.adb_path, &device_serial, &format!("am force-stop {process_name}"))?;
++                commands::start_application(&self.adb_path, &device_serial, &process_name)?;
++            }
++            return Ok(WiredConnectionStatus::NotReady(message));
++        }
++
+         if commands::get_process_id(&self.adb_path, &device_serial, &process_name)?.is_none() {
+             if client_autolaunch {
+                 commands::start_application(&self.adb_path, &device_serial, &process_name)?;
+@@ -86,14 +139,9 @@ impl WiredConnection {
      }
  }
  
@@ -6841,7 +7349,7 @@ index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..11b465f5173fb9295b7169d1b02389f7
 +    changes
 +}
 diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
-index efb0f8e89507b93f737f085742bd9daec993d444..e7d051af5f16a2e70fdb635c65039f4015a13fbc 100644
+index efb0f8e89507b93f737f085742bd9daec993d444..623401d900584ed86532de4cf1f9fc89080dac34 100644
 --- a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 @@ -323,7 +323,7 @@ pub fn streaming_profile_schema() -> PresetSchemaNode {
@@ -6853,7 +7361,7 @@ index efb0f8e89507b93f737f085742bd9daec993d444..e7d051af5f16a2e70fdb635c65039f40
  afterwards leaves no profile selected; pick the profile again to return to it."
                  .into(),
          )]
-@@ -351,65 +351,78 @@ afterwards leaves no profile selected; pick the profile again to return to it."
+@@ -351,73 +351,96 @@ afterwards leaves no profile selected; pick the profile again to return to it."
      })
  }
  
@@ -6951,7 +7459,7 @@ index efb0f8e89507b93f737f085742bd9daec993d444..e7d051af5f16a2e70fdb635c65039f40
              "help".into(),
 -            "90 Hz is the measured operating point. Latency falls with the frame period; \
 -the tuned H.264 profile runs at 72 Hz because the headset's H.264 decode is too slow for 90."
-+            "90/120 Hz are normal targets. 144/207 Hz use the v2.7 request/frame-period probe; 240 Hz requires developer display scaling and confirmation."
++            "90/120 Hz are normal targets. 144/207 Hz use the v2.7 request/frame-period probe. 240 Hz needs the Quest 3 display-scaling mode (1552x1664 per eye): choosing it here turns on 'Quest 3: switch to 240 Hz over USB', which switches the panel when the headset is on USB and restores it for other rates. Streams of about 1280x1376 to 1440x1536 per eye suit that panel."
                  .into(),
          )]
          .into_iter()
@@ -6962,7 +7470,29 @@ index efb0f8e89507b93f737f085742bd9daec993d444..e7d051af5f16a2e70fdb635c65039f40
              .into_iter()
              .map(|hz| HigherOrderChoiceOption {
                  display_name: format!("{hz} Hz"),
-@@ -426,7 +439,6 @@ the tuned H.264 profile runs at 72 Hz because the headset's H.264 decode is too
+                 description: None,
+-                modifiers: vec![num_modifier(
+-                    "session_settings.video.preferred_fps",
+-                    &format!("{:?}", hz as f32),
+-                )],
++                modifiers: {
++                    let mut modifiers = vec![num_modifier(
++                        "session_settings.video.preferred_fps",
++                        &format!("{:?}", hz as f32),
++                    )];
++                    // 240 Hz exists only in the scaled panel mode; let the PC switch it over USB.
++                    if hz == 240 {
++                        modifiers.push(bool_modifier(
++                            "session_settings.video.pyrowave.quest3_240hz_display_scaling",
++                            true,
++                        ));
++                    }
++                    modifiers
++                },
+                 content: None,
+             })
+             .collect(),
+@@ -426,7 +449,6 @@ the tuned H.264 profile runs at 72 Hz because the headset's H.264 decode is too
      })
  }
  
@@ -6970,7 +7500,7 @@ index efb0f8e89507b93f737f085742bd9daec993d444..e7d051af5f16a2e70fdb635c65039f40
  #[cfg(test)]
  mod tests {
      use super::*;
-@@ -447,25 +459,96 @@ mod tests {
+@@ -447,25 +469,67 @@ mod tests {
              .iter()
              .map(|o| o.display_name.as_str())
              .collect::<Vec<_>>();
@@ -7036,44 +7566,15 @@ index efb0f8e89507b93f737f085742bd9daec993d444..e7d051af5f16a2e70fdb635c65039f40
 +            })
 +    }
 +
-+    #[test]
-+    fn stream_resolution_is_panel_relative_and_leaves_game_render_alone() {
-+        let schema = choice(stream_resolution_schema());
-+        let names = schema
-+            .options
-+            .iter()
-+            .map(|o| o.display_name.as_str())
-+            .collect::<Vec<_>>();
-+        assert_eq!(
-+            names,
-+            [
-+                "50 % (1032x1104 per eye)",
-+                "60 % (1238x1325 per eye)",
-+                "70 % (1445x1546 per eye)",
-+                "80 % (1651x1766 per eye)",
-+                "90 % (1858x1987 per eye)",
-+                "100 % (2064x2208 per eye, panel)",
-+            ]
-+        );
-+        assert!(schema
-+            .options
-+            .iter()
-+            .any(|o| o.display_name == schema.default_option_display_name));
-+        for option in 0..schema.options.len() {
-+            assert_eq!(sizes_set(&schema, option), ["transcoding_view_resolution"]);
-+        }
-+        assert_eq!(width_of(&schema, 2, "transcoding_view_resolution"), Some(1445.into()));
-+    }
-+
      #[test]
 -    fn render_scale_is_panel_relative_and_sets_both_resolutions() {
 -        let schema = choice(render_scale_schema());
-+    fn game_render_resolution_goes_above_the_panel_without_touching_the_stream() {
-+        let schema = choice(game_render_resolution_schema());
++    fn stream_resolution_is_panel_relative_and_leaves_game_render_alone() {
++        let schema = choice(stream_resolution_schema());
          let names = schema
              .options
              .iter()
-@@ -474,28 +557,21 @@ mod tests {
+@@ -474,28 +538,50 @@ mod tests {
          assert_eq!(
              names,
              [
@@ -7083,11 +7584,12 @@ index efb0f8e89507b93f737f085742bd9daec993d444..e7d051af5f16a2e70fdb635c65039f40
 -                "80 % (2842x3072 per eye)",
 -                "90 % (3197x3456 per eye)",
 -                "100 % (3552x3840 per eye, panel)",
++                "50 % (1032x1104 per eye)",
++                "60 % (1238x1325 per eye)",
++                "70 % (1445x1546 per eye)",
++                "80 % (1651x1766 per eye)",
++                "90 % (1858x1987 per eye)",
 +                "100 % (2064x2208 per eye, panel)",
-+                "125 % (2580x2760 per eye)",
-+                "150 % (3096x3312 per eye)",
-+                "175 % (3612x3864 per eye)",
-+                "200 % (4128x4416 per eye)",
              ]
          );
 -        assert_eq!(schema.default_option_display_name, "60 % (2131x2304 per eye)");
@@ -7104,6 +7606,34 @@ index efb0f8e89507b93f737f085742bd9daec993d444..e7d051af5f16a2e70fdb635c65039f40
 -        };
 -        assert_eq!(width("transcoding_view_resolution"), Some(2486.into()));
 -        assert_eq!(width("emulated_headset_view_resolution"), Some(2486.into()));
++        assert!(schema
++            .options
++            .iter()
++            .any(|o| o.display_name == schema.default_option_display_name));
++        for option in 0..schema.options.len() {
++            assert_eq!(sizes_set(&schema, option), ["transcoding_view_resolution"]);
++        }
++        assert_eq!(width_of(&schema, 2, "transcoding_view_resolution"), Some(1445.into()));
++    }
++
++    #[test]
++    fn game_render_resolution_goes_above_the_panel_without_touching_the_stream() {
++        let schema = choice(game_render_resolution_schema());
++        let names = schema
++            .options
++            .iter()
++            .map(|o| o.display_name.as_str())
++            .collect::<Vec<_>>();
++        assert_eq!(
++            names,
++            [
++                "100 % (2064x2208 per eye, panel)",
++                "125 % (2580x2760 per eye)",
++                "150 % (3096x3312 per eye)",
++                "175 % (3612x3864 per eye)",
++                "200 % (4128x4416 per eye)",
++            ]
++        );
 +        assert_eq!(
 +            schema.default_option_display_name,
 +            "100 % (2064x2208 per eye, panel)"
@@ -7115,7 +7645,7 @@ index efb0f8e89507b93f737f085742bd9daec993d444..e7d051af5f16a2e70fdb635c65039f40
      }
  
      #[test]
-@@ -506,7 +582,10 @@ mod tests {
+@@ -506,7 +592,15 @@ mod tests {
              .iter()
              .map(|o| o.display_name.as_str())
              .collect::<Vec<_>>();
@@ -7125,6 +7655,11 @@ index efb0f8e89507b93f737f085742bd9daec993d444..e7d051af5f16a2e70fdb635c65039f40
 +            ["72 Hz", "80 Hz", "90 Hz", "120 Hz", "144 Hz", "207 Hz", "240 Hz"]
 +        );
          assert_eq!(schema.default_option_display_name, "90 Hz");
++        let enables_helper = |name: &str| {
++            schema.options.iter().find(|o| o.display_name == name).unwrap().modifiers.len() == 2
++        };
++        assert!(enables_helper("240 Hz"));
++        assert!(!enables_helper("207 Hz"));
      }
  }
 diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/higher_order_choice.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/higher_order_choice.rs
@@ -7274,10 +7809,10 @@ index 0000000000000000000000000000000000000000..bc6bee02decfec1a7df24f18e8fd2991
 +}
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..705380921963929ede61ff0a3d95836bff20b3b1
+index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1d6ba58e3
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,479 @@
+@@ -0,0 +1,481 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -7298,14 +7833,16 @@ index 0000000000000000000000000000000000000000..705380921963929ede61ff0a3d95836b
 +    fn __system_property_get(name: *const std::ffi::c_char, value: *mut std::ffi::c_char) -> i32;
 +}
 +
-+// debug.q3pw.eye_invalidate=1: discard each eye image before its full-screen draw, so a
-+// tiled (GMEM) Adreno pass need not load the previous contents. Every pixel is redrawn.
++// Discard each eye image before its full-screen draw, so a tiled (GMEM) Adreno pass need not load
++// the previous contents. Every pixel is redrawn: the quad covers the whole viewport with blending
++// and scissoring off. On by default since .57 (240 Hz: stale frames 261 -> 136/12 s, app loop
++// 231 -> 235); debug.q3pw.eye_invalidate=0 turns it off.
 +fn eye_invalidate_requested() -> bool {
 +    #[cfg(target_os = "android")]
 +    {
 +        let mut value = [0u8; 92];
 +        let len = unsafe { __system_property_get(c"debug.q3pw.eye_invalidate".as_ptr(), value.as_mut_ptr().cast()) };
-+        len == 1 && value[0] == b'1'
++        !(len == 1 && value[0] == b'0')
 +    }
 +    #[cfg(not(target_os = "android"))]
 +    { false }
@@ -9399,7 +9936,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..869fa779ca44f72241dd5b2423600cba
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da39833633bc7fbac803ebe345c7832fbdb..a7cf9885f92a38dd7e3f72d78fa4fe3eb5b9d03f 100644
+index fc176da39833633bc7fbac803ebe345c7832fbdb..e28d10535dabb746a234a47094274c83c8b8b243 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -53,7 +53,61 @@ pub struct VideoPacket {
@@ -9515,7 +10052,50 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..a7cf9885f92a38dd7e3f72d78fa4fe3e
          _controller_profile,
          _server_impl_debug: settings.extra.logging.debug_groups.server_impl,
          _client_impl_debug: settings.extra.logging.debug_groups.client_impl,
-@@ -629,6 +680,14 @@ fn connection_pipeline(
+@@ -313,12 +364,19 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+             let stream_port;
+             let client_type;
+             let client_autolaunch;
++            let display_request;
+             {
+                 let session_manager_lock = SESSION_MANAGER.read();
+                 let connection = &session_manager_lock.settings().connection;
+                 stream_port = connection.stream_port;
+                 client_type = connection.wired_client_type.clone();
+                 client_autolaunch = connection.wired_client_autolaunch;
++                let video = &session_manager_lock.settings().video;
++                display_request = alvr_adb::display_override::Request {
++                    scaled_240: video.pyrowave.quest3_240hz_display_scaling
++                        && video.preferred_fps > 207.5,
++                    gpu_level_7: video.pyrowave.quest3_max_gpu_clock,
++                };
+             }
+ 
+             let status = match wired_connection.setup(
+@@ -326,6 +384,7 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+                 stream_port,
+                 &client_type,
+                 client_autolaunch,
++                display_request,
+             ) {
+                 Ok(status) => status,
+                 Err(e) => {
+@@ -471,6 +530,14 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+         thread.join().ok();
+     }
+ 
++    // Quest3-Pyrowave: put back any headset display/GPU values the wired helper changed, so
++    // other VR apps do not inherit the 240 Hz scaled mode. Best effort; the next start retries.
++    if let Some(connection) = &wired_connection {
++        if let Err(e) = connection.restore_display() {
++            warn!("Could not restore the Quest display values: {e:?}");
++        }
++    }
++
+     alvr_common::dbg_connection!("handshake_loop: End");
+ }
+ 
+@@ -629,6 +696,19 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -9524,13 +10104,18 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..a7cf9885f92a38dd7e3f72d78fa4fe3e
 +            && *rate > 0.0
 +            && (*rate - initial_settings.video.preferred_fps).abs() < 0.01
 +    }) {
-+        con_bail!("Quest3-Pyrowave: requested {} Hz unsupported; client-confirmed rates {:?}. Reopen the app to probe rates; choose a confirmed mode.",
++        let hint = if initial_settings.video.preferred_fps > 207.5 {
++            " 240 Hz needs the Quest 3 display-scaling mode: turn on 'Quest 3: switch to 240 Hz over USB' (USB only) or run tools/quest3/refresh_scaling.py enable, then reopen the app."
++        } else {
++            ""
++        };
++        con_bail!("Quest3-Pyrowave: requested {} Hz unsupported; client-confirmed rates {:?}. Reopen the app to probe rates; choose a confirmed mode.{hint}",
 +            initial_settings.video.preferred_fps, streaming_caps.supported_refresh_rates);
 +    }
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +708,9 @@ fn connection_pipeline(
+@@ -649,18 +729,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -9552,7 +10137,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..a7cf9885f92a38dd7e3f72d78fa4fe3e
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -802,6 +852,10 @@ fn connection_pipeline(
+@@ -802,6 +873,10 @@ fn connection_pipeline(
          proto_socket.split(STREAMING_RECV_TIMEOUT).to_con()?;
  
      let mut new_openvr_config = contruct_openvr_config(session_manager_lock.session());
@@ -9563,7 +10148,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..a7cf9885f92a38dd7e3f72d78fa4fe3e
      new_openvr_config.eye_resolution_width = stream_view_resolution.x;
      new_openvr_config.eye_resolution_height = stream_view_resolution.y;
      new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
-@@ -869,10 +923,11 @@ fn connection_pipeline(
+@@ -869,10 +944,11 @@ fn connection_pipeline(
  
      // PyroWave over UDP: a plain socket to the client's address. The same resolution fills
      // openvr_config for the C++ encoder, so the two sides cannot disagree.
@@ -9579,7 +10164,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..a7cf9885f92a38dd7e3f72d78fa4fe3e
      if pyrowave.enabled {
          info!("{pyrowave}");
      }
-@@ -1102,7 +1157,10 @@ fn connection_pipeline(
+@@ -1102,7 +1178,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -9591,7 +10176,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..a7cf9885f92a38dd7e3f72d78fa4fe3e
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1173,7 @@ fn connection_pipeline(
+@@ -1115,6 +1194,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -9599,7 +10184,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..a7cf9885f92a38dd7e3f72d78fa4fe3e
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1190,14 @@ fn connection_pipeline(
+@@ -1131,6 +1211,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -9614,7 +10199,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..a7cf9885f92a38dd7e3f72d78fa4fe3e
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1184,6 +1251,7 @@ fn connection_pipeline(
+@@ -1184,6 +1272,7 @@ fn connection_pipeline(
          let disconnect_notif = Arc::clone(&disconnect_notif);
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
@@ -9622,7 +10207,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..a7cf9885f92a38dd7e3f72d78fa4fe3e
          move || {
              let mut disconnection_deadline = Instant::now() + KEEPALIVE_TIMEOUT;
              while is_streaming(&client_hostname) {
-@@ -1299,6 +1367,9 @@ fn connection_pipeline(
+@@ -1299,6 +1388,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -9632,7 +10217,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..a7cf9885f92a38dd7e3f72d78fa4fe3e
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1378,6 +1449,22 @@ fn connection_pipeline(
+@@ -1378,6 +1470,22 @@ fn connection_pipeline(
                              };
  
                          match reserved {
@@ -9655,7 +10240,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..a7cf9885f92a38dd7e3f72d78fa4fe3e
                              ReservedClientControlPacket::CustomInteractionProfile {
                                  input_ids,
                                  ..
-@@ -1552,9 +1639,10 @@ mod beta_tests {
+@@ -1552,9 +1660,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -11207,7 +11792,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..c9ad430a498c7d2313b7cd5e68937edb
  
  /// The profile whose every assignment the session (`session_settings` as JSON) currently holds,
 diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
-index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e568434da8bb35 100644
+index 985a4d04e505ecaf29120bcc61b525476eb7caf2..ff8c883371d3049424883a3e8ed88f17e0022cfb 100644
 --- a/alvr/session/src/beta_tests.rs
 +++ b/alvr/session/src/beta_tests.rs
 @@ -31,7 +31,7 @@ fn video_shows_only_codec_experiment_controls() {
@@ -11219,7 +11804,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e56843
      );
      assert_eq!(
          names(entries, Visibility::Advanced),
-@@ -49,36 +49,39 @@ fn video_shows_only_codec_experiment_controls() {
+@@ -49,36 +49,41 @@ fn video_shows_only_codec_experiment_controls() {
  fn codec_picker_offers_pyrowave_and_h264_only() {
      assert_eq!(
          visible_variants(&schema(), &["video", "preferred_codec"]).unwrap(),
@@ -11243,6 +11828,8 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e56843
 +            "light_foveated_encoding",
 +            "render_downsample_filter",
 +            "foveation_profile",
++            "quest3_240hz_display_scaling",
++            "quest3_max_gpu_clock",
 +            "latency_stamp"
 +        ])
 +    );
@@ -11275,7 +11862,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e56843
  }
  
  #[test]
-@@ -133,8 +136,11 @@ fn default_settings() -> Settings {
+@@ -133,8 +138,11 @@ fn default_settings() -> Settings {
  fn fresh_install_streams_the_recommended_profile() {
      let s = default_settings();
      assert_eq!(s.video.preferred_codec, CodecType::PyroWave);
@@ -11289,7 +11876,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e56843
      for size in [
          &s.video.transcoding_view_resolution,
          &s.video.emulated_headset_view_resolution,
-@@ -142,33 +148,27 @@ fn fresh_install_streams_the_recommended_profile() {
+@@ -142,33 +150,27 @@ fn fresh_install_streams_the_recommended_profile() {
          assert!(matches!(
              size,
              FrameSize::Absolute {
@@ -11330,7 +11917,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e56843
  }
  
  // Applies session-style assignments the way the dashboard's SetValues does.
-@@ -198,13 +198,10 @@ fn profile(name: &str) -> StreamingProfile {
+@@ -198,13 +200,10 @@ fn profile(name: &str) -> StreamingProfile {
  #[test]
  fn profiles_are_named_for_testers() {
      let profiles = streaming_profiles();
@@ -11348,7 +11935,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e56843
  }
  
  #[test]
-@@ -218,13 +215,16 @@ fn recommended_profile_is_the_fresh_install() {
+@@ -218,13 +217,16 @@ fn recommended_profile_is_the_fresh_install() {
  fn h264_profile_is_the_measured_b15_cell() {
      let s = apply(&profile(H264_PROFILE));
      assert_eq!(s.video.preferred_codec, CodecType::H264);
@@ -11369,7 +11956,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e56843
          }
      ));
      assert_eq!(s.video.max_buffering_frames, 1.5);
-@@ -233,20 +233,66 @@ fn h264_profile_is_the_measured_b15_cell() {
+@@ -233,20 +235,66 @@ fn h264_profile_is_the_measured_b15_cell() {
          EncoderQualityPresetNvidia::P1
      );
      assert_eq!(s.video.encoder_config.entropy_coding, EntropyCoding::Cavlc);
@@ -11445,7 +12032,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e56843
  }
  
  fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
-@@ -261,21 +307,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
+@@ -261,21 +309,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
  fn effective_config_follows_settings_without_env() {
      let e = pyrowave_effective(&default_settings(), &env(&[]));
      assert!(e.enabled);
@@ -11472,7 +12059,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e56843
      assert!(e.wavelet_53);
      assert_eq!(e.decode_path, PyroWaveDecodePath::Fragment);
  }
-@@ -284,6 +330,7 @@ fn effective_config_follows_a_non_default_setting() {
+@@ -284,6 +332,7 @@ fn effective_config_follows_a_non_default_setting() {
  fn research_env_overrides_win_and_are_reported() {
      let mut s = default_settings();
      s.video.preferred_codec = CodecType::H264;
@@ -11480,7 +12067,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e56843
      let e = pyrowave_effective(
          &s,
          &env(&[
-@@ -302,8 +349,7 @@ fn research_env_overrides_win_and_are_reported() {
+@@ -302,8 +351,7 @@ fn research_env_overrides_win_and_are_reported() {
          vec![
              "ALVR_PYROWAVE",
              "ALVR_PYROWAVE_UDP",
@@ -11490,7 +12077,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e56843
          ]
      );
  }
-@@ -320,8 +366,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
+@@ -320,8 +368,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
      let line = pyrowave_effective(&default_settings(), &env(&[])).to_string();
      assert_eq!(
          line,
@@ -11501,7 +12088,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e56843
      );
  }
  
-@@ -398,6 +444,7 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
+@@ -398,6 +446,7 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
          "pyrowave_enabled",
          "pyrowave_udp",
          "pyrowave_wavelet_53",
@@ -11509,7 +12096,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c77f0cb3e05f91ce2a67d74c06e56843
          "pyrowave_decode_path",
      ] {
          openvr.remove(key).expect(key);
-@@ -410,3 +457,20 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
+@@ -410,3 +459,20 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
          "upgrading must not forget the paired headset"
      );
  }
@@ -11898,7 +12485,7 @@ index d7d0dbbfcbfc7eaacf6f4ff5f0c47f882f1eee1a..e85a1e8a6f60414317ee82c6b1a251c5
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a714d39f1 100644
+index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..019445054e22ee023093cb5a7cb51fffa0046c87 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -11950,7 +12537,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
  }
  
  #[repr(u8)]
-@@ -618,32 +618,120 @@ pub enum PyroWaveWavelet {
+@@ -618,32 +618,128 @@ pub enum PyroWaveWavelet {
  #[schema(gui = "button_group")]
  pub enum PyroWaveDecodePath {
      // The driver heuristic, which picks the fragment path on Qualcomm. Kept for research.
@@ -12040,6 +12627,14 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
 +    pub render_downsample_filter: RenderDownsampleFilter,
 +
 +    #[serde(default)]
++    #[schema(strings(display_name = "Quest 3: switch to 240 Hz over USB", help = "With 240 Hz selected and the headset on USB, the PC wakes the headset, puts its panel in the developer display-scaling mode (3104x1664, 1552x1664 per eye) and restarts the client so it confirms 240 Hz. Streams of about 1280x1376 to 1440x1536 per eye suit that panel. The previous headset values are restored when another rate is selected or SteamVR closes; until then other VR apps, Virtual Desktop included, also run in this mode."))]
++    pub quest3_240hz_display_scaling: bool,
++
++    #[serde(default)]
++    #[schema(strings(display_name = "Quest 3: maximum GPU clock over USB", help = "Pins the headset GPU at level 7 (690 MHz instead of about 640) while this PC streams over USB, and restores the previous value afterwards. Measured +4 to +9 fresh frames/s where decoding is GPU-bound (above-native sizes, 207 and 240 Hz); no change at native 120 Hz. More heat; sustained thermals are not measured. The client restarts when this changes."))]
++    pub quest3_max_gpu_clock: bool,
++
++    #[serde(default)]
 +    #[schema(strings(display_name = "Optical latency stamp (diagnostic)", help = "Draws the PC performance-counter clock (ms) and two frame-parity squares just below the center of each eye. Film a monitor running tools/quest3/latency_clock.py next to a headset lens to measure composition-to-photon latency. Leave off for play. Restart SteamVR."))]
 +    #[schema(flag = "steamvr-restart")]
 +    pub latency_stamp: bool,
@@ -12075,7 +12670,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
  }
  
  #[repr(u8)]
-@@ -799,23 +887,20 @@ pub struct VideoConfig {
+@@ -799,23 +895,20 @@ pub struct VideoConfig {
      pub bitrate: BitrateConfig,
  
      #[schema(strings(
@@ -12104,7 +12699,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
      pub foveated_encoding: Switch<FoveatedEncodingConfig>,
  
      #[schema(flag = "steamvr-restart")]
-@@ -858,14 +943,14 @@ If you want to reduce the amount of pixelation on the edges, increase the center
+@@ -858,14 +951,14 @@ If you want to reduce the amount of pixelation on the edges, increase the center
      pub mediacodec_extra_options: Vec<(String, MediacodecProperty)>,
  
      #[schema(strings(
@@ -12121,7 +12716,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
      ))]
      #[schema(flag = "steamvr-restart")]
      #[schema(flag = "hidden")]
-@@ -1663,15 +1748,15 @@ pub struct Settings {
+@@ -1663,15 +1756,15 @@ pub struct Settings {
  }
  
  pub fn session_settings_default() -> SettingsDefault {
@@ -12140,7 +12735,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
              },
          },
      };
-@@ -1742,7 +1827,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1742,7 +1835,7 @@ pub fn session_settings_default() -> SettingsDefault {
              adapter_index: 0,
              transcoding_view_resolution: view_resolution.clone(),
              emulated_headset_view_resolution: view_resolution,
@@ -12149,7 +12744,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
              max_buffering_frames: 1.5,
              buffering_history_weight: 0.90,
              enforce_server_frame_pacing: true,
-@@ -1796,15 +1881,24 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1796,15 +1889,26 @@ pub fn session_settings_default() -> SettingsDefault {
                  variant: CodecTypeDefaultVariant::PyroWave,
              },
              pyrowave: PyroWaveConfigDefault {
@@ -12168,15 +12763,17 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
                  decode_path: PyroWaveDecodePathDefault {
 -                    variant: PyroWaveDecodePathDefaultVariant::Compute,
 +                    variant: PyroWaveDecodePathDefaultVariant::Auto,
-+                },
+                 },
 +                render_downsample_filter: RenderDownsampleFilterDefault {
 +                    variant: RenderDownsampleFilterDefaultVariant::Bilinear,
-                 },
++                },
++                quest3_240hz_display_scaling: false,
++                quest3_max_gpu_clock: false,
 +                latency_stamp: false,
              },
              encoder_config: EncoderConfigDefault {
                  gui_collapsed: true,
-@@ -1901,7 +1995,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1901,7 +2005,7 @@ pub fn session_settings_default() -> SettingsDefault {
                  }
              },
              foveated_encoding: SwitchDefault {
@@ -12185,7 +12782,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
                  content: FoveatedEncodingConfigDefault {
                      force_enable: false,
                      center_size_x: 0.20,
-@@ -1910,7 +2004,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1910,7 +2014,7 @@ pub fn session_settings_default() -> SettingsDefault {
                      center_shift_y: 0.0,
                      edge_ratio_x: 3.,
                      edge_ratio_y: 4.,
@@ -12194,7 +12791,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
                  },
              },
              clientside_foveation: SwitchDefault {
-@@ -2066,7 +2160,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2066,7 +2170,7 @@ pub fn session_settings_default() -> SettingsDefault {
                                  content: vec![],
                              },
                          },
@@ -12203,7 +12800,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
                      },
                      extra_openvr_props: default_custom_openvr_props,
                      button_mappings: OptionalDefault {
-@@ -2179,16 +2273,12 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2179,16 +2283,12 @@ pub fn session_settings_default() -> SettingsDefault {
                  content: DiscoveryConfigDefault {
                      // Beta: no pairing step. The pre-release protocol ID already keeps stock
                      // ALVR clients out; turn this off to approve each headset by hand.
@@ -12223,7 +12820,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
              },
              wired_client_autolaunch: true,
              web_server_port: 8082,
-@@ -2211,7 +2301,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2211,7 +2311,7 @@ pub fn session_settings_default() -> SettingsDefault {
              server_recv_buffer_bytes: socket_buffer.clone(),
              client_send_buffer_bytes: socket_buffer.clone(),
              client_recv_buffer_bytes: socket_buffer,
@@ -12232,7 +12829,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
              avoid_video_glitching: true,
              minimum_idr_interval_ms: 100,
              enable_on_connect_script: false,
-@@ -2262,7 +2352,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2262,7 +2362,7 @@ pub fn session_settings_default() -> SettingsDefault {
              },
              steamvr_launcher: SteamvrLauncherDefault {
                  driver_launch_action: DriverLaunchActionDefault {
@@ -12241,7 +12838,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..05fb9f572d0d3507dfe86d1c35b8ac6a
                  },
                  open_close_steamvr_with_dashboard: false,
              },
-@@ -2287,3 +2377,50 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2287,3 +2387,50 @@ pub fn session_settings_default() -> SettingsDefault {
          },
      }
  }

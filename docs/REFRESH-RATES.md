@@ -14,6 +14,16 @@ APK after changing the environment to run a fresh probe. Startup can briefly cha
 
 ## 240 Hz developer experiment
 
+From `.57` the PC can do this itself: choosing **240 Hz** in the dashboard turns on
+**Quest 3: switch to 240 Hz over USB** (`video.pyrowave.quest3_240hz_display_scaling`). While the
+headset is on USB and the client is not yet streaming, the server saves the headset's values, wakes
+it, applies the override (stepping through a change if needed), confirms the kernel DSI mode, and
+restarts the client so its probe confirms 240 Hz. Selecting another rate (a SteamVR restart) or
+closing SteamVR restores the saved values the same way. **Quest 3: maximum GPU clock over USB**
+(`video.pyrowave.quest3_max_gpu_clock`) does the same for `debug.oculus.gpuLevel=7`. With neither
+requested and nothing saved, the server issues no extra ADB commands. Over Wi-Fi, or to manage the
+properties by hand, use the helper below.
+
 Above 207 Hz the panel requires display scaling. HorizonOS exposes the 4128x2208 panel modes up to
 207 Hz; 240 Hz exists only as a 3104x1664 mode (1552x1664 per eye) that the panel upscales. Fine
 detail changes even with a full-chroma encoded stream, so keep 240 Hz results separate from
