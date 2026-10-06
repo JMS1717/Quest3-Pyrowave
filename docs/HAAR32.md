@@ -1,9 +1,9 @@
 # Multilevel inverse Haar (`debug.q3pw.haar32`)
 
-Status: default on in mode 3 (`debug.q3pw.haar32` unset). `0`, `1`, `2`, `3` select a mode; requesting
+Status: default on in mode 4 (`debug.q3pw.haar32` unset). `0` to `4` select a mode; requesting
 `debug.q3pw.fuse_color=1` or `debug.q3pw.dequant_haar=1` turns the default off, since those
 experiments replace passes this one owns. The client logs `[Q3PW_HAAR32] requested=N active=M
-packed_luma=0|1` and steps down to the best mode the decoder accepts (CDF wavelets, 4:4:4, the
+packed_luma=0|1 dual_chroma=0|1` and steps down to the best mode the decoder accepts (CDF wavelets, 4:4:4, the
 fragment decode path and precisions other than 1 fall back to mode 0 or 1).
 
 | mode | what changes |
@@ -12,6 +12,29 @@ fragment decode path and precisions other than 1 fall back to mode 0 or 1).
 | 1 | multilevel inverse Haar, two dispatches per plane |
 | 2 | 1 + levels 0-1 stored as RGBA16F 2x2 quads |
 | 3 | 2 + luma written as an RGBA8 plane of half size, one 2x2 pixel quad per texel |
+| 4 | 3 + Cb and Cr reconstructed by one dispatch into one RG8 plane |
+
+## Mode 4: both chroma planes in one RG8 plane
+
+A cost probe (`PYROWAVE_HAAR32_PROBE=3`, which drops the chroma final-pass stores and lets the
+compiler drop the work feeding them) put the chroma final pass at 0.44 of mode 3's 2.09 ms at
+492 MHz. Mode 4 runs that pass once for both components (the `DUAL` variant of
+`idwt_haar32.comp`, second component on bindings 4-6) and stores Cb and Cr together into an RG8
+plane: half the store instructions, and the conversion pass reads both with one bilinear fetch.
+Output is bit-identical to mode 3 (`decoder_ab haar32qd` with `AB_ALLOW_DIFF=1` reports the same
+differing counts against the base decoder as `haar32qo`).
+
+| | mode 3 | mode 4 |
+|---|---|---|
+| bench p50, 4160x2208, 604 KB, 492 MHz, interleaved | 2.10 ms | 2.03 ms |
+| live fresh FPS, ABBA 12 s windows (blocks) | 183.7 (185.3 / 182.1) | **190.4** (190.6 / 190.2) |
+| live decode fence p50 | 4.94 ms | **4.71** |
+| live stale frames per second | 23.9 | 17.3 |
+
+Live settings, 2026-10-06: the owner's 3072x3216 render, 2080x2208 per eye encoded, 207 Hz,
+1000 Mbit/s, Haar 4:2:0, no foveation, Adaptive downsample, `quality_scene` panning at 60 deg/s.
+Most of the live gain is in the conversion and fence, not the decode interval, so the single
+fetch matters more than the halved stores. The in-headset screenshots show correct colour.
 
 ## What it does
 
