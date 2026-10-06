@@ -12,12 +12,18 @@ uses ALVR v20.13.0 plus the complete research patch, then `patches/quest3-alvr.p
 Granite remain pinned to the tested research revisions. Cargo's lockfile comes from that tree.
 Reproducible here means the same inputs and recipe, not identical signature timestamps or ZIP bytes.
 
+**Iterating on a Windows PC?** `python tools/local/fast_build.py build` keeps a persistent
+reconstruction and rebuilds only what changed: 30 seconds to 2 minutes per edit for both
+artifacts, versus about 20 minutes per CI run. See [LOCAL-BUILD.md](LOCAL-BUILD.md) for setup,
+measured timings, signing and its differences from CI artifacts. The manual steps follow.
+
 ## Local Windows build
 
 Use a short external workspace such as `C:\q3pw` to avoid Windows native-tool path limits.
 Install Git for Windows, Python 3.13, Rustup, CMake, Ninja, LLVM (libclang), and Visual Studio
-2022 C++ tools with Windows SDK and ATL. VS2019 can compile PyroWave and the transport probe;
-the supported full-streamer recipe uses VS2022. The SDK, tools and project remain separate.
+2022 C++ tools with Windows SDK and ATL. VS2019 can compile PyroWave and the transport probe.
+On October 6 it also built the full `.58` streamer (set `Q3PW_CMAKE_GENERATOR=Visual Studio 16 2019`).
+CI and the supported recipe use VS2022. The SDK, tools and project remain separate.
 
 ```powershell
 $env:XRWIRED_INPUTS = 'C:\q3pw'

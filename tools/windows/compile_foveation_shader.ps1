@@ -10,8 +10,17 @@ $taskCompiler = Get-ChildItem -LiteralPath $taskSdkRoot -Directory |
 if (-not $taskCompiler) { throw 'Windows SDK x64 fxc.exe is required for matching FFE shader compilation' }
 $taskSource = Join-Path $taskAlvrRoot 'alvr\server_openvr\cpp\alvr_server\shader\CompressAxisAlignedPixelShader.hlsl'
 $taskOutput = Join-Path $taskAlvrRoot 'alvr\server_openvr\cpp\platform\win32\CompressAxisAlignedPixelShader.cso'
-& $taskCompiler /nologo /T ps_5_0 /E main /O3 /Fo $taskOutput $taskSource
+# Compile beside the output and replace it only when the bytes change, so an unchanged shader keeps
+# its timestamp and an incremental build does not recompile the server's C++ for it.
+$taskFresh = $taskOutput + '.new'
+& $taskCompiler /nologo /T ps_5_0 /E main /O3 /Fo $taskFresh $taskSource
 if ($LASTEXITCODE -ne 0) { throw 'Foveated encoding shader compilation failed' }
+if ((Test-Path -LiteralPath $taskOutput) -and
+    (Get-FileHash -LiteralPath $taskOutput).Hash -eq (Get-FileHash -LiteralPath $taskFresh).Hash) {
+    Remove-Item -LiteralPath $taskFresh -Force
+} else {
+    Move-Item -LiteralPath $taskFresh -Destination $taskOutput -Force
+}
 Write-Output ('Compiled FFE shader SHA256: ' + (Get-FileHash -LiteralPath $taskOutput -Algorithm SHA256).Hash.ToLower())
 
 # The adaptive game-render downsample is compiled at runtime by FrameRender (D3DCompile), with a
