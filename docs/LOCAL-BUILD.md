@@ -52,8 +52,11 @@ From an empty root, `setup` (81 s) followed by the first `build` (5 min 39 s, in
 network reconstruction) took 7 minutes. The cargo registry was already populated; an empty one
 adds the crate downloads.
 
-APK packaging and signing account for about 20 s of every client build. The remainder of a
-no-change build is Cargo and CMake confirming that nothing changed.
+Every client build has about 20 s of fixed cost. About 9.5 s is `tools/pyroclient/build.sh`
+recompiling the seven decoder binaries, which CI's script always does; most of the rest is APK
+packaging and signing. Skipping the decoder recompile would save those seconds, but a stale decoder
+library in an APK would invalidate measurements, so it always runs. The remainder of a no-change
+build is Cargo and CMake confirming that nothing changed.
 
 ## Usage
 
