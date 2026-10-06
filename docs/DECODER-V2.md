@@ -92,6 +92,63 @@ plane is within one code value on about 0.6 % of pixels, at the same PSNR. This 
 512x320, 4160x2208 and the unaligned 1000x600, which exercises the edge mirroring. That is the
 same Adreno float-to-half behaviour documented for haar32.
 
+## Live at 207 Hz
+
+The client enables V2 with `debug.q3pw.cdf53v2` (0-3, default 3). It only applies to CDF 5/3
+streams; the client logs `[Q3PW_CDF53V2] requested=3 active=3`. The test configuration (2026-10-06)
+was:
+
+- the owner's settings: 3072x3216 render, 2080x2208 per eye encoded, 207 Hz, 1000 Mbit/s, 4:2:0,
+  no foveation;
+- the `quality_scene` panning at 60 deg/s;
+- 12 s ABBA windows, with SteamVR restarted per cell.
+
+| cell | fresh FPS (blocks) | GPU decode p50 | decode fence p50 |
+|---|---|---|---|
+| CDF 5/3, stock decoder | 72.1 (71.9 / 72.2) | 11.36 ms | 13.5 ms |
+| CDF 5/3, V2 mode 3 (first cell) | 138.0 (147.0 / 129.1) | 4.33 | 6.93 |
+| Haar, haar32 mode 3 | 175.2 (175.3 / 175.0) | 2.80 | 5.26 |
+| CDF 5/3, V2 mode 3 (last cell) | 144.7 (144.6 / 144.9) | 4.14 | 6.54 |
+
+Fresh FPS follows 1000 / fence. Live decode takes about 1.8x the bench time: the clock is lower and
+the compositor preempts decode. In-headset image captures are still pending.
+
+## Where the time goes
+
+`PYROWAVE_V2_LEVEL_TIMES=1` with `AB_STAGES=1` adds one GPU interval per level. Interleaved at
+690 MHz, total p50 is Haar mode 3 1.71 ms vs V2 mode 3 2.27 ms. The V2 iDWT splits as:
+
+| level | V2 mode 3 | Haar mode 3 equivalent |
+|---|---|---|
+| L0 (luma 4160x2208, packed RGBA8 out) | 0.48-0.55 ms | luma pass 1 (levels 1-0): 0.37 |
+| L1 (luma, plus both chroma final planes) | 0.67-0.75 | chroma pass 1: 0.23 per plane |
+| L2 | 0.19-0.24 | levels 4-2, all of pass 0: about 0.05 |
+| L3 | 0.11 | |
+| L4 | 0.04 | |
+
+- Haar's chroma final pass costs the same as V2's (0.56 ms per plane at 285 MHz). The R8 chroma
+  stores are expensive for both, not a V2 defect.
+- Skipping V2 levels 2-4 (wrong output) cuts the total from 2.27 to 1.87 ms. 5/3 synthesis needs
+  a neighbour apron that Haar's pair-local transform does not.
+- Bitrate barely matters: V2 at 700 Mbit/s (423 KB cap) decodes in 2.21 ms vs 2.27 at 1000.
+
+## Tried and rejected
+
+Each candidate passed the exactness gate unless noted. All were timed interleaved against mode 3.
+
+| candidate | result | why it fails |
+|---|---|---|
+| Chroma pair in one dispatch, interleaved RG8 CbCr | 2.85 vs 2.87 ms | register pressure doubles |
+| Shared-memory staged row stores | no gain | the stores are not the coalescing kind of slow |
+| FP16 arithmetic | no change | not ALU-bound |
+| Level 1 in its own image | no change | |
+| Shared-memory band tile in `idwt_cdf53v2.comp` | 7.2 vs 5.3 ms at 285 MHz | any shared-memory path in that shader, even one switched off by a specialization constant, makes Adreno spill the band arrays |
+| Mode 4: levels 4-2 in one dispatch (separate program, 4 KB shared memory) | 2.28 vs 2.27 ms | fusing saves no pipeline drains worth having; the 12 KB first version took 1.49 ms for those levels |
+| Mode 4 overlapped with the level 0-1 dequant | 2.29 ms | dequant grows by what iDWT loses; the GPU runs them back to back |
+
+The Adreno 740 decode is throughput-bound. Only less work helps; reordering or fusing dispatches
+does not.
+
 ## Reproduce
 
 ```
@@ -107,7 +164,6 @@ python -m tools.quest3.quality_score <clip.y4m> --out <dir> --mbps 700 1000 --wa
 
 ## Next
 
-1. Client switch and live 207 Hz ABBA against Haar mode 3 with the server on 5/3: fresh FPS,
-   decode time and in-headset captures.
-2. Multilevel fusion of the small levels 2-4 (five barriers now).
+1. In-headset captures of V2 against Haar at the owner's settings, with motion.
+2. Quad-pack level 2 in dequant (25 fetches instead of 49 at L2; at most about 0.08 ms).
 3. CDF 9/7 in the same structure, if the remaining +0.4 dB is worth its wider support.

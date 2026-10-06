@@ -49,7 +49,7 @@ index d44dc0fb80aafa468d14fbf30536551fac0da8bc..df9b440598ab8612a8e9d218bba4df3c
  {
  	if (!decoder)
 diff --git a/pyrowave_decoder.cpp b/pyrowave_decoder.cpp
-index d2ca014b7ba09be6781c6a98c819e53d63094182..2317514b33f378378d167a1e03da8c00f3f02fad 100644
+index d2ca014b7ba09be6781c6a98c819e53d63094182..c77176964c356e6ff9a52b701a8d3c2b28f6d283 100644
 --- a/pyrowave_decoder.cpp
 +++ b/pyrowave_decoder.cpp
 @@ -109,6 +109,9 @@ struct Decoder::Impl final : public WaveletBuffers
@@ -78,7 +78,7 @@ index d2ca014b7ba09be6781c6a98c819e53d63094182..2317514b33f378378d167a1e03da8c00
  	void init_block_meta() override;
  	void clear();
  
-@@ -976,10 +988,76 @@ bool Decoder::Impl::idwt_haar32(CommandBuffer &cmd, const ViewBuffers &views)
+@@ -976,10 +988,87 @@ bool Decoder::Impl::idwt_haar32(CommandBuffer &cmd, const ViewBuffers &views)
  	return true;
  }
  
@@ -100,6 +100,10 @@ index d2ca014b7ba09be6781c6a98c819e53d63094182..2317514b33f378378d167a1e03da8c00
 +		ivec2 band_size;
 +		ivec2 output_size;
 +	} push = {};
++
++	// PYROWAVE_V2_LEVEL_TIMES=1 adds one GPU interval per level ("iDWT L<n>") for profiling.
++	const bool level_times = timestamp_recording && getenv("PYROWAVE_V2_LEVEL_TIMES");
++	QueryPoolHandle level_start = level_times ? cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT) : QueryPoolHandle{};
 +
 +	for (int input_level = DecompositionLevels - 1; input_level >= 0; input_level--)
 +	{
@@ -139,6 +143,13 @@ index d2ca014b7ba09be6781c6a98c819e53d63094182..2317514b33f378378d167a1e03da8c00
 +		cmd.set_specialization_constant_mask(0);
 +		cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
 +		            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
++		if (level_times)
++		{
++			auto level_end = cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
++			static const char *const names[] = { "iDWT L0", "iDWT L1", "iDWT L2", "iDWT L3", "iDWT L4" };
++			device->register_time_interval("GPU", std::move(level_start), QueryPoolHandle(level_end), names[input_level]);
++			level_start = level_end;
++		}
 +	}
 +
 +	auto end_idwt = timestamp_recording ? cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT) : QueryPoolHandle{};
@@ -155,7 +166,7 @@ index d2ca014b7ba09be6781c6a98c819e53d63094182..2317514b33f378378d167a1e03da8c00
      if (haar && fused_haar)
      {
          cmd.set_program(shaders.idwt_haar_fused[Configuration::get().get_precision()]);
-@@ -1441,6 +1519,9 @@ bool Decoder::Impl::allocate_packed()
+@@ -1441,6 +1530,9 @@ bool Decoder::Impl::allocate_packed()
  			view_info.base_layer = 4 * component;
  			view_info.layers = 4;
  			packed_layer_views[component][level] = device->create_image_view(view_info);
@@ -165,7 +176,7 @@ index d2ca014b7ba09be6781c6a98c819e53d63094182..2317514b33f378378d167a1e03da8c00
  		}
  	}
  	return true;
-@@ -1458,6 +1539,18 @@ bool Decoder::set_haar32(int mode)
+@@ -1458,6 +1550,18 @@ bool Decoder::set_haar32(int mode)
  	return true;
  }
  

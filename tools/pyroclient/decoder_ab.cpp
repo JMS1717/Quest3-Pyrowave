@@ -266,7 +266,13 @@ int run_wavelets(uint32_t w, uint32_t h, size_t bytes, int blocks, int frames, b
                            { "cdf53_v2", PYROWAVE_WAVELET_CDF53, v2, false },
                            { "cdf53_v2q", PYROWAVE_WAVELET_CDF53, v2q, false },
                            { "cdf53_v2qp", PYROWAVE_WAVELET_CDF53, v2qp, false } };
-    const int n = 8;
+    // AB_ARMS=name,name,... runs a subset (default: all).
+    std::vector<WArm> chosen;
+    const char *only = getenv("AB_ARMS");
+    for (const WArm &a : warms)
+        if (!only || strstr((std::string(",") + only + ",").c_str(), (std::string(",") + a.name + ",").c_str()))
+            chosen.push_back(a);
+    const int n = int(chosen.size());
     Gpu g;
     create_gpu(g);
     VkPhysicalDeviceProperties props;
@@ -277,14 +283,14 @@ int run_wavelets(uint32_t w, uint32_t h, size_t bytes, int blocks, int frames, b
     std::vector<std::vector<std::vector<uint8_t>>> packets(n);
     std::vector<Session> s;
     for (int i = 0; i < n; i++) {
-        packets[i] = encode(w, h, bytes, y, cb, cr, warms[i].wavelet);
+        packets[i] = encode(w, h, bytes, y, cb, cr, chosen[i].wavelet);
         size_t total = 0;
         for (auto &p : packets[i]) total += p.size();
-        s.push_back(create_session(g, w, h, warms[i].arm, warms[i].wavelet, warms[i].fragment));
+        s.push_back(create_session(g, w, h, chosen[i].arm, chosen[i].wavelet, chosen[i].fragment));
         PW_CHECK(pyrowave_decoder_set_timestamp_recording(s[i].decoder, stages ? 1 : 0));
         std::vector<std::vector<uint8_t>> out;
         decode(g, s[i], packets[i], ns_per_tick, &out);
-        printf("arm=%s bytes=%zu luma_psnr=%.3f\n", warms[i].name, total, psnr(out[0], y));
+        printf("arm=%s bytes=%zu luma_psnr=%.3f\n", chosen[i].name, total, psnr(out[0], y));
     }
     for (int warm = 0; warm < 10; warm++)
         for (int i = 0; i < n; i++) decode(g, s[i], packets[i], ns_per_tick);
@@ -297,10 +303,11 @@ int run_wavelets(uint32_t w, uint32_t h, size_t bytes, int blocks, int frames, b
             std::vector<double> ms;
             for (int f = 0; f < frames; f++) ms.push_back(decode(g, s[i], packets[i], ns_per_tick));
             all[i].insert(all[i].end(), ms.begin(), ms.end());
-            printf("block=%d arm=%s p50=%.3f clock=%s", block, warms[i].name, percentile(ms, 0.5), clock.c_str());
+            printf("block=%d arm=%s p50=%.3f clock=%s", block, chosen[i].name, percentile(ms, 0.5), clock.c_str());
             if (stages)
                 pyrowave_device_report_performance_stats(g.pyro, [](void *, const char *message) {
-                    if (!strncmp(message, "Dequant:", 8) || !strncmp(message, "iDWT:", 5)) {
+                    // "iDWT L<n>:" per level with PYROWAVE_V2_LEVEL_TIMES=1.
+                    if (!strncmp(message, "Dequant:", 8) || !strncmp(message, "iDWT", 4)) {
                         std::string m(message);
                         while (!m.empty() && m.back() == '\n') m.pop_back();
                         printf(" | %s", m.c_str());
@@ -310,7 +317,7 @@ int run_wavelets(uint32_t w, uint32_t h, size_t bytes, int blocks, int frames, b
         }
     }
     printf("SUMMARY %ux%u cap=%zu", w, h, bytes);
-    for (int i = 0; i < n; i++) printf(" %s_p50=%.3f", warms[i].name, percentile(all[i], 0.5));
+    for (int i = 0; i < n; i++) printf(" %s_p50=%.3f", chosen[i].name, percentile(all[i], 0.5));
     printf("\n");
     for (auto &x : s) destroy_session(g, x);
     pyrowave_device_destroy(g.pyro);
