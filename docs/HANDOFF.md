@@ -334,6 +334,11 @@ Early performance screens can usually run 5–15 seconds after verified startup
 and source coverage. Promising results still need repeated sustained
 thermal/gameplay validation. Improve test design rather than rerunning everything.
 
+When nobody is playing VR, iterate with the [local fast build](LOCAL-BUILD.md)
+(`python tools/local/fast_build.py build`): 30 seconds to 2 minutes per edit for a stable-signed
+APK plus the Windows streamer, versus about 20 minutes per CI run. It refuses to start while
+SteamVR runs. Reviewed CI builds stay the evidence for releases and published measurements.
+
 Use [CI](../.github/workflows/ci.yml) for heavy builds while the PC may be used:
 
 ```text

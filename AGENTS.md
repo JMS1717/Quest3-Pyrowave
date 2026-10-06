@@ -10,6 +10,8 @@ hardware authorization, continue development without interrupting PCVR.
   authorization for remote recovery/unattended testing supersedes this restriction
   for that work; automatic goal continuations do not grant new authorization.
 - Do not run heavy local builds while the owner is playing. Build on GitHub Actions.
+  Otherwise prefer `python tools/local/fast_build.py build` ([docs/LOCAL-BUILD.md](docs/LOCAL-BUILD.md)),
+  which refuses to run while SteamVR is up; reviewed CI builds remain the release evidence.
 - Preserve Virtual Desktop's registration and service. Verify current driver state
   rather than assuming an old isolation snapshot is still current. Register/enable
   the project driver only within explicitly authorized hardware work.

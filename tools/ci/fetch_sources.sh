@@ -7,6 +7,9 @@
 # Usage: tools/ci/fetch_sources.sh <dest>
 # Q3PW_PYROWAVE_ONLY=1 reconstructs just the patched pyrowave tree, without ALVR or Granite, for
 # shader-level checks that need only its sources and generated slangmosh.hpp.
+# Q3PW_BASE_REPOS=<dir> takes the pinned base commits from an earlier full reconstruction in <dir>
+# instead of GitHub and skips the unpatched submodules (ALVR's openvr headers, Granite). It stages
+# only the patched trees, in about a second, for tools/local/fast_build.py; CI never sets it.
 set -eu
 : "${ALVR_BASE:=7eda092dbf0002281410a4222683ec228700cffb}"
 : "${PYROWAVE_BASE:=d2997ac172bdc00e29c58e3f2938acb7e94580bf}"
@@ -16,18 +19,21 @@ dest=${1:?usage: fetch_sources.sh <dest>}
 [ ! -e "$dest/ALVR-20.13.0" ] && [ ! -e "$dest/pyrowave" ] || { echo "Destination already contains sources; use a new directory to preserve local work." >&2; exit 1; }
 mkdir -p "$dest"
 
+base_repos=${Q3PW_BASE_REPOS:-}
 checkout() {  # <url> <dir> <commit>
+    src=$1
+    [ -z "$base_repos" ] || src="$base_repos/$(basename -- "$2")"
     git init -q "$2"
     git -C "$2" config core.autocrlf false
     git -C "$2" config core.longpaths true   # Granite's SPIRV-Cross test files pass 260 chars
-    git -C "$2" fetch -q --depth 1 "$1" "$3"
+    git -C "$2" fetch -q --depth 1 "$src" "$3"
     git -C "$2" checkout -q FETCH_HEAD
 }
 
 pyrowave_only=${Q3PW_PYROWAVE_ONLY:-0}
 if [ "$pyrowave_only" != 1 ]; then
 checkout https://github.com/alvr-org/ALVR "$dest/ALVR-20.13.0" "$ALVR_BASE"
-git -C "$dest/ALVR-20.13.0" submodule update -q --init --recursive --depth 1   # openvr headers
+[ -n "$base_repos" ] || git -C "$dest/ALVR-20.13.0" submodule update -q --init --recursive --depth 1   # openvr headers
 git -C "$dest/ALVR-20.13.0" apply --binary "$repo/patches/alvr-20.13.0-server-instrumentation.patch"
 git -C "$dest/ALVR-20.13.0" apply --binary "$repo/patches/quest3-alvr.patch"
 cp "$repo/tools/foveation/light.glsl" "$dest/ALVR-20.13.0/alvr/graphics/resources/light_foveation.glsl"
@@ -42,7 +48,7 @@ cp "$repo/tools/quest3/producer_prerecord.rs" "$dest/ALVR-20.13.0/alvr/client_co
 fi
 
 checkout https://github.com/Themaister/pyrowave "$dest/pyrowave" "$PYROWAVE_BASE"
-if [ "$pyrowave_only" != 1 ]; then
+if [ "$pyrowave_only" != 1 ] && [ -z "$base_repos" ]; then
 # pyrowave's checkout_granite.sh pins a newer Granite (9d44761), which spiked encoder p99 to 14 ms;
 # the measurements used 842d9d5, cloned here with all of its submodules.
 checkout https://github.com/Themaister/Granite "$dest/pyrowave/Granite" "$GRANITE_COMMIT"

@@ -44,6 +44,7 @@ results/local/
 *.jks
 *.so
 tools/pyroclient/pyroclient_test
+tools/pyroclient/prerecord_gpu_test
 tools/pyroclient/release_fence_gpu_test
 tools/pyroclient/ready_fence_gpu_test
 tools/udptest/udprecv-android
