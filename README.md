@@ -34,7 +34,7 @@ Vulkan handles wavelet decoding; ALVR supplies SteamVR integration, tracking, co
 | --- | --- |
 | **Latest release** | **alpha.9 / `.63`**: a decoder about twice as fast, any refresh rate from 144 to 240 Hz with PC-driven panel switching over USB, Decoder V2 for smoother CDF 5/3 images, bitrate up to 4000 Mbps, two parallel wired video connections, and measured Wi-Fi streaming with connection fixes. [Release notes →](docs/RELEASE-alpha.9.md) |
 | **On main since alpha.9** | **`.64`** (not yet released): safer parallel wired video. Frames are numbered, so a repeated timestamp can no longer mix two frames, and a stalled connection times out after 1 s and video falls back to the stream socket. Packed frames that no shader can convert are skipped instead of shown in wrong colours, and the dashboard's Auto text is corrected. Checked over Wi-Fi 6E (190.6 and 193.9 fresh FPS at 207 Hz, correct colours); the USB path it changes is not yet hardware-tested. [Handoff →](docs/HANDOFF.md) |
-| **Best measured high-refresh setting** | **207 Hz · 2080 × 2208 per eye · Haar · 1000 Mbps · 4:2:0 · no foveation · maximum GPU clock over USB**: 194–197 fresh FPS in 10–12 s screens with a 60°/s pan. [Frame trace →](docs/FRAME-TRACE.md) |
+| **Best measured high-refresh setting** | **207 Hz · 2080 × 2208 per eye · Haar · 1000 Mbps · 4:2:0 · no foveation · maximum GPU clock over USB · direct eye copy**: 194–197 fresh FPS in 10–12 s screens with a 60°/s pan. [Frame trace →](docs/FRAME-TRACE.md) |
 | **Over Wi-Fi** | The same 207 Hz stream at 1000 Mbps on Wi-Fi 6E (6 GHz, PC on Ethernet): 189–195 fresh FPS and about 6 ms of network time, about 3.4 ms more than USB. 1250 Mbps is the practical ceiling on the test link; 1500 queued frames hundreds of milliseconds late. [Wi-Fi →](docs/WIRELESS.md) |
 | **Smoothest image** | CDF 5/3 (Decoder V2) removes Haar's block edges, for about 2 fresh FPS at 700 Mbps and more at higher bitrates. [Decoder V2 →](docs/DECODER-V2.md) |
 | **What limits 207 Hz** | Frames that finish too close to the display deadline, the eye copy's fill cost (about 0.8 ms), and a headset memory clock the app cannot control. [Details →](docs/FRAME-TRACE.md#what-limits-207-hz-now) |
@@ -165,9 +165,10 @@ controller emulation and restoring another driver.
 | **Wavelet** | **Haar** (default) is fastest. **CDF 5/3** uses Decoder V2 and gives smoother gradients without Haar's 8-pixel block edges, for a few fresh FPS; pair it with the maximum GPU clock. [Decoder V2](docs/DECODER-V2.md) · [decoder findings](docs/DECODE-PIPELINE.md) |
 | **GPU clock** | **Quest 3: maximum GPU clock** (690 MHz) helps whenever decoding limits the frame rate. The measured 207 and 240 Hz profiles turn it on. The PC applies it, and the panel switch, over USB adb only. [Details](docs/HIGH-REFRESH.md) |
 | **Wired video connections** | Two by default over USB: each frame is split across parallel adb-forwarded connections, which shortens network time at 1000 Mbps and above. **0** restores the single stream socket. [Details](docs/BITRATE.md) |
+| **Direct eye copy** | An opt-in developer property that draws decoded frames straight into the headset's eye images; the 207 Hz measurements on this page use it. With the headset on USB: `adb shell setprop debug.q3pw.direct_eye_copy 1`, then force-stop and reopen the app. Set it to `0` to return to ALVR's staging renderer, the default. [Frame trace](docs/FRAME-TRACE.md) |
 | **Chroma** | Keep **4:2:0** for the baseline; 4:4:4 increased decode cost in the recorded comparison. [Chroma comparison](docs/CHROMA.md) |
 | **Foveation** | Off by default. [Light peripheral encoding](docs/LIGHT-FOVEATION.md) is optional development work; sustained and in-headset acceptance are pending. |
-| **Overlay** | On by default. **Click both thumbsticks together**, release both, then click again to toggle. [Metrics and overrides](docs/OVERLAY.md) |
+| **Overlay** | On by default, in Compact mode. **Click both thumbsticks together** and release to cycle Compact → Full → Hidden. **Hold both** for about 0.7 s to open the headset settings menu. [Metrics and overrides](docs/OVERLAY.md) |
 | **Controllers** | **Settings → Headset → Controllers → Emulation mode → Quest 3 Touch Plus.** SteamVR restarts to apply it. |
 
 ### Settings that restart SteamVR
@@ -233,8 +234,8 @@ presets can set both sizes together.
 ## 📊 Measured performance
 
 Short live screens on Quest 3 over USB (Wi-Fi where noted), October 6–7, 2026. Unless noted, each
-used 2080 × 2208 per eye encoded from a 3072 × 3216 render, 4:2:0, no foveation, the maximum GPU clock (690 MHz), a
-60°/s pan in ABBA order, and 10–12 s windows after a 3–5 s settle. Blocks whose headset memory clock
+used 2080 × 2208 per eye encoded from a 3072 × 3216 render, 4:2:0, no foveation, the maximum GPU clock (690 MHz), the
+direct eye copy (`debug.q3pw.direct_eye_copy=1`, see [Settings](#-settings-and-quality)), a 60°/s pan in ABBA order, and 10–12 s windows after a 3–5 s settle. Blocks whose headset memory clock
 changed mid-window were rejected.
 
 | Setting | Fresh FPS | Notes |
