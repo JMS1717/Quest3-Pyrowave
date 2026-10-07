@@ -182,7 +182,15 @@ and 3; `dqprobe`, `h32nostore` and `h32nofetch` are the cost probes (`AB_SKIP_GA
    operations per plane (CPU-verified, saved privately as a patch). Standalone, mode 3 with it ran
    3.04 ms against 3.005-3.04 ms without, so the plane loop is not the cost. Mode 3 dequant without its
    stores measured 1.09 ms (probe, one block at 640 MHz), so stores are now only about 0.25 ms;
-   the rest is per-block header loads, subgroup scans and barriers. Probe those next.
+   the rest is per-block header loads, subgroup scans and barriers. Rejected 2026-10-07 (mode 5,
+   `decoder_ab wavelets`, six interleaved blocks): sharing each 8x8 block's control words through
+   shared memory instead of reloading them after the barrier (exact), and summing the subgroup
+   totals after one barrier instead of a scan between two (exact only with the barrier kept even
+   for one subgroup: skipping it on `gl_NumSubgroups == 1` decoded wrong signs on Adreno). Dequant
+   stage means 0.930 ms base against 0.898-0.911 ms for the variants, inside the block-to-block
+   spread (0.81-1.04 ms), and total p50 2.068-2.092 ms against 2.083 ms. Neither header loads nor
+   barriers are the cost; the remaining work is spread over the plane loop, sign clocking and the
+   13.4k workgroups themselves.
 2. **Chroma stores.** Done: mode 4.
 3. **Conversion pass** (0.9 ms live in mode 4, about 37 MB of RGBA8 written per frame) and the ALVR
    eye render it feeds: the next large item. Rejected 2026-10-06: folding the final luma level into
