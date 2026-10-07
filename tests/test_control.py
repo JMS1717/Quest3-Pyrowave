@@ -86,5 +86,5 @@ class DownsampleControlTests(unittest.TestCase):
     def test_unknown_mode_rejected_before_mutation(self):
         with patch('tools.quest3.control.set_values') as write:
             with self.assertRaises(ValueError):
-                downsample('lanczos')
+                downsample('mitchell')
             write.assert_not_called()

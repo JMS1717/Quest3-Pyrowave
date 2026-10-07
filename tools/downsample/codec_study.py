@@ -64,6 +64,11 @@ KERNELS = {
     'catmull': (catmull_rom, 2.0),
     'mitchell': (mitchell, 2.0),
     'lanczos2': (lanczos(2), 2.0),
+    # Keys cubics sharper than Catmull-Rom (c = 0.5) with the same 2-pixel support.
+    'keys075': (lambda x: mitchell(x, 0.0, 0.75), 2.0),
+    'keys1': (lambda x: mitchell(x, 0.0, 1.0), 2.0),
+    'keys125': (lambda x: mitchell(x, 0.0, 1.25), 2.0),
+    'keys15': (lambda x: mitchell(x, 0.0, 1.5), 2.0),
     'lanczos3': (lanczos(3), 3.0),
     'box': (box, 0.5),
 }

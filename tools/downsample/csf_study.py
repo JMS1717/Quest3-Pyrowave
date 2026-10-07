@@ -37,7 +37,9 @@ for y0, _, _ in refs:
     y0 = y0.astype(np.float64)
     std = np.sqrt(np.maximum(box_mean(y0 * y0, 15) - box_mean(y0, 15) ** 2, 0))
     masks.append(std < 3.0)
-frames = [to_ycbcr(resample(w, tw, th, 'catmull')) for w in windows]
+# The live filter is Catmull-Rom; STUDY_FILTER picks another codec_study kernel (lanczos3, ...).
+filt = os.environ.get('STUDY_FILTER', 'catmull')
+frames = [to_ycbcr(resample(w, tw, th, filt)) for w in windows]
 planes = [(y, box420(cb), box420(cr)) for y, cb, cr in frames]
 inp = out / 'input.y4m'
 write_y4m(inp, planes, tw, th, '420jpeg', hz)
@@ -65,5 +67,5 @@ for mbps in mbps_list:
             per.append({'hvs': psnr_hvs_m(y0, yu, ppd), 'y': psnr(y0, yu), 'cb': psnr(cb0, cbu), 'cr': psnr(cr0, cru),
                         'y_smooth': smooth(y0, yu), 'c_smooth': (smooth(cb0, cbu) + smooth(cr0, cru)) / 2,
                         'smooth_frac': float(m.mean())})
-        row = {'mbps': mbps, 'variant': v, 'bytes': enc.stat().st_size, **{k: round(float(np.mean([p[k] for p in per])), 3) for k in per[0]}}
+        row = {'mbps': mbps, 'filter': filt, 'variant': v, 'bytes': enc.stat().st_size, **{k: round(float(np.mean([p[k] for p in per])), 3) for k in per[0]}}
         print(json.dumps(row), flush=True)
