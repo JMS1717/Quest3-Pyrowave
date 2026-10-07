@@ -13,7 +13,7 @@ from tools.quest3.quality_scene import build_world
 from tools.quest3.quality_score import box420, psnr, psnr_hvs_m, read_y4m, run, write_y4m
 
 tools = Path(sys.argv[1]); out = Path(sys.argv[2]); out.mkdir(parents=True, exist_ok=True)
-variants = sys.argv[3].split(',')  # cpd values, 'default' = unset; optional ':chroma' suffix
+variants = sys.argv[3].split(',')  # cpd[:chroma[:aq_offset/aq_strength]], 'default' = unset
 mbps_list = [float(x) for x in sys.argv[4].split(',')]
 crops = int(sys.argv[5]) if len(sys.argv) > 5 else 2
 sw, sh, tw, th, hz = 3072, 3216, 2080, 2208, 207
@@ -22,6 +22,21 @@ wh, ww = world.shape[:2]
 tall = np.concatenate([np.concatenate([world, world], 1)] * 2, 0)
 windows = [tall[(k * 1331) % wh:(k * 1331) % wh + sh, (k * 2477) % ww:(k * 2477) % ww + sw] for k in range(crops)]
 refs = [to_ycbcr(w.astype(np.float32)) for w in windows]
+
+
+def box_mean(a, r):
+    c = np.cumsum(np.cumsum(np.pad(a, ((r + 1, r), (r + 1, r)), mode='edge'), 0), 1)
+    k = 2 * r + 1
+    return (c[k:, k:] - c[:-k, k:] - c[k:, :-k] + c[:-k, :-k]) / (k * k)
+
+
+# Smooth regions (gradients, skies, the scene's soft blobs): where coarse-band quantization shows as
+# Haar blocks. Local luma standard deviation over 31x31 source pixels below 3 code values.
+masks = []
+for y0, _, _ in refs:
+    y0 = y0.astype(np.float64)
+    std = np.sqrt(np.maximum(box_mean(y0 * y0, 15) - box_mean(y0, 15) ** 2, 0))
+    masks.append(std < 3.0)
 frames = [to_ycbcr(resample(w, tw, th, 'catmull')) for w in windows]
 planes = [(y, box420(cb), box420(cr)) for y, cb, cr in frames]
 inp = out / 'input.y4m'
@@ -31,17 +46,24 @@ for mbps in mbps_list:
     cap = int(mbps * 1e6 / 8 / hz / 2) // 4 * 4
     for v in variants:
         env = dict(os.environ, PYROWAVE_WAVELET='haar')
-        cpd, _, chroma = v.partition(':')
-        env.pop('PYROWAVE_CPD_NYQUIST', None); env.pop('PYROWAVE_CHROMA_CSF', None)
+        cpd, chroma, aq, lf = (v.split(':') + ['', '', ''])[:4]
+        for key in ('PYROWAVE_CPD_NYQUIST', 'PYROWAVE_CHROMA_CSF', 'PYROWAVE_AQ', 'PYROWAVE_LF_BOOST'):
+            env.pop(key, None)
         if cpd != 'default': env['PYROWAVE_CPD_NYQUIST'] = cpd
         if chroma: env['PYROWAVE_CHROMA_CSF'] = chroma
-        enc, dec = out / 'tmp.pyrowave', out / 'tmp-dec.y4m'
+        if aq: env['PYROWAVE_AQ'] = aq.replace('/', ',')  # offset/strength (wavelet_quant.comp)
+        if lf: env['PYROWAVE_LF_BOOST'] = lf.replace('/', ',')  # level/factor
+        enc, dec = out / 'tmp.pyrowave', out / f"dec-{mbps:g}-{v.replace(':', '_').replace('/', '-')}.y4m"
         run([str(tools / 'pyrowave-encode.exe'), str(inp), str(enc), str(cap)], env)
         run([str(tools / 'pyrowave-decode.exe'), str(enc), str(dec)], env)
         decoded, _ = read_y4m(dec, len(planes))
         per = []
         for (y, cb, cr), (y0, cb0, cr0) in zip(decoded, refs):
             yu, cbu, cru = upsample(y, sw, sh), upsample(cb, sw, sh), upsample(cr, sw, sh)
-            per.append({'hvs': psnr_hvs_m(y0, yu, ppd), 'y': psnr(y0, yu), 'cb': psnr(cb0, cbu), 'cr': psnr(cr0, cru)})
+            m = masks[len(per)]
+            smooth = lambda a, b: float(10 * np.log10(255 ** 2 / max(np.mean((a[m].astype(np.float64) - b[m]) ** 2), 1e-9)))
+            per.append({'hvs': psnr_hvs_m(y0, yu, ppd), 'y': psnr(y0, yu), 'cb': psnr(cb0, cbu), 'cr': psnr(cr0, cru),
+                        'y_smooth': smooth(y0, yu), 'c_smooth': (smooth(cb0, cbu) + smooth(cr0, cru)) / 2,
+                        'smooth_frac': float(m.mean())})
         row = {'mbps': mbps, 'variant': v, 'bytes': enc.stat().st_size, **{k: round(float(np.mean([p[k] for p in per])), 3) for k in per[0]}}
         print(json.dumps(row), flush=True)

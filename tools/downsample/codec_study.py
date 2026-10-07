@@ -110,7 +110,8 @@ def resample(img, out_w, out_h, name, cache={}):
     f = img.astype(np.float32)
     if f.ndim == 2:
         return my @ f @ mx.T
-    return np.stack([my @ f[..., k] @ mx.T for k in range(f.shape[2])], -1)
+    # Contiguous planes: a strided channel view drops numpy to a non-BLAS loop (minutes per frame).
+    return np.stack([my @ np.ascontiguousarray(f[..., k]) @ mx.T for k in range(f.shape[2])], -1)
 
 
 def to_ycbcr(rgb):
