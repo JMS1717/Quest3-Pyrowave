@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66ddc256d0 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb927ee89ab5 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,84 +129,92 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
-@@ -422,7 +423,7 @@ dependencies = [
+@@ -414,6 +415,7 @@ dependencies = [
+  "rosc",
+  "serde",
+  "serde_json",
++ "socket2",
+  "sysinfo",
+  "tokio",
+  "tokio-tungstenite",
+@@ -422,7 +424,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_common",
   "alvr_events",
-@@ -438,7 +439,7 @@ dependencies = [
+@@ -438,7 +440,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
-@@ -455,7 +456,7 @@ dependencies = [
+@@ -455,7 +457,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
-@@ -469,7 +470,7 @@ dependencies = [
+@@ -469,7 +471,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_common",
   "alvr_session",
-@@ -482,7 +483,7 @@ dependencies = [
+@@ -482,7 +484,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_common",
   "jni",
-@@ -496,7 +497,7 @@ dependencies = [
+@@ -496,7 +498,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
-@@ -506,7 +507,7 @@ dependencies = [
+@@ -506,7 +508,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
-@@ -518,7 +519,7 @@ dependencies = [
+@@ -518,7 +520,7 @@ dependencies = [
  
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..9de57211be247dbdd6890b3cc395b7418bcdf051 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..c6d1bd9e7caaf974cd3dd93c6f47c180c57525a0 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..9de57211be247dbdd6890b3cc395b741
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.64"
++version = "20.13.0-quest3.pyro.65"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -1246,7 +1254,7 @@ index 0000000000000000000000000000000000000000..057b458db4253a7c044c8c1592cd29af
 +    }
 +}
 diff --git a/alvr/client_core/src/connection.rs b/alvr/client_core/src/connection.rs
-index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..fd9eb702c994a33cc6e4a53e981779cf40b2c5dd 100644
+index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c4f38c4c4fc9599a40d13eeb153a57b5fe52e69b 100644
 --- a/alvr/client_core/src/connection.rs
 +++ b/alvr/client_core/src/connection.rs
 @@ -80,11 +80,14 @@ pub struct ConnectionContext {
@@ -1284,7 +1292,7 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..fd9eb702c994a33cc6e4a53e981779cf
                  Arc::clone(&ctx),
                  Arc::clone(&lifecycle_state),
                  Arc::clone(&event_queue),
-@@ -299,6 +303,14 @@ fn connection_pipeline(
+@@ -299,6 +303,20 @@ fn connection_pipeline(
      )
      .to_con()?;
  
@@ -1295,11 +1303,17 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..fd9eb702c994a33cc6e4a53e981779cf
 +    } else {
 +        vec![]
 +    };
++    // PyroWave video over UDP, bound before StreamReady for the same reason. The server sends it
++    // only to a Wi-Fi client, and only when the PyroWave transport is UDP.
++    let udp_video_socket = (!negotiated_config.wired
++        && settings.video.pyrowave.transport == alvr_session::PyroWaveTransport::Udp)
++        .then(crate::wired_video::udp_listen)
++        .flatten();
 +
      dbg_connection!("connection_pipeline: Send StreamReady");
      if let Err(e) = control_sender.send(&ClientControlPacket::StreamReady) {
          info!("Server disconnected. Cause: {e:?}");
-@@ -327,6 +339,10 @@ fn connection_pipeline(
+@@ -327,6 +345,10 @@ fn connection_pipeline(
      let video_receive_thread = thread::spawn({
          let ctx = Arc::clone(&ctx);
          move || {
@@ -1310,7 +1324,7 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..fd9eb702c994a33cc6e4a53e981779cf
              let mut stream_corrupted = true;
              // With PyroWave over UDP nothing arrives on this stream, so the RequestIdr that
              // normally fetches the DecoderConfig would never be sent. Ask once a second until a
-@@ -357,6 +373,7 @@ fn connection_pipeline(
+@@ -357,6 +379,7 @@ fn connection_pipeline(
                  }
  
                  crate::push_foveation_center(header.timestamp, header.foveation_center);
@@ -1318,16 +1332,17 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..fd9eb702c994a33cc6e4a53e981779cf
  
                  if header.is_idr {
                      stream_corrupted = false;
-@@ -393,6 +410,8 @@ fn connection_pipeline(
+@@ -393,6 +416,9 @@ fn connection_pipeline(
          }
      });
  
 +    let wired_video_threads = crate::wired_video::spawn_receivers(&ctx, wired_video_listeners);
++    let udp_video_thread = crate::wired_video::spawn_udp_receiver(&ctx, udp_video_socket);
 +
      let game_audio_thread = if let Switch::Enabled(config) = settings.audio.game_audio {
          let device = AudioDevice::new_output(None).to_con()?;
          thread::spawn({
-@@ -571,6 +590,19 @@ fn connection_pipeline(
+@@ -571,6 +597,19 @@ fn connection_pipeline(
                          set_hud_message(&event_queue, SERVER_RESTART_MESSAGE);
                          disconnect_notif.notify_one();
                      }
@@ -1347,7 +1362,7 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..fd9eb702c994a33cc6e4a53e981779cf
                      Ok(ServerControlPacket::ReservedBuffer(buffer)) => {
                          // NB: it's normal for deserialization to fail if server has different
                          // version
-@@ -607,6 +639,10 @@ fn connection_pipeline(
+@@ -607,6 +646,10 @@ fn connection_pipeline(
          let event_queue = Arc::clone(&event_queue);
          let disconnect_notif = Arc::clone(&disconnect_notif);
          move || {
@@ -1358,11 +1373,11 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..fd9eb702c994a33cc6e4a53e981779cf
              while is_streaming(&ctx) {
                  match stream_socket.recv() {
                      Ok(()) => (),
-@@ -655,6 +691,9 @@ fn connection_pipeline(
+@@ -655,6 +698,9 @@ fn connection_pipeline(
      dbg_connection!("connection_pipeline: Destroying streams");
  
      video_receive_thread.join().ok();
-+    for thread in wired_video_threads {
++    for thread in wired_video_threads.into_iter().chain(udp_video_thread) {
 +        thread.join().ok();
 +    }
      game_audio_thread.join().ok();
@@ -5220,23 +5235,25 @@ index da58258ad92ba71c0d44e7d437bedf084cf6940f..dfefe0008969564b5b88f363c733f0df
  }
 diff --git a/alvr/client_core/src/wired_video.rs b/alvr/client_core/src/wired_video.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..945f83fe933804864acec796c24e18855c63ab7a
+index 0000000000000000000000000000000000000000..b2652edc28664c4cac6e4571be0f41bac72d5149
 --- /dev/null
 +++ b/alvr/client_core/src/wired_video.rs
-@@ -0,0 +1,291 @@
+@@ -0,0 +1,471 @@
 +//! PyroWave's parallel wired video connections (alvr_packets::PYROWAVE_WIRED_PORT and up). Each
 +//! connection carries one contiguous slice of every frame; a frame whose slices have all arrived
-+//! goes to the decoder exactly as if it had arrived on ALVR's video stream.
++//! goes to the decoder exactly as if it had arrived on ALVR's video stream. Over Wi-Fi the same
++//! slices can arrive as UDP datagrams instead (PYROWAVE_UDP_PORT), assembled the same way.
 +
 +use crate::connection::ConnectionContext;
-+use alvr_common::{info, parking_lot::Mutex, warn, ConnectionState};
++use alvr_common::{error, parking_lot::Mutex, warn, ConnectionState};
 +use alvr_packets::{
 +    PyroWaveSliceHeader, PYROWAVE_WIRED_HEADER_LEN, PYROWAVE_WIRED_HELLO,
 +    PYROWAVE_WIRED_MAX_CONNECTIONS, PYROWAVE_WIRED_PORT,
 +};
 +use std::{
++    collections::BTreeMap,
 +    io::{ErrorKind, Read, Write},
-+    net::{Ipv4Addr, TcpListener, TcpStream},
++    net::{Ipv4Addr, TcpListener, TcpStream, UdpSocket},
 +    sync::Arc,
 +    thread::{self, JoinHandle},
 +    time::{Duration, Instant},
@@ -5272,8 +5289,9 @@ index 0000000000000000000000000000000000000000..945f83fe933804864acec796c24e1885
 +struct Pending {
 +    header: PyroWaveSliceHeader,
 +    frame: Vec<u8>,
-+    /// Byte ranges already written, so a repeated or overlapping slice is not counted twice.
-+    ranges: Vec<(u32, u32)>,
++    /// Byte ranges already written (start -> end), so a repeated or overlapping slice is not
++    /// counted twice. Ordered, because a UDP frame arrives in hundreds of slices.
++    ranges: BTreeMap<u32, u32>,
 +    received: usize,
 +}
 +
@@ -5289,19 +5307,38 @@ index 0000000000000000000000000000000000000000..945f83fe933804864acec796c24e1885
 +
 +#[derive(Default)]
 +struct Assembly {
++    transport: &'static str,
 +    pending: Vec<Pending>,
 +    last_complete: u64,
 +    complete: u64,
++    /// Frames given up incomplete, the bytes they lacked and their runs of missing bytes.
 +    dropped: u64,
++    missing_bytes: u64,
++    gaps: u64,
++    /// Slices of a frame already complete or given up.
++    late: u64,
 +    rejected: u64,
++    slices: u64,
 +    last_log: Option<Instant>,
 +}
 +
 +impl Assembly {
++    fn drop_incomplete(&mut self, pending: &Pending) {
++        self.dropped += 1;
++        self.missing_bytes += (pending.frame.len() - pending.received) as u64;
++        let mut cursor = 0;
++        for (&start, &end) in &pending.ranges {
++            self.gaps += (start > cursor) as u64;
++            cursor = end;
++        }
++        self.gaps += ((cursor as usize) < pending.frame.len()) as u64;
++    }
++
 +    fn push(&mut self, slice: PyroWaveSliceHeader, data: &[u8]) -> Option<(PyroWaveSliceHeader, Vec<u8>)> {
++        self.slices += 1;
 +        let key = frame_key(&slice);
 +        if key <= self.last_complete {
-+            self.dropped += 1;
++            self.late += 1;
 +            return None;
 +        }
 +        let index = match self.pending.iter().position(|p| frame_key(&p.header) == key) {
@@ -5309,13 +5346,13 @@ index 0000000000000000000000000000000000000000..945f83fe933804864acec796c24e1885
 +            None => {
 +                crate::frame_trace::record(b'F', slice.timestamp_ns, slice.frame_len as i64, slice.offset as i64);
 +                if self.pending.len() >= MAX_PENDING {
-+                    self.pending.remove(0);
-+                    self.dropped += 1;
++                    let oldest = self.pending.remove(0);
++                    self.drop_incomplete(&oldest);
 +                }
 +                self.pending.push(Pending {
 +                    header: slice,
 +                    frame: vec![0; slice.frame_len as usize],
-+                    ranges: vec![],
++                    ranges: BTreeMap::new(),
 +                    received: 0,
 +                });
 +                self.pending.len() - 1
@@ -5323,30 +5360,45 @@ index 0000000000000000000000000000000000000000..945f83fe933804864acec796c24e1885
 +        };
 +        let pending = &mut self.pending[index];
 +        let (start, end) = (slice.offset, slice.offset + slice.len);
++        // Stored ranges never overlap one another, so only the last one starting before `end`
++        // can overlap this slice.
++        let overlaps = pending.ranges.range(..end).next_back().is_some_and(|(_, &e)| start < e);
 +        if pending.header.frame_len != slice.frame_len
 +            || pending.header.timestamp_ns != slice.timestamp_ns
-+            || pending.ranges.iter().any(|&(s, e)| start < e && s < end)
++            || overlaps
 +        {
 +            self.rejected += 1;
 +            return None;
 +        }
 +        pending.frame[start as usize..end as usize].copy_from_slice(data);
-+        pending.ranges.push((start, end));
++        pending.ranges.insert(start, end);
 +        pending.received += data.len();
 +        if pending.received < pending.frame.len() {
 +            return None;
 +        }
 +        let Pending { header, frame, .. } = self.pending.remove(index);
 +        self.last_complete = key;
-+        let before = self.pending.len();
-+        self.pending.retain(|p| frame_key(&p.header) > key);
-+        self.dropped += (before - self.pending.len()) as u64;
++        for older in std::mem::take(&mut self.pending) {
++            if frame_key(&older.header) > key {
++                self.pending.push(older);
++            } else {
++                self.drop_incomplete(&older);
++            }
++        }
 +        self.complete += 1;
 +        if self.last_log.is_none_or(|t| t.elapsed() > Duration::from_secs(5)) {
 +            self.last_log = Some(Instant::now());
-+            info!(
-+                "PyroWave wired video: {} frames complete, {} dropped, {} rejected",
-+                self.complete, self.dropped, self.rejected
++            // Totals since the stream started; error level so the release log keeps them.
++            error!(
++                "[Q3PW_TRANSPORT] transport={} complete={} dropped={} missing_kb={} gaps={} late={} rejected={} slices={}",
++                self.transport,
++                self.complete,
++                self.dropped,
++                self.missing_bytes / 1024,
++                self.gaps,
++                self.late,
++                self.rejected,
++                self.slices
 +            );
 +        }
 +        Some((header, frame))
@@ -5430,7 +5482,10 @@ index 0000000000000000000000000000000000000000..945f83fe933804864acec796c24e1885
 +
 +/// One thread per connection; each exits when the stream ends or its connection closes.
 +pub fn spawn_receivers(ctx: &Arc<ConnectionContext>, listeners: Vec<TcpListener>) -> Vec<JoinHandle<()>> {
-+    let assembly = Arc::new(Mutex::new(Assembly::default()));
++    let assembly = Arc::new(Mutex::new(Assembly {
++        transport: "wired",
++        ..Default::default()
++    }));
 +    listeners
 +        .into_iter()
 +        .enumerate()
@@ -5446,6 +5501,130 @@ index 0000000000000000000000000000000000000000..945f83fe933804864acec796c24e1885
 +            })
 +        })
 +        .collect()
++}
++
++/// Binds PyroWave's UDP video port before the client reports StreamReady, so no datagram of the
++/// first frame is lost. None where batched receive (recvmmsg) is unavailable.
++pub fn udp_listen() -> Option<UdpSocket> {
++    #[cfg(any(target_os = "android", target_os = "linux"))]
++    return udp::listen();
++    #[cfg(not(any(target_os = "android", target_os = "linux")))]
++    None
++}
++
++pub fn spawn_udp_receiver(ctx: &Arc<ConnectionContext>, socket: Option<UdpSocket>) -> Option<JoinHandle<()>> {
++    let socket = socket?;
++    let ctx = Arc::clone(ctx);
++    Some(thread::spawn(move || {
++        crate::thread_hints::publish_current(
++            crate::thread_hints::ThreadRole::ApplicationWorker,
++            "udp_video",
++        );
++        #[cfg(any(target_os = "android", target_os = "linux"))]
++        udp::receive(&ctx, socket);
++        #[cfg(not(any(target_os = "android", target_os = "linux")))]
++        drop((ctx, socket));
++    }))
++}
++
++#[cfg(any(target_os = "android", target_os = "linux"))]
++mod udp {
++    use super::*;
++    use alvr_packets::{PYROWAVE_UDP_DATAGRAM, PYROWAVE_UDP_PORT};
++    use std::os::fd::AsRawFd;
++
++    /// Any address: the datagrams arrive over Wi-Fi.
++    pub fn listen() -> Option<UdpSocket> {
++        let socket = match UdpSocket::bind((Ipv4Addr::UNSPECIFIED, PYROWAVE_UDP_PORT)) {
++            Ok(socket) => socket,
++            Err(e) => {
++                warn!("PyroWave UDP video port {PYROWAVE_UDP_PORT}: {e}");
++                return None;
++            }
++        };
++        // Several frames of datagrams, so a scheduling hiccup on the receive thread costs no
++        // frame. The kernel caps this at net.core.rmem_max.
++        let size: libc::c_int = 16 << 20;
++        unsafe {
++            libc::setsockopt(
++                socket.as_raw_fd(),
++                libc::SOL_SOCKET,
++                libc::SO_RCVBUF,
++                &size as *const _ as *const libc::c_void,
++                std::mem::size_of_val(&size) as libc::socklen_t,
++            );
++        }
++        socket.set_read_timeout(Some(READ_TIMEOUT)).ok()?;
++        Some(socket)
++    }
++
++    const BATCH: usize = 64;
++
++    /// Receives datagrams in batches (one system call for up to 64) until the stream ends.
++    pub fn receive(ctx: &ConnectionContext, socket: UdpSocket) {
++        let mut assembly = Assembly {
++            transport: "UDP",
++            ..Default::default()
++        };
++        let mut bufs = vec![[0u8; PYROWAVE_UDP_DATAGRAM]; BATCH];
++        let mut iovs: Vec<libc::iovec> = bufs
++            .iter_mut()
++            .map(|b| libc::iovec {
++                iov_base: b.as_mut_ptr() as *mut libc::c_void,
++                iov_len: PYROWAVE_UDP_DATAGRAM,
++            })
++            .collect();
++        let mut msgs: Vec<libc::mmsghdr> = iovs
++            .iter_mut()
++            .map(|iov| {
++                let mut hdr: libc::msghdr = unsafe { std::mem::zeroed() };
++                hdr.msg_iov = iov;
++                hdr.msg_iovlen = 1;
++                libc::mmsghdr { msg_hdr: hdr, msg_len: 0 }
++            })
++            .collect();
++        let mut malformed = 0u64;
++        while is_streaming(ctx) {
++            for msg in &mut msgs {
++                msg.msg_hdr.msg_flags = 0;
++                msg.msg_len = 0;
++            }
++            let count = unsafe {
++                libc::recvmmsg(
++                    socket.as_raw_fd(),
++                    msgs.as_mut_ptr(),
++                    BATCH as libc::c_uint,
++                    libc::MSG_WAITFORONE,
++                    std::ptr::null_mut(),
++                )
++            };
++            if count < 0 {
++                let e = std::io::Error::last_os_error();
++                if matches!(e.kind(), ErrorKind::WouldBlock | ErrorKind::TimedOut | ErrorKind::Interrupted) {
++                    continue;
++                }
++                warn!("PyroWave UDP video: {e}");
++                return;
++            }
++            for (msg, buf) in msgs.iter().zip(&bufs).take(count as usize) {
++                let datagram = &buf[..msg.msg_len as usize];
++                let header = (msg.msg_hdr.msg_flags & libc::MSG_TRUNC == 0)
++                    .then(|| PyroWaveSliceHeader::from_bytes(datagram))
++                    .flatten()
++                    .filter(|h| h.len as usize == datagram.len() - PYROWAVE_WIRED_HEADER_LEN);
++                let Some(header) = header else {
++                    malformed += 1;
++                    if malformed.is_power_of_two() {
++                        warn!("PyroWave UDP video: {malformed} malformed datagrams ignored");
++                    }
++                    continue;
++                };
++                if let Some((header, frame)) = assembly.push(header, &datagram[PYROWAVE_WIRED_HEADER_LEN..]) {
++                    deliver(ctx, header, &frame);
++                }
++            }
++        }
++    }
 +}
 +
 +#[cfg(test)]
@@ -5476,9 +5655,9 @@ index 0000000000000000000000000000000000000000..945f83fe933804864acec796c24e1885
 +        assert!(a.push(slice(10, 4, 0, 2), &[1, 2]).is_none());
 +        assert!(a.push(slice(20, 2, 0, 2), &[7, 8]).is_some());
 +        assert!(a.pending.is_empty());
-+        assert_eq!(a.dropped, 1);
++        assert_eq!((a.dropped, a.missing_bytes, a.gaps), (1, 2, 1));
 +        assert!(a.push(slice(10, 4, 2, 2), &[3, 4]).is_none());
-+        assert_eq!(a.dropped, 2);
++        assert_eq!((a.dropped, a.late), (1, 1));
 +    }
 +
 +    #[test]
@@ -5504,6 +5683,22 @@ index 0000000000000000000000000000000000000000..945f83fe933804864acec796c24e1885
 +        assert_eq!(a.rejected, 2);
 +        let (_, frame) = a.push(numbered(1, 10, 4, 2, 2), &[3, 4]).unwrap();
 +        assert_eq!(frame, [1, 2, 3, 4]);
++    }
++
++    #[test]
++    fn a_frame_in_hundreds_of_udp_slices_completes_in_any_order() {
++        let mut a = Assembly::default();
++        let data: Vec<u8> = (0..10_000u32).map(|i| (i % 251) as u8).collect();
++        let odd = (0..1000).filter(|i| i % 2 == 1).rev();
++        let even = (0..1000).filter(|i| i % 2 == 0);
++        let mut done = None;
++        for i in odd.chain(even) {
++            let range = i * 10..i * 10 + 10;
++            assert!(done.is_none());
++            done = a.push(numbered(1, 10, 10_000, range.start, 10), &data[range.start as usize..range.end as usize]);
++        }
++        assert_eq!(done.unwrap().1, data);
++        assert_eq!(a.rejected, 0);
 +    }
 +
 +    #[test]
@@ -11233,7 +11428,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..0a8bd2935cd348d38648395e9ad3c954
  
          let mut encoder = self
 diff --git a/alvr/packets/src/lib.rs b/alvr/packets/src/lib.rs
-index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..153aef2836dd1e31b53881aad13e2b04c715013a 100644
+index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..8ecbfdbd219d0bf62eb0b068c88986c00d1b7e2e 100644
 --- a/alvr/packets/src/lib.rs
 +++ b/alvr/packets/src/lib.rs
 @@ -247,6 +247,8 @@ pub enum ReservedClientControlPacket {
@@ -11321,7 +11516,7 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..153aef2836dd1e31b53881aad13e2b04
  /// Datagram payload budget below a 1500-byte MTU with IPv4/UDP headers and ours.
  pub const PYROWAVE_UDP_PAYLOAD: usize = 1400 - PYROWAVE_UDP_HEADER_LEN;
  
-@@ -531,6 +575,136 @@ impl PyroWavePacketHeader {
+@@ -531,6 +575,141 @@ impl PyroWavePacketHeader {
      }
  }
  
@@ -11343,6 +11538,11 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..153aef2836dd1e31b53881aad13e2b04
 +pub const PYROWAVE_WIRED_HEADER_LEN: usize = 48;
 +/// Larger than any frame the encoder's budget allows (1/207 s at 4000 Mbps is 2.4 MB).
 +pub const PYROWAVE_WIRED_MAX_FRAME: u32 = 64 << 20;
++/// PyroWave video over UDP (Wi-Fi) sends the same slices, one per datagram, to
++/// PYROWAVE_UDP_PORT. 1472 bytes is the largest UDP payload a 1500-byte MTU carries whole; the
++/// measured Wi-Fi path dropped every IP fragment, so no datagram may be larger.
++pub const PYROWAVE_UDP_DATAGRAM: usize = 1472;
++pub const PYROWAVE_UDP_SLICE_LEN: usize = PYROWAVE_UDP_DATAGRAM - PYROWAVE_WIRED_HEADER_LEN;
 +
 +#[derive(Debug, Clone, Copy, PartialEq)]
 +pub struct PyroWaveSliceHeader {
@@ -11458,7 +11658,7 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..153aef2836dd1e31b53881aad13e2b04
  #[cfg(test)]
  mod pyrowave_udp_tests {
      use super::*;
-@@ -586,6 +760,14 @@ mod beta_telemetry_tests {
+@@ -586,6 +765,14 @@ mod beta_telemetry_tests {
                  partial: 3,
                  gpu_decode_ms: vec![3.2, 3.4],
                  fence_ms: vec![4.9, 5.1],
@@ -11473,6 +11673,18 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..153aef2836dd1e31b53881aad13e2b04
                  ..Default::default()
              }),
          };
+diff --git a/alvr/server_core/Cargo.toml b/alvr/server_core/Cargo.toml
+index 554dcb40352e5dc65370bd245aed0c276b09a7c2..a729f4b6b3eec9e433e51a6474b27af48c761e86 100644
+--- a/alvr/server_core/Cargo.toml
++++ b/alvr/server_core/Cargo.toml
+@@ -42,6 +42,7 @@ mdns-sd = "0.13"
+ profiling = { version = "1", optional = true }
+ reqwest = "0.11" # not used but webserver does not work without it. todo: investigate
+ rosc = "0.10"
++socket2 = "0.5"
+ tokio = { version = "1", features = [
+     "rt-multi-thread",
+     "macros",
 diff --git a/alvr/server_core/src/bitrate.rs b/alvr/server_core/src/bitrate.rs
 index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..e57afb4088ce4382f426a9b5e7a18b0bc182e087 100644
 --- a/alvr/server_core/src/bitrate.rs
@@ -11723,7 +11935,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..e57afb4088ce4382f426a9b5e7a18b0b
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff6490fde5c67 100644
+index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90adc9109abe 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -43,6 +43,9 @@ use std::{
@@ -11736,7 +11948,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
  const REAL_TIME_UPDATE_INTERVAL: Duration = Duration::from_secs(1);
  
  const MAX_UNREAD_PACKETS: usize = 10; // Applies per stream
-@@ -52,8 +55,165 @@ pub struct VideoPacket {
+@@ -52,8 +55,270 @@ pub struct VideoPacket {
      pub payload: Vec<u8>,
  }
  
@@ -11843,6 +12055,111 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
 +    }
 +}
 +
++/// PyroWave video over UDP to a Wi-Fi client: each frame leaves as numbered slices of at most
++/// PYROWAVE_UDP_SLICE_LEN bytes, one per datagram, with the wired slice header. Nothing is
++/// retransmitted; the client decodes only frames whose slices all arrived. On Wi-Fi 6E this
++/// carried 1250-1500 Mbps where TCP queued frames for hundreds of milliseconds.
++struct UdpVideoSender {
++    socket: std::net::UdpSocket,
++    // send_to, not connect: on Windows a connected UDP socket fails later sends after an ICMP
++    // port-unreachable, for example while the client restarts.
++    target: std::net::SocketAddr,
++    next_sequence: u32,
++    datagram: Vec<u8>,
++    errors: u64,
++    last_error_log: Option<Instant>,
++    // Since the last report: frames, frames repeating the previous frame's timestamp (pose),
++    // datagrams and time spent in send_to.
++    frames: u32,
++    repeats: u32,
++    last_timestamp: Duration,
++    datagrams: u64,
++    send_time: Duration,
++    send_max: Duration,
++    report_start: Instant,
++}
++
++impl UdpVideoSender {
++    fn new(client_ip: IpAddr) -> std::io::Result<Self> {
++        let socket = std::net::UdpSocket::bind(match client_ip {
++            IpAddr::V4(_) => "0.0.0.0:0",
++            IpAddr::V6(_) => "[::]:0",
++        })?;
++        // Room for a few frames, so a frame's burst of datagrams never waits on the buffer.
++        socket2::SockRef::from(&socket).set_send_buffer_size(8 << 20)?;
++        Ok(Self {
++            socket,
++            target: std::net::SocketAddr::new(client_ip, alvr_packets::PYROWAVE_UDP_PORT),
++            next_sequence: 1,
++            datagram: Vec::with_capacity(alvr_packets::PYROWAVE_UDP_DATAGRAM),
++            errors: 0,
++            last_error_log: None,
++            frames: 0,
++            repeats: 0,
++            last_timestamp: Duration::ZERO,
++            datagrams: 0,
++            send_time: Duration::ZERO,
++            send_max: Duration::ZERO,
++            report_start: Instant::now(),
++        })
++    }
++
++    fn send(&mut self, packet: &VideoPacket) {
++        let start = Instant::now();
++        let sequence = self.next_sequence;
++        self.next_sequence = self.next_sequence.wrapping_add(1).max(1);
++        let slices = packet.payload.chunks(alvr_packets::PYROWAVE_UDP_SLICE_LEN);
++        for (index, slice) in slices.enumerate() {
++            let header = alvr_packets::PyroWaveSliceHeader {
++                timestamp_ns: packet.header.timestamp.as_nanos() as u64,
++                frame_len: packet.payload.len() as u32,
++                offset: (index * alvr_packets::PYROWAVE_UDP_SLICE_LEN) as u32,
++                len: slice.len() as u32,
++                is_idr: packet.header.is_idr,
++                sequence,
++                foveation_center: packet.header.foveation_center,
++            };
++            self.datagram.clear();
++            self.datagram.extend_from_slice(&header.to_bytes());
++            self.datagram.extend_from_slice(slice);
++            if let Err(e) = self.socket.send_to(&self.datagram, self.target) {
++                self.errors += 1;
++                if self.last_error_log.is_none_or(|t| t.elapsed() > Duration::from_secs(5)) {
++                    self.last_error_log = Some(Instant::now());
++                    warn!("[PYROWAVE] UDP video: {e} ({} send errors)", self.errors);
++                }
++            }
++            self.datagrams += 1;
++        }
++        let took = start.elapsed();
++        self.frames += 1;
++        self.repeats += (packet.header.timestamp == self.last_timestamp) as u32;
++        self.last_timestamp = packet.header.timestamp;
++        self.send_time += took;
++        self.send_max = self.send_max.max(took);
++        let window = self.report_start.elapsed();
++        if window > Duration::from_secs(5) {
++            // Error level so crash_log.txt keeps it.
++            error!(
++                "[Q3PW_UDP_SEND] frames={} repeated_timestamps={} datagrams={} window_s={:.2} send_ms_mean={:.3} send_ms_max={:.3} errors={}",
++                self.frames,
++                self.repeats,
++                self.datagrams,
++                window.as_secs_f32(),
++                self.send_time.as_secs_f32() * 1000. / self.frames as f32,
++                self.send_max.as_secs_f32() * 1000.,
++                self.errors
++            );
++            self.frames = 0;
++            self.repeats = 0;
++            self.datagrams = 0;
++            self.send_time = Duration::ZERO;
++            self.send_max = Duration::ZERO;
++            self.report_start = Instant::now();
++        }
++    }
++}
++
  fn align32(value: f32) -> u32 {
 -    ((value / 32.).floor() * 32.) as u32
 +    // Pad up so the full panel-relative request never loses pixels to alignment.
@@ -11903,7 +12220,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
  }
  
  fn is_streaming(client_hostname: &str) -> bool {
-@@ -69,6 +229,46 @@ pub fn contruct_openvr_config(session: &SessionConfig) -> OpenvrConfig {
+@@ -69,6 +334,46 @@ pub fn contruct_openvr_config(session: &SessionConfig) -> OpenvrConfig {
      openvr_config_with_env(session, &alvr_session::beta::process_env)
  }
  
@@ -11950,7 +12267,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
  fn openvr_config_with_env(
      session: &SessionConfig,
      env: &dyn Fn(&str) -> Option<String>,
-@@ -133,25 +333,18 @@ fn openvr_config_with_env(
+@@ -133,25 +438,18 @@ fn openvr_config_with_env(
          })
          .unwrap_or(false);
  
@@ -11988,7 +12305,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
  
      let mut brightness = 0.0;
      let mut contrast = 0.0;
-@@ -240,7 +433,11 @@ fn openvr_config_with_env(
+@@ -240,7 +538,11 @@ fn openvr_config_with_env(
          pyrowave_enabled: pyrowave.enabled,
          pyrowave_udp: pyrowave.udp,
          pyrowave_wavelet_53: pyrowave.wavelet_53,
@@ -12000,7 +12317,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
          _controller_profile,
          _server_impl_debug: settings.extra.logging.debug_groups.server_impl,
          _client_impl_debug: settings.extra.logging.debug_groups.client_impl,
-@@ -283,9 +480,13 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -283,9 +585,13 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
                      && hostname.as_str() == WIRED_CLIENT_HOSTNAME
              })
          {
@@ -12015,7 +12332,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
              } else {
                  let connection = match WiredConnection::new(
                      FILESYSTEM_LAYOUT.get().unwrap(),
-@@ -297,53 +498,63 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -297,53 +603,63 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
                          };
                      },
                  ) {
@@ -12105,7 +12422,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
          }
  
          if !wired_client_ips.is_empty()
-@@ -471,6 +682,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -471,6 +787,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
          thread.join().ok();
      }
  
@@ -12122,7 +12439,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
      alvr_common::dbg_connection!("handshake_loop: End");
  }
  
-@@ -629,6 +850,19 @@ fn connection_pipeline(
+@@ -629,6 +955,19 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -12142,7 +12459,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +883,9 @@ fn connection_pipeline(
+@@ -649,18 +988,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -12164,18 +12481,17 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -802,6 +1027,10 @@ fn connection_pipeline(
+@@ -802,6 +1132,9 @@ fn connection_pipeline(
          proto_socket.split(STREAMING_RECV_TIMEOUT).to_con()?;
  
      let mut new_openvr_config = contruct_openvr_config(session_manager_lock.session());
-+    // ADB forwards TCP ports. The independent UDP video socket cannot reach a USB peer.
-+    if wired {
-+        new_openvr_config.pyrowave_udp = false;
-+    }
++    // The server slices PyroWave UDP video itself (UdpVideoSender), so the encoder always hands
++    // frames to the video thread, and the client always decodes them with its main decoder.
++    new_openvr_config.pyrowave_udp = false;
      new_openvr_config.eye_resolution_width = stream_view_resolution.x;
      new_openvr_config.eye_resolution_height = stream_view_resolution.y;
      new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
-@@ -822,6 +1051,7 @@ fn connection_pipeline(
+@@ -822,6 +1155,7 @@ fn connection_pipeline(
  
          crate::notify_restart_driver();
      }
@@ -12183,7 +12499,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
  
      dbg_connection!("connection_pipeline: Send StartStream packet");
      control_sender
-@@ -846,6 +1076,29 @@ fn connection_pipeline(
+@@ -846,6 +1180,29 @@ fn connection_pipeline(
  
      *ctx.bitrate_manager.lock() =
          BitrateManager::new(initial_settings.video.bitrate.history_size, fps);
@@ -12213,14 +12529,17 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
  
      let stream_protocol = if wired {
          SocketProtocol::Tcp
-@@ -869,10 +1122,11 @@ fn connection_pipeline(
+@@ -867,25 +1224,33 @@ fn connection_pipeline(
  
-     // PyroWave over UDP: a plain socket to the client's address. The same resolution fills
-     // openvr_config for the C++ encoder, so the two sides cannot disagree.
+     let mut video_sender = stream_socket.request_stream(VIDEO);
+ 
+-    // PyroWave over UDP: a plain socket to the client's address. The same resolution fills
+-    // openvr_config for the C++ encoder, so the two sides cannot disagree.
 -    let pyrowave = alvr_session::beta::pyrowave_effective(
 -        &initial_settings,
 -        &alvr_session::beta::process_env,
 -    );
++    // PyroWave over UDP, Wi-Fi only: adb forwards TCP alone, and USB has the wired connections.
 +    let mut pyrowave =
 +        alvr_session::beta::pyrowave_effective(&initial_settings, &alvr_session::beta::process_env);
 +    if wired {
@@ -12229,9 +12548,24 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
      if pyrowave.enabled {
          info!("{pyrowave}");
      }
-@@ -886,6 +1140,14 @@ fn connection_pipeline(
-             Err(e) => error!("[PYROWAVE] UDP socket: {e}"),
-         }
+-    if pyrowave.enabled && pyrowave.udp {
+-        match std::net::UdpSocket::bind("0.0.0.0:0") {
+-            Ok(socket) => {
+-                let target = std::net::SocketAddr::new(client_ip, alvr_packets::PYROWAVE_UDP_PORT);
+-                info!("[PYROWAVE] UDP video to {target}");
+-                *ctx.pyrowave_udp.lock() = Some((socket, target));
+-            }
+-            Err(e) => error!("[PYROWAVE] UDP socket: {e}"),
+-        }
++    let mut udp_video = (pyrowave.enabled && pyrowave.udp)
++        .then(|| UdpVideoSender::new(client_ip))
++        .and_then(|sender| {
++            sender
++                .inspect_err(|e| error!("[PYROWAVE] UDP video socket: {e}; video stays on the stream socket"))
++                .ok()
++        });
++    if let Some(sender) = &udp_video {
++        info!("[PYROWAVE] UDP video to {}", sender.target);
      }
 +    let wired_video_connections = initial_settings.video.pyrowave.wired_video_connections;
 +    let mut wired_video = (wired && pyrowave.enabled && wired_video_connections > 0)
@@ -12244,10 +12578,15 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
      let game_audio_sender: alvr_sockets::StreamSender<()> = stream_socket.request_stream(AUDIO);
      let mut microphone_receiver: alvr_sockets::StreamReceiver<()> =
          stream_socket.subscribe_to_stream(AUDIO, MAX_UNREAD_PACKETS);
-@@ -911,6 +1173,15 @@ fn connection_pipeline(
+@@ -911,6 +1276,20 @@ fn connection_pipeline(
                          Err(RecvTimeoutError::Disconnected) => return,
                      };
  
++                if let Some(sender) = &mut udp_video {
++                    sender.send(&VideoPacket { header, payload });
++                    continue;
++                }
++
 +                if let Some(sender) = &mut wired_video {
 +                    if sender.send(VideoPacket { header, payload }) {
 +                        continue;
@@ -12260,7 +12599,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
                  let mut buffer = video_sender.get_buffer(&header).unwrap();
                  // todo: make encoder write to socket buffers directly to avoid copy
                  buffer
-@@ -1081,18 +1352,40 @@ fn connection_pipeline(
+@@ -1081,18 +1460,40 @@ fn connection_pipeline(
          let ctx = Arc::clone(&ctx);
          let client_hostname = client_hostname.clone();
          move || {
@@ -12304,7 +12643,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
                      let decoder_latency = client_stats.video_decode;
                      let (network_latency, game_latency) = stats.report_statistics(client_stats);
  
-@@ -1102,7 +1395,10 @@ fn connection_pipeline(
+@@ -1102,7 +1503,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -12316,7 +12655,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1411,7 @@ fn connection_pipeline(
+@@ -1115,6 +1519,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -12324,7 +12663,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1428,14 @@ fn connection_pipeline(
+@@ -1131,6 +1536,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -12339,7 +12678,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1184,9 +1489,35 @@ fn connection_pipeline(
+@@ -1184,9 +1597,35 @@ fn connection_pipeline(
          let disconnect_notif = Arc::clone(&disconnect_notif);
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
@@ -12375,7 +12714,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
                  let packet = match control_receiver.recv(STREAMING_RECV_TIMEOUT) {
                      Ok(packet) => packet,
                      Err(ConnectionError::TryAgain(_)) => {
-@@ -1299,6 +1630,9 @@ fn connection_pipeline(
+@@ -1299,6 +1738,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -12385,7 +12724,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1378,6 +1712,22 @@ fn connection_pipeline(
+@@ -1378,6 +1820,22 @@ fn connection_pipeline(
                              };
  
                          match reserved {
@@ -12408,7 +12747,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
                              ReservedClientControlPacket::CustomInteractionProfile {
                                  input_ids,
                                  ..
-@@ -1552,9 +1902,10 @@ mod beta_tests {
+@@ -1552,9 +2010,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -12421,7 +12760,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff649
      }
  
      #[test]
-@@ -1569,4 +1920,22 @@ mod beta_tests {
+@@ -1569,4 +2028,22 @@ mod beta_tests {
          assert!(!config.pyrowave_udp);
          assert!(config.pyrowave_wavelet_53);
      }
@@ -12609,7 +12948,7 @@ index 365db6463a9bd019ff5548186b873056f77806ae..7e49dd79843b09a417b15e576bafb443
          // This is the opposite of the client's StatisticsManager::tracker_prediction_offset().
          self.steamvr_pipeline_latency
 diff --git a/alvr/server_core/src/tracking/mod.rs b/alvr/server_core/src/tracking/mod.rs
-index 64f93a6fd54e90b50e5382e09f539f4cefa7817f..d38c74e95cb9d0337c0efb12b78e8e23bb6d2f37 100644
+index 64f93a6fd54e90b50e5382e09f539f4cefa7817f..13b97d9d4a29fe77811d2f24255f470c6d3d5469 100644
 --- a/alvr/server_core/src/tracking/mod.rs
 +++ b/alvr/server_core/src/tracking/mod.rs
 @@ -302,7 +302,7 @@ impl TrackingManager {
@@ -12621,6 +12960,75 @@ index 64f93a6fd54e90b50e5382e09f539f4cefa7817f..d38c74e95cb9d0337c0efb12b78e8e23
  
          self.last_face_data = face_data;
      }
+@@ -312,6 +312,52 @@ impl TrackingManager {
+     }
+ }
+ 
++/// Tracking packet arrival gaps on the server and the client's spacing of target timestamps, logged
++/// as [Q3PW_TRACKING_RX] every 5 s. Bunched arrivals mean SteamVR renders several frames from the
++/// same pose, which the client then counts as one fresh frame.
++#[derive(Default)]
++struct TrackingArrivals {
++    last: Option<(std::time::Instant, Duration)>,
++    gaps_ms: Vec<f32>,
++    steps_ms: Vec<f32>,
++    window_start: Option<std::time::Instant>,
++}
++
++impl TrackingArrivals {
++    fn record(&mut self, target: Duration) {
++        let now = std::time::Instant::now();
++        if let Some((at, previous)) = self.last {
++            self.gaps_ms.push((now - at).as_secs_f32() * 1000.);
++            self.steps_ms.push((target.as_secs_f32() - previous.as_secs_f32()) * 1000.);
++        }
++        self.last = Some((now, target));
++        let start = *self.window_start.get_or_insert(now);
++        if now - start < Duration::from_secs(5) || self.gaps_ms.is_empty() {
++            return;
++        }
++        let pct = |v: &mut Vec<f32>, p: f32| {
++            v.sort_by(f32::total_cmp);
++            v[((v.len() - 1) as f32 * p) as usize]
++        };
++        let packets = self.gaps_ms.len();
++        let bunched = self.gaps_ms.iter().filter(|&&g| g < 1.).count();
++        alvr_common::error!(
++            "[Q3PW_TRACKING_RX] packets={packets} window_s={:.2} gap_ms_p10={:.2} p50={:.2} p90={:.2} p99={:.2} max={:.2} under_1ms={bunched} target_step_ms_p50={:.2} p99={:.2}",
++            (now - start).as_secs_f32(),
++            pct(&mut self.gaps_ms, 0.1),
++            pct(&mut self.gaps_ms, 0.5),
++            pct(&mut self.gaps_ms, 0.9),
++            pct(&mut self.gaps_ms, 0.99),
++            pct(&mut self.gaps_ms, 1.),
++            pct(&mut self.steps_ms, 0.5),
++            pct(&mut self.steps_ms, 0.99),
++        );
++        self.gaps_ms.clear();
++        self.steps_ms.clear();
++        self.window_start = Some(now);
++    }
++}
++
+ pub fn tracking_loop(
+     ctx: &ConnectionContext,
+     initial_settings: Settings,
+@@ -355,6 +401,7 @@ pub fn tracking_loop(
+         .into_option()
+         .and_then(|config| VMCSink::new(config).ok());
+ 
++    let mut arrivals = TrackingArrivals::default();
+     while is_streaming() {
+         let data = match tracking_receiver.recv(STREAMING_RECV_TIMEOUT) {
+             Ok(tracking) => tracking,
+@@ -366,6 +413,7 @@ pub fn tracking_loop(
+         };
+ 
+         let timestamp = tracking.target_timestamp;
++        arrivals.record(timestamp);
+ 
+         if let Some(stats) = &mut *ctx.statistics_manager.write() {
+             stats.report_tracking_received(timestamp);
 diff --git a/alvr/server_core/src/web_server.rs b/alvr/server_core/src/web_server.rs
 index de64d69d2154608092afc0bcfd5f1583210d8fb2..bea6d509012c5fc21941f044959e946ff3c3b636 100644
 --- a/alvr/server_core/src/web_server.rs
@@ -14925,7 +15333,7 @@ index d7d0dbbfcbfc7eaacf6f4ff5f0c47f882f1eee1a..e85a1e8a6f60414317ee82c6b1a251c5
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..ec38225781086ddd0f07d399c2a6d224dfd38f4c 100644
+index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..a61060487c8f3446bcc69ccf3483bb9237b53042 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -15040,7 +15448,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..ec38225781086ddd0f07d399c2a6d224
 +
      #[schema(strings(
 -        help = "UDP sends each frame as independent datagrams and drops late ones; TCP retransmits. UDP is the measured operating point."
-+        help = "UDP sends each frame as independent datagrams and drops late ones; TCP retransmits. TCP is the conservative baseline; UDP is experimental and requires a matched PWU2 client/server."
++        help = "Wi-Fi only; USB always uses the wired connections. UDP sends each frame as datagrams and skips a frame that loses one. TCP retransmits, so above what the link carries it queues frames and lag builds up. On Wi-Fi 6E at 1500 Mbps, TCP queued to a 112 ms latency estimate and UDP stayed at 42 ms; at 1000-1250 Mbps UDP was as good or better. Experimental."
      ))]
      #[schema(flag = "steamvr-restart")]
      pub transport: PyroWaveTransport,
