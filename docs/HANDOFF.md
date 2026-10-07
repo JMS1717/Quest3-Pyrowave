@@ -23,6 +23,9 @@ State:
 - **Not established:** sustained gameplay, optical motion-to-photon latency, image quality on par
   with Virtual Desktop.
 
+**Plan from October 7, evening:** [PLAN.md](PLAN.md). The owner played `.65` and set new priorities:
+finish the network stack, then sharpness and clarity (bitrate use, colour), then latency.
+
 The per-claim summary is the [scorecard](WHOLE-STACK-SCORECARD.md). The current next steps are
 [after the `.64` section](#next-steps-after-64). The dated sections below are a record and stay as
 written.
