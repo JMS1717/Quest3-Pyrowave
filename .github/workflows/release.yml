@@ -1,7 +1,11 @@
 name: Release
-# Publishes a prerelease from the artifacts of one successful push-to-main CI run. Nothing is
-# rebuilt: the APK is the stable-signed main build, checked against its run's SHA256SUMS and against
-# the reference release's signing certificate. Signing keys never enter this workflow.
+# Builds a release from the artifacts of one successful push-to-main CI run. Nothing is rebuilt: the
+# APK is the stable-signed main build, checked against its run's SHA256SUMS and against the reference
+# release's signing certificate. Signing keys never enter this workflow.
+#
+# By default the result is a private draft, so the exact assets can be installed and checked in the
+# headset first. Publishing needs `headset_check`: what was verified in-headset on this exact
+# build (AGENTS.md: publish only after in-headset screenshots of that build look correct).
 on:
   workflow_dispatch:
     inputs:
@@ -23,6 +27,13 @@ on:
       reference_tag:
         description: Earlier release whose APK certificate must match
         default: v0.1.0-alpha.8
+      publish:
+        description: Publish the prerelease (otherwise create a draft only)
+        type: boolean
+        default: false
+      headset_check:
+        description: Required to publish. In-headset verification of this exact build (date, what was checked, doc link)
+        default: ''
 permissions:
   contents: read
 concurrency:
@@ -42,12 +53,17 @@ jobs:
       NOTES_PATH: ${{ inputs.notes_path }}
       EXPECT_VERSION: ${{ inputs.expect_version }}
       REFERENCE_TAG: ${{ inputs.reference_tag }}
+      PUBLISH: ${{ inputs.publish }}
+      HEADSET_CHECK: ${{ inputs.headset_check }}
     steps:
       - uses: actions/checkout@v4
       - name: Check the source run
         run: |
           set -eu
           case "$RUN_ID" in *[!0-9]*|'') echo "run_id must be numeric"; exit 1;; esac
+          if [ "$PUBLISH" = true ] && [ -z "$(printf '%s' "$HEADSET_CHECK" | tr -d '[:space:]')" ]; then
+            echo "publishing needs headset_check: an in-headset check of this exact build"; exit 1
+          fi
           test -f "$NOTES_PATH" || { echo "missing notes file $NOTES_PATH"; exit 1; }
           if gh release view "$TAG" >/dev/null 2>&1 || git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
             echo "$TAG already exists"; exit 1
@@ -72,16 +88,21 @@ jobs:
             --out "$RUNNER_TEMP/release" --run-id "$RUN_ID" --source-sha "$SOURCE_SHA" --tag "$TAG" \
             --reference-cert "$RUNNER_TEMP/reference/APK-CERTIFICATE.txt" --expect-version "$EXPECT_VERSION"
           ls -l "$RUNNER_TEMP/release"
-      - name: Publish prerelease
+      - name: Create draft or publish prerelease
         run: |
           set -eu
           {
             cat "$NOTES_PATH"
             printf '\n## Provenance\n\n'
+            if [ "$PUBLISH" = true ]; then
+              printf -- '- Headset check of this build: %s\n' "$HEADSET_CHECK"
+            fi
             printf -- '- Source commit: `%s`\n' "$SOURCE_SHA"
             printf -- '- Built by: %s\n' "$RUN_URL"
             printf -- '- APK signing certificate matches `%s`; see `APK-CERTIFICATE.txt`.\n' "$REFERENCE_TAG"
             printf -- '- `BUILD-METADATA.json` and `SHA256SUMS.txt` list every asset hash.\n'
           } > "$RUNNER_TEMP/notes.md"
+          draft=--draft
+          if [ "$PUBLISH" = true ]; then draft=; fi
           gh release create "$TAG" "$RUNNER_TEMP"/release/* --target "$SOURCE_SHA" --title "$TITLE" \
-            --notes-file "$RUNNER_TEMP/notes.md" --prerelease
+            --notes-file "$RUNNER_TEMP/notes.md" --prerelease $draft
