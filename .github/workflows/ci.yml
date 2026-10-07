@@ -331,6 +331,8 @@ jobs:
           Set-Location "$env:XRWIRED_INPUTS/research/ALVR-20.13.0"
           cargo test --release -p alvr_client_core --lib
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --release -p alvr_graphics --lib
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --release -p alvr_session --lib
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --release -p alvr_packets --lib

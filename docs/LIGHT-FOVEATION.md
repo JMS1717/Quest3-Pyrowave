@@ -120,6 +120,39 @@ rose from about 0.66 ms without foveation to 1.19 ms. This still exceeds the
 peripheral detail changes need lens acceptance. Owner-interrupted windows were
 excluded and repeated cleanly. [Window data and limits](PR-9-REVIEW.md).
 
+## Packed YCbCr presentation (October 7)
+
+Haar mode 5 hands the Quest's eye draw packed YCbCr: luma in 2x2 quads in one half of an RGBA8
+buffer, 4:2:0 chroma in the other (see `present_ycbcr.glsl`). With foveation on, the packed draw
+first read the buffer as RGBA, which showed a grey, doubled image. It now samples the decoded
+eye size and maps each output pixel through the same inverse warp.
+
+Filtering is where the cost lies. Every packed luma read is a texture fetch, so bilinear luma
+costs four fetches per pixel against the hardware filter's one. The centre needs no filter: it
+maps 1:1 onto decoded pixels (centre offsets are multiples of a quarter pixel, and rounding with a
+0.375 bias never meets a tie). Only the compressed bands do. Run-time branches on the band did
+not help, because the driver still fetched all four pixels. The eye draw therefore splits each
+eye into up to nine scissored regions, and each region uses a program compiled for its filter:
+none in the centre, x or y in the side bands, both in the corners. A unit test checks that the
+regions tile both eyes exactly once, with right-eye and flipped-y mirroring.
+
+Quest 3, 207 Hz, 2080x2208 per eye from 3072x3216, Haar 4:2:0, 1000 Mbps, Strong profile
+(1664x1792 decoded per eye), static quality scene and a 60 deg/s pan, 12 s windows, headset
+awake:
+
+| Eye draw | Fresh FPS, static / pan | Eye-copy fence p50 |
+|---|---:|---:|
+| Foveation off | 193.0 | 4.50 ms |
+| Bilinear luma everywhere | 172.8 / 170.7 | 5.17 ms |
+| Run-time band branches | 176.8 / 175.0 | 5.09 ms |
+| Scissored regions (current) | 188.3 / 188.9 | 4.78 ms |
+| Nearest luma everywhere (diagnostic, blocky edges) | 194.6 / 190.4 | 3.35 ms |
+
+Strong foveation still decodes about 0.8 ms faster (2.24 against 3.03 ms GPU decode), but at this
+resolution the decoder is not the limit, so it does not raise fresh FPS. In-headset screenshots
+of the same view with foveation off and with Strong show the same image, with no seams at region
+edges. Perceptual acceptance of the softer periphery remains pending.
+
 ## Mapping safeguards and inspiration
 
 The implementation adapts the existing MIT-licensed

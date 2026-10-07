@@ -56,7 +56,7 @@ CARGO_TOOLS = (["cargo-ndk@4.1.2", "cbindgen@0.29.4"],
 # Public certificate digest of the repository's stable signing key (CI's APK-CERTIFICATE.txt).
 STABLE_CERT_SHA256 = "2f2c5b3bb99cd69edc58cc53fbac30325426e410b3fecafc76fe447549886779"
 # The Windows test set of CI's streamer job, in its order.
-WINDOWS_TESTS = [["alvr_adb", "--lib"], ["alvr_client_core", "--lib"], ["alvr_session", "--lib"],
+WINDOWS_TESTS = [["alvr_adb", "--lib"], ["alvr_client_core", "--lib"], ["alvr_graphics", "--lib"], ["alvr_session", "--lib"],
                  ["alvr_packets", "--lib"], ["alvr_server_core", "--lib"],
                  ["alvr_server_io", "--lib", "initialization_tests"],
                  ["alvr_dashboard", "--bin", "alvr_dashboard"]]

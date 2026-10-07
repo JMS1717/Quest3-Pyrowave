@@ -8052,10 +8052,10 @@ index 0000000000000000000000000000000000000000..bc6bee02decfec1a7df24f18e8fd2991
 +}
 diff --git a/alvr/graphics/resources/present_ycbcr.glsl b/alvr/graphics/resources/present_ycbcr.glsl
 new file mode 100644
-index 0000000000000000000000000000000000000000..df927cd861936954bb556a53dcb14b6244a4d06d
+index 0000000000000000000000000000000000000000..83e14668d088b2af058ee8aecf8c9fe0d15f6108
 --- /dev/null
 +++ b/alvr/graphics/resources/present_ycbcr.glsl
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,58 @@
 +// PyroWave Haar mode 5 (Quest3-Pyrowave docs/PRESENT-YCBCR.md): `tex` is a frame_size.x x
 +// frame_size.y/2 RGBA8 buffer. x < frame_size.x/2 holds luma as 2x2 pixel quads ((0,0), (1,0),
 +// (0,1), (1,1) in RGBA); x >= frame_size.x/2 holds the 4:2:0 chroma, one pixel per texel with Cb
@@ -8075,15 +8075,34 @@ index 0000000000000000000000000000000000000000..df927cd861936954bb556a53dcb14b62
 +    highp vec2 pos = uv * q3pw_frame_size;
 +    highp ivec2 last = ivec2(q3pw_frame_size) - 1;
 +#ifdef Q3PW_FFE
-+    // The foveated mapping is not 1:1, so filter luma like the RGBA path's sampler does.
++    // Filter luma bilinearly like the RGBA path's sampler, but only along axes in a compressed
++    // band: the centre maps 1:1 onto decoded pixels, so there the nearest pixel is exact. Each
++    // packed luma read is a texture fetch, and filtering everywhere cost about 2 ms per frame.
++    // The renderer draws each band with a scissor and a program compiled for it
++    // (Q3PW_FFE_FILTER_X/Y); with run-time branches the drivers fetched all four pixels anyway.
 +    highp vec2 p = pos - 0.5;
-+    highp ivec2 i0 = ivec2(floor(p));
-+    vec2 f = p - floor(p);
-+    float l00 = q3pw_luma(clamp(i0, ivec2(0), last));
-+    float l10 = q3pw_luma(clamp(i0 + ivec2(1, 0), ivec2(0), last));
-+    float l01 = q3pw_luma(clamp(i0 + ivec2(0, 1), ivec2(0), last));
-+    float l11 = q3pw_luma(clamp(i0 + ivec2(1, 1), ivec2(0), last));
-+    float Y = mix(mix(l00, l10, f.x), mix(l01, l11, f.x), f.y);
++    // Centre offsets are multiples of a quarter pixel; rounding with 0.375 never meets a tie.
++    highp vec2 base = floor(p + 0.375);
++#ifdef Q3PW_FFE_FILTER_X
++    base.x = floor(p.x);
++#endif
++#ifdef Q3PW_FFE_FILTER_Y
++    base.y = floor(p.y);
++#endif
++    vec2 f = p - base;
++    highp ivec2 i0 = clamp(ivec2(base), ivec2(0), last);
++    highp ivec2 i1 = clamp(ivec2(base) + 1, ivec2(0), last);
++    float Y = q3pw_luma(i0);
++#ifdef Q3PW_FFE_FILTER_X
++    Y = mix(Y, q3pw_luma(ivec2(i1.x, i0.y)), f.x);
++#endif
++#ifdef Q3PW_FFE_FILTER_Y
++    float below = q3pw_luma(ivec2(i0.x, i1.y));
++#ifdef Q3PW_FFE_FILTER_X
++    below = mix(below, q3pw_luma(i1), f.x);
++#endif
++    Y = mix(Y, below, f.y);
++#endif
 +#else
 +    float Y = q3pw_luma(clamp(ivec2(pos), ivec2(0), last));
 +#endif
@@ -8116,10 +8135,10 @@ index 7bfba12ca0479598b4060b84664695a82c96411d..7236535dfbd7196f77a29c1e5f9dbc27
  #endif
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..9e39123173b74fd4e2c632de8f0ab1c4cb5ac77b
+index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce306d99a4
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,553 @@
+@@ -0,0 +1,645 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -8225,8 +8244,11 @@ index 0000000000000000000000000000000000000000..9e39123173b74fd4e2c632de8f0ab1c4
 +    decoded: UVec2,
 +    view_idx: gl::UniformLocation,
 +    flip_y: gl::UniformLocation,
-+    // The same copy for PyroWave Haar mode 5 buffers: program, view_idx, flip_y.
-+    present: Option<(gl::Program, gl::UniformLocation, gl::UniformLocation)>,
++    // The same copy for PyroWave Haar mode 5 buffers: (program, view_idx, flip_y) for each luma
++    // filter (bit 0 along x, bit 1 along y; only filter 0 without light foveation) ...
++    present: Option<Vec<(gl::Program, gl::UniformLocation, gl::UniformLocation)>>,
++    // ... drawn per eye as these scissored regions of the eye image.
++    regions: [Vec<(usize, [i32; 4])>; 2],
 +    flip: bool,
 +    asynchronous: Cell<bool>,
 +    copy_wait_ns: i32,
@@ -8246,7 +8268,30 @@ index 0000000000000000000000000000000000000000..9e39123173b74fd4e2c632de8f0ab1c4
 +    release_last_log: RefCell<Instant>,
 +}
 +
-+unsafe fn compile_program(gl: &gl::Context, foveation: bool, present: bool) -> Result<gl::Program, String> {
++/// Light foveation regions of an eye image in window coordinates, for the packed-YCbCr draw:
++/// (luma filter, [x, y, width, height]). Filter bit 0 or 1 is set where the x or y axis is
++/// compressed (outside params' lo..hi band), so only there does the shader filter luma; the centre
++/// maps 1:1 onto decoded pixels. Without foveation the whole image takes filter 0.
++pub(super) fn foveation_regions(size: UVec2, params: Option<&[f32; 16]>, eye: usize, flip_y: bool) -> Vec<(usize, [i32; 4])> {
++    let Some(params) = params else { return vec![(0, [0, 0, size.x as i32, size.y as i32])] };
++    // The shader mirrors x for eye 1 and y when flipping, so the bands mirror with it.
++    let axis = |n: u32, lo: f32, hi: f32, mirror: bool| {
++        let (lo, hi) = if mirror { (1.0 - hi, 1.0 - lo) } else { (lo, hi) };
++        let n = n as i32;
++        let a = ((lo * n as f32).round() as i32).clamp(0, n);
++        let b = ((hi * n as f32).round() as i32).clamp(a, n);
++        [(1, 0, a), (0, a, b), (1, b, n)].into_iter().filter(|(_, start, end)| end > start)
++    };
++    let mut regions = Vec::new();
++    for (filter_y, y0, y1) in axis(size.y, params[3], params[5], flip_y) {
++        for (filter_x, x0, x1) in axis(size.x, params[2], params[4], eye == 1) {
++            regions.push((filter_x | filter_y << 1, [x0, y0, x1 - x0, y1 - y0]));
++        }
++    }
++    regions
++}
++
++unsafe fn compile_program(gl: &gl::Context, foveation: bool, present: bool, filter: usize) -> Result<gl::Program, String> {
 +    let program = gl.create_program()?;
 +    let mut shaders = Vec::new();
 +    let result = (|| {
@@ -8261,6 +8306,11 @@ index 0000000000000000000000000000000000000000..9e39123173b74fd4e2c632de8f0ab1c4
 +                    .replace("// Q3PW_FOVEATION_FUNCTION", include_str!("../resources/light_foveation.glsl"))
 +            } else { source.to_owned() };
 +            let source = if kind == gl::FRAGMENT_SHADER { present_ycbcr_source(&source, present) } else { source };
++            let source = if kind == gl::FRAGMENT_SHADER && filter != 0 {
++                let defines = [(1, "Q3PW_FFE_FILTER_X"), (2, "Q3PW_FFE_FILTER_Y")].iter()
++                    .filter(|(bit, _)| filter & bit != 0).map(|(_, name)| format!("\n#define {name}")).collect::<String>();
++                source.replacen("#version 300 es", &format!("#version 300 es{defines}"), 1)
++            } else { source };
 +            gl.shader_source(shader, &source);
 +            gl.compile_shader(shader);
 +            if !gl.get_shader_compile_status(shader) {
@@ -8296,20 +8346,25 @@ index 0000000000000000000000000000000000000000..9e39123173b74fd4e2c632de8f0ab1c4
 +                config.srgb_correction, config.encoding_gamma));
 +            let invalidate = eye_invalidate_requested();
 +            import_diagnostic(4, format!("[Q3PW_EYE_INVALIDATE] requested={invalidate} active={invalidate}"));
-+            let program = compile_program(gl, config.foveation.is_some(), false)?;
-+            // Compiled up front so the first mode-5 frame does not stall; without it such frames
++            let program = compile_program(gl, config.foveation.is_some(), false, 0)?;
++            // Compiled up front so the first mode-5 frame does not stall; without them such frames
 +            // take the staging path, which converts them too.
-+            let present_program = match compile_program(gl, config.foveation.is_some(), true) {
-+                Ok(program) => Some(program),
-+                Err(error) => {
-+                    import_diagnostic(5, format!("[Q3PW_PRESENT_YCBCR] direct program failed: {error}"));
-+                    None
++            let filters = if config.foveation.is_some() { 4 } else { 1 };
++            let mut present_programs = Some(Vec::new());
++            for filter in 0..filters {
++                match compile_program(gl, config.foveation.is_some(), true, filter) {
++                    Ok(program) => present_programs.as_mut().unwrap().push(program),
++                    Err(error) => {
++                        import_diagnostic(5, format!("[Q3PW_PRESENT_YCBCR] direct program {filter} failed: {error}"));
++                        for program in present_programs.take().unwrap() { gl.delete_program(program); }
++                        break;
++                    }
 +                }
-+            };
++            }
 +            let source_texture = match gl.create_texture() {
 +                Ok(texture) => texture,
 +                Err(e) => {
-+                    if let Some(present) = present_program { gl.delete_program(present); }
++                    for &present in present_programs.iter().flatten() { gl.delete_program(present); }
 +                    gl.delete_program(program);
 +                    return Err(e);
 +                }
@@ -8318,7 +8373,7 @@ index 0000000000000000000000000000000000000000..9e39123173b74fd4e2c632de8f0ab1c4
 +                Ok(array) => array,
 +                Err(e) => {
 +                    gl.delete_texture(source_texture);
-+                    if let Some(present) = present_program { gl.delete_program(present); }
++                    for &present in present_programs.iter().flatten() { gl.delete_program(present); }
 +                    gl.delete_program(program);
 +                    return Err(e);
 +                }
@@ -8350,14 +8405,16 @@ index 0000000000000000000000000000000000000000..9e39123173b74fd4e2c632de8f0ab1c4
 +                }
 +                Ok((view_idx, flip_y))
 +            };
-+            let present = present_program.and_then(|present| match init_program(present, true) {
-+                Ok((view_idx, flip_y)) => Some((present, view_idx, flip_y)),
-+                Err(error) => {
++            let present = present_programs.and_then(|programs| {
++                let ready = programs.iter().map(|&present| init_program(present, true)
++                    .map(|(view_idx, flip_y)| (present, view_idx, flip_y))).collect::<Result<Vec<_>, _>>();
++                ready.map_err(|error| {
 +                    import_diagnostic(5, format!("[Q3PW_PRESENT_YCBCR] direct program setup failed: {error}"));
-+                    gl.delete_program(present);
-+                    None
-+                }
++                    for &present in &programs { gl.delete_program(present); }
++                }).ok()
 +            });
++            let regions = [0, 1].map(|eye| foveation_regions(config.resolution,
++                config.foveation.as_ref().map(|(_, params, _)| params), eye, flip));
 +            import_diagnostic(4, format!("[Q3PW_PRESENT_YCBCR] direct program ready={}", present.is_some()));
 +            let setup = (|| {
 +                let (view_idx, flip_y) = init_program(program, false)?;
@@ -8388,7 +8445,7 @@ index 0000000000000000000000000000000000000000..9e39123173b74fd4e2c632de8f0ab1c4
 +                    let native_release = NativeRelease::new(&context);
 +                    Ok(Self { context, program, source_texture,
 +                    vertex_array, framebuffers, resolution: config.resolution, decoded,
-+                    view_idx, flip_y, present, flip, asynchronous: Cell::new(asynchronous),
++                    view_idx, flip_y, present, regions, flip, asynchronous: Cell::new(asynchronous),
 +                    image_cache_enabled: Cell::new(image_cache_requested && cfg!(target_os = "android")),
 +                    timer,
 +                    native_release, release_active: Cell::new(true), source_release_token: Cell::new(0),
@@ -8400,7 +8457,7 @@ index 0000000000000000000000000000000000000000..9e39123173b74fd4e2c632de8f0ab1c4
 +                    for framebuffer in framebuffers.into_iter().flatten() { gl.delete_framebuffer(framebuffer); }
 +                    gl.delete_vertex_array(vertex_array);
 +                    gl.delete_texture(source_texture);
-+                    if let Some((present, _, _)) = present { gl.delete_program(present); }
++                    for (present, _, _) in present.into_iter().flatten() { gl.delete_program(present); }
 +                    gl.delete_program(program);
 +                    Err(e)
 +                }
@@ -8568,12 +8625,8 @@ index 0000000000000000000000000000000000000000..9e39123173b74fd4e2c632de8f0ab1c4
 +        let started = Instant::now();
 +        let cached = self.cached_source_texture(buffer);
 +        let source_texture = cached.unwrap_or(self.source_texture);
-+        let (program, view_idx, flip_y) = match &self.present {
-+            Some((program, view_idx, flip_y)) if present_ycbcr_layout(buffer, self.decoded) => (program, view_idx, flip_y),
-+            _ => (&self.program, &self.view_idx, &self.flip_y),
-+        };
++        let present = self.present.as_ref().filter(|_| present_ycbcr_layout(buffer, self.decoded));
 +        let draw = || {
-+            gl.use_program(Some(*program));
 +            gl.bind_vertex_array(Some(self.vertex_array));
 +            gl.viewport(0, 0, self.resolution.x as i32, self.resolution.y as i32);
 +            for state in [gl::SCISSOR_TEST, gl::STENCIL_TEST, gl::DEPTH_TEST, gl::BLEND, gl::CULL_FACE] {
@@ -8593,14 +8646,32 @@ index 0000000000000000000000000000000000000000..9e39123173b74fd4e2c632de8f0ab1c4
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
-+            gl.uniform_1_i32(Some(flip_y), self.flip as i32);
++            match present {
++                Some(_) => gl.enable(gl::SCISSOR_TEST),
++                None => {
++                    gl.use_program(Some(self.program));
++                    gl.uniform_1_i32(Some(&self.flip_y), self.flip as i32);
++                }
++            }
 +            let query = self.timer.borrow_mut().as_mut().and_then(|timer| timer.begin(gl));
 +            for (eye, &index) in indices.iter().enumerate() {
 +                gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, Some(self.framebuffers[eye][index as usize]));
 +                if self.invalidate { gl.invalidate_framebuffer(gl::DRAW_FRAMEBUFFER, &[gl::COLOR_ATTACHMENT0]); }
-+                gl.uniform_1_i32(Some(view_idx), eye as i32);
-+                gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
++                let Some(programs) = present else {
++                    gl.uniform_1_i32(Some(&self.view_idx), eye as i32);
++                    gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
++                    continue;
++                };
++                for &(filter, [x, y, width, height]) in &self.regions[eye] {
++                    let (program, view_idx, flip_y) = &programs[filter];
++                    gl.use_program(Some(*program));
++                    gl.uniform_1_i32(Some(flip_y), self.flip as i32);
++                    gl.uniform_1_i32(Some(view_idx), eye as i32);
++                    gl.scissor(x, y, width, height);
++                    gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
++                }
 +            }
++            if present.is_some() { gl.disable(gl::SCISSOR_TEST); }
 +            if let Some(index) = query {
 +                if let Some(timer) = self.timer.borrow_mut().as_mut() { timer.end(gl, index); }
 +            }
@@ -8668,9 +8739,49 @@ index 0000000000000000000000000000000000000000..9e39123173b74fd4e2c632de8f0ab1c4
 +            for framebuffer in self.framebuffers.iter().flatten() { gl.delete_framebuffer(*framebuffer); }
 +            gl.delete_vertex_array(self.vertex_array);
 +            gl.delete_texture(self.source_texture);
-+            if let Some((present, _, _)) = &self.present { gl.delete_program(*present); }
++            for (present, _, _) in self.present.iter().flatten() { gl.delete_program(*present); }
 +            gl.delete_program(self.program);
 +        }
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn foveation_regions_tile_each_eye() {
++        let size = UVec2::new(2080, 2208);
++        let mut params = [0.0; 16];
++        (params[2], params[3], params[4], params[5]) = (0.2, 0.25, 0.75, 0.7);
++        assert_eq!(foveation_regions(size, None, 1, true), vec![(0, [0, 0, 2080, 2208])]);
++        for eye in 0..2 {
++            for flip in [false, true] {
++                let regions = foveation_regions(size, Some(&params), eye, flip);
++                assert_eq!(regions.len(), 9);
++                let mut covered = vec![0u8; (size.x * size.y) as usize];
++                for &(_, [x, y, w, h]) in &regions {
++                    for row in y..y + h {
++                        for column in x..x + w { covered[(row * 2080 + column) as usize] += 1; }
++                    }
++                }
++                assert!(covered.iter().all(|&c| c == 1));
++                // The unfiltered centre, mirrored in x for eye 1 and in y when flipped.
++                let centre = regions.iter().find(|(filter, _)| *filter == 0).unwrap().1;
++                let x0 = if eye == 1 { 520 } else { 416 };
++                let y0 = if flip { 662 } else { 552 };
++                assert_eq!(centre, [x0, y0, 1144, 994]);
++                // Filtered along x left and right of the centre, along y above and below it.
++                assert!(regions.iter().all(|&(filter, [x, y, w, h])|
++                    (filter & 1 != 0) == (x + w <= x0 || x >= x0 + 1144)
++                        && (filter & 2 != 0) == (y + h <= y0 || y >= y0 + 994)));
++            }
++        }
++        // An uncompressed axis has no edge bands.
++        (params[2], params[4]) = (0.0, 1.0);
++        let regions = foveation_regions(size, Some(&params), 0, false);
++        assert_eq!(regions.len(), 3);
++        assert!(regions.iter().all(|(filter, [x, _, w, _])| filter & 1 == 0 && *x == 0 && *w == 2080));
 +    }
 +}
 diff --git a/alvr/graphics/src/eye_timer.rs b/alvr/graphics/src/eye_timer.rs

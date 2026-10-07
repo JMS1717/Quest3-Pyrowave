@@ -47,6 +47,21 @@ sustained 120 FPS. Reconsider 4:4:4 as a default only after a future decoder sho
 negligible impact in repeated sustained matched tests and a clearly noticeable in-headset
 improvement. If that improvement is hard to see, prefer 4:2:0.
 
+## October 7 check at 207 Hz
+
+The **Full chroma (4:4:4)** setting still takes effect and still costs too much. One `.61` run
+(2080 x 2208 per eye from a 3072 x 3216 render, Haar, 1000 Mbps, static quality scene, 12 s
+windows, headset awake), changing only the setting:
+
+| 207 Hz | Fresh FPS | GPU decode p50 | Eye-copy fence p50 |
+|---|---:|---:|---:|
+| 4:2:0 (packed YCbCr presentation) | 189.3 | 2.93 ms | 4.52 ms |
+| 4:4:4 | 68.1 | 11.40 ms | 14.07 ms |
+
+4:4:4 decodes twice the chroma samples and has no packed presentation path, so it pays for a
+separate colour conversion too. Its decode alone takes more than twice the 4.83 ms frame period.
+4:2:0 stays the default.
+
 Reproduce the visual source with:
 
 ```powershell
