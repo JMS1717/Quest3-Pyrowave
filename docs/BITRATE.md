@@ -197,3 +197,31 @@ useful range at 207 Hz. Above it, the options are a transport that bypasses ADB 
 function such as NCM, not yet tried because switching USB functions can drop ADB until someone
 replugs the headset) or fewer bytes per frame for the same quality (a better wavelet).
 
+### CDF 5/3 at the owner's 690 MHz GPU clock, October 7
+
+Same scene and stream, CDF 5/3 with V2 mode 5, maximum GPU clock on (690 MHz in every VrApi line),
+one streamer session per cell in the order 700, 1000, 1500, 1500, 1000, 700 Mbps, 12 s each:
+
+| Mbit/s | frame cap | fresh FPS | lost/s | GPU decode p50 | fence p50 | offline PSNR-HVS-M (60 deg/s pan) |
+|---|---|---|---|---|---|---|
+| 700 | 423 KB | 191.2 / 178.9 (mean 185.1) | 16.6 / 28.5 | 2.96 / 3.12 ms | 4.84 / 5.00 ms | 19.0 |
+| 1000 | 604 KB | 177.8 / 180.0 (mean 178.9) | 30.1 / 28.2 | 3.13 / 3.14 | 4.94 / 4.96 | 20.8 |
+| 1500 | 906 KB | 169.6 / 158.9 (mean 164.2) | 38.9 / 49.0 | 3.50 / 4.01 | 5.10 / 5.67 | not scored |
+
+- Unlike Haar, 5/3 decode grows with bitrate (2.96 to 3.50-4.01 ms): V2 runs at 98 % GPU busy, so
+  more coefficients to dequantize cost frames directly. 1000 Mbit/s costs about 6 fresh FPS against
+  700, 1500 about 21.
+- The two 700 cells differ by 12 FPS. The memory clock moves between 2092, 2736 and 3196 MHz from
+  cell to cell (VrApi `Mem=`) and is not pinned by the GPU level; at this load it is the largest
+  noise source left.
+- At 700 Mbit/s a frame carries about 0.35 bit per sample; the stream is bitrate-starved by any
+  inter-frame codec's standard, and each step up is visible offline (+1.8 dB to 1000). For the
+  owner's 207 Hz target, CDF 5/3 at 700-1000 Mbit/s is the useful range; the trade is the user's.
+- A first attempt switched the bitrate inside one streamer session, with the harness relaunching
+  the client for each block. With the maximum GPU clock on, every relaunch makes the server release
+  GPU level 7 (it does so whenever the client is not running, so other VR apps never inherit it),
+  re-apply it when the client starts, and restart the client once more. Two of four such
+  back-to-back restarts came back at 72 or 90 Hz, so that run is discarded and this sweep uses one
+  session per bitrate. All 11 fresh-session cells that day started at 207 Hz; a client reopened
+  seconds after closing it was not checked with the owner's settings.
+
