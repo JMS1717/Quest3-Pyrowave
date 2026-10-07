@@ -1,3 +1,4 @@
 libpyroclient.so
 pyroclient_test
 dequant_haar_gate
+decoder_ab

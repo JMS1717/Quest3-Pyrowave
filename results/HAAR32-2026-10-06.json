@@ -1,0 +1,250 @@
+{
+ "date": "2026-10-06",
+ "source": "cb4efd5 (mode 1) and 5246dff (modes 2-3, default mode 3); local fast builds, not CI artifacts",
+ "device": "Quest 3, Adreno 740; standalone decoder_ab in /data/local/tmp (no APK install for the standalone runs)",
+ "fixture": "synthetic 4160x2208 Haar 4:2:0 frame from gate_common.h make_source, 1041667-byte cap (1000 Mbit/s at 120 Hz), 131 packets",
+ "method": "one Vulkan device, default decoder vs arm; one submission per frame bracketed by GPU timestamps; 10 warm-up frames per arm; AB_BLOCKS x 40 frames in ABBA order",
+ "gate": {
+  "controls": {
+   "base_vs_base": "EXACT at 512x320, 1000x600, 4160x2208",
+   "pairs64_vs_base": "EXACT at 512x320, 1000x600, 4160x2208"
+  },
+  "haar32_default_schedule": [
+   "512x320: luma 3795 / cb 512 / cr 336 differing, max 1, luma PSNR 54.315 (base) vs 54.326 dB (arm)",
+   "1000x600: luma 11835 / cb 3048 / cr 2888 differing, max 1, PSNR 42.985 vs 42.985 dB",
+   "4160x2208: luma 125335 / cb 45152 / cr 19584 differing, max 1, PSNR 32.199 vs 32.199 dB"
+  ],
+  "single_level_schedule_11111_1111": "4160x2208: luma 127355 / cb 45152 / cr 19808 differing, max 1",
+  "precise_qualifiers": "no change in any count",
+  "verdict": "within one code value at equal PSNR; not byte-exact (driver float-to-half rounding varies with code shape)"
+ },
+ "schedules_4_blocks": [
+  {
+   "luma": "3,2",
+   "chroma": "2,2 (chroma root below top, first version, 8 blocks)",
+   "base_p50_ms": 4.708,
+   "arm_p50_ms": 4.215,
+   "delta_pct": -10.5
+  },
+  {
+   "luma": "3,2",
+   "chroma": "2,2",
+   "base_p50_ms": 4.678,
+   "arm_p50_ms": 4.21,
+   "delta_pct": -10.0
+  },
+  {
+   "luma": "2,3",
+   "chroma": "2,2",
+   "base_p50_ms": 4.695,
+   "arm_p50_ms": 4.136,
+   "delta_pct": -11.9
+  },
+  {
+   "luma": "3,2",
+   "chroma": "3,1",
+   "base_p50_ms": 4.708,
+   "arm_p50_ms": 4.293,
+   "delta_pct": -8.8
+  },
+  {
+   "luma": "3,2",
+   "chroma": "1,3",
+   "base_p50_ms": 4.684,
+   "arm_p50_ms": 4.16,
+   "delta_pct": -11.2
+  },
+  {
+   "luma": "2,2,1",
+   "chroma": "2,2",
+   "base_p50_ms": 4.695,
+   "arm_p50_ms": 4.439,
+   "delta_pct": -5.4
+  },
+  {
+   "luma": "2,1,2",
+   "chroma": "2,1,1",
+   "base_p50_ms": 4.697,
+   "arm_p50_ms": 4.211,
+   "delta_pct": -10.3
+  },
+  {
+   "luma": "2,3",
+   "chroma": "1,3",
+   "base_p50_ms": 4.695,
+   "arm_p50_ms": 4.088,
+   "delta_pct": -12.9
+  },
+  {
+   "luma": "1,1,3",
+   "chroma": "1,3",
+   "base_p50_ms": 4.698,
+   "arm_p50_ms": 4.083,
+   "delta_pct": -13.1
+  },
+  {
+   "luma": "1,1,3",
+   "chroma": "2,2",
+   "base_p50_ms": 4.694,
+   "arm_p50_ms": 4.137,
+   "delta_pct": -11.9
+  }
+ ],
+ "default_schedule_8_blocks": {
+  "luma": "2,3",
+  "chroma": "1,3",
+  "gpu_clock_mhz": "545 -> 640 in block 0, 640 in all others",
+  "base_p50_ms": 4.691,
+  "arm_p50_ms": 4.086,
+  "base_p90_ms": 5.52,
+  "arm_p90_ms": 4.912,
+  "delta_pct": -12.9,
+  "block_medians_base_ms": [
+   4.71,
+   4.689,
+   4.688,
+   4.691
+  ],
+  "block_medians_arm_ms": [
+   4.086,
+   4.087,
+   4.085,
+   4.088
+  ],
+  "stage_idwt_ms": {
+   "base": [
+    2.699,
+    2.676,
+    2.644,
+    2.69
+   ],
+   "arm": [
+    2.027,
+    1.994,
+    1.972,
+    1.976
+   ]
+  },
+  "stage_dequant_ms": {
+   "base": [
+    2.054,
+    1.938,
+    1.981,
+    1.942
+   ],
+   "arm": [
+    2.082,
+    2.066,
+    2.044,
+    2.041
+   ]
+  },
+  "dispatches": {
+   "base": 13,
+   "arm": 6
+  },
+  "idwt_barriers": {
+   "base": 5,
+   "arm": 2
+  },
+  "workgroup": "8x8 invocations, one root coefficient each, no shared memory",
+  "formats": "levels 0-1 R16F, 2-4 R32F (sampled mediump); LL intermediates LL2 / LL3 R32F; planes R8 (storage, no format qualifier)"
+ },
+ "live": {
+  "config": "207 Hz, 2080x2208 per eye render and stream, 4:2:0, 1000 Mbit/s, ABBA client restarts, 12 s windows",
+  "cells": [
+   {
+    "arms": "0 vs 1",
+    "build": "cb4efd5",
+    "A": {
+     "fresh_fps": [
+      118.6,
+      119.0
+     ],
+     "gpu_decode_p50": 5.57,
+     "fence_p50": 8.02,
+     "vrapi_app": 5.8
+    },
+    "B": {
+     "fresh_fps": [
+      136.6,
+      137.0
+     ],
+     "gpu_decode_p50": 4.79,
+     "fence_p50": 6.88,
+     "vrapi_app": 5.03
+    }
+   },
+   {
+    "arms": "1 vs 3",
+    "build": "5246dff",
+    "A": {
+     "fresh_fps": [
+      137.2,
+      135.2
+     ],
+     "gpu_decode_p50": 4.4,
+     "fence_p50": 6.92,
+     "vrapi_app": 4.83,
+     "alvr_pipeline_latency_estimate_ms": 39.3
+    },
+    "B": {
+     "fresh_fps": [
+      180.4,
+      178.5
+     ],
+     "gpu_decode_p50": 2.77,
+     "fence_p50": 5.17,
+     "vrapi_app": 3.78,
+     "alvr_pipeline_latency_estimate_ms": 34.6
+    }
+   },
+   {
+    "arms": "0 vs 3",
+    "build": "5246dff",
+    "A": {
+     "fresh_fps": [
+      121.5,
+      120.3
+     ],
+     "gpu_decode_p50": 5.55,
+     "fence_p50": 7.94,
+     "vrapi_app": 5.76,
+     "alvr_pipeline_latency_estimate_ms": 40.7
+    },
+    "B": {
+     "fresh_fps": [
+      174.9,
+      160.1
+     ],
+     "gpu_decode_p50": 2.96,
+     "fence_p50": 5.45,
+     "vrapi_app": 3.94,
+     "alvr_pipeline_latency_estimate_ms": 41.5
+    }
+   }
+  ],
+  "notes": "latency figures are ALVR estimates, not motion-to-photon; GPU% ~0.96 in every arm"
+ },
+ "packing": {
+  "mode2_standalone": {
+   "dequant_ms": "1.3-1.4",
+   "idwt_ms": "2.1",
+   "total_p50_ms": "3.61-3.63"
+  },
+  "mode3_standalone": {
+   "dequant_ms": "1.3-1.4",
+   "idwt_ms": "1.23-1.5",
+   "total_p50_ms": "3.005-3.037",
+   "total_p90_ms": 3.17
+  },
+  "probes_mode1": {
+   "idwt_ms": 2.2,
+   "idwt_no_stores_ms": 0.75,
+   "idwt_no_band_fetch_ms": 1.6,
+   "dequant_ms": 2.0,
+   "dequant_no_stores_ms": 0.95
+  },
+  "end_to_end_rgba": "modes 1-3 byte-identical (compute and fragment conversion); vs mode 0: 1.96% of pixels differ, max 4 RGB codes"
+ }
+}

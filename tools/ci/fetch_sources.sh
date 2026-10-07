@@ -62,6 +62,8 @@ git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-prerecord-api.pat
 git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-fuse-color.patch"
 # Optional fused dequant + level-0 Haar (debug.q3pw.dequant_haar), with its embedded shaders.
 git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-fused-dequant-haar.patch"
+# Optional two-pass [3,2] inverse Haar (debug.q3pw.haar32), with its embedded shaders.
+git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-haar32.patch"
 
 [ "$pyrowave_only" != 1 ] || { echo "pyrowave-only sources ready in $dest/pyrowave (${PYROWAVE_BASE%${PYROWAVE_BASE#???????}})"; exit 0; }
 echo "sources ready in $dest: ALVR ${ALVR_BASE%${ALVR_BASE#???????}}, pyrowave ${PYROWAVE_BASE%${PYROWAVE_BASE#???????}}, Granite ${GRANITE_COMMIT%${GRANITE_COMMIT#???????}}"

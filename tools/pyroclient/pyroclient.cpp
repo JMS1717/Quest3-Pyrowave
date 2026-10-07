@@ -143,6 +143,12 @@ struct pyroclient {
     pyrowave_decoder decoder = nullptr;
     Plane planes[3];
     pyrowave_gpu_buffers buffers{};
+    // debug.q3pw.haar32: requested and applied PyroWave multilevel Haar mode (docs/HAAR32.md).
+    // Mode 3 writes luma as an RGBA8 plane of half size, one 2x2 pixel quad per texel, which the
+    // conversion shaders unpack (packed_luma).
+    int haar32_requested = 0;
+    int haar32_mode = 0;
+    bool packed_luma = false;
 
     // Conversion pass.
     VkSampler sampler = VK_NULL_HANDLE;
@@ -505,9 +511,25 @@ static bool create_plain_image(VkPhysicalDevice gpu, VkDevice device, VkFormat f
 }
 
 bool pyroclient::create_planes() {
+    pyrowave_decoder_create_info di = {};
+    di.device = pyro; di.width = width; di.height = height;
+    di.chroma = chroma444 ? PYROWAVE_CHROMA_SUBSAMPLING_444 : PYROWAVE_CHROMA_SUBSAMPLING_420;
+    di.fragment_path = fragment_path;
+    di.wavelet = haar ? PYROWAVE_WAVELET_HAAR : legall53 ? PYROWAVE_WAVELET_CDF53 : PYROWAVE_WAVELET_CDF97;
+    PW_TRY(pyrowave_decoder_create(&di, &decoder));
+    // The decoder refuses modes its configuration cannot run (CDF, 4:4:4, fragment path, other
+    // precisions); step down to the best mode it accepts. The plane layout follows the result.
+    haar32_mode = 0;
+    for (int mode = haar32_requested; mode > 0 && !haar32_mode; mode--)
+        if (pyrowave_decoder_set_haar32(decoder, mode) == PYROWAVE_SUCCESS) haar32_mode = mode;
+    packed_luma = haar32_mode == 3;
+    LOGI("[Q3PW_HAAR32] requested=%d active=%d packed_luma=%d", haar32_requested, haar32_mode, packed_luma ? 1 : 0);
+
     const uint32_t cw = chroma444 ? width : width / 2, ch = chroma444 ? height : height / 2;
     for (int i = 0; i < 3; i++) {
-        if (!create_plain_image(gpu, device, VK_FORMAT_R8_UNORM, i ? cw : width, i ? ch : height,
+        const bool packed = i == 0 && packed_luma;
+        const VkFormat format = packed ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R8_UNORM;
+        if (!create_plain_image(gpu, device, format, packed ? width / 2 : i ? cw : width, packed ? height / 2 : i ? ch : height,
                                 VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
                                     | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                                 planes[i]))
@@ -517,16 +539,10 @@ bool pyroclient::create_planes() {
         // WrappedViewBuffers uses these extents for viewport/render-area construction.
         // A 4:2:0 chroma target must describe its actual half-sized image.
         v.width = planes[i].width; v.height = planes[i].height;
-        v.image_format = VK_FORMAT_R8_UNORM; v.view_format = VK_FORMAT_R8_UNORM;
+        v.image_format = format; v.view_format = format;
         v.mip_level = 0; v.layer = 0; v.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
         v.swizzle = VK_COMPONENT_SWIZZLE_IDENTITY; v.layout = VK_IMAGE_LAYOUT_GENERAL;
     }
-    pyrowave_decoder_create_info di = {};
-    di.device = pyro; di.width = width; di.height = height;
-    di.chroma = chroma444 ? PYROWAVE_CHROMA_SUBSAMPLING_444 : PYROWAVE_CHROMA_SUBSAMPLING_420;
-    di.fragment_path = fragment_path;
-    di.wavelet = haar ? PYROWAVE_WAVELET_HAAR : legall53 ? PYROWAVE_WAVELET_CDF53 : PYROWAVE_WAVELET_CDF97;
-    PW_TRY(pyrowave_decoder_create(&di, &decoder));
     return true;
 }
 
@@ -558,6 +574,11 @@ bool pyroclient::create_convert() {
     VkComputePipelineCreateInfo cpi = { VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
     cpi.stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     cpi.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT; cpi.stage.module = module; cpi.stage.pName = "main";
+    // Constant 0: the luma plane is packed (see create_planes).
+    const VkBool32 packed_constant = packed_luma ? VK_TRUE : VK_FALSE;
+    const VkSpecializationMapEntry packed_entry = { 0, 0, sizeof(VkBool32) };
+    const VkSpecializationInfo packed_info = { 1, &packed_entry, sizeof(VkBool32), &packed_constant };
+    cpi.stage.pSpecializationInfo = &packed_info;
     cpi.layout = pipeline_layout;
     VkResult pr = vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &cpi, nullptr, &pipeline);
     vkDestroyShaderModule(device, module, nullptr);
@@ -593,11 +614,16 @@ bool pyroclient::create_fragment_convert() {
     sm.codeSize = sizeof(CONVERT_FRAG_SPV); sm.pCode = CONVERT_FRAG_SPV;
     VkResult created = vkCreateShaderModule(device, &sm, nullptr, &modules[1]);
     if (created != VK_SUCCESS) { vkDestroyShaderModule(device, modules[0], nullptr); return false; }
+    // Fragment constant 0: the luma plane is packed (see create_planes).
+    const VkBool32 packed_constant = packed_luma ? VK_TRUE : VK_FALSE;
+    const VkSpecializationMapEntry packed_entry = { 0, 0, sizeof(VkBool32) };
+    const VkSpecializationInfo packed_info = { 1, &packed_entry, sizeof(VkBool32), &packed_constant };
     VkPipelineShaderStageCreateInfo stages[2] = {};
     for (int i = 0; i < 2; i++) {
         stages[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         stages[i].stage = i ? VK_SHADER_STAGE_FRAGMENT_BIT : VK_SHADER_STAGE_VERTEX_BIT;
         stages[i].module = modules[i]; stages[i].pName = "main";
+        stages[i].pSpecializationInfo = i ? &packed_info : nullptr;
     }
     VkPipelineVertexInputStateCreateInfo vertex = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
     VkPipelineInputAssemblyStateCreateInfo assembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
@@ -1242,6 +1268,16 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
     LOGI("[Q3PW_CHROMA_FILTER] requested=%s applied=%d", chroma_prop[0] ? chroma_prop : "unset", c->chroma_filter);
     char fuse_prop[PROP_VALUE_MAX] = {};
     __system_property_get("debug.q3pw.fuse_color", fuse_prop);
+    {
+        // Multilevel Haar (docs/HAAR32.md), default mode 3; "0" to "3" selects a mode. Fused colour
+        // and fused dequant replace passes it owns, so requesting either turns the default off.
+        char haar32_prop[PROP_VALUE_MAX] = {}, dequant_haar_prop[PROP_VALUE_MAX] = {};
+        __system_property_get("debug.q3pw.dequant_haar", dequant_haar_prop);
+        const bool explicit_mode = __system_property_get("debug.q3pw.haar32", haar32_prop) > 0 &&
+                                   haar32_prop[0] >= '0' && haar32_prop[0] <= '3' && !haar32_prop[1];
+        c->haar32_requested = explicit_mode ? haar32_prop[0] - '0'
+                              : !strcmp(fuse_prop, "1") || !strcmp(dequant_haar_prop, "1") ? 0 : 3;
+    }
     c->ring.resize(ring_size < 2 ? 2 : ring_size);
     if (!c->create_device() || !c->create_planes() || !c->create_convert()) { c->destroy(); delete c; return nullptr; }
 
