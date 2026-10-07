@@ -217,8 +217,13 @@ extrapolation on, and 185.6 and 187.5 with it off.
 
 Still untested:
 
-- Whether head movement looks smoother in the headset: the harness headset is static, so this
-  needs a worn test.
+- Whether head movement looks smoother in the headset.
+  - The harness headset is static, so its extrapolated poses barely differ from the held one.
+  - Fresh FPS counts distinct timestamps, so these runs show that the mechanism works: every
+    frame gets a new timestamp, and the client finds every pose.
+  - They don't show that the predicted motion is right.
+  - A unit test (`server_extrapolation_matches_the_client`) checks that the PC and the headset
+    compute the same pose. Whether it looks right in motion needs a worn test.
 - How it behaves under sustained play.
 
 New diagnostics, logged at error level every 5 s:
