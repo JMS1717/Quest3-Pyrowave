@@ -1477,8 +1477,24 @@ extern "C" int pyroclient_decode_guarded(pyroclient *c, AHardwareBuffer **out, p
     return pyroclient_submit_guarded(c, out, info, protected_a, protected_b, nullptr);
 }
 
+static int submit_guarded(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info,
+                          AHardwareBuffer *protected_a, AHardwareBuffer *protected_b,
+                          AHardwareBuffer *protected_c, int *ready_fd);
+
+extern "C" int pyroclient_decode_guarded3(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info,
+                                        AHardwareBuffer *protected_a, AHardwareBuffer *protected_b,
+                                        AHardwareBuffer *protected_c) {
+    return submit_guarded(c, out, info, protected_a, protected_b, protected_c, nullptr);
+}
+
 extern "C" int pyroclient_submit_guarded(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info,
                                        AHardwareBuffer *protected_a, AHardwareBuffer *protected_b, int *ready_fd) {
+    return submit_guarded(c, out, info, protected_a, protected_b, nullptr, ready_fd);
+}
+
+static int submit_guarded(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info,
+                          AHardwareBuffer *protected_a, AHardwareBuffer *protected_b,
+                          AHardwareBuffer *protected_c, int *ready_fd) {
     if (ready_fd) *ready_fd = -1;
     if (!c || !out) return -1;
     *out = nullptr;
@@ -1489,7 +1505,8 @@ extern "C" int pyroclient_submit_guarded(pyroclient *c, AHardwareBuffer **out, p
     if (!pyrowave_decoder_decode_is_ready(c->decoder, false)) return -3;
     if (info) { *info = pyroclient_frame_info{}; info->complete = pyrowave_decoder_decode_is_ready(c->decoder, false) ? 1 : 0; }
     uint32_t attempts = 0;
-    while (c->ring[c->next_slot].ahb == protected_a || c->ring[c->next_slot].ahb == protected_b) {
+    while (c->ring[c->next_slot].ahb == protected_a || c->ring[c->next_slot].ahb == protected_b
+           || (protected_c && c->ring[c->next_slot].ahb == protected_c)) {
         c->next_slot = (c->next_slot + 1) % (uint32_t)c->ring.size();
         if (++attempts == c->ring.size()) return -4;
     }

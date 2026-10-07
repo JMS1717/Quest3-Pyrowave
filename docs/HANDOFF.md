@@ -22,6 +22,107 @@ supported by evidence. Preserve correctness, rollback and honest measurements;
 the previous agent's process is not mandatory. A handoff does not automatically
 resume paused hardware work or unattended workers.
 
+## October 7 afternoon: 207 Hz trace and scorecard
+
+Branch `claude/frame-trace` (on top of `claude/wired-parallel-video`, PR #15). Owner target:
+2080x2208 per eye at 207 Hz from a 3072x3216 render, 1000-1500 Mbit/s, about 200-207 fresh FPS,
+under 30 ms optical latency, no visible foveation. Details: [FRAME-TRACE.md](FRAME-TRACE.md).
+
+| Item | Result |
+|---|---|
+| best shipped config | Haar, mode 5, 1000 Mbit/s, two wired connections, maximum GPU clock (690 MHz), raw sRGB eye copy |
+| fresh FPS (valid blocks, memory clock 2736 MHz) | 194-197; published 203; display periods 195-200 |
+| superseded + empty per second | about 9 + 4 (default); 10 + 11 with release_fd |
+| Haar GPU decode | 2.67 ms p50, 3.50 ms p90 |
+| eye pass | 1.05-1.10 ms (was 1.28 ms) |
+| best opt-in | release_fd + frame hold 6 ms: 199.5 fresh, ALVR latency estimate +5.4 ms |
+| quality choice | CDF 5/3 looks much smoother but is decode-bound near 180 fresh FPS at 1000 Mbit/s; Haar is the 207 Hz choice |
+| optical latency | not yet measured (P4); frame age at display 30.4 ms p50, ALVR estimate about 30-33 ms |
+| limits on 207 Hz | publication jitter against the selection point, 0.8 ms eye-pass fill, uncontrolled memory clock |
+
+Pending:
+
+- **Unplug/replug safety for two wired connections (PR #15).**
+  - The simulated test (`adb reconnect` mid-stream) left the headset "offline" to adb until a
+    physical replug.
+  - The client's behaviour after a real replug still needs a check.
+- Lower-latency selection than the 6 ms hold, for example a 2.8 ms selection wait with release_fd.
+- P4 optical latency with a phone at 240 fps or more.
+- P3 offline quality: CDF 5/3 vs Haar at 1000/1300/1500.
+
+## October 7: findings and planned next steps
+
+Branches: `claude/decoder-v2` (PR #14) holds Decoder V2 (CDF 5/3 with packed YCbCr output, modes
+5 and 6). `claude/wired-parallel-video` is stacked on it and adds opt-in parallel wired video
+connections. Local fast builds only; no release. Owner settings: 207 Hz, 2080x2208 per eye from a
+3072x3216 render, maximum GPU clock on (690 MHz), 700 Mbit/s.
+
+Findings, all live ABBA at the owner's settings with a 60 deg/s pan and 12 s windows:
+
+- **CDF 5/3 costs about 2 fresh FPS at 690 MHz** (mean 192.0 vs Haar 193.5). It is much smoother
+  than Haar in the headset: Haar shows blocky, soft spheres. Recommendation: Wavelet = CDF 5/3
+  with the maximum GPU clock on. Haar stays the shipped default for now
+  ([DECODER-V2.md](DECODER-V2.md)).
+- **Bitrate with 5/3:** 700 Mbit/s gives 185 fresh FPS, 1000 gives 179 and 1500 gives 164.
+  Quality rises about 1.8 dB PSNR-HVS-M from 700 to 1000. At 700 the stream carries about 0.35 bit
+  per sample, so the owner's "bitrate starved" impression is plausible. The cost of more bitrate
+  is decode time, because 5/3 dequant grows with bitrate ([BITRATE.md](BITRATE.md)).
+- **Parallel wired connections** (`video.pyrowave.wired_video_connections`, default 2) cut ALVR's
+  network-stage estimate by 0.7 ms at 1000 Mbit/s and 1.8 ms at 1500, where one adb-forwarded
+  connection queues frames. Fresh FPS is unchanged: the headset GPU is 97-98 % busy in every cell,
+  so decode sets the frame rate.
+- **Latency budget** (ALVR's own estimate, not motion-to-photon) at 1000 Mbit/s is about 33 ms in
+  total:
+
+  | Stage | Time |
+  |---|---|
+  | vsync queue | 10.7 ms |
+  | decoder stage | 7.3 ms |
+  | client compositor | 5.0 ms |
+  | network | 2.6-3.8 ms |
+  | encoder | 2.2 ms |
+  | game | 1-2.6 ms |
+
+- **Standalone V2 mode 5 profile at the 1000 Mbit/s cap** (decoder_ab with
+  `PYROWAVE_V2_LEVEL_TIMES=1`; the bench reported a 492 MHz clock because the GPU level was unset):
+
+  | Stage | Time |
+  |---|---|
+  | total p50 | 2.78-2.88 ms |
+  | iDWT, all levels | 2.15 ms |
+  | level 0 | 0.59 ms |
+  | level 1 | 1.22 ms |
+  | level 2 | 0.2 ms |
+  | levels 3-4 | 0.1 ms |
+  | dequant | 1.25 ms, overlapping the iDWT |
+
+  Level 1 taking twice level 0 points to it waiting on the finest bands' dequant. That is a
+  hypothesis and has not been checked.
+- **Noise:** the headset memory clock moves between 2092, 2736 and 3196 MHz from session to session
+  (VrApi `Mem=`). It is not pinned by the GPU level and causes cell-to-cell spreads of up to 12 FPS.
+
+Planned next steps, in order:
+
+1. **Shorten 5/3 decode, which caps the frame rate.**
+   - Attribute level 1's 1.22 ms: dequant overlap or iDWT.
+   - Reorder or split dequant so the bands each iDWT level needs finish first.
+   - Bring Haar's dequant speedups (bit-plane decode) to 5/3, whose dequant grows with bitrate.
+   - Target: 5/3 at 1000 Mbit/s at 2.5 ms or less, which should give about 195+ fresh FPS.
+   - Run the bench at GPU level 7 so standalone numbers match the owner's clock.
+2. **Haar with two connections at 1500 Mbit/s.** Haar decode barely grows with bitrate, so faster
+   arrival may turn into frames there.
+3. **Latency.**
+   - The vsync queue (about 2.2 frames at 207 Hz) and the decoder stage (7.3 ms) dominate.
+   - Check the client's submit timing against the predicted display time.
+   - Measure real motion-to-photon with the optical latency stamp ([OPTICAL-LATENCY.md](OPTICAL-LATENCY.md)).
+4. **Memory-clock noise.** Look for a way to pin or record it per cell; until then use more
+   repetitions.
+5. **`wired_video_connections` now defaults to 2** (owner's call, e325386, checked live with a
+   session that lacks the key). Still to do: a sustained-play session, a cable unplug/replug, and a
+   3-4 connection cell.
+6. **In-headset quality suite with motion** (task 6), CDF 9/7, then the in-headset screenshots a
+   release needs before publishing.
+
 ## October 6 (later): decoder mode 3, 160-180 fresh FPS at 207 Hz native
 
 PR #13 (`claude/haar32`) makes the Haar 4:2:0 decoder default to multilevel Haar with quad-packed

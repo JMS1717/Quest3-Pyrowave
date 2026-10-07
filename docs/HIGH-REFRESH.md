@@ -99,6 +99,19 @@ and 1664x1760 at 144 Hz.
 
 ## Recommended settings from these screens
 
+**Update, October 7 (`.62`).** The decoder is now about twice as fast:
+
+- multilevel Haar with packed output ([HAAR32.md](HAAR32.md))
+- decoding straight into the eye-copy buffer ([PRESENT-YCBCR.md](PRESENT-YCBCR.md))
+- a cheaper eye copy ([FRAME-TRACE.md](FRAME-TRACE.md))
+
+**207 Hz at the full 2080x2208 per eye now reaches about 194-197 fresh FPS** with the maximum GPU
+clock, against 117 in the table above. The "207 Hz (measured)" profile now uses that size, so the
+"avoid 207 Hz at native resolution" advice below no longer holds. The 120 and 240 Hz rows above
+have not been remeasured with the new decoder.
+
+The October 6 recommendations, kept for reference:
+
 - Native detail: **120 Hz, 2080x2208**. Highest fresh rate per pixel; higher stream sizes cost
   fresh frames one for one with decode time.
 - High refresh: **240 Hz with display scaling at 1280x1376-1440x1536 per eye** (223-230 fresh

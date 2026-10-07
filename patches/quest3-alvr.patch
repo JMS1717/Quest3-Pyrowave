@@ -206,7 +206,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..18ad9d0230c4dcc30ad7e7d97af279bc
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..f60f9cb21ee2205c0c8acda8d03950de81b4a811 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..a8c08ef76d0a79d958806d967ab32578dad18f63 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..f60f9cb21ee2205c0c8acda8d03950de
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.61"
++version = "20.13.0-quest3.pyro.62"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -863,7 +863,7 @@ index 0000000000000000000000000000000000000000..1e58855f94e3ae6e1f923ca096ea307e
 +    }
 +}
 diff --git a/alvr/adb/src/lib.rs b/alvr/adb/src/lib.rs
-index 64660b1e8e559354c4fb96d88ec579f08fe243ec..63fcbf0d1d62b78075f4662ab718b20371485019 100644
+index 64660b1e8e559354c4fb96d88ec579f08fe243ec..d6b423b1a58ba49dfef43b572bf4ea7975b2202d 100644
 --- a/alvr/adb/src/lib.rs
 +++ b/alvr/adb/src/lib.rs
 @@ -1,12 +1,22 @@
@@ -974,7 +974,19 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..63fcbf0d1d62b78075f4662ab718b203
      ) -> Result<WiredConnectionStatus> {
          let Some(device_serial) = commands::list_devices(&self.adb_path)?
              .into_iter()
-@@ -65,6 +134,34 @@ impl WiredConnection {
+@@ -44,7 +113,10 @@ impl WiredConnection {
+             ));
+         };
+ 
+-        let ports = HashSet::from([control_port, stream_port]);
++        // Plus the ports of PyroWave's optional parallel video connections
++        // (alvr_packets::PYROWAVE_WIRED_PORT and up); a forward nobody connects to costs nothing.
++        let mut ports = HashSet::from([control_port, stream_port]);
++        ports.extend(9950..9954);
+         let forwarded_ports: HashSet<u16> =
+             commands::list_forwarded_ports(&self.adb_path, &device_serial)?
+                 .into_iter()
+@@ -65,6 +137,34 @@ impl WiredConnection {
              ));
          };
  
@@ -1009,7 +1021,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..63fcbf0d1d62b78075f4662ab718b203
          if commands::get_process_id(&self.adb_path, &device_serial, &process_name)?.is_none() {
              if client_autolaunch {
                  commands::start_application(&self.adb_path, &device_serial, &process_name)?;
-@@ -86,14 +183,9 @@ impl WiredConnection {
+@@ -86,14 +186,9 @@ impl WiredConnection {
      }
  }
  
@@ -1180,7 +1192,7 @@ index 0000000000000000000000000000000000000000..057b458db4253a7c044c8c1592cd29af
 +    }
 +}
 diff --git a/alvr/client_core/src/connection.rs b/alvr/client_core/src/connection.rs
-index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c174619a0ab7b9aa02ea0de2fb7b092a627c33b1 100644
+index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..fd9eb702c994a33cc6e4a53e981779cf40b2c5dd 100644
 --- a/alvr/client_core/src/connection.rs
 +++ b/alvr/client_core/src/connection.rs
 @@ -80,11 +80,14 @@ pub struct ConnectionContext {
@@ -1218,7 +1230,22 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c174619a0ab7b9aa02ea0de2fb7b092a
                  Arc::clone(&ctx),
                  Arc::clone(&lifecycle_state),
                  Arc::clone(&event_queue),
-@@ -327,6 +331,10 @@ fn connection_pipeline(
+@@ -299,6 +303,14 @@ fn connection_pipeline(
+     )
+     .to_con()?;
+ 
++    // PyroWave's parallel wired video connections, bound before StreamReady so the server's
++    // connects wait in the backlog. The server connects only over USB.
++    let wired_video_listeners = if negotiated_config.wired {
++        crate::wired_video::listen(settings.video.pyrowave.wired_video_connections)
++    } else {
++        vec![]
++    };
++
+     dbg_connection!("connection_pipeline: Send StreamReady");
+     if let Err(e) = control_sender.send(&ClientControlPacket::StreamReady) {
+         info!("Server disconnected. Cause: {e:?}");
+@@ -327,6 +339,10 @@ fn connection_pipeline(
      let video_receive_thread = thread::spawn({
          let ctx = Arc::clone(&ctx);
          move || {
@@ -1229,7 +1256,24 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c174619a0ab7b9aa02ea0de2fb7b092a
              let mut stream_corrupted = true;
              // With PyroWave over UDP nothing arrives on this stream, so the RequestIdr that
              // normally fetches the DecoderConfig would never be sent. Ask once a second until a
-@@ -571,6 +579,19 @@ fn connection_pipeline(
+@@ -357,6 +373,7 @@ fn connection_pipeline(
+                 }
+ 
+                 crate::push_foveation_center(header.timestamp, header.foveation_center);
++                crate::frame_trace::record(b'A', header.timestamp.as_nanos() as u64, nal.len() as i64, 1);
+ 
+                 if header.is_idr {
+                     stream_corrupted = false;
+@@ -393,6 +410,8 @@ fn connection_pipeline(
+         }
+     });
+ 
++    let wired_video_threads = crate::wired_video::spawn_receivers(&ctx, wired_video_listeners);
++
+     let game_audio_thread = if let Switch::Enabled(config) = settings.audio.game_audio {
+         let device = AudioDevice::new_output(None).to_con()?;
+         thread::spawn({
+@@ -571,6 +590,19 @@ fn connection_pipeline(
                          set_hud_message(&event_queue, SERVER_RESTART_MESSAGE);
                          disconnect_notif.notify_one();
                      }
@@ -1249,7 +1293,7 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c174619a0ab7b9aa02ea0de2fb7b092a
                      Ok(ServerControlPacket::ReservedBuffer(buffer)) => {
                          // NB: it's normal for deserialization to fail if server has different
                          // version
-@@ -607,6 +628,10 @@ fn connection_pipeline(
+@@ -607,6 +639,10 @@ fn connection_pipeline(
          let event_queue = Arc::clone(&event_queue);
          let disconnect_notif = Arc::clone(&disconnect_notif);
          move || {
@@ -1260,20 +1304,169 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c174619a0ab7b9aa02ea0de2fb7b092a
              while is_streaming(&ctx) {
                  match stream_socket.recv() {
                      Ok(()) => (),
+@@ -655,6 +691,9 @@ fn connection_pipeline(
+     dbg_connection!("connection_pipeline: Destroying streams");
+ 
+     video_receive_thread.join().ok();
++    for thread in wired_video_threads {
++        thread.join().ok();
++    }
+     game_audio_thread.join().ok();
+     microphone_thread.join().ok();
+     haptics_receive_thread.join().ok();
+diff --git a/alvr/client_core/src/frame_trace.rs b/alvr/client_core/src/frame_trace.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..ed952972c5004d1f1e9d4f0ed674c9dde6570ad8
+--- /dev/null
++++ b/alvr/client_core/src/frame_trace.rs
+@@ -0,0 +1,127 @@
++//! Opt-in per-frame critical-path trace for Quest PyroWave (`debug.q3pw.frame_trace=1`, read when
++//! a stream starts). Hot paths only read CLOCK_MONOTONIC and push a fixed-size record into a
++//! bounded buffer; a separate thread logs the records as `[Q3PW_TRACE]` batches about four times
++//! a second, so no formatting or logging happens on the decode or render threads.
++//!
++//! Record: `kind,t_us,id,a,b` with `t_us` CLOCK_MONOTONIC microseconds. `id` is the frame's
++//! tracking timestamp (OpenXR XrTime nanoseconds) for frame records, or the predicted display time
++//! for render-loop records. `K` records pair the monotonic clock with xrConvertTimespecTimeToTimeKHR
++//! so the two clocks are compared only through that measured offset. Kinds are listed in
++//! `tools/quest3/frame_trace.py`.
++
++use alvr_common::parking_lot::Mutex;
++use std::{
++    sync::{
++        atomic::{AtomicBool, AtomicU64, Ordering},
++        Once,
++    },
++    thread,
++    time::Duration,
++};
++
++/// About 18 s of records at 207 Hz; a stalled logger drops (and counts) records rather than grow.
++const MAX_RECORDS: usize = 1 << 16;
++const PER_LINE: usize = 40;
++
++static ENABLED: AtomicBool = AtomicBool::new(false);
++static DROPPED: AtomicU64 = AtomicU64::new(0);
++static RECORDS: Mutex<Vec<Record>> = Mutex::new(Vec::new());
++static FLUSHER: Once = Once::new();
++
++#[derive(Clone, Copy)]
++struct Record {
++    kind: u8,
++    t_us: u64,
++    id: u64,
++    a: i64,
++    b: i64,
++}
++
++#[cfg(unix)]
++pub fn mono_ns() -> u64 {
++    let mut ts = libc::timespec { tv_sec: 0, tv_nsec: 0 };
++    unsafe { libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut ts) };
++    ts.tv_sec as u64 * 1_000_000_000 + ts.tv_nsec as u64
++}
++
++#[cfg(not(unix))]
++pub fn mono_ns() -> u64 {
++    static EPOCH: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
++    EPOCH.get_or_init(std::time::Instant::now).elapsed().as_nanos() as u64
++}
++
++#[inline]
++pub fn enabled() -> bool {
++    ENABLED.load(Ordering::Relaxed)
++}
++
++/// `kind` is one ASCII letter; see the module documentation.
++#[inline]
++pub fn record(kind: u8, id: u64, a: i64, b: i64) {
++    if enabled() {
++        record_at(kind, mono_ns(), id, a, b);
++    }
++}
++
++pub fn record_at(kind: u8, t_ns: u64, id: u64, a: i64, b: i64) {
++    if !enabled() {
++        return;
++    }
++    let mut records = RECORDS.lock();
++    if records.len() < MAX_RECORDS {
++        records.push(Record { kind, t_us: t_ns / 1000, id, a, b });
++    } else {
++        DROPPED.fetch_add(1, Ordering::Relaxed);
++    }
++}
++
++/// Called when a stream starts. Enabling spawns the logging thread once per process.
++pub fn start(enable: bool) {
++    RECORDS.lock().clear();
++    ENABLED.store(enable, Ordering::Relaxed);
++    if !enable {
++        return;
++    }
++    FLUSHER.call_once(|| {
++        thread::spawn(|| loop {
++            thread::sleep(Duration::from_millis(250));
++            let batch = std::mem::take(&mut *RECORDS.lock());
++            for (index, chunk) in batch.chunks(PER_LINE).enumerate() {
++                log(&line(chunk, if index == 0 { DROPPED.swap(0, Ordering::Relaxed) } else { 0 }));
++            }
++        });
++    });
++}
++
++fn line(chunk: &[Record], dropped: u64) -> String {
++    use std::fmt::Write;
++    let mut out = format!("[Q3PW_TRACE] v1 dropped={dropped} ");
++    for r in chunk {
++        let _ = write!(out, "{},{},{},{},{};", r.kind as char, r.t_us, r.id, r.a, r.b);
++    }
++    out
++}
++
++#[cfg(target_os = "android")]
++fn log(message: &str) {
++    crate::video_decoder::logcat_info("Q3PW", message);
++}
++
++#[cfg(not(target_os = "android"))]
++fn log(message: &str) {
++    alvr_common::info!("{message}");
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn line_lists_records_in_order() {
++        let chunk = [
++            Record { kind: b'S', t_us: 10, id: 7, a: 1, b: 0 },
++            Record { kind: b'D', t_us: 12, id: 7, a: 2500, b: -1 },
++        ];
++        assert_eq!(line(&chunk, 3), "[Q3PW_TRACE] v1 dropped=3 S,10,7,1,0;D,12,7,2500,-1;");
++    }
++}
 diff --git a/alvr/client_core/src/lib.rs b/alvr/client_core/src/lib.rs
-index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..8f303dd34280d3b1c5ca8bf31ac9358caa9c1143 100644
+index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..1d6cb87eed22360f8d1beddad94219206ec3eb20 100644
 --- a/alvr/client_core/src/lib.rs
 +++ b/alvr/client_core/src/lib.rs
-@@ -11,6 +11,8 @@ mod logging_backend;
+@@ -7,10 +7,14 @@
+ 
+ mod c_api;
+ mod connection;
++pub mod frame_trace;
+ mod logging_backend;
  mod sockets;
  mod statistics;
  mod storage;
++mod wired_video;
 +pub mod performance;
 +pub mod thread_hints;
  
  #[cfg(target_os = "android")]
  mod audio;
-@@ -92,6 +94,7 @@ pub(crate) fn push_foveation_center(timestamp: Duration, center: [[f32; 2]; 2])
+@@ -92,6 +96,7 @@ pub(crate) fn push_foveation_center(timestamp: Duration, center: [[f32; 2]; 2])
  }
  
  pub struct ClientCoreContext {
@@ -1281,7 +1474,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..8f303dd34280d3b1c5ca8bf31ac9358c
      lifecycle_state: Arc<RwLock<LifecycleState>>,
      event_queue: Arc<Mutex<VecDeque<ClientCoreEvent>>>,
      connection_context: Arc<ConnectionContext>,
-@@ -99,6 +102,11 @@ pub struct ClientCoreContext {
+@@ -99,6 +104,11 @@ pub struct ClientCoreContext {
  }
  
  impl ClientCoreContext {
@@ -1293,7 +1486,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..8f303dd34280d3b1c5ca8bf31ac9358c
      pub fn new(capabilities: ClientCapabilities) -> Self {
          dbg_client_core!("Create");
  
-@@ -115,6 +123,7 @@ impl ClientCoreContext {
+@@ -115,6 +125,7 @@ impl ClientCoreContext {
              alvr_system_info::set_wifi_lock(true);
          }
  
@@ -1301,7 +1494,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..8f303dd34280d3b1c5ca8bf31ac9358c
          let lifecycle_state = Arc::new(RwLock::new(LifecycleState::Idle));
          let event_queue = Arc::new(Mutex::new(VecDeque::new()));
          let connection_context = Arc::new(ConnectionContext::default());
-@@ -122,6 +131,7 @@ impl ClientCoreContext {
+@@ -122,6 +133,7 @@ impl ClientCoreContext {
              let lifecycle_state = Arc::clone(&lifecycle_state);
              let connection_context = Arc::clone(&connection_context);
              let event_queue = Arc::clone(&event_queue);
@@ -1309,7 +1502,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..8f303dd34280d3b1c5ca8bf31ac9358c
              move || {
                  connection::connection_lifecycle_loop(
                      capabilities,
-@@ -133,6 +143,7 @@ impl ClientCoreContext {
+@@ -133,6 +145,7 @@ impl ClientCoreContext {
          });
  
          Self {
@@ -1317,7 +1510,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..8f303dd34280d3b1c5ca8bf31ac9358c
              lifecycle_state,
              event_queue,
              connection_context,
-@@ -140,6 +151,11 @@ impl ClientCoreContext {
+@@ -140,6 +153,11 @@ impl ClientCoreContext {
          }
      }
  
@@ -1329,7 +1522,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..8f303dd34280d3b1c5ca8bf31ac9358c
      pub fn resume(&self) {
          dbg_client_core!("resume");
  
-@@ -218,6 +234,27 @@ impl ClientCoreContext {
+@@ -218,6 +236,27 @@ impl ClientCoreContext {
          }
      }
  
@@ -2347,7 +2540,7 @@ index f764033a20a89656e24ff599ce2a39cd5f8338df..d63644247eacf32df8343608ce83fdb2
                          decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
                      }
 diff --git a/alvr/client_core/src/video_decoder/mod.rs b/alvr/client_core/src/video_decoder/mod.rs
-index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e463d7a9f 100644
+index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..e7724ccda52e67bf8d67ea760090bc4066e80383 100644
 --- a/alvr/client_core/src/video_decoder/mod.rs
 +++ b/alvr/client_core/src/video_decoder/mod.rs
 @@ -1,14 +1,22 @@
@@ -2426,7 +2619,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
      if complete {
          FrameDecision::DecodeComplete
      } else if age < deadline {
-@@ -130,22 +154,269 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
+@@ -130,22 +154,330 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
      let mean = samples.iter().sum::<f32>() / n as f32;
      format!(
          "min {:.2} mean {:.2} p50 {:.2} p95 {:.2} p99 {:.2} max {:.2}",
@@ -2479,6 +2672,13 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
 +    pub condvar_calls: u64,
 +}
 +
++struct Held {
++    frame: (Duration, usize),
++    published_at: Instant,
++    release_token: u64,
++    was_late: bool,
++}
++
 +#[derive(Default)]
 +struct FrameSlotState {
 +    handoff_enabled: bool,
@@ -2497,6 +2697,12 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
 +    pending_was_late: bool,
 +    empty_since: Option<Instant>,
 +    in_flight: bool,
++    /// Opt-in frame hold: a newer publication moves the untaken pending frame here instead of
++    /// superseding it, and the next take() shows it if it is no older than `hold`. Absorbs two
++    /// publications landing in one display period at the cost of one period's extra latency
++    /// for that frame. Not compatible with copy handoff or ready FDs (one pending FD only).
++    hold: Option<Duration>,
++    held: Option<Held>,
 +    #[cfg(test)]
 +    consumer_waiters: usize,
 +    #[cfg(test)]
@@ -2511,6 +2717,10 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
 +    /// the consumer lease remains protected until a subsequent frame is taken.
 +    pub fn enable_copy_handoff(&self) {
 +        self.inner.lock().handoff_enabled = true;
++    }
++    pub fn set_hold(&self, hold: Option<Duration>) {
++        let mut state = self.inner.lock();
++        state.hold = hold.filter(|_| !state.handoff_enabled);
 +    }
 +    pub fn wait_producer_ready(&self, running: impl Fn() -> bool) -> bool {
 +        let mut state = self.inner.lock();
@@ -2565,6 +2775,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
 +        // Keep the watermark after take() to reject late independent completions.
 +        if let Some(order) = order {
 +            if state.latest_order.is_some_and(|latest| order <= latest) {
++                crate::frame_trace::record(b'O', timestamp.as_nanos() as u64, order as i64, 0);
 +                state.superseded += 1;
 +                state.freshness.superseded += 1;
 +                return false;
@@ -2576,10 +2787,21 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
 +        if let Some(late) = late {
 +            state.freshness.late[freshness_bucket(late)] += 1;
 +        }
-+        if state.pending.replace((timestamp, buffer)).is_some() {
-+            state.superseded += 1;
-+            state.freshness.superseded += 1;
-+            if state.pending_was_late { state.freshness.late_superseded += 1; }
++        let hold = state.hold.is_some() && !state.freshness.ready_active;
++        if let Some(old) = state.pending.replace((timestamp, buffer)) {
++            let older = if hold {
++                let held = Held { frame: old, published_at: state.pending_published_at.unwrap_or(now),
++                                  release_token: state.pending_release_token, was_late: state.pending_was_late };
++                state.held.replace(held).map(|h| (h.frame, h.was_late))
++            } else {
++                Some((old, state.pending_was_late))
++            };
++            if let Some(((old, _), was_late)) = older {
++                crate::frame_trace::record(b'X', old.as_nanos() as u64, 0, 0);
++                state.superseded += 1;
++                state.freshness.superseded += 1;
++                if was_late { state.freshness.late_superseded += 1; }
++            }
 +        }
 +        state.pending_published_at = Some(now);
 +        state.pending_was_late = late.is_some();
@@ -2636,18 +2858,39 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
      pub fn take(&self) -> Option<(Duration, usize)> {
 -        self.inner.lock().take()
 +        let mut state = self.inner.lock();
++        if let Some(held) = state.held.take() {
++            let age = held.published_at.elapsed();
++            if state.hold.is_some_and(|limit| age <= limit) {
++                state.freshness.taken += 1;
++                state.freshness.margin[freshness_bucket(age)] += 1;
++                crate::frame_trace::record(b'T', held.frame.0.as_nanos() as u64, age.as_micros() as i64, 1);
++                if held.was_late { state.freshness.late_taken += 1; }
++                state.leased = held.frame.1;
++                state.leased_release_token = held.release_token;
++                #[cfg(unix)]
++                { state.ready_fds.lease(held.frame.1); }
++                return Some(held.frame);
++            }
++            crate::frame_trace::record(b'X', held.frame.0.as_nanos() as u64, 0, 1);
++            state.superseded += 1;
++            state.freshness.superseded += 1;
++            if held.was_late { state.freshness.late_superseded += 1; }
++        }
 +        let Some(frame) = state.pending.take() else {
 +            // Repeated polls within one wait count once: this marks an empty episode.
 +            if state.empty_since.is_none() {
++                crate::frame_trace::record(b'E', 0, 0, 0);
 +                state.empty_since = Some(Instant::now());
 +                state.freshness.empty += 1;
 +            }
 +            return None;
 +        };
 +        state.freshness.taken += 1;
-+        if let Some(published) = state.pending_published_at.take() {
-+            state.freshness.margin[freshness_bucket(published.elapsed())] += 1;
++        let margin = state.pending_published_at.take().map(|published| published.elapsed());
++        if let Some(margin) = margin {
++            state.freshness.margin[freshness_bucket(margin)] += 1;
 +        }
++        crate::frame_trace::record(b'T', frame.0.as_nanos() as u64, margin.map_or(-1, |m| m.as_micros() as i64), 0);
 +        if std::mem::take(&mut state.pending_was_late) { state.freshness.late_taken += 1; }
 +        state.leased = frame.1;
 +        state.leased_release_token = state.pending_release_token;
@@ -2663,6 +2906,11 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
 +        let state = self.inner.lock();
 +        [state.leased, state.pending.map_or(0, |(_, buffer)| buffer)]
 +    }
++    /// `protected_buffers` plus the held frame's buffer, read under one lock.
++    pub fn protected_buffers3(&self) -> [usize; 3] {
++        let state = self.inner.lock();
++        [state.leased, state.pending.map_or(0, |(_, buffer)| buffer), state.held.as_ref().map_or(0, |h| h.frame.1)]
++    }
 +    pub fn leased_release_token(&self, buffer: usize) -> u64 {
 +        let state = self.inner.lock();
 +        if state.leased == buffer { state.leased_release_token } else { 0 }
@@ -2675,6 +2923,12 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
 +}
 +
 +/// Bound the experimental independent TCP decoders; the default stays one worker.
++/// `debug.q3pw.frame_hold_us`: 1-10000 enables the frame hold with that age limit; anything else
++/// leaves it off.
++pub fn frame_hold(value: &str) -> Option<Duration> {
++    value.trim().parse::<u64>().ok().filter(|us| (1..=10_000).contains(us)).map(Duration::from_micros)
++}
++
 +pub fn pyrowave_worker_count(value: &str) -> usize {
 +    if value.trim() == "2" { 2 } else { 1 }
 +}
@@ -2701,7 +2955,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
      }
  }
  
-@@ -203,6 +474,64 @@ pub struct VideoDecoderSource {
+@@ -203,6 +535,64 @@ pub struct VideoDecoderSource {
  }
  
  impl VideoDecoderSource {
@@ -2766,7 +3020,16 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
      /// If a frame is available, return the timestamp and the AHardwareBuffer.
      pub fn get_frame(&mut self) -> Option<(Duration, *mut std::ffi::c_void)> {
          #[cfg(target_os = "android")]
-@@ -229,7 +558,9 @@ fn logcat_info(tag: &str, message: &str) {
+@@ -219,7 +609,7 @@ impl VideoDecoderSource {
+ }
+ 
+ #[cfg(target_os = "android")]
+-fn logcat_info(tag: &str, message: &str) {
++pub(crate) fn logcat_info(tag: &str, message: &str) {
+     extern "C" {
+         fn __android_log_write(
+             prio: i32,
+@@ -229,7 +619,9 @@ fn logcat_info(tag: &str, message: &str) {
      }
      let tag = std::ffi::CString::new(tag).unwrap_or_default();
      let text = std::ffi::CString::new(message).unwrap_or_default();
@@ -2777,7 +3040,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
  }
  
  // report_frame_decoded: (target_timestamp: Duration) -> ()
-@@ -249,7 +580,9 @@ pub fn create_decoder(
+@@ -249,7 +641,9 @@ pub fn create_decoder(
              }
          }
          if config.codec == CodecType::PyroWave
@@ -2788,7 +3051,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
          {
              let (sink, source) = pyrowave_udp::video_decoder_split(
                  config.clone(),
-@@ -304,6 +637,192 @@ pub fn create_decoder(
+@@ -304,6 +698,264 @@ pub fn create_decoder(
  mod tests {
      use super::*;
  
@@ -2801,6 +3064,78 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
 +            assert!(Instant::now() < deadline, "consumer never parked");
 +            std::thread::yield_now();
 +        }
++    }
++
++    fn ms(value: u64) -> Duration { Duration::from_millis(value) }
++
++    #[test]
++    fn frame_hold_property_is_bounded() {
++        assert_eq!(frame_hold(""), None);
++        assert_eq!(frame_hold("0"), None);
++        assert_eq!(frame_hold(" 6000 "), Some(Duration::from_micros(6000)));
++        assert_eq!(frame_hold("10001"), None);
++        assert_eq!(frame_hold("-5"), None);
++    }
++
++    #[test]
++    fn hold_shows_both_frames_of_a_burst_in_order() {
++        let slot = FrameSlot::default();
++        slot.set_hold(Some(Duration::from_secs(1)));
++        assert!(slot.publish_fenced(ms(1), 0x10, 1, 11));
++        assert!(slot.publish_fenced(ms(2), 0x20, 2, 22));
++        assert_eq!(slot.superseded(), 0);
++        assert_eq!(slot.protected_buffers3(), [0, 0x20, 0x10]);
++        assert_eq!(slot.take(), Some((ms(1), 0x10)));
++        assert_eq!(slot.leased_release_token(0x10), 11);
++        // The newer frame stays pending and protected while the held one is leased.
++        assert_eq!(slot.protected_buffers3(), [0x10, 0x20, 0]);
++        assert_eq!(slot.take(), Some((ms(2), 0x20)));
++        assert_eq!(slot.leased_release_token(0x20), 22);
++        assert_eq!(slot.take(), None);
++    }
++
++    #[test]
++    fn hold_keeps_at_most_one_older_frame() {
++        let slot = FrameSlot::default();
++        slot.set_hold(Some(Duration::from_secs(1)));
++        for (i, buffer) in [0x10, 0x20, 0x30].into_iter().enumerate() {
++            assert!(slot.publish_fenced(ms(i as u64), buffer, i as u64 + 1, 0));
++        }
++        assert_eq!(slot.superseded(), 1);
++        assert_eq!(slot.take(), Some((ms(1), 0x20)));
++        assert_eq!(slot.take(), Some((ms(2), 0x30)));
++    }
++
++    #[test]
++    fn stale_held_frame_is_dropped_for_the_newer_one() {
++        let slot = FrameSlot::default();
++        slot.set_hold(Some(Duration::from_micros(1)));
++        assert!(slot.publish_fenced(ms(1), 0x10, 1, 0));
++        assert!(slot.publish_fenced(ms(2), 0x20, 2, 0));
++        std::thread::sleep(ms(2));
++        assert_eq!(slot.take(), Some((ms(2), 0x20)));
++        assert_eq!(slot.superseded(), 1);
++        assert_eq!(slot.protected_buffers3(), [0x20, 0, 0]);
++    }
++
++    #[test]
++    fn without_hold_the_newest_frame_wins() {
++        let slot = FrameSlot::default();
++        assert!(slot.publish_fenced(ms(1), 0x10, 1, 0));
++        assert!(slot.publish_fenced(ms(2), 0x20, 2, 0));
++        assert_eq!(slot.protected_buffers3(), [0, 0x20, 0]);
++        assert_eq!(slot.take(), Some((ms(2), 0x20)));
++        assert_eq!(slot.take(), None);
++    }
++
++    #[test]
++    fn hold_is_refused_with_copy_handoff() {
++        let slot = FrameSlot::default();
++        slot.enable_copy_handoff();
++        slot.set_hold(Some(Duration::from_secs(1)));
++        assert!(slot.publish_fenced(ms(1), 0x10, 1, 0));
++        assert!(slot.publish_fenced(ms(2), 0x20, 2, 0));
++        assert_eq!(slot.superseded(), 1);
 +    }
 +
 +    #[test]
@@ -2981,7 +3316,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
      #[test]
      fn config_round_trips_the_encoder_blob() {
          let mut buf = Vec::new();
-@@ -312,53 +831,97 @@ mod tests {
+@@ -312,53 +964,97 @@ mod tests {
          buf.push(1);
          buf.push(0);
          let c = parse_pyrowave_config(&buf).unwrap();
@@ -3092,7 +3427,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
          assert_eq!(dist(&mut Vec::new()), "-");
      }
  
-@@ -392,4 +955,145 @@ mod tests {
+@@ -392,4 +1088,145 @@ mod tests {
          assert_eq!(slot.take(), Some((Duration::from_millis(2), 0x20)));
          assert!(slot.take().is_none());
      }
@@ -3239,7 +3574,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9c81ba6ed 100644
+index 2e22601497aaca790db25fa1b37423948fdfaa86..4b46b81f5b7cd18e97bc90f7d9a8e1a13ca832f0 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -3290,7 +3625,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
  #[repr(C)]
  struct PyroClient {
      _private: [u8; 0],
-@@ -33,36 +51,74 @@ struct FrameInfo {
+@@ -33,36 +51,78 @@ struct FrameInfo {
      convert_ms: f64,
      total_ms: f64,
      complete: i32,
@@ -3320,6 +3655,8 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
 +        protected_a: *mut c_void,
 +        protected_b: *mut c_void,
      ) -> i32;
++    fn pyroclient_decode_guarded3(c: *mut PyroClient, out: *mut *mut c_void, info: *mut FrameInfo,
++        protected_a: *mut c_void, protected_b: *mut c_void, protected_c: *mut c_void) -> i32;
      fn pyroclient_destroy(c: *mut PyroClient);
 +    fn pyroclient_submit_guarded(c: *mut PyroClient, out: *mut *mut c_void,
 +        info: *mut FrameInfo, protected_a: *mut c_void, protected_b: *mut c_void, ready_fd: *mut i32) -> i32;
@@ -3355,7 +3692,9 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
  impl VideoDecoderSink {
      pub fn push_frame_nal(&mut self, timestamp: Duration, data: &[u8]) -> Result<bool> {
          let mut slot = self.pending.frame.lock();
-         if slot.is_some() {
+-        if slot.is_some() {
++        if let Some(old) = slot.as_ref() {
++            crate::frame_trace::record(b'R', old.0.as_nanos() as u64, old.2 as i64, 0);
 +            self.pending.skipped.fetch_add(1, Ordering::Relaxed);
              warn!("PyroWave: frame replaced before decode (decoder slower than the stream)");
          }
@@ -3364,12 +3703,13 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
 +        // Timestamp after copying: this is when a complete payload is usable.
 +        // Disabled diagnostics do not read the clock or alter latest-frame policy.
 +        let received_at = self.producer_probe.then(Instant::now);
++        crate::frame_trace::record(b'P', timestamp.as_nanos() as u64, self.next_order as i64, data.len() as i64);
 +        *slot = Some((timestamp, data, self.next_order, received_at));
 +        self.next_order = self.next_order.wrapping_add(1);
          self.pending.ready.notify_one();
          Ok(true)
      }
-@@ -71,13 +127,39 @@ impl VideoDecoderSink {
+@@ -71,13 +131,39 @@ impl VideoDecoderSink {
  pub struct VideoDecoderSource {
      running: Arc<AtomicBool>,
      pending: Arc<Pending>,
@@ -3411,7 +3751,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
      }
  }
  
-@@ -85,7 +167,7 @@ impl Drop for VideoDecoderSource {
+@@ -85,7 +171,7 @@ impl Drop for VideoDecoderSource {
      fn drop(&mut self) {
          self.running.store(false, Ordering::Relaxed);
          self.pending.ready.notify_all();
@@ -3420,7 +3760,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
              t.join().ok();
          }
      }
-@@ -99,18 +181,85 @@ pub fn video_decoder_split(
+@@ -99,25 +185,102 @@ pub fn video_decoder_split(
      let pending = Arc::new(Pending {
          frame: Mutex::new(None),
          ready: Condvar::new(),
@@ -3485,6 +3825,15 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
 +        cfg.width==4160 && cfg.height==2208 && !cfg.chroma444 && cfg.wavelet==2 && cfg.decode_path==2,
 +        low_priority, other_mode);
 +    super::logcat_info("PYROWAVE", &format!("[Q3PW_PRERECORD_POLICY] eligible={} native420_single_low_worker=true", prerecord_requested as u8));
++    // debug.q3pw.frame_hold_us (opt-in): keep one older decoded frame for the next display period
++    // instead of superseding it, if it is still that young when selected (FrameSlot::set_hold).
++    // Only on the plain synchronous single-decoder path; it needs a fourth output buffer.
++    let hold_len = unsafe { libc::__system_property_get(c"debug.q3pw.frame_hold_us".as_ptr(), property.as_mut_ptr().cast()) };
++    let hold = super::frame_hold(&String::from_utf8_lossy(&property[..hold_len.max(0) as usize]))
++        .filter(|_| workers == 1 && !handoff && !ready_requested && !prerecord_requested);
++    decoded.set_hold(hold);
++    super::logcat_info("PYROWAVE", &format!("[Q3PW_FRAME_HOLD] hold_us={} ring={}",
++        hold.map_or(0, |h| h.as_micros()), if hold.is_some() { 4 } else { 3 }));
 +    let report_frame_decoded = Arc::new(report_frame_decoded);
 +    let mut threads = Vec::with_capacity(workers);
 +    for worker_index in 0..workers {
@@ -3509,15 +3858,16 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
                      cfg.width,
                      cfg.height,
                      cfg.chroma444 as i32,
-@@ -118,6 +267,7 @@ pub fn video_decoder_split(
-                     3,
+                     cfg.full_range as i32,
+-                    3,
++                    if hold.is_some() { 4 } else { 3 },
                      cfg.wavelet as i32,
                      cfg.decode_path as i32,
 +                    low_priority as i32,
                  )
              };
              if client.is_null() {
-@@ -128,64 +278,251 @@ pub fn video_decoder_split(
+@@ -128,64 +291,259 @@ pub fn video_decoder_split(
                  )));
                  return;
              }
@@ -3594,6 +3944,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
 -                if pushed < 0 {
 -                    warn!("PyroWave: push_packet failed ({pushed})");
 +                decoded.mark_in_flight();
++                crate::frame_trace::record(b'S', timestamp.as_nanos() as u64, order as i64, 0);
 +                if ready_requested && ready_checked.elapsed() >= Duration::from_secs(1) {
 +                    ready_checked = Instant::now();
 +                    let active = ready_active_property();
@@ -3617,7 +3968,9 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
                  let mut info = FrameInfo::default();
 -                let rc = unsafe { pyroclient_decode(client, &mut out, &mut info) };
 -                if rc != 0 || out.is_null() {
-+                let protected = decoded.protected_buffers();
++                // One snapshot: a take() between separate reads could lease the held buffer unguarded.
++                let protected3 = decoded.protected_buffers3();
++                let protected = [protected3[0], protected3[1]];
 +                let mut ready_fd = -1;
 +                let native_start = producer_probe.then(Instant::now);
 +                let rc = unsafe {
@@ -3628,6 +3981,8 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
 +                            protected[0] as *mut c_void,protected[1] as *mut c_void)
 +                    } else if ready_active { pyroclient_submit_guarded(client, &mut out, &mut info,
 +                        protected[0] as *mut c_void, protected[1] as *mut c_void, &mut ready_fd) }
++                    else if hold.is_some() { pyroclient_decode_guarded3(client, &mut out, &mut info,
++                        protected[0] as *mut c_void, protected[1] as *mut c_void, protected3[2] as *mut c_void) }
 +                    else { pyroclient_decode_guarded(
 +                        client,
 +                        &mut out,
@@ -3705,6 +4060,8 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
 +                        super::logcat_info("PYROWAVE", &format!("[Q3PW_PRODUCER_PROBE] {}", opportunities.take().row()));
 +                    }
 +                }
++                crate::frame_trace::record(b'D', timestamp.as_nanos() as u64, (info.decode_ms * 1000.0) as i64,
++                    (info.total_ms * 1000.0) as i64);
 +                let token = if release_requested { unsafe { pyroclient_output_release_token(out) } } else { 0 };
 +                let early = ready_fd.is_some();
 +                let published = if let Some(fd) = ready_fd {
@@ -3723,6 +4080,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
 +                        alvr_common::info!("[Q3PW_READY_FD] submitted={submitted_early} completed={completed_early} max_inflight=1");
 +                    }
 +                }
++                crate::frame_trace::record(b'U', timestamp.as_nanos() as u64, published as i64, (info.wait_ms * 1000.0) as i64);
 +                if published {
 +                    report_frame_decoded(Ok(timestamp));
 +                }
@@ -4806,6 +5164,243 @@ index da58258ad92ba71c0d44e7d437bedf084cf6940f..dfefe0008969564b5b88f363c733f0df
 +        assert_eq!(take().unwrap().direct_eye_copies, 0);
      }
  }
+diff --git a/alvr/client_core/src/wired_video.rs b/alvr/client_core/src/wired_video.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..2216a6a1c3dea8d38cc85d7fa05dbc77a310a4cd
+--- /dev/null
++++ b/alvr/client_core/src/wired_video.rs
+@@ -0,0 +1,231 @@
++//! PyroWave's parallel wired video connections (alvr_packets::PYROWAVE_WIRED_PORT and up). Each
++//! connection carries one contiguous slice of every frame; a frame whose slices have all arrived
++//! goes to the decoder exactly as if it had arrived on ALVR's video stream.
++
++use crate::connection::ConnectionContext;
++use alvr_common::{info, parking_lot::Mutex, warn, ConnectionState};
++use alvr_packets::{
++    PyroWaveSliceHeader, PYROWAVE_WIRED_HEADER_LEN, PYROWAVE_WIRED_HELLO,
++    PYROWAVE_WIRED_MAX_CONNECTIONS, PYROWAVE_WIRED_PORT,
++};
++use std::{
++    io::{ErrorKind, Read, Write},
++    net::{Ipv4Addr, TcpListener, TcpStream},
++    sync::Arc,
++    thread::{self, JoinHandle},
++    time::{Duration, Instant},
++};
++
++const READ_TIMEOUT: Duration = Duration::from_millis(500);
++const ACCEPT_POLL: Duration = Duration::from_millis(20);
++/// Frames older than the newest complete one are dropped, so only a few can be pending at once.
++const MAX_PENDING: usize = 8;
++
++fn is_streaming(ctx: &ConnectionContext) -> bool {
++    *ctx.state.read() == ConnectionState::Streaming
++}
++
++/// Binds the listeners before the client reports StreamReady, so the server's connects wait in
++/// the backlog. Loopback only: adb delivers forwarded connections on the headset's loopback.
++pub fn listen(count: u32) -> Vec<TcpListener> {
++    let count = count.min(PYROWAVE_WIRED_MAX_CONNECTIONS as u32) as u16;
++    let mut listeners = vec![];
++    for i in 0..count {
++        match TcpListener::bind((Ipv4Addr::LOCALHOST, PYROWAVE_WIRED_PORT + i)) {
++            Ok(listener) => listeners.push(listener),
++            Err(e) => {
++                // The server then gets no hello on this port and keeps video on the stream socket.
++                warn!("PyroWave wired video port {}: {e}", PYROWAVE_WIRED_PORT + i);
++                return vec![];
++            }
++        }
++    }
++    listeners
++}
++
++#[derive(Default)]
++struct Assembly {
++    pending: Vec<(PyroWaveSliceHeader, Vec<u8>, usize)>,
++    last_complete: u64,
++    complete: u64,
++    dropped: u64,
++    rejected: u64,
++    last_log: Option<Instant>,
++}
++
++impl Assembly {
++    fn push(&mut self, slice: PyroWaveSliceHeader, data: &[u8]) -> Option<(PyroWaveSliceHeader, Vec<u8>)> {
++        if slice.timestamp_ns <= self.last_complete {
++            self.dropped += 1;
++            return None;
++        }
++        let index = match self
++            .pending
++            .iter()
++            .position(|(h, ..)| h.timestamp_ns == slice.timestamp_ns)
++        {
++            Some(index) => index,
++            None => {
++                crate::frame_trace::record(b'F', slice.timestamp_ns, slice.frame_len as i64, slice.offset as i64);
++                if self.pending.len() >= MAX_PENDING {
++                    self.pending.remove(0);
++                    self.dropped += 1;
++                }
++                self.pending
++                    .push((slice, vec![0; slice.frame_len as usize], 0));
++                self.pending.len() - 1
++            }
++        };
++        let (header, frame, received) = &mut self.pending[index];
++        if header.frame_len != slice.frame_len {
++            self.rejected += 1;
++            return None;
++        }
++        let start = slice.offset as usize;
++        frame[start..start + data.len()].copy_from_slice(data);
++        *received += data.len();
++        if *received < frame.len() {
++            return None;
++        }
++        let (header, frame, _) = self.pending.remove(index);
++        self.last_complete = header.timestamp_ns;
++        let before = self.pending.len();
++        self.pending
++            .retain(|(h, ..)| h.timestamp_ns > header.timestamp_ns);
++        self.dropped += (before - self.pending.len()) as u64;
++        self.complete += 1;
++        if self.last_log.is_none_or(|t| t.elapsed() > Duration::from_secs(5)) {
++            self.last_log = Some(Instant::now());
++            info!(
++                "PyroWave wired video: {} frames complete, {} dropped, {} rejected",
++                self.complete, self.dropped, self.rejected
++            );
++        }
++        Some((header, frame))
++    }
++}
++
++/// Reads exactly `buf.len()` bytes, giving up when the stream ends or the connection closes.
++fn read_full(ctx: &ConnectionContext, stream: &mut TcpStream, buf: &mut [u8]) -> bool {
++    let mut done = 0;
++    while done < buf.len() {
++        match stream.read(&mut buf[done..]) {
++            Ok(0) => return false,
++            Ok(n) => done += n,
++            Err(e) if matches!(e.kind(), ErrorKind::WouldBlock | ErrorKind::TimedOut | ErrorKind::Interrupted) => {
++                if !is_streaming(ctx) {
++                    return false;
++                }
++            }
++            Err(_) => return false,
++        }
++    }
++    true
++}
++
++fn accept(ctx: &ConnectionContext, listener: &TcpListener) -> Option<TcpStream> {
++    listener.set_nonblocking(true).ok()?;
++    while is_streaming(ctx) {
++        match listener.accept() {
++            Ok((stream, _)) => return Some(stream),
++            Err(e) if e.kind() == ErrorKind::WouldBlock => thread::sleep(ACCEPT_POLL),
++            Err(e) => {
++                warn!("PyroWave wired video accept: {e}");
++                return None;
++            }
++        }
++    }
++    None
++}
++
++fn deliver(ctx: &ConnectionContext, header: PyroWaveSliceHeader, frame: &[u8]) {
++    let timestamp = Duration::from_nanos(header.timestamp_ns);
++    crate::frame_trace::record(b'A', header.timestamp_ns, frame.len() as i64, 0);
++    if let Some(stats) = &mut *ctx.statistics_manager.lock() {
++        stats.report_video_packet_received(timestamp);
++    }
++    crate::push_foveation_center(timestamp, header.foveation_center);
++    // PyroWave frames are independent, so a frame the decoder refuses needs no IDR.
++    if let Some(callback) = ctx.decoder_callback.lock().as_mut() {
++        callback(timestamp, frame);
++    }
++}
++
++fn receive(ctx: &ConnectionContext, listener: TcpListener, assembly: &Mutex<Assembly>) -> Option<()> {
++    let mut stream = accept(ctx, &listener)?;
++    drop(listener);
++    stream.set_nonblocking(false).ok()?;
++    stream.set_nodelay(true).ok()?;
++    stream.set_read_timeout(Some(READ_TIMEOUT)).ok()?;
++    stream.write_all(&PYROWAVE_WIRED_HELLO).ok()?;
++    let mut head = [0u8; PYROWAVE_WIRED_HEADER_LEN];
++    let mut slice = Vec::new();
++    while is_streaming(ctx) {
++        if !read_full(ctx, &mut stream, &mut head) {
++            return None;
++        }
++        let Some(header) = PyroWaveSliceHeader::from_bytes(&head) else {
++            warn!("PyroWave wired video: malformed slice header, closing the connection");
++            return None;
++        };
++        slice.resize(header.len as usize, 0);
++        if !read_full(ctx, &mut stream, &mut slice) {
++            return None;
++        }
++        let complete = assembly.lock().push(header, &slice);
++        if let Some((header, frame)) = complete {
++            deliver(ctx, header, &frame);
++        }
++    }
++    Some(())
++}
++
++/// One thread per connection; each exits when the stream ends or its connection closes.
++pub fn spawn_receivers(ctx: &Arc<ConnectionContext>, listeners: Vec<TcpListener>) -> Vec<JoinHandle<()>> {
++    let assembly = Arc::new(Mutex::new(Assembly::default()));
++    listeners
++        .into_iter()
++        .enumerate()
++        .map(|(index, listener)| {
++            let ctx = Arc::clone(ctx);
++            let assembly = Arc::clone(&assembly);
++            thread::spawn(move || {
++                crate::thread_hints::publish_current(
++                    crate::thread_hints::ThreadRole::ApplicationWorker,
++                    ["wired_video_0", "wired_video_1", "wired_video_2", "wired_video_3"][index.min(3)],
++                );
++                receive(&ctx, listener, &assembly);
++            })
++        })
++        .collect()
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    fn slice(ts: u64, frame_len: u32, offset: u32, len: u32) -> PyroWaveSliceHeader {
++        PyroWaveSliceHeader { timestamp_ns: ts, frame_len, offset, len, is_idr: false, foveation_center: [[0.0; 2]; 2] }
++    }
++
++    #[test]
++    fn slices_in_any_order_make_one_frame() {
++        let mut a = Assembly::default();
++        assert!(a.push(slice(10, 6, 3, 3), &[4, 5, 6]).is_none());
++        let (h, frame) = a.push(slice(10, 6, 0, 3), &[1, 2, 3]).unwrap();
++        assert_eq!(h.timestamp_ns, 10);
++        assert_eq!(frame, [1, 2, 3, 4, 5, 6]);
++        assert!(a.pending.is_empty());
++    }
++
++    #[test]
++    fn older_frames_are_dropped_once_a_newer_one_completes() {
++        let mut a = Assembly::default();
++        assert!(a.push(slice(10, 4, 0, 2), &[1, 2]).is_none());
++        assert!(a.push(slice(20, 2, 0, 2), &[7, 8]).is_some());
++        assert!(a.pending.is_empty());
++        assert_eq!(a.dropped, 1);
++        assert!(a.push(slice(10, 4, 2, 2), &[3, 4]).is_none());
++        assert_eq!(a.dropped, 2);
++    }
++}
 diff --git a/alvr/client_openxr/Cargo.toml b/alvr/client_openxr/Cargo.toml
 index 995394b026f20901526723e3c45a6459e6f3a536..d9d9cf1e00309959aa02bab31454c848d7a1bcf8 100644
 --- a/alvr/client_openxr/Cargo.toml
@@ -4957,7 +5552,7 @@ index 7765bb459f73e9d7d5a9f296a498f09a0df43706..1a2b8152c628566294dfb840971d5b3e
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd8803191d3cb 100644
+index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7ad92f0530 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -1,10 +1,16 @@
@@ -5362,9 +5957,9 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd880
 +                    } else {
 +                        stream.poll_frame(poll_interval);
 +                    }
-                 }
-             }
- 
++                }
++            }
++
 +            if let Some(probe) = &mut refresh_probe {
 +                probe.request_next(&xr_session);
 +            }
@@ -5384,18 +5979,32 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd880
 +                        cadence_probe = Some(cadence_probe::CadenceProbe::new(hz, seconds, restore));
 +                    }
 +                    Err(err) => error!("[Q3PW_CADENCE] target_hz={hz} request_rejected={err:?}"),
-+                }
-+            }
-+
+                 }
+             }
+ 
 +            let wait_started = loop_probe.then(Instant::now);
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -576,12 +787,65 @@ pub fn entry_point() {
+@@ -576,12 +787,79 @@ pub fn entry_point() {
                      panic!();
                  }
              };
 +            let wait_call_ms = wait_started.map_or(0.0, |s| s.elapsed().as_secs_f64() * 1000.0);
++            if alvr_client_core::frame_trace::enabled() {
++                use alvr_client_core::frame_trace::{mono_ns, record, record_at};
++                record(b'W', frame_state.predicted_display_time.as_nanos() as u64,
++                    frame_state.predicted_display_period.as_nanos(), frame_state.should_render as i64);
++                // Once a second: XrTime against CLOCK_MONOTONIC, bracketed by two monotonic reads.
++                static LAST_CALIBRATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
++                let before = mono_ns();
++                if before.saturating_sub(LAST_CALIBRATION.load(std::sync::atomic::Ordering::Relaxed)) > 1_000_000_000 {
++                    LAST_CALIBRATION.store(before, std::sync::atomic::Ordering::Relaxed);
++                    if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
++                        record_at(b'K', before, now.as_nanos() as u64, (mono_ns() - before) as i64, 0);
++                    }
++                }
++            }
              let frame_interval =
                  Duration::from_nanos(frame_state.predicted_display_period.as_nanos() as _);
              poll_interval = frame_interval;
@@ -5458,7 +6067,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd880
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +869,15 @@ pub fn entry_point() {
+@@ -605,15 +883,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -5483,7 +6092,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd880
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,13 +885,16 @@ pub fn entry_point() {
+@@ -621,13 +899,17 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -5498,10 +6107,11 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd880
 +            let begin_started = loop_probe.then(Instant::now);
              xr_frame_stream.begin().unwrap();
 +            let begin_ms = begin_started.map_or(0.0, |s| s.elapsed().as_secs_f64() * 1000.0);
++            alvr_client_core::frame_trace::record(b'B', 0, 0, 0);
  
              if !frame_state.should_render {
                  xr_frame_stream
-@@ -654,22 +921,89 @@ pub fn entry_point() {
+@@ -654,22 +936,90 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
@@ -5567,6 +6177,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd880
 +            } else { to_xr_time(display_time) };
 +            let end_started = loop_probe.then(Instant::now);
 +            let res = xr_frame_stream.end(end_time, blend_mode, &layers);
++            alvr_client_core::frame_trace::record(b'N', end_time.as_nanos() as u64, res.is_ok() as i64, streaming as i64);
 +            #[cfg(target_os = "android")]
 +            if res.is_ok() && surface_layer.is_some() && !surface_layer_logged {
 +                error!("[Q3PW_SURFACE_CHART] layer_submitted=true xr_end_ok=true static_only=true");
@@ -5599,7 +6210,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd880
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +1032,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +1048,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
@@ -6572,7 +7183,7 @@ index 0000000000000000000000000000000000000000..be1205ccfde1989670f4732b16b7982a
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c5af18260 100644
+index b87dfe995e4e278f3903d05f84a50db089f21cfc..71ca8db6ec7a5a09cbc7b470c7c1ff899de9a39c 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -1,3 +1,6 @@
@@ -6680,7 +7291,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
              input_thread: None,
              input_thread_running,
              config,
-@@ -235,8 +261,36 @@ impl StreamContext {
+@@ -235,8 +261,38 @@ impl StreamContext {
              renderer,
              decoder: None,
              pending_frame: None,
@@ -6705,6 +7316,8 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
 +                && crate::extra_extensions::perf_settings::system_property("debug.q3pw.fresh_probe") == "1",
 +            fresh_last: Instant::now(),
          };
++        alvr_client_core::frame_trace::start(platform == Platform::Quest3
++            && crate::extra_extensions::perf_settings::system_property("debug.q3pw.frame_trace") == "1");
  
 +        alvr_graphics::log_quest_experiment(format!(
 +            "[Q3PW_PRE_WAIT] requested={} (requires Quest3 PyroWave and early_poll)",
@@ -6717,7 +7330,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
          this.update_reference_space();
  
          this
-@@ -280,6 +334,10 @@ impl StreamContext {
+@@ -280,6 +336,10 @@ impl StreamContext {
              let refresh_rate = self.config.refresh_rate_hint;
              let running = Arc::clone(&self.input_thread_running);
              move || {
@@ -6728,7 +7341,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
                  stream_input_loop(
                      &core_ctx,
                      xr_session,
-@@ -310,6 +368,24 @@ impl StreamContext {
+@@ -310,6 +370,24 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
@@ -6746,14 +7359,14 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
 +                crate::extra_extensions::perf_settings::system_property("debug.q3pw.async_eye_copy") == "1",
 +                crate::extra_extensions::perf_settings::system_property("debug.q3pw.copy_wait_us")
 +                    .parse::<i32>().unwrap_or(0).clamp(0, 2000),
-+                crate::extra_extensions::perf_settings::system_property("debug.q3pw.raw_srgb_copy") == "1",
++                crate::extra_extensions::perf_settings::system_property("debug.q3pw.raw_srgb_copy") != "0",
 +                crate::extra_extensions::perf_settings::system_property("debug.q3pw.image_cache") == "1",
 +            );
 +            video_decoder::set_pyrowave_refresh_hz(self.config.refresh_rate_hint);
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +414,42 @@ impl StreamContext {
+@@ -338,12 +416,42 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -6798,13 +7411,14 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +461,25 @@ impl StreamContext {
+@@ -355,8 +463,26 @@ impl StreamContext {
          }
      }
  
 +    fn poll_eye_copy(&self) -> bool {
 +        let (ready, completed_ms) = self.renderer.poll_import_copy();
 +        for ms in completed_ms {
++            alvr_client_core::frame_trace::record(b'Y', 0, (ms * 1000.0) as i64, 0);
 +            video_decoder::telemetry::record_eye_completion(Some(ms));
 +        }
 +        if !ready { video_decoder::telemetry::record_eye_deferral(); }
@@ -6824,11 +7438,12 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
      }
  
      pub fn render(
-@@ -364,15 +487,151 @@ impl StreamContext {
+@@ -364,15 +490,152 @@ impl StreamContext {
          frame_interval: Duration,
          vsync_time: Duration,
      ) -> (ProjectionLayerBuilder, Duration) {
 +        let selection_started = self.selection_probe.then(Instant::now);
++        alvr_client_core::frame_trace::record(b'G', vsync_time.as_nanos() as u64, 0, 0);
          let frame_poll_deadline = Instant::now()
              + Duration::from_secs_f32(
                  frame_interval.as_secs_f32() * DECODER_MAX_TIMEOUT_MULTIPLIER,
@@ -6978,7 +7593,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
              }
          }
  
-@@ -401,37 +660,80 @@ impl StreamContext {
+@@ -401,37 +664,82 @@ impl StreamContext {
              ]);
          }
  
@@ -7058,6 +7673,8 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
  
 -        self.swapchains[0].release_image().unwrap();
 -        self.swapchains[1].release_image().unwrap();
++            alvr_client_core::frame_trace::record(b'H', if buffer_ptr.is_null() { 0 } else { timestamp.as_nanos() as u64 },
++                copy_ready as i64, 0);
 +            if !buffer_ptr.is_null() {
 +                if let Some(fence) = self.renderer.take_release_fence() {
 +                    let buffer = fence.buffer as *mut std::ffi::c_void;
@@ -7089,7 +7706,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +795,8 @@ impl StreamContext {
+@@ -493,6 +801,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
@@ -7098,7 +7715,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
          self.input_thread_running.set(false);
          self.input_thread.take().unwrap().join().ok();
      }
-@@ -510,6 +814,7 @@ fn stream_input_loop(
+@@ -510,6 +820,7 @@ fn stream_input_loop(
      let platform = alvr_system_info::platform();
  
      let mut last_controller_poses = [Pose::default(); 2];
@@ -7106,7 +7723,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
      let mut last_palm_poses = [Pose::default(); 2];
      let mut last_view_params = [ViewParams::default(); 2];
  
-@@ -630,7 +935,17 @@ fn stream_input_loop(
+@@ -630,7 +941,17 @@ fn stream_input_loop(
          );
  
          let button_entries = interaction::update_buttons(&xr_session, &int_ctx.button_actions);
@@ -8144,10 +8761,10 @@ index 0000000000000000000000000000000000000000..bc6bee02decfec1a7df24f18e8fd2991
 +}
 diff --git a/alvr/graphics/resources/present_ycbcr.glsl b/alvr/graphics/resources/present_ycbcr.glsl
 new file mode 100644
-index 0000000000000000000000000000000000000000..83e14668d088b2af058ee8aecf8c9fe0d15f6108
+index 0000000000000000000000000000000000000000..a8bab4b7544d79175eed5709bb493588b6f8be0e
 --- /dev/null
 +++ b/alvr/graphics/resources/present_ycbcr.glsl
-@@ -0,0 +1,75 @@
+@@ -0,0 +1,91 @@
 +// PyroWave Haar mode 5 (Quest3-Pyrowave docs/PRESENT-YCBCR.md): `tex` is a frame_size.x x
 +// frame_size.y/2 RGBA8 buffer. x < frame_size.x/2 holds luma as 2x2 pixel quads ((0,0), (1,0),
 +// (0,1), (1,1) in RGBA); x >= frame_size.x/2 holds the 4:2:0 chroma, one pixel per texel with Cb
@@ -8167,6 +8784,16 @@ index 0000000000000000000000000000000000000000..83e14668d088b2af058ee8aecf8c9fe0
 +
 +// uv spans the whole frame, both eyes.
 +vec3 q3pw_present_sample(highp vec2 uv) {
++#if defined(Q3PW_EYE_PROBE) && Q3PW_EYE_PROBE == 1
++    // Diagnostic (debug.q3pw.eye_probe): no buffer reads; a smooth gradient compresses well.
++    return vec3(uv, 0.5);
++#elif defined(Q3PW_EYE_PROBE) && Q3PW_EYE_PROBE == 2
++    // Diagnostic: no buffer reads; per-pixel noise defeats framebuffer compression.
++    highp uvec2 n = uvec2(uv * vec2(4160.0, 2208.0));
++    highp uint h = (n.x * 1664525u) ^ (n.y * 1013904223u);
++    h ^= h >> 13; h *= 0x5bd1e995u; h ^= h >> 15;
++    return vec3(uvec3(h, h >> 8, h >> 16) & 255u) / 255.0;
++#endif
 +    highp vec2 pos = uv * q3pw_frame_size;
 +    highp ivec2 last = ivec2(q3pw_frame_size) - 1;
 +    q3pw_tex_size = vec2(textureSize(tex, 0));
@@ -8208,6 +8835,12 @@ index 0000000000000000000000000000000000000000..83e14668d088b2af058ee8aecf8c9fe0
 +    highp vec2 c = clamp(pos * 0.5, vec2(0.5), half_size - 0.5);
 +    highp float v = c.y / half_size.y;
 +    vec2 chroma;
++#if defined(Q3PW_EYE_PROBE) && Q3PW_EYE_PROBE == 3
++    // Diagnostic: luma reads only.
++    if (true) {
++        chroma = vec2(0.0);
++    } else
++#endif
 +    if (q3pw_tex_size.x < q3pw_frame_size.x) {
 +        // Mode 6: the hardware filters vertically; mix the two nearest pixels horizontally.
 +        highp float k = floor(c.x - 0.5);
@@ -8244,10 +8877,10 @@ index 7bfba12ca0479598b4060b84664695a82c96411d..7236535dfbd7196f77a29c1e5f9dbc27
  #endif
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce306d99a4
+index 0000000000000000000000000000000000000000..a54e69acd9b130d59918da2058ea3b719107c4ef
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,646 @@
+@@ -0,0 +1,694 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -8313,6 +8946,37 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +    { false }
 +}
 +
++// Diagnostic only, never a default: `debug.q3pw.eye_ablate=N` (2-16) draws only the bottom 1/N
++// of each eye, leaving the rest of the image stale. It measures how many frames the eye pass's GPU
++// time costs at a saturated refresh rate; the picture is wrong while it is set.
++fn eye_ablate_requested() -> i32 {
++    #[cfg(target_os = "android")]
++    {
++        let mut value = [0u8; 92];
++        let len = unsafe { __system_property_get(c"debug.q3pw.eye_ablate".as_ptr(), value.as_mut_ptr().cast()) };
++        std::str::from_utf8(&value[..len.max(0) as usize]).ok()
++            .and_then(|v| v.trim().parse::<i32>().ok()).filter(|n| (2..=16).contains(n)).unwrap_or(1)
++    }
++    #[cfg(not(target_os = "android"))]
++    { 1 }
++}
++
++// Diagnostic only, never a default: `debug.q3pw.eye_probe=N` changes what the packed-YCbCr eye
++// shader reads, to split the eye pass's GPU time into texture reads and writes. 1 writes a
++// gradient and 2 hash noise without reading the buffer (best- and worst-case write compression);
++// 3 reads luma only. The picture is wrong while it is set.
++fn eye_probe_requested() -> i32 {
++    #[cfg(target_os = "android")]
++    {
++        let mut value = [0u8; 92];
++        let len = unsafe { __system_property_get(c"debug.q3pw.eye_probe".as_ptr(), value.as_mut_ptr().cast()) };
++        std::str::from_utf8(&value[..len.max(0) as usize]).ok()
++            .and_then(|v| v.trim().parse::<i32>().ok()).filter(|n| (1..=3).contains(n)).unwrap_or(0)
++    }
++    #[cfg(not(target_os = "android"))]
++    { 0 }
++}
++
 +// Initialization diagnostics bypass the mirrored-log severity filter. No per-frame
 +// logging or device/pointer identifiers; this confirms effective experimental paths.
 +pub(super) fn import_diagnostic(priority: i32, message: String) {
@@ -8364,6 +9028,7 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +    copy_wait_ns: i32,
 +    bypass_srgb: bool,
 +    invalidate: bool,
++    ablate: i32,
 +    image_cache_enabled: Cell<bool>,
 +    image_cache: RefCell<Vec<CachedImport>>,
 +    pending: RefCell<Option<(gl::Fence, Instant)>>,
@@ -8401,7 +9066,7 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +    regions
 +}
 +
-+unsafe fn compile_program(gl: &gl::Context, foveation: bool, present: bool, filter: usize) -> Result<gl::Program, String> {
++unsafe fn compile_program(gl: &gl::Context, foveation: bool, present: bool, filter: usize, probe: i32) -> Result<gl::Program, String> {
 +    let program = gl.create_program()?;
 +    let mut shaders = Vec::new();
 +    let result = (|| {
@@ -8420,6 +9085,10 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +                let defines = [(1, "Q3PW_FFE_FILTER_X"), (2, "Q3PW_FFE_FILTER_Y")].iter()
 +                    .filter(|(bit, _)| filter & bit != 0).map(|(_, name)| format!("\n#define {name}")).collect::<String>();
 +                source.replacen("#version 300 es", &format!("#version 300 es{defines}"), 1)
++            } else { source };
++            let source = if kind == gl::FRAGMENT_SHADER && present && probe != 0 {
++                source.replacen("#version 300 es", &format!("#version 300 es
++#define Q3PW_EYE_PROBE {probe}"), 1)
 +            } else { source };
 +            gl.shader_source(shader, &source);
 +            gl.compile_shader(shader);
@@ -8456,13 +9125,17 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +                config.srgb_correction, config.encoding_gamma));
 +            let invalidate = eye_invalidate_requested();
 +            import_diagnostic(4, format!("[Q3PW_EYE_INVALIDATE] requested={invalidate} active={invalidate}"));
-+            let program = compile_program(gl, config.foveation.is_some(), false, 0)?;
++            let ablate = eye_ablate_requested();
++            if ablate > 1 { import_diagnostic(4, format!("[Q3PW_EYE_ABLATE] fraction=1/{ablate} image_incorrect=true")); }
++            let probe = eye_probe_requested();
++            if probe != 0 { import_diagnostic(4, format!("[Q3PW_EYE_PROBE] mode={probe} image_incorrect=true")); }
++            let program = compile_program(gl, config.foveation.is_some(), false, 0, 0)?;
 +            // Compiled up front so the first mode-5 frame does not stall; without them such frames
 +            // take the staging path, which converts them too.
 +            let filters = if config.foveation.is_some() { 4 } else { 1 };
 +            let mut present_programs = Some(Vec::new());
 +            for filter in 0..filters {
-+                match compile_program(gl, config.foveation.is_some(), true, filter) {
++                match compile_program(gl, config.foveation.is_some(), true, filter, probe) {
 +                    Ok(program) => present_programs.as_mut().unwrap().push(program),
 +                    Err(error) => {
 +                        import_diagnostic(5, format!("[Q3PW_PRESENT_YCBCR] direct program {filter} failed: {error}"));
@@ -8561,7 +9234,7 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +                    native_release, release_active: Cell::new(true), source_release_token: Cell::new(0),
 +                    release_fd: RefCell::new(None), release_observers: RefCell::new(VecDeque::new()),
 +                    release_exported: Cell::new(0), release_observed: Cell::new(0), release_last_log: RefCell::new(Instant::now()),
-+                    image_cache: RefCell::new(Vec::new()), pending: RefCell::new(None), copy_wait_ns: copy_wait_us.clamp(0, 2000) * 1000, bypass_srgb, invalidate })
++                    image_cache: RefCell::new(Vec::new()), pending: RefCell::new(None), copy_wait_ns: copy_wait_us.clamp(0, 2000) * 1000, bypass_srgb, invalidate, ablate })
 +                },
 +                Err(e) => {
 +                    for framebuffer in framebuffers.into_iter().flatten() { gl.delete_framebuffer(framebuffer); }
@@ -8756,6 +9429,7 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
++            if self.ablate > 1 { gl.enable(gl::SCISSOR_TEST); }
 +            match present {
 +                Some(_) => gl.enable(gl::SCISSOR_TEST),
 +                None => {
@@ -8768,6 +9442,7 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +                gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, Some(self.framebuffers[eye][index as usize]));
 +                if self.invalidate { gl.invalidate_framebuffer(gl::DRAW_FRAMEBUFFER, &[gl::COLOR_ATTACHMENT0]); }
 +                let Some(programs) = present else {
++                    if self.ablate > 1 { gl.scissor(0, 0, self.resolution.x as i32, self.resolution.y as i32 / self.ablate); }
 +                    gl.uniform_1_i32(Some(&self.view_idx), eye as i32);
 +                    gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
 +                    continue;
@@ -8777,11 +9452,17 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +                    gl.use_program(Some(*program));
 +                    gl.uniform_1_i32(Some(flip_y), self.flip as i32);
 +                    gl.uniform_1_i32(Some(view_idx), eye as i32);
-+                    gl.scissor(x, y, width, height);
++                    if self.ablate > 1 {
++                        let top = (self.resolution.y as i32 / self.ablate).min(y + height);
++                        if top <= y { continue; }
++                        gl.scissor(x, y, width, top - y);
++                    } else {
++                        gl.scissor(x, y, width, height);
++                    }
 +                    gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
 +                }
 +            }
-+            if present.is_some() { gl.disable(gl::SCISSOR_TEST); }
++            if present.is_some() || self.ablate > 1 { gl.disable(gl::SCISSOR_TEST); }
 +            if let Some(index) = query {
 +                if let Some(timer) = self.timer.borrow_mut().as_mut() { timer.end(gl, index); }
 +            }
@@ -10368,7 +11049,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..6dd30146b4953ef58938730b76b754f4
  
          let mut encoder = self
 diff --git a/alvr/packets/src/lib.rs b/alvr/packets/src/lib.rs
-index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..85fdf624efc16bea4b70ffd3ee5b6c897cf1f085 100644
+index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..bf559fef1226a4bcd92bb273b827980eced76e85 100644
 --- a/alvr/packets/src/lib.rs
 +++ b/alvr/packets/src/lib.rs
 @@ -247,6 +247,8 @@ pub enum ReservedClientControlPacket {
@@ -10456,7 +11137,137 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..85fdf624efc16bea4b70ffd3ee5b6c89
  /// Datagram payload budget below a 1500-byte MTU with IPv4/UDP headers and ours.
  pub const PYROWAVE_UDP_PAYLOAD: usize = 1400 - PYROWAVE_UDP_HEADER_LEN;
  
-@@ -586,6 +630,14 @@ mod beta_telemetry_tests {
+@@ -531,6 +575,129 @@ impl PyroWavePacketHeader {
+     }
+ }
+ 
++// ---- PyroWave over parallel wired TCP connections ----
++//
++// adb forwards TCP only, and one forwarded connection moves about 2 Gbit/s; at 1000+ Mbps and
++// 207 Hz a frame's transfer takes most of a frame interval. With `wired_video_connections` set,
++// the server splits each complete frame into that many contiguous byte slices and writes one to
++// each of the connections in parallel; the client reassembles the frame and decodes it as if it
++// had arrived on ALVR's video stream. Each slice carries a fixed header.
++
++pub const PYROWAVE_WIRED_PORT: u16 = 9950;
++pub const PYROWAVE_WIRED_MAX_CONNECTIONS: u16 = 4;
++/// The client writes this on each accepted connection, so the server can tell a listening
++/// client from adb's forward accepting and closing for a device port nobody listens on.
++pub const PYROWAVE_WIRED_HELLO: [u8; 4] = *b"PWT1";
++pub const PYROWAVE_WIRED_HEADER_LEN: usize = 48;
++/// Larger than any frame the encoder's budget allows (1/207 s at 4000 Mbps is 2.4 MB).
++pub const PYROWAVE_WIRED_MAX_FRAME: u32 = 64 << 20;
++
++#[derive(Debug, Clone, Copy, PartialEq)]
++pub struct PyroWaveSliceHeader {
++    pub timestamp_ns: u64,
++    pub frame_len: u32,
++    pub offset: u32,
++    pub len: u32,
++    pub is_idr: bool,
++    pub foveation_center: [[f32; 2]; 2],
++}
++
++impl PyroWaveSliceHeader {
++    pub fn to_bytes(&self) -> [u8; PYROWAVE_WIRED_HEADER_LEN] {
++        let mut b = [0u8; PYROWAVE_WIRED_HEADER_LEN];
++        b[0..4].copy_from_slice(&PYROWAVE_WIRED_HELLO);
++        b[4..12].copy_from_slice(&self.timestamp_ns.to_le_bytes());
++        b[12..16].copy_from_slice(&self.frame_len.to_le_bytes());
++        b[16..20].copy_from_slice(&self.offset.to_le_bytes());
++        b[20..24].copy_from_slice(&self.len.to_le_bytes());
++        b[24] = self.is_idr as u8;
++        let c = &self.foveation_center;
++        for (i, v) in [c[0][0], c[0][1], c[1][0], c[1][1]].into_iter().enumerate() {
++            b[32 + i * 4..36 + i * 4].copy_from_slice(&v.to_le_bytes());
++        }
++        b
++    }
++
++    /// None unless the magic matches and the slice lies inside a frame of a sane size.
++    pub fn from_bytes(b: &[u8]) -> Option<Self> {
++        if b.len() < PYROWAVE_WIRED_HEADER_LEN || b[0..4] != PYROWAVE_WIRED_HELLO {
++            return None;
++        }
++        let u = |o: usize| u32::from_le_bytes(b[o..o + 4].try_into().unwrap());
++        let f = |o: usize| f32::from_le_bytes(b[o..o + 4].try_into().unwrap());
++        let h = Self {
++            timestamp_ns: u64::from_le_bytes(b[4..12].try_into().ok()?),
++            frame_len: u(12),
++            offset: u(16),
++            len: u(20),
++            is_idr: b[24] != 0,
++            foveation_center: [[f(32), f(36)], [f(40), f(44)]],
++        };
++        (h.frame_len > 0
++            && h.frame_len <= PYROWAVE_WIRED_MAX_FRAME
++            && h.len > 0
++            && h.offset as u64 + h.len as u64 <= h.frame_len as u64)
++            .then_some(h)
++    }
++}
++
++/// The byte range of slice `index` when a frame of `len` bytes is split `count` ways. Empty for
++/// slices past the end of a tiny frame.
++pub fn pyrowave_wired_slice(len: usize, index: usize, count: usize) -> std::ops::Range<usize> {
++    let chunk = len.div_ceil(count.max(1));
++    let start = (index * chunk).min(len);
++    start..(start + chunk).min(len)
++}
++
++#[cfg(test)]
++mod pyrowave_wired_tests {
++    use super::*;
++
++    #[test]
++    fn slice_header_round_trips() {
++        let h = PyroWaveSliceHeader {
++            timestamp_ns: 9_876_543_210,
++            frame_len: 603_864,
++            offset: 301_932,
++            len: 301_932,
++            is_idr: true,
++            foveation_center: [[0.125, -0.25], [0.0625, 0.5]],
++        };
++        assert_eq!(PyroWaveSliceHeader::from_bytes(&h.to_bytes()), Some(h));
++    }
++
++    #[test]
++    fn broken_slices_are_rejected() {
++        let h = PyroWaveSliceHeader { timestamp_ns: 1, frame_len: 10, offset: 5, len: 5, is_idr: false, foveation_center: [[0.0; 2]; 2] };
++        let mut b = h.to_bytes();
++        assert!(PyroWaveSliceHeader::from_bytes(&b[..47]).is_none());
++        b[0] = b'X';
++        assert!(PyroWaveSliceHeader::from_bytes(&b).is_none());
++        let past_end = PyroWaveSliceHeader { len: 6, ..h };
++        assert!(PyroWaveSliceHeader::from_bytes(&past_end.to_bytes()).is_none());
++        let empty = PyroWaveSliceHeader { len: 0, ..h };
++        assert!(PyroWaveSliceHeader::from_bytes(&empty.to_bytes()).is_none());
++    }
++
++    #[test]
++    fn slices_cover_the_frame_exactly_once() {
++        for len in [1usize, 2, 3, 7, 603_864, 905_797] {
++            for count in 1..=4 {
++                let mut next = 0;
++                for i in 0..count {
++                    let r = pyrowave_wired_slice(len, i, count);
++                    if r.is_empty() {
++                        continue;
++                    }
++                    assert_eq!(r.start, next);
++                    next = r.end;
++                }
++                assert_eq!(next, len);
++            }
++        }
++    }
++}
++
+ #[cfg(test)]
+ mod pyrowave_udp_tests {
+     use super::*;
+@@ -586,6 +753,14 @@ mod beta_telemetry_tests {
                  partial: 3,
                  gpu_decode_ms: vec![3.2, 3.4],
                  fence_ms: vec![4.9, 5.1],
@@ -10681,7 +11492,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..32d9601f7a9835e93115859e328c9b04
  
          Some((
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05ec044942b 100644
+index fc176da39833633bc7fbac803ebe345c7832fbdb..21ff2542642d0609029719b1ccfac3054096bddd 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -43,6 +43,9 @@ use std::{
@@ -10694,9 +11505,99 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
  const REAL_TIME_UPDATE_INTERVAL: Duration = Duration::from_secs(1);
  
  const MAX_UNREAD_PACKETS: usize = 10; // Applies per stream
-@@ -53,7 +56,61 @@ pub struct VideoPacket {
+@@ -52,8 +55,151 @@ pub struct VideoPacket {
+     pub payload: Vec<u8>,
  }
  
++/// PyroWave's optional parallel wired video connections (alvr_packets::PYROWAVE_WIRED_PORT and
++/// up). Empty when none are requested or the client does not answer on every one: video then
++/// stays on the stream socket.
++fn connect_wired_video(client_ip: IpAddr, count: u32) -> Vec<std::net::TcpStream> {
++    use std::io::Read;
++    let count = count.min(alvr_packets::PYROWAVE_WIRED_MAX_CONNECTIONS as u32) as u16;
++    let mut streams = vec![];
++    for i in 0..count {
++        let addr = std::net::SocketAddr::new(client_ip, alvr_packets::PYROWAVE_WIRED_PORT + i);
++        // adb accepts a forwarded connection even when nothing listens on the headset, so only
++        // the client's hello proves the connection reaches it.
++        let connect = || -> std::io::Result<std::net::TcpStream> {
++            let mut stream = std::net::TcpStream::connect_timeout(&addr, Duration::from_secs(1))?;
++            stream.set_nodelay(true)?;
++            stream.set_read_timeout(Some(Duration::from_secs(2)))?;
++            let mut hello = [0u8; 4];
++            stream.read_exact(&mut hello)?;
++            if hello != alvr_packets::PYROWAVE_WIRED_HELLO {
++                return Err(std::io::Error::other("unexpected hello"));
++            }
++            stream.set_read_timeout(None)?;
++            Ok(stream)
++        };
++        match connect() {
++            Ok(stream) => streams.push(stream),
++            Err(e) => {
++                warn!("[PYROWAVE] wired video connection {addr}: {e}; video stays on the stream socket");
++                return vec![];
++            }
++        }
++    }
++    streams
++}
++
++/// One writer thread per wired video connection; each writes its slice of every frame, so the
++/// slices cross USB in parallel.
++struct WiredVideoSender {
++    senders: Vec<std::sync::mpsc::SyncSender<Arc<VideoPacket>>>,
++}
++
++impl WiredVideoSender {
++    fn new(streams: Vec<std::net::TcpStream>) -> Self {
++        use std::io::Write;
++        let count = streams.len();
++        let senders = streams
++            .into_iter()
++            .enumerate()
++            .map(|(index, mut stream)| {
++                let (sender, receiver) = std::sync::mpsc::sync_channel::<Arc<VideoPacket>>(1);
++                thread::spawn(move || {
++                    let mut buffer = Vec::new();
++                    for packet in receiver {
++                        let range =
++                            alvr_packets::pyrowave_wired_slice(packet.payload.len(), index, count);
++                        if range.is_empty() {
++                            continue;
++                        }
++                        let header = alvr_packets::PyroWaveSliceHeader {
++                            timestamp_ns: packet.header.timestamp.as_nanos() as u64,
++                            frame_len: packet.payload.len() as u32,
++                            offset: range.start as u32,
++                            len: range.len() as u32,
++                            is_idr: packet.header.is_idr,
++                            foveation_center: packet.header.foveation_center,
++                        };
++                        buffer.clear();
++                        buffer.extend_from_slice(&header.to_bytes());
++                        buffer.extend_from_slice(&packet.payload[range]);
++                        if let Err(e) = stream.write_all(&buffer) {
++                            warn!("[PYROWAVE] wired video connection {index}: {e}");
++                            return;
++                        }
++                    }
++                });
++                sender
++            })
++            .collect();
++        Self { senders }
++    }
++
++    /// False once any connection has failed; the frame may then be incomplete.
++    fn send(&self, packet: VideoPacket) -> bool {
++        let packet = Arc::new(packet);
++        self.senders
++            .iter()
++            .all(|sender| sender.send(Arc::clone(&packet)).is_ok())
++    }
++}
++
  fn align32(value: f32) -> u32 {
 -    ((value / 32.).floor() * 32.) as u32
 +    // Pad up so the full panel-relative request never loses pixels to alignment.
@@ -10757,7 +11658,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
  }
  
  fn is_streaming(client_hostname: &str) -> bool {
-@@ -69,6 +126,46 @@ pub fn contruct_openvr_config(session: &SessionConfig) -> OpenvrConfig {
+@@ -69,6 +215,46 @@ pub fn contruct_openvr_config(session: &SessionConfig) -> OpenvrConfig {
      openvr_config_with_env(session, &alvr_session::beta::process_env)
  }
  
@@ -10804,7 +11705,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
  fn openvr_config_with_env(
      session: &SessionConfig,
      env: &dyn Fn(&str) -> Option<String>,
-@@ -133,25 +230,18 @@ fn openvr_config_with_env(
+@@ -133,25 +319,18 @@ fn openvr_config_with_env(
          })
          .unwrap_or(false);
  
@@ -10842,7 +11743,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
  
      let mut brightness = 0.0;
      let mut contrast = 0.0;
-@@ -240,7 +330,11 @@ fn openvr_config_with_env(
+@@ -240,7 +419,11 @@ fn openvr_config_with_env(
          pyrowave_enabled: pyrowave.enabled,
          pyrowave_udp: pyrowave.udp,
          pyrowave_wavelet_53: pyrowave.wavelet_53,
@@ -10854,7 +11755,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
          _controller_profile,
          _server_impl_debug: settings.extra.logging.debug_groups.server_impl,
          _client_impl_debug: settings.extra.logging.debug_groups.client_impl,
-@@ -313,12 +407,24 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -313,12 +496,24 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
              let stream_port;
              let client_type;
              let client_autolaunch;
@@ -10879,7 +11780,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
              }
  
              let status = match wired_connection.setup(
-@@ -326,6 +432,7 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -326,6 +521,7 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
                  stream_port,
                  &client_type,
                  client_autolaunch,
@@ -10887,7 +11788,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
              ) {
                  Ok(status) => status,
                  Err(e) => {
-@@ -471,6 +578,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -471,6 +667,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
          thread.join().ok();
      }
  
@@ -10904,7 +11805,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
      alvr_common::dbg_connection!("handshake_loop: End");
  }
  
-@@ -629,6 +746,19 @@ fn connection_pipeline(
+@@ -629,6 +835,19 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -10924,7 +11825,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +779,9 @@ fn connection_pipeline(
+@@ -649,18 +868,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -10946,7 +11847,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -802,6 +923,10 @@ fn connection_pipeline(
+@@ -802,6 +1012,10 @@ fn connection_pipeline(
          proto_socket.split(STREAMING_RECV_TIMEOUT).to_con()?;
  
      let mut new_openvr_config = contruct_openvr_config(session_manager_lock.session());
@@ -10957,7 +11858,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
      new_openvr_config.eye_resolution_width = stream_view_resolution.x;
      new_openvr_config.eye_resolution_height = stream_view_resolution.y;
      new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
-@@ -822,6 +947,7 @@ fn connection_pipeline(
+@@ -822,6 +1036,7 @@ fn connection_pipeline(
  
          crate::notify_restart_driver();
      }
@@ -10965,7 +11866,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
  
      dbg_connection!("connection_pipeline: Send StartStream packet");
      control_sender
-@@ -846,6 +972,28 @@ fn connection_pipeline(
+@@ -846,6 +1061,28 @@ fn connection_pipeline(
  
      *ctx.bitrate_manager.lock() =
          BitrateManager::new(initial_settings.video.bitrate.history_size, fps);
@@ -10994,7 +11895,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
  
      let stream_protocol = if wired {
          SocketProtocol::Tcp
-@@ -869,10 +1017,11 @@ fn connection_pipeline(
+@@ -869,10 +1106,11 @@ fn connection_pipeline(
  
      // PyroWave over UDP: a plain socket to the client's address. The same resolution fills
      // openvr_config for the C++ encoder, so the two sides cannot disagree.
@@ -11010,7 +11911,38 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
      if pyrowave.enabled {
          info!("{pyrowave}");
      }
-@@ -1081,18 +1230,40 @@ fn connection_pipeline(
+@@ -886,6 +1124,14 @@ fn connection_pipeline(
+             Err(e) => error!("[PYROWAVE] UDP socket: {e}"),
+         }
+     }
++    let wired_video_connections = initial_settings.video.pyrowave.wired_video_connections;
++    let mut wired_video = (wired && pyrowave.enabled && wired_video_connections > 0)
++        .then(|| connect_wired_video(client_ip, wired_video_connections))
++        .filter(|streams| !streams.is_empty())
++        .map(|streams| {
++            info!("[PYROWAVE] wired video over {} parallel connections", streams.len());
++            WiredVideoSender::new(streams)
++        });
+     let game_audio_sender: alvr_sockets::StreamSender<()> = stream_socket.request_stream(AUDIO);
+     let mut microphone_receiver: alvr_sockets::StreamReceiver<()> =
+         stream_socket.subscribe_to_stream(AUDIO, MAX_UNREAD_PACKETS);
+@@ -911,6 +1157,15 @@ fn connection_pipeline(
+                         Err(RecvTimeoutError::Disconnected) => return,
+                     };
+ 
++                if let Some(sender) = &wired_video {
++                    if sender.send(VideoPacket { header, payload }) {
++                        continue;
++                    }
++                    error!("[PYROWAVE] wired video connection lost; back to the stream socket");
++                    wired_video = None;
++                    continue;
++                }
++
+                 let mut buffer = video_sender.get_buffer(&header).unwrap();
+                 // todo: make encoder write to socket buffers directly to avoid copy
+                 buffer
+@@ -1081,18 +1336,40 @@ fn connection_pipeline(
          let ctx = Arc::clone(&ctx);
          let client_hostname = client_hostname.clone();
          move || {
@@ -11054,7 +11986,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
                      let decoder_latency = client_stats.video_decode;
                      let (network_latency, game_latency) = stats.report_statistics(client_stats);
  
-@@ -1102,7 +1273,10 @@ fn connection_pipeline(
+@@ -1102,7 +1379,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -11066,7 +11998,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1289,7 @@ fn connection_pipeline(
+@@ -1115,6 +1395,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -11074,7 +12006,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1306,14 @@ fn connection_pipeline(
+@@ -1131,6 +1412,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -11089,7 +12021,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1184,9 +1367,35 @@ fn connection_pipeline(
+@@ -1184,9 +1473,35 @@ fn connection_pipeline(
          let disconnect_notif = Arc::clone(&disconnect_notif);
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
@@ -11125,7 +12057,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
                  let packet = match control_receiver.recv(STREAMING_RECV_TIMEOUT) {
                      Ok(packet) => packet,
                      Err(ConnectionError::TryAgain(_)) => {
-@@ -1299,6 +1508,9 @@ fn connection_pipeline(
+@@ -1299,6 +1614,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -11135,7 +12067,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1378,6 +1590,22 @@ fn connection_pipeline(
+@@ -1378,6 +1696,22 @@ fn connection_pipeline(
                              };
  
                          match reserved {
@@ -11158,7 +12090,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
                              ReservedClientControlPacket::CustomInteractionProfile {
                                  input_ids,
                                  ..
-@@ -1552,9 +1780,10 @@ mod beta_tests {
+@@ -1552,9 +1886,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -11171,7 +12103,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05e
      }
  
      #[test]
-@@ -1569,4 +1798,22 @@ mod beta_tests {
+@@ -1569,4 +1904,22 @@ mod beta_tests {
          assert!(!config.pyrowave_udp);
          assert!(config.pyrowave_wavelet_53);
      }
@@ -12433,7 +13365,7 @@ index 861f726c74e38cec9058513ab412ceb08ae2e8bf..e277d11fe8271552f711118c8c26c817
              thread::yield_now();
          }
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
-index 84100dc7c01a272de5b0b22b22907127bb5e1e18..30e05cbdbc400a9f815aa3772e7dc8ebb11dda71 100644
+index 84100dc7c01a272de5b0b22b22907127bb5e1e18..3f181a7dfed8b63e7612a58fbf4acc978941925d 100644
 --- a/alvr/session/src/beta.rs
 +++ b/alvr/session/src/beta.rs
 @@ -3,25 +3,125 @@
@@ -12619,7 +13551,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..30e05cbdbc400a9f815aa3772e7dc8eb
  /// socket values, so switching profiles never leaves one of them at a tester's experiment.
  fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::Value)> {
      let mut list = vec![
-@@ -56,48 +170,206 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
+@@ -56,48 +170,207 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
          assign("video.bitrate.mode.variant", "ConstantMbps".into()),
          assign("video.bitrate.mode.ConstantMbps", mbps.into()),
          assign("video.preferred_fps", json::json!(fps)),
@@ -12691,9 +13623,10 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..30e05cbdbc400a9f815aa3772e7dc8eb
 -    pyrowave.extend([
 -        assign("video.pyrowave.transport.variant", "Udp".into()),
 -        assign("video.pyrowave.wavelet.variant", "Cdf97".into()),
-+/// Profiles measured on Quest 3 on October 6, 2026 (short stationary-chart screens; see
-+/// docs/HIGH-REFRESH.md). Haar/Compute/TCP, 4:2:0, 1000 Mbps; the stream size is explicit
-+/// because 1440x1536 is not a panel percentage.
++/// Profiles measured on Quest 3 (October 6, 2026 for 120 and 240 Hz, October 7 for 207 Hz with the
++/// multilevel Haar decoder; short screens, see docs/HIGH-REFRESH.md and docs/FRAME-TRACE.md).
++/// Haar/Compute/TCP, 4:2:0, 1000 Mbps; the stream size is explicit because 2080x2208 and 1440x1536
++/// are not panel percentages.
 +pub const MEASURED_PROFILES: [(&str, f32, (u32, u32), bool, bool, &str); 3] = [
 +    (
 +        "Quest 3 PyroWave native 120 Hz (measured)",
@@ -12706,10 +13639,10 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..30e05cbdbc400a9f815aa3772e7dc8eb
 +    (
 +        "Quest 3 PyroWave 207 Hz (measured)",
 +        207.0,
-+        (1440, 1536),
++        (2080, 2208),
 +        false,
 +        true,
-+        "Haar, 4:2:0, 1000 Mbps, 1440x1536 per eye, maximum GPU clock over USB; about 196 fresh FPS in short screens",
++        "Haar, 4:2:0, 1000 Mbps, 2080x2208 per eye, maximum GPU clock over USB; about 195 fresh FPS in short screens",
 +    ),
 +    (
 +        "Quest 3 PyroWave 240 Hz scaled panel (measured)",
@@ -12856,7 +13789,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..30e05cbdbc400a9f815aa3772e7dc8eb
  }
  
  #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-@@ -186,8 +458,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
+@@ -186,8 +459,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
  #[derive(Clone, Debug, PartialEq)]
  pub struct PyroWaveEffective {
      pub enabled: bool,
@@ -12867,7 +13800,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..30e05cbdbc400a9f815aa3772e7dc8eb
      pub decode_path: PyroWaveDecodePath,
      pub follow_gaze: bool,
      pub overrides: Vec<&'static str>,
-@@ -211,30 +485,24 @@ pub fn pyrowave_effective(
+@@ -211,30 +486,24 @@ pub fn pyrowave_effective(
          value
      };
  
@@ -12906,7 +13839,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..30e05cbdbc400a9f815aa3772e7dc8eb
          decode_path: video.pyrowave.decode_path,
          follow_gaze,
          overrides,
-@@ -255,10 +523,11 @@ impl fmt::Display for PyroWaveEffective {
+@@ -255,10 +524,11 @@ impl fmt::Display for PyroWaveEffective {
          };
          write!(
              f,
@@ -12920,7 +13853,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..30e05cbdbc400a9f815aa3772e7dc8eb
              if self.follow_gaze { "on" } else { "off" },
              if self.overrides.is_empty() {
                  "none".to_owned()
-@@ -279,7 +548,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
+@@ -279,7 +549,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
  }
  
  fn at<'a>(root: &'a json::Value, path: &str) -> Option<&'a json::Value> {
@@ -12931,7 +13864,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..30e05cbdbc400a9f815aa3772e7dc8eb
  
  /// The profile whose every assignment the session (`session_settings` as JSON) currently holds,
 diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
-index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6ff56e494 100644
+index 985a4d04e505ecaf29120bcc61b525476eb7caf2..63a0d3fec56d8481b530252418eebbec36a21340 100644
 --- a/alvr/session/src/beta_tests.rs
 +++ b/alvr/session/src/beta_tests.rs
 @@ -31,7 +31,7 @@ fn video_shows_only_codec_experiment_controls() {
@@ -12943,7 +13876,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
      );
      assert_eq!(
          names(entries, Visibility::Advanced),
-@@ -49,36 +49,41 @@ fn video_shows_only_codec_experiment_controls() {
+@@ -49,36 +49,42 @@ fn video_shows_only_codec_experiment_controls() {
  fn codec_picker_offers_pyrowave_and_h264_only() {
      assert_eq!(
          visible_variants(&schema(), &["video", "preferred_codec"]).unwrap(),
@@ -12969,6 +13902,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
 +            "foveation_profile",
 +            "quest3_240hz_display_scaling",
 +            "quest3_max_gpu_clock",
++            "wired_video_connections",
 +            "latency_stamp"
 +        ])
 +    );
@@ -13001,7 +13935,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
  }
  
  #[test]
-@@ -133,8 +138,11 @@ fn default_settings() -> Settings {
+@@ -133,8 +139,11 @@ fn default_settings() -> Settings {
  fn fresh_install_streams_the_recommended_profile() {
      let s = default_settings();
      assert_eq!(s.video.preferred_codec, CodecType::PyroWave);
@@ -13015,7 +13949,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
      for size in [
          &s.video.transcoding_view_resolution,
          &s.video.emulated_headset_view_resolution,
-@@ -142,33 +150,27 @@ fn fresh_install_streams_the_recommended_profile() {
+@@ -142,33 +151,27 @@ fn fresh_install_streams_the_recommended_profile() {
          assert!(matches!(
              size,
              FrameSize::Absolute {
@@ -13056,7 +13990,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
  }
  
  // Applies session-style assignments the way the dashboard's SetValues does.
-@@ -198,13 +200,38 @@ fn profile(name: &str) -> StreamingProfile {
+@@ -198,13 +201,45 @@ fn profile(name: &str) -> StreamingProfile {
  #[test]
  fn profiles_are_named_for_testers() {
      let profiles = streaming_profiles();
@@ -13090,6 +14024,13 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
 +        scaled.video.transcoding_view_resolution,
 +        FrameSize::Absolute { width: 1440, height: Some(1536) }
 +    ));
++    let high = apply(&profile(MEASURED_PROFILES[1].0));
++    assert_eq!(high.video.preferred_fps, 207.0);
++    assert!(!high.video.pyrowave.quest3_240hz_display_scaling && high.video.pyrowave.quest3_max_gpu_clock);
++    assert!(matches!(
++        high.video.transcoding_view_resolution,
++        FrameSize::Absolute { width: 2080, height: Some(2208) }
++    ));
 +    let mut root = json::to_value(SessionConfig::default().session_settings).unwrap();
 +    for (path, value) in profile(MEASURED_PROFILES[1].0).assignments {
 +        let mut node = &mut root;
@@ -13102,7 +14043,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
  }
  
  #[test]
-@@ -218,13 +245,16 @@ fn recommended_profile_is_the_fresh_install() {
+@@ -218,13 +253,16 @@ fn recommended_profile_is_the_fresh_install() {
  fn h264_profile_is_the_measured_b15_cell() {
      let s = apply(&profile(H264_PROFILE));
      assert_eq!(s.video.preferred_codec, CodecType::H264);
@@ -13123,7 +14064,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
          }
      ));
      assert_eq!(s.video.max_buffering_frames, 1.5);
-@@ -233,20 +263,66 @@ fn h264_profile_is_the_measured_b15_cell() {
+@@ -233,20 +271,66 @@ fn h264_profile_is_the_measured_b15_cell() {
          EncoderQualityPresetNvidia::P1
      );
      assert_eq!(s.video.encoder_config.entropy_coding, EntropyCoding::Cavlc);
@@ -13199,7 +14140,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
  }
  
  fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
-@@ -261,21 +337,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
+@@ -261,21 +345,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
  fn effective_config_follows_settings_without_env() {
      let e = pyrowave_effective(&default_settings(), &env(&[]));
      assert!(e.enabled);
@@ -13226,7 +14167,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
      assert!(e.wavelet_53);
      assert_eq!(e.decode_path, PyroWaveDecodePath::Fragment);
  }
-@@ -284,6 +360,7 @@ fn effective_config_follows_a_non_default_setting() {
+@@ -284,6 +368,7 @@ fn effective_config_follows_a_non_default_setting() {
  fn research_env_overrides_win_and_are_reported() {
      let mut s = default_settings();
      s.video.preferred_codec = CodecType::H264;
@@ -13234,7 +14175,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
      let e = pyrowave_effective(
          &s,
          &env(&[
-@@ -302,8 +379,7 @@ fn research_env_overrides_win_and_are_reported() {
+@@ -302,8 +387,7 @@ fn research_env_overrides_win_and_are_reported() {
          vec![
              "ALVR_PYROWAVE",
              "ALVR_PYROWAVE_UDP",
@@ -13244,7 +14185,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
          ]
      );
  }
-@@ -320,8 +396,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
+@@ -320,8 +404,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
      let line = pyrowave_effective(&default_settings(), &env(&[])).to_string();
      assert_eq!(
          line,
@@ -13255,7 +14196,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
      );
  }
  
-@@ -398,6 +474,7 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
+@@ -398,6 +482,7 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
          "pyrowave_enabled",
          "pyrowave_udp",
          "pyrowave_wavelet_53",
@@ -13263,7 +14204,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
          "pyrowave_decode_path",
      ] {
          openvr.remove(key).expect(key);
-@@ -410,3 +487,20 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
+@@ -410,3 +495,25 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
          "upgrading must not forget the paired headset"
      );
  }
@@ -13283,6 +14224,11 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
 +    let e = pyrowave_effective(&s, &env(&[("ALVR_PYROWAVE_WAVELET", "haar")]));
 +    assert!(e.wavelet_haar);
 +    assert!(!e.wavelet_53);
++}
++
++#[test]
++fn wired_video_uses_two_connections_by_default() {
++    assert_eq!(default_settings().video.pyrowave.wired_video_connections, 2);
 +}
 diff --git a/alvr/session/src/headset_settings.rs b/alvr/session/src/headset_settings.rs
 new file mode 100644
@@ -13661,7 +14607,7 @@ index d7d0dbbfcbfc7eaacf6f4ff5f0c47f882f1eee1a..e85a1e8a6f60414317ee82c6b1a251c5
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414af4cca653 100644
+index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..ec38225781086ddd0f07d399c2a6d224dfd38f4c 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -13713,7 +14659,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
  }
  
  #[repr(u8)]
-@@ -618,32 +618,130 @@ pub enum PyroWaveWavelet {
+@@ -618,32 +618,140 @@ pub enum PyroWaveWavelet {
  #[schema(gui = "button_group")]
  pub enum PyroWaveDecodePath {
      // The driver heuristic, which picks the fragment path on Qualcomm. Kept for research.
@@ -13812,6 +14758,12 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
 +    #[schema(strings(display_name = "Quest 3: maximum GPU clock over USB", help = "Pins the headset GPU at level 7 (690 MHz instead of about 640) while this PC streams over USB, and restores the previous value afterwards. Measured +4 to +9 fresh frames/s where decoding is GPU-bound (above-native sizes, 207 and 240 Hz); no change at native 120 Hz. More heat; sustained thermals are not measured. The client restarts when this changes."))]
 +    pub quest3_max_gpu_clock: bool,
 +
++    #[serde(default = "default_wired_video_connections")]
++    #[schema(strings(display_name = "Wired video connections", help = "USB only. Each frame is split across this many dedicated connections (ports 9950 to 9953, forwarded over adb), which deliver large frames sooner: one adb-forwarded connection tops out at about 2 Gbit/s. Two cut ALVR's network time by about 0.7 ms at 1000 Mbit/s and 1.8 ms at 1500 at 207 Hz. 0 sends video on ALVR's stream connection, as before. A client that does not answer falls back to 0. Restart SteamVR."))]
++    #[schema(gui(slider(min = 0, max = 4)))]
++    #[schema(flag = "steamvr-restart")]
++    pub wired_video_connections: u32,
++
 +    #[serde(default)]
 +    #[schema(strings(display_name = "Optical latency stamp (diagnostic)", help = "Draws the PC performance-counter clock (ms) and two frame-parity squares just below the center of each eye. Film a monitor running tools/quest3/latency_clock.py next to a headset lens to measure composition-to-photon latency. Leave off for play. Restart SteamVR."))]
 +    #[schema(flag = "steamvr-restart")]
@@ -13820,6 +14772,10 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
 +
 +/// Only these fixed profiles are exposed by Quest3-Pyrowave. Generic stale
 +/// foveation/force-enable/gaze/environment settings cannot modify their geometry.
++fn default_wired_video_connections() -> u32 {
++    2
++}
++
 +pub fn pyrowave_light_foveation_enabled(codec: CodecType, requested: bool, supported: bool) -> bool {
 +    codec == CodecType::PyroWave && requested && supported
 +}
@@ -13848,7 +14804,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
  }
  
  #[repr(u8)]
-@@ -799,23 +897,20 @@ pub struct VideoConfig {
+@@ -799,23 +907,20 @@ pub struct VideoConfig {
      pub bitrate: BitrateConfig,
  
      #[schema(strings(
@@ -13877,7 +14833,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
      pub foveated_encoding: Switch<FoveatedEncodingConfig>,
  
      #[schema(flag = "steamvr-restart")]
-@@ -858,23 +953,25 @@ If you want to reduce the amount of pixelation on the edges, increase the center
+@@ -858,23 +963,25 @@ If you want to reduce the amount of pixelation on the edges, increase the center
      pub mediacodec_extra_options: Vec<(String, MediacodecProperty)>,
  
      #[schema(strings(
@@ -13908,7 +14864,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
      pub preferred_fps: f32,
  
      #[schema(strings(help = "You probably don't want to change this"))]
-@@ -1663,15 +1760,15 @@ pub struct Settings {
+@@ -1663,15 +1770,15 @@ pub struct Settings {
  }
  
  pub fn session_settings_default() -> SettingsDefault {
@@ -13927,7 +14883,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
              },
          },
      };
-@@ -1742,7 +1839,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1742,7 +1849,7 @@ pub fn session_settings_default() -> SettingsDefault {
              adapter_index: 0,
              transcoding_view_resolution: view_resolution.clone(),
              emulated_headset_view_resolution: view_resolution,
@@ -13936,7 +14892,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
              max_buffering_frames: 1.5,
              buffering_history_weight: 0.90,
              enforce_server_frame_pacing: true,
-@@ -1796,15 +1893,26 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1796,15 +1903,27 @@ pub fn session_settings_default() -> SettingsDefault {
                  variant: CodecTypeDefaultVariant::PyroWave,
              },
              pyrowave: PyroWaveConfigDefault {
@@ -13955,17 +14911,18 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
                  decode_path: PyroWaveDecodePathDefault {
 -                    variant: PyroWaveDecodePathDefaultVariant::Compute,
 +                    variant: PyroWaveDecodePathDefaultVariant::Auto,
-                 },
++                },
 +                render_downsample_filter: RenderDownsampleFilterDefault {
 +                    variant: RenderDownsampleFilterDefaultVariant::Bilinear,
-+                },
+                 },
 +                quest3_240hz_display_scaling: false,
 +                quest3_max_gpu_clock: false,
++                wired_video_connections: 2,
 +                latency_stamp: false,
              },
              encoder_config: EncoderConfigDefault {
                  gui_collapsed: true,
-@@ -1901,7 +2009,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1901,7 +2020,7 @@ pub fn session_settings_default() -> SettingsDefault {
                  }
              },
              foveated_encoding: SwitchDefault {
@@ -13974,7 +14931,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
                  content: FoveatedEncodingConfigDefault {
                      force_enable: false,
                      center_size_x: 0.20,
-@@ -1910,7 +2018,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1910,7 +2029,7 @@ pub fn session_settings_default() -> SettingsDefault {
                      center_shift_y: 0.0,
                      edge_ratio_x: 3.,
                      edge_ratio_y: 4.,
@@ -13983,7 +14940,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
                  },
              },
              clientside_foveation: SwitchDefault {
-@@ -2066,7 +2174,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2066,7 +2185,7 @@ pub fn session_settings_default() -> SettingsDefault {
                                  content: vec![],
                              },
                          },
@@ -13992,7 +14949,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
                      },
                      extra_openvr_props: default_custom_openvr_props,
                      button_mappings: OptionalDefault {
-@@ -2179,16 +2287,12 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2179,16 +2298,12 @@ pub fn session_settings_default() -> SettingsDefault {
                  content: DiscoveryConfigDefault {
                      // Beta: no pairing step. The pre-release protocol ID already keeps stock
                      // ALVR clients out; turn this off to approve each headset by hand.
@@ -14012,7 +14969,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
              },
              wired_client_autolaunch: true,
              web_server_port: 8082,
-@@ -2211,7 +2315,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2211,7 +2326,7 @@ pub fn session_settings_default() -> SettingsDefault {
              server_recv_buffer_bytes: socket_buffer.clone(),
              client_send_buffer_bytes: socket_buffer.clone(),
              client_recv_buffer_bytes: socket_buffer,
@@ -14021,7 +14978,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
              avoid_video_glitching: true,
              minimum_idr_interval_ms: 100,
              enable_on_connect_script: false,
-@@ -2262,7 +2366,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2262,7 +2377,7 @@ pub fn session_settings_default() -> SettingsDefault {
              },
              steamvr_launcher: SteamvrLauncherDefault {
                  driver_launch_action: DriverLaunchActionDefault {
@@ -14030,7 +14987,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
                  },
                  open_close_steamvr_with_dashboard: false,
              },
-@@ -2287,3 +2391,50 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2287,3 +2402,50 @@ pub fn session_settings_default() -> SettingsDefault {
          },
      }
  }
