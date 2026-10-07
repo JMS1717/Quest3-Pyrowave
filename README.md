@@ -33,6 +33,7 @@ Vulkan handles wavelet decoding; ALVR supplies SteamVR integration, tracking, co
 |  |  |
 | --- | --- |
 | **Latest release** | **alpha.9 / `.63`**: a decoder about twice as fast, any refresh rate from 144 to 240 Hz with PC-driven panel switching over USB, Decoder V2 for smoother CDF 5/3 images, bitrate up to 4000 Mbps, two parallel wired video connections, and measured Wi-Fi streaming with connection fixes. [Release notes →](docs/RELEASE-alpha.9.md) |
+| **On main since alpha.9** | **`.64`**: safer parallel wired video. Frames are numbered, so a repeated timestamp can no longer mix two frames, and a stalled connection times out after 1 s and video falls back to the stream socket. Packed frames that no shader can convert are skipped instead of shown in wrong colours, and the dashboard's Auto text is corrected. |
 | **Best measured high-refresh setting** | **207 Hz · 2080 × 2208 per eye · Haar · 1000 Mbps · 4:2:0 · no foveation · maximum GPU clock over USB**: 194–197 fresh FPS in 10–12 s screens with a 60°/s pan. [Frame trace →](docs/FRAME-TRACE.md) |
 | **Over Wi-Fi** | The same 207 Hz stream at 1000 Mbps on Wi-Fi 6E (6 GHz, PC on Ethernet): 189–195 fresh FPS and about 6 ms of network time, about 3.4 ms more than USB. 1250 Mbps is the practical ceiling on the test link; 1500 queued frames hundreds of milliseconds late. [Wi-Fi →](docs/WIRELESS.md) |
 | **Smoothest image** | CDF 5/3 (Decoder V2) removes Haar's block edges, for about 2 fresh FPS at 700 Mbps and more at higher bitrates. [Decoder V2 →](docs/DECODER-V2.md) |

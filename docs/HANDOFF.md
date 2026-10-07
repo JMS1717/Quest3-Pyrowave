@@ -22,6 +22,35 @@ supported by evidence. Preserve correctness, rollback and honest measurements;
 the previous agent's process is not mandatory. A handoff does not automatically
 resume paused hardware work or unattended workers.
 
+## October 7, late: `.64` on main (PR #18 merged with alpha.9)
+
+- **What happened:** two sessions fixed the `.62` review issues in parallel. #19 (`.63`) was
+  released as alpha.9. #18 was then rebased on it as `.64`, keeping the stronger parts of each.
+- **From #18:**
+  - Wired slices carry a frame sequence number (header bytes 28..32).
+  - The client assembles by that number and rejects overlapping or mismatched slices.
+  - Writers have a 1 s write timeout.
+  - The staging path skips packed frames when it has no YCbCr program.
+  - The dashboard's Auto floor text is corrected.
+  - These replace `.63`'s skip of repeated timestamps.
+- **From `.63`:**
+  - USB-only wired device choice with network fallback.
+  - The Auto floor fix.
+  - The Wi-Fi docs.
+- **Dropped:** #18's rename of the "(measured)" profiles to "candidate (short screens)". Saved
+  presets, docs and the harness use the existing names; the descriptions already say "short
+  screens".
+- **Compatibility:** older servers send sequence 0 and the client falls back to timestamps. Older
+  clients ignore the bytes.
+- **Checked:**
+  - Local build of `9145530` over Wi-Fi 6E: 207 Hz, 2080x2208, Haar, 1000 Mbit/s.
+  - 193.9 (memory clock changed mid-block) and 190.6 fresh FPS; network 6.2 ms p50.
+  - Correct colours in both eyes; restore errors [].
+  - That matches alpha.9 (190.0 and 196.5).
+  - Rust tests: client_core 73 (3 new wired-video tests), server_core 13, packets 7, adb 17,
+    session 39. Python: 183.
+- **Not checked:** USB parallel wired video, the path the numbering changes. USB adb was offline.
+
 ## October 7 evening: `.63`, Wi-Fi, alpha.9
 
 Branch `claude/wifi-adb-fixes`, released as alpha.9. USB adb was offline all evening. Every hardware
