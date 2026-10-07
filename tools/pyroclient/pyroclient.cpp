@@ -1326,12 +1326,13 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
                                    haar32_prop[0] >= '0' && haar32_prop[0] <= '6' && !haar32_prop[1];
         c->haar32_requested = explicit_mode ? haar32_prop[0] - '0'
                               : !strcmp(fuse_prop, "1") || !strcmp(dequant_haar_prop, "1") ? 0 : 5;
-        // Decoder V2 for CDF 5/3 (docs/DECODER-V2.md), default mode 5 (the packed YCbCr output of
-        // haar32 mode 5); "0" to "6" selects a mode.
+        // Decoder V2 for CDF 5/3 (docs/DECODER-V2.md), default mode 6 (mode 5's packed YCbCr output
+        // with two chroma pixels per texel: +4.8 fresh FPS live at 1000 Mbit/s, identical planes);
+        // "0" to "6" selects a mode, and an unsupported mode steps down.
         char v2_prop[PROP_VALUE_MAX] = {};
         const bool explicit_v2 = __system_property_get("debug.q3pw.cdf53v2", v2_prop) > 0 &&
                                  v2_prop[0] >= '0' && v2_prop[0] <= '6' && !v2_prop[1];
-        c->cdf53v2_requested = explicit_v2 ? v2_prop[0] - '0' : 5;
+        c->cdf53v2_requested = explicit_v2 ? v2_prop[0] - '0' : 6;
         // A/B only: debug.q3pw.packed_levels "2" keeps the quad-packed layout to levels 0-1 (default
         // levels 0-3) for haar32 mode 2-3 and Decoder V2 mode 3.
         char packed_prop[PROP_VALUE_MAX] = {};
