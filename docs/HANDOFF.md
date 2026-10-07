@@ -67,10 +67,10 @@ resume paused hardware work or unattended workers.
 - **Checked:**
   - Windows tests (`fast_build.py test`), run on `c909f7f`, before the diagnostics commits.
   - The live cells above.
+  - USB on the final build `7e46ef5`: 193.2 fresh FPS at 1000 Mbps; wired assembly completed
+    10338 frames and dropped none; colours correct in both eyes.
   - The headset restored to the `.61` hold client, with the properties read back.
-- **Not checked:**
-  - USB on `.65`. Its wired path is unchanged apart from the assembly counters.
-  - Other networks, sustained play, perceptual quality and optical latency.
+- **Not checked:** other networks, sustained play, perceptual quality and optical latency.
 
 ## October 7, late: `.64` on main (PR #18 merged with alpha.9)
 
