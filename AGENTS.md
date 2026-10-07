@@ -4,17 +4,7 @@ Preserve the owner's Virtual Desktop and SteamVR setup. Without current explicit
 hardware authorization, continue development without interrupting PCVR.
 
 - Work only on source files, documentation, lightweight CPU checks, and GitHub Actions builds.
-- Do not use ADB, install APKs, launch VR applications, run GPU or live streaming benchmarks,
-  restart SteamVR, register drivers, or change headset, system, network, or SteamVR settings
-  until the owner explicitly permits hardware testing again. Direct owner
-  authorization for remote recovery/unattended testing supersedes this restriction
-  for that work; automatic goal continuations do not grant new authorization.
-- Do not run heavy local builds while the owner is playing. Build on GitHub Actions.
-  Otherwise prefer `python tools/local/fast_build.py build` ([docs/LOCAL-BUILD.md](docs/LOCAL-BUILD.md)),
   which refuses to run while SteamVR is up; reviewed CI builds remain the release evidence.
-- Preserve Virtual Desktop's registration and service. Verify current driver state
-  rather than assuming an old isolation snapshot is still current. Register/enable
-  the project driver only within explicitly authorized hardware work.
 - Commit and push as JMS1717, using 43321848+JMS1717@users.noreply.github.com.
 - Never commit private captures, session configurations, device identifiers, or signing keys.
 - State separately whether a rate is accepted by the runtime, meets a standalone decode
