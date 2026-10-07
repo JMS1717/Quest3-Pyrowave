@@ -35,8 +35,8 @@ Constraints on that target:
   the PR stack short.
 - **Release at good points.** Cut a pre-release when the stack is a clear step forward.
   - Update and improve the README and add `docs/RELEASE-<tag>.md` with every release.
-  - Publish only CI-built artifacts, after in-headset screenshots of that exact build look
-    correct.
+  - Publish a local build of a clean, committed and pushed tree, after in-headset screenshots
+    of that exact build look correct.
 - **Keep the record current.** Update docs/HANDOFF.md at milestones with what changed, what was
   measured, what was rejected and what comes next. Write plain, specific docs with numbers and
   conditions.
@@ -139,15 +139,23 @@ Where things live:
 
 How to build:
 
-- **Fast local builds:** `python tools/local/fast_build.py build`, about 1-3 min
-  ([docs/LOCAL-BUILD.md](docs/LOCAL-BUILD.md)).
-  - It refuses to run while SteamVR is up.
-  - Pass `--allow-while-vr` only when nobody is playing.
-- **Release and CI builds:** GitHub Actions.
-  - A full run produces a matching APK and Windows server pair.
-  - Docs-only pushes produce no artifacts.
-  - A new push to the same branch can cancel a run in progress, so don't push while waiting for
-    artifacts you need.
+- **Build locally for everything, releases included:** `python tools/local/fast_build.py build`.
+  - It takes about 1-3 min, against about 20 min on GitHub Actions
+    ([docs/LOCAL-BUILD.md](docs/LOCAL-BUILD.md)).
+  - It refuses to run while SteamVR is up. Pass `--allow-while-vr` only when nobody is playing.
+  - Outputs land in `C:\q3pw\fast\out\<commit>[-dirty]\` in CI's layout:
+    - the APK, `SHA256SUMS.txt` and `APK-CERTIFICATE.txt`
+    - the Windows server zip
+    - `PROVENANCE.json`
+  - With the stable key in the private workspace, the APK is signed exactly as CI signs it.
+- **Release builds:**
+  - Build from a committed tree, so the output folder has no `-dirty` suffix.
+  - Push that commit first and tag the release at it.
+  - Attach the outputs, and record the commit and APK SHA-256 in the release notes.
+- **GitHub Actions:** CI still runs on every PR push as a cross-check. Don't wait on it to keep
+  working.
+  - Fix any failures it finds.
+  - A new push to the same branch cancels the run in progress.
 - **Tests before pushing:**
   - `python -m pytest -q tests`
   - the Rust unit tests for any crate you touched
