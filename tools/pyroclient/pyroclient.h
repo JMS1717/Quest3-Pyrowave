@@ -75,6 +75,11 @@ int pyroclient_decode(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_inf
 // could be dequeued while GPU work runs. Ring size must leave at least one free slot.
 int pyroclient_decode_guarded(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info,
                              AHardwareBuffer *protected_a, AHardwareBuffer *protected_b);
+// As above with a third excluded buffer: the frame hold (debug.q3pw.frame_hold_us) keeps an older
+// decoded frame for the next display period beside the pending one. Needs a ring of four.
+int pyroclient_decode_guarded3(pyroclient *c, AHardwareBuffer **out, pyroclient_frame_info *info,
+                              AHardwareBuffer *protected_a, AHardwareBuffer *protected_b,
+                              AHardwareBuffer *protected_c);
 
 // Experimental early publication (debug.q3pw.ready_fd=1). At most ONE submission
 // may be outstanding. ready_fd >= 0 is transferred to caller and MUST gate all

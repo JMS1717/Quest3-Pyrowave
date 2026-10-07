@@ -2540,7 +2540,7 @@ index f764033a20a89656e24ff599ce2a39cd5f8338df..d63644247eacf32df8343608ce83fdb2
                          decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
                      }
 diff --git a/alvr/client_core/src/video_decoder/mod.rs b/alvr/client_core/src/video_decoder/mod.rs
-index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f863f3a7b9 100644
+index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..e7724ccda52e67bf8d67ea760090bc4066e80383 100644
 --- a/alvr/client_core/src/video_decoder/mod.rs
 +++ b/alvr/client_core/src/video_decoder/mod.rs
 @@ -1,14 +1,22 @@
@@ -2619,7 +2619,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
      if complete {
          FrameDecision::DecodeComplete
      } else if age < deadline {
-@@ -130,22 +154,274 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
+@@ -130,22 +154,330 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
      let mean = samples.iter().sum::<f32>() / n as f32;
      format!(
          "min {:.2} mean {:.2} p50 {:.2} p95 {:.2} p99 {:.2} max {:.2}",
@@ -2672,6 +2672,13 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
 +    pub condvar_calls: u64,
 +}
 +
++struct Held {
++    frame: (Duration, usize),
++    published_at: Instant,
++    release_token: u64,
++    was_late: bool,
++}
++
 +#[derive(Default)]
 +struct FrameSlotState {
 +    handoff_enabled: bool,
@@ -2690,6 +2697,12 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
 +    pending_was_late: bool,
 +    empty_since: Option<Instant>,
 +    in_flight: bool,
++    /// Opt-in frame hold: a newer publication moves the untaken pending frame here instead of
++    /// superseding it, and the next take() shows it if it is no older than `hold`. Absorbs two
++    /// publications landing in one display period at the cost of one period's extra latency
++    /// for that frame. Not compatible with copy handoff or ready FDs (one pending FD only).
++    hold: Option<Duration>,
++    held: Option<Held>,
 +    #[cfg(test)]
 +    consumer_waiters: usize,
 +    #[cfg(test)]
@@ -2704,6 +2717,10 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
 +    /// the consumer lease remains protected until a subsequent frame is taken.
 +    pub fn enable_copy_handoff(&self) {
 +        self.inner.lock().handoff_enabled = true;
++    }
++    pub fn set_hold(&self, hold: Option<Duration>) {
++        let mut state = self.inner.lock();
++        state.hold = hold.filter(|_| !state.handoff_enabled);
 +    }
 +    pub fn wait_producer_ready(&self, running: impl Fn() -> bool) -> bool {
 +        let mut state = self.inner.lock();
@@ -2770,11 +2787,21 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
 +        if let Some(late) = late {
 +            state.freshness.late[freshness_bucket(late)] += 1;
 +        }
-+        if let Some((old, _)) = state.pending.replace((timestamp, buffer)) {
-+            crate::frame_trace::record(b'X', old.as_nanos() as u64, 0, 0);
-+            state.superseded += 1;
-+            state.freshness.superseded += 1;
-+            if state.pending_was_late { state.freshness.late_superseded += 1; }
++        let hold = state.hold.is_some() && !state.freshness.ready_active;
++        if let Some(old) = state.pending.replace((timestamp, buffer)) {
++            let older = if hold {
++                let held = Held { frame: old, published_at: state.pending_published_at.unwrap_or(now),
++                                  release_token: state.pending_release_token, was_late: state.pending_was_late };
++                state.held.replace(held).map(|h| (h.frame, h.was_late))
++            } else {
++                Some((old, state.pending_was_late))
++            };
++            if let Some(((old, _), was_late)) = older {
++                crate::frame_trace::record(b'X', old.as_nanos() as u64, 0, 0);
++                state.superseded += 1;
++                state.freshness.superseded += 1;
++                if was_late { state.freshness.late_superseded += 1; }
++            }
 +        }
 +        state.pending_published_at = Some(now);
 +        state.pending_was_late = late.is_some();
@@ -2831,6 +2858,24 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
      pub fn take(&self) -> Option<(Duration, usize)> {
 -        self.inner.lock().take()
 +        let mut state = self.inner.lock();
++        if let Some(held) = state.held.take() {
++            let age = held.published_at.elapsed();
++            if state.hold.is_some_and(|limit| age <= limit) {
++                state.freshness.taken += 1;
++                state.freshness.margin[freshness_bucket(age)] += 1;
++                crate::frame_trace::record(b'T', held.frame.0.as_nanos() as u64, age.as_micros() as i64, 1);
++                if held.was_late { state.freshness.late_taken += 1; }
++                state.leased = held.frame.1;
++                state.leased_release_token = held.release_token;
++                #[cfg(unix)]
++                { state.ready_fds.lease(held.frame.1); }
++                return Some(held.frame);
++            }
++            crate::frame_trace::record(b'X', held.frame.0.as_nanos() as u64, 0, 1);
++            state.superseded += 1;
++            state.freshness.superseded += 1;
++            if held.was_late { state.freshness.late_superseded += 1; }
++        }
 +        let Some(frame) = state.pending.take() else {
 +            // Repeated polls within one wait count once: this marks an empty episode.
 +            if state.empty_since.is_none() {
@@ -2861,6 +2906,11 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
 +        let state = self.inner.lock();
 +        [state.leased, state.pending.map_or(0, |(_, buffer)| buffer)]
 +    }
++    /// `protected_buffers` plus the held frame's buffer, read under one lock.
++    pub fn protected_buffers3(&self) -> [usize; 3] {
++        let state = self.inner.lock();
++        [state.leased, state.pending.map_or(0, |(_, buffer)| buffer), state.held.as_ref().map_or(0, |h| h.frame.1)]
++    }
 +    pub fn leased_release_token(&self, buffer: usize) -> u64 {
 +        let state = self.inner.lock();
 +        if state.leased == buffer { state.leased_release_token } else { 0 }
@@ -2873,6 +2923,12 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
 +}
 +
 +/// Bound the experimental independent TCP decoders; the default stays one worker.
++/// `debug.q3pw.frame_hold_us`: 1-10000 enables the frame hold with that age limit; anything else
++/// leaves it off.
++pub fn frame_hold(value: &str) -> Option<Duration> {
++    value.trim().parse::<u64>().ok().filter(|us| (1..=10_000).contains(us)).map(Duration::from_micros)
++}
++
 +pub fn pyrowave_worker_count(value: &str) -> usize {
 +    if value.trim() == "2" { 2 } else { 1 }
 +}
@@ -2899,7 +2955,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
      }
  }
  
-@@ -203,6 +479,64 @@ pub struct VideoDecoderSource {
+@@ -203,6 +535,64 @@ pub struct VideoDecoderSource {
  }
  
  impl VideoDecoderSource {
@@ -2964,7 +3020,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
      /// If a frame is available, return the timestamp and the AHardwareBuffer.
      pub fn get_frame(&mut self) -> Option<(Duration, *mut std::ffi::c_void)> {
          #[cfg(target_os = "android")]
-@@ -219,7 +553,7 @@ impl VideoDecoderSource {
+@@ -219,7 +609,7 @@ impl VideoDecoderSource {
  }
  
  #[cfg(target_os = "android")]
@@ -2973,7 +3029,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
      extern "C" {
          fn __android_log_write(
              prio: i32,
-@@ -229,7 +563,9 @@ fn logcat_info(tag: &str, message: &str) {
+@@ -229,7 +619,9 @@ fn logcat_info(tag: &str, message: &str) {
      }
      let tag = std::ffi::CString::new(tag).unwrap_or_default();
      let text = std::ffi::CString::new(message).unwrap_or_default();
@@ -2984,7 +3040,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
  }
  
  // report_frame_decoded: (target_timestamp: Duration) -> ()
-@@ -249,7 +585,9 @@ pub fn create_decoder(
+@@ -249,7 +641,9 @@ pub fn create_decoder(
              }
          }
          if config.codec == CodecType::PyroWave
@@ -2995,7 +3051,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
          {
              let (sink, source) = pyrowave_udp::video_decoder_split(
                  config.clone(),
-@@ -304,6 +642,192 @@ pub fn create_decoder(
+@@ -304,6 +698,264 @@ pub fn create_decoder(
  mod tests {
      use super::*;
  
@@ -3008,6 +3064,78 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
 +            assert!(Instant::now() < deadline, "consumer never parked");
 +            std::thread::yield_now();
 +        }
++    }
++
++    fn ms(value: u64) -> Duration { Duration::from_millis(value) }
++
++    #[test]
++    fn frame_hold_property_is_bounded() {
++        assert_eq!(frame_hold(""), None);
++        assert_eq!(frame_hold("0"), None);
++        assert_eq!(frame_hold(" 6000 "), Some(Duration::from_micros(6000)));
++        assert_eq!(frame_hold("10001"), None);
++        assert_eq!(frame_hold("-5"), None);
++    }
++
++    #[test]
++    fn hold_shows_both_frames_of_a_burst_in_order() {
++        let slot = FrameSlot::default();
++        slot.set_hold(Some(Duration::from_secs(1)));
++        assert!(slot.publish_fenced(ms(1), 0x10, 1, 11));
++        assert!(slot.publish_fenced(ms(2), 0x20, 2, 22));
++        assert_eq!(slot.superseded(), 0);
++        assert_eq!(slot.protected_buffers3(), [0, 0x20, 0x10]);
++        assert_eq!(slot.take(), Some((ms(1), 0x10)));
++        assert_eq!(slot.leased_release_token(0x10), 11);
++        // The newer frame stays pending and protected while the held one is leased.
++        assert_eq!(slot.protected_buffers3(), [0x10, 0x20, 0]);
++        assert_eq!(slot.take(), Some((ms(2), 0x20)));
++        assert_eq!(slot.leased_release_token(0x20), 22);
++        assert_eq!(slot.take(), None);
++    }
++
++    #[test]
++    fn hold_keeps_at_most_one_older_frame() {
++        let slot = FrameSlot::default();
++        slot.set_hold(Some(Duration::from_secs(1)));
++        for (i, buffer) in [0x10, 0x20, 0x30].into_iter().enumerate() {
++            assert!(slot.publish_fenced(ms(i as u64), buffer, i as u64 + 1, 0));
++        }
++        assert_eq!(slot.superseded(), 1);
++        assert_eq!(slot.take(), Some((ms(1), 0x20)));
++        assert_eq!(slot.take(), Some((ms(2), 0x30)));
++    }
++
++    #[test]
++    fn stale_held_frame_is_dropped_for_the_newer_one() {
++        let slot = FrameSlot::default();
++        slot.set_hold(Some(Duration::from_micros(1)));
++        assert!(slot.publish_fenced(ms(1), 0x10, 1, 0));
++        assert!(slot.publish_fenced(ms(2), 0x20, 2, 0));
++        std::thread::sleep(ms(2));
++        assert_eq!(slot.take(), Some((ms(2), 0x20)));
++        assert_eq!(slot.superseded(), 1);
++        assert_eq!(slot.protected_buffers3(), [0x20, 0, 0]);
++    }
++
++    #[test]
++    fn without_hold_the_newest_frame_wins() {
++        let slot = FrameSlot::default();
++        assert!(slot.publish_fenced(ms(1), 0x10, 1, 0));
++        assert!(slot.publish_fenced(ms(2), 0x20, 2, 0));
++        assert_eq!(slot.protected_buffers3(), [0, 0x20, 0]);
++        assert_eq!(slot.take(), Some((ms(2), 0x20)));
++        assert_eq!(slot.take(), None);
++    }
++
++    #[test]
++    fn hold_is_refused_with_copy_handoff() {
++        let slot = FrameSlot::default();
++        slot.enable_copy_handoff();
++        slot.set_hold(Some(Duration::from_secs(1)));
++        assert!(slot.publish_fenced(ms(1), 0x10, 1, 0));
++        assert!(slot.publish_fenced(ms(2), 0x20, 2, 0));
++        assert_eq!(slot.superseded(), 1);
 +    }
 +
 +    #[test]
@@ -3188,7 +3316,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
      #[test]
      fn config_round_trips_the_encoder_blob() {
          let mut buf = Vec::new();
-@@ -312,53 +836,97 @@ mod tests {
+@@ -312,53 +964,97 @@ mod tests {
          buf.push(1);
          buf.push(0);
          let c = parse_pyrowave_config(&buf).unwrap();
@@ -3299,7 +3427,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
          assert_eq!(dist(&mut Vec::new()), "-");
      }
  
-@@ -392,4 +960,145 @@ mod tests {
+@@ -392,4 +1088,145 @@ mod tests {
          assert_eq!(slot.take(), Some((Duration::from_millis(2), 0x20)));
          assert!(slot.take().is_none());
      }
@@ -3446,7 +3574,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f8
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601497aaca790db25fa1b37423948fdfaa86..534a463e6194d74a13104f46d4b1e83e9475810b 100644
+index 2e22601497aaca790db25fa1b37423948fdfaa86..4b46b81f5b7cd18e97bc90f7d9a8e1a13ca832f0 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -3497,7 +3625,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..534a463e6194d74a13104f46d4b1e83e
  #[repr(C)]
  struct PyroClient {
      _private: [u8; 0],
-@@ -33,36 +51,76 @@ struct FrameInfo {
+@@ -33,36 +51,78 @@ struct FrameInfo {
      convert_ms: f64,
      total_ms: f64,
      complete: i32,
@@ -3527,6 +3655,8 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..534a463e6194d74a13104f46d4b1e83e
 +        protected_a: *mut c_void,
 +        protected_b: *mut c_void,
      ) -> i32;
++    fn pyroclient_decode_guarded3(c: *mut PyroClient, out: *mut *mut c_void, info: *mut FrameInfo,
++        protected_a: *mut c_void, protected_b: *mut c_void, protected_c: *mut c_void) -> i32;
      fn pyroclient_destroy(c: *mut PyroClient);
 +    fn pyroclient_submit_guarded(c: *mut PyroClient, out: *mut *mut c_void,
 +        info: *mut FrameInfo, protected_a: *mut c_void, protected_b: *mut c_void, ready_fd: *mut i32) -> i32;
@@ -3579,7 +3709,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..534a463e6194d74a13104f46d4b1e83e
          self.pending.ready.notify_one();
          Ok(true)
      }
-@@ -71,13 +129,39 @@ impl VideoDecoderSink {
+@@ -71,13 +131,39 @@ impl VideoDecoderSink {
  pub struct VideoDecoderSource {
      running: Arc<AtomicBool>,
      pending: Arc<Pending>,
@@ -3621,7 +3751,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..534a463e6194d74a13104f46d4b1e83e
      }
  }
  
-@@ -85,7 +169,7 @@ impl Drop for VideoDecoderSource {
+@@ -85,7 +171,7 @@ impl Drop for VideoDecoderSource {
      fn drop(&mut self) {
          self.running.store(false, Ordering::Relaxed);
          self.pending.ready.notify_all();
@@ -3630,7 +3760,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..534a463e6194d74a13104f46d4b1e83e
              t.join().ok();
          }
      }
-@@ -99,18 +183,85 @@ pub fn video_decoder_split(
+@@ -99,25 +185,102 @@ pub fn video_decoder_split(
      let pending = Arc::new(Pending {
          frame: Mutex::new(None),
          ready: Condvar::new(),
@@ -3695,6 +3825,15 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..534a463e6194d74a13104f46d4b1e83e
 +        cfg.width==4160 && cfg.height==2208 && !cfg.chroma444 && cfg.wavelet==2 && cfg.decode_path==2,
 +        low_priority, other_mode);
 +    super::logcat_info("PYROWAVE", &format!("[Q3PW_PRERECORD_POLICY] eligible={} native420_single_low_worker=true", prerecord_requested as u8));
++    // debug.q3pw.frame_hold_us (opt-in): keep one older decoded frame for the next display period
++    // instead of superseding it, if it is still that young when selected (FrameSlot::set_hold).
++    // Only on the plain synchronous single-decoder path; it needs a fourth output buffer.
++    let hold_len = unsafe { libc::__system_property_get(c"debug.q3pw.frame_hold_us".as_ptr(), property.as_mut_ptr().cast()) };
++    let hold = super::frame_hold(&String::from_utf8_lossy(&property[..hold_len.max(0) as usize]))
++        .filter(|_| workers == 1 && !handoff && !ready_requested && !prerecord_requested);
++    decoded.set_hold(hold);
++    super::logcat_info("PYROWAVE", &format!("[Q3PW_FRAME_HOLD] hold_us={} ring={}",
++        hold.map_or(0, |h| h.as_micros()), if hold.is_some() { 4 } else { 3 }));
 +    let report_frame_decoded = Arc::new(report_frame_decoded);
 +    let mut threads = Vec::with_capacity(workers);
 +    for worker_index in 0..workers {
@@ -3719,15 +3858,16 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..534a463e6194d74a13104f46d4b1e83e
                      cfg.width,
                      cfg.height,
                      cfg.chroma444 as i32,
-@@ -118,6 +269,7 @@ pub fn video_decoder_split(
-                     3,
+                     cfg.full_range as i32,
+-                    3,
++                    if hold.is_some() { 4 } else { 3 },
                      cfg.wavelet as i32,
                      cfg.decode_path as i32,
 +                    low_priority as i32,
                  )
              };
              if client.is_null() {
-@@ -128,64 +280,255 @@ pub fn video_decoder_split(
+@@ -128,64 +291,259 @@ pub fn video_decoder_split(
                  )));
                  return;
              }
@@ -3828,7 +3968,9 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..534a463e6194d74a13104f46d4b1e83e
                  let mut info = FrameInfo::default();
 -                let rc = unsafe { pyroclient_decode(client, &mut out, &mut info) };
 -                if rc != 0 || out.is_null() {
-+                let protected = decoded.protected_buffers();
++                // One snapshot: a take() between separate reads could lease the held buffer unguarded.
++                let protected3 = decoded.protected_buffers3();
++                let protected = [protected3[0], protected3[1]];
 +                let mut ready_fd = -1;
 +                let native_start = producer_probe.then(Instant::now);
 +                let rc = unsafe {
@@ -3839,6 +3981,8 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..534a463e6194d74a13104f46d4b1e83e
 +                            protected[0] as *mut c_void,protected[1] as *mut c_void)
 +                    } else if ready_active { pyroclient_submit_guarded(client, &mut out, &mut info,
 +                        protected[0] as *mut c_void, protected[1] as *mut c_void, &mut ready_fd) }
++                    else if hold.is_some() { pyroclient_decode_guarded3(client, &mut out, &mut info,
++                        protected[0] as *mut c_void, protected[1] as *mut c_void, protected3[2] as *mut c_void) }
 +                    else { pyroclient_decode_guarded(
 +                        client,
 +                        &mut out,
