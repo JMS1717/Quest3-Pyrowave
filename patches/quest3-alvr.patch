@@ -8717,10 +8717,10 @@ index 7bfba12ca0479598b4060b84664695a82c96411d..7236535dfbd7196f77a29c1e5f9dbc27
  #endif
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce306d99a4
+index 0000000000000000000000000000000000000000..81eee1e7c0156b0fab0cf5a4927bba110e367a1a
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,646 @@
+@@ -0,0 +1,672 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -8786,6 +8786,21 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +    { false }
 +}
 +
++// Diagnostic only, never a default: `debug.q3pw.eye_ablate=N` (2-16) draws only the bottom 1/N
++// of each eye, leaving the rest of the image stale. It measures how many frames the eye pass's GPU
++// time costs at a saturated refresh rate; the picture is wrong while it is set.
++fn eye_ablate_requested() -> i32 {
++    #[cfg(target_os = "android")]
++    {
++        let mut value = [0u8; 92];
++        let len = unsafe { __system_property_get(c"debug.q3pw.eye_ablate".as_ptr(), value.as_mut_ptr().cast()) };
++        std::str::from_utf8(&value[..len.max(0) as usize]).ok()
++            .and_then(|v| v.trim().parse::<i32>().ok()).filter(|n| (2..=16).contains(n)).unwrap_or(1)
++    }
++    #[cfg(not(target_os = "android"))]
++    { 1 }
++}
++
 +// Initialization diagnostics bypass the mirrored-log severity filter. No per-frame
 +// logging or device/pointer identifiers; this confirms effective experimental paths.
 +pub(super) fn import_diagnostic(priority: i32, message: String) {
@@ -8837,6 +8852,7 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +    copy_wait_ns: i32,
 +    bypass_srgb: bool,
 +    invalidate: bool,
++    ablate: i32,
 +    image_cache_enabled: Cell<bool>,
 +    image_cache: RefCell<Vec<CachedImport>>,
 +    pending: RefCell<Option<(gl::Fence, Instant)>>,
@@ -8929,6 +8945,8 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +                config.srgb_correction, config.encoding_gamma));
 +            let invalidate = eye_invalidate_requested();
 +            import_diagnostic(4, format!("[Q3PW_EYE_INVALIDATE] requested={invalidate} active={invalidate}"));
++            let ablate = eye_ablate_requested();
++            if ablate > 1 { import_diagnostic(4, format!("[Q3PW_EYE_ABLATE] fraction=1/{ablate} image_incorrect=true")); }
 +            let program = compile_program(gl, config.foveation.is_some(), false, 0)?;
 +            // Compiled up front so the first mode-5 frame does not stall; without them such frames
 +            // take the staging path, which converts them too.
@@ -9034,7 +9052,7 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +                    native_release, release_active: Cell::new(true), source_release_token: Cell::new(0),
 +                    release_fd: RefCell::new(None), release_observers: RefCell::new(VecDeque::new()),
 +                    release_exported: Cell::new(0), release_observed: Cell::new(0), release_last_log: RefCell::new(Instant::now()),
-+                    image_cache: RefCell::new(Vec::new()), pending: RefCell::new(None), copy_wait_ns: copy_wait_us.clamp(0, 2000) * 1000, bypass_srgb, invalidate })
++                    image_cache: RefCell::new(Vec::new()), pending: RefCell::new(None), copy_wait_ns: copy_wait_us.clamp(0, 2000) * 1000, bypass_srgb, invalidate, ablate })
 +                },
 +                Err(e) => {
 +                    for framebuffer in framebuffers.into_iter().flatten() { gl.delete_framebuffer(framebuffer); }
@@ -9229,6 +9247,7 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
++            if self.ablate > 1 { gl.enable(gl::SCISSOR_TEST); }
 +            match present {
 +                Some(_) => gl.enable(gl::SCISSOR_TEST),
 +                None => {
@@ -9241,6 +9260,7 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +                gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, Some(self.framebuffers[eye][index as usize]));
 +                if self.invalidate { gl.invalidate_framebuffer(gl::DRAW_FRAMEBUFFER, &[gl::COLOR_ATTACHMENT0]); }
 +                let Some(programs) = present else {
++                    if self.ablate > 1 { gl.scissor(0, 0, self.resolution.x as i32, self.resolution.y as i32 / self.ablate); }
 +                    gl.uniform_1_i32(Some(&self.view_idx), eye as i32);
 +                    gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
 +                    continue;
@@ -9250,11 +9270,17 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +                    gl.use_program(Some(*program));
 +                    gl.uniform_1_i32(Some(flip_y), self.flip as i32);
 +                    gl.uniform_1_i32(Some(view_idx), eye as i32);
-+                    gl.scissor(x, y, width, height);
++                    if self.ablate > 1 {
++                        let top = (self.resolution.y as i32 / self.ablate).min(y + height);
++                        if top <= y { continue; }
++                        gl.scissor(x, y, width, top - y);
++                    } else {
++                        gl.scissor(x, y, width, height);
++                    }
 +                    gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
 +                }
 +            }
-+            if present.is_some() { gl.disable(gl::SCISSOR_TEST); }
++            if present.is_some() || self.ablate > 1 { gl.disable(gl::SCISSOR_TEST); }
 +            if let Some(index) = query {
 +                if let Some(timer) = self.timer.borrow_mut().as_mut() { timer.end(gl, index); }
 +            }
