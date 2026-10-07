@@ -86,6 +86,25 @@ unsignaled. It does not force a fixed GPU delay, prove the FD is the only driver
 dependency, reproduce OpenXR scheduling or establish absolute image quality.
 This extra diagnostic is not linked into the production renderer/library.
 
+## 207 Hz with mode 5 (October 7)
+
+Retested because the synchronous eye copy now blocks the render thread for most of the frame
+(CPU span 4.16 ms p50 of 4.83 ms). Haar mode 5, 700 Mbps, 2080x2208 per eye from 3072x3216,
+60 deg/s pan, headset awake, 12 s windows, ABBA over the bf62efc + mode 6 build:
+
+| Arm | Fresh FPS | Lost/s | Eye-copy CPU p50 | VrApi FPS | Compositor stale frames / 12 s | ALVR latency estimate |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| off | 196.6 | 11.0 | 4.16 ms | 202.0 | 200 | 28.8 ms |
+| `release_fd=1` | 197.7 | 10.3 | 0.95 ms | 205.5 | 115 | 30.5 ms |
+| `release_fd=1` | 194.1 | 13.7 | 0.75 ms | 206.0 | 72 | 32.3 ms |
+| off | 194.0 | 13.9 | 4.14 ms | 201.5 | 274 | 28.1 ms |
+
+With the CPU wait gone the app submits nearly every display period, so the compositor repeats
+far fewer layers, but the rate of fresh decoded frames is unchanged (+0.6 FPS, within block
+variation) and the latency estimate rises by 1.7-4.1 ms (time in the vsync queue). Not a
+default: fresh frames and latency are the goals. The estimate is the client's pipeline figure,
+not motion-to-photon.
+
 ## Recorded outcome on Quest 3
 
 [Matching `.26` CI builds](https://github.com/JMS1717/Quest3-Pyrowave/actions/runs/37027807642)
