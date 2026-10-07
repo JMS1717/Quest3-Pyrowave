@@ -54,6 +54,22 @@ this is not a latency claim.
 logcat `[Q3PW_PRIORITY]` reports the policy decision (refresh rate, chroma,
 choice) and what the driver applied.
 
+## 207 Hz with mode 5 (October 7)
+
+Mode 5 cut decode to about 2.6 ms of the 4.83 ms period, about the share at which LOW won at
+120 Hz, and the eye copy's CPU span was 4.24 ms p50 (5.19 ms p90), so LOW was retried. Haar mode
+5, 700 Mbps, 2080x2208 per eye from 3072x3216, 60 deg/s pan, headset awake, 12 s windows:
+
+| Arm | Fresh FPS | Lost/s | GPU decode p50 | Fence p50 |
+| --- | --- | --- | --- | --- |
+| default (auto chose default above 120 Hz) | 192.9 | 14.4 | 2.67 ms | 4.64 ms |
+| `decode_priority=low` | 163.5 | 43.8 | 4.12 ms | 5.73 ms |
+| `decode_priority=low` | 165.3 | 41.8 | 3.49 ms | 5.70 ms |
+
+The closing default block was interrupted (the PC ran short of memory and the run was stopped);
+the same build's default measured 195.4-196.5 FPS in the four mode 5 blocks run just before.
+Preempting decode at 207 Hz costs about 30 fresh FPS: keep the automatic policy.
+
 ## Limits
 
 Stationary chart on an unworn headset. Not gameplay, perceptual or sustained
