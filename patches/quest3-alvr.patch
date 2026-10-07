@@ -7353,7 +7353,7 @@ index 0000000000000000000000000000000000000000..358b58d00e5683ff20e7a17d0195a072
 +    }
 +}
 diff --git a/alvr/dashboard/src/dashboard/components/settings.rs b/alvr/dashboard/src/dashboard/components/settings.rs
-index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..d4f7bc936ecfdcb66c35e8d6a357721b12a4db61 100644
+index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..bbcec7bef3394472feb0aedc2cd4664fb150b608 100644
 --- a/alvr/dashboard/src/dashboard/components/settings.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings.rs
 @@ -4,7 +4,7 @@ use super::{
@@ -7550,7 +7550,7 @@ index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..d4f7bc936ecfdcb66c35e8d6a357721b
 +            ui.label(format!("{}×{} / eye • {:.2} ms • ≤{} B/frame • {:.2}:1 raw/payload{}",
 +                b.eye_width, b.eye_height, b.frame_ms, b.payload_bytes, b.raw_to_payload,
 +                if automatic { " at ceiling" } else { "" }))
-+                .on_hover_text("PyroWave 8-bit codec payload after 32-pixel padding. Excludes network overhead. This budget does not prove decode speed or image quality. Resolution/refresh changes need a SteamVR restart.");
++                .on_hover_text("PyroWave 8-bit codec payload after 32-pixel padding. Excludes network overhead. This budget does not prove decode speed or image quality. Resolution and refresh changes apply about 2 s after the last edit: the stream reconnects and SteamVR restarts.");
 +            let floor = alvr_session::beta::quality_floor_mbps(
 +                res["Absolute"]["width"].as_u64().unwrap_or(0) as u32,
 +                res["Absolute"]["height"]["content"].as_u64().unwrap_or(0) as u32,
@@ -10456,10 +10456,19 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..32d9601f7a9835e93115859e328c9b04
  
          Some((
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec6452cdd507 100644
+index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9a2d276d9 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
-@@ -53,7 +53,61 @@ pub struct VideoPacket {
+@@ -43,6 +43,8 @@ use std::{
+ const RETRY_CONNECT_MIN_INTERVAL: Duration = Duration::from_secs(1);
+ const HANDSHAKE_ACTION_TIMEOUT: Duration = Duration::from_secs(2);
+ pub const STREAMING_RECV_TIMEOUT: Duration = Duration::from_millis(500);
++const SETTINGS_CHECK_INTERVAL: Duration = Duration::from_millis(500);
++const SETTINGS_SETTLE_TIME: Duration = Duration::from_secs(2);
+ const REAL_TIME_UPDATE_INTERVAL: Duration = Duration::from_secs(1);
+ 
+ const MAX_UNREAD_PACKETS: usize = 10; // Applies per stream
+@@ -53,7 +55,61 @@ pub struct VideoPacket {
  }
  
  fn align32(value: f32) -> u32 {
@@ -10522,7 +10531,54 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
  }
  
  fn is_streaming(client_hostname: &str) -> bool {
-@@ -133,25 +187,18 @@ fn openvr_config_with_env(
+@@ -69,6 +125,46 @@ pub fn contruct_openvr_config(session: &SessionConfig) -> OpenvrConfig {
+     openvr_config_with_env(session, &alvr_session::beta::process_env)
+ }
+ 
++/// Settings read only when a stream starts: the SteamVR driver configuration and what stream
++/// negotiation reads. Changing one while streaming takes effect by reconnecting the client; the
++/// next connection restarts SteamVR when the driver configuration changed.
++fn stream_start_settings(session: &SessionConfig) -> serde_json::Map<String, serde_json::Value> {
++    let settings = session.to_settings();
++    let video = &settings.video;
++    let mut map = match serde_json::to_value(contruct_openvr_config(session)) {
++        Ok(serde_json::Value::Object(map)) => map,
++        _ => serde_json::Map::new(),
++    };
++    for (key, value) in [
++        ("preferred_codec", serde_json::to_value(&video.preferred_codec)),
++        ("pyrowave", serde_json::to_value(&video.pyrowave)),
++        ("transcoding_view_resolution", serde_json::to_value(&video.transcoding_view_resolution)),
++        (
++            "emulated_headset_view_resolution",
++            serde_json::to_value(&video.emulated_headset_view_resolution),
++        ),
++        ("preferred_fps", serde_json::to_value(video.preferred_fps)),
++    ] {
++        map.insert(format!("video.{key}"), value.unwrap_or_default());
++    }
++    map
++}
++
++fn changed_settings(
++    before: &serde_json::Map<String, serde_json::Value>,
++    after: &serde_json::Map<String, serde_json::Value>,
++) -> Vec<String> {
++    let mut keys = before
++        .keys()
++        .chain(after.keys())
++        .filter(|key| before.get(*key) != after.get(*key))
++        .cloned()
++        .collect::<Vec<_>>();
++    keys.sort();
++    keys.dedup();
++    keys
++}
++
+ fn openvr_config_with_env(
+     session: &SessionConfig,
+     env: &dyn Fn(&str) -> Option<String>,
+@@ -133,25 +229,18 @@ fn openvr_config_with_env(
          })
          .unwrap_or(false);
  
@@ -10560,7 +10616,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
  
      let mut brightness = 0.0;
      let mut contrast = 0.0;
-@@ -240,7 +287,11 @@ fn openvr_config_with_env(
+@@ -240,7 +329,11 @@ fn openvr_config_with_env(
          pyrowave_enabled: pyrowave.enabled,
          pyrowave_udp: pyrowave.udp,
          pyrowave_wavelet_53: pyrowave.wavelet_53,
@@ -10572,7 +10628,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
          _controller_profile,
          _server_impl_debug: settings.extra.logging.debug_groups.server_impl,
          _client_impl_debug: settings.extra.logging.debug_groups.client_impl,
-@@ -313,12 +364,24 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -313,12 +406,24 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
              let stream_port;
              let client_type;
              let client_autolaunch;
@@ -10597,7 +10653,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
              }
  
              let status = match wired_connection.setup(
-@@ -326,6 +389,7 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -326,6 +431,7 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
                  stream_port,
                  &client_type,
                  client_autolaunch,
@@ -10605,7 +10661,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
              ) {
                  Ok(status) => status,
                  Err(e) => {
-@@ -471,6 +535,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -471,6 +577,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
          thread.join().ok();
      }
  
@@ -10622,7 +10678,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
      alvr_common::dbg_connection!("handshake_loop: End");
  }
  
-@@ -629,6 +703,19 @@ fn connection_pipeline(
+@@ -629,6 +745,19 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -10642,7 +10698,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +736,9 @@ fn connection_pipeline(
+@@ -649,18 +778,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -10664,7 +10720,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -802,6 +880,10 @@ fn connection_pipeline(
+@@ -802,6 +922,10 @@ fn connection_pipeline(
          proto_socket.split(STREAMING_RECV_TIMEOUT).to_con()?;
  
      let mut new_openvr_config = contruct_openvr_config(session_manager_lock.session());
@@ -10675,7 +10731,15 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
      new_openvr_config.eye_resolution_width = stream_view_resolution.x;
      new_openvr_config.eye_resolution_height = stream_view_resolution.y;
      new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
-@@ -846,6 +928,28 @@ fn connection_pipeline(
+@@ -822,6 +946,7 @@ fn connection_pipeline(
+ 
+         crate::notify_restart_driver();
+     }
++    let stream_start_baseline = stream_start_settings(session_manager_lock.session());
+ 
+     dbg_connection!("connection_pipeline: Send StartStream packet");
+     control_sender
+@@ -846,6 +971,28 @@ fn connection_pipeline(
  
      *ctx.bitrate_manager.lock() =
          BitrateManager::new(initial_settings.video.bitrate.history_size, fps);
@@ -10704,7 +10768,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
  
      let stream_protocol = if wired {
          SocketProtocol::Tcp
-@@ -869,10 +973,11 @@ fn connection_pipeline(
+@@ -869,10 +1016,11 @@ fn connection_pipeline(
  
      // PyroWave over UDP: a plain socket to the client's address. The same resolution fills
      // openvr_config for the C++ encoder, so the two sides cannot disagree.
@@ -10720,7 +10784,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
      if pyrowave.enabled {
          info!("{pyrowave}");
      }
-@@ -1102,7 +1207,10 @@ fn connection_pipeline(
+@@ -1102,7 +1250,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -10732,7 +10796,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1223,7 @@ fn connection_pipeline(
+@@ -1115,6 +1266,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -10740,7 +10804,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1240,14 @@ fn connection_pipeline(
+@@ -1131,6 +1283,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -10755,15 +10819,43 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1184,6 +1301,7 @@ fn connection_pipeline(
+@@ -1184,9 +1344,35 @@ fn connection_pipeline(
          let disconnect_notif = Arc::clone(&disconnect_notif);
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
 +        let supported_refresh_rates = streaming_caps.supported_refresh_rates.clone();
          move || {
              let mut disconnection_deadline = Instant::now() + KEEPALIVE_TIMEOUT;
++            let mut next_settings_check = Instant::now() + SETTINGS_CHECK_INTERVAL;
++            let mut settings_changed_since = None;
              while is_streaming(&client_hostname) {
-@@ -1299,6 +1417,9 @@ fn connection_pipeline(
++                // Dashboard edits of stream-start settings would otherwise wait for the next
++                // connection. Wait until edits settle, so a slider drag reconnects once.
++                if Instant::now() >= next_settings_check {
++                    next_settings_check = Instant::now() + SETTINGS_CHECK_INTERVAL;
++                    let changed = changed_settings(
++                        &stream_start_baseline,
++                        &stream_start_settings(SESSION_MANAGER.read().session()),
++                    );
++                    if changed.is_empty() {
++                        settings_changed_since = None;
++                    } else if settings_changed_since
++                        .get_or_insert_with(Instant::now)
++                        .elapsed()
++                        >= SETTINGS_SETTLE_TIME
++                    {
++                        info!(
++                            "[Q3PW_SETTINGS_RECONNECT] Reconnecting to apply {}",
++                            changed.join(", ")
++                        );
++                        control_sender.lock().send(&ServerControlPacket::Restarting).ok();
++                        break;
++                    }
++                }
+                 let packet = match control_receiver.recv(STREAMING_RECV_TIMEOUT) {
+                     Ok(packet) => packet,
+                     Err(ConnectionError::TryAgain(_)) => {
+@@ -1299,6 +1485,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -10773,7 +10865,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1378,6 +1499,22 @@ fn connection_pipeline(
+@@ -1378,6 +1567,22 @@ fn connection_pipeline(
                              };
  
                          match reserved {
@@ -10796,7 +10888,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
                              ReservedClientControlPacket::CustomInteractionProfile {
                                  input_ids,
                                  ..
-@@ -1552,9 +1689,10 @@ mod beta_tests {
+@@ -1552,9 +1757,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -10809,6 +10901,29 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec64
      }
  
      #[test]
+@@ -1569,4 +1775,22 @@ mod beta_tests {
+         assert!(!config.pyrowave_udp);
+         assert!(config.pyrowave_wavelet_53);
+     }
++
++    #[test]
++    fn stream_start_settings_name_restart_changes_only() {
++        let session = SessionConfig::default();
++        let baseline = stream_start_settings(&session);
++
++        let mut live = session.clone();
++        live.session_settings.video.bitrate.mode.ConstantMbps = 300;
++        assert!(changed_settings(&baseline, &stream_start_settings(&live)).is_empty());
++
++        let mut restart = session.clone();
++        restart.session_settings.video.pyrowave.chroma_444 = true;
++        restart.session_settings.video.preferred_fps = 120.0;
++        assert_eq!(
++            changed_settings(&baseline, &stream_start_settings(&restart)),
++            ["pyrowave_chroma_444", "video.preferred_fps", "video.pyrowave"]
++        );
++    }
+ }
 diff --git a/alvr/server_core/src/lib.rs b/alvr/server_core/src/lib.rs
 index efa67b1d107def4e3e6d9cec00e6056dbece2380..ed3c31b5b43d9d9a178673a059250e1aba9312d1 100644
 --- a/alvr/server_core/src/lib.rs
