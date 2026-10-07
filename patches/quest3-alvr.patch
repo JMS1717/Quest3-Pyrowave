@@ -1192,7 +1192,7 @@ index 0000000000000000000000000000000000000000..057b458db4253a7c044c8c1592cd29af
 +    }
 +}
 diff --git a/alvr/client_core/src/connection.rs b/alvr/client_core/src/connection.rs
-index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c1042272aa7155c83a5c6133d2d897d71e13fae7 100644
+index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..fd9eb702c994a33cc6e4a53e981779cf40b2c5dd 100644
 --- a/alvr/client_core/src/connection.rs
 +++ b/alvr/client_core/src/connection.rs
 @@ -80,11 +80,14 @@ pub struct ConnectionContext {
@@ -1256,7 +1256,15 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c1042272aa7155c83a5c6133d2d897d7
              let mut stream_corrupted = true;
              // With PyroWave over UDP nothing arrives on this stream, so the RequestIdr that
              // normally fetches the DecoderConfig would never be sent. Ask once a second until a
-@@ -393,6 +409,8 @@ fn connection_pipeline(
+@@ -357,6 +373,7 @@ fn connection_pipeline(
+                 }
+ 
+                 crate::push_foveation_center(header.timestamp, header.foveation_center);
++                crate::frame_trace::record(b'A', header.timestamp.as_nanos() as u64, nal.len() as i64, 1);
+ 
+                 if header.is_idr {
+                     stream_corrupted = false;
+@@ -393,6 +410,8 @@ fn connection_pipeline(
          }
      });
  
@@ -1265,7 +1273,7 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c1042272aa7155c83a5c6133d2d897d7
      let game_audio_thread = if let Switch::Enabled(config) = settings.audio.game_audio {
          let device = AudioDevice::new_output(None).to_con()?;
          thread::spawn({
-@@ -571,6 +589,19 @@ fn connection_pipeline(
+@@ -571,6 +590,19 @@ fn connection_pipeline(
                          set_hud_message(&event_queue, SERVER_RESTART_MESSAGE);
                          disconnect_notif.notify_one();
                      }
@@ -1285,7 +1293,7 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c1042272aa7155c83a5c6133d2d897d7
                      Ok(ServerControlPacket::ReservedBuffer(buffer)) => {
                          // NB: it's normal for deserialization to fail if server has different
                          // version
-@@ -607,6 +638,10 @@ fn connection_pipeline(
+@@ -607,6 +639,10 @@ fn connection_pipeline(
          let event_queue = Arc::clone(&event_queue);
          let disconnect_notif = Arc::clone(&disconnect_notif);
          move || {
@@ -1296,7 +1304,7 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c1042272aa7155c83a5c6133d2d897d7
              while is_streaming(&ctx) {
                  match stream_socket.recv() {
                      Ok(()) => (),
-@@ -655,6 +690,9 @@ fn connection_pipeline(
+@@ -655,6 +691,9 @@ fn connection_pipeline(
      dbg_connection!("connection_pipeline: Destroying streams");
  
      video_receive_thread.join().ok();
@@ -1306,11 +1314,149 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c1042272aa7155c83a5c6133d2d897d7
      game_audio_thread.join().ok();
      microphone_thread.join().ok();
      haptics_receive_thread.join().ok();
+diff --git a/alvr/client_core/src/frame_trace.rs b/alvr/client_core/src/frame_trace.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..ed952972c5004d1f1e9d4f0ed674c9dde6570ad8
+--- /dev/null
++++ b/alvr/client_core/src/frame_trace.rs
+@@ -0,0 +1,127 @@
++//! Opt-in per-frame critical-path trace for Quest PyroWave (`debug.q3pw.frame_trace=1`, read when
++//! a stream starts). Hot paths only read CLOCK_MONOTONIC and push a fixed-size record into a
++//! bounded buffer; a separate thread logs the records as `[Q3PW_TRACE]` batches about four times
++//! a second, so no formatting or logging happens on the decode or render threads.
++//!
++//! Record: `kind,t_us,id,a,b` with `t_us` CLOCK_MONOTONIC microseconds. `id` is the frame's
++//! tracking timestamp (OpenXR XrTime nanoseconds) for frame records, or the predicted display time
++//! for render-loop records. `K` records pair the monotonic clock with xrConvertTimespecTimeToTimeKHR
++//! so the two clocks are compared only through that measured offset. Kinds are listed in
++//! `tools/quest3/frame_trace.py`.
++
++use alvr_common::parking_lot::Mutex;
++use std::{
++    sync::{
++        atomic::{AtomicBool, AtomicU64, Ordering},
++        Once,
++    },
++    thread,
++    time::Duration,
++};
++
++/// About 18 s of records at 207 Hz; a stalled logger drops (and counts) records rather than grow.
++const MAX_RECORDS: usize = 1 << 16;
++const PER_LINE: usize = 40;
++
++static ENABLED: AtomicBool = AtomicBool::new(false);
++static DROPPED: AtomicU64 = AtomicU64::new(0);
++static RECORDS: Mutex<Vec<Record>> = Mutex::new(Vec::new());
++static FLUSHER: Once = Once::new();
++
++#[derive(Clone, Copy)]
++struct Record {
++    kind: u8,
++    t_us: u64,
++    id: u64,
++    a: i64,
++    b: i64,
++}
++
++#[cfg(unix)]
++pub fn mono_ns() -> u64 {
++    let mut ts = libc::timespec { tv_sec: 0, tv_nsec: 0 };
++    unsafe { libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut ts) };
++    ts.tv_sec as u64 * 1_000_000_000 + ts.tv_nsec as u64
++}
++
++#[cfg(not(unix))]
++pub fn mono_ns() -> u64 {
++    static EPOCH: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
++    EPOCH.get_or_init(std::time::Instant::now).elapsed().as_nanos() as u64
++}
++
++#[inline]
++pub fn enabled() -> bool {
++    ENABLED.load(Ordering::Relaxed)
++}
++
++/// `kind` is one ASCII letter; see the module documentation.
++#[inline]
++pub fn record(kind: u8, id: u64, a: i64, b: i64) {
++    if enabled() {
++        record_at(kind, mono_ns(), id, a, b);
++    }
++}
++
++pub fn record_at(kind: u8, t_ns: u64, id: u64, a: i64, b: i64) {
++    if !enabled() {
++        return;
++    }
++    let mut records = RECORDS.lock();
++    if records.len() < MAX_RECORDS {
++        records.push(Record { kind, t_us: t_ns / 1000, id, a, b });
++    } else {
++        DROPPED.fetch_add(1, Ordering::Relaxed);
++    }
++}
++
++/// Called when a stream starts. Enabling spawns the logging thread once per process.
++pub fn start(enable: bool) {
++    RECORDS.lock().clear();
++    ENABLED.store(enable, Ordering::Relaxed);
++    if !enable {
++        return;
++    }
++    FLUSHER.call_once(|| {
++        thread::spawn(|| loop {
++            thread::sleep(Duration::from_millis(250));
++            let batch = std::mem::take(&mut *RECORDS.lock());
++            for (index, chunk) in batch.chunks(PER_LINE).enumerate() {
++                log(&line(chunk, if index == 0 { DROPPED.swap(0, Ordering::Relaxed) } else { 0 }));
++            }
++        });
++    });
++}
++
++fn line(chunk: &[Record], dropped: u64) -> String {
++    use std::fmt::Write;
++    let mut out = format!("[Q3PW_TRACE] v1 dropped={dropped} ");
++    for r in chunk {
++        let _ = write!(out, "{},{},{},{},{};", r.kind as char, r.t_us, r.id, r.a, r.b);
++    }
++    out
++}
++
++#[cfg(target_os = "android")]
++fn log(message: &str) {
++    crate::video_decoder::logcat_info("Q3PW", message);
++}
++
++#[cfg(not(target_os = "android"))]
++fn log(message: &str) {
++    alvr_common::info!("{message}");
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn line_lists_records_in_order() {
++        let chunk = [
++            Record { kind: b'S', t_us: 10, id: 7, a: 1, b: 0 },
++            Record { kind: b'D', t_us: 12, id: 7, a: 2500, b: -1 },
++        ];
++        assert_eq!(line(&chunk, 3), "[Q3PW_TRACE] v1 dropped=3 S,10,7,1,0;D,12,7,2500,-1;");
++    }
++}
 diff --git a/alvr/client_core/src/lib.rs b/alvr/client_core/src/lib.rs
-index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..fcb2ce7104b9e8db8eab97693ce3bd4b80d26f0f 100644
+index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..1d6cb87eed22360f8d1beddad94219206ec3eb20 100644
 --- a/alvr/client_core/src/lib.rs
 +++ b/alvr/client_core/src/lib.rs
-@@ -11,6 +11,9 @@ mod logging_backend;
+@@ -7,10 +7,14 @@
+ 
+ mod c_api;
+ mod connection;
++pub mod frame_trace;
+ mod logging_backend;
  mod sockets;
  mod statistics;
  mod storage;
@@ -1320,7 +1466,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..fcb2ce7104b9e8db8eab97693ce3bd4b
  
  #[cfg(target_os = "android")]
  mod audio;
-@@ -92,6 +95,7 @@ pub(crate) fn push_foveation_center(timestamp: Duration, center: [[f32; 2]; 2])
+@@ -92,6 +96,7 @@ pub(crate) fn push_foveation_center(timestamp: Duration, center: [[f32; 2]; 2])
  }
  
  pub struct ClientCoreContext {
@@ -1328,7 +1474,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..fcb2ce7104b9e8db8eab97693ce3bd4b
      lifecycle_state: Arc<RwLock<LifecycleState>>,
      event_queue: Arc<Mutex<VecDeque<ClientCoreEvent>>>,
      connection_context: Arc<ConnectionContext>,
-@@ -99,6 +103,11 @@ pub struct ClientCoreContext {
+@@ -99,6 +104,11 @@ pub struct ClientCoreContext {
  }
  
  impl ClientCoreContext {
@@ -1340,7 +1486,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..fcb2ce7104b9e8db8eab97693ce3bd4b
      pub fn new(capabilities: ClientCapabilities) -> Self {
          dbg_client_core!("Create");
  
-@@ -115,6 +124,7 @@ impl ClientCoreContext {
+@@ -115,6 +125,7 @@ impl ClientCoreContext {
              alvr_system_info::set_wifi_lock(true);
          }
  
@@ -1348,7 +1494,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..fcb2ce7104b9e8db8eab97693ce3bd4b
          let lifecycle_state = Arc::new(RwLock::new(LifecycleState::Idle));
          let event_queue = Arc::new(Mutex::new(VecDeque::new()));
          let connection_context = Arc::new(ConnectionContext::default());
-@@ -122,6 +132,7 @@ impl ClientCoreContext {
+@@ -122,6 +133,7 @@ impl ClientCoreContext {
              let lifecycle_state = Arc::clone(&lifecycle_state);
              let connection_context = Arc::clone(&connection_context);
              let event_queue = Arc::clone(&event_queue);
@@ -1356,7 +1502,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..fcb2ce7104b9e8db8eab97693ce3bd4b
              move || {
                  connection::connection_lifecycle_loop(
                      capabilities,
-@@ -133,6 +144,7 @@ impl ClientCoreContext {
+@@ -133,6 +145,7 @@ impl ClientCoreContext {
          });
  
          Self {
@@ -1364,7 +1510,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..fcb2ce7104b9e8db8eab97693ce3bd4b
              lifecycle_state,
              event_queue,
              connection_context,
-@@ -140,6 +152,11 @@ impl ClientCoreContext {
+@@ -140,6 +153,11 @@ impl ClientCoreContext {
          }
      }
  
@@ -1376,7 +1522,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..fcb2ce7104b9e8db8eab97693ce3bd4b
      pub fn resume(&self) {
          dbg_client_core!("resume");
  
-@@ -218,6 +235,27 @@ impl ClientCoreContext {
+@@ -218,6 +236,27 @@ impl ClientCoreContext {
          }
      }
  
@@ -2394,7 +2540,7 @@ index f764033a20a89656e24ff599ce2a39cd5f8338df..d63644247eacf32df8343608ce83fdb2
                          decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
                      }
 diff --git a/alvr/client_core/src/video_decoder/mod.rs b/alvr/client_core/src/video_decoder/mod.rs
-index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e463d7a9f 100644
+index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..4388480d5cdc34633592a1dee19fd0f863f3a7b9 100644
 --- a/alvr/client_core/src/video_decoder/mod.rs
 +++ b/alvr/client_core/src/video_decoder/mod.rs
 @@ -1,14 +1,22 @@
@@ -2473,7 +2619,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
      if complete {
          FrameDecision::DecodeComplete
      } else if age < deadline {
-@@ -130,22 +154,269 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
+@@ -130,22 +154,274 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
      let mean = samples.iter().sum::<f32>() / n as f32;
      format!(
          "min {:.2} mean {:.2} p50 {:.2} p95 {:.2} p99 {:.2} max {:.2}",
@@ -2612,6 +2758,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
 +        // Keep the watermark after take() to reject late independent completions.
 +        if let Some(order) = order {
 +            if state.latest_order.is_some_and(|latest| order <= latest) {
++                crate::frame_trace::record(b'O', timestamp.as_nanos() as u64, order as i64, 0);
 +                state.superseded += 1;
 +                state.freshness.superseded += 1;
 +                return false;
@@ -2623,7 +2770,8 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
 +        if let Some(late) = late {
 +            state.freshness.late[freshness_bucket(late)] += 1;
 +        }
-+        if state.pending.replace((timestamp, buffer)).is_some() {
++        if let Some((old, _)) = state.pending.replace((timestamp, buffer)) {
++            crate::frame_trace::record(b'X', old.as_nanos() as u64, 0, 0);
 +            state.superseded += 1;
 +            state.freshness.superseded += 1;
 +            if state.pending_was_late { state.freshness.late_superseded += 1; }
@@ -2686,15 +2834,18 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
 +        let Some(frame) = state.pending.take() else {
 +            // Repeated polls within one wait count once: this marks an empty episode.
 +            if state.empty_since.is_none() {
++                crate::frame_trace::record(b'E', 0, 0, 0);
 +                state.empty_since = Some(Instant::now());
 +                state.freshness.empty += 1;
 +            }
 +            return None;
 +        };
 +        state.freshness.taken += 1;
-+        if let Some(published) = state.pending_published_at.take() {
-+            state.freshness.margin[freshness_bucket(published.elapsed())] += 1;
++        let margin = state.pending_published_at.take().map(|published| published.elapsed());
++        if let Some(margin) = margin {
++            state.freshness.margin[freshness_bucket(margin)] += 1;
 +        }
++        crate::frame_trace::record(b'T', frame.0.as_nanos() as u64, margin.map_or(-1, |m| m.as_micros() as i64), 0);
 +        if std::mem::take(&mut state.pending_was_late) { state.freshness.late_taken += 1; }
 +        state.leased = frame.1;
 +        state.leased_release_token = state.pending_release_token;
@@ -2748,7 +2899,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
      }
  }
  
-@@ -203,6 +474,64 @@ pub struct VideoDecoderSource {
+@@ -203,6 +479,64 @@ pub struct VideoDecoderSource {
  }
  
  impl VideoDecoderSource {
@@ -2813,7 +2964,16 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
      /// If a frame is available, return the timestamp and the AHardwareBuffer.
      pub fn get_frame(&mut self) -> Option<(Duration, *mut std::ffi::c_void)> {
          #[cfg(target_os = "android")]
-@@ -229,7 +558,9 @@ fn logcat_info(tag: &str, message: &str) {
+@@ -219,7 +553,7 @@ impl VideoDecoderSource {
+ }
+ 
+ #[cfg(target_os = "android")]
+-fn logcat_info(tag: &str, message: &str) {
++pub(crate) fn logcat_info(tag: &str, message: &str) {
+     extern "C" {
+         fn __android_log_write(
+             prio: i32,
+@@ -229,7 +563,9 @@ fn logcat_info(tag: &str, message: &str) {
      }
      let tag = std::ffi::CString::new(tag).unwrap_or_default();
      let text = std::ffi::CString::new(message).unwrap_or_default();
@@ -2824,7 +2984,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
  }
  
  // report_frame_decoded: (target_timestamp: Duration) -> ()
-@@ -249,7 +580,9 @@ pub fn create_decoder(
+@@ -249,7 +585,9 @@ pub fn create_decoder(
              }
          }
          if config.codec == CodecType::PyroWave
@@ -2835,7 +2995,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
          {
              let (sink, source) = pyrowave_udp::video_decoder_split(
                  config.clone(),
-@@ -304,6 +637,192 @@ pub fn create_decoder(
+@@ -304,6 +642,192 @@ pub fn create_decoder(
  mod tests {
      use super::*;
  
@@ -3028,7 +3188,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
      #[test]
      fn config_round_trips_the_encoder_blob() {
          let mut buf = Vec::new();
-@@ -312,53 +831,97 @@ mod tests {
+@@ -312,53 +836,97 @@ mod tests {
          buf.push(1);
          buf.push(0);
          let c = parse_pyrowave_config(&buf).unwrap();
@@ -3139,7 +3299,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
          assert_eq!(dist(&mut Vec::new()), "-");
      }
  
-@@ -392,4 +955,145 @@ mod tests {
+@@ -392,4 +960,145 @@ mod tests {
          assert_eq!(slot.take(), Some((Duration::from_millis(2), 0x20)));
          assert!(slot.take().is_none());
      }
@@ -3286,7 +3446,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..7fea2be46f4943b4905ac2c4654abc0e
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9c81ba6ed 100644
+index 2e22601497aaca790db25fa1b37423948fdfaa86..534a463e6194d74a13104f46d4b1e83e9475810b 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -3337,7 +3497,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
  #[repr(C)]
  struct PyroClient {
      _private: [u8; 0],
-@@ -33,36 +51,74 @@ struct FrameInfo {
+@@ -33,36 +51,76 @@ struct FrameInfo {
      convert_ms: f64,
      total_ms: f64,
      complete: i32,
@@ -3402,7 +3562,9 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
  impl VideoDecoderSink {
      pub fn push_frame_nal(&mut self, timestamp: Duration, data: &[u8]) -> Result<bool> {
          let mut slot = self.pending.frame.lock();
-         if slot.is_some() {
+-        if slot.is_some() {
++        if let Some(old) = slot.as_ref() {
++            crate::frame_trace::record(b'R', old.0.as_nanos() as u64, old.2 as i64, 0);
 +            self.pending.skipped.fetch_add(1, Ordering::Relaxed);
              warn!("PyroWave: frame replaced before decode (decoder slower than the stream)");
          }
@@ -3411,12 +3573,13 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
 +        // Timestamp after copying: this is when a complete payload is usable.
 +        // Disabled diagnostics do not read the clock or alter latest-frame policy.
 +        let received_at = self.producer_probe.then(Instant::now);
++        crate::frame_trace::record(b'P', timestamp.as_nanos() as u64, self.next_order as i64, data.len() as i64);
 +        *slot = Some((timestamp, data, self.next_order, received_at));
 +        self.next_order = self.next_order.wrapping_add(1);
          self.pending.ready.notify_one();
          Ok(true)
      }
-@@ -71,13 +127,39 @@ impl VideoDecoderSink {
+@@ -71,13 +129,39 @@ impl VideoDecoderSink {
  pub struct VideoDecoderSource {
      running: Arc<AtomicBool>,
      pending: Arc<Pending>,
@@ -3458,7 +3621,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
      }
  }
  
-@@ -85,7 +167,7 @@ impl Drop for VideoDecoderSource {
+@@ -85,7 +169,7 @@ impl Drop for VideoDecoderSource {
      fn drop(&mut self) {
          self.running.store(false, Ordering::Relaxed);
          self.pending.ready.notify_all();
@@ -3467,7 +3630,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
              t.join().ok();
          }
      }
-@@ -99,18 +181,85 @@ pub fn video_decoder_split(
+@@ -99,18 +183,85 @@ pub fn video_decoder_split(
      let pending = Arc::new(Pending {
          frame: Mutex::new(None),
          ready: Condvar::new(),
@@ -3556,7 +3719,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
                      cfg.width,
                      cfg.height,
                      cfg.chroma444 as i32,
-@@ -118,6 +267,7 @@ pub fn video_decoder_split(
+@@ -118,6 +269,7 @@ pub fn video_decoder_split(
                      3,
                      cfg.wavelet as i32,
                      cfg.decode_path as i32,
@@ -3564,7 +3727,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
                  )
              };
              if client.is_null() {
-@@ -128,64 +278,251 @@ pub fn video_decoder_split(
+@@ -128,64 +280,255 @@ pub fn video_decoder_split(
                  )));
                  return;
              }
@@ -3641,6 +3804,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
 -                if pushed < 0 {
 -                    warn!("PyroWave: push_packet failed ({pushed})");
 +                decoded.mark_in_flight();
++                crate::frame_trace::record(b'S', timestamp.as_nanos() as u64, order as i64, 0);
 +                if ready_requested && ready_checked.elapsed() >= Duration::from_secs(1) {
 +                    ready_checked = Instant::now();
 +                    let active = ready_active_property();
@@ -3752,6 +3916,8 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
 +                        super::logcat_info("PYROWAVE", &format!("[Q3PW_PRODUCER_PROBE] {}", opportunities.take().row()));
 +                    }
 +                }
++                crate::frame_trace::record(b'D', timestamp.as_nanos() as u64, (info.decode_ms * 1000.0) as i64,
++                    (info.total_ms * 1000.0) as i64);
 +                let token = if release_requested { unsafe { pyroclient_output_release_token(out) } } else { 0 };
 +                let early = ready_fd.is_some();
 +                let published = if let Some(fd) = ready_fd {
@@ -3770,6 +3936,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..2f520d71bc617cc62b30b4aa8d9e0bb9
 +                        alvr_common::info!("[Q3PW_READY_FD] submitted={submitted_early} completed={completed_early} max_inflight=1");
 +                    }
 +                }
++                crate::frame_trace::record(b'U', timestamp.as_nanos() as u64, published as i64, (info.wait_ms * 1000.0) as i64);
 +                if published {
 +                    report_frame_decoded(Ok(timestamp));
 +                }
@@ -4855,10 +5022,10 @@ index da58258ad92ba71c0d44e7d437bedf084cf6940f..dfefe0008969564b5b88f363c733f0df
  }
 diff --git a/alvr/client_core/src/wired_video.rs b/alvr/client_core/src/wired_video.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..01efc08f527aba36681a93c288b335e147dc9979
+index 0000000000000000000000000000000000000000..2216a6a1c3dea8d38cc85d7fa05dbc77a310a4cd
 --- /dev/null
 +++ b/alvr/client_core/src/wired_video.rs
-@@ -0,0 +1,229 @@
+@@ -0,0 +1,231 @@
 +//! PyroWave's parallel wired video connections (alvr_packets::PYROWAVE_WIRED_PORT and up). Each
 +//! connection carries one contiguous slice of every frame; a frame whose slices have all arrived
 +//! goes to the decoder exactly as if it had arrived on ALVR's video stream.
@@ -4927,6 +5094,7 @@ index 0000000000000000000000000000000000000000..01efc08f527aba36681a93c288b335e1
 +        {
 +            Some(index) => index,
 +            None => {
++                crate::frame_trace::record(b'F', slice.timestamp_ns, slice.frame_len as i64, slice.offset as i64);
 +                if self.pending.len() >= MAX_PENDING {
 +                    self.pending.remove(0);
 +                    self.dropped += 1;
@@ -5000,6 +5168,7 @@ index 0000000000000000000000000000000000000000..01efc08f527aba36681a93c288b335e1
 +
 +fn deliver(ctx: &ConnectionContext, header: PyroWaveSliceHeader, frame: &[u8]) {
 +    let timestamp = Duration::from_nanos(header.timestamp_ns);
++    crate::frame_trace::record(b'A', header.timestamp_ns, frame.len() as i64, 0);
 +    if let Some(stats) = &mut *ctx.statistics_manager.lock() {
 +        stats.report_video_packet_received(timestamp);
 +    }
@@ -5239,7 +5408,7 @@ index 7765bb459f73e9d7d5a9f296a498f09a0df43706..1a2b8152c628566294dfb840971d5b3e
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd8803191d3cb 100644
+index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7ad92f0530 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -1,10 +1,16 @@
@@ -5644,9 +5813,9 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd880
 +                    } else {
 +                        stream.poll_frame(poll_interval);
 +                    }
-                 }
-             }
- 
++                }
++            }
++
 +            if let Some(probe) = &mut refresh_probe {
 +                probe.request_next(&xr_session);
 +            }
@@ -5666,18 +5835,32 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd880
 +                        cadence_probe = Some(cadence_probe::CadenceProbe::new(hz, seconds, restore));
 +                    }
 +                    Err(err) => error!("[Q3PW_CADENCE] target_hz={hz} request_rejected={err:?}"),
-+                }
-+            }
-+
+                 }
+             }
+ 
 +            let wait_started = loop_probe.then(Instant::now);
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -576,12 +787,65 @@ pub fn entry_point() {
+@@ -576,12 +787,79 @@ pub fn entry_point() {
                      panic!();
                  }
              };
 +            let wait_call_ms = wait_started.map_or(0.0, |s| s.elapsed().as_secs_f64() * 1000.0);
++            if alvr_client_core::frame_trace::enabled() {
++                use alvr_client_core::frame_trace::{mono_ns, record, record_at};
++                record(b'W', frame_state.predicted_display_time.as_nanos() as u64,
++                    frame_state.predicted_display_period.as_nanos(), frame_state.should_render as i64);
++                // Once a second: XrTime against CLOCK_MONOTONIC, bracketed by two monotonic reads.
++                static LAST_CALIBRATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
++                let before = mono_ns();
++                if before.saturating_sub(LAST_CALIBRATION.load(std::sync::atomic::Ordering::Relaxed)) > 1_000_000_000 {
++                    LAST_CALIBRATION.store(before, std::sync::atomic::Ordering::Relaxed);
++                    if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
++                        record_at(b'K', before, now.as_nanos() as u64, (mono_ns() - before) as i64, 0);
++                    }
++                }
++            }
              let frame_interval =
                  Duration::from_nanos(frame_state.predicted_display_period.as_nanos() as _);
              poll_interval = frame_interval;
@@ -5740,7 +5923,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd880
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +869,15 @@ pub fn entry_point() {
+@@ -605,15 +883,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -5765,7 +5948,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd880
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,13 +885,16 @@ pub fn entry_point() {
+@@ -621,13 +899,17 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -5780,10 +5963,11 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd880
 +            let begin_started = loop_probe.then(Instant::now);
              xr_frame_stream.begin().unwrap();
 +            let begin_ms = begin_started.map_or(0.0, |s| s.elapsed().as_secs_f64() * 1000.0);
++            alvr_client_core::frame_trace::record(b'B', 0, 0, 0);
  
              if !frame_state.should_render {
                  xr_frame_stream
-@@ -654,22 +921,89 @@ pub fn entry_point() {
+@@ -654,22 +936,90 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
@@ -5849,6 +6033,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd880
 +            } else { to_xr_time(display_time) };
 +            let end_started = loop_probe.then(Instant::now);
 +            let res = xr_frame_stream.end(end_time, blend_mode, &layers);
++            alvr_client_core::frame_trace::record(b'N', end_time.as_nanos() as u64, res.is_ok() as i64, streaming as i64);
 +            #[cfg(target_os = "android")]
 +            if res.is_ok() && surface_layer.is_some() && !surface_layer_logged {
 +                error!("[Q3PW_SURFACE_CHART] layer_submitted=true xr_end_ok=true static_only=true");
@@ -5881,7 +6066,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..7c6fc97e6ad902548f99abe7c79dd880
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +1032,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +1048,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
@@ -6854,7 +7039,7 @@ index 0000000000000000000000000000000000000000..be1205ccfde1989670f4732b16b7982a
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c5af18260 100644
+index b87dfe995e4e278f3903d05f84a50db089f21cfc..58b8e7871cb25d22eb357820e64b43553e487048 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -1,3 +1,6 @@
@@ -6962,7 +7147,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
              input_thread: None,
              input_thread_running,
              config,
-@@ -235,8 +261,36 @@ impl StreamContext {
+@@ -235,8 +261,38 @@ impl StreamContext {
              renderer,
              decoder: None,
              pending_frame: None,
@@ -6987,6 +7172,8 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
 +                && crate::extra_extensions::perf_settings::system_property("debug.q3pw.fresh_probe") == "1",
 +            fresh_last: Instant::now(),
          };
++        alvr_client_core::frame_trace::start(platform == Platform::Quest3
++            && crate::extra_extensions::perf_settings::system_property("debug.q3pw.frame_trace") == "1");
  
 +        alvr_graphics::log_quest_experiment(format!(
 +            "[Q3PW_PRE_WAIT] requested={} (requires Quest3 PyroWave and early_poll)",
@@ -6999,7 +7186,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
          this.update_reference_space();
  
          this
-@@ -280,6 +334,10 @@ impl StreamContext {
+@@ -280,6 +336,10 @@ impl StreamContext {
              let refresh_rate = self.config.refresh_rate_hint;
              let running = Arc::clone(&self.input_thread_running);
              move || {
@@ -7010,7 +7197,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
                  stream_input_loop(
                      &core_ctx,
                      xr_session,
-@@ -310,6 +368,24 @@ impl StreamContext {
+@@ -310,6 +370,24 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
@@ -7035,7 +7222,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +414,42 @@ impl StreamContext {
+@@ -338,12 +416,42 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -7080,13 +7267,14 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +461,25 @@ impl StreamContext {
+@@ -355,8 +463,26 @@ impl StreamContext {
          }
      }
  
 +    fn poll_eye_copy(&self) -> bool {
 +        let (ready, completed_ms) = self.renderer.poll_import_copy();
 +        for ms in completed_ms {
++            alvr_client_core::frame_trace::record(b'Y', 0, (ms * 1000.0) as i64, 0);
 +            video_decoder::telemetry::record_eye_completion(Some(ms));
 +        }
 +        if !ready { video_decoder::telemetry::record_eye_deferral(); }
@@ -7106,11 +7294,12 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
      }
  
      pub fn render(
-@@ -364,15 +487,151 @@ impl StreamContext {
+@@ -364,15 +490,152 @@ impl StreamContext {
          frame_interval: Duration,
          vsync_time: Duration,
      ) -> (ProjectionLayerBuilder, Duration) {
 +        let selection_started = self.selection_probe.then(Instant::now);
++        alvr_client_core::frame_trace::record(b'G', vsync_time.as_nanos() as u64, 0, 0);
          let frame_poll_deadline = Instant::now()
              + Duration::from_secs_f32(
                  frame_interval.as_secs_f32() * DECODER_MAX_TIMEOUT_MULTIPLIER,
@@ -7260,7 +7449,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
              }
          }
  
-@@ -401,37 +660,80 @@ impl StreamContext {
+@@ -401,37 +664,82 @@ impl StreamContext {
              ]);
          }
  
@@ -7340,6 +7529,8 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
  
 -        self.swapchains[0].release_image().unwrap();
 -        self.swapchains[1].release_image().unwrap();
++            alvr_client_core::frame_trace::record(b'H', if buffer_ptr.is_null() { 0 } else { timestamp.as_nanos() as u64 },
++                copy_ready as i64, 0);
 +            if !buffer_ptr.is_null() {
 +                if let Some(fence) = self.renderer.take_release_fence() {
 +                    let buffer = fence.buffer as *mut std::ffi::c_void;
@@ -7371,7 +7562,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +795,8 @@ impl StreamContext {
+@@ -493,6 +801,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
@@ -7380,7 +7571,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
          self.input_thread_running.set(false);
          self.input_thread.take().unwrap().join().ok();
      }
-@@ -510,6 +814,7 @@ fn stream_input_loop(
+@@ -510,6 +820,7 @@ fn stream_input_loop(
      let platform = alvr_system_info::platform();
  
      let mut last_controller_poses = [Pose::default(); 2];
@@ -7388,7 +7579,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..9ee2909003164706c02257de7b414c9c
      let mut last_palm_poses = [Pose::default(); 2];
      let mut last_view_params = [ViewParams::default(); 2];
  
-@@ -630,7 +935,17 @@ fn stream_input_loop(
+@@ -630,7 +941,17 @@ fn stream_input_loop(
          );
  
          let button_entries = interaction::update_buttons(&xr_session, &int_ctx.button_actions);
