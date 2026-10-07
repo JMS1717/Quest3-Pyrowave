@@ -33,7 +33,7 @@ Vulkan handles wavelet decoding; ALVR supplies SteamVR integration, tracking, co
 |  |  |
 | --- | --- |
 | **Latest release** | **alpha.8 / `.51`**: native-frame pacing, independent PC render and stream sizes, and safety fixes. [Release notes →](docs/RELEASE-alpha.8.md) |
-| **On main, not yet released** | **`.62`**: a decoder about twice as fast, any refresh rate from 144 to 240 Hz with PC-driven panel switching over USB, Decoder V2 for smoother CDF 5/3 images, bitrate up to 4000 Mbps, and two parallel wired video connections. It is held back for the fixes in its [known issues](docs/RELEASE-alpha.9.md#known-issues) and an in-headset check of the exact CI build. [Draft notes →](docs/RELEASE-alpha.9.md) |
+| **On main, not yet released** | **`.62`**: a decoder about twice as fast, any refresh rate from 144 to 240 Hz with PC-driven panel switching over USB, Decoder V2 for smoother CDF 5/3 images, bitrate up to 4000 Mbps, and two parallel wired video connections. It is held back for the fixes in its [known issues](docs/RELEASE-alpha.9.md#known-issues) and an in-headset check of the exact release build. [Draft notes →](docs/RELEASE-alpha.9.md) |
 | **Best measured high-refresh setting** | **207 Hz · 2080 × 2208 per eye · Haar · 1000 Mbps · 4:2:0 · no foveation · maximum GPU clock over USB**: 194–197 fresh FPS in 10–12 s screens with a 60°/s pan. [Frame trace →](docs/FRAME-TRACE.md) |
 | **Smoothest image** | CDF 5/3 (Decoder V2) removes Haar's block edges, for about 2 fresh FPS at 700 Mbps and more at higher bitrates. [Decoder V2 →](docs/DECODER-V2.md) |
 | **What limits 207 Hz** | Frames that finish too close to the display deadline, the eye copy's fill cost (about 0.8 ms), and a headset memory clock the app cannot control. [Details →](docs/FRAME-TRACE.md#what-limits-207-hz-now) |
@@ -88,8 +88,8 @@ The current preview is **[v0.1.0-alpha.8](https://github.com/JMS1717/Quest3-Pyro
 
 Read the [alpha.8 release notes](docs/RELEASE-alpha.8.md) for what changed and what is still opt-in.
 The faster `.62` stack on main is described in the [draft alpha.9 notes](docs/RELEASE-alpha.9.md).
-It is published only after its known issues are fixed and the exact CI build looks correct in the
-headset.
+It is published only after its known issues are fixed and the exact release build looks correct
+in the headset.
 
 > [!WARNING]
 > **Never mix an APK and server from different releases or runs.** Pull-request APKs use temporary

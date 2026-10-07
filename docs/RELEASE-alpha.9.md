@@ -1,7 +1,8 @@
 # alpha.9: 207 Hz at full resolution, a faster decoder, 144-240 Hz
 
 > **Status: draft, not published.** The `.62` build on main has the [known issues](#known-issues)
-> below. It is released only after they are fixed and the exact CI build is checked in the headset.
+> below. It is released only after they are fixed and the exact release build is checked in the
+> headset.
 
 This prerelease packages the `.62` stack: PRs #10-#12 (merged), #13 (multilevel Haar), #14
 (Decoder V2, packed YCbCr output) and #15 (parallel wired video, frame trace).
