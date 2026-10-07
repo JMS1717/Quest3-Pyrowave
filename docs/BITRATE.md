@@ -225,3 +225,35 @@ one streamer session per cell in the order 700, 1000, 1500, 1500, 1000, 700 Mbps
   session per bitrate. All 11 fresh-session cells that day started at 207 Hz; a client reopened
   seconds after closing it was not checked with the owner's settings.
 
+
+### Parallel wired video connections, October 7
+
+Over USB, adb forwards TCP only, and one forwarded connection moves a burst at about 1.7-2.4
+Gbit/s. A 906 KB frame (1500 Mbit/s at 207 Hz) then takes about 4 ms of a 4.83 ms frame interval
+to cross. `video.pyrowave.wired_video_connections` (experimental, default 0) splits each
+complete frame into 1 to 4 contiguous slices and writes them in parallel on dedicated
+adb-forwarded connections (ports 9950-9953). The client puts the frame back together and decodes
+it as if it had come on ALVR's video stream. If the client does not answer on every port, video
+stays on the stream socket.
+
+ABBA at the owner's settings: CDF 5/3 V2 mode 5, 690 MHz, 207 Hz, 2080x2208 per eye from
+3072x3216, 60 deg/s pan, 12 s, one streamer session per cell. "Network" and "pipeline" are
+medians of ALVR's own per-frame estimates over the last two thirds of each session; they are
+not motion-to-photon.
+
+| Mbit/s | connections | fresh FPS | GPU busy | network | pipeline estimate |
+|---|---|---|---|---|---|
+| 1000 | stream socket | 184.2 / 181.2 (mean 182.7) | 98 / 97 % | 3.76 / 2.98 ms | 33.7 / 32.9 ms |
+| 1000 | 2 | 183.7 / 180.5 (mean 182.1) | 98 / 97 % | 2.64 / 2.64 ms | 33.3 / 32.5 ms |
+| 1500 | stream socket | 171.4 / 157.6 (mean 164.5) | 98 / 98 % | 4.77 / 6.42 ms | 35.4 / 40.1 ms |
+| 1500 | 2 | 170.2 / 168.8 (mean 169.5) | 97.5 / 97 % | 3.56 / 4.02 ms | 34.9 / 35.4 ms |
+
+- Two connections cut the network stage by about 0.7 ms at 1000 Mbit/s and 1.8 ms at 1500. On
+  one connection at 1500, frames take longer than a frame interval to arrive and queue behind
+  each other (6.4 ms in one cell).
+- Fresh FPS does not change at 1000 Mbit/s. At 1500 the 5 FPS gain is within the cell-to-cell
+  noise. The headset GPU is 97-98 % busy in every cell, so decode, not the link, caps the frame
+  rate. A faster link shortens latency but cannot add frames.
+- The 1000 Mbit/s probe cell before the ABBA (two connections) gave 180.6 FPS and 3.3 ms network.
+- Not yet measured: 3 or 4 connections; Haar, whose decode does not grow with bitrate and so may
+  turn the shorter arrival into frames; sustained play.
