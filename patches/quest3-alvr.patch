@@ -206,7 +206,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..18ad9d0230c4dcc30ad7e7d97af279bc
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..f60f9cb21ee2205c0c8acda8d03950de81b4a811 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..a8c08ef76d0a79d958806d967ab32578dad18f63 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..f60f9cb21ee2205c0c8acda8d03950de
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.61"
++version = "20.13.0-quest3.pyro.62"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
