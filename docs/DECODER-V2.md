@@ -94,7 +94,7 @@ same Adreno float-to-half behaviour documented for haar32.
 
 ## Live at 207 Hz
 
-The client enables V2 with `debug.q3pw.cdf53v2` (0-3, default 3). It only applies to CDF 5/3
+The client enables V2 with `debug.q3pw.cdf53v2` (0-5; default 5 since 2026-10-07, 3 in the runs below). It only applies to CDF 5/3
 streams; the client logs `[Q3PW_CDF53V2] requested=3 active=3`. The test configuration (2026-10-06)
 was:
 
@@ -176,6 +176,46 @@ the compositor preempts decode, so fresh FPS and the fence are the measures that
 The RGBA conversion after decode costs 0.92 ms live for Haar and 1.8 ms for V2 with the same
 shader. This is next to look at.
 
+## Mode 5: packed YCbCr into the hardware buffer (default for CDF 5/3)
+
+Mode 5 gives V2 the output path of haar32 mode 5 ([PRESENT-YCBCR.md](PRESENT-YCBCR.md)). The
+final level writes luma quads and Cb/Cr straight into the RGBA8 AHardwareBuffer ALVR imports,
+and ALVR's eye shader converts. The RGBA pass, 1.8 ms of the V2 fence, is gone.
+
+- `idwt_cdf53v2.comp` gains a `DUAL` variant. One invocation rebuilds the Cb and Cr blocks
+  together (bindings 0 and 2) and stores them as one RG texel at `output_offset` (x = width/2).
+  Luma stores its quads at offset 0. Mode 4 is the same without the AHB: chroma goes to one RG8 plane.
+- `pyrowave_decoder_set_cdf53v2(5)` needs 4:2:0, width and height divisible by 4, precision 1 and
+  the packed allocation. The client asks for mode 5 by default (`debug.q3pw.cdf53v2` "0" to "5"),
+  and steps down to 4 when storage on the AHB, full range or the chroma filter rule mode 5 out,
+  as haar32 does.
+
+Exactness (`decoder_ab cdf53v2m5` and `cdf53v2qd`, `AB_WAVELET=53 AB_ALLOW_DIFF=1`): identical
+counts of differing pixels to mode 3 (luma 19415, Cb 20083, Cr 5106 at 4160x2208, max 1) at 512x320,
+1000x600 and 4160x2208. Standalone at 640 MHz the decode is the same as mode 3 (2.45 vs 2.42 ms);
+the gain is the pass that no longer runs.
+
+Live, 2026-10-07. Settings: the owner's (3072x3216 render, 2080x2208 per eye encoded, 207 Hz,
+700 Mbit/s, 4:2:0, no foveation), `quality_scene` panning at 60 deg/s, 12 s windows. Cells ran
+Haar, 5/3, 5/3, Haar, then a V2 mode 3 control. The wavelet is a session setting, so each cell
+is its own streamer session:
+
+| cell | fresh FPS | stale/s | fence p50 | GPU decode p50 |
+|---|---|---|---|---|
+| Haar, haar32 mode 5 | 198.0 / 192.5 (mean 195.3) | 9.5 / 15.2 | 4.04 / 4.42 ms | 2.64 / 2.66 ms |
+| **CDF 5/3, V2 mode 5** | **183.1 / 185.4 (mean 184.2)** | 24.5 / 22.1 | 4.89 / 4.89 | 3.15 / 3.14 |
+| CDF 5/3, V2 mode 3 (control) | 157.1 | 50.2 | 6.02 | 3.17 |
+
+Mode 5 lifts V2 by 27 fresh FPS (+17 %) and cuts its fence by 1.1 ms. 5/3 now costs 11 FPS
+(6 %) against Haar instead of 38. The client logs confirm each cell's decoder
+(`[Q3PW_CDF53V2] requested=5 active=5`, `[Q3PW_PRESENT_YCBCR] active=1`), and every
+in-headset screenshot decodes correctly. In those screenshots Haar's shading on the scene's
+spheres steps in blocks and 5/3's does not: the pixelation of
+[Why: Haar is what looks pixelated](#why-haar-is-what-looks-pixelated), seen in the headset.
+
+Haar stays the default wavelet. 5/3 trades about 6 % of fresh frames for smooth gradients; the
+choice is the user's (`Wavelet` in the PyroWave settings).
+
 ## Tried and rejected
 
 Each candidate passed the exactness gate unless noted. All were timed interleaved against mode 3.
@@ -208,6 +248,6 @@ python -m tools.quest3.quality_score <clip.y4m> --out <dir> --mbps 700 1000 --wa
 
 ## Next
 
-1. In-headset captures of V2 against Haar at the owner's settings, with motion.
-2. The RGBA conversion pass: 0.9 ms (Haar) to 1.8 ms (V2) of the live fence.
+1. Retune the encoder's low-frequency boost for 5/3 (PC study: LF boost 3/3 scored best).
+2. The remaining 0.5 ms of 5/3 decode against Haar is in the coarse levels (see Where the time goes).
 3. CDF 9/7 in the same structure, if the remaining +0.4 dB is worth its wider support.

@@ -49,6 +49,8 @@ const Arm ARMS[] = {
     { "cdf53v2", [](pyrowave_decoder d) { return pyrowave_decoder_set_cdf53v2(d, 1); } },
     { "cdf53v2q", [](pyrowave_decoder d) { return pyrowave_decoder_set_cdf53v2(d, 2); }, nullptr, nullptr, true },
     { "cdf53v2qp", [](pyrowave_decoder d) { return pyrowave_decoder_set_cdf53v2(d, 3); }, nullptr, nullptr, true },
+    { "cdf53v2qd", [](pyrowave_decoder d) { return pyrowave_decoder_set_cdf53v2(d, 4); }, nullptr, nullptr, true, true },
+    { "cdf53v2m5", [](pyrowave_decoder d) { return pyrowave_decoder_set_cdf53v2(d, 5); }, nullptr, nullptr, true, true, true },
     // Controls: the default decoder against itself, and the dedicated pair-local Haar kernel.
     { "base", no_change },
     { "pairs64", no_change, "PYROWAVE_HAAR_PAIRS", "64-column" },
@@ -291,7 +293,8 @@ double percentile(std::vector<double> v, double p) {
 // arms decode different bitstreams. Prints each arm's luma PSNR against the synthetic source.
 int run_wavelets(uint32_t w, uint32_t h, size_t bytes, int blocks, int frames, bool stages) {
     struct WArm { const char *name; pyrowave_wavelet wavelet; const Arm *arm; bool fragment; };
-    const Arm *mode3 = nullptr, *mode4 = nullptr, *mode5 = nullptr, *v2 = nullptr, *v2q = nullptr, *v2qp = nullptr;
+    const Arm *mode3 = nullptr, *mode4 = nullptr, *mode5 = nullptr, *v2 = nullptr, *v2q = nullptr, *v2qp = nullptr,
+              *v2m5 = nullptr;
     for (const Arm &a : ARMS)
     {
         if (!strcmp(a.name, "haar32qo")) mode3 = &a;
@@ -300,6 +303,7 @@ int run_wavelets(uint32_t w, uint32_t h, size_t bytes, int blocks, int frames, b
         if (!strcmp(a.name, "cdf53v2")) v2 = &a;
         if (!strcmp(a.name, "cdf53v2q")) v2q = &a;
         if (!strcmp(a.name, "cdf53v2qp")) v2qp = &a;
+        if (!strcmp(a.name, "cdf53v2m5")) v2m5 = &a;
     }
     const WArm warms[] = { { "haar", PYROWAVE_WAVELET_HAAR, nullptr, false },
                            { "haar_mode3", PYROWAVE_WAVELET_HAAR, mode3, false },
@@ -310,7 +314,8 @@ int run_wavelets(uint32_t w, uint32_t h, size_t bytes, int blocks, int frames, b
                            { "cdf97_frag", PYROWAVE_WAVELET_CDF97, nullptr, true },
                            { "cdf53_v2", PYROWAVE_WAVELET_CDF53, v2, false },
                            { "cdf53_v2q", PYROWAVE_WAVELET_CDF53, v2q, false },
-                           { "cdf53_v2qp", PYROWAVE_WAVELET_CDF53, v2qp, false } };
+                           { "cdf53_v2qp", PYROWAVE_WAVELET_CDF53, v2qp, false },
+                           { "cdf53_v2m5", PYROWAVE_WAVELET_CDF53, v2m5, false } };
     // AB_ARMS=name,name,... runs a subset (default: all).
     std::vector<WArm> chosen;
     const char *only = getenv("AB_ARMS");

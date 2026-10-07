@@ -535,10 +535,11 @@ bool pyroclient::create_planes() {
     for (int mode = haar32_max; mode > 0 && !haar32_mode; mode--)
         if (pyrowave_decoder_set_haar32(decoder, mode) == PYROWAVE_SUCCESS) haar32_mode = mode;
     cdf53v2_mode = 0;
-    for (int mode = legall53 ? cdf53v2_requested : 0; mode > 0 && !cdf53v2_mode; mode--)
+    const int cdf53v2_max = cdf53v2_requested == 5 && (!full_range || chroma_filter) ? 4 : cdf53v2_requested;
+    for (int mode = legall53 ? cdf53v2_max : 0; mode > 0 && !cdf53v2_mode; mode--)
         if (pyrowave_decoder_set_cdf53v2(decoder, mode) == PYROWAVE_SUCCESS) cdf53v2_mode = mode;
     packed_luma = haar32_mode >= 3 || cdf53v2_mode >= 2;
-    dual_chroma = haar32_mode >= 4;
+    dual_chroma = haar32_mode >= 4 || cdf53v2_mode >= 4;
     LOGI("[Q3PW_HAAR32] requested=%d active=%d packed_luma=%d dual_chroma=%d", haar32_requested, haar32_mode,
          packed_luma ? 1 : 0, dual_chroma ? 1 : 0);
     LOGI("[Q3PW_CDF53V2] requested=%d active=%d", legall53 ? cdf53v2_requested : 0, cdf53v2_mode);
@@ -1320,11 +1321,12 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
                                    haar32_prop[0] >= '0' && haar32_prop[0] <= '5' && !haar32_prop[1];
         c->haar32_requested = explicit_mode ? haar32_prop[0] - '0'
                               : !strcmp(fuse_prop, "1") || !strcmp(dequant_haar_prop, "1") ? 0 : 5;
-        // Decoder V2 for CDF 5/3 (docs/DECODER-V2.md), default mode 3; "0" to "3" selects a mode.
+        // Decoder V2 for CDF 5/3 (docs/DECODER-V2.md), default mode 5 (the packed YCbCr output of
+        // haar32 mode 5); "0" to "5" selects a mode.
         char v2_prop[PROP_VALUE_MAX] = {};
         const bool explicit_v2 = __system_property_get("debug.q3pw.cdf53v2", v2_prop) > 0 &&
-                                 v2_prop[0] >= '0' && v2_prop[0] <= '3' && !v2_prop[1];
-        c->cdf53v2_requested = explicit_v2 ? v2_prop[0] - '0' : 3;
+                                 v2_prop[0] >= '0' && v2_prop[0] <= '5' && !v2_prop[1];
+        c->cdf53v2_requested = explicit_v2 ? v2_prop[0] - '0' : 5;
         // A/B only: debug.q3pw.packed_levels "2" keeps the quad-packed layout to levels 0-1 (default
         // levels 0-3) for haar32 mode 2-3 and Decoder V2 mode 3.
         char packed_prop[PROP_VALUE_MAX] = {};
@@ -1423,13 +1425,14 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
             LOGI("[Q3PW_DEQUANT_HAAR] requested=1 active=%d (%s)", !strcmp(result, "applied") ? 1 : 0, result);
         }
     }
-    if (c->haar32_mode == 5) {
+    if (c->haar32_mode == 5 || c->cdf53v2_mode == 5) {
         // Mode 5 needs PyroWave to write the imported buffer as a storage image; otherwise step
         // down to mode 4, whose planes are already allocated.
         const char *reason = !c->storage_on_ahb ? "no storage on AHB" : c->fuse_color ? "fused colour" : nullptr;
-        if (reason && pyrowave_decoder_set_haar32(c->decoder, 4) == PYROWAVE_SUCCESS) c->haar32_mode = 4;
+        if (reason && c->haar32_mode == 5 && pyrowave_decoder_set_haar32(c->decoder, 4) == PYROWAVE_SUCCESS) c->haar32_mode = 4;
+        else if (reason && c->cdf53v2_mode == 5 && pyrowave_decoder_set_cdf53v2(c->decoder, 4) == PYROWAVE_SUCCESS) c->cdf53v2_mode = 4;
         else if (reason) { c->destroy(); delete c; return nullptr; }
-        c->present_ycbcr = c->haar32_mode == 5;
+        c->present_ycbcr = c->haar32_mode == 5 || c->cdf53v2_mode == 5;
         LOGI("[Q3PW_PRESENT_YCBCR] active=%d (%s)", c->present_ycbcr ? 1 : 0, reason ? reason : "applied");
     }
     if (!c->storage_on_ahb) {

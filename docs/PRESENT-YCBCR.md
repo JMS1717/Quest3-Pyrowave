@@ -1,7 +1,8 @@
 # Haar mode 5: no RGBA conversion pass
 
 Status: default from 2026-10-07 (`debug.q3pw.haar32` unset or `5`; `4` selects the previous
-default). Won all three live ABBA runs below.
+default). Won all three live ABBA runs below. CDF 5/3 has the same output as V2 mode 5
+(`debug.q3pw.cdf53v2`, default 5); see [DECODER-V2.md](DECODER-V2.md#mode-5-packed-ycbcr-into-the-hardware-buffer-default-for-cdf-53).
 
 ## Why
 
