@@ -13942,6 +13942,65 @@ index 8136dda8cff38b25068adcfb5a7e816c908a5074..03a2d90918c87f4750148ca6a24e6eb6
      static bool SetGpuPriority(ID3D11Device* device) {
          typedef enum _D3DKMT_SCHEDULINGPRIORITYCLASS {
              D3DKMT_SCHEDULINGPRIORITYCLASS_IDLE,
+diff --git a/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.cpp b/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.cpp
+index d1a18787cf61087043cd1ad091bfcad4b26035a1..10b5b8b935730e9769f093f4fae64a0b4ee9a7ec 100644
+--- a/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.cpp
++++ b/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.cpp
+@@ -141,6 +141,7 @@ void OvrDirectModeComponent::GetNextSwapTextureSetIndex(
+     vr::SharedTextureHandle_t sharedTextureHandles[2], uint32_t (*pIndices)[2]
+ ) {
+     Debug("OvrDirectModeComponent::GetNextSwapTextureSetIndex");
++    m_swapIndexCalls++;
+ 
+     (*pIndices)[0]++;
+     (*pIndices)[0] %= 3;
+@@ -215,6 +216,29 @@ void OvrDirectModeComponent::Present(vr::SharedTextureHandle_t syncTexture) {
+         // return;
+     }
+ 
++    if (layerCount > 0) {
++        const auto& eyes = m_submitLayers[0];
++        m_presents++;
++        m_sameTimestamp += m_prevTargetTimestampNs == m_targetTimestampNs;
++        m_sameTextures += eyes[0].hTexture == m_prevPresentTextures[0]
++            && eyes[1].hTexture == m_prevPresentTextures[1];
++        m_samePose += memcmp(&eyes[0].mHmdPose, &m_prevPresentPose, sizeof(m_prevPresentPose)) == 0;
++        m_prevPresentTextures[0] = eyes[0].hTexture;
++        m_prevPresentTextures[1] = eyes[1].hTexture;
++        m_prevPresentPose = eyes[0].mHmdPose;
++        const uint64_t nowNs = GetTimestampUs() * 1000;
++        if (m_presentWindowStartNs == 0) {
++            m_presentWindowStartNs = nowNs;
++        } else if (nowNs - m_presentWindowStartNs >= 1000000000ull) {
++            Info("[Q3PW_PRESENT] presents=%u same_timestamp=%u same_textures=%u same_pose=%u "
++                 "swap_index_calls=%u layers=%u\n",
++                 m_presents, m_sameTimestamp, m_sameTextures, m_samePose, m_swapIndexCalls,
++                 layerCount);
++            m_presentWindowStartNs = nowNs;
++            m_presents = m_sameTimestamp = m_sameTextures = m_samePose = m_swapIndexCalls = 0;
++        }
++    }
++
+     ID3D11Texture2D* pSyncTexture = m_pD3DRender->GetSharedTexture((HANDLE)syncTexture);
+     if (!pSyncTexture) {
+         Warn("[VDispDvr] SyncTexture is NULL!");
+diff --git a/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.h b/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.h
+index adef8973ea6259daa44f167f0c57b9c35a7f1769..f0de49ce72eea7a6ab8dbf0caac3b4d9d74a8f43 100644
+--- a/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.h
++++ b/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.h
+@@ -71,5 +71,12 @@ private:
+     uint64_t m_targetTimestampNs;
+     uint64_t m_prevTargetTimestampNs;
+ 
++    // [Q3PW_PRESENT] counters: how often the compositor re-presents the frame it presented last.
++    vr::SharedTextureHandle_t m_prevPresentTextures[2] = {};
++    vr::HmdMatrix34_t m_prevPresentPose = {};
++    uint64_t m_presentWindowStartNs = 0;
++    uint32_t m_presents = 0, m_sameTimestamp = 0, m_sameTextures = 0, m_samePose = 0,
++             m_swapIndexCalls = 0;
++
+     std::mutex m_presentMutex;
+ };
 diff --git a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
 index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..356d83356f556d8d987ffd6cb603b0b482527457 100644
 --- a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp

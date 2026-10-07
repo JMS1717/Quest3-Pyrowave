@@ -18,6 +18,7 @@ Requires: pip install numpy opencv-python openvr glfw PyOpenGL
 import argparse
 import json
 import math
+import os
 import time
 from pathlib import Path
 
@@ -251,6 +252,10 @@ def main():
         # Source pixels map 1:1 to world texels; the view starts at a fixed, content-rich spot.
         v0, v1 = (wh - height) / 2 / wh, (wh + height) / 2 / wh
         pan = args.pan_deg_s
+        # A minimum frame time stands in for a game that renders below the refresh rate, so the
+        # streamer presents fewer frames than the panel shows (Q3PW_SCENE_FRAME_MS, or the control
+        # file's "frame_ms").
+        frame_ms = float(os.environ.get('Q3PW_SCENE_FRAME_MS') or 0)
         frames = 0; offset_px = 0.0; start = time.monotonic(); last_control = start
         (root / 'ready.json').write_text(json.dumps({
             'source_eye_size': [width, height], 'px_per_deg': px_per_deg,
@@ -263,7 +268,9 @@ def main():
             if args.control_file and now - last_control > 1.0:
                 last_control = now
                 try:
-                    pan = float(json.loads(args.control_file.read_text())['pan_deg_s'])
+                    control = json.loads(args.control_file.read_text())
+                    pan = float(control['pan_deg_s'])
+                    frame_ms = float(control.get('frame_ms', frame_ms))
                 except (OSError, ValueError, KeyError):
                     pass
             for index, (eye, fbo, vr) in enumerate(eyes):
@@ -288,6 +295,9 @@ def main():
             frames += 1
             # Advance by the frame period the compositor paces us at.
             offset_px = (offset_px + pan * px_per_deg / 207.0) % ww
+            if frame_ms:
+                while time.monotonic() - now < frame_ms / 1000:
+                    pass
         log.close()
         (root / 'scene.json').write_text(json.dumps({'frames_submitted': frames,
                                                      'seconds': time.monotonic() - start}, indent=2))
