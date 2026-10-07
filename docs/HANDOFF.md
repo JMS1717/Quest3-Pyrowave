@@ -22,6 +22,34 @@ supported by evidence. Preserve correctness, rollback and honest measurements;
 the previous agent's process is not mandatory. A handoff does not automatically
 resume paused hardware work or unattended workers.
 
+## October 7 afternoon: 207 Hz trace and scorecard
+
+Branch `claude/frame-trace` (on top of `claude/wired-parallel-video`, PR #15). Owner target:
+2080x2208 per eye at 207 Hz from a 3072x3216 render, 1000-1500 Mbit/s, about 200-207 fresh FPS,
+under 30 ms optical latency, no visible foveation. Details: [FRAME-TRACE.md](FRAME-TRACE.md).
+
+| Item | Result |
+|---|---|
+| best shipped config | Haar, mode 5, 1000 Mbit/s, two wired connections, maximum GPU clock (690 MHz), raw sRGB eye copy |
+| fresh FPS (valid blocks, memory clock 2736 MHz) | 194-197; published 203; display periods 195-200 |
+| superseded + empty per second | about 9 + 4 (default); 10 + 11 with release_fd |
+| Haar GPU decode | 2.67 ms p50, 3.50 ms p90 |
+| eye pass | 1.05-1.10 ms (was 1.28 ms) |
+| best opt-in | release_fd + frame hold 6 ms: 199.5 fresh, ALVR latency estimate +5.4 ms |
+| quality choice | CDF 5/3 looks much smoother but is decode-bound near 180 fresh FPS at 1000 Mbit/s; Haar is the 207 Hz choice |
+| optical latency | not yet measured (P4); frame age at display 30.4 ms p50, ALVR estimate about 30-33 ms |
+| limits on 207 Hz | publication jitter against the selection point, 0.8 ms eye-pass fill, uncontrolled memory clock |
+
+Pending:
+
+- **Unplug/replug safety for two wired connections (PR #15).**
+  - The simulated test (`adb reconnect` mid-stream) left the headset "offline" to adb until a
+    physical replug.
+  - The client's behaviour after a real replug still needs a check.
+- Lower-latency selection than the 6 ms hold, for example a 2.8 ms selection wait with release_fd.
+- P4 optical latency with a phone at 240 fps or more.
+- P3 offline quality: CDF 5/3 vs Haar at 1000/1300/1500.
+
 ## October 7: findings and planned next steps
 
 Branches: `claude/decoder-v2` (PR #14) holds Decoder V2 (CDF 5/3 with packed YCbCr output, modes
