@@ -233,6 +233,10 @@ Each candidate passed the exactness gate unless noted. All were timed interleave
 The Adreno 740 decode is throughput-bound. Only less work helps; reordering or fusing dispatches
 does not.
 
+Mode 6 (`debug.q3pw.cdf53v2=6`, opt-in) stores two chroma pixels per texel and cuts V2 decode from
+2.77 to 2.40 ms standalone (2.88 against 3.15 ms live), but live fresh FPS did not change; see
+[PRESENT-YCBCR.md](PRESENT-YCBCR.md#mode-6-two-chroma-pixels-per-texel-opt-in-october-7).
+
 ## Reproduce
 
 ```

@@ -3,6 +3,8 @@
 Status: default from 2026-10-07 (`debug.q3pw.haar32` unset or `5`; `4` selects the previous
 default). Won all three live ABBA runs below. CDF 5/3 has the same output as V2 mode 5
 (`debug.q3pw.cdf53v2`, default 5); see [DECODER-V2.md](DECODER-V2.md#mode-5-packed-ycbcr-into-the-hardware-buffer-default-for-cdf-53).
+Mode 6 (paired chroma, opt-in) decodes faster but measured FPS-neutral live; see
+[below](#mode-6-two-chroma-pixels-per-texel-opt-in-october-7).
 
 ## Why
 
@@ -102,3 +104,40 @@ state the server received no client statistics at all, although the same restart
 headset kept awake by hand reported normally. The server now logs `[Q3PW_STATS]` when client
 statistics stop arriving or stop matching its frames, so the next occurrence names itself.
 Whether a worn headset ever shows the gap is not yet checked.
+
+## Mode 6: two chroma pixels per texel (opt-in, October 7)
+
+`debug.q3pw.haar32=6` (or `debug.q3pw.cdf53v2=6` with CDF 5/3) keeps the mode 5 layout but packs
+two horizontally adjacent chroma pixels per texel, (Cb, Cr) of the left one in RG and of the right
+one in BA. The buffer becomes 3/4 as wide (3096x1104 at the owner's setting, 13.7 MB) and the
+final chroma pass stores half as many texels. The eye shader can no longer filter chroma
+horizontally in hardware: it fetches the two texels around the sample (vertical filtering stays in
+hardware) and mixes them itself. ALVR tells the layouts apart by the buffer width
+(`textureSize` in the shader, `AHardwareBuffer_describe` when choosing the program).
+
+Correctness: `decoder_ab haar32m6` and `cdf53v2m6` give the same differing counts against the base
+decoder as `haar32qp` and `cdf53v2m5`, so the decoded planes are identical. In-headset screenshots
+show correct colour and clean 1:1 chroma on the chequerboards.
+
+Standalone (`decoder_ab wavelets`, 4160x2208, 604 KB, 492 MHz, 4 interleaved blocks):
+
+| | mode 5 | mode 6 |
+|---|---|---|
+| Haar decode p50 | 2.111 ms | **1.742 ms** |
+| CDF 5/3 V2 decode p50 | 2.770 ms | **2.402 ms** |
+
+Live, ABBA per wavelet (bf62efc + mode 6, 207 Hz, 2080x2208 per eye from 3072x3216, 700 Mbps,
+60 deg/s pan, 12 s windows, headset awake; GPU busy 97-99% in every block):
+
+| wavelet | arm | fresh FPS | lost/s | GPU decode p50 | fence p50 | VrApi app GPU |
+|---|---|---|---|---|---|---|
+| Haar | mode 5 | 195.5 / 196.5 | 11.9 / 11.3 | 2.64 / 2.66 ms | 4.62 / 4.60 ms | 3.44 / 3.48 ms |
+| Haar | mode 6 | 195.7 / 195.1 | 11.4 / 12.9 | **2.40 / 2.40 ms** | 4.59 / 4.62 ms | 3.54 / 3.50 ms |
+| CDF 5/3 | mode 5 | 177.6 / 177.6 | 29.6 / 30.1 | 3.15 / 3.14 ms | 5.13 / 5.13 ms | 3.89 / 3.89 ms |
+| CDF 5/3 | mode 6 | 176.8 / 176.0 | 30.5 / 31.4 | **2.88 / 2.89 ms** | 5.17 / 5.18 ms | 3.93 / 3.94 ms |
+
+Decode falls by 0.25 ms, but fresh FPS and the fence do not move, and the app's GPU time rises by
+0.05-0.1 ms (the second chroma fetch and the manual filter in the eye shader). An earlier probe
+that only added the second fetch to mode 5 cost no FPS (188.7 / 188.7 against 192.0 / 189.3), so
+the saving is absorbed elsewhere in the GPU-bound frame. Mode 6 stays opt-in; mode 5 remains the
+default.

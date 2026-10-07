@@ -8147,17 +8147,20 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..83e14668d088b2af058ee8aecf8c9fe0d15f6108
 --- /dev/null
 +++ b/alvr/graphics/resources/present_ycbcr.glsl
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,75 @@
 +// PyroWave Haar mode 5 (Quest3-Pyrowave docs/PRESENT-YCBCR.md): `tex` is a frame_size.x x
 +// frame_size.y/2 RGBA8 buffer. x < frame_size.x/2 holds luma as 2x2 pixel quads ((0,0), (1,0),
 +// (0,1), (1,1) in RGBA); x >= frame_size.x/2 holds the 4:2:0 chroma, one pixel per texel with Cb
-+// in R and Cr in G. Full-range BT.709 with bilinear chroma, the conversion pyroclient's convert.frag
-+// does in the other modes. The external sampler must filter linearly.
++// in R and Cr in G. Mode 6 is the same buffer 3/4 as wide: each chroma texel holds two horizontally
++// adjacent pixels, (Cb, Cr) of the left one in RG and of the right one in BA. Full-range BT.709 with
++// bilinear chroma, the conversion pyroclient's convert.frag does in the other modes. The external
++// sampler must filter linearly.
 +precision highp float;
 +uniform highp vec2 q3pw_frame_size;
++highp vec2 q3pw_tex_size;
 +
 +float q3pw_luma(highp ivec2 p) {
-+    vec4 quad = texture(tex, (vec2(p >> 1) + 0.5) / vec2(q3pw_frame_size.x, q3pw_frame_size.y * 0.5));
++    vec4 quad = texture(tex, (vec2(p >> 1) + 0.5) / q3pw_tex_size);
 +    int i = (p.x & 1) | ((p.y & 1) << 1);
 +    return i == 0 ? quad.r : i == 1 ? quad.g : i == 2 ? quad.b : quad.a;
 +}
@@ -8166,6 +8169,7 @@ index 0000000000000000000000000000000000000000..83e14668d088b2af058ee8aecf8c9fe0
 +vec3 q3pw_present_sample(highp vec2 uv) {
 +    highp vec2 pos = uv * q3pw_frame_size;
 +    highp ivec2 last = ivec2(q3pw_frame_size) - 1;
++    q3pw_tex_size = vec2(textureSize(tex, 0));
 +#ifdef Q3PW_FFE
 +    // Filter luma bilinearly like the RGBA path's sampler, but only along axes in a compressed
 +    // band: the centre maps 1:1 onto decoded pixels, so there the nearest pixel is exact. Each
@@ -8202,7 +8206,20 @@ index 0000000000000000000000000000000000000000..83e14668d088b2af058ee8aecf8c9fe0
 +    // half, as CLAMP_TO_EDGE does on a separate plane.
 +    highp vec2 half_size = q3pw_frame_size * 0.5;
 +    highp vec2 c = clamp(pos * 0.5, vec2(0.5), half_size - 0.5);
-+    vec2 chroma = texture(tex, vec2((half_size.x + c.x) / q3pw_frame_size.x, c.y / half_size.y)).rg - 0.5;
++    highp float v = c.y / half_size.y;
++    vec2 chroma;
++    if (q3pw_tex_size.x < q3pw_frame_size.x) {
++        // Mode 6: the hardware filters vertically; mix the two nearest pixels horizontally.
++        highp float k = floor(c.x - 0.5);
++        float f = c.x - 0.5 - k;
++        highp float t = floor(k * 0.5);
++        vec4 a = texture(tex, vec2((half_size.x + t + 0.5) / q3pw_tex_size.x, v));
++        vec4 b = texture(tex, vec2((half_size.x + t + 1.5) / q3pw_tex_size.x, v));
++        bool odd = k - 2.0 * t > 0.5;
++        chroma = mix(odd ? a.ba : a.rg, odd ? b.rg : a.ba, f) - 0.5;
++    } else {
++        chroma = texture(tex, vec2((half_size.x + c.x) / q3pw_tex_size.x, v)).rg - 0.5;
++    }
 +    return clamp(vec3(Y + 1.5748 * chroma.y, Y - 0.1873 * chroma.x - 0.4681 * chroma.y, Y + 1.8556 * chroma.x),
 +                 0.0, 1.0);
 +}
@@ -8230,7 +8247,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce306d99a4
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,645 @@
+@@ -0,0 +1,646 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -8257,9 +8274,10 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +#[derive(Default)]
 +struct AHardwareBufferDesc { width: u32, height: u32, layers: u32, format: u32, usage: u64, stride: u32, rfu0: u32, rfu1: u64 }
 +
-+/// PyroWave Haar mode 5 hands over packed YCbCr instead of RGBA: one RGBA8 buffer of the full
-+/// frame's width (both eyes) and half its height (resources/present_ycbcr.glsl). Any other buffer,
-+/// including every MediaCodec frame, is RGBA of the full frame.
++/// PyroWave modes 5 and 6 hand over packed YCbCr instead of RGBA: one RGBA8 buffer of the full
++/// frame's width (both eyes; 3/4 of it in mode 6) and half its height
++/// (resources/present_ycbcr.glsl). Any other buffer, including every MediaCodec frame, is RGBA of
++/// the full frame.
 +/// `eye` is the decoded size per eye, which light foveation makes smaller than the view.
 +pub(super) fn present_ycbcr_layout(buffer: *const c_void, eye: UVec2) -> bool {
 +    #[cfg(target_os = "android")]
@@ -8267,7 +8285,7 @@ index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce
 +        if buffer.is_null() { return false; }
 +        let mut desc = AHardwareBufferDesc::default();
 +        unsafe { AHardwareBuffer_describe(buffer, &mut desc) };
-+        desc.width == 2 * eye.x && desc.height * 2 == eye.y
++        (desc.width == 2 * eye.x || desc.width == 2 * eye.x / 4 * 3) && desc.height * 2 == eye.y
 +    }
 +    #[cfg(not(target_os = "android"))]
 +    { let _ = (buffer, eye); false }

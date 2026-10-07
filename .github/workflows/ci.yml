@@ -190,6 +190,11 @@ jobs:
           java-version: '17'
       - name: Reconstruct pinned source trees
         run: sh tools/ci/fetch_sources.sh "$XRWIRED_INPUTS/research"
+      - name: Compile ALVR's run-time GLES shader variants (glslang)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends glslang-tools
+          python3 tools/ci/check_alvr_shaders.py "$XRWIRED_INPUTS/research/ALVR-20.13.0"
       - name: Cache Rust dependencies and compiled Android targets
         id: cargo_client_cache
         uses: actions/cache/restore@v4

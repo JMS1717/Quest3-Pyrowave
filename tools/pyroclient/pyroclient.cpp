@@ -159,6 +159,9 @@ struct pyroclient {
     // output buffer, width x height/2 RGBA8, and the consumer converts to RGB. No conversion pass;
     // planes stay allocated as for mode 4 (the fallback) but are not written.
     bool present_ycbcr = false;
+    // Mode 6: present_ycbcr with two chroma pixels per texel; each buffer is 3/4 width x height/2.
+    bool chroma_pairs = false;
+    uint32_t present_width() const { return chroma_pairs ? width / 4 * 3 : width; }
 
     // Conversion pass.
     VkSampler sampler = VK_NULL_HANDLE;
@@ -531,11 +534,11 @@ bool pyroclient::create_planes() {
     // precisions); step down to the best mode it accepts. The plane layout follows the result.
     haar32_mode = 0;
     // Mode 5 leaves colour conversion to ALVR's eye shader, which does full range and bilinear chroma.
-    const int haar32_max = haar32_requested == 5 && (!full_range || chroma_filter) ? 4 : haar32_requested;
+    const int haar32_max = haar32_requested >= 5 && (!full_range || chroma_filter) ? 4 : haar32_requested;
     for (int mode = haar32_max; mode > 0 && !haar32_mode; mode--)
         if (pyrowave_decoder_set_haar32(decoder, mode) == PYROWAVE_SUCCESS) haar32_mode = mode;
     cdf53v2_mode = 0;
-    const int cdf53v2_max = cdf53v2_requested == 5 && (!full_range || chroma_filter) ? 4 : cdf53v2_requested;
+    const int cdf53v2_max = cdf53v2_requested >= 5 && (!full_range || chroma_filter) ? 4 : cdf53v2_requested;
     for (int mode = legall53 ? cdf53v2_max : 0; mode > 0 && !cdf53v2_mode; mode--)
         if (pyrowave_decoder_set_cdf53v2(decoder, mode) == PYROWAVE_SUCCESS) cdf53v2_mode = mode;
     packed_luma = haar32_mode >= 3 || cdf53v2_mode >= 2;
@@ -848,10 +851,12 @@ static bool write_set(VkDevice device, VkSampler sampler, const Plane planes[3],
 // usage on an imported buffer is what makes the convert pass one dispatch; if the driver refuses
 // it we fall back to TRANSFER_DST and a copy, and say so once.
 bool pyroclient::create_slot(Slot &s) {
-    // Mode 5: luma quads beside Cb/Cr pixels, each half width/2 x height/2.
+    // Mode 5: luma quads beside Cb/Cr pixels, each half width/2 x height/2 (mode 6: the chroma
+    // half is width/4 wide).
     const uint32_t slot_height = present_ycbcr ? height / 2 : height;
+    const uint32_t slot_width = present_ycbcr ? present_width() : width;
     AHardwareBuffer_Desc d = {};
-    d.width = width; d.height = slot_height; d.layers = 1;
+    d.width = slot_width; d.height = slot_height; d.layers = 1;
     d.format = AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM;
     d.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE | AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT;
     if (fragment_min_usage && optimal_ahb_usage && !present_ycbcr) d.usage |= optimal_ahb_usage;
@@ -862,7 +867,7 @@ bool pyroclient::create_slot(Slot &s) {
         d.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE | AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT;
         allocated = AHardwareBuffer_allocate(&d, &s.ahb);
     }
-    if (allocated != 0 || !s.ahb) { LOGE("AHardwareBuffer_allocate %ux%u", width, slot_height); return false; }
+    if (allocated != 0 || !s.ahb) { LOGE("AHardwareBuffer_allocate %ux%u", slot_width, slot_height); return false; }
     AHardwareBuffer_Desc actual = {};
     AHardwareBuffer_describe(s.ahb, &actual);
     LOGI("[Q3PW_AHB_USAGE] allocated=0x%llx recommended=0x%llx", (unsigned long long)actual.usage,
@@ -878,7 +883,7 @@ bool pyroclient::create_slot(Slot &s) {
     VkImageCreateInfo ii = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
     ii.pNext = &ext;
     ii.imageType = VK_IMAGE_TYPE_2D; ii.format = VK_FORMAT_R8G8B8A8_UNORM;
-    ii.extent = { width, slot_height, 1 }; ii.mipLevels = 1; ii.arrayLayers = 1;
+    ii.extent = { slot_width, slot_height, 1 }; ii.mipLevels = 1; ii.arrayLayers = 1;
     ii.samples = VK_SAMPLE_COUNT_1_BIT; ii.tiling = VK_IMAGE_TILING_OPTIMAL;
     const VkImageUsageFlags legacy_usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
         | (storage_on_ahb ? VK_IMAGE_USAGE_STORAGE_BIT : 0)
@@ -1018,7 +1023,7 @@ bool pyroclient::record_commands(Slot &s) {
         s.first_use = false;
         for (int i = 0; i < 2; i++) {
             pyrowave_image_view &v = frame_buffers.planes[i];
-            v.image = s.image; v.width = width; v.height = height / 2;
+            v.image = s.image; v.width = int(present_width()); v.height = height / 2;
             v.image_format = v.view_format = VK_FORMAT_R8G8B8A8_UNORM;
         }
     }
@@ -1313,19 +1318,19 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
     __system_property_get("debug.q3pw.fuse_color", fuse_prop);
     {
         // Multilevel Haar (docs/HAAR32.md), default mode 5 (docs/PRESENT-YCBCR.md), which steps down
-        // to mode 4 where it cannot apply; "0" to "5" selects a mode. Fused colour
+        // to mode 4 where it cannot apply; "0" to "6" selects a mode (6: paired chroma, docs/PRESENT-YCBCR.md). Fused colour
         // and fused dequant replace passes it owns, so requesting either turns the default off.
         char haar32_prop[PROP_VALUE_MAX] = {}, dequant_haar_prop[PROP_VALUE_MAX] = {};
         __system_property_get("debug.q3pw.dequant_haar", dequant_haar_prop);
         const bool explicit_mode = __system_property_get("debug.q3pw.haar32", haar32_prop) > 0 &&
-                                   haar32_prop[0] >= '0' && haar32_prop[0] <= '5' && !haar32_prop[1];
+                                   haar32_prop[0] >= '0' && haar32_prop[0] <= '6' && !haar32_prop[1];
         c->haar32_requested = explicit_mode ? haar32_prop[0] - '0'
                               : !strcmp(fuse_prop, "1") || !strcmp(dequant_haar_prop, "1") ? 0 : 5;
         // Decoder V2 for CDF 5/3 (docs/DECODER-V2.md), default mode 5 (the packed YCbCr output of
-        // haar32 mode 5); "0" to "5" selects a mode.
+        // haar32 mode 5); "0" to "6" selects a mode.
         char v2_prop[PROP_VALUE_MAX] = {};
         const bool explicit_v2 = __system_property_get("debug.q3pw.cdf53v2", v2_prop) > 0 &&
-                                 v2_prop[0] >= '0' && v2_prop[0] <= '5' && !v2_prop[1];
+                                 v2_prop[0] >= '0' && v2_prop[0] <= '6' && !v2_prop[1];
         c->cdf53v2_requested = explicit_v2 ? v2_prop[0] - '0' : 5;
         // A/B only: debug.q3pw.packed_levels "2" keeps the quad-packed layout to levels 0-1 (default
         // levels 0-3) for haar32 mode 2-3 and Decoder V2 mode 3.
@@ -1425,15 +1430,17 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
             LOGI("[Q3PW_DEQUANT_HAAR] requested=1 active=%d (%s)", !strcmp(result, "applied") ? 1 : 0, result);
         }
     }
-    if (c->haar32_mode == 5 || c->cdf53v2_mode == 5) {
+    if (c->haar32_mode >= 5 || c->cdf53v2_mode >= 5) {
         // Mode 5 needs PyroWave to write the imported buffer as a storage image; otherwise step
         // down to mode 4, whose planes are already allocated.
         const char *reason = !c->storage_on_ahb ? "no storage on AHB" : c->fuse_color ? "fused colour" : nullptr;
-        if (reason && c->haar32_mode == 5 && pyrowave_decoder_set_haar32(c->decoder, 4) == PYROWAVE_SUCCESS) c->haar32_mode = 4;
-        else if (reason && c->cdf53v2_mode == 5 && pyrowave_decoder_set_cdf53v2(c->decoder, 4) == PYROWAVE_SUCCESS) c->cdf53v2_mode = 4;
+        if (reason && c->haar32_mode >= 5 && pyrowave_decoder_set_haar32(c->decoder, 4) == PYROWAVE_SUCCESS) c->haar32_mode = 4;
+        else if (reason && c->cdf53v2_mode >= 5 && pyrowave_decoder_set_cdf53v2(c->decoder, 4) == PYROWAVE_SUCCESS) c->cdf53v2_mode = 4;
         else if (reason) { c->destroy(); delete c; return nullptr; }
-        c->present_ycbcr = c->haar32_mode == 5 || c->cdf53v2_mode == 5;
-        LOGI("[Q3PW_PRESENT_YCBCR] active=%d (%s)", c->present_ycbcr ? 1 : 0, reason ? reason : "applied");
+        c->present_ycbcr = c->haar32_mode >= 5 || c->cdf53v2_mode >= 5;
+        c->chroma_pairs = c->haar32_mode == 6 || c->cdf53v2_mode == 6;
+        LOGI("[Q3PW_PRESENT_YCBCR] active=%d chroma_pairs=%d (%s)", c->present_ycbcr ? 1 : 0, c->chroma_pairs ? 1 : 0,
+             reason ? reason : "applied");
     }
     if (!c->storage_on_ahb) {
         if (!create_plain_image(c->gpu, c->device, VK_FORMAT_R8G8B8A8_UNORM, width, height,
