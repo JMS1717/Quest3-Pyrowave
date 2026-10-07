@@ -7039,7 +7039,7 @@ index 0000000000000000000000000000000000000000..be1205ccfde1989670f4732b16b7982a
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe995e4e278f3903d05f84a50db089f21cfc..58b8e7871cb25d22eb357820e64b43553e487048 100644
+index b87dfe995e4e278f3903d05f84a50db089f21cfc..71ca8db6ec7a5a09cbc7b470c7c1ff899de9a39c 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -1,3 +1,6 @@
@@ -7215,7 +7215,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..58b8e7871cb25d22eb357820e64b4355
 +                crate::extra_extensions::perf_settings::system_property("debug.q3pw.async_eye_copy") == "1",
 +                crate::extra_extensions::perf_settings::system_property("debug.q3pw.copy_wait_us")
 +                    .parse::<i32>().unwrap_or(0).clamp(0, 2000),
-+                crate::extra_extensions::perf_settings::system_property("debug.q3pw.raw_srgb_copy") == "1",
++                crate::extra_extensions::perf_settings::system_property("debug.q3pw.raw_srgb_copy") != "0",
 +                crate::extra_extensions::perf_settings::system_property("debug.q3pw.image_cache") == "1",
 +            );
 +            video_decoder::set_pyrowave_refresh_hz(self.config.refresh_rate_hint);
@@ -8617,10 +8617,10 @@ index 0000000000000000000000000000000000000000..bc6bee02decfec1a7df24f18e8fd2991
 +}
 diff --git a/alvr/graphics/resources/present_ycbcr.glsl b/alvr/graphics/resources/present_ycbcr.glsl
 new file mode 100644
-index 0000000000000000000000000000000000000000..83e14668d088b2af058ee8aecf8c9fe0d15f6108
+index 0000000000000000000000000000000000000000..a8bab4b7544d79175eed5709bb493588b6f8be0e
 --- /dev/null
 +++ b/alvr/graphics/resources/present_ycbcr.glsl
-@@ -0,0 +1,75 @@
+@@ -0,0 +1,91 @@
 +// PyroWave Haar mode 5 (Quest3-Pyrowave docs/PRESENT-YCBCR.md): `tex` is a frame_size.x x
 +// frame_size.y/2 RGBA8 buffer. x < frame_size.x/2 holds luma as 2x2 pixel quads ((0,0), (1,0),
 +// (0,1), (1,1) in RGBA); x >= frame_size.x/2 holds the 4:2:0 chroma, one pixel per texel with Cb
@@ -8640,6 +8640,16 @@ index 0000000000000000000000000000000000000000..83e14668d088b2af058ee8aecf8c9fe0
 +
 +// uv spans the whole frame, both eyes.
 +vec3 q3pw_present_sample(highp vec2 uv) {
++#if defined(Q3PW_EYE_PROBE) && Q3PW_EYE_PROBE == 1
++    // Diagnostic (debug.q3pw.eye_probe): no buffer reads; a smooth gradient compresses well.
++    return vec3(uv, 0.5);
++#elif defined(Q3PW_EYE_PROBE) && Q3PW_EYE_PROBE == 2
++    // Diagnostic: no buffer reads; per-pixel noise defeats framebuffer compression.
++    highp uvec2 n = uvec2(uv * vec2(4160.0, 2208.0));
++    highp uint h = (n.x * 1664525u) ^ (n.y * 1013904223u);
++    h ^= h >> 13; h *= 0x5bd1e995u; h ^= h >> 15;
++    return vec3(uvec3(h, h >> 8, h >> 16) & 255u) / 255.0;
++#endif
 +    highp vec2 pos = uv * q3pw_frame_size;
 +    highp ivec2 last = ivec2(q3pw_frame_size) - 1;
 +    q3pw_tex_size = vec2(textureSize(tex, 0));
@@ -8681,6 +8691,12 @@ index 0000000000000000000000000000000000000000..83e14668d088b2af058ee8aecf8c9fe0
 +    highp vec2 c = clamp(pos * 0.5, vec2(0.5), half_size - 0.5);
 +    highp float v = c.y / half_size.y;
 +    vec2 chroma;
++#if defined(Q3PW_EYE_PROBE) && Q3PW_EYE_PROBE == 3
++    // Diagnostic: luma reads only.
++    if (true) {
++        chroma = vec2(0.0);
++    } else
++#endif
 +    if (q3pw_tex_size.x < q3pw_frame_size.x) {
 +        // Mode 6: the hardware filters vertically; mix the two nearest pixels horizontally.
 +        highp float k = floor(c.x - 0.5);
@@ -8717,10 +8733,10 @@ index 7bfba12ca0479598b4060b84664695a82c96411d..7236535dfbd7196f77a29c1e5f9dbc27
  #endif
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..81eee1e7c0156b0fab0cf5a4927bba110e367a1a
+index 0000000000000000000000000000000000000000..a54e69acd9b130d59918da2058ea3b719107c4ef
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,672 @@
+@@ -0,0 +1,694 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -8799,6 +8815,22 @@ index 0000000000000000000000000000000000000000..81eee1e7c0156b0fab0cf5a4927bba11
 +    }
 +    #[cfg(not(target_os = "android"))]
 +    { 1 }
++}
++
++// Diagnostic only, never a default: `debug.q3pw.eye_probe=N` changes what the packed-YCbCr eye
++// shader reads, to split the eye pass's GPU time into texture reads and writes. 1 writes a
++// gradient and 2 hash noise without reading the buffer (best- and worst-case write compression);
++// 3 reads luma only. The picture is wrong while it is set.
++fn eye_probe_requested() -> i32 {
++    #[cfg(target_os = "android")]
++    {
++        let mut value = [0u8; 92];
++        let len = unsafe { __system_property_get(c"debug.q3pw.eye_probe".as_ptr(), value.as_mut_ptr().cast()) };
++        std::str::from_utf8(&value[..len.max(0) as usize]).ok()
++            .and_then(|v| v.trim().parse::<i32>().ok()).filter(|n| (1..=3).contains(n)).unwrap_or(0)
++    }
++    #[cfg(not(target_os = "android"))]
++    { 0 }
 +}
 +
 +// Initialization diagnostics bypass the mirrored-log severity filter. No per-frame
@@ -8890,7 +8922,7 @@ index 0000000000000000000000000000000000000000..81eee1e7c0156b0fab0cf5a4927bba11
 +    regions
 +}
 +
-+unsafe fn compile_program(gl: &gl::Context, foveation: bool, present: bool, filter: usize) -> Result<gl::Program, String> {
++unsafe fn compile_program(gl: &gl::Context, foveation: bool, present: bool, filter: usize, probe: i32) -> Result<gl::Program, String> {
 +    let program = gl.create_program()?;
 +    let mut shaders = Vec::new();
 +    let result = (|| {
@@ -8909,6 +8941,10 @@ index 0000000000000000000000000000000000000000..81eee1e7c0156b0fab0cf5a4927bba11
 +                let defines = [(1, "Q3PW_FFE_FILTER_X"), (2, "Q3PW_FFE_FILTER_Y")].iter()
 +                    .filter(|(bit, _)| filter & bit != 0).map(|(_, name)| format!("\n#define {name}")).collect::<String>();
 +                source.replacen("#version 300 es", &format!("#version 300 es{defines}"), 1)
++            } else { source };
++            let source = if kind == gl::FRAGMENT_SHADER && present && probe != 0 {
++                source.replacen("#version 300 es", &format!("#version 300 es
++#define Q3PW_EYE_PROBE {probe}"), 1)
 +            } else { source };
 +            gl.shader_source(shader, &source);
 +            gl.compile_shader(shader);
@@ -8947,13 +8983,15 @@ index 0000000000000000000000000000000000000000..81eee1e7c0156b0fab0cf5a4927bba11
 +            import_diagnostic(4, format!("[Q3PW_EYE_INVALIDATE] requested={invalidate} active={invalidate}"));
 +            let ablate = eye_ablate_requested();
 +            if ablate > 1 { import_diagnostic(4, format!("[Q3PW_EYE_ABLATE] fraction=1/{ablate} image_incorrect=true")); }
-+            let program = compile_program(gl, config.foveation.is_some(), false, 0)?;
++            let probe = eye_probe_requested();
++            if probe != 0 { import_diagnostic(4, format!("[Q3PW_EYE_PROBE] mode={probe} image_incorrect=true")); }
++            let program = compile_program(gl, config.foveation.is_some(), false, 0, 0)?;
 +            // Compiled up front so the first mode-5 frame does not stall; without them such frames
 +            // take the staging path, which converts them too.
 +            let filters = if config.foveation.is_some() { 4 } else { 1 };
 +            let mut present_programs = Some(Vec::new());
 +            for filter in 0..filters {
-+                match compile_program(gl, config.foveation.is_some(), true, filter) {
++                match compile_program(gl, config.foveation.is_some(), true, filter, probe) {
 +                    Ok(program) => present_programs.as_mut().unwrap().push(program),
 +                    Err(error) => {
 +                        import_diagnostic(5, format!("[Q3PW_PRESENT_YCBCR] direct program {filter} failed: {error}"));
