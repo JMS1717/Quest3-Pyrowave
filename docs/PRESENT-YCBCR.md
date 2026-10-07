@@ -93,4 +93,11 @@ show correct colour (per-channel means within 1.3 code values of mode 4 on the s
 
 `session_settings.video.pyrowave.quest3_max_gpu_clock=true` does pin the client at 690 MHz, but
 in two attempts the server then reported no statistics after its client restart, so the harness
-could not measure; this is a separate defect under investigation.
+could not measure; this is a separate defect under investigation. Two causes were found on
+October 7: the server restarted the client every few seconds because it undid HorizonOS's own
+refresh-rate write (fixed, see [REFRESH-RATES.md](REFRESH-RATES.md)), and the test headset was
+not worn, so it went to standby once the server handed proximity back after the restart. In that
+state the server received no client statistics at all, although the same restart with the
+headset kept awake by hand reported normally. The server now logs `[Q3PW_STATS]` when client
+statistics stop arriving or stop matching its frames, so the next occurrence names itself.
+Whether a worn headset ever shows the gap is not yet checked.

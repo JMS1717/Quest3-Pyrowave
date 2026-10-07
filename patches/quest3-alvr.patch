@@ -266,10 +266,10 @@ index a5a446842d4799523d0e06fbfb7253bb13d6c7db..566cdde2b0f58ca90d722104983a4464
          .context("Failed to list ADB devices")?;
 diff --git a/alvr/adb/src/display_override.rs b/alvr/adb/src/display_override.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a3374e236
+index 0000000000000000000000000000000000000000..1e58855f94e3ae6e1f923ca096ea307e719eabe5
 --- /dev/null
 +++ b/alvr/adb/src/display_override.rs
-@@ -0,0 +1,500 @@
+@@ -0,0 +1,592 @@
 +//! Opt-in Quest 3 display and GPU developer properties, managed by the PC over USB.
 +//!
 +//! Any whole refresh rate can be forced (measured October 6, 2026): 144-207 Hz with the full
@@ -286,6 +286,10 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +//! The original values are saved before the first change and restored, the same way, when the
 +//! request is withdrawn or the server shuts down. With nothing requested and nothing saved this
 +//! module issues no ADB commands at all.
++//!
++//! A property is restored only while it still holds the value this module wrote. HorizonOS writes
++//! `debug.oculus.refreshRate` itself (72 when a VR app starts with it empty), and the user may set
++//! these properties too; restoring over such a value restarted the client in an endless loop.
 +
 +use anyhow::{bail, Result};
 +use std::{
@@ -338,13 +342,20 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +    Some((field("hactive=")?, field("vactive=")?, field("fps=")?))
 +}
 +
-+/// The property values the PC wants, given the originals saved before the first change.
-+pub fn targets(request: Request, original: &[String; 3]) -> [String; 3] {
++/// The property values the PC wants. Requested properties take the requested values; the others
++/// go back to the originals saved before the first change, but only while they still hold the
++/// value this module last wrote (`applied`; `None` for state saved before that was recorded).
++pub fn targets(request: Request, original: &[String; 3], current: &[String; 3],
++               applied: Option<&[Option<String>; 3]>) -> [String; 3] {
++    let release = |i: usize| {
++        let ours = applied.map_or(true, |applied| applied[i].as_deref() == Some(current[i].as_str()));
++        if ours { original[i].clone() } else { current[i].clone() }
++    };
 +    let (scaling, rate) = match request.rate_hz {
 +        Some(hz) => (if request.scaled() { "1".into() } else { String::new() }, hz.to_string()),
-+        None => (original[0].clone(), original[1].clone()),
++        None => (release(0), release(1)),
 +    };
-+    [scaling, rate, if request.gpu_level_7 { "7".into() } else { original[2].clone() }]
++    [scaling, rate, if request.gpu_level_7 { "7".into() } else { release(2) }]
 +}
 +
 +/// What to apply this loop iteration. The headset is only changed for the Quest3-Pyrowave client:
@@ -369,6 +380,15 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +    }
 +}
 +
++/// "name: old -> new" for each property that changes, so a log shows what triggered a restart.
++fn describe_changes(current: &[String; 3], want: &[String; 3]) -> String {
++    let changes: Vec<String> = PROPERTIES.iter().zip(current.iter().zip(want))
++        .filter(|(_, (from, to))| from != to)
++        .map(|(name, (from, to))| format!("{name}: '{from}' -> '{to}'"))
++        .collect();
++    if changes.is_empty() { "panel mode only".into() } else { changes.join(", ") }
++}
++
 +fn valid_value(value: &str) -> bool {
 +    value.len() <= 8 && value.chars().all(|c| c.is_ascii_digit())
 +}
@@ -383,7 +403,9 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +        Self { state_path, verified: None }
 +    }
 +
-+    fn saved(&self, serial: &str) -> Result<Option<[String; 3]>> {
++    /// The saved originals and, from state files with `format=2`, the values this module last
++    /// wrote (`applied.<property>=<value>`).
++    fn saved(&self, serial: &str) -> Result<Option<([String; 3], Option<[Option<String>; 3]>)>> {
 +        let Ok(text) = fs::read_to_string(&self.state_path) else {
 +            return Ok(None);
 +        };
@@ -392,20 +414,33 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +            bail!("Saved Quest display values belong to another headset: {}", self.state_path.display());
 +        }
 +        let mut values: [String; 3] = Default::default();
++        let mut applied: [Option<String>; 3] = Default::default();
++        let mut tracked = false;
 +        for line in lines {
-+            if let Some((name, value)) = line.split_once('=') {
++            if line == "format=2" {
++                tracked = true;
++            } else if let Some((name, value)) = line.split_once('=') {
++                let (name, slot) = match name.strip_prefix("applied.") {
++                    Some(name) => (name, true),
++                    None => (name, false),
++                };
 +                if let Some(index) = PROPERTIES.iter().position(|p| *p == name) {
-+                    values[index] = value.to_owned();
++                    if slot { applied[index] = Some(value.to_owned()) } else { values[index] = value.to_owned() }
 +                }
 +            }
 +        }
-+        Ok(Some(values))
++        Ok(Some((values, tracked.then_some(applied))))
 +    }
 +
-+    fn save(&self, serial: &str, values: &[String; 3]) -> Result<()> {
-+        let mut text = format!("{serial}\n");
++    fn save(&self, serial: &str, values: &[String; 3], applied: &[Option<String>; 3]) -> Result<()> {
++        let mut text = format!("{serial}\nformat=2\n");
 +        for (name, value) in PROPERTIES.iter().zip(values) {
 +            text.push_str(&format!("{name}={value}\n"));
++        }
++        for (name, value) in PROPERTIES.iter().zip(applied) {
++            if let Some(value) = value {
++                text.push_str(&format!("applied.{name}={value}\n"));
++            }
 +        }
 +        fs::write(&self.state_path, text)?;
 +        Ok(())
@@ -462,14 +497,15 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +        // A saved state means this module may have changed the panel mode earlier.
 +        let had_saved = saved.is_some();
 +        let current = Self::current(shell)?;
-+        let original = match saved {
-+            Some(values) => values,
++        let (original, applied) = match saved {
++            Some(saved) => saved,
 +            None => {
-+                self.save(serial, &current)?;
-+                current.clone()
++                let applied = Default::default();
++                self.save(serial, &current, &applied)?;
++                (current.clone(), Some(applied))
 +            }
 +        };
-+        let want = targets(request, &original);
++        let want = targets(request, &original, &current, applied.as_ref());
 +        // Verified earlier and the values still hold: skip the panel check. A headset reboot
 +        // clears the properties, which this comparison notices.
 +        if self.verified == Some(request) && current == want {
@@ -509,16 +545,29 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +            }
 +        })();
 +        let released = shell.shell("am broadcast -a com.oculus.vrpowermanager.automation_disable");
-+        let applied = result?;
++        let done = result;
++        // Whatever was written is this module's to restore, even when the mode never switched.
++        if done.is_ok() {
++            let mut written = applied.unwrap_or_default();
++            for (i, value) in want.iter().enumerate() {
++                let requested = if i == 2 { request.gpu_level_7 } else { request.rate_hz.is_some() };
++                if requested || *value != current[i] {
++                    written[i] = Some(value.clone());
++                }
++            }
++            self.save(serial, &original, &written)?;
++        }
++        let done = done?;
 +        released?;
-+        if !applied {
++        if !done {
 +            return Ok(Some("Waiting for the headset display mode to change".into()));
 +        }
 +        self.finish(request)?;
++        let changes = describe_changes(&current, &want);
 +        Ok(Some(if let Some(hz) = request.rate_hz {
-+            format!("Headset display switched to {hz} Hz; restarting the client")
++            format!("Headset display switched to {hz} Hz ({changes}); restarting the client")
 +        } else {
-+            "Headset display and GPU values updated; restarting the client".into()
++            format!("Headset display and GPU values updated ({changes}); restarting the client")
 +        }))
 +    }
 +
@@ -759,6 +808,49 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +        assert_eq!(effective_request(ON, false, true, false), ON);
 +        assert_eq!(effective_request(ON, false, false, true), ON);
 +        assert_eq!(effective_request(ON, false, false, false), Request::default());
++    }
++
++    #[test]
++    fn values_written_by_others_are_left_alone() {
++        // GPU clock only. HorizonOS writes refreshRate=72 whenever the client starts with it
++        // empty; restoring the saved empty value over that restarted the client forever.
++        let quest = FakeQuest::new(true);
++        quest.props.borrow_mut().insert(RATE.into(), String::new());
++        let path = state_path("foreign");
++        let mut display = DisplayOverride::new(path.clone());
++        let gpu = Request { rate_hz: None, gpu_level_7: true };
++        assert!(display.ensure(&quest, "serial", gpu).unwrap().is_some());
++        assert_eq!(quest.prop(GPU_LEVEL), "7");
++        quest.props.borrow_mut().insert(RATE.into(), "72".into());
++        let mut display = DisplayOverride::new(path.clone());
++        assert_eq!(display.ensure(&quest, "serial", gpu).unwrap(), None);
++        assert_eq!(display.ensure(&quest, "serial", gpu).unwrap(), None);
++        assert_eq!(quest.prop(RATE), "72");
++        // Withdrawn: the GPU level this module wrote goes back; the OS's rate stays.
++        assert!(display.ensure(&quest, "serial", Request::default()).unwrap().is_some());
++        assert_eq!((quest.prop(RATE), quest.prop(GPU_LEVEL)), ("72".into(), String::new()));
++        assert!(!path.exists());
++        // A GPU level the user changed after this module wrote it is not taken back either.
++        display.ensure(&quest, "serial", gpu).unwrap();
++        quest.props.borrow_mut().insert(GPU_LEVEL.into(), "5".into());
++        assert!(DisplayOverride::new(path.clone()).ensure(&quest, "serial", Request::default()).unwrap().is_none());
++        assert_eq!(quest.prop(GPU_LEVEL), "5");
++        assert!(!path.exists());
++    }
++
++    #[test]
++    fn state_saved_before_tracking_still_restores() {
++        let quest = FakeQuest::new(true);
++        let path = state_path("legacy");
++        let mut display = DisplayOverride::new(path.clone());
++        display.ensure(&quest, "serial", ON).unwrap();
++        // The older format: originals only.
++        fs::write(&path, format!("serial\n{SCALING}=\n{RATE}=120\n{GPU_LEVEL}=\n")).unwrap();
++        let mut display = DisplayOverride::new(path.clone());
++        assert!(display.ensure(&quest, "serial", Request::default()).unwrap().is_some());
++        assert_eq!(*quest.mode.borrow(), (4128, 2208, 120));
++        assert_eq!((quest.prop(RATE), quest.prop(GPU_LEVEL)), ("120".into(), String::new()));
++        assert!(!path.exists());
 +    }
 +
 +    #[test]
@@ -10571,19 +10663,20 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..32d9601f7a9835e93115859e328c9b04
  
          Some((
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9a2d276d9 100644
+index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05ec044942b 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
-@@ -43,6 +43,8 @@ use std::{
+@@ -43,6 +43,9 @@ use std::{
  const RETRY_CONNECT_MIN_INTERVAL: Duration = Duration::from_secs(1);
  const HANDSHAKE_ACTION_TIMEOUT: Duration = Duration::from_secs(2);
  pub const STREAMING_RECV_TIMEOUT: Duration = Duration::from_millis(500);
 +const SETTINGS_CHECK_INTERVAL: Duration = Duration::from_millis(500);
 +const SETTINGS_SETTLE_TIME: Duration = Duration::from_secs(2);
++const STATISTICS_CHECK_INTERVAL: Duration = Duration::from_secs(10);
  const REAL_TIME_UPDATE_INTERVAL: Duration = Duration::from_secs(1);
  
  const MAX_UNREAD_PACKETS: usize = 10; // Applies per stream
-@@ -53,7 +55,61 @@ pub struct VideoPacket {
+@@ -53,7 +56,61 @@ pub struct VideoPacket {
  }
  
  fn align32(value: f32) -> u32 {
@@ -10646,7 +10739,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
  }
  
  fn is_streaming(client_hostname: &str) -> bool {
-@@ -69,6 +125,46 @@ pub fn contruct_openvr_config(session: &SessionConfig) -> OpenvrConfig {
+@@ -69,6 +126,46 @@ pub fn contruct_openvr_config(session: &SessionConfig) -> OpenvrConfig {
      openvr_config_with_env(session, &alvr_session::beta::process_env)
  }
  
@@ -10693,7 +10786,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
  fn openvr_config_with_env(
      session: &SessionConfig,
      env: &dyn Fn(&str) -> Option<String>,
-@@ -133,25 +229,18 @@ fn openvr_config_with_env(
+@@ -133,25 +230,18 @@ fn openvr_config_with_env(
          })
          .unwrap_or(false);
  
@@ -10731,7 +10824,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
  
      let mut brightness = 0.0;
      let mut contrast = 0.0;
-@@ -240,7 +329,11 @@ fn openvr_config_with_env(
+@@ -240,7 +330,11 @@ fn openvr_config_with_env(
          pyrowave_enabled: pyrowave.enabled,
          pyrowave_udp: pyrowave.udp,
          pyrowave_wavelet_53: pyrowave.wavelet_53,
@@ -10743,7 +10836,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
          _controller_profile,
          _server_impl_debug: settings.extra.logging.debug_groups.server_impl,
          _client_impl_debug: settings.extra.logging.debug_groups.client_impl,
-@@ -313,12 +406,24 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -313,12 +407,24 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
              let stream_port;
              let client_type;
              let client_autolaunch;
@@ -10768,7 +10861,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
              }
  
              let status = match wired_connection.setup(
-@@ -326,6 +431,7 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -326,6 +432,7 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
                  stream_port,
                  &client_type,
                  client_autolaunch,
@@ -10776,7 +10869,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
              ) {
                  Ok(status) => status,
                  Err(e) => {
-@@ -471,6 +577,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -471,6 +578,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
          thread.join().ok();
      }
  
@@ -10793,7 +10886,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
      alvr_common::dbg_connection!("handshake_loop: End");
  }
  
-@@ -629,6 +745,19 @@ fn connection_pipeline(
+@@ -629,6 +746,19 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -10813,7 +10906,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +778,9 @@ fn connection_pipeline(
+@@ -649,18 +779,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -10835,7 +10928,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -802,6 +922,10 @@ fn connection_pipeline(
+@@ -802,6 +923,10 @@ fn connection_pipeline(
          proto_socket.split(STREAMING_RECV_TIMEOUT).to_con()?;
  
      let mut new_openvr_config = contruct_openvr_config(session_manager_lock.session());
@@ -10846,7 +10939,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
      new_openvr_config.eye_resolution_width = stream_view_resolution.x;
      new_openvr_config.eye_resolution_height = stream_view_resolution.y;
      new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
-@@ -822,6 +946,7 @@ fn connection_pipeline(
+@@ -822,6 +947,7 @@ fn connection_pipeline(
  
          crate::notify_restart_driver();
      }
@@ -10854,7 +10947,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
  
      dbg_connection!("connection_pipeline: Send StartStream packet");
      control_sender
-@@ -846,6 +971,28 @@ fn connection_pipeline(
+@@ -846,6 +972,28 @@ fn connection_pipeline(
  
      *ctx.bitrate_manager.lock() =
          BitrateManager::new(initial_settings.video.bitrate.history_size, fps);
@@ -10883,7 +10976,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
  
      let stream_protocol = if wired {
          SocketProtocol::Tcp
-@@ -869,10 +1016,11 @@ fn connection_pipeline(
+@@ -869,10 +1017,11 @@ fn connection_pipeline(
  
      // PyroWave over UDP: a plain socket to the client's address. The same resolution fills
      // openvr_config for the C++ encoder, so the two sides cannot disagree.
@@ -10899,7 +10992,51 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
      if pyrowave.enabled {
          info!("{pyrowave}");
      }
-@@ -1102,7 +1250,10 @@ fn connection_pipeline(
+@@ -1081,18 +1230,40 @@ fn connection_pipeline(
+         let ctx = Arc::clone(&ctx);
+         let client_hostname = client_hostname.clone();
+         move || {
++            // The dashboard's graphs and the bitrate controller depend on these reports, so say
++            // when they stop arriving or stop matching server frames instead of going quiet.
++            let mut window = (Instant::now(), 0u32, 0u32); // (start, received, without a server frame)
+             while is_streaming(&client_hostname) {
++                if window.0.elapsed() >= STATISTICS_CHECK_INTERVAL {
++                    let (_, received, unmatched) = window;
++                    if received == 0 || unmatched * 2 > received {
++                        warn!("[Q3PW_STATS] {received} client statistics in {} s, {unmatched} without a server frame",
++                            STATISTICS_CHECK_INTERVAL.as_secs());
++                    }
++                    window = (Instant::now(), 0, 0);
++                }
+                 let data = match statics_receiver.recv(STREAMING_RECV_TIMEOUT) {
+                     Ok(stats) => stats,
+                     Err(ConnectionError::TryAgain(_)) => continue,
+-                    Err(ConnectionError::Other(_)) => return,
++                    Err(ConnectionError::Other(e)) => {
++                        warn!("[Q3PW_STATS] Client statistics stopped: {e}");
++                        return;
++                    }
+                 };
+-                let Ok(client_stats) = data.get_header() else {
+-                    return;
++                let client_stats = match data.get_header() {
++                    Ok(client_stats) => client_stats,
++                    Err(e) => {
++                        warn!("[Q3PW_STATS] Client statistics stopped, unreadable report: {e}");
++                        return;
++                    }
+                 };
++                window.1 += 1;
+ 
+                 if let Some(stats) = &mut *ctx.statistics_manager.write() {
+                     let timestamp = client_stats.target_timestamp;
++                    if !stats.has_frame(timestamp) {
++                        window.2 += 1;
++                    }
+                     let decoder_latency = client_stats.video_decode;
+                     let (network_latency, game_latency) = stats.report_statistics(client_stats);
+ 
+@@ -1102,7 +1273,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -10911,7 +11048,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1266,7 @@ fn connection_pipeline(
+@@ -1115,6 +1289,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -10919,7 +11056,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1283,14 @@ fn connection_pipeline(
+@@ -1131,6 +1306,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -10934,7 +11071,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1184,9 +1344,35 @@ fn connection_pipeline(
+@@ -1184,9 +1367,35 @@ fn connection_pipeline(
          let disconnect_notif = Arc::clone(&disconnect_notif);
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
@@ -10970,7 +11107,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
                  let packet = match control_receiver.recv(STREAMING_RECV_TIMEOUT) {
                      Ok(packet) => packet,
                      Err(ConnectionError::TryAgain(_)) => {
-@@ -1299,6 +1485,9 @@ fn connection_pipeline(
+@@ -1299,6 +1508,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -10980,7 +11117,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1378,6 +1567,22 @@ fn connection_pipeline(
+@@ -1378,6 +1590,22 @@ fn connection_pipeline(
                              };
  
                          match reserved {
@@ -11003,7 +11140,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
                              ReservedClientControlPacket::CustomInteractionProfile {
                                  input_ids,
                                  ..
-@@ -1552,9 +1757,10 @@ mod beta_tests {
+@@ -1552,9 +1780,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -11016,7 +11153,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..57b658c58a561fad03ced4258ae211d9
      }
  
      #[test]
-@@ -1569,4 +1775,22 @@ mod beta_tests {
+@@ -1569,4 +1798,22 @@ mod beta_tests {
          assert!(!config.pyrowave_udp);
          assert!(config.pyrowave_wavelet_53);
      }
@@ -11077,7 +11214,7 @@ index efa67b1d107def4e3e6d9cec00e6056dbece2380..ed3c31b5b43d9d9a178673a059250e1a
  
          if let Some((params, stats)) = pair {
 diff --git a/alvr/server_core/src/statistics.rs b/alvr/server_core/src/statistics.rs
-index 365db6463a9bd019ff5548186b873056f77806ae..4ef88aadac7cad6074ebc414745686ab92c83a52 100644
+index 365db6463a9bd019ff5548186b873056f77806ae..7e49dd79843b09a417b15e576bafb443fd60c40c 100644
 --- a/alvr/server_core/src/statistics.rs
 +++ b/alvr/server_core/src/statistics.rs
 @@ -9,6 +9,25 @@ use std::{
@@ -11128,7 +11265,19 @@ index 365db6463a9bd019ff5548186b873056f77806ae..4ef88aadac7cad6074ebc414745686ab
          }
      }
  
-@@ -287,6 +314,22 @@ impl StatisticsManager {
+@@ -113,6 +140,11 @@ impl StatisticsManager {
+         }
+     }
+ 
++    /// Whether a client report for this frame can be matched to the server's record of it.
++    pub fn has_frame(&self, target_timestamp: Duration) -> bool {
++        self.history_buffer.iter().any(|frame| frame.target_timestamp == target_timestamp)
++    }
++
+     pub fn report_frame_present(&mut self, target_timestamp: Duration, offset: Duration) {
+         if let Some(frame) = self
+             .history_buffer
+@@ -287,6 +319,22 @@ impl StatisticsManager {
                  / Duration::max(self.last_frame_present_interval, EPS_INTERVAL).as_secs_f32();
  
              // todo: the dashboard needs to use the first timestamp as the graph time origin.
@@ -11151,7 +11300,7 @@ index 365db6463a9bd019ff5548186b873056f77806ae..4ef88aadac7cad6074ebc414745686ab
              alvr_events::send_event(EventType::GraphStatistics(GraphStatistics {
                  target_timestamp_ns: frame.target_timestamp.as_nanos() as u64,
                  video_packet_bytes: frame.video_packet_bytes,
-@@ -316,6 +359,39 @@ impl StatisticsManager {
+@@ -316,6 +364,39 @@ impl StatisticsManager {
          self.motion_to_photon_latency_average.get_average()
      }
  
