@@ -2,8 +2,8 @@
 
 Measured October 6, 2026 on source `5946281`. A full CI run takes about **20 minutes**. The same
 APK and Windows streamer build locally in **under 3 minutes cold** and **30 seconds to 2 minutes**
-after an edit. Use local builds to iterate. Reviewed CI builds remain the evidence for releases and
-published measurements; see [When to use which](#when-to-use-which).
+after an edit. Local builds are the default for everything, releases included (owner decision,
+October 7, 2026); CI runs on pull requests as a cross-check. See [When to use which](#when-to-use-which).
 
 ## Why CI takes about 20 minutes
 
@@ -89,8 +89,8 @@ Android will refuse it as an update. Keys never enter the repo or the build root
 **Safety.** `build` and `test` refuse to start while `vrserver.exe` or `vrcompositor.exe` is
 running (`--allow-while-vr` overrides this). It cannot see a game that Virtual Desktop runs through
 its own OpenXR runtime without SteamVR, so check that nobody is playing before a manual build.
-Compilers run at below-normal priority. Installing or
-launching a build on the headset still needs current hardware authorization ([AGENTS.md](../AGENTS.md)).
+Compilers run at below-normal priority. Before installing or launching a build on the headset,
+follow the hardware rules in [AGENTS.md](../AGENTS.md).
 
 ## How the incremental build stays correct
 
@@ -137,12 +137,10 @@ launching a build on the headset still needs current hardware authorization ([AG
 | Need | Use |
 | --- | --- |
 | Compile errors, unit tests, quick fixes | Local `build` / `test` |
-| Iterating on a headset experiment (with hardware authorization) | Local build; record its `PROVENANCE.json` and APK SHA-256 with the evidence |
-| Measurements that will be published, release candidates, "matching reviewed pair" claims | CI signed build with every job passing, as before |
+| Headset experiments and published measurements | Local build; record its `PROVENANCE.json` and APK SHA-256 with the evidence |
+| Releases | Local build of a committed, pushed tree (no `-dirty` suffix), signed with the stable key, validated by in-headset screenshots; tag the release at that commit and attach its outputs |
+| Cross-check on another machine | The CI run on the pull request; fix failures, but don't block on it |
 | The owner is playing VR | GitHub Actions (`build` refuses while SteamVR is running) |
-
-A result measured on a local build should say so. Repeat it on the matching CI build before it
-becomes a public claim.
 
 ## CI changes
 
