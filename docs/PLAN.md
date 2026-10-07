@@ -213,6 +213,70 @@ From the table above, in order:
    start decoding coarse levels while fine ones arrive.
 4. **Optical motion-to-photon:** measure it, as AGENTS.md requires.
 
+## Phase 4: interface and settings revamp (later)
+
+Getting the owner from "driving home" to "headset on" took about 15 minutes on October 7, and the
+interface caused most of it. The parts:
+
+**Profiles instead of knobs.**
+
+- Measured presets: "USB best quality", "Wi-Fi best quality" and "lowest latency". Each sets the
+  refresh rate, stream size, bitrate, wavelet, chroma and transport together, from the latest
+  measurements.
+- The server picks the USB or Wi-Fi profile from the connection actually in use. Unplugging
+  switches profile, not just the link.
+- Saved custom profiles, switchable without editing `session.json`.
+
+**Changes that apply.**
+
+- Refresh rate, stream size, wavelet and chroma apply with one click, including the panel-rate
+  change and the client restart (1.6).
+- No manual relaunch, no `adb` and no developer properties by hand. The GPU clock and panel rate
+  belong in the app, not the shell.
+
+**A status view, in the dashboard and in the headset.**
+
+- Show what is actually happening: link (USB or Wi-Fi) and its rate, fresh FPS, repeated poses,
+  frame drops, bits per frame, the game's frame rate, the latency estimate by stage, GPU clock
+  and temperature.
+- A warning when the setup is limited: the game below the panel rate, Wi-Fi saturated, the panel
+  pinned to 72/80 Hz.
+
+**Fewer, clearer settings.**
+
+- Group the rest into Basic and Advanced.
+- Hide or remove experiments that lost (see AGENTS.md "Already tried"), and say in each help text
+  what was measured.
+
+**First run.**
+
+- Pair over Wi-Fi without typing an IP. Detect USB and offer the wired profile.
+- Check the developer prerequisites and explain any that are missing.
+
+**One install.** A single installer or archive for the server, plus the client APK, with an
+upgrade path that keeps settings. The parallel `runtime-local*` folders used in testing stay a
+developer tool.
+
+## Other later goals
+
+- **Sustained play:**
+  - 30-60 minute sessions at the chosen profiles, logging thermals, battery, clock throttling and
+    fresh FPS over time.
+  - Short screens don't show these.
+- **Game compatibility and quality suite:**
+  - A fixed set of real games and scenes (text, foliage, dark gradients, fast motion), each
+    captured and scored the same way every time.
+  - In-headset screenshots, for regressions in image quality, not just speed (task #6).
+- **Automated nightly regression:** the live harness on main every night, reporting fresh FPS,
+  latency estimate and quality against the last release.
+- **Track upstream PyroWave:**
+  - Valve ships PyroWave in Steam Remote Play (4:4:4, HDR), so upstream may improve the codec.
+  - Check it for changes worth taking, and keep our patches small enough to rebase.
+- **HDR or 10-bit:** check whether banding in dark gradients is visible, and whether 10-bit is
+  worth its bits. Measure only for now.
+- **User documentation:** a short README path from install to a good first stream, with the
+  measured recommendations.
+
 ## Stretch goals
 
 - **GPU entropy coder** on both ends (2.4 taken to production).
