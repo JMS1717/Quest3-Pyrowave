@@ -32,6 +32,9 @@ order above:
    image that looks above native and colour closer to 4:4:4. 4:4:4 is welcome if it can be made
    affordable. Virtual Desktop is the reference.
 3. Latency after that. It is noticeable, but not the first priority.
+4. Later: an interface and settings revamp. Measured profiles for USB and Wi-Fi, changes that
+   apply without manual relaunches, a status view, and a simpler install. Also sustained-play,
+   game-quality and nightly regression testing.
 
 Keep finding the real bottleneck and rewriting what is slow; that is what has produced the gains
 so far. The plan is [docs/PLAN.md](docs/PLAN.md).
