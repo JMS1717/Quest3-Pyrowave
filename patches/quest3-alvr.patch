@@ -11935,7 +11935,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..e57afb4088ce4382f426a9b5e7a18b0b
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d3ba7accb 100644
+index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90adc9109abe 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -43,6 +43,9 @@ use std::{
@@ -11948,7 +11948,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
  const REAL_TIME_UPDATE_INTERVAL: Duration = Duration::from_secs(1);
  
  const MAX_UNREAD_PACKETS: usize = 10; // Applies per stream
-@@ -52,8 +55,261 @@ pub struct VideoPacket {
+@@ -52,8 +55,270 @@ pub struct VideoPacket {
      pub payload: Vec<u8>,
  }
  
@@ -12068,8 +12068,11 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
 +    datagram: Vec<u8>,
 +    errors: u64,
 +    last_error_log: Option<Instant>,
-+    // Since the last report: frames, datagrams and time spent in send_to.
++    // Since the last report: frames, frames repeating the previous frame's timestamp (pose),
++    // datagrams and time spent in send_to.
 +    frames: u32,
++    repeats: u32,
++    last_timestamp: Duration,
 +    datagrams: u64,
 +    send_time: Duration,
 +    send_max: Duration,
@@ -12092,6 +12095,8 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
 +            errors: 0,
 +            last_error_log: None,
 +            frames: 0,
++            repeats: 0,
++            last_timestamp: Duration::ZERO,
 +            datagrams: 0,
 +            send_time: Duration::ZERO,
 +            send_max: Duration::ZERO,
@@ -12128,14 +12133,17 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
 +        }
 +        let took = start.elapsed();
 +        self.frames += 1;
++        self.repeats += (packet.header.timestamp == self.last_timestamp) as u32;
++        self.last_timestamp = packet.header.timestamp;
 +        self.send_time += took;
 +        self.send_max = self.send_max.max(took);
 +        let window = self.report_start.elapsed();
 +        if window > Duration::from_secs(5) {
 +            // Error level so crash_log.txt keeps it.
 +            error!(
-+                "[Q3PW_UDP_SEND] frames={} datagrams={} window_s={:.2} send_ms_mean={:.3} send_ms_max={:.3} errors={}",
++                "[Q3PW_UDP_SEND] frames={} repeated_timestamps={} datagrams={} window_s={:.2} send_ms_mean={:.3} send_ms_max={:.3} errors={}",
 +                self.frames,
++                self.repeats,
 +                self.datagrams,
 +                window.as_secs_f32(),
 +                self.send_time.as_secs_f32() * 1000. / self.frames as f32,
@@ -12143,6 +12151,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
 +                self.errors
 +            );
 +            self.frames = 0;
++            self.repeats = 0;
 +            self.datagrams = 0;
 +            self.send_time = Duration::ZERO;
 +            self.send_max = Duration::ZERO;
@@ -12211,7 +12220,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
  }
  
  fn is_streaming(client_hostname: &str) -> bool {
-@@ -69,6 +325,46 @@ pub fn contruct_openvr_config(session: &SessionConfig) -> OpenvrConfig {
+@@ -69,6 +334,46 @@ pub fn contruct_openvr_config(session: &SessionConfig) -> OpenvrConfig {
      openvr_config_with_env(session, &alvr_session::beta::process_env)
  }
  
@@ -12258,7 +12267,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
  fn openvr_config_with_env(
      session: &SessionConfig,
      env: &dyn Fn(&str) -> Option<String>,
-@@ -133,25 +429,18 @@ fn openvr_config_with_env(
+@@ -133,25 +438,18 @@ fn openvr_config_with_env(
          })
          .unwrap_or(false);
  
@@ -12296,7 +12305,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
  
      let mut brightness = 0.0;
      let mut contrast = 0.0;
-@@ -240,7 +529,11 @@ fn openvr_config_with_env(
+@@ -240,7 +538,11 @@ fn openvr_config_with_env(
          pyrowave_enabled: pyrowave.enabled,
          pyrowave_udp: pyrowave.udp,
          pyrowave_wavelet_53: pyrowave.wavelet_53,
@@ -12308,7 +12317,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
          _controller_profile,
          _server_impl_debug: settings.extra.logging.debug_groups.server_impl,
          _client_impl_debug: settings.extra.logging.debug_groups.client_impl,
-@@ -283,9 +576,13 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -283,9 +585,13 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
                      && hostname.as_str() == WIRED_CLIENT_HOSTNAME
              })
          {
@@ -12323,7 +12332,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
              } else {
                  let connection = match WiredConnection::new(
                      FILESYSTEM_LAYOUT.get().unwrap(),
-@@ -297,53 +594,63 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -297,53 +603,63 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
                          };
                      },
                  ) {
@@ -12413,7 +12422,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
          }
  
          if !wired_client_ips.is_empty()
-@@ -471,6 +778,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -471,6 +787,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
          thread.join().ok();
      }
  
@@ -12430,7 +12439,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
      alvr_common::dbg_connection!("handshake_loop: End");
  }
  
-@@ -629,6 +946,19 @@ fn connection_pipeline(
+@@ -629,6 +955,19 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -12450,7 +12459,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +979,9 @@ fn connection_pipeline(
+@@ -649,18 +988,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -12472,7 +12481,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -802,6 +1123,9 @@ fn connection_pipeline(
+@@ -802,6 +1132,9 @@ fn connection_pipeline(
          proto_socket.split(STREAMING_RECV_TIMEOUT).to_con()?;
  
      let mut new_openvr_config = contruct_openvr_config(session_manager_lock.session());
@@ -12482,7 +12491,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
      new_openvr_config.eye_resolution_width = stream_view_resolution.x;
      new_openvr_config.eye_resolution_height = stream_view_resolution.y;
      new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
-@@ -822,6 +1146,7 @@ fn connection_pipeline(
+@@ -822,6 +1155,7 @@ fn connection_pipeline(
  
          crate::notify_restart_driver();
      }
@@ -12490,7 +12499,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
  
      dbg_connection!("connection_pipeline: Send StartStream packet");
      control_sender
-@@ -846,6 +1171,29 @@ fn connection_pipeline(
+@@ -846,6 +1180,29 @@ fn connection_pipeline(
  
      *ctx.bitrate_manager.lock() =
          BitrateManager::new(initial_settings.video.bitrate.history_size, fps);
@@ -12520,7 +12529,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
  
      let stream_protocol = if wired {
          SocketProtocol::Tcp
-@@ -867,25 +1215,33 @@ fn connection_pipeline(
+@@ -867,25 +1224,33 @@ fn connection_pipeline(
  
      let mut video_sender = stream_socket.request_stream(VIDEO);
  
@@ -12569,7 +12578,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
      let game_audio_sender: alvr_sockets::StreamSender<()> = stream_socket.request_stream(AUDIO);
      let mut microphone_receiver: alvr_sockets::StreamReceiver<()> =
          stream_socket.subscribe_to_stream(AUDIO, MAX_UNREAD_PACKETS);
-@@ -911,6 +1267,20 @@ fn connection_pipeline(
+@@ -911,6 +1276,20 @@ fn connection_pipeline(
                          Err(RecvTimeoutError::Disconnected) => return,
                      };
  
@@ -12590,7 +12599,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
                  let mut buffer = video_sender.get_buffer(&header).unwrap();
                  // todo: make encoder write to socket buffers directly to avoid copy
                  buffer
-@@ -1081,18 +1451,40 @@ fn connection_pipeline(
+@@ -1081,18 +1460,40 @@ fn connection_pipeline(
          let ctx = Arc::clone(&ctx);
          let client_hostname = client_hostname.clone();
          move || {
@@ -12634,7 +12643,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
                      let decoder_latency = client_stats.video_decode;
                      let (network_latency, game_latency) = stats.report_statistics(client_stats);
  
-@@ -1102,7 +1494,10 @@ fn connection_pipeline(
+@@ -1102,7 +1503,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -12646,7 +12655,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1510,7 @@ fn connection_pipeline(
+@@ -1115,6 +1519,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -12654,7 +12663,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1527,14 @@ fn connection_pipeline(
+@@ -1131,6 +1536,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -12669,7 +12678,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1184,9 +1588,35 @@ fn connection_pipeline(
+@@ -1184,9 +1597,35 @@ fn connection_pipeline(
          let disconnect_notif = Arc::clone(&disconnect_notif);
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
@@ -12705,7 +12714,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
                  let packet = match control_receiver.recv(STREAMING_RECV_TIMEOUT) {
                      Ok(packet) => packet,
                      Err(ConnectionError::TryAgain(_)) => {
-@@ -1299,6 +1729,9 @@ fn connection_pipeline(
+@@ -1299,6 +1738,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -12715,7 +12724,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1378,6 +1811,22 @@ fn connection_pipeline(
+@@ -1378,6 +1820,22 @@ fn connection_pipeline(
                              };
  
                          match reserved {
@@ -12738,7 +12747,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
                              ReservedClientControlPacket::CustomInteractionProfile {
                                  input_ids,
                                  ..
-@@ -1552,9 +2001,10 @@ mod beta_tests {
+@@ -1552,9 +2010,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -12751,7 +12760,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..5018e459f1165ac146a0113f078bd55d
      }
  
      #[test]
-@@ -1569,4 +2019,22 @@ mod beta_tests {
+@@ -1569,4 +2028,22 @@ mod beta_tests {
          assert!(!config.pyrowave_udp);
          assert!(config.pyrowave_wavelet_53);
      }
@@ -12939,7 +12948,7 @@ index 365db6463a9bd019ff5548186b873056f77806ae..7e49dd79843b09a417b15e576bafb443
          // This is the opposite of the client's StatisticsManager::tracker_prediction_offset().
          self.steamvr_pipeline_latency
 diff --git a/alvr/server_core/src/tracking/mod.rs b/alvr/server_core/src/tracking/mod.rs
-index 64f93a6fd54e90b50e5382e09f539f4cefa7817f..d38c74e95cb9d0337c0efb12b78e8e23bb6d2f37 100644
+index 64f93a6fd54e90b50e5382e09f539f4cefa7817f..13b97d9d4a29fe77811d2f24255f470c6d3d5469 100644
 --- a/alvr/server_core/src/tracking/mod.rs
 +++ b/alvr/server_core/src/tracking/mod.rs
 @@ -302,7 +302,7 @@ impl TrackingManager {
@@ -12951,6 +12960,75 @@ index 64f93a6fd54e90b50e5382e09f539f4cefa7817f..d38c74e95cb9d0337c0efb12b78e8e23
  
          self.last_face_data = face_data;
      }
+@@ -312,6 +312,52 @@ impl TrackingManager {
+     }
+ }
+ 
++/// Tracking packet arrival gaps on the server and the client's spacing of target timestamps, logged
++/// as [Q3PW_TRACKING_RX] every 5 s. Bunched arrivals mean SteamVR renders several frames from the
++/// same pose, which the client then counts as one fresh frame.
++#[derive(Default)]
++struct TrackingArrivals {
++    last: Option<(std::time::Instant, Duration)>,
++    gaps_ms: Vec<f32>,
++    steps_ms: Vec<f32>,
++    window_start: Option<std::time::Instant>,
++}
++
++impl TrackingArrivals {
++    fn record(&mut self, target: Duration) {
++        let now = std::time::Instant::now();
++        if let Some((at, previous)) = self.last {
++            self.gaps_ms.push((now - at).as_secs_f32() * 1000.);
++            self.steps_ms.push((target.as_secs_f32() - previous.as_secs_f32()) * 1000.);
++        }
++        self.last = Some((now, target));
++        let start = *self.window_start.get_or_insert(now);
++        if now - start < Duration::from_secs(5) || self.gaps_ms.is_empty() {
++            return;
++        }
++        let pct = |v: &mut Vec<f32>, p: f32| {
++            v.sort_by(f32::total_cmp);
++            v[((v.len() - 1) as f32 * p) as usize]
++        };
++        let packets = self.gaps_ms.len();
++        let bunched = self.gaps_ms.iter().filter(|&&g| g < 1.).count();
++        alvr_common::error!(
++            "[Q3PW_TRACKING_RX] packets={packets} window_s={:.2} gap_ms_p10={:.2} p50={:.2} p90={:.2} p99={:.2} max={:.2} under_1ms={bunched} target_step_ms_p50={:.2} p99={:.2}",
++            (now - start).as_secs_f32(),
++            pct(&mut self.gaps_ms, 0.1),
++            pct(&mut self.gaps_ms, 0.5),
++            pct(&mut self.gaps_ms, 0.9),
++            pct(&mut self.gaps_ms, 0.99),
++            pct(&mut self.gaps_ms, 1.),
++            pct(&mut self.steps_ms, 0.5),
++            pct(&mut self.steps_ms, 0.99),
++        );
++        self.gaps_ms.clear();
++        self.steps_ms.clear();
++        self.window_start = Some(now);
++    }
++}
++
+ pub fn tracking_loop(
+     ctx: &ConnectionContext,
+     initial_settings: Settings,
+@@ -355,6 +401,7 @@ pub fn tracking_loop(
+         .into_option()
+         .and_then(|config| VMCSink::new(config).ok());
+ 
++    let mut arrivals = TrackingArrivals::default();
+     while is_streaming() {
+         let data = match tracking_receiver.recv(STREAMING_RECV_TIMEOUT) {
+             Ok(tracking) => tracking,
+@@ -366,6 +413,7 @@ pub fn tracking_loop(
+         };
+ 
+         let timestamp = tracking.target_timestamp;
++        arrivals.record(timestamp);
+ 
+         if let Some(stats) = &mut *ctx.statistics_manager.write() {
+             stats.report_tracking_received(timestamp);
 diff --git a/alvr/server_core/src/web_server.rs b/alvr/server_core/src/web_server.rs
 index de64d69d2154608092afc0bcfd5f1583210d8fb2..bea6d509012c5fc21941f044959e946ff3c3b636 100644
 --- a/alvr/server_core/src/web_server.rs
