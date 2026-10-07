@@ -52,6 +52,11 @@ Desktop. Smooth areas, where Haar blocking shows, drop below that at about 0.25 
 content compresses better, but the floor scales with pixels per second, not content. A network
 that cannot carry the floor drops frames instead of lowering the bitrate.
 
+Checked in the headset (13ff836, 207 Hz, 2080×2208 per eye, 12 s pan blocks): with the slider at
+300 Mbps the streamer logged `[Q3PW_QUALITY_FLOOR] 500 Mbps` and requested 500 Mbps from the
+encoder for every frame, at 193.5 fresh FPS; with the slider at 1000 Mbps it requested 1000 Mbps
+(the floor does not lower anything), at 191.1 fresh FPS.
+
 PyroWave receives ALVR's dynamic bitrate and sets its maximum frame size to
 `floor(bitrate_bits_per_second / 8 / round(refresh_hz))`, aligned down to four bytes.
 The serialized complete frame is checked against that cap and rejected if oversized;
