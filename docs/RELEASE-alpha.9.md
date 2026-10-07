@@ -5,7 +5,7 @@ This prerelease packages the `.62` stack: PRs #10-#12 (merged), #13 (multilevel 
 
 - Haar GPU decode at 207 Hz takes about half as long as before: 2.6-2.8 ms, down from 5.6 ms.
 - At the owner's settings the client shows about **195 fresh frames per second at 207 Hz with
-  2080x2208 per eye**. The `.55` build managed about 117 there.
+  2080x2208 per eye** in 10-12 s screens; sustained play is not yet measured. The `.55` build managed about 117 there.
 - Keep alpha.8 for rollback.
 - Not established: sustained gameplay, optical motion-to-photon latency, and an advantage over
   Virtual Desktop.

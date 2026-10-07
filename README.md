@@ -155,8 +155,8 @@ controller emulation and restoring another driver.
 
 | Setting | Where and what to start with |
 | --- | --- |
-| **Bitrate** | **Settings → Presets.** The slider sets a fixed payload cap; with Auto it sets a maximum. |
-| **Auto bitrate** | Lowers the requested rate from network/encoder latency feedback. It cannot guarantee FPS or remove a GPU bottleneck. [Details](docs/BITRATE.md) |
+| **Bitrate** | **Settings → Presets.** The slider sets a fixed payload cap; with Auto it sets a maximum. PyroWave keeps a quality floor of 0.25 bits per stream pixel (about 500 Mbps at 207 Hz with 2080 × 2208 per eye) and raises lower settings to it. [Details](docs/BITRATE.md) |
+| **Auto bitrate** | Lowers the requested rate from network/encoder latency feedback, but not below the quality floor: on a congested link it drops frames instead. It cannot guarantee FPS or remove a GPU bottleneck. |
 | **Profiles** | **Settings → Presets → Streaming profile.** The three "(measured)" profiles set refresh, stream size, wavelet, chroma, bitrate and GPU clock together and keep the game's render resolution. [Measurements](docs/HIGH-REFRESH.md) |
 | **Refresh** | 72–120 Hz, or any whole rate from 144 to 240 Hz with **Preferred FPS**. Over USB the PC switches the panel: 144–207 Hz natively, above 207 Hz in the scaled panel mode (1552 × 1664 per eye). [Capability detection](docs/REFRESH-RATES.md) |
 | **Wavelet** | **Haar** (default) is fastest. **CDF 5/3** uses Decoder V2 and gives smoother gradients without Haar's 8-pixel block edges, for a few fresh FPS; pair it with the maximum GPU clock. [Decoder V2](docs/DECODER-V2.md) · [decoder findings](docs/DECODE-PIPELINE.md) |
