@@ -42,6 +42,14 @@ resume paused hardware work or unattended workers.
   screens".
 - **Compatibility:** older servers send sequence 0 and the client falls back to timestamps. Older
   clients ignore the bytes.
+- **Checked:**
+  - Local build of `9145530` over Wi-Fi 6E: 207 Hz, 2080x2208, Haar, 1000 Mbit/s.
+  - 193.9 (memory clock changed mid-block) and 190.6 fresh FPS; network 6.2 ms p50.
+  - Correct colours in both eyes; restore errors [].
+  - That matches alpha.9 (190.0 and 196.5).
+  - Rust tests: client_core 73 (3 new wired-video tests), server_core 13, packets 7, adb 17,
+    session 39. Python: 183.
+- **Not checked:** USB parallel wired video, the path the numbering changes. USB adb was offline.
 
 ## October 7 evening: `.63`, Wi-Fi, alpha.9
 
