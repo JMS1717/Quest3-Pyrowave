@@ -256,6 +256,8 @@ def main():
         # streamer presents fewer frames than the panel shows (Q3PW_SCENE_FRAME_MS, or the control
         # file's "frame_ms").
         frame_ms = float(os.environ.get('Q3PW_SCENE_FRAME_MS') or 0)
+        # Redraw each eye this many times: a GPU-bound game, which also delays SteamVR's compositor.
+        overdraw = max(1, int(os.environ.get('Q3PW_SCENE_OVERDRAW') or 1))
         frames = 0; offset_px = 0.0; start = time.monotonic(); last_control = start
         (root / 'ready.json').write_text(json.dumps({
             'source_eye_size': [width, height], 'px_per_deg': px_per_deg,
@@ -281,12 +283,13 @@ def main():
                 GL.glViewport(0, 0, width, height)
                 GL.glEnable(GL.GL_TEXTURE_2D)
                 GL.glBindTexture(GL.GL_TEXTURE_2D, world_tex)
-                GL.glBegin(GL.GL_QUADS)
-                GL.glTexCoord2f(u0, v1); GL.glVertex2f(-1, -1)
-                GL.glTexCoord2f(u1, v1); GL.glVertex2f(1, -1)
-                GL.glTexCoord2f(u1, v0); GL.glVertex2f(1, 1)
-                GL.glTexCoord2f(u0, v0); GL.glVertex2f(-1, 1)
-                GL.glEnd()
+                for _ in range(overdraw):
+                    GL.glBegin(GL.GL_QUADS)
+                    GL.glTexCoord2f(u0, v1); GL.glVertex2f(-1, -1)
+                    GL.glTexCoord2f(u1, v1); GL.glVertex2f(1, -1)
+                    GL.glTexCoord2f(u1, v0); GL.glVertex2f(1, 1)
+                    GL.glTexCoord2f(u0, v0); GL.glVertex2f(-1, 1)
+                    GL.glEnd()
             GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
             for eye, fbo, vr in eyes:
                 compositor.submit(eye, vr, bounds)

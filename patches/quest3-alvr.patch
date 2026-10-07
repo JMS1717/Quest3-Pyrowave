@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2348e4808 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b53063512b0b6af 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..6927d75c47217882f267dad802c77ea2
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..f42aa9f97c79975a0e769176628dcdaa13d59649 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..72dd6fc620ef8c7cd8b6636521bed9b357bb97f1 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..f42aa9f97c79975a0e769176628dcdaa
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.67"
++version = "20.13.0-quest3.pyro.68"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -1254,10 +1254,30 @@ index 0000000000000000000000000000000000000000..057b458db4253a7c044c8c1592cd29af
 +    }
 +}
 diff --git a/alvr/client_core/src/connection.rs b/alvr/client_core/src/connection.rs
-index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c4f38c4c4fc9599a40d13eeb153a57b5fe52e69b 100644
+index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..bcdaee48f2f4317a8f6d162dc41e918a873765f1 100644
 --- a/alvr/client_core/src/connection.rs
 +++ b/alvr/client_core/src/connection.rs
-@@ -80,11 +80,14 @@ pub struct ConnectionContext {
+@@ -12,7 +12,7 @@ use alvr_common::{
+     dbg_connection, debug, error, info,
+     parking_lot::{Condvar, Mutex, RwLock},
+     wait_rwlock, warn, AnyhowToCon, ConResult, ConnectionError, ConnectionState, LifecycleState,
+-    Pose, RelaxedAtomic, ALVR_VERSION,
++    DeviceMotion, Pose, RelaxedAtomic, ALVR_VERSION,
+ };
+ use alvr_packets::{
+     ClientConnectionResult, ClientControlPacket, ClientStatistics, Haptics, ServerControlPacket,
+@@ -74,17 +74,24 @@ pub struct ConnectionContext {
+     pub statistics_sender: Mutex<Option<StreamSender<ClientStatistics>>>,
+     pub statistics_manager: Mutex<Option<StatisticsManager>>,
+     pub decoder_callback: Mutex<Option<Box<DecoderCallback>>>,
+-    pub head_pose_queue: RwLock<VecDeque<(Duration, Pose)>>,
++    /// Head motion per sent timestamp, after prediction, with its velocities: the server may
++    /// render a frame from one of these extrapolated (see `alvr_packets::extrapolated_timestamp`).
++    pub head_pose_queue: RwLock<VecDeque<(Duration, DeviceMotion)>>,
++    /// Send head velocities, which the server needs to extrapolate late poses.
++    pub send_head_velocity: RelaxedAtomic,
+     pub last_good_head_pose: RwLock<Pose>,
+     pub view_params: RwLock<[ViewParams; 2]>,
      pub uses_multimodal_protocol: RelaxedAtomic,
      pub velocities_multiplier: RwLock<f32>,
      pub max_prediction: RwLock<Duration>,
@@ -1272,7 +1292,7 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c4f38c4c4fc9599a40d13eeb153a57b5
          *self.control_sender.lock() = None;
          *self.tracking_sender.lock() = None;
          *self.statistics_sender.lock() = None;
-@@ -112,7 +115,7 @@ fn is_streaming(ctx: &ConnectionContext) -> bool {
+@@ -112,7 +119,7 @@ fn is_streaming(ctx: &ConnectionContext) -> bool {
  }
  
  pub fn connection_lifecycle_loop(
@@ -1281,7 +1301,7 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c4f38c4c4fc9599a40d13eeb153a57b5
      ctx: Arc<ConnectionContext>,
      lifecycle_state: Arc<RwLock<LifecycleState>>,
      event_queue: Arc<Mutex<VecDeque<ClientCoreEvent>>>,
-@@ -123,8 +126,9 @@ pub fn connection_lifecycle_loop(
+@@ -123,8 +130,9 @@ pub fn connection_lifecycle_loop(
  
      while *lifecycle_state.read() != LifecycleState::ShuttingDown {
          if *lifecycle_state.read() == LifecycleState::Resumed {
@@ -1292,7 +1312,16 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c4f38c4c4fc9599a40d13eeb153a57b5
                  Arc::clone(&ctx),
                  Arc::clone(&lifecycle_state),
                  Arc::clone(&event_queue),
-@@ -299,6 +303,20 @@ fn connection_pipeline(
+@@ -245,6 +253,8 @@ fn connection_pipeline(
+ 
+     *ctx.velocities_multiplier.write() = settings.extra.velocities_multiplier;
+     *ctx.max_prediction.write() = Duration::from_millis(settings.headset.max_prediction_ms);
++    ctx.send_head_velocity
++        .set(settings.headset.extrapolate_late_head_poses);
+ 
+     *ctx.statistics_manager.lock() = Some(StatisticsManager::new(
+         settings.connection.statistics_history_size,
+@@ -299,6 +309,20 @@ fn connection_pipeline(
      )
      .to_con()?;
  
@@ -1313,7 +1342,7 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c4f38c4c4fc9599a40d13eeb153a57b5
      dbg_connection!("connection_pipeline: Send StreamReady");
      if let Err(e) = control_sender.send(&ClientControlPacket::StreamReady) {
          info!("Server disconnected. Cause: {e:?}");
-@@ -327,6 +345,10 @@ fn connection_pipeline(
+@@ -327,6 +351,10 @@ fn connection_pipeline(
      let video_receive_thread = thread::spawn({
          let ctx = Arc::clone(&ctx);
          move || {
@@ -1324,7 +1353,7 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c4f38c4c4fc9599a40d13eeb153a57b5
              let mut stream_corrupted = true;
              // With PyroWave over UDP nothing arrives on this stream, so the RequestIdr that
              // normally fetches the DecoderConfig would never be sent. Ask once a second until a
-@@ -357,6 +379,7 @@ fn connection_pipeline(
+@@ -357,6 +385,7 @@ fn connection_pipeline(
                  }
  
                  crate::push_foveation_center(header.timestamp, header.foveation_center);
@@ -1332,7 +1361,7 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c4f38c4c4fc9599a40d13eeb153a57b5
  
                  if header.is_idr {
                      stream_corrupted = false;
-@@ -393,6 +416,9 @@ fn connection_pipeline(
+@@ -393,6 +422,9 @@ fn connection_pipeline(
          }
      });
  
@@ -1342,7 +1371,7 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c4f38c4c4fc9599a40d13eeb153a57b5
      let game_audio_thread = if let Switch::Enabled(config) = settings.audio.game_audio {
          let device = AudioDevice::new_output(None).to_con()?;
          thread::spawn({
-@@ -571,6 +597,19 @@ fn connection_pipeline(
+@@ -571,6 +603,19 @@ fn connection_pipeline(
                          set_hud_message(&event_queue, SERVER_RESTART_MESSAGE);
                          disconnect_notif.notify_one();
                      }
@@ -1362,7 +1391,7 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c4f38c4c4fc9599a40d13eeb153a57b5
                      Ok(ServerControlPacket::ReservedBuffer(buffer)) => {
                          // NB: it's normal for deserialization to fail if server has different
                          // version
-@@ -607,6 +646,10 @@ fn connection_pipeline(
+@@ -607,6 +652,10 @@ fn connection_pipeline(
          let event_queue = Arc::clone(&event_queue);
          let disconnect_notif = Arc::clone(&disconnect_notif);
          move || {
@@ -1373,7 +1402,7 @@ index 1ed433323bda4b3f6948a0fe9b488bc03d36d5cb..c4f38c4c4fc9599a40d13eeb153a57b5
              while is_streaming(&ctx) {
                  match stream_socket.recv() {
                      Ok(()) => (),
-@@ -655,6 +698,9 @@ fn connection_pipeline(
+@@ -655,6 +704,9 @@ fn connection_pipeline(
      dbg_connection!("connection_pipeline: Destroying streams");
  
      video_receive_thread.join().ok();
@@ -1517,7 +1546,7 @@ index 0000000000000000000000000000000000000000..ed952972c5004d1f1e9d4f0ed674c9dd
 +    }
 +}
 diff --git a/alvr/client_core/src/lib.rs b/alvr/client_core/src/lib.rs
-index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..1d6cb87eed22360f8d1beddad94219206ec3eb20 100644
+index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..b47b2735fd634b76347667b0e579be587f09475e 100644
 --- a/alvr/client_core/src/lib.rs
 +++ b/alvr/client_core/src/lib.rs
 @@ -7,10 +7,14 @@
@@ -1535,15 +1564,58 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..1d6cb87eed22360f8d1beddad9421920
  
  #[cfg(target_os = "android")]
  mod audio;
-@@ -92,6 +96,7 @@ pub(crate) fn push_foveation_center(timestamp: Duration, center: [[f32; 2]; 2])
+@@ -35,7 +39,7 @@ use std::{
+     collections::{HashSet, VecDeque},
+     sync::Arc,
+     thread::{self, JoinHandle},
+-    time::Duration,
++    time::{Duration, Instant},
+ };
+ use storage::Config;
+ 
+@@ -91,7 +95,41 @@ pub(crate) fn push_foveation_center(timestamp: Duration, center: [[f32; 2]; 2])
+     }
  }
  
++/// Frames drawn since the last `[Q3PW_POSE_LOOKUP]` line, by how their render pose was found.
++static POSE_LOOKUP_COUNTS: Lazy<Mutex<(Instant, [u32; 3])>> =
++    Lazy::new(|| Mutex::new((Instant::now(), [0; 3])));
++
++/// The head pose the server rendered the frame with `timestamp` from: a sample this client sent,
++/// or one the server extrapolated from such a sample (see `alvr_packets::extrapolated_timestamp`).
++fn head_pose_for_frame(queue: &VecDeque<(Duration, DeviceMotion)>, timestamp: Duration) -> Option<Pose> {
++    let found = queue
++        .iter()
++        .find(|(ts, _)| *ts == timestamp)
++        .map(|(_, motion)| (0, motion.pose))
++        .or_else(|| {
++            queue
++                .iter()
++                .rev()
++                .find(|(ts, _)| alvr_packets::is_extrapolated_from(*ts, timestamp))
++                .map(|(ts, motion)| (1, motion.predict(*ts, timestamp).pose))
++        });
++
++    let mut counts = POSE_LOOKUP_COUNTS.lock();
++    counts.1[found.map_or(2, |(kind, _)| kind)] += 1;
++    if counts.0.elapsed() > Duration::from_secs(5) {
++        // Error level so the release log keeps it.
++        error!(
++            "[Q3PW_POSE_LOOKUP] sent={} extrapolated={} missing={}",
++            counts.1[0], counts.1[1], counts.1[2]
++        );
++        *counts = (Instant::now(), [0; 3]);
++    }
++
++    found.map(|(_, pose)| pose)
++}
++
  pub struct ClientCoreContext {
 +    capabilities: Arc<RwLock<ClientCapabilities>>,
      lifecycle_state: Arc<RwLock<LifecycleState>>,
      event_queue: Arc<Mutex<VecDeque<ClientCoreEvent>>>,
      connection_context: Arc<ConnectionContext>,
-@@ -99,6 +104,11 @@ pub struct ClientCoreContext {
+@@ -99,6 +137,11 @@ pub struct ClientCoreContext {
  }
  
  impl ClientCoreContext {
@@ -1555,7 +1627,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..1d6cb87eed22360f8d1beddad9421920
      pub fn new(capabilities: ClientCapabilities) -> Self {
          dbg_client_core!("Create");
  
-@@ -115,6 +125,7 @@ impl ClientCoreContext {
+@@ -115,6 +158,7 @@ impl ClientCoreContext {
              alvr_system_info::set_wifi_lock(true);
          }
  
@@ -1563,7 +1635,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..1d6cb87eed22360f8d1beddad9421920
          let lifecycle_state = Arc::new(RwLock::new(LifecycleState::Idle));
          let event_queue = Arc::new(Mutex::new(VecDeque::new()));
          let connection_context = Arc::new(ConnectionContext::default());
-@@ -122,6 +133,7 @@ impl ClientCoreContext {
+@@ -122,6 +166,7 @@ impl ClientCoreContext {
              let lifecycle_state = Arc::clone(&lifecycle_state);
              let connection_context = Arc::clone(&connection_context);
              let event_queue = Arc::clone(&event_queue);
@@ -1571,7 +1643,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..1d6cb87eed22360f8d1beddad9421920
              move || {
                  connection::connection_lifecycle_loop(
                      capabilities,
-@@ -133,6 +145,7 @@ impl ClientCoreContext {
+@@ -133,6 +178,7 @@ impl ClientCoreContext {
          });
  
          Self {
@@ -1579,7 +1651,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..1d6cb87eed22360f8d1beddad9421920
              lifecycle_state,
              event_queue,
              connection_context,
-@@ -140,6 +153,11 @@ impl ClientCoreContext {
+@@ -140,6 +186,11 @@ impl ClientCoreContext {
          }
      }
  
@@ -1591,7 +1663,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..1d6cb87eed22360f8d1beddad9421920
      pub fn resume(&self) {
          dbg_client_core!("resume");
  
-@@ -218,6 +236,27 @@ impl ClientCoreContext {
+@@ -218,6 +269,27 @@ impl ClientCoreContext {
          }
      }
  
@@ -1619,6 +1691,86 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..1d6cb87eed22360f8d1beddad9421920
      pub fn send_buttons(&self, entries: Vec<ButtonEntry>) {
          dbg_client_core!("send_buttons");
  
+@@ -274,16 +346,19 @@ impl ClientCoreContext {
+ 
+                 let mut head_pose_queue = self.connection_context.head_pose_queue.write();
+ 
+-                head_pose_queue.push_back((reported_timestamp, motion.pose));
++                head_pose_queue.push_back((reported_timestamp, *motion));
+ 
+                 while head_pose_queue.len() > 1024 {
+                     head_pose_queue.pop_front();
+                 }
+ 
+                 // This is done for backward compatibiity for the v20 protocol. Will be removed with the
+-                // tracking rewrite protocol extension.
+-                motion.linear_velocity = Vec3::ZERO;
+-                motion.angular_velocity = Vec3::ZERO;
++                // tracking rewrite protocol extension. The server's driver gives SteamVR the head
++                // pose without velocities either way; it uses them only to extrapolate late poses.
++                if !self.connection_context.send_head_velocity.value() {
++                    motion.linear_velocity = Vec3::ZERO;
++                    motion.angular_velocity = Vec3::ZERO;
++                }
+             } else if let Some(stats) = &*self.connection_context.statistics_manager.lock() {
+                 let tracker_timestamp = poll_timestamp
+                     + Duration::min(stats.tracker_prediction_offset(), max_prediction);
+@@ -403,13 +478,11 @@ impl ClientCoreContext {
+             stats.report_compositor_start(timestamp);
+         }
+ 
+-        let mut head_pose = *self.connection_context.last_good_head_pose.read();
+-        for (ts, pose) in &*self.connection_context.head_pose_queue.read() {
+-            if *ts == timestamp {
+-                head_pose = *pose;
+-                break;
+-            }
+-        }
++        let head_pose = head_pose_for_frame(
++            &self.connection_context.head_pose_queue.read(),
++            timestamp,
++        )
++        .unwrap_or(*self.connection_context.last_good_head_pose.read());
+         let view_params = self.connection_context.view_params.read();
+ 
+         [
+@@ -455,3 +528,36 @@ impl Drop for ClientCoreContext {
+         alvr_system_info::set_wifi_lock(false);
+     }
+ }
++
++#[cfg(test)]
++mod pose_lookup_tests {
++    use super::*;
++
++    #[test]
++    fn frames_find_sent_and_extrapolated_poses() {
++        let motion = |yaw: f32| DeviceMotion {
++            pose: Pose {
++                orientation: alvr_common::glam::Quat::from_rotation_y(yaw),
++                position: Vec3::new(0.0, 1.6, 0.0),
++            },
++            linear_velocity: Vec3::new(0.5, 0.0, 0.0),
++            angular_velocity: Vec3::new(0.0, 2.0, 0.0),
++        };
++        // Samples a third of a 120 Hz frame apart, as the client sends them.
++        let queue: VecDeque<_> = (0..6u64)
++            .map(|i| (Duration::from_nanos(1_000_000_000 + i * 2_777_778), motion(i as f32 * 0.005)))
++            .collect();
++
++        let (ts2, m2) = queue[2];
++        let same = |a: Pose, b: Pose| a.position == b.position && a.orientation == b.orientation;
++        assert!(same(head_pose_for_frame(&queue, ts2).unwrap(), m2.pose));
++
++        // The server only had sample 2 and extrapolated it 12 ms, past samples 3-5.
++        let target = alvr_packets::extrapolated_timestamp(ts2, Duration::from_millis(12));
++        let pose = head_pose_for_frame(&queue, target).unwrap();
++        assert!(same(pose, m2.predict(ts2, target).pose));
++        assert!((pose.position.x - 0.5 * (target - ts2).as_secs_f32()).abs() < 1e-6);
++
++        assert!(head_pose_for_frame(&queue, ts2 + Duration::from_millis(12)).is_none());
++    }
++}
 diff --git a/alvr/client_core/src/performance.rs b/alvr/client_core/src/performance.rs
 new file mode 100644
 index 0000000000000000000000000000000000000000..84fe7d46be55d89ddedb1142df563458028248a4
@@ -2379,6 +2531,37 @@ index 0000000000000000000000000000000000000000..84fe7d46be55d89ddedb1142df563458
 +        assert!(m.lines().iter().all(|l| l.label != "Chroma"));
 +    }
 +}
+diff --git a/alvr/client_core/src/statistics.rs b/alvr/client_core/src/statistics.rs
+index af9791d06e1d0f1ca6edc02b5432a428a3144f03..a49dae7c8c8ccc68d88a03625d85981e3e32c94f 100644
+--- a/alvr/client_core/src/statistics.rs
++++ b/alvr/client_core/src/statistics.rs
+@@ -68,6 +68,26 @@ impl StatisticsManager {
+             .find(|frame| frame.client_stats.target_timestamp == target_timestamp)
+         {
+             frame.video_packet_received = Instant::now();
++        } else if let Some(input_acquired) = self
++            .history_buffer
++            .iter()
++            .find(|frame| {
++                alvr_packets::is_extrapolated_from(frame.client_stats.target_timestamp, target_timestamp)
++            })
++            .map(|frame| frame.input_acquired)
++        {
++            // A frame the server rendered from an extrapolated pose: its input is the base sample.
++            self.history_buffer.push_front(HistoryFrame {
++                input_acquired,
++                video_packet_received: Instant::now(),
++                client_stats: ClientStatistics {
++                    target_timestamp,
++                    ..Default::default()
++                },
++            });
++            if self.history_buffer.len() > self.max_history_size {
++                self.history_buffer.pop_back();
++            }
+         }
+     }
+ 
 diff --git a/alvr/client_core/src/thread_hints.rs b/alvr/client_core/src/thread_hints.rs
 new file mode 100644
 index 0000000000000000000000000000000000000000..26cd78a8817842a326cb7e1088ff7f5993e961b1
@@ -8936,7 +9119,7 @@ index ccc83c870f5f49cdb9491d2b4aa1409198852845..5e14bba15cc864f067f18c469dbba059
                  .options
                  .into_iter()
 diff --git a/alvr/dashboard/src/dashboard/components/test_report.rs b/alvr/dashboard/src/dashboard/components/test_report.rs
-index 3be93190b208e2811ea657244046718f516760da..c6baa56d8ed6ed3a8613666363d821159c724ad4 100644
+index 3be93190b208e2811ea657244046718f516760da..60bc2041e2e816cd0faffb11230cf8e985b48aec 100644
 --- a/alvr/dashboard/src/dashboard/components/test_report.rs
 +++ b/alvr/dashboard/src/dashboard/components/test_report.rs
 @@ -243,6 +243,10 @@ fn effective_settings(settings: &Settings, session_settings: &Value) -> Value {
@@ -8973,7 +9156,7 @@ index 3be93190b208e2811ea657244046718f516760da..c6baa56d8ed6ed3a8613666363d82115
              },
              "decode_path": match video.pyrowave.decode_path {
                  PyroWaveDecodePath::Compute => "compute",
-@@ -549,11 +556,13 @@ mod tests {
+@@ -549,10 +556,12 @@ mod tests {
          let r = report(&Subjective::default());
          assert_eq!(r["schema_version"], 1);
          assert_eq!(r["settings"]["profile"], beta::RECOMMENDED_PROFILE);
@@ -8981,17 +9164,15 @@ index 3be93190b208e2811ea657244046718f516760da..c6baa56d8ed6ed3a8613666363d82115
 -        assert_eq!(r["settings"]["chroma"], "4:4:4");
 -        assert_eq!(r["settings"]["render_per_eye"], json!([2131, 2304]));
 -        assert_eq!(r["settings"]["render_scale_percent"], 60.0);
--        assert_eq!(r["settings"]["pyrowave"]["transport"], "UDP");
 +        assert_eq!(r["settings"]["codec"], "PyroWave");
 +        assert_eq!(r["settings"]["chroma"], "4:2:0");
 +        assert_eq!(r["settings"]["render_per_eye"], json!([2064, 2208]));
 +        assert_eq!(r["settings"]["render_scale_percent"], 100.0);
 +        assert_eq!(r["settings"]["game_render_per_eye"], json!([2064, 2208]));
 +        assert_eq!(r["settings"]["render_downsample_filter"], "Bilinear");
-+        assert_eq!(r["settings"]["pyrowave"]["transport"], "TCP");
+         assert_eq!(r["settings"]["pyrowave"]["transport"], "UDP");
          assert_eq!(r["settings"]["advanced_changes"], json!([]));
          assert_eq!(r["encoded_size"], json!([1984, 896]));
-         assert_eq!(r["window"]["frames"], 900);
 diff --git a/alvr/graphics/resources/direct_eye_fragment.glsl b/alvr/graphics/resources/direct_eye_fragment.glsl
 new file mode 100644
 index 0000000000000000000000000000000000000000..b664b8244cebd480e2c841109fbf2f6bae735105
@@ -11428,7 +11609,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..0a8bd2935cd348d38648395e9ad3c954
  
          let mut encoder = self
 diff --git a/alvr/packets/src/lib.rs b/alvr/packets/src/lib.rs
-index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..8ecbfdbd219d0bf62eb0b068c88986c00d1b7e2e 100644
+index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..da7627b56361a059959f152fc617db89e34118d9 100644
 --- a/alvr/packets/src/lib.rs
 +++ b/alvr/packets/src/lib.rs
 @@ -247,6 +247,8 @@ pub enum ReservedClientControlPacket {
@@ -11463,7 +11644,41 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..8ecbfdbd219d0bf62eb0b068c88986c0
  }
  
  /// What the beta test report needs from the headset that per-frame statistics do not carry.
-@@ -457,6 +475,32 @@ pub struct RealTimeConfig {
+@@ -329,6 +347,33 @@ pub struct VideoPacketHeader {
+     pub foveation_center: [[f32; 2]; 2],
+ }
+ 
++/// Server-predicted head poses. When no head sample reaches the server during a frame interval,
++/// the server extrapolates the newest sample it has and renders the next frame from that, rather
++/// than rendering the same pose again. The frame's timestamp is then `base + delta`, with `delta`
++/// rounded up to a whole number of `EXTRAPOLATION_STEP_NS` plus `EXTRAPOLATION_MARK_NS`. The
++/// client finds the base sample in its own history by that remainder and repeats the same
++/// extrapolation, so the pose a frame was rendered from needs no field in any video header.
++///
++/// Both ends extrapolate with the sample's velocities: `DeviceMotion::predict` on the client, and
++/// on the server the same motion after recentering, which rotates pose and velocities together.
++pub const EXTRAPOLATION_STEP_NS: u64 = 1 << 16;
++pub const EXTRAPOLATION_MARK_NS: u64 = 0x5a5a;
++/// The server extrapolates at most this far; the client allows the rounding on top.
++pub const MAX_EXTRAPOLATION: Duration = Duration::from_millis(50);
++
++/// The timestamp of a frame rendered from `base` extrapolated by `delta`, rounded up.
++pub fn extrapolated_timestamp(base: Duration, delta: Duration) -> Duration {
++    let steps = (delta.as_nanos() as u64).div_ceil(EXTRAPOLATION_STEP_NS);
++    base + Duration::from_nanos(steps * EXTRAPOLATION_STEP_NS + EXTRAPOLATION_MARK_NS)
++}
++
++/// Whether `timestamp` is `base` extrapolated by the server.
++pub fn is_extrapolated_from(base: Duration, timestamp: Duration) -> bool {
++    timestamp > base
++        && timestamp - base <= MAX_EXTRAPOLATION + Duration::from_nanos(2 * EXTRAPOLATION_STEP_NS)
++        && (timestamp - base).as_nanos() as u64 % EXTRAPOLATION_STEP_NS == EXTRAPOLATION_MARK_NS
++}
++
+ // Note: face_data does not respect target_timestamp.
+ #[derive(Serialize, Deserialize, Default)]
+ pub struct Tracking {
+@@ -457,6 +502,32 @@ pub struct RealTimeConfig {
      pub passthrough: Option<PassthroughMode>,
  }
  
@@ -11496,7 +11711,7 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..8ecbfdbd219d0bf62eb0b068c88986c0
  pub fn encode_real_time_config(config: &RealTimeConfig) -> Result<ServerControlPacket> {
      Ok(ServerControlPacket::ReservedBuffer(bincode::serialize(
          config,
-@@ -477,15 +521,15 @@ pub struct ViewParams {
+@@ -477,15 +548,15 @@ pub struct ViewParams {
  
  // ---- PyroWave over UDP ----
  //
@@ -11516,7 +11731,7 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..8ecbfdbd219d0bf62eb0b068c88986c0
  /// Datagram payload budget below a 1500-byte MTU with IPv4/UDP headers and ours.
  pub const PYROWAVE_UDP_PAYLOAD: usize = 1400 - PYROWAVE_UDP_HEADER_LEN;
  
-@@ -531,6 +575,141 @@ impl PyroWavePacketHeader {
+@@ -531,6 +602,141 @@ impl PyroWavePacketHeader {
      }
  }
  
@@ -11658,7 +11873,40 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..8ecbfdbd219d0bf62eb0b068c88986c0
  #[cfg(test)]
  mod pyrowave_udp_tests {
      use super::*;
-@@ -586,6 +765,14 @@ mod beta_telemetry_tests {
+@@ -570,6 +776,32 @@ mod pyrowave_udp_tests {
+     }
+ }
+ 
++#[cfg(test)]
++mod extrapolation_tests {
++    use super::*;
++
++    #[test]
++    fn extrapolated_timestamps_find_their_base() {
++        let base = Duration::from_nanos(123_456_789_012);
++        for delta_us in [0, 1, 65, 66, 8_333, 20_000, 50_000] {
++            let delta = Duration::from_micros(delta_us);
++            let t = extrapolated_timestamp(base, delta);
++            assert!(t > base + delta, "rounded up past the delta");
++            assert!(t < base + delta + Duration::from_nanos(2 * EXTRAPOLATION_STEP_NS));
++            assert!(is_extrapolated_from(base, t));
++            // The client's other samples, a third of a frame apart, don't match.
++            for other_ns in [1u64, 2_777_777, 2_777_778, 5_555_555, 8_333_333] {
++                assert!(!is_extrapolated_from(base + Duration::from_nanos(other_ns), t));
++                assert!(!is_extrapolated_from(base - Duration::from_nanos(other_ns), t));
++            }
++        }
++        assert!(!is_extrapolated_from(base, base + Duration::from_nanos(2_777_777)));
++        assert!(!is_extrapolated_from(base, base));
++        let far = extrapolated_timestamp(base, Duration::from_millis(200));
++        assert!(!is_extrapolated_from(base, far));
++    }
++}
++
+ #[cfg(test)]
+ mod beta_telemetry_tests {
+     use super::*;
+@@ -586,6 +818,14 @@ mod beta_telemetry_tests {
                  partial: 3,
                  gpu_decode_ms: vec![3.2, 3.4],
                  fence_ms: vec![4.9, 5.1],
@@ -12102,7 +12350,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..38d35a685b272a6ac3d0f1aa73a9d0e6
              bitrate_directives,
          ))
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90adc9109abe 100644
+index fc176da39833633bc7fbac803ebe345c7832fbdb..42f0f49040b3ec596674d510c1af7d65c6d4eb6a 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -43,6 +43,9 @@ use std::{
@@ -12472,9 +12720,14 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
  
      let mut brightness = 0.0;
      let mut contrast = 0.0;
-@@ -240,7 +538,11 @@ fn openvr_config_with_env(
+@@ -238,9 +536,15 @@ fn openvr_config_with_env(
+         amd_bitrate_corruption_fix: settings.video.bitrate.image_corruption_fix,
+         use_separate_hand_trackers,
          pyrowave_enabled: pyrowave.enabled,
-         pyrowave_udp: pyrowave.udp,
+-        pyrowave_udp: pyrowave.udp,
++        // The server slices PyroWave UDP video itself (UdpVideoSender), so the encoder never does;
++        // matching the connection's value here avoids a SteamVR restart on the first connection.
++        pyrowave_udp: false,
          pyrowave_wavelet_53: pyrowave.wavelet_53,
 +        pyrowave_wavelet_haar: pyrowave.wavelet_haar,
          pyrowave_decode_path: pyrowave.decode_path as u32,
@@ -12484,7 +12737,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
          _controller_profile,
          _server_impl_debug: settings.extra.logging.debug_groups.server_impl,
          _client_impl_debug: settings.extra.logging.debug_groups.client_impl,
-@@ -283,9 +585,13 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -283,9 +587,13 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
                      && hostname.as_str() == WIRED_CLIENT_HOSTNAME
              })
          {
@@ -12499,7 +12752,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
              } else {
                  let connection = match WiredConnection::new(
                      FILESYSTEM_LAYOUT.get().unwrap(),
-@@ -297,53 +603,63 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -297,53 +605,63 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
                          };
                      },
                  ) {
@@ -12589,7 +12842,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
          }
  
          if !wired_client_ips.is_empty()
-@@ -471,6 +787,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -471,6 +789,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
          thread.join().ok();
      }
  
@@ -12606,7 +12859,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
      alvr_common::dbg_connection!("handshake_loop: End");
  }
  
-@@ -629,6 +955,19 @@ fn connection_pipeline(
+@@ -629,6 +957,19 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -12626,7 +12879,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +988,9 @@ fn connection_pipeline(
+@@ -649,18 +990,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -12648,7 +12901,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -802,6 +1132,9 @@ fn connection_pipeline(
+@@ -802,6 +1134,9 @@ fn connection_pipeline(
          proto_socket.split(STREAMING_RECV_TIMEOUT).to_con()?;
  
      let mut new_openvr_config = contruct_openvr_config(session_manager_lock.session());
@@ -12658,7 +12911,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
      new_openvr_config.eye_resolution_width = stream_view_resolution.x;
      new_openvr_config.eye_resolution_height = stream_view_resolution.y;
      new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
-@@ -822,6 +1155,7 @@ fn connection_pipeline(
+@@ -822,6 +1157,7 @@ fn connection_pipeline(
  
          crate::notify_restart_driver();
      }
@@ -12666,7 +12919,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
  
      dbg_connection!("connection_pipeline: Send StartStream packet");
      control_sender
-@@ -846,6 +1180,29 @@ fn connection_pipeline(
+@@ -846,6 +1182,29 @@ fn connection_pipeline(
  
      *ctx.bitrate_manager.lock() =
          BitrateManager::new(initial_settings.video.bitrate.history_size, fps);
@@ -12696,7 +12949,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
  
      let stream_protocol = if wired {
          SocketProtocol::Tcp
-@@ -867,25 +1224,33 @@ fn connection_pipeline(
+@@ -867,25 +1226,33 @@ fn connection_pipeline(
  
      let mut video_sender = stream_socket.request_stream(VIDEO);
  
@@ -12745,7 +12998,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
      let game_audio_sender: alvr_sockets::StreamSender<()> = stream_socket.request_stream(AUDIO);
      let mut microphone_receiver: alvr_sockets::StreamReceiver<()> =
          stream_socket.subscribe_to_stream(AUDIO, MAX_UNREAD_PACKETS);
-@@ -911,6 +1276,20 @@ fn connection_pipeline(
+@@ -911,6 +1278,20 @@ fn connection_pipeline(
                          Err(RecvTimeoutError::Disconnected) => return,
                      };
  
@@ -12766,7 +13019,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
                  let mut buffer = video_sender.get_buffer(&header).unwrap();
                  // todo: make encoder write to socket buffers directly to avoid copy
                  buffer
-@@ -1081,18 +1460,40 @@ fn connection_pipeline(
+@@ -1081,18 +1462,40 @@ fn connection_pipeline(
          let ctx = Arc::clone(&ctx);
          let client_hostname = client_hostname.clone();
          move || {
@@ -12810,7 +13063,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
                      let decoder_latency = client_stats.video_decode;
                      let (network_latency, game_latency) = stats.report_statistics(client_stats);
  
-@@ -1102,7 +1503,10 @@ fn connection_pipeline(
+@@ -1102,7 +1505,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -12822,7 +13075,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1519,7 @@ fn connection_pipeline(
+@@ -1115,6 +1521,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -12830,7 +13083,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1536,14 @@ fn connection_pipeline(
+@@ -1131,6 +1538,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -12845,7 +13098,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1184,9 +1597,35 @@ fn connection_pipeline(
+@@ -1184,9 +1599,35 @@ fn connection_pipeline(
          let disconnect_notif = Arc::clone(&disconnect_notif);
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
@@ -12881,7 +13134,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
                  let packet = match control_receiver.recv(STREAMING_RECV_TIMEOUT) {
                      Ok(packet) => packet,
                      Err(ConnectionError::TryAgain(_)) => {
-@@ -1299,6 +1738,9 @@ fn connection_pipeline(
+@@ -1299,6 +1740,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -12891,7 +13144,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1378,6 +1820,22 @@ fn connection_pipeline(
+@@ -1378,6 +1822,22 @@ fn connection_pipeline(
                              };
  
                          match reserved {
@@ -12914,7 +13167,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
                              ReservedClientControlPacket::CustomInteractionProfile {
                                  input_ids,
                                  ..
-@@ -1552,9 +2010,10 @@ mod beta_tests {
+@@ -1552,9 +2012,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -12927,7 +13180,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
      }
  
      #[test]
-@@ -1569,4 +2028,22 @@ mod beta_tests {
+@@ -1569,4 +2030,22 @@ mod beta_tests {
          assert!(!config.pyrowave_udp);
          assert!(config.pyrowave_wavelet_53);
      }
@@ -12951,9 +13204,18 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90ad
 +    }
  }
 diff --git a/alvr/server_core/src/lib.rs b/alvr/server_core/src/lib.rs
-index efa67b1d107def4e3e6d9cec00e6056dbece2380..ed3c31b5b43d9d9a178673a059250e1aba9312d1 100644
+index efa67b1d107def4e3e6d9cec00e6056dbece2380..5512841e93d4a225103fb8329abe4ce504511cef 100644
 --- a/alvr/server_core/src/lib.rs
 +++ b/alvr/server_core/src/lib.rs
+@@ -12,7 +12,7 @@ mod web_server;
+ 
+ pub use c_api::*;
+ pub use logging_backend::init_logging;
+-pub use tracking::HandType;
++pub use tracking::{extrapolate_head_motion, HandType};
+ 
+ use crate::connection::VideoPacket;
+ use alvr_common::{
 @@ -54,6 +54,12 @@ use tracking::TrackingManager;
  
  static FILESYSTEM_LAYOUT: OnceLock<afs::Layout> = OnceLock::new();
@@ -12987,6 +13249,21 @@ index efa67b1d107def4e3e6d9cec00e6056dbece2380..ed3c31b5b43d9d9a178673a059250e1a
          };
  
          if let Some((params, stats)) = pair {
+@@ -541,6 +551,14 @@ impl ServerCoreContext {
+         }
+     }
+ 
++    /// The driver gave SteamVR a head pose extrapolated to `target_timestamp`, with no tracking
++    /// packet behind it; the frame rendered from it is tracked like one that had.
++    pub fn report_extrapolated_pose(&self, target_timestamp: Duration) {
++        if let Some(stats) = &mut *self.connection_context.statistics_manager.write() {
++            stats.report_tracking_received(target_timestamp);
++        }
++    }
++
+     pub fn report_composed(&self, target_timestamp: Duration, offset: Duration) {
+         dbg_server_core!("report_composed");
+ 
 diff --git a/alvr/server_core/src/statistics.rs b/alvr/server_core/src/statistics.rs
 index 365db6463a9bd019ff5548186b873056f77806ae..7e49dd79843b09a417b15e576bafb443fd60c40c 100644
 --- a/alvr/server_core/src/statistics.rs
@@ -13115,7 +13392,7 @@ index 365db6463a9bd019ff5548186b873056f77806ae..7e49dd79843b09a417b15e576bafb443
          // This is the opposite of the client's StatisticsManager::tracker_prediction_offset().
          self.steamvr_pipeline_latency
 diff --git a/alvr/server_core/src/tracking/mod.rs b/alvr/server_core/src/tracking/mod.rs
-index 64f93a6fd54e90b50e5382e09f539f4cefa7817f..13b97d9d4a29fe77811d2f24255f470c6d3d5469 100644
+index 64f93a6fd54e90b50e5382e09f539f4cefa7817f..9b1a660568e5a7a31d82f5752961acc50e2f9331 100644
 --- a/alvr/server_core/src/tracking/mod.rs
 +++ b/alvr/server_core/src/tracking/mod.rs
 @@ -302,7 +302,7 @@ impl TrackingManager {
@@ -13127,10 +13404,63 @@ index 64f93a6fd54e90b50e5382e09f539f4cefa7817f..13b97d9d4a29fe77811d2f24255f470c
  
          self.last_face_data = face_data;
      }
-@@ -312,6 +312,52 @@ impl TrackingManager {
+@@ -312,6 +312,105 @@ impl TrackingManager {
      }
  }
  
++/// A head motion as `report_device_motions` stores it (recentered, angular velocity in the head's
++/// own frame) extrapolated from `base` to `target`: the server-predicted pose for a frame whose
++/// tracking arrived late (see `alvr_packets::extrapolated_timestamp`). The client repeats this with
++/// `DeviceMotion::predict` on the sample it sent, whose angular velocity is in the tracking frame,
++/// and gets the same pose before recentering.
++pub fn extrapolate_head_motion(base: Duration, motion: DeviceMotion, target: Duration) -> DeviceMotion {
++    let predicted = DeviceMotion {
++        angular_velocity: motion.pose.orientation * motion.angular_velocity,
++        ..motion
++    }
++    .predict(base, target);
++    DeviceMotion {
++        pose: predicted.pose,
++        ..motion
++    }
++}
++
++#[cfg(test)]
++mod extrapolation_tests {
++    use super::*;
++
++    #[test]
++    fn server_extrapolation_matches_the_client() {
++        let sent = DeviceMotion {
++            pose: Pose {
++                orientation: Quat::from_euler(EulerRot::YXZ, 0.7, -0.2, 0.1),
++                position: Vec3::new(0.3, 1.6, -0.4),
++            },
++            linear_velocity: Vec3::new(0.4, -0.1, 0.25),
++            angular_velocity: Vec3::new(0.3, 2.5, -0.6),
++        };
++        let mut manager = TrackingManager::new(16);
++        manager.last_head_pose = Pose {
++            orientation: Quat::from_rotation_y(1.1),
++            position: Vec3::new(0.2, 1.5, -0.3),
++        };
++        manager.recenter(PositionRecenteringMode::LocalFloor, RotationRecenteringMode::Yaw);
++
++        let base = Duration::from_millis(1000);
++        let target = alvr_packets::extrapolated_timestamp(base, Duration::from_millis(17));
++        let mut stored = manager.recenter_motion(sent);
++        stored.angular_velocity = stored.pose.orientation.conjugate() * stored.angular_velocity;
++
++        let server = extrapolate_head_motion(base, stored, target).pose;
++        let client = manager.recenter_pose(sent.predict(base, target).pose);
++
++        assert!(server.position.distance(client.position) < 1e-5);
++        assert!(server.orientation.angle_between(client.orientation) < 1e-4);
++        // 2.5 rad/s for 17 ms is about 2.4 degrees.
++        assert!(server.orientation.angle_between(stored.pose.orientation) > 0.04);
++    }
++}
++
 +/// Tracking packet arrival gaps on the server and the client's spacing of target timestamps, logged
 +/// as [Q3PW_TRACKING_RX] every 5 s. Bunched arrivals mean SteamVR renders several frames from the
 +/// same pose, which the client then counts as one fresh frame.
@@ -13180,7 +13510,7 @@ index 64f93a6fd54e90b50e5382e09f539f4cefa7817f..13b97d9d4a29fe77811d2f24255f470c
  pub fn tracking_loop(
      ctx: &ConnectionContext,
      initial_settings: Settings,
-@@ -355,6 +401,7 @@ pub fn tracking_loop(
+@@ -355,6 +454,7 @@ pub fn tracking_loop(
          .into_option()
          .and_then(|config| VMCSink::new(config).ok());
  
@@ -13188,7 +13518,7 @@ index 64f93a6fd54e90b50e5382e09f539f4cefa7817f..13b97d9d4a29fe77811d2f24255f470c
      while is_streaming() {
          let data = match tracking_receiver.recv(STREAMING_RECV_TIMEOUT) {
              Ok(tracking) => tracking,
-@@ -366,6 +413,7 @@ pub fn tracking_loop(
+@@ -366,6 +466,7 @@ pub fn tracking_loop(
          };
  
          let timestamp = tracking.target_timestamp;
@@ -13359,6 +13689,74 @@ index 7bed823544ba31eeeebde4643e7a2de0de6424ca..8090f9e7f4b22354ee196ae286e36364
      int m_h264Profile;
      bool m_use10bitEncoder;
      bool m_useFullRangeEncoding;
+diff --git a/alvr/server_openvr/cpp/alvr_server/alvr_server.cpp b/alvr/server_openvr/cpp/alvr_server/alvr_server.cpp
+index 184e7552545889824b525400a74813ff2ce239cc..a3e8e815f0201cf4f32e08ce52e2421eb7e7af64 100644
+--- a/alvr/server_openvr/cpp/alvr_server/alvr_server.cpp
++++ b/alvr/server_openvr/cpp/alvr_server/alvr_server.cpp
+@@ -21,6 +21,7 @@
+ #include <cmath>
+ #include <cstring>
+ #include <map>
++#include <mutex>
+ #include <optional>
+ 
+ #ifdef __linux__
+@@ -353,17 +354,28 @@ void SetFoveationCenter(float leftX, float leftY, float rightX, float rightY) {
+ #endif
+ }
+ 
++// Head poses come from the tracking thread and, when extrapolated, from the vsync wait.
++static std::mutex g_headPoseMutex;
++
++void SetHeadTracking(unsigned long long targetTimestampNs, FfiDeviceMotion headMotion) {
++    std::lock_guard<std::mutex> lock(g_headPoseMutex);
++    if (g_driver_provider.hmd) {
++        g_driver_provider.hmd->OnPoseUpdated(targetTimestampNs, headMotion);
++    }
++}
++
+ void SetTracking(
+     unsigned long long targetTimestampNs,
+     float controllerPoseTimeOffsetS,
++    bool updateHead,
+     FfiDeviceMotion headMotion,
+     FfiHandData leftHandData,
+     FfiHandData rightHandData,
+     const FfiDeviceMotion* bodyTrackerMotions,
+     int bodyTrackerMotionCount
+ ) {
+-    if (g_driver_provider.hmd) {
+-        g_driver_provider.hmd->OnPoseUpdated(targetTimestampNs, headMotion);
++    if (updateHead) {
++        SetHeadTracking(targetTimestampNs, headMotion);
+     }
+ 
+     if (g_driver_provider.left_hand_tracker) {
+diff --git a/alvr/server_openvr/cpp/alvr_server/bindings.h b/alvr/server_openvr/cpp/alvr_server/bindings.h
+index d51e5ca46085d6ad08a25b413530006438d2956e..9184b6857f01d723126997cd8bbbbe2e05e201ec 100644
+--- a/alvr/server_openvr/cpp/alvr_server/bindings.h
++++ b/alvr/server_openvr/cpp/alvr_server/bindings.h
+@@ -159,15 +159,20 @@ extern "C" void InitializeStreaming();
+ extern "C" void DeinitializeStreaming();
+ extern "C" void SendVSync();
+ extern "C" void RequestIDR();
++/// updateHead false leaves the head pose alone: the server already rendered from a later
++/// extrapolated head pose than this sample's (see SetHeadTracking).
+ extern "C" void SetTracking(
+     unsigned long long targetTimestampNs,
+     float controllerPoseTimeOffsetS,
++    bool updateHead,
+     FfiDeviceMotion headMotion,
+     FfiHandData leftHandData,
+     FfiHandData rightHandData,
+     const FfiDeviceMotion* bodyTrackerMotions,
+     int bodyTrackerMotionCount
+ );
++/// A head pose the server extrapolated because no tracking arrived within a frame.
++extern "C" void SetHeadTracking(unsigned long long targetTimestampNs, FfiDeviceMotion headMotion);
+ /// Gaze-driven foveation centre, both in [-1, 1] with 0 at the frame centre. Separate from
+ /// SetTracking on purpose: gaze does not respect SetTracking's target timestamp (see the note on
+ /// `Tracking` in alvr/packets/src/lib.rs), so tying the two together would imply an alignment
 diff --git a/alvr/server_openvr/cpp/alvr_server/shader/CompressAxisAlignedPixelShader.hlsl b/alvr/server_openvr/cpp/alvr_server/shader/CompressAxisAlignedPixelShader.hlsl
 index e77a8ab6a2f6820f385524a4baa12e3b95038891..a41aea8d5cf078d8375eebfd918de4efbcb13e20 100644
 --- a/alvr/server_openvr/cpp/alvr_server/shader/CompressAxisAlignedPixelShader.hlsl
@@ -14259,9 +14657,18 @@ index a0356d3dd4231a40ffe4b1bce4fb9b1427528aeb..230c7517ac3165b6b9f75cd0fe6c1d0c
  public:
      VideoEncoderPyroWave(
 diff --git a/alvr/server_openvr/src/lib.rs b/alvr/server_openvr/src/lib.rs
-index 861f726c74e38cec9058513ab412ceb08ae2e8bf..e277d11fe8271552f711118c8c26c817b4d4cbf8 100644
+index 861f726c74e38cec9058513ab412ceb08ae2e8bf..451aee3a6ce8edc782d4b4404201443d67101c09 100644
 --- a/alvr/server_openvr/src/lib.rs
 +++ b/alvr/server_openvr/src/lib.rs
+@@ -19,7 +19,7 @@ use alvr_common::{
+     once_cell::sync::Lazy,
+     parking_lot::{Mutex, RwLock},
+     settings_schema::Switch,
+-    warn, BUTTON_INFO, HAND_LEFT_ID, HAND_RIGHT_ID, HAND_TRACKER_LEFT_ID, HAND_TRACKER_RIGHT_ID,
++    warn, DeviceMotion, BUTTON_INFO, HAND_LEFT_ID, HAND_RIGHT_ID, HAND_TRACKER_LEFT_ID, HAND_TRACKER_RIGHT_ID,
+     HEAD_ID,
+ };
+ use alvr_filesystem as afs;
 @@ -50,6 +50,7 @@ use std::{
  /// present, overrides it. Read once at first use, which is after the driver loaded the session:
  /// the setting is flagged steamvr-restart.
@@ -14270,7 +14677,27 @@ index 861f726c74e38cec9058513ab412ceb08ae2e8bf..e277d11fe8271552f711118c8c26c817
      alvr_session::beta::pyrowave_effective(
          &alvr_server_core::settings(),
          &alvr_session::beta::process_env,
-@@ -663,6 +664,36 @@ extern "C" fn report_present(timestamp_ns: u64, offset_ns: u64) {
+@@ -323,8 +324,9 @@ extern "C" fn driver_ready_idle(set_default_chap: bool) {
+                     if let Some(context) = &*SERVER_CORE_CONTEXT.read() {
+                         let controllers_pose_time_offset = context.get_tracker_pose_time_offset();
+ 
+-                        let ffi_head_motion = context
+-                            .get_device_motion(*HEAD_ID, sample_timestamp)
++                        let head_motion = context.get_device_motion(*HEAD_ID, sample_timestamp);
++                        let update_head = receive_head_sample(sample_timestamp, head_motion);
++                        let ffi_head_motion = head_motion
+                             .map(|m| tracking::to_ffi_motion(*HEAD_ID, m))
+                             .unwrap_or_else(FfiDeviceMotion::default);
+                         let ffi_left_controller_motion = context
+@@ -430,6 +432,7 @@ extern "C" fn driver_ready_idle(set_default_chap: bool) {
+                             SetTracking(
+                                 sample_timestamp.as_nanos() as _,
+                                 controllers_pose_time_offset.as_secs_f32(),
++                                update_head,
+                                 ffi_head_motion,
+                                 ffi_left_hand_data,
+                                 ffi_right_hand_data,
+@@ -663,6 +666,151 @@ extern "C" fn report_present(timestamp_ns: u64, offset_ns: u64) {
      }
  }
  
@@ -14288,6 +14715,121 @@ index 861f726c74e38cec9058513ab412ceb08ae2e8bf..e277d11fe8271552f711118c8c26c817
 +            .min(3000),
 +    )
 +});
++
++/// Server-predicted head poses (`headset.extrapolate_late_head_poses`, read once): when no head
++/// sample reached SteamVR during a frame, the vsync wait gives it the newest sample extrapolated
++/// by its age, under a timestamp the client can resolve (`alvr_packets::extrapolated_timestamp`).
++/// Samples older than a pose already extrapolated past them don't reach SteamVR's head, so frame
++/// timestamps never go backwards; they still become the base of the next extrapolation.
++static EXTRAPOLATE_LATE_HEAD_POSES: Lazy<bool> =
++    Lazy::new(|| alvr_server_core::settings().headset.extrapolate_late_head_poses);
++
++/// A head timestamp this far below the last one given to SteamVR starts a new timeline (the
++/// client reconnected), rather than being an old sample.
++const HEAD_TIMELINE_RESET: Duration = Duration::from_secs(1);
++
++struct HeadPoseState {
++    /// The newest head sample received: timestamp, motion after recentering, arrival.
++    newest: Option<(Duration, DeviceMotion, Instant)>,
++    /// The timestamp of the last head pose given to SteamVR.
++    last_submitted: Duration,
++    /// Whether a received sample reached SteamVR since the last vsync.
++    fresh_since_vsync: bool,
++    window_start: Instant,
++    vsyncs: u32,
++    extrapolated: u32,
++    held_samples: u32,
++    delta_sum: Duration,
++    delta_max: Duration,
++}
++
++static HEAD_POSE_STATE: Lazy<Mutex<HeadPoseState>> = Lazy::new(|| {
++    Mutex::new(HeadPoseState {
++        newest: None,
++        last_submitted: Duration::ZERO,
++        fresh_since_vsync: false,
++        window_start: Instant::now(),
++        vsyncs: 0,
++        extrapolated: 0,
++        held_samples: 0,
++        delta_sum: Duration::ZERO,
++        delta_max: Duration::ZERO,
++    })
++});
++
++/// Records a received head sample; returns whether SteamVR's head should take it.
++fn receive_head_sample(timestamp: Duration, motion: Option<DeviceMotion>) -> bool {
++    if !*EXTRAPOLATE_LATE_HEAD_POSES {
++        return true;
++    }
++    let mut state = HEAD_POSE_STATE.lock();
++    if let Some(motion) = motion {
++        if state.newest.is_none_or(|(ts, ..)| timestamp > ts || ts > timestamp + HEAD_TIMELINE_RESET) {
++            state.newest = Some((timestamp, motion, Instant::now()));
++        }
++    }
++    let take = timestamp > state.last_submitted
++        || state.last_submitted > timestamp + HEAD_TIMELINE_RESET;
++    if take {
++        state.last_submitted = timestamp;
++        state.fresh_since_vsync = true;
++    } else {
++        state.held_samples += 1;
++    }
++    take
++}
++
++/// Called once per frame after the vsync wait, before SteamVR starts the next frame.
++fn extrapolate_late_head_pose() {
++    if !*EXTRAPOLATE_LATE_HEAD_POSES {
++        return;
++    }
++    let now = Instant::now();
++    let mut state = HEAD_POSE_STATE.lock();
++    state.vsyncs += 1;
++    let fresh = std::mem::replace(&mut state.fresh_since_vsync, false);
++    let mut extrapolated = None;
++    if let (false, Some((base, motion, arrival))) = (fresh, state.newest) {
++        let age = now.saturating_duration_since(arrival);
++        let target = alvr_packets::extrapolated_timestamp(base, age);
++        if age <= alvr_packets::MAX_EXTRAPOLATION && target > state.last_submitted {
++            state.last_submitted = target;
++            state.extrapolated += 1;
++            state.delta_sum += target - base;
++            state.delta_max = state.delta_max.max(target - base);
++            extrapolated = Some((
++                target,
++                alvr_server_core::extrapolate_head_motion(base, motion, target),
++            ));
++        }
++    }
++    if state.window_start.elapsed() > Duration::from_secs(5) {
++        // Error level so crash_log.txt keeps it.
++        error!(
++            "[Q3PW_POSE_EXTRAPOLATE] vsyncs={} extrapolated={} held_samples={} delta_ms_mean={:.2} delta_ms_max={:.2}",
++            state.vsyncs,
++            state.extrapolated,
++            state.held_samples,
++            state.delta_sum.as_secs_f32() * 1000. / state.extrapolated.max(1) as f32,
++            state.delta_max.as_secs_f32() * 1000.,
++        );
++        state.window_start = now;
++        state.vsyncs = 0;
++        state.extrapolated = 0;
++        state.held_samples = 0;
++        state.delta_sum = Duration::ZERO;
++        state.delta_max = Duration::ZERO;
++    }
++    // Not under the state lock: the tracking thread takes it while holding the context.
++    drop(state);
++
++    if let Some((target, motion)) = extrapolated {
++        if let Some(context) = &*SERVER_CORE_CONTEXT.read() {
++            context.report_extrapolated_pose(target);
++        }
++        unsafe { SetHeadTracking(target.as_nanos() as _, tracking::to_ffi_motion(*HEAD_ID, motion)) };
++    }
++}
 +
 +/// Sleep for `duration`, spinning the final `spin` of it for a precise wake-up.
 +fn precise_sleep(duration: Duration, spin: Duration) {
@@ -14307,7 +14849,7 @@ index 861f726c74e38cec9058513ab412ceb08ae2e8bf..e277d11fe8271552f711118c8c26c817
  extern "C" fn wait_for_vsync() {
      // Default 120Hz-ish wait if StatisticsManager isn't up.
      // We use 120Hz-ish so that SteamVR doesn't accidentally get
-@@ -680,7 +711,7 @@ extern "C" fn wait_for_vsync() {
+@@ -680,10 +828,11 @@ extern "C" fn wait_for_vsync() {
              .video
              .enforce_server_frame_pacing
          {
@@ -14316,8 +14858,12 @@ index 861f726c74e38cec9058513ab412ceb08ae2e8bf..e277d11fe8271552f711118c8c26c817
          } else {
              thread::yield_now();
          }
++        extrapolate_late_head_pose();
+     } else {
+         // StatsManager isn't up because the headset hasn't connected,
+         // safety fallback to prevent deadlocking.
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
-index 84100dc7c01a272de5b0b22b22907127bb5e1e18..3f181a7dfed8b63e7612a58fbf4acc978941925d 100644
+index 84100dc7c01a272de5b0b22b22907127bb5e1e18..9e535fd7204588d660e1a268973aebdeccafc297 100644
 --- a/alvr/session/src/beta.rs
 +++ b/alvr/session/src/beta.rs
 @@ -3,25 +3,125 @@
@@ -14336,7 +14882,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..3f181a7dfed8b63e7612a58fbf4acc97
 -pub const RECOMMENDED_SUBTITLE: &str = "Full-chroma experimental wireless VR streaming";
 -pub const H264_PROFILE: &str = "ALVR H.264 (tuned)";
 +pub const RECOMMENDED_PROFILE: &str = "Quest 3 PyroWave 400 Mbps / 72 Hz candidate";
-+pub const RECOMMENDED_SUBTITLE: &str = "Conservative candidate: full-frame 4:2:0, TCP, 72 Hz, full panel resolution; live acceptance pending";
++pub const RECOMMENDED_SUBTITLE: &str = "Conservative candidate: full-frame 4:2:0, UDP on Wi-Fi, 72 Hz, full panel resolution; live acceptance pending";
 +pub const H264_PROFILE: &str = "H.264 comparison";
  
 -/// Galaxy XR panel, per eye, as reported by `dumpsys display` (7104x3840 for both).
@@ -14548,6 +15094,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..3f181a7dfed8b63e7612a58fbf4acc97
 -        assign("video.encoder_config.rate_control_mode.variant", "Cbr".into()),
 -        assign("video.encoder_config.entropy_coding.variant", "Cavlc".into()),
 -        assign("video.encoder_config.nvenc.quality_preset.variant", "P1".into()),
+-        assign("connection.stream_protocol.variant", "Tcp".into()),
 +        assign(
 +            "video.encoder_config.rate_control_mode.variant",
 +            "Cbr".into(),
@@ -14560,7 +15107,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..3f181a7dfed8b63e7612a58fbf4acc97
 +            "video.encoder_config.nvenc.quality_preset.variant",
 +            "P1".into(),
 +        ),
-         assign("connection.stream_protocol.variant", "Tcp".into()),
++        assign("connection.stream_protocol.variant", "Udp".into()),
          assign("connection.packet_size", 65000.into()),
 -        assign("connection.max_queued_server_video_frames", 12.into()),
 +        assign("connection.max_queued_server_video_frames", 2.into()),
@@ -14573,11 +15120,9 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..3f181a7dfed8b63e7612a58fbf4acc97
 -pub fn streaming_profiles() -> Vec<StreamingProfile> {
 -    let mut pyrowave = shared("PyroWave", 400, 90.0, 60);
 -    pyrowave.extend([
--        assign("video.pyrowave.transport.variant", "Udp".into()),
--        assign("video.pyrowave.wavelet.variant", "Cdf97".into()),
 +/// Profiles measured on Quest 3 (October 6, 2026 for 120 and 240 Hz, October 7 for 207 Hz with the
 +/// multilevel Haar decoder; short screens, see docs/HIGH-REFRESH.md and docs/FRAME-TRACE.md).
-+/// Haar/Compute/TCP, 4:2:0, 1000 Mbps; the stream size is explicit because 2080x2208 and 1440x1536
++/// Haar/Compute, 4:2:0, 1000 Mbps (UDP on Wi-Fi; USB always uses TCP); the stream size is explicit because 2080x2208 and 1440x1536
 +/// are not panel percentages.
 +pub const MEASURED_PROFILES: [(&str, f32, (u32, u32), bool, bool, &str); 3] = [
 +    (
@@ -14615,7 +15160,8 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..3f181a7dfed8b63e7612a58fbf4acc97
 +        assign("video.transcoding_view_resolution.Absolute.height.set", true.into()),
 +        assign("video.transcoding_view_resolution.Absolute.height.content", height.into()),
 +        assign("video.pyrowave.chroma_444", false.into()),
-+        assign("video.pyrowave.transport.variant", "Tcp".into()),
+         assign("video.pyrowave.transport.variant", "Udp".into()),
+-        assign("video.pyrowave.wavelet.variant", "Cdf97".into()),
 +        assign("video.pyrowave.wavelet.variant", "Haar".into()),
          assign("video.pyrowave.decode_path.variant", "Compute".into()),
 +        assign("video.pyrowave.quest3_240hz_display_scaling", scaled.into()),
@@ -14639,14 +15185,14 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..3f181a7dfed8b63e7612a58fbf4acc97
 +pub fn streaming_profiles() -> Vec<StreamingProfile> {
 +    let mut profiles = Vec::new();
 +    const EXPERIMENT: &str =
-+        "Experimental: full-frame 4:2:0, TCP, 120 Hz; decode/transport budget not validated";
++        "Experimental: full-frame 4:2:0, UDP on Wi-Fi, 120 Hz; decode/transport budget not validated";
 +    for (index, (name, mbps, fps, subtitle)) in [
 +        (RECOMMENDED_PROFILE, 400, 72.0, RECOMMENDED_SUBTITLE),
 +        (
 +            "Quest 3 PyroWave 600 Mbps / 90 Hz candidate",
 +            600,
 +            90.0,
-+            "Candidate: full-frame 4:2:0, TCP, 90 Hz; live acceptance pending",
++            "Candidate: full-frame 4:2:0, UDP on Wi-Fi, 90 Hz; live acceptance pending",
 +        ),
 +        (
 +            "Quest 3 PyroWave 600 Mbps / 120 Hz experiment",
@@ -14685,7 +15231,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..3f181a7dfed8b63e7612a58fbf4acc97
 +        let mut assignments = shared("PyroWave", mbps, fps, 100);
 +        assignments.extend([
 +            assign("video.pyrowave.chroma_444", false.into()),
-+            assign("video.pyrowave.transport.variant", "Tcp".into()),
++            assign("video.pyrowave.transport.variant", "Udp".into()),
 +            assign("video.pyrowave.wavelet.variant", "Cdf97".into()),
 +            assign("video.pyrowave.decode_path.variant", "Auto".into()),
 +        ]);
@@ -14816,7 +15362,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..3f181a7dfed8b63e7612a58fbf4acc97
  
  /// The profile whose every assignment the session (`session_settings` as JSON) currently holds,
 diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
-index 985a4d04e505ecaf29120bcc61b525476eb7caf2..63a0d3fec56d8481b530252418eebbec36a21340 100644
+index 985a4d04e505ecaf29120bcc61b525476eb7caf2..da399578385b9624af8ce4bbb085b22aabced03b 100644
 --- a/alvr/session/src/beta_tests.rs
 +++ b/alvr/session/src/beta_tests.rs
 @@ -31,7 +31,7 @@ fn video_shows_only_codec_experiment_controls() {
@@ -14919,9 +15465,8 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..63a0d3fec56d8481b530252418eebbec
 -    assert_eq!((fov.edge_ratio_x, fov.edge_ratio_y), (3.0, 4.0));
 -    assert_eq!((fov.center_shift_x, fov.center_shift_y), (0.0, 0.0));
 -    assert!(fov.follow_gaze);
--    assert_eq!(s.video.pyrowave.transport, PyroWaveTransport::Udp);
 +    assert!(!s.video.foveated_encoding.enabled());
-+    assert_eq!(s.video.pyrowave.transport, PyroWaveTransport::Tcp);
+     assert_eq!(s.video.pyrowave.transport, PyroWaveTransport::Udp);
      assert_eq!(s.video.pyrowave.wavelet, PyroWaveWavelet::Cdf97);
 -    assert_eq!(s.video.pyrowave.decode_path, PyroWaveDecodePath::Compute);
 +    assert_eq!(s.video.pyrowave.decode_path, PyroWaveDecodePath::Auto);
@@ -15092,12 +15637,9 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..63a0d3fec56d8481b530252418eebbec
  }
  
  fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
-@@ -261,21 +345,21 @@ fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
- fn effective_config_follows_settings_without_env() {
-     let e = pyrowave_effective(&default_settings(), &env(&[]));
+@@ -263,8 +347,8 @@ fn effective_config_follows_settings_without_env() {
      assert!(e.enabled);
--    assert!(e.udp);
-+    assert!(!e.udp);
+     assert!(e.udp);
      assert!(!e.wavelet_53);
 -    assert_eq!(e.decode_path, PyroWaveDecodePath::Compute);
 -    assert!(e.follow_gaze);
@@ -15106,19 +15648,6 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..63a0d3fec56d8481b530252418eebbec
      assert!(e.overrides.is_empty());
  }
  
- #[test]
- fn effective_config_follows_a_non_default_setting() {
-     let mut s = default_settings();
--    s.video.pyrowave.transport = PyroWaveTransport::Tcp;
-+    s.video.pyrowave.transport = PyroWaveTransport::Udp;
-     s.video.pyrowave.wavelet = PyroWaveWavelet::Cdf53;
-     s.video.pyrowave.decode_path = PyroWaveDecodePath::Fragment;
-     let e = pyrowave_effective(&s, &env(&[]));
--    assert!(!e.udp);
-+    assert!(e.udp);
-     assert!(e.wavelet_53);
-     assert_eq!(e.decode_path, PyroWaveDecodePath::Fragment);
- }
 @@ -284,6 +368,7 @@ fn effective_config_follows_a_non_default_setting() {
  fn research_env_overrides_win_and_are_reported() {
      let mut s = default_settings();
@@ -15143,7 +15672,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..63a0d3fec56d8481b530252418eebbec
          line,
 -        "PyroWave effective config: chroma=4:4:4 transport=UDP wavelet=CDF 9/7 \
 -         decode_path=compute follow_gaze=on overrides=none"
-+        "PyroWave effective config: chroma=4:2:0 transport=TCP wavelet=CDF 9/7 \
++        "PyroWave effective config: chroma=4:2:0 transport=UDP wavelet=CDF 9/7 \
 +         decode_path=auto follow_gaze=off overrides=none"
      );
  }
@@ -15559,7 +16088,7 @@ index d7d0dbbfcbfc7eaacf6f4ff5f0c47f882f1eee1a..e85a1e8a6f60414317ee82c6b1a251c5
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637b3a86967 100644
+index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..225100008b349d9029e411f948347d4db9449a4c 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -15631,7 +16160,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
  }
  
  #[repr(u8)]
-@@ -618,32 +618,140 @@ pub enum PyroWaveWavelet {
+@@ -618,32 +618,144 @@ pub enum PyroWaveWavelet {
  #[schema(gui = "button_group")]
  pub enum PyroWaveDecodePath {
      // The driver heuristic, which picks the fragment path on Qualcomm. Kept for research.
@@ -15694,7 +16223,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
 +
      #[schema(strings(
 -        help = "UDP sends each frame as independent datagrams and drops late ones; TCP retransmits. UDP is the measured operating point."
-+        help = "Wi-Fi only; USB always uses the wired connections. UDP sends each frame as datagrams and skips a frame that loses one. TCP retransmits, so above what the link carries it queues frames and lag builds up. On Wi-Fi 6E at 1500 Mbps, TCP queued to a 112 ms latency estimate and UDP stayed at 42 ms; at 1000-1250 Mbps UDP was as good or better. Experimental."
++        help = "Wi-Fi only; USB always uses the wired connections. UDP sends each frame as datagrams and skips a frame that loses one. TCP retransmits, so above what the link carries it queues frames and lag builds up. On Wi-Fi 6E at 1500 Mbps, TCP queued to a 112 ms latency estimate and UDP stayed at 42 ms; at 1000-1250 Mbps UDP was as good or better."
      ))]
      #[schema(flag = "steamvr-restart")]
      pub transport: PyroWaveTransport,
@@ -15748,6 +16277,10 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
 +    2
 +}
 +
++fn default_true() -> bool {
++    true
++}
++
 +pub fn pyrowave_light_foveation_enabled(codec: CodecType, requested: bool, supported: bool) -> bool {
 +    codec == CodecType::PyroWave && requested && supported
 +}
@@ -15776,7 +16309,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
  }
  
  #[repr(u8)]
-@@ -799,23 +907,20 @@ pub struct VideoConfig {
+@@ -799,23 +911,20 @@ pub struct VideoConfig {
      pub bitrate: BitrateConfig,
  
      #[schema(strings(
@@ -15805,7 +16338,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
      pub foveated_encoding: Switch<FoveatedEncodingConfig>,
  
      #[schema(flag = "steamvr-restart")]
-@@ -858,23 +963,25 @@ If you want to reduce the amount of pixelation on the edges, increase the center
+@@ -858,23 +967,25 @@ If you want to reduce the amount of pixelation on the edges, increase the center
      pub mediacodec_extra_options: Vec<(String, MediacodecProperty)>,
  
      #[schema(strings(
@@ -15836,7 +16369,34 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
      pub preferred_fps: f32,
  
      #[schema(strings(help = "You probably don't want to change this"))]
-@@ -1663,15 +1770,15 @@ pub struct Settings {
+@@ -1395,6 +1506,14 @@ Tilted: the world gets tilted when long pressing the oculus button. This is usef
+     ))]
+     #[schema(gui(slider(min = 0, max = 200, step = 5)), suffix = "ms")]
+     pub max_prediction_ms: u64,
++
++    #[schema(strings(
++        display_name = "Predict late head poses on the PC",
++        help = "When no head tracking reaches the PC within a frame (Wi-Fi under load delivers it late and bunched), the PC extrapolates the newest pose by its velocity and renders the frame from that, instead of rendering the previous pose again. The headset repeats the same extrapolation to reproject the frame. Off renders the previous pose again."
++    ))]
++    #[serde(default = "default_true")]
++    #[schema(flag = "steamvr-restart")]
++    pub extrapolate_late_head_poses: bool,
+ }
+ 
+ #[derive(SettingsSchema, Serialize, Deserialize, Clone, Copy)]
+@@ -1425,8 +1544,9 @@ pub enum SocketBufferSize {
+ #[derive(SettingsSchema, Serialize, Deserialize, Clone)]
+ pub struct ConnectionConfig {
+     #[schema(strings(
+-        help = r#"UDP: Faster, but less stable than TCP. Try this if your network is well optimized and free of interference.
+-TCP: Slower than UDP, but more stable. Pick this if you experience video or audio stutters with UDP."#
++        help = r#"The socket for tracking, statistics and audio, Wi-Fi only: USB always uses TCP.
++UDP: a late packet doesn't hold back the ones behind it. On Wi-Fi 6E at 120 Hz and 1250 Mbps the server reused the previous pose for 2.9% of frames with UDP and 4.2% with TCP.
++TCP: retransmits lost packets in order. Pick this if audio stutters with UDP."#
+     ))]
+     pub stream_protocol: SocketProtocol,
+ 
+@@ -1663,15 +1783,15 @@ pub struct Settings {
  }
  
  pub fn session_settings_default() -> SettingsDefault {
@@ -15855,7 +16415,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
              },
          },
      };
-@@ -1742,7 +1849,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1742,7 +1862,7 @@ pub fn session_settings_default() -> SettingsDefault {
              adapter_index: 0,
              transcoding_view_resolution: view_resolution.clone(),
              emulated_headset_view_resolution: view_resolution,
@@ -15864,7 +16424,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
              max_buffering_frames: 1.5,
              buffering_history_weight: 0.90,
              enforce_server_frame_pacing: true,
-@@ -1784,7 +1891,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1784,7 +1904,7 @@ pub fn session_settings_default() -> SettingsDefault {
                      variant: BitrateModeDefaultVariant::ConstantMbps,
                  },
                  adapt_to_framerate: SwitchDefault {
@@ -15873,7 +16433,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
                      content: BitrateAdaptiveFramerateConfigDefault {
                          framerate_reset_threshold_multiplier: 2.0,
                      },
-@@ -1796,15 +1903,27 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1796,6 +1916,11 @@ pub fn session_settings_default() -> SettingsDefault {
                  variant: CodecTypeDefaultVariant::PyroWave,
              },
              pyrowave: PyroWaveConfigDefault {
@@ -15883,19 +16443,18 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
 +                },
 +                chroma_444: false,
                  transport: PyroWaveTransportDefault {
--                    variant: PyroWaveTransportDefaultVariant::Udp,
-+                    variant: PyroWaveTransportDefaultVariant::Tcp,
+                     variant: PyroWaveTransportDefaultVariant::Udp,
                  },
-                 wavelet: PyroWaveWaveletDefault {
+@@ -1803,8 +1928,15 @@ pub fn session_settings_default() -> SettingsDefault {
                      variant: PyroWaveWaveletDefaultVariant::Cdf97,
                  },
                  decode_path: PyroWaveDecodePathDefault {
 -                    variant: PyroWaveDecodePathDefaultVariant::Compute,
 +                    variant: PyroWaveDecodePathDefaultVariant::Auto,
-+                },
+                 },
 +                render_downsample_filter: RenderDownsampleFilterDefault {
 +                    variant: RenderDownsampleFilterDefaultVariant::Bilinear,
-                 },
++                },
 +                quest3_240hz_display_scaling: false,
 +                quest3_max_gpu_clock: false,
 +                wired_video_connections: 2,
@@ -15903,7 +16462,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
              },
              encoder_config: EncoderConfigDefault {
                  gui_collapsed: true,
-@@ -1901,7 +2020,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1901,7 +2033,7 @@ pub fn session_settings_default() -> SettingsDefault {
                  }
              },
              foveated_encoding: SwitchDefault {
@@ -15912,7 +16471,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
                  content: FoveatedEncodingConfigDefault {
                      force_enable: false,
                      center_size_x: 0.20,
-@@ -1910,7 +2029,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1910,7 +2042,7 @@ pub fn session_settings_default() -> SettingsDefault {
                      center_shift_y: 0.0,
                      edge_ratio_x: 3.,
                      edge_ratio_y: 4.,
@@ -15921,7 +16480,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
                  },
              },
              clientside_foveation: SwitchDefault {
-@@ -2066,7 +2185,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2066,7 +2198,7 @@ pub fn session_settings_default() -> SettingsDefault {
                                  content: vec![],
                              },
                          },
@@ -15930,7 +16489,21 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
                      },
                      extra_openvr_props: default_custom_openvr_props,
                      button_mappings: OptionalDefault {
-@@ -2179,16 +2298,12 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2168,27 +2300,24 @@ pub fn session_settings_default() -> SettingsDefault {
+                 variant: RotationRecenteringModeDefaultVariant::Yaw,
+             },
+             max_prediction_ms: 100,
++            extrapolate_late_head_poses: true,
+         },
+         connection: ConnectionConfigDefault {
+-            // ALVR's own stream socket. PyroWave video uses its own UDP datagrams regardless.
++            // ALVR's own stream socket (tracking, statistics, audio), Wi-Fi only: wired is always TCP.
+             stream_protocol: SocketProtocolDefault {
+-                variant: SocketProtocolDefaultVariant::Tcp,
++                variant: SocketProtocolDefaultVariant::Udp,
+             },
+             client_discovery: SwitchDefault {
+                 enabled: true,
                  content: DiscoveryConfigDefault {
                      // Beta: no pairing step. The pre-release protocol ID already keeps stock
                      // ALVR clients out; turn this off to approve each headset by hand.
@@ -15950,7 +16523,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
              },
              wired_client_autolaunch: true,
              web_server_port: 8082,
-@@ -2211,7 +2326,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2211,7 +2340,7 @@ pub fn session_settings_default() -> SettingsDefault {
              server_recv_buffer_bytes: socket_buffer.clone(),
              client_send_buffer_bytes: socket_buffer.clone(),
              client_recv_buffer_bytes: socket_buffer,
@@ -15959,7 +16532,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
              avoid_video_glitching: true,
              minimum_idr_interval_ms: 100,
              enable_on_connect_script: false,
-@@ -2262,7 +2377,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2262,7 +2391,7 @@ pub fn session_settings_default() -> SettingsDefault {
              },
              steamvr_launcher: SteamvrLauncherDefault {
                  driver_launch_action: DriverLaunchActionDefault {
@@ -15968,7 +16541,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637
                  },
                  open_close_steamvr_with_dashboard: false,
              },
-@@ -2287,3 +2402,50 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2287,3 +2416,50 @@ pub fn session_settings_default() -> SettingsDefault {
          },
      }
  }
