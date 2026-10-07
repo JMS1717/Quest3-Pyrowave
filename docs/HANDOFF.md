@@ -91,12 +91,21 @@ bitrate needs the game's own rate. See
 - The Wi-Fi setup replaces the runtime's client entry with `q3pw-wifi.client`. Restore the wired
   entry before a USB cell, or the "wired" cell streams over Wi-Fi.
 
+**Supersampled stream (`.69`):**
+
+- Stream resolution gains 110/120/125 %.
+- 125 % (2592x2784) holds 120 Hz wired: 115.5 fresh FPS with a 7.7 ms decode fence.
+- At 1500 Mbps, offline, it keeps 1.3 dB more detail than the panel-size stream.
+- See [RENDER-ENCODE-RESOLUTION.md](RENDER-ENCODE-RESOLUTION.md#supersampled-stream-at-120-hz-68-october-7).
+
 **Next:**
 
-1. Owner test of `.68` over Wi-Fi with head movement.
-2. Supersampled stream at 120 Hz (PLAN 2.3).
-3. Four wired connections at 2000 Mbps (PLAN 1.4).
-4. The game's own frame rate for the budget (PLAN 2.1).
+1. Owner tests:
+   - `.68`/`.69` over Wi-Fi with head movement.
+   - 120 Hz, 1500 Mbps, stream 125 % with game render 150 %, against stream 100 %.
+2. Four wired connections at 2000 Mbps (PLAN 1.4).
+3. The game's own frame rate for the budget (PLAN 2.1).
+4. An entropy-coding estimate on game frames (PLAN 2.4), for sharpness at 207 Hz.
 
 ## October 7, night: `.65`, transport measured and Wi-Fi UDP video
 

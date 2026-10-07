@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b53063512b0b6af 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557a9f6160c 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b01e245781b4fe8667cd12b9b530635
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..72dd6fc620ef8c7cd8b6636521bed9b357bb97f1 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..1c45b40f5002d49293a0fd697e91e5e2a910e396 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..72dd6fc620ef8c7cd8b6636521bed9b3
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.68"
++version = "20.13.0-quest3.pyro.69"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -8780,7 +8780,7 @@ index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..f76ada6ae430f45c2633def8cab0287e
 +    changes
 +}
 diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
-index efb0f8e89507b93f737f085742bd9daec993d444..7f3178927d4f5332a3fbf9551dd7b77632956b0c 100644
+index efb0f8e89507b93f737f085742bd9daec993d444..38b3d7815258908f6404ae737127ae890880ada7 100644
 --- a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 @@ -323,7 +323,7 @@ pub fn streaming_profile_schema() -> PresetSchemaNode {
@@ -8792,7 +8792,7 @@ index efb0f8e89507b93f737f085742bd9daec993d444..7f3178927d4f5332a3fbf9551dd7b776
  afterwards leaves no profile selected; pick the profile again to return to it."
                  .into(),
          )]
-@@ -351,73 +351,97 @@ afterwards leaves no profile selected; pick the profile again to return to it."
+@@ -351,73 +351,100 @@ afterwards leaves no profile selected; pick the profile again to return to it."
      })
  }
  
@@ -8863,7 +8863,10 @@ index efb0f8e89507b93f737f085742bd9daec993d444..7f3178927d4f5332a3fbf9551dd7b776
 +    panel_size_schema(
 +        "stream_resolution",
 +        "Per-eye size PyroWave encodes and the headset decodes, as a share of the Quest 3 2064x2208 panel. \
-+This sets headset decode cost; the bitrate sets bandwidth. It does not change the game render resolution.",
++This sets headset decode cost; the bitrate sets bandwidth. It does not change the game render resolution. \
++Above 100 % streams more detail than the panel's pixel count, which the lens magnification at the centre \
++can show: at the same bitrate 125 % keeps more detail than 100 %. It needs 120 Hz or less (the headset \
++decodes 125 % in about 7.7 ms) and a game render resolution at least as large, such as 150 %.",
 +        "transcoding_view_resolution",
 +        &alvr_session::beta::STREAM_SCALES,
 +    )
@@ -8924,7 +8927,7 @@ index efb0f8e89507b93f737f085742bd9daec993d444..7f3178927d4f5332a3fbf9551dd7b776
                  content: None,
              })
              .collect(),
-@@ -426,7 +450,6 @@ the tuned H.264 profile runs at 72 Hz because the headset's H.264 decode is too
+@@ -426,7 +453,6 @@ the tuned H.264 profile runs at 72 Hz because the headset's H.264 decode is too
      })
  }
  
@@ -8932,7 +8935,7 @@ index efb0f8e89507b93f737f085742bd9daec993d444..7f3178927d4f5332a3fbf9551dd7b776
  #[cfg(test)]
  mod tests {
      use super::*;
-@@ -447,25 +470,70 @@ mod tests {
+@@ -447,25 +473,70 @@ mod tests {
              .iter()
              .map(|o| o.display_name.as_str())
              .collect::<Vec<_>>();
@@ -9009,7 +9012,7 @@ index efb0f8e89507b93f737f085742bd9daec993d444..7f3178927d4f5332a3fbf9551dd7b776
          let names = schema
              .options
              .iter()
-@@ -474,28 +542,50 @@ mod tests {
+@@ -474,28 +545,53 @@ mod tests {
          assert_eq!(
              names,
              [
@@ -9025,6 +9028,9 @@ index efb0f8e89507b93f737f085742bd9daec993d444..7f3178927d4f5332a3fbf9551dd7b776
 +                "80 % (1651x1766 per eye)",
 +                "90 % (1858x1987 per eye)",
 +                "100 % (2064x2208 per eye, panel)",
++                "110 % (2270x2429 per eye)",
++                "120 % (2477x2650 per eye)",
++                "125 % (2580x2760 per eye)",
              ]
          );
 -        assert_eq!(schema.default_option_display_name, "60 % (2131x2304 per eye)");
@@ -9080,7 +9086,7 @@ index efb0f8e89507b93f737f085742bd9daec993d444..7f3178927d4f5332a3fbf9551dd7b776
      }
  
      #[test]
-@@ -506,7 +596,19 @@ mod tests {
+@@ -506,7 +602,19 @@ mod tests {
              .iter()
              .map(|o| o.display_name.as_str())
              .collect::<Vec<_>>();
@@ -14863,7 +14869,7 @@ index 861f726c74e38cec9058513ab412ceb08ae2e8bf..451aee3a6ce8edc782d4b4404201443d
          // StatsManager isn't up because the headset hasn't connected,
          // safety fallback to prevent deadlocking.
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
-index 84100dc7c01a272de5b0b22b22907127bb5e1e18..9e535fd7204588d660e1a268973aebdeccafc297 100644
+index 84100dc7c01a272de5b0b22b22907127bb5e1e18..40abde43f43530c676feec55cc19daf0154df97c 100644
 --- a/alvr/session/src/beta.rs
 +++ b/alvr/session/src/beta.rs
 @@ -3,25 +3,125 @@
@@ -14999,7 +15005,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..9e535fd7204588d660e1a268973aebde
  pub struct StreamingProfile {
      pub name: &'static str,
      pub subtitle: &'static str,
-@@ -33,22 +133,36 @@ fn assign(path: &str, value: json::Value) -> (String, json::Value) {
+@@ -33,22 +133,38 @@ fn assign(path: &str, value: json::Value) -> (String, json::Value) {
      (path.to_owned(), value)
  }
  
@@ -15030,9 +15036,11 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..9e535fd7204588d660e1a268973aebde
  }
  
 -/// The settings both profiles pin: the measured foveation, buffering, pacing, encoder and
-+/// Stream (encode/decode) resolution choices, as panel percentages. Above the panel only adds
-+/// headset decode work, so the stream tops out at the panel.
-+pub const STREAM_SCALES: [u32; 6] = [50, 60, 70, 80, 90, 100];
++/// Stream (encode/decode) resolution choices, as panel percentages. Above 100 % is a supersampled
++/// stream: the lens correction magnifies the panel centre, so it shows more than the panel's
++/// pixel count. 125 % (2592x2784 after alignment) still decodes within a 120 Hz frame with
++/// CDF 5/3 (October 7: 115.5 fresh FPS, 7.7 ms decode fence); 150 % does not (86 FPS).
++pub const STREAM_SCALES: [u32; 9] = [50, 60, 70, 80, 90, 100, 110, 120, 125];
 +
 +/// Game render resolution choices, as panel percentages per axis. Like Virtual Desktop's
 +/// separate SteamVR resolution: the PC renders this size and downsamples it to the stream, so
@@ -15049,7 +15057,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..9e535fd7204588d660e1a268973aebde
  /// socket values, so switching profiles never leaves one of them at a tester's experiment.
  fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::Value)> {
      let mut list = vec![
-@@ -56,48 +170,207 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
+@@ -56,48 +172,207 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
          assign("video.bitrate.mode.variant", "ConstantMbps".into()),
          assign("video.bitrate.mode.ConstantMbps", mbps.into()),
          assign("video.preferred_fps", json::json!(fps)),
@@ -15287,7 +15295,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..9e535fd7204588d660e1a268973aebde
  }
  
  #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-@@ -186,8 +459,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
+@@ -186,8 +461,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
  #[derive(Clone, Debug, PartialEq)]
  pub struct PyroWaveEffective {
      pub enabled: bool,
@@ -15298,7 +15306,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..9e535fd7204588d660e1a268973aebde
      pub decode_path: PyroWaveDecodePath,
      pub follow_gaze: bool,
      pub overrides: Vec<&'static str>,
-@@ -211,30 +486,24 @@ pub fn pyrowave_effective(
+@@ -211,30 +488,24 @@ pub fn pyrowave_effective(
          value
      };
  
@@ -15337,7 +15345,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..9e535fd7204588d660e1a268973aebde
          decode_path: video.pyrowave.decode_path,
          follow_gaze,
          overrides,
-@@ -255,10 +524,11 @@ impl fmt::Display for PyroWaveEffective {
+@@ -255,10 +526,11 @@ impl fmt::Display for PyroWaveEffective {
          };
          write!(
              f,
@@ -15351,7 +15359,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..9e535fd7204588d660e1a268973aebde
              if self.follow_gaze { "on" } else { "off" },
              if self.overrides.is_empty() {
                  "none".to_owned()
-@@ -279,7 +549,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
+@@ -279,7 +551,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
  }
  
  fn at<'a>(root: &'a json::Value, path: &str) -> Option<&'a json::Value> {

@@ -292,3 +292,44 @@ This adds a PC GPU pass after downsampling, without increasing Quest decode
 resolution. It can accentuate compression or halos and is not recovered detail.
 Keep this setting identical across resolution comparisons; it remains disabled
 in the repository's baseline.
+
+## Supersampled stream at 120 Hz (`.68`, October 7)
+
+Until `.69` the stream stopped at the panel's 2064x2208. On `.55`, a 2560x2720 stream reached only
+89 fresh FPS at 120 Hz ([HIGH-REFRESH.md](HIGH-REFRESH.md#results)). The CDF 5/3 present path
+now decodes about twice as fast, so the larger stream was re-measured.
+
+**Frame rate.** The settings were:
+
+- `.68`, wired, 120 Hz, CDF 5/3, 1500 Mbps.
+- A 3072x3216 render.
+- The headset GPU at its maximum clock.
+
+| Stream per eye | Fresh FPS | GPU decode p50 | Decode fence p50 |
+| --- | --- | --- | --- |
+| 2080x2208 | 117.4, 114.4 | 3.8, 4.2 ms | 5.1, 5.4 ms |
+| 2560x2720 | 116.6, 117.9 | 6.5, 5.5 ms | 7.6, 7.5 ms |
+| 2592x2784 (125 %) | 115.5 | 6.6 ms | 7.7 ms |
+| 3072x3216 | 86.4 | 7.3 ms | 10.9 ms |
+
+The 2080 and 2560 rows were run ABBA. Up to 125 % the stream holds 120 Hz; 150 % doesn't.
+
+**Detail.** The offline study (`tools/downsample/codec_study.py --hz 120 --wavelet 53 --filters
+catmull`) renders at 3072x3216, filters to the stream size and codes at the live byte cap. It
+then scores against the render, using PSNR-HVS-M luma at the render's pixels per degree:
+
+| Stream per eye | Uncoded 4:2:0 | 1000 Mbps | 1500 Mbps | 2000 Mbps |
+| --- | --- | --- | --- | --- |
+| 2080x2208 | 16.28 | 15.36 | 15.92 | 16.12 dB |
+| 2560x2720 | 18.37 | 16.54 | 17.23 | 17.73 dB |
+
+- At the same bitrate the larger stream keeps more detail: about 1.2–1.6 dB.
+- 2560 at 1000 Mbps beats 2080 at 2000 Mbps.
+- Chroma PSNR is within 0.7 dB of 2080, either way.
+- The study scores against the render's pixel density (about 32 px/deg). The panel centre
+  shows less after the lens, so the visible gain is smaller than the table suggests. An
+  in-headset A/B is the test that counts.
+
+**`.69`** adds 110 %, 120 % and 125 % to **Stream resolution**. They are meant for 120 Hz or
+less, with the game render resolution at least as large (150 % recommended). At 207 Hz the
+decoder already sets the frame rate at 100 %, so a supersampled stream doesn't fit there.

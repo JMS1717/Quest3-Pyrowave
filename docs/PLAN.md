@@ -176,6 +176,13 @@ The largest loss decides what to build next.
   This is the most likely reason the image doesn't look above native.
 - Check decode time against the 8.3 ms frame and fresh FPS, then an in-headset A/B.
 - This is mostly settings, so it comes early.
+- **Done (`.69`):** Stream resolution gains 110/120/125 %. 125 % (2592x2784) holds 115–118 fresh
+  FPS at 120 Hz, with a 7.7 ms decode fence; 150 % reaches only 86. At 1500 Mbps, 2560x2720 keeps
+  1.3 dB more PSNR-HVS-M than 2080x2208 offline
+  ([RENDER-ENCODE-RESOLUTION.md](RENDER-ENCODE-RESOLUTION.md#supersampled-stream-at-120-hz-68-october-7)).
+  The owner's in-headset A/B is still needed.
+- At 207 Hz the decoder is already the limit at 100 %, so sharpness there must come from the
+  codec (2.4 entropy coding, 2.6 rate control) or a faster decode.
 
 **2.4 Entropy coding (the big rewrite candidate).**
 
