@@ -189,3 +189,22 @@ The `.35` surface probe also looked only in `ExtensionSet.other`, which excludes
 extensions known to the Rust bindings. Its all-false log cannot rule out Android
 surface swapchains. `.37` reads the three named fields from the pinned openxr
 bindings; this is a diagnostic correction, with existing rendering unchanged.
+
+## 207 Hz with mode 5 (October 7)
+
+Owner settings (3072x3216 rendered, 2080x2208 per eye streamed, 700 Mbps, Haar mode 5, 60 deg/s
+pan, headset awake). Fresh FPS sits at 193-197 with 10-14 lost/s. `debug.q3pw.fresh_probe=1` over
+one 12 s block, per ~1 s window:
+
+| taken | superseded | empty selections | late frames taken after a wait |
+| ---: | ---: | ---: | ---: |
+| 194-202 | 5-11 | 0-9 | 0-9 |
+
+Taken plus superseded is about 207, so every frame arrives and is decoded; the loss is real and
+on the client: about 8 frames/s finish decoding in the same display period as their successor,
+and a few periods find nothing ready. Most frames are published 2-3 ms before selection. Arrival
+bunching comes from transit and decode jitter (network p50 2.2 / p90 3.0 ms, decode p50 2.65 /
+p90 3.5 ms), not from the server's send rate: making that steady with `ALVR_PACING_SPIN_US`
+changed nothing ([HIGH-REFRESH.md](HIGH-REFRESH.md)). Neither did removing the render-thread
+wait (release fence) or preempting decode (LOW priority). Displaying every frame would need a
+one-frame queue, about 4.8 ms more latency against the 30 ms goal, so it is not pursued.
