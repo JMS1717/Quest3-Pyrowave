@@ -103,7 +103,7 @@ not worn, so it went to standby once the server handed proximity back after the 
 state the server received no client statistics at all, although the same restart with the
 headset kept awake by hand reported normally. The server now logs `[Q3PW_STATS]` when client
 statistics stop arriving or stop matching its frames, so the next occurrence names itself.
-Whether a worn headset ever shows the gap is not yet checked.
+Explained on October 7 (headset awake but not worn): after the restart the head pose is invalid, so the client sends no views, tracking or statistics while video keeps playing; the harness now renews its proximity hold. With the clock pinned, 5/3 runs within about 2 FPS of Haar; see [DECODER-V2.md](DECODER-V2.md#at-the-owners-gpu-clock-53-costs-about-2-fps-october-7).
 
 ## Mode 6: two chroma pixels per texel (opt-in, October 7)
 

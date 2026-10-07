@@ -82,6 +82,8 @@ The server's pose-match term (game time) is unreliable on a stationary headset a
 | GPU level 7 | 240 Hz, 1536x1664, ABBA | 198.9 fresh, loop 205 | 203.8 fresh, loop 218 | |
 | GPU level 7 | 207 Hz, 1664x1760, ABBA | 172.1 fresh, loop 176 | 181.5 fresh, loop 185 | |
 | GPU level 7 | 120 Hz, 2560x2720, ABBA | 89.5 fresh, fence 10.6 ms | 93.2 fresh, fence 10.2 ms | |
+| GPU level 7 (server setting `quest3_max_gpu_clock`) | 207 Hz, 2080x2208 from 3072x3216, 700 Mbit/s, CDF 5/3 V2 mode 5 | 177.1-177.6 fresh, fence 5.13 ms | 189.8-193.2 fresh (mean 192.0), fence 4.83 ms | The clock that makes 5/3 viable: within about 2 FPS of Haar ([DECODER-V2.md](DECODER-V2.md#at-the-owners-gpu-clock-53-costs-about-2-fps-october-7)) |
+| GPU level 7 | 207 Hz, same, Haar mode 5 | 195.5 / 196.5 fresh | 197.7 / 189.2 fresh | No gain beyond the spread: Haar was not GPU-bound |
 | GPU level 7 | 120 Hz, native, ABBA | 119.1 | 118.8 | No gain where 120 is already reached |
 | Eye-image invalidation (`debug.q3pw.eye_invalidate=1`) | 240 Hz, 1440x1536, GPU level 7, ACDDCA | 228.0 fresh, loop 231, 261 stale | 229.5 fresh, loop 235, 136 stale | On by default from `.57` (every eye pixel is redrawn); 120 Hz was 119.65 vs 119.09 in the `.55` acceptance. `debug.q3pw.eye_invalidate=0` disables it |
 | Shorter frame wait (`debug.q3pw.frame_wait_us=1000`) | same cell | 228.0 fresh, loop 231 | 225.1 fresh, loop 230 | Worse; keep the half-period default |

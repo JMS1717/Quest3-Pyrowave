@@ -216,6 +216,47 @@ spheres steps in blocks and 5/3's does not: the pixelation of
 Haar stays the default wavelet. 5/3 trades about 6 % of fresh frames for smooth gradients; the
 choice is the user's (`Wavelet` in the PyroWave settings).
 
+## At the owner's GPU clock, 5/3 costs about 2 FPS (October 7)
+
+Every live cell above ran at 640 MHz. The harness turns
+`video.pyrowave.quest3_max_gpu_clock` off for its cells, and without it the client streams at GPU
+level 4, which HorizonOS caps at 640 MHz (VrApi `CPU4/GPU=4/4,.../640MHz`). The owner's session has
+it on: the server pins `debug.oculus.gpuLevel=7` and the client streams at 690 MHz (`GPU=4/7`,
+`690MHz` in every VrApi line of the cells below). Setting the property from the harness does not
+work: the server's display helper puts back the value it saved within two seconds.
+
+Settings: the owner's (3072x3216 render, 2080x2208 per eye encoded, 207 Hz, 700 Mbit/s, 4:2:0, no
+foveation, maximum GPU clock on), `quality_scene` panning at 60 deg/s, 12 s windows, one streamer
+session per cell, cells in ABBA order:
+
+| cell | GPU clock | fresh FPS | lost/s | fence p50 | GPU decode p50 | GPU busy |
+|---|---|---|---|---|---|---|
+| Haar, haar32 mode 5 | 640 MHz | 195.5 / 196.5 | 11.9 / 11.3 | 4.62 / 4.60 ms | 2.64 / 2.66 ms | 98 % |
+| CDF 5/3, V2 mode 5 | 640 MHz | 177.6 / 177.6 / 177.1 / 177.1 / 177.2 | 29.6-30.4 | 5.13-5.15 | 3.14-3.19 | 99 % |
+| Haar, haar32 mode 5 | **690 MHz** | 197.7 / 189.2 (mean **193.5**) | 9.8 / 18.7 | 3.65 / 3.80 | 2.47 / 2.47 | 90-91 % |
+| **CDF 5/3, V2 mode 5** | **690 MHz** | 193.1 / 191.8 / 189.8 / 192.0 / 193.2 (mean **192.0**) | 14.1-17.8 | 4.81-4.84 | 2.93-2.96 | 98 % |
+| CDF 5/3, V2 mode 6 | 690 MHz | 194.0 / 192.4 (mean 193.2) | 13.9 / 15.4 | 4.84 / 4.86 | 2.71 / 2.72 | 98 % |
+
+- The 7.8 % faster clock lifts 5/3 by 15 fresh FPS (+8 %) and Haar by none within this noise.
+  5/3 sat at 99 % GPU busy, so every saved microsecond was a frame; Haar had headroom.
+- At 690 MHz 5/3 is within the cell-to-cell spread of Haar (189-198), about 1.5 FPS on the means.
+- Mode 6 is still neutral (+0.6 FPS against the mode 5 cells of its own ABBA), as at 640 MHz.
+- In-headset screenshots of the 690 MHz cells decode correctly; Haar's soft spheres step in
+  blocks and 5/3's are smooth, as before.
+
+With the maximum GPU clock on, CDF 5/3 gives the smooth gradients and +2 dB PSNR-HVS-M of
+[Why: Haar is what looks pixelated](#why-haar-is-what-looks-pixelated) for about 1 % of fresh
+frames. **Recommended: `Wavelet` = CDF 5/3 together with Quest 3: maximum GPU clock over USB.**
+Without the GPU clock, 5/3 still costs about 10 % (177 against 196). Haar stays the shipped
+default because the GPU clock needs USB and a developer property.
+
+`[Q3PW_STATS] 0 client statistics` after the server's GPU-level restart, which kept the harness
+from measuring this before, was the test headset: the display helper hands proximity back after
+restarting the client, an unworn headset then reads as unmounted, its head pose is invalid, and
+the client sends no view configuration, tracking or statistics (`stream_input_loop` skips the
+whole iteration). Video keeps playing, so it looks like a server fault. The harness now renews its
+proximity hold while it waits for the stream. A worn headset is not affected.
+
 ## Tried and rejected
 
 Each candidate passed the exactness gate unless noted. All were timed interleaved against mode 3.
@@ -252,6 +293,10 @@ python -m tools.quest3.quality_score <clip.y4m> --out <dir> --mbps 700 1000 --wa
 
 ## Next
 
-1. Retune the encoder's low-frequency boost for 5/3 (PC study: LF boost 3/3 scored best).
-2. The remaining 0.5 ms of 5/3 decode against Haar is in the coarse levels (see Where the time goes).
-3. CDF 9/7 in the same structure, if the remaining +0.4 dB is worth its wider support.
+1. CDF 9/7 in the same structure, if the remaining +0.4 dB is worth its wider support.
+
+Done: the encoder's low-frequency boost (levels 3-4, x6) stays for 5/3. Lowering it to x3 or x4
+gains only 0.09-0.19 dB PSNR-HVS-M and raises the low-frequency luma error in smooth areas by 12-40 %
+(PC study, 2 crops at 700 and 1000 Mbit/s); x2 and x1 add visible blotches beside text on dark
+backgrounds. The coarse levels' remaining decode time is not worth chasing: fusing them was
+rejected above, and at 690 MHz 5/3 is within about 2 FPS of Haar.
