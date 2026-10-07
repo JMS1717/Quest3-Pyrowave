@@ -372,6 +372,56 @@ index 219b2e937a175349c046991b106ccbc1f264c7ca..b3bef50bd7c3bddb855b8a9159a15915
  
  	// A more refined version of decode_is_ready() that allows a bit more control.
  	// The default is num_pristine_bands = 2 (the next-to-final LL band) and minimum_packet_ratio = 0.9.
+diff --git a/pyrowave_encoder.cpp b/pyrowave_encoder.cpp
+index c93114d8015b90506dd16e41b9610d7d5066592c..9f7716f832f5cc798b7f3e109501ec18a6e5d27f 100644
+--- a/pyrowave_encoder.cpp
++++ b/pyrowave_encoder.cpp
+@@ -109,17 +109,21 @@ struct Encoder::Impl final : public WaveletBuffers
+ 	uint32_t sequence_count = 0;
+ };
+ 
++static constexpr float CHROMA_CSF_420 = 1.6f;
++
+ float Encoder::Impl::get_quant_rdo_distortion_scale(int level, int component, int band) const
+ {
+ 	// From my Linelet master thesis. Copy paste 11 years later, ah yes :D
+ 	float horiz_midpoint = (band & 1) ? 0.75f : 0.25f;
+ 	float vert_midpoint = (band & 2) ? 0.75f : 0.25f;
+ 
+-	// Normal PC monitors.
+-	constexpr float dpi = 96.0f;
+-	// Compromise between couch gaming and desktop.
+-	constexpr float viewing_distance = 1.0f;
+-	constexpr float cpd_nyquist = 0.34f * viewing_distance * dpi;
++	// Quest3-Pyrowave: weight for the headset, not a 96 dpi monitor at 1 m (32.6 cycles/degree at
++	// level 0). A Quest 3 eye spans about 99 degrees vertically, so a 2208-row stream has 22 pixels
++	// per degree and its finest band sits near 11 cycles/degree, where the CSF is still rising: the
++	// monitor model discounted fine luma detail up to 10x in power and starved it of bits
++	// (docs/ENCODER-CSF.md). PYROWAVE_CPD_NYQUIST overrides the level-0 Nyquist frequency.
++	static const float cpd_override = [] { const char *v = getenv("PYROWAVE_CPD_NYQUIST"); return v ? float(atof(v)) : 0.0f; }();
++	const float cpd_nyquist = cpd_override > 0.0f ? cpd_override : 0.5f * float(height) / 99.0f;
+ 
+ 	float cpd = std::sqrt(horiz_midpoint * horiz_midpoint + vert_midpoint * vert_midpoint) *
+ 	                  cpd_nyquist * std::exp2(-float(level));
+@@ -129,12 +133,17 @@ float Encoder::Impl::get_quant_rdo_distortion_scale(int level, int component, in
+ 
+ 	float csf = 2.6f * (0.0192f + 0.114f * cpd) * std::exp(-std::pow(0.114f * cpd, 1.1f));
+ 
++	// Upstream used 0.6 against the monitor model. Against the flatter headset weighting, 0.6
++	// lost about 1 dB of Cb/Cr PSNR (colour bleed); CHROMA_CSF_420 keeps chroma at least as
++	// good as upstream while luma gains. PYROWAVE_CHROMA_CSF overrides it.
++	static const float chroma_csf_420 = [] { const char *v = getenv("PYROWAVE_CHROMA_CSF"); return v ? float(atof(v)) : CHROMA_CSF_420; }();
++
+ 	// Heavily discount chroma quality.
+ 	if (component != 0 && level != DecompositionLevels - 1)
+ 	{
+ 		// Consider chroma a little more important if we're not subsampling.
+ 		if (chroma == ChromaSubsampling::Chroma420)
+-			csf *= 0.6f;
++			csf *= chroma_csf_420;
+ 	}
+ 
+ 	// Due to filtering, distortion in lower bands will result in more noise power.
 diff --git a/shaders/idwt_cdf53v2.comp b/shaders/idwt_cdf53v2.comp
 new file mode 100644
 index 0000000000000000000000000000000000000000..aae317e06c2ffd258bea3d2cf5c022b7bbe6853b
