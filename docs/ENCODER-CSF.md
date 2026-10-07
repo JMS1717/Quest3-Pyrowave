@@ -1,8 +1,8 @@
 # Encoder rate allocation for the headset
 
-Status: default on `claude/decoder-v2` from 2026-10-07 (PyroWave patch: `pyrowave_encoder.cpp`
-`get_quant_rdo_distortion_scale` and `shaders/wavelet_quant.comp`). Only the encoder's choices
-change: the bitstream, the decoder, the byte budget and the encoder's work per frame are the same.
+Status: default on `claude/decoder-v2` from 2026-10-07 and checked in the headset (PyroWave
+patch: `pyrowave_encoder.cpp` `get_quant_rdo_distortion_scale` and `shaders/wavelet_quant.comp`).
+Only the encoder's choices change: the bitstream, the decoder, the byte budget and the encoder's work per frame are the same.
 
 ## Summary
 
@@ -106,6 +106,18 @@ them, where the encoder input has low local curvature (flats and gradients).
 
 ## Live
 
-Change 1 alone (c892e11), 207 Hz, 1000 Mbps, 12 s blocks, 60 deg/s pan: 186.3/186.4 fresh FPS
-against upstream's 191.1/188.1 (ABBA, within the run-to-run noise of about 5 FPS); static 193.0
-against 190.3. Validation of changes 2 and 3 in the headset is pending.
+Quest 3, 207 Hz, 2080x2208 per eye from a 3072x3216 render, 1000 Mbps Haar, 12 s blocks with
+the headset awake; the same client throughout, only the streamer changes.
+
+| streamer | 60 deg/s pan, fresh FPS (A/A ABBA) | static, fresh FPS |
+|---|---|---|
+| upstream rate allocation | 191.1 / 188.1 | 190.3 |
+| headset CSF only (c892e11) | 186.3 / 186.4 | 193.0 |
+| default (0581e97) | 189.2 / 185.8 | 195.0 |
+
+The differences are within the run-to-run noise of about 5 FPS: the change costs no speed.
+Static in-headset screenshots of the same view show the gain. With the headset CSF alone, the
+scene's soft blobs and colour ramps broke into visible 16-pixel blocks and wide bands. With the
+default, they are smoother than upstream's (upstream still shows faint vertical bands in the
+red-to-blue ramp), and the small text on the ramp's border is at least as sharp as with the
+headset CSF alone.
