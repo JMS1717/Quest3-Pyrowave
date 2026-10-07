@@ -39,7 +39,7 @@ Findings, all live ABBA at the owner's settings with a 60 deg/s pan and 12 s win
   Quality rises about 1.8 dB PSNR-HVS-M from 700 to 1000. At 700 the stream carries about 0.35 bit
   per sample, so the owner's "bitrate starved" impression is plausible. The cost of more bitrate
   is decode time, because 5/3 dequant grows with bitrate ([BITRATE.md](BITRATE.md)).
-- **Parallel wired connections** (`video.pyrowave.wired_video_connections`, default 0) cut ALVR's
+- **Parallel wired connections** (`video.pyrowave.wired_video_connections`, default 2) cut ALVR's
   network-stage estimate by 0.7 ms at 1000 Mbit/s and 1.8 ms at 1500, where one adb-forwarded
   connection queues frames. Fresh FPS is unchanged: the headset GPU is 97-98 % busy in every cell,
   so decode sets the frame rate.
@@ -89,11 +89,9 @@ Planned next steps, in order:
    - Measure real motion-to-photon with the optical latency stamp ([OPTICAL-LATENCY.md](OPTICAL-LATENCY.md)).
 4. **Memory-clock noise.** Look for a way to pin or record it per cell; until then use more
    repetitions.
-5. **Before defaulting `wired_video_connections` to 2:**
-   - a sustained-play session
-   - an in-headset check
-   - a 3-4 connection cell
-   - an unplug/replug test
+5. **`wired_video_connections` now defaults to 2** (owner's call, e325386, checked live with a
+   session that lacks the key). Still to do: a sustained-play session, a cable unplug/replug, and a
+   3-4 connection cell.
 6. **In-headset quality suite with motion** (task 6), CDF 9/7, then the in-headset screenshots a
    release needs before publishing.
 

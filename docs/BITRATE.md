@@ -230,7 +230,7 @@ one streamer session per cell in the order 700, 1000, 1500, 1500, 1000, 700 Mbps
 
 Over USB, adb forwards TCP only, and one forwarded connection moves a burst at about 1.7-2.4
 Gbit/s. A 906 KB frame (1500 Mbit/s at 207 Hz) then takes about 4 ms of a 4.83 ms frame interval
-to cross. `video.pyrowave.wired_video_connections` (experimental, default 0) splits each
+to cross. `video.pyrowave.wired_video_connections` (default 2 since e325386; 0 restores the old path) splits each
 complete frame into 1 to 4 contiguous slices and writes them in parallel on dedicated
 adb-forwarded connections (ports 9950-9953). The client puts the frame back together and decodes
 it as if it had come on ALVR's video stream. If the client does not answer on every port, video
@@ -255,5 +255,7 @@ not motion-to-photon.
   noise. The headset GPU is 97-98 % busy in every cell, so decode, not the link, caps the frame
   rate. A faster link shortens latency but cannot add frames.
 - The 1000 Mbit/s probe cell before the ABBA (two connections) gave 180.6 FPS and 3.3 ms network.
-- Not yet measured: 3 or 4 connections; Haar, whose decode does not grow with bitrate and so may
+- Default check (e325386, the owner's session without the key): two connections engaged, 178.1
+  fresh FPS and 2.71 ms network against 177.4 and 3.04 ms with the setting at 0 (1000 Mbit/s).
+- Not yet measured: unplugging the cable mid-stream; 3 or 4 connections; Haar, whose decode does not grow with bitrate and so may
   turn the shorter arrival into frames; sustained play.
