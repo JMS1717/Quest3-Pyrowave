@@ -1,5 +1,19 @@
 # Full-resolution frame-rate investigation
 
+**Current state (October 7, `.64`).** This is a dated research log of builds `.8` to `.34`
+(October 1-4). Its defaults, timings and next steps describe those builds, not the current one.
+Since then:
+
+- Haar is the default wavelet, decoded by the multilevel inverse Haar ([HAAR32.md](HAAR32.md)).
+  CDF 5/3 uses Decoder V2 ([DECODER-V2.md](DECODER-V2.md)).
+- Both write packed YCbCr straight into the RGBA8 AHardwareBuffer the eye pass reads (mode 5,
+  [PRESENT-YCBCR.md](PRESENT-YCBCR.md)). The eye shader converts to RGB; there is no separate
+  YCbCr-to-RGBA pass.
+- At 207 Hz, 2080x2208 per eye, Haar, 1000 Mbit/s and a 690 MHz GPU clock, Haar GPU decode is
+  2.67 ms p50 and the client shows 194-197 fresh FPS in 10-12 s screens. Where the remaining
+  frames are lost: [FRAME-TRACE.md](FRAME-TRACE.md). Pipeline overview:
+  [ARCHITECTURE.md](ARCHITECTURE.md).
+
 At 120 Hz the frame period is 8.33 ms. Short .8 native USB captures at the
 padded panel resolution (2080 x 2208 per eye), 4:2:0 and CDF 9/7 measured about
 10.6–10.9 ms of GPU wavelet decode and 15.0–15.5 ms from recording through
@@ -391,6 +405,11 @@ sustained 120 FPS remains unmet. See [sanitized distributions and scoped logs](.
 
 ## Color-copy candidate (.18, unvalidated)
 
+**Superseded:** on October 7 the raw sRGB write became the default in the direct eye copy. It cut
+the eye pass from 1.28 to 1.05-1.10 ms GPU p50 at 207 Hz with identical output; see
+[FRAME-TRACE.md](FRAME-TRACE.md#eye-pass-cost). `debug.q3pw.raw_srgb_copy=0` turns it off. The
+original `.18` description follows.
+
 The direct-eye shader skips the identity power operation at encoding gamma 1.
 An additional `debug.q3pw.raw_srgb_copy=1` experiment bypasses the paired software
 sRGB decode and framebuffer sRGB encode. It requires an sRGB target, existing
@@ -675,3 +694,7 @@ is NV12, whose interleaved chroma plane cannot be a storage target and does not
 match PyroWave's separate Cb and Cr outputs. The code was reverted, so `.34`
 ships the same native libraries as `.33`. A zero-copy route needs a Vulkan
 OpenXR presenter instead (see [Vulkan presentation](VULKAN-PRESENTATION.md)).
+
+**Later (October 7):** mode 5 removes the YCbCr→RGBA pass without R8 buffers. PyroWave writes
+luma quads and Cb/Cr into one RGBA8 AHardwareBuffer of half height, and the eye shader converts.
+See [PRESENT-YCBCR.md](PRESENT-YCBCR.md).

@@ -1,6 +1,22 @@
 # Vulkan presentation investigation
 
 Status: source design, not an implemented renderer or a measured speedup.
+
+**Current state (October 7, `.64`).** Still no Vulkan presenter: the OpenXR session and eye pass
+are GLES. This page dates from October 2-4. Since then:
+
+- The YCbCr-to-RGBA pass is gone. In mode 5 ([PRESENT-YCBCR.md](PRESENT-YCBCR.md), the default)
+  PyroWave writes packed YCbCr into an RGBA8 AHardwareBuffer of half height, and the GLES eye
+  shader converts it. That covers part of migration step 5 below without a Vulkan session.
+- Planar R8 output is not possible: Quest 3 gralloc has no R8 AHardwareBuffer
+  ([DECODE-PIPELINE.md](DECODE-PIPELINE.md#planar-output-without-the-rgba-pass-not-possible-on-quest-3-october-4)).
+- The direct eye copy costs 1.05-1.10 ms GPU p50 at 207 Hz with 2080x2208 eyes. About 0.8 ms of
+  that is writing the two sRGB swapchain images. A Vulkan path that still copies into eye
+  swapchains pays that write too; only a path without the copy (such as the Surface route below)
+  could avoid it ([FRAME-TRACE.md](FRAME-TRACE.md#eye-pass-cost)).
+- The owner's stream is 2080x2208 per eye at 207 Hz (1,901,352,960 stereo pixels/s), rendered at
+  3072x3216. The 3072x3216 rows in the table below model encoding at the render size.
+
 Morning .23 Quest logs advertise `XR_KHR_vulkan_enable` and
 `XR_KHR_vulkan_enable2`. Current PyroWave decode is already Vulkan; the OpenXR
 session, stream projection and performance quad are GLES. Advertised bindings

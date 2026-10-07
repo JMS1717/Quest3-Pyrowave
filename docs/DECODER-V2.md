@@ -58,7 +58,7 @@ otherwise moves it between 285 and 690 MHz from run to run.
 | decoder (599 MHz, blocks 1 and 3) | total p50 | iDWT | dequant |
 |---|---|---|---|
 | Haar, default | 3.95 ms | 2.10 | 1.61 |
-| Haar, haar32 mode 3 (shipping) | 1.97 | 1.53 | 0.99 |
+| Haar, haar32 mode 3 (shipping on October 6) | 1.97 | 1.53 | 0.99 |
 | CDF 5/3, default | 7.88 | 6.20 | 1.70 |
 | CDF 9/7, default | 8.63 | 6.87 | 1.71 |
 | CDF 9/7, fragment path | 6.11 | (about 4.4) | 1.71 |
@@ -174,7 +174,7 @@ interval rose (3.52 to 3.81 ms) while its fence fell: the interval is not the cr
 the compositor preempts decode, so fresh FPS and the fence are the measures that count.
 
 The RGBA conversion after decode costs 0.92 ms live for Haar and 1.8 ms for V2 with the same
-shader. This is next to look at.
+shader. This was next to look at; mode 5 below removes the pass.
 
 ## Mode 5: packed YCbCr into the hardware buffer (default for CDF 5/3)
 
@@ -186,7 +186,7 @@ and ALVR's eye shader converts. The RGBA pass, 1.8 ms of the V2 fence, is gone.
   together (bindings 0 and 2) and stores them as one RG texel at `output_offset` (x = width/2).
   Luma stores its quads at offset 0. Mode 4 is the same without the AHB: chroma goes to one RG8 plane.
 - `pyrowave_decoder_set_cdf53v2(5)` needs 4:2:0, width and height divisible by 4, precision 1 and
-  the packed allocation. The client asks for mode 5 by default (`debug.q3pw.cdf53v2` "0" to "5"),
+  the packed allocation. The client asks for mode 5 by default (`debug.q3pw.cdf53v2` "0" to "6"),
   and steps down to 4 when storage on the AHB, full range or the chroma filter rule mode 5 out,
   as haar32 does.
 
@@ -249,6 +249,11 @@ With the maximum GPU clock on, CDF 5/3 gives the smooth gradients and +2 dB PSNR
 frames. **Recommended: `Wavelet` = CDF 5/3 together with Quest 3: maximum GPU clock over USB.**
 Without the GPU clock, 5/3 still costs about 10 % (177 against 196). Haar stays the shipped
 default because the GPU clock needs USB and a developer property.
+
+This recommendation holds at 700 Mbit/s. 5/3 decode grows with bitrate: at 690 MHz, 700, 1000 and
+1500 Mbit/s gave 185, 179 and 164 fresh FPS
+([BITRATE.md](BITRATE.md#cdf-53-at-the-owners-690-mhz-gpu-clock-october-7)), against 194-197 for
+Haar at 1000 Mbit/s in later sessions ([FRAME-TRACE.md](FRAME-TRACE.md)).
 
 `[Q3PW_STATS] 0 client statistics` after the server's GPU-level restart, which kept the harness
 from measuring this before, was the test headset: the display helper hands proximity back after

@@ -1,10 +1,13 @@
 # Light peripheral encoding
 
-Development `.28`; **off by default**. Matching cloud builds and short Quest 3
-mapping/timing screens passed; sustained performance and in-headset quality
-acceptance remain pending. The current no-foveation native120 goal
-remains separate. This mode deliberately trades a little peripheral detail for
-fewer encoded/decoded pixels; it does not reduce the game's rendering workload.
+Added in development `.28`; **off by default** and opt-in through alpha.9 and `.64`.
+Short Quest 3 mapping/timing screens passed; sustained performance and in-headset
+quality acceptance remain pending. The owner's target (2080×2208 per eye at 207 Hz)
+asks for no visible foveation, so this mode stays separate from it. At that target the
+decoder is no longer the limit, and Strong foveation did not raise fresh FPS
+([packed presentation](#packed-ycbcr-presentation-october-7)). This mode deliberately trades
+a little peripheral detail for fewer encoded/decoded pixels; it does not reduce the game's
+rendering workload.
 
 ## What changes
 
@@ -31,9 +34,11 @@ in-headset acceptance remains necessary.
 
 ## Enable and compare
 
-Use a matching `.28` or newer APK/Windows pair; the published alpha.7 pair has no
-light-mode setting. In the development dashboard, open **Video → PyroWave → Light
-peripheral encoding (experimental)**. Restart SteamVR after changing it.
+Use a matching `.28` or newer APK/Windows pair. Releases from alpha.8 on (alpha.9 is
+the latest) include the setting; alpha.7 and older have no light-mode setting. In the
+dashboard, open **Video → PyroWave → Light peripheral encoding (experimental)**. Restart
+SteamVR after changing it. While a client streams, the server does this itself about 2 s
+after the change ([SETTINGS-APPLY.md](SETTINGS-APPLY.md)).
 
 ```powershell
 python -m tools.quest3.control foveation --mode light
@@ -104,8 +109,9 @@ was disabled; no thermal safeguards were changed.
 encoding is on. Light (80% center, 1.5x) is the default profile; encoding itself
 remains off by default. Light, Balanced and Strong now have short Quest screens. Balanced (68% center, 1.75x) encodes 1824x1920 per eye from native
 2080x2208, about 24% fewer pixels. Strong (60% center, 2x) encodes 1664x1792, about
-35% fewer. Both are decode-budget candidates for 144/207 Hz without perceptual or
-sustained-performance acceptance. Their constants were chosen so the client's f32
+35% fewer. Both were decode-budget candidates for 144/207 Hz, without perceptual or
+sustained-performance acceptance; with the faster `.62` decoder they no longer raise fresh
+FPS at 207 Hz (see below). Their constants were chosen so the client's f32
 sizing and the server's mixed float/double sizing agree for every 8-pixel eye size
 from 512 to 4096 (tests/test_foveation.py). `python -m tools.quest3.control foveation
 --mode light --profile strong` selects one; see [PATH-TO-207.md](PATH-TO-207.md).

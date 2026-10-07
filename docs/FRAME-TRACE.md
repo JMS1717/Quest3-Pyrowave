@@ -5,6 +5,9 @@ October 7, 2026. Settings for every run below:
 - 207 Hz panel, 2080x2208 per eye encoded from a 3072x3216 render, 4:2:0, no foveation.
 - Haar at 1000 Mbit/s unless noted, mode 5 (packed YCbCr in the AHB).
 - Maximum GPU clock on (690 MHz), two wired video connections.
+- Direct eye copy (`debug.q3pw.direct_eye_copy=1`). The eye-pass diagnostics, the eye GPU timer
+  and the raw sRGB write below exist only in that path (`alvr/graphics/src/direct_eye.rs`). Without
+  the property the client uses ALVR's staging renderer.
 - A 60 deg/s pan.
 - Measurement windows of 10-12 s after a 3-5 s settle.
 
@@ -96,7 +99,8 @@ The eye-probe split shows that writes, not reads, dominate the pass:
 | no reads, noise | 0.82 ms |
 | luma reads only | 0.67 ms |
 
-**Raw sRGB is now the default** (`debug.q3pw.raw_srgb_copy=0` restores the shader conversion).
+**Raw sRGB is now the default in the direct eye copy** (`debug.q3pw.raw_srgb_copy=0` restores the
+shader conversion; the staging renderer does not use it).
 
 - With `GL_EXT_sRGB_write_control`, an sRGB target, sRGB correction and gamma 1, the eye pass
   disables sRGB encoding on write and writes the already sRGB-coded values directly.

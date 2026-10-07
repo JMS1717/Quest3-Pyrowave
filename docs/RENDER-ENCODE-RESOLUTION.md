@@ -7,6 +7,12 @@ work with the matching `.25` pair without a new APK. Development `.55` adds
 separate dashboard/menu controls and an optional PC downsample shader; codec,
 client decode size and foveation remain independently selectable.
 
+**Current (alpha.9 and `.64`).** Settings → Presets has **Stream resolution** (50-100 % of the
+panel, in 10 % steps) and **Game render resolution** (100-200 % of the panel per axis, in 25 %
+steps). **Game render downsample filter** offers **Single tap (legacy)**, the default,
+**Adaptive bicubic** and **Adaptive Lanczos (sharper)**. Streaming profiles set only the stream
+size. The owner's target, 3072x3216 rendered and streamed at 2080x2208 per eye, uses this split.
+
 ## Verified semantics
 
 Both settings are **per eye**. The names below refer to session settings, not
@@ -54,10 +60,12 @@ work all stay at the stream size.
 | Dashboard | One "render scale" preset (50–100 %) set **both** fields to the same size, so there was no way to render above the panel. | "Stream resolution" (50–100 % of panel) sets only the stream; "Game render resolution" (100–200 % per axis) sets only the SteamVR recommendation. |
 | Streaming profiles | Pinned both fields to the profile's size. | Pin the stream only; a chosen game render size survives a profile change. |
 
-The filter setting is `video.pyrowave.render_downsample_filter` (`Bilinear`
-default = the previous single tap, `Adaptive` = footprint-widened Catmull-Rom, `Lanczos` = the
-same shader compiled with `KERNEL_LANCZOS3`, a 3-lobe Lanczos kernel) and applies to every
-codec. It needs a SteamVR restart. If the runtime compile fails, the driver logs an
+The filter setting is `video.pyrowave.render_downsample_filter` (`Bilinear`, shown as
+"Single tap (legacy)", default = the previous single tap; `Adaptive`, "Adaptive bicubic" =
+footprint-widened Catmull-Rom; `Lanczos`, "Adaptive Lanczos (sharper)" = the same shader compiled
+with `KERNEL_LANCZOS3`, a 3-lobe Lanczos kernel) and applies to every
+codec. It needs a SteamVR restart; while a client streams, the server reconnects and restarts
+SteamVR about 2 s after the change ([SETTINGS-APPLY.md](SETTINGS-APPLY.md)). If the runtime compile fails, the driver logs an
 error and keeps the single tap; the Windows build also compiles it with `fxc` so a
 shader error fails CI. The driver log prints the active sizes and filter:
 `[FrameRender] game render WxH per eye -> stream WxH per eye (R x per axis), ... downsample`.
@@ -154,12 +162,17 @@ python -m tools.quest3.control resolution --render-eye 3072 3216
 python -m tools.quest3.control resolution --encode-eye 2080 2208
 ```
 
+`--profile supersampled150` selects the dashboard's 150 % game render size (3096x3312) with a
+2080x2208 stream. `python -m tools.quest3.control downsample --mode adaptive|lanczos|bilinear`
+sets the PC filter for an A/B; it also needs a SteamVR restart.
+
 These commands leave the existing refresh, bitrate, wavelet, chroma, decoder,
 transport and foveation settings alone. They do not enable 120 Hz implicitly.
 Use your current best 4:2:0/noFFE/no-client-upscaling configuration for both.
-The comparison manifest is `presets/resolution-comparison.json`; 1000 Mbps /120 Hz
-remains an experimental target. The dashboard's stream and game render
-resolution presets each set one field only, and streaming profiles set only the
+The comparison manifest is `presets/resolution-comparison.json`. Its comparison
+target is 1000 Mbps at 120 Hz, the setting of the October 2 screen below; the owner's
+current target is 207 Hz ([HIGH-REFRESH.md](HIGH-REFRESH.md)). The dashboard's stream and
+game render resolution presets each set one field only, and streaming profiles set only the
 stream. Existing defaults are preserved.
 
 ## Quick old/new benchmark

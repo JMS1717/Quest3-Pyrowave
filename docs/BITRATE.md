@@ -1,7 +1,7 @@
 # Bitrate controls and profile budgets
 
-Settings → Presets has a **5–2000 Mbps slider**, an **Auto bitrate** checkbox and
-the padded resolution/frame budget. In manual mode the slider sets the codec payload
+Settings → Presets has a **5–4000 Mbps slider** (4000 since `.60`), an **Auto bitrate**
+checkbox and the padded resolution/frame budget. In manual mode the slider sets the codec payload
 rate cap. In Auto mode it sets an enabled maximum; feedback can lower the requested
 rate. Selecting Auto disables Auto's own optional minimum (Video → Bitrate → Adaptive). Auto
 starts from at least the PyroWave quality floor below, and its latency limiters can go under it.
@@ -10,7 +10,10 @@ For PyroWave the hardware decoder latency limiter is ignored: a target below fix
 GPU reconstruction time otherwise drives bitrate toward zero without reaching the
 requested frame rate. Network/encoder feedback still applies. This policy does not
 change hardware codecs; changing bitrate controls also clears an old learned decoder cap.
-Resolution/refresh/codec changes require restarting SteamVR. Bitrate updates are live.
+Resolution, refresh, codec and other PyroWave settings apply at stream start. While a client
+streams, the server reconnects about 2 s after the last such edit and restarts SteamVR when the
+driver configuration changed (`[Q3PW_SETTINGS_RECONNECT]` in the log;
+[SETTINGS-APPLY.md](SETTINGS-APPLY.md)). Bitrate updates are live.
 
 ## Quality floor
 
@@ -20,15 +23,16 @@ rounded up to 50 Mbps (`BitrateManager::set_quality_floor_mbps`,
 
 - **Constant bitrate**, from the dashboard or the headset menu: a lower setting is raised to the
   floor.
-- **Auto** (since `.63`): the throughput estimate is raised to the floor, so Auto does not idle
-  at a blocky bitrate. The network and encoder latency limiters and a manual maximum are applied
+- **Auto** (since `.63`, unchanged in `.64`): the throughput estimate is raised to the floor,
+  so Auto does not idle at a blocky bitrate. The network and encoder latency limiters and a manual maximum are applied
   after it, so on a congested link Auto still lowers the bitrate under the floor. In `.62` the
   floor was applied after them, and a link that could not carry it dropped frames instead.
   Checked over Wi-Fi 6E on `.63`: with a 1500 Mbps maximum and the 8 ms network-latency limit,
   Auto settled at about 550 Mbps, below the 1000 Mbps the link carries cleanly
   ([WIRELESS.md](WIRELESS.md)).
 
-The dashboard shows the floor under the per-frame budget, and the driver logs
+The dashboard shows the floor under the per-frame budget ("Auto starts from at least this" in
+Auto; `.64` corrected that text), and the driver logs
 `[Q3PW_QUALITY_FLOOR]`. 4:4:4 doubles the raw samples and the floor; that factor is not measured,
 so it errs high. `ALVR_PYROWAVE_NO_QUALITY_FLOOR=1` in the streamer's environment lifts the floor
 for codec measurements.
@@ -76,9 +80,10 @@ not a promise to generate that many bytes. Auto estimates capacity from frame by
 and latency and also uses encoder/decoder feedback. It updates approximately once
 per second. It cannot fix an overloaded decoder merely by changing network bandwidth.
 Use TCP for initial Auto testing: the experimental separate UDP timing estimate can
-clamp to zero and skip adaptation samples. Auto is available but live stability still
-needs measurement. An earlier USB test with an 8 ms decoder limiter collapsed the
-bitrate; the PyroWave policy above addresses that mechanism in the next build.
+clamp to zero and skip adaptation samples. Auto has only short screens: over Wi-Fi 6E on
+`.63` it settled at about 550 Mbps ([WIRELESS.md](WIRELESS.md)); sustained behaviour is not
+measured. An earlier USB test with an 8 ms decoder limiter collapsed the bitrate; ignoring
+that limiter for PyroWave (above) addresses the mechanism.
 The port also corrects the hardware decoder limiter's bytes/frame → bits/s units.
 
 The full-panel PyroWave profiles request 2064×2208 per eye, padded to **2080×2208**.
@@ -94,6 +99,7 @@ The stereo frame contains **9,185,280 pixels**, or **13,777,920 bytes of raw 8-b
 | 1000 / 120 experiment | 8.33 | 1,041,666 | 13.23:1 | 1053 |
 | 1500 / 120 experiment | 8.33 | 1,562,500 | 8.82:1 | 1580 |
 | 2000 / 120 experiment | 8.33 | 2,083,333 | 6.61:1 | 2107 |
+| 1000 / 207 measured profile | 4.83 | 603,864 | 22.82:1 | 1053 |
 
 Two additional 120 Hz / 1000 Mbps experiments lower render size: 75% requests
 1548×1656 per eye (padded 1568×1664), while 60% requests 1238×1325
@@ -107,9 +113,13 @@ the wire). They exclude ACKs, retransmissions and Wi-Fi airtime overhead. A 2.4 
 Wi-Fi PHY rate is not 2.4 Gbps payload capacity; 2000 Mbps is particularly aggressive.
 All byte budgets fit PWU2's 8192-fragment transport bound. Passing those mathematical
 bounds does not establish visual quality, thermal stability, or sustained frame rate.
-Previous full-resolution standalone decode measurements exceeded 120 Hz's 8.33 ms;
-the high-rate profiles therefore remain experiments. Native panel size is also distinct
-from SteamVR's larger lens-corrected render recommendation.
+Older full-resolution decode measurements exceeded 120 Hz's 8.33 ms, which is why the
+120 Hz rows above are named experiments. The current decoder (`.62` and later) decodes
+2080×2208 Haar in about 2.7 ms GPU time (p50, 207 Hz, 690 MHz GPU clock). The three
+"(measured)" profiles run at 1000 Mbps: native 120 Hz, 207 Hz at 2080×2208 and 240 Hz scaled panel at 1440×1536
+(520,832 bytes/frame). See [HIGH-REFRESH.md](HIGH-REFRESH.md). Those are 10-12 s screens, not
+sustained play. Native panel size is also distinct from SteamVR's larger lens-corrected render
+recommendation.
 
 Regenerate machine-readable budgets using `python -m tools.quest3.budget --out
 presets/frame-budgets.json`. The dashboard uses the same padding and integer cap math
@@ -141,18 +151,22 @@ See [complete sanitized distributions](../results/BITRATE-USB-LIVE-2026-10-02.js
 
 ## Current native120 payload isolation, October5
 
+Dated record from `.44`. It predates the faster decoder: Haar GPU decode at 2080×2208 now
+measures about 2.7 ms p50 (207 Hz, 690 MHz GPU clock, `.62`), not 6 ms. "Default" below means the native 120 Hz profile's 1000 Mbps; a fresh
+install still starts on the 400 Mbps / 72 Hz candidate preset.
+
 The reviewed `.44` pair passed all matching builds and production decoder tests;
 its native libraries are byte-identical to GPU-verified `.42`. One continuous
-Quest session used2080×2208/eye, confirmed120Hz, Haar/Compute4:2:0, no foveation,
+Quest session used 2080×2208/eye, confirmed 120 Hz, Haar/Compute 4:2:0, no foveation,
 LOW decode priority, synchronous direct eye copy, one TCP worker and the existing
-4ms selection wait. Stage diagnostics and event waiting were off. Bitrate changed
-live through1000/800/600/800/1000, with3 seconds settling and12-second windows.
+4 ms selection wait. Stage diagnostics and event waiting were off. Bitrate changed
+live through 1000/800/600/800/1000, with 3 seconds settling and 12-second windows.
 No client restart or screenshot occurred between windows.
 
-Source coverage, PID/clock alignment, runtime120 and unchanged codec/geometry
+Source coverage, PID/clock alignment, runtime 120 and unchanged codec/geometry
 were verified. Every recorded encoder directive matched its target, and **every
 captured serialized frame fit the aligned per-frame byte cap**. These settings
-fit the payload math; that does not establish their120Hz timing or visual budget.
+fit the payload math; that does not establish their 120 Hz timing or visual budget.
 
 | Target Mbps | Median ALVR payload-rate estimate Mbps | Frame cap / largest frame bytes | Eye completions/s | GPU decode p50/p95 ms | Decode-to-fence p50/p95 ms | Client FPS p1 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -162,16 +176,16 @@ fit the payload math; that does not establish their120Hz timing or visual budget
 | 800 | 806.8 | 833,332 / 833,308 | 117.49 | 5.71 / 6.62 | 7.83 / 8.16 | 60.0 |
 | 1000 | 1008.0 | 1,041,664 / 1,041,652 | 118.10 | 6.05 / 6.73 | 7.98 / 8.30 | 60.0 |
 
-**Keep1000Mbps as the default.** The controls agree near118.1 eye completions/s;
-800 varied118.4→117.5, while the single600 block reached118.7. P1 stays near60;
-none establishes sustained fresh120. Neither GPU nor completion time decreased
-consistently with payload. GPU endpoints shifted599/640MHz, so DVFS and timing
+**Keep 1000 Mbps as the default.** The controls agree near 118.1 eye completions/s;
+800 varied 118.4→117.5, while the single 600 block reached 118.7. P1 stays near 60;
+none establishes sustained fresh 120. Neither GPU nor completion time decreased
+consistently with payload. GPU endpoints shifted 599/640 MHz, so DVFS and timing
 remain confounds. Extra link capacity or lower rate alone has not removed the
 remaining completion/presentation bottleneck. Avoid an unchanged rate sweep.
 
-Temperatures stayed31–33°C, thermal status0, AC powered. All temporary settings,
+Temperatures stayed 31–33°C, thermal status 0, AC powered. All temporary settings,
 proximity and driver registrations restored without errors, preserving VD. A
-single final1000 compositor image retained correct eye mapping/orientation;
+single final 1000 compositor image retained correct eye mapping/orientation;
 lower-bitrate and in-headset quality acceptance were not tested. ALVR total/network
 latency estimates with a stationary headset are not optical motion-to-photon.
 [Sanitized metrics, exact byte budgets and package provenance](../results/PAYLOAD-NATIVE120-2026-10-05.json).
@@ -245,6 +259,22 @@ complete frame into 1 to 4 contiguous slices and writes them in parallel on dedi
 adb-forwarded connections (ports 9950-9953). The client puts the frame back together and decodes
 it as if it had come on ALVR's video stream. If the client does not answer on every port, video
 stays on the stream socket.
+
+The setting applies only to a client on ALVR's wired (USB adb) connection. Over Wi-Fi or a manual
+network address, video always uses ALVR's stream socket, whatever the setting says. From `.63`,
+wired mode uses only an online adb device attached over USB and otherwise falls through to manual
+IPs and discovery.
+
+Current behaviour (`.64`, on main, not yet released):
+
+- Each slice carries a 48-byte header (magic `PWT1`) with a per-frame sequence number in bytes
+  28..32. The client assembles frames by that number and rejects overlapping or mismatched
+  slices. This replaces `.63`'s skip of frames whose timestamp repeats the previous one.
+- An older server sends sequence 0, and the client falls back to timestamps.
+- Each writer has a 1 s write timeout. A stalled connection counts as lost, and video falls back
+  to the stream socket.
+- `.64` was checked over Wi-Fi only. The USB parallel path with numbered slices is not yet
+  hardware-tested.
 
 ABBA at the owner's settings: CDF 5/3 V2 mode 5, 690 MHz, 207 Hz, 2080x2208 per eye from
 3072x3216, 60 deg/s pan, 12 s, one streamer session per cell. "Network" and "pipeline" are

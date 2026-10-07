@@ -1,6 +1,8 @@
 # Wi-Fi streaming
 
-October 7, 2026: the first measured PyroWave runs over Wi-Fi, on the `.63` build.
+October 7, 2026: the first measured PyroWave runs over Wi-Fi, on the `.63` build (released as
+v0.1.0-alpha.9). `.64`, now on main and not yet released, was checked over the same link
+([below](#64-check)).
 
 ## Setup
 
@@ -67,6 +69,21 @@ Auto here used a 1500 Mbit/s maximum and the 8 ms network-latency limit.
 The Auto blocks ran partly at a lower memory clock (2092 against 2736 MHz), so their extra fresh
 frames are not a clean comparison.
 
+### `.64` check
+
+A local build of `.64` (commit `9145530`) on the same link and settings: 207 Hz, 2080x2208 per
+eye, Haar, 1000 Mbit/s.
+
+| Build | Fresh FPS by block | Network p50 |
+|---|---|---|
+| `.64` | 193.9\*, 190.6 | 6.2 ms |
+
+\* The memory clock changed during the block.
+
+Colours were correct in both eyes. This matches the alpha.9 build, which gave 190.0 and 196.5
+fresh FPS ([HANDOFF.md](HANDOFF.md)), and the `.63` blocks above. USB adb was offline again, so
+the USB path that `.64` changes (numbered wired video slices) is not hardware-tested.
+
 ## What this means
 
 - **Fresh frames:** Wi-Fi 6E at 6 GHz carries 207 Hz at full resolution with about the same fresh
@@ -78,7 +95,8 @@ frames are not a clean comparison.
 - **No back-pressure above the limit:** a constant bitrate above what the link delivers is not
   throttled. TCP queues the excess and latency grows without limit.
 - **Auto is the safe choice, but conservative:**
-  - With the `.63` fix the quality floor no longer overrides Auto's network-latency limit.
+  - Since the `.63` fix (also in `.64`), the quality floor raises Auto's estimate, but the
+    network-latency limit and the maximum still win.
   - On this link Auto settled at about 550 Mbit/s, about half of what the link carries cleanly.
   - ALVR's estimator divides one frame's bytes by its network time, so it stays conservative.
 
@@ -96,5 +114,12 @@ These results don't cover:
 - sustained play
 - optical latency
 - tuning Auto's saturation multiplier towards the link's real capacity
-- whether parallel connections would shorten Wi-Fi network time, as they do over USB (they are
-  used only for wired clients)
+- whether parallel connections would shorten Wi-Fi network time, as they do over USB
+
+## Parallel connections are USB only
+
+**Wired video connections** (`video.pyrowave.wired_video_connections`, default 2) apply only to a
+client on ALVR's wired connection through USB adb. The server opens them only for that connection,
+and the client listens only when the negotiated stream is wired. Over Wi-Fi, video always uses
+ALVR's single stream socket, whatever the setting says. See
+[BITRATE.md](BITRATE.md#parallel-wired-video-connections-october-7).

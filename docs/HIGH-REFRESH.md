@@ -7,6 +7,21 @@ snapshot, an independent restorer and readback of the owner's properties and ses
 These are screening results, not sustained, gameplay, perceptual or optical-latency measurements.
 Per-window numbers, PC-side stages and temperatures: [results](../results/HIGH-REFRESH-2026-10-06.json).
 
+**Current state (main is `.64`, October 7).** Most rows below predate the faster decoder of
+`.62`. At 207 Hz, 2080x2208 per eye, Haar, 1000 Mbit/s and the maximum GPU clock over USB, short
+screens on `.62` reached 194-197 fresh FPS (Haar GPU decode 2.67 ms p50). `.64` was checked over
+Wi-Fi 6E only: 190.6 and 193.9 fresh FPS ([WIRELESS.md](WIRELESS.md)). The 120 and 240 Hz rows
+have not been remeasured. The three "(measured)" streaming profiles are:
+
+| Profile | Stream per eye | Panel | GPU clock | Fresh FPS in short screens |
+| --- | --- | --- | --- | --- |
+| Native 120 Hz (measured) | 2064x2208 (padded 2080x2208) | native | not set | about 119 |
+| 207 Hz (measured) | 2080x2208 (was 1440x1536) | native | 690 MHz over USB | about 195 |
+| 240 Hz scaled panel (measured) | 1440x1536 | scaled, switched over USB | 690 MHz over USB | 223-230 (October 6 decoder) |
+
+All three use Haar, 4:2:0, TCP and 1000 Mbit/s. "(measured)" means 10-12 s screens; sustained play
+is not measured. See [Recommended settings](#recommended-settings-from-these-screens).
+
 "Fresh FPS" is distinct server target timestamps reaching the display per second. "App loop" is
 VrApi's frame rate for the client, which drops below the panel rate when the client misses frames.
 
@@ -78,7 +93,7 @@ The server's pose-match term (game time) is unreliable on a stationary headset a
 
 | Lever | Cell | Off | On | Decision |
 | --- | --- | --- | --- | --- |
-| GPU level 7 (`debug.oculus.gpuLevel=7`, 690 MHz vs level 4 at 640 MHz, verified in VrApi) | 240 Hz, 1440x1536, ABBA | 220.8 fresh, fence 4.05 ms, loop 225 | 224.1 fresh, fence 3.89 ms, loop 232 | Gain wherever decode is GPU-bound. A developer property the APK cannot request: `tools/quest3/gpu_level.py` sets and restores it |
+| GPU level 7 (`debug.oculus.gpuLevel=7`, 690 MHz vs level 4 at 640 MHz, verified in VrApi) | 240 Hz, 1440x1536, ABBA | 220.8 fresh, fence 4.05 ms, loop 225 | 224.1 fresh, fence 3.89 ms, loop 232 | Gain wherever decode is GPU-bound. A developer property the APK cannot request: `tools/quest3/gpu_level.py` sets and restores it. From `.57` the server setting **Quest 3: maximum GPU clock over USB** does the same |
 | GPU level 7 | 240 Hz, 1536x1664, ABBA | 198.9 fresh, loop 205 | 203.8 fresh, loop 218 | |
 | GPU level 7 | 207 Hz, 1664x1760, ABBA | 172.1 fresh, loop 176 | 181.5 fresh, loop 185 | |
 | GPU level 7 | 120 Hz, 2560x2720, ABBA | 89.5 fresh, fence 10.6 ms | 93.2 fresh, fence 10.2 ms | |
@@ -106,9 +121,9 @@ and 1664x1760 at 144 Hz.
 - a cheaper eye copy ([FRAME-TRACE.md](FRAME-TRACE.md))
 
 **207 Hz at the full 2080x2208 per eye now reaches about 194-197 fresh FPS** with the maximum GPU
-clock, against 117 in the table above. The "207 Hz (measured)" profile now uses that size, so the
-"avoid 207 Hz at native resolution" advice below no longer holds. The 120 and 240 Hz rows above
-have not been remeasured with the new decoder.
+clock, against 117 in the table above. The "207 Hz (measured)" profile now uses that size (it was
+1440x1536), so the "avoid 207 Hz at native resolution" advice below no longer holds. The 120 and
+240 Hz rows above have not been remeasured with the new decoder.
 
 The October 6 recommendations, kept for reference:
 

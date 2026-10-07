@@ -3,6 +3,11 @@
 Keep 4:2:0 as the default. 4:4:4 remains an optional quality mode: spare USB
 bandwidth did not make its GPU reconstruction cost free in the current decoder.
 
+**Current (alpha.9 and `.64`).** 4:2:0 is the default and **Full chroma (4:4:4)** is opt-in.
+The latest check is the [October 7 run at 207 Hz](#october-7-check-at-207-hz): 68.1 fresh FPS
+with 4:4:4 against 189.3 with 4:2:0, because 4:4:4 decodes twice the chroma and has no packed
+YCbCr output. The 120 Hz comparison below is from the older `.11` decoder (October 1).
+
 The matching .11 pair (3c223eb) used 2080 x 2208 encoded pixels per eye, 120 Hz,
 Haar, Vulkan Compute, one worker, no foveation, native ALVR USB/TCP and the same
 GPU 7 / CPU 6 requests. The fixed chart inputs were byte-identical for each eye;
@@ -21,11 +26,11 @@ repeated sustained gameplay or thermal endurance acceptance. Full records withou
 private identifiers are in [reviewed measurements](../results/CHROMA-2026-10-01.json).
 A first 25-second 420 chart cell crossed a scene transition and is excluded here.
 
-SteamVR Home also regressed: 4:4:4 / 1000 Mbps delivered 68.01 freshFPS and4:4:4 / 2000 Mbps delivered
-63.46, versus 96.50 for4:2:0 / 1000 Mbps. A return 4:2:0 control recovered 93.43 freshFPS over
+SteamVR Home also regressed: 4:4:4 / 1000 Mbps delivered 68.01 fresh FPS and 4:4:4 / 2000 Mbps delivered
+63.46, versus 96.50 for 4:2:0 / 1000 Mbps. A return 4:2:0 control recovered 93.43 fresh FPS over
 an 89-second submitted-event span; its requested 120-second window included initial
-reconnection. The Home battery temperatures differed by about1 C. SteamVR crashed
-after the first4:4:4 / 2000 Mbps capture; its cause is unknown. The known-good 4:2:0 settings
+reconnection. The Home battery temperatures differed by about 1 C. SteamVR crashed
+after the first 4:4:4 / 2000 Mbps capture; its cause is unknown. The known-good 4:2:0 settings
 were restored and crash-added driver blocks cleared, preserving VD registration.
 
 Screenshot inspection of fine yellow/cyan/magenta/green HUD text, outlines and
@@ -35,13 +40,13 @@ including doubled bitrate, so it does not isolate chroma from bit allocation.
 Screenshots are not a human in-headset quality judgment. SteamVR Home supplies a
 textured environment check; detailed gameplay quality comparisons remain pending.
 
-At 4160 x 2208 stereo, eight-bit 4:2:0 contains 13,777,920 YUV samples/frame ; 4:4:4 contains
+At 4160 x 2208 stereo, eight-bit 4:2:0 contains 13,777,920 YUV samples/frame; 4:4:4 contains
 27,555,840. At 120 Hz their uncompressed rates are 13.23 and 26.45 Gbps. The transmitted
 stream remains compressed. Chroma format alone does not change a fixed bitrate:
 1000 Mbps still provides about 1.042 MB/frame, and 2000 Mbps about 2.083 MB/frame. Doubling
 target bitrate gives comparable average bits/sample, not guaranteed perceptual parity.
 
-For this target, the observed 34% reduction in freshFPS and 46% increase in completion
+For this target, the observed 34% reduction in fresh FPS and 46% increase in completion
 outweigh the colored-text improvement. Keep 4:2:0 for gameplay while optimizing toward
 sustained 120 FPS. Reconsider 4:4:4 as a default only after a future decoder shows effectively
 negligible impact in repeated sustained matched tests and a clearly noticeable in-headset
@@ -73,7 +78,9 @@ and `scene.json` record source size and Unix-nanosecond start/end times. Start t
 benchmark after readiness and finish before scene end; compare the capture start
 and per-event elapsed times to verify the window. Keep the client overlay enabled
 consistently. Change **Full chroma (4:4:4)** in video/PyroWave settings and restart
-SteamVR/client for negotiation; verify the overlay and negotiated OpenVR flag.
+SteamVR/client for negotiation (while streaming, the server now reconnects and restarts
+SteamVR about 2 s after the change; [SETTINGS-APPLY.md](SETTINGS-APPLY.md)); verify the
+overlay and negotiated OpenVR flag.
 Restore it off after the experiment. Fresh event rate, instantaneous FPS percentiles,
 source-timestamp gaps and ALVR estimated latency are distinct; optical latency needs
 separate measurement.
@@ -108,7 +115,7 @@ loss, not chroma subsampling.** None of these cheaper fixes helped:
   chroma resolution, then `a * Y + b`), but coded luma is too noisy to guide: 2 dB less chroma
   PSNR and more ΔE at every radius and regularisation tried.
 
-The levers that do reduce colour bleed are bits and wavelet: higher bitrate (see BITRATE.md) and
-4:4:4 or CDF 5/3, both of which cost decode time. This is a deliberately dense synthetic scene;
+The levers that do reduce colour bleed are bits and wavelet: higher bitrate (see
+[BITRATE.md](BITRATE.md)) and 4:4:4 or CDF 5/3, both of which cost decode time. This is a deliberately dense synthetic scene;
 a natural game frame should be checked before the trade is decided. Scripts:
 `workspace/state/claude-oct6/chroma_study.py`, `guided_study.py` (private workspace).

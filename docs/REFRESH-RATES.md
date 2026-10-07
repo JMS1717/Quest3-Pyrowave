@@ -6,13 +6,29 @@ HorizonOS v2.7+ supports integer 72-207 Hz on Quest 3 through standard refresh r
 Quest 3S does not have these extended modes. Legacy enumeration can omit valid modes.
 The APK therefore tests requests rather than adding a hard-coded capability claim.
 
-On first session startup, the lobby tests 90,120,144,207,240 Hz. Each accepted request must
+On first session startup, the lobby tests 72, 90, 120, 144, 165, 180, 200, 207 and 240 Hz
+(`PROBE_RATES`). When `debug.oculus.refreshRate` pins the display, or the runtime runs a rate above
+120 Hz that it does not enumerate, the probe verifies only that rate: every other request would
+"succeed" without changing the rate and cost the full timeout. Each tested rate must
 match `xrGetDisplayRefreshRateFB` and at least three consecutive `xrWaitFrame` periods within
 0.5%, with a two-second settling deadline. It restores the session's original rate, then sends
 confirmed capabilities to ALVR. A request failure or timeout is a recorded result. Reopen the
 APK after changing the environment to run a fresh probe. Startup can briefly change lobby refresh.
 
 ## 240 Hz developer experiment
+
+**Current (`.60` and later, including `.64`).** The dashboard offers 72, 80, 90, 120, 144, 165,
+180, 200, 207 and 240 Hz, and **Preferred FPS** takes any whole rate. The setting described below
+is now named **Quest 3: set the panel refresh rate over USB**; its key is still
+`video.pyrowave.quest3_240hz_display_scaling`, so saved sessions load. Choosing 165, 180, 200 or
+240 Hz turns it on, since the dashboard expects the runtime to grant those rates only with the
+panel forced. With it on and the headset on USB, the PC forces the panel to exactly the
+selected rate whenever that rate is above 120 Hz: natively up to 207 Hz (4128x2208), in the scaled
+3104x1664 mode above 207 Hz, up to 240 Hz. Selecting 120 Hz or less, or closing SteamVR, restores
+the saved values. The "207 Hz (measured)" profile leaves it off and turns on only the maximum GPU
+clock. The PC changes these properties over USB adb only. Without USB, the helper below sets 240 Hz
+only, and `tools/quest3/gpu_level.py` sets the GPU clock. The text that follows describes `.57`,
+when the setting covered 240 Hz only.
 
 From `.57` the PC can do this itself: choosing **240 Hz** in the dashboard turns on
 **Quest 3: switch to 240 Hz over USB** (`video.pyrowave.quest3_240hz_display_scaling`). While the
