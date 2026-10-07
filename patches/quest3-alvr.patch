@@ -8116,10 +8116,10 @@ index 7bfba12ca0479598b4060b84664695a82c96411d..7236535dfbd7196f77a29c1e5f9dbc27
  #endif
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..8113ba2eba3040817beb1580db8fa38a0bd91ea8
+index 0000000000000000000000000000000000000000..9e39123173b74fd4e2c632de8f0ab1c4cb5ac77b
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,549 @@
+@@ -0,0 +1,553 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -8149,6 +8149,7 @@ index 0000000000000000000000000000000000000000..8113ba2eba3040817beb1580db8fa38a
 +/// PyroWave Haar mode 5 hands over packed YCbCr instead of RGBA: one RGBA8 buffer of the full
 +/// frame's width (both eyes) and half its height (resources/present_ycbcr.glsl). Any other buffer,
 +/// including every MediaCodec frame, is RGBA of the full frame.
++/// `eye` is the decoded size per eye, which light foveation makes smaller than the view.
 +pub(super) fn present_ycbcr_layout(buffer: *const c_void, eye: UVec2) -> bool {
 +    #[cfg(target_os = "android")]
 +    {
@@ -8220,6 +8221,8 @@ index 0000000000000000000000000000000000000000..8113ba2eba3040817beb1580db8fa38a
 +    vertex_array: gl::VertexArray,
 +    framebuffers: [Vec<gl::Framebuffer>; 2],
 +    resolution: UVec2,
++    // Decoded size per eye: smaller than `resolution` with light foveation.
++    decoded: UVec2,
 +    view_idx: gl::UniformLocation,
 +    flip_y: gl::UniformLocation,
 +    // The same copy for PyroWave Haar mode 5 buffers: program, view_idx, flip_y.
@@ -8321,7 +8324,8 @@ index 0000000000000000000000000000000000000000..8113ba2eba3040817beb1580db8fa38a
 +                }
 +            };
 +            let mut framebuffers: [Vec<gl::Framebuffer>; 2] = [vec![], vec![]];
-+            let frame_size = (2 * config.resolution.x, config.resolution.y);
++            let decoded = config.foveation.as_ref().map_or(config.resolution, |(_, _, encoded)| *encoded);
++            let frame_size = (2 * decoded.x, decoded.y);
 +            let init_program = |program: gl::Program, present: bool| -> Result<(gl::UniformLocation, gl::UniformLocation), String> {
 +                let location = |name: &str| gl.get_uniform_location(program, name)
 +                    .ok_or_else(|| format!("Direct eye copy missing uniform {name}"));
@@ -8383,7 +8387,7 @@ index 0000000000000000000000000000000000000000..8113ba2eba3040817beb1580db8fa38a
 +                    let timer = RefCell::new(super::eye_timer::EyeTimer::new(&context));
 +                    let native_release = NativeRelease::new(&context);
 +                    Ok(Self { context, program, source_texture,
-+                    vertex_array, framebuffers, resolution: config.resolution,
++                    vertex_array, framebuffers, resolution: config.resolution, decoded,
 +                    view_idx, flip_y, present, flip, asynchronous: Cell::new(asynchronous),
 +                    image_cache_enabled: Cell::new(image_cache_requested && cfg!(target_os = "android")),
 +                    timer,
@@ -8565,7 +8569,7 @@ index 0000000000000000000000000000000000000000..8113ba2eba3040817beb1580db8fa38a
 +        let cached = self.cached_source_texture(buffer);
 +        let source_texture = cached.unwrap_or(self.source_texture);
 +        let (program, view_idx, flip_y) = match &self.present {
-+            Some((program, view_idx, flip_y)) if present_ycbcr_layout(buffer, self.resolution) => (program, view_idx, flip_y),
++            Some((program, view_idx, flip_y)) if present_ycbcr_layout(buffer, self.decoded) => (program, view_idx, flip_y),
 +            _ => (&self.program, &self.view_idx, &self.flip_y),
 +        };
 +        let draw = || {
