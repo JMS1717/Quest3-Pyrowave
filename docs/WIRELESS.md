@@ -100,8 +100,26 @@ the USB path that `.64` changes (numbered wired video slices) is not hardware-te
   - On this link Auto settled at about 550 Mbit/s, about half of what the link carries cleanly.
   - ALVR's estimator divides one frame's bytes by its network time, so it stays conservative.
 
+### `.65`: PyroWave video over UDP
+
+`.65` adds **PyroWave → Transport → UDP** for Wi-Fi ([TRANSPORT.md](TRANSPORT.md#live-results-65)).
+On the same link and settings (Haar, 207 Hz, 2080x2208):
+
+| Bitrate | TCP fresh FPS | UDP fresh FPS | ALVR estimate, TCP / UDP |
+|---|---|---|---|
+| 1000 Mbit/s | 187.6 | 189.7 | 31.9 / 33.0 ms |
+| 1250 Mbit/s (ABBA) | 171.0, 169.2 | 177.3, 180.7 | 34.9-36.4 / 33.9-34.9 ms |
+| 1500 Mbit/s | 110.1 | 110.3 | 112.4 / 42.5 ms |
+
+At 1250 Mbit/s and above, the video arrives complete, but the headset's tracking packets reach the
+PC late. The server then sends several frames with the same pose, and the client counts them as
+one fresh frame. That happens with either transport, and these `.65` runs at 1250 Mbit/s were
+below the 190-192 measured on `.63`.
+
 **Recommendation for Wi-Fi:**
 
+- Transport **UDP** (opt-in in `.65`): never worse than TCP here, and above the link's limit it
+  skips frames instead of queueing them.
 - Constant **1000 Mbit/s** for quality, **1250 at most**.
 - Auto (with a maximum and the latency limit) when latency matters more than bitrate.
 - Keep the PC on Ethernet and the headset on a nearby 6 GHz access point.
@@ -120,6 +138,6 @@ These results don't cover:
 
 **Wired video connections** (`video.pyrowave.wired_video_connections`, default 2) apply only to a
 client on ALVR's wired connection through USB adb. The server opens them only for that connection,
-and the client listens only when the negotiated stream is wired. Over Wi-Fi, video always uses
-ALVR's single stream socket, whatever the setting says. See
+and the client listens only when the negotiated stream is wired. Over Wi-Fi, video uses ALVR's
+single stream socket, or with Transport set to UDP, PyroWave's own UDP datagrams. See
 [BITRATE.md](BITRATE.md#parallel-wired-video-connections-october-7).

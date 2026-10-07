@@ -15333,7 +15333,7 @@ index d7d0dbbfcbfc7eaacf6f4ff5f0c47f882f1eee1a..e85a1e8a6f60414317ee82c6b1a251c5
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..aaf8214604b36643c685f578b1c6f9ccf9b007f5 100644
+index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..a61060487c8f3446bcc69ccf3483bb9237b53042 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -15448,7 +15448,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..aaf8214604b36643c685f578b1c6f9cc
 +
      #[schema(strings(
 -        help = "UDP sends each frame as independent datagrams and drops late ones; TCP retransmits. UDP is the measured operating point."
-+        help = "Wi-Fi only; USB always uses the wired connections. UDP sends each frame as datagrams and skips a frame that loses one. TCP retransmits, so above what the link carries it queues frames and lag builds up. On Wi-Fi 6E, UDP carried 1250-1500 Mbps where TCP stalled. Experimental."
++        help = "Wi-Fi only; USB always uses the wired connections. UDP sends each frame as datagrams and skips a frame that loses one. TCP retransmits, so above what the link carries it queues frames and lag builds up. On Wi-Fi 6E at 1500 Mbps, TCP queued to a 112 ms latency estimate and UDP stayed at 42 ms; at 1000-1250 Mbps UDP was as good or better. Experimental."
      ))]
      #[schema(flag = "steamvr-restart")]
      pub transport: PyroWaveTransport,

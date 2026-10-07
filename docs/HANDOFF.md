@@ -16,7 +16,8 @@ objective below, AGENTS.md wins:
 
 State:
 
-- **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.64`, not released.
+- **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.65` (`.64` plus the opt-in
+  Wi-Fi UDP transport), not released.
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
   194-197 fresh FPS over USB with the direct eye copy, 189-195 over Wi-Fi 6E.
 - **Not established:** sustained gameplay, optical motion-to-photon latency, image quality on par
@@ -44,6 +45,32 @@ The owner permits improving the workflow, test duration and architecture when
 supported by evidence. Preserve correctness, rollback and honest measurements;
 the previous agent's process is not mandatory. A handoff does not automatically
 resume paused hardware work or unattended workers.
+
+## October 7, night: `.65`, transport measured and Wi-Fi UDP video
+
+- **Question:** would replacing adb or TCP raise usable bitrate? See [TRANSPORT.md](TRANSPORT.md).
+- **USB:** adb forwarding is not the limit. NCM USB networking reaches the same 2.3-2.6 Gbps burst
+  ceiling, so USB stays on adb.
+- **Wi-Fi:** `.65` adds PyroWave → Transport → UDP. It sends the wired path's slices as datagrams
+  of at most 1472 bytes, because this network dropped every IP fragment. The client receives them
+  with `recvmmsg` and assembles them with the wired code. UDP is opt-in, and USB ignores the
+  setting.
+- **Live:**
+  - UDP never did worse than TCP:
+    - 1000 Mbps: 189.7 vs 187.6 fresh FPS.
+    - 1250 Mbps, ABBA: 177.3 and 180.7 vs 171.0 and 169.2.
+    - 1500 Mbps: ALVR's latency estimate was 42.5 ms vs 112.4 ms.
+  - At 1250 Mbps and above, fresh FPS is limited by tracking that arrives late over the busy link.
+    The server then repeats a pose: 11% of frames at 1250 Mbps, 43% at 1500 Mbps. That limits both
+    transports.
+- **New diagnostics:** `[Q3PW_TRANSPORT]`, `[Q3PW_UDP_SEND]` and `[Q3PW_TRACKING_RX]`.
+- **Checked:**
+  - Windows tests (`fast_build.py test`), run on `c909f7f`, before the diagnostics commits.
+  - The live cells above.
+  - The headset restored to the `.61` hold client, with the properties read back.
+- **Not checked:**
+  - USB on `.65`. Its wired path is unchanged apart from the assembly counters.
+  - Other networks, sustained play, perceptual quality and optical latency.
 
 ## October 7, late: `.64` on main (PR #18 merged with alpha.9)
 
@@ -84,8 +111,10 @@ Collected from the `.64`, `.63` and October 7 afternoon notes below:
    until a physical replug.
 2. **Auto on Wi-Fi.** Tune Auto towards the link's real capacity. On the tested link it settled
    at about 550 Mbit/s, about half of what the link carried cleanly.
-3. **Parallel connections over Wi-Fi.** They are used only for wired clients today. Check whether
-   they shorten Wi-Fi network time as they do over USB.
+3. **Tracking over a busy Wi-Fi link** (replaces "parallel connections over Wi-Fi"; `.65`'s UDP
+   transport covers Wi-Fi video). Above about 1250 Mbps, late tracking makes the server repeat
+   poses. A fix would render from a server-predicted pose for each frame's display time and send
+   that pose with the frame. Then decide whether UDP becomes the Wi-Fi default.
 4. **P2A, selection.** Find lower-latency selection than the 6 ms frame hold, for example a 2.8 ms
    selection wait with release_fd.
 5. **P3, offline quality.** Compare CDF 5/3 and Haar at 1000, 1300 and 1500 Mbit/s.

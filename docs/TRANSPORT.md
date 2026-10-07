@@ -17,10 +17,13 @@ next one; this is why fresh FPS falls at high bitrates.
   ceiling of about 2.3–2.6 Gbps per burst. NCM had steadier medians but higher base latency and
   worse p99. Four adb connections did as well as NCM or better. The limit is in the headset, not
   in adb's protocol, so the wired transport stays on adb.
-- **Wi-Fi: TCP is the bottleneck.** At 1000 Mbps TCP and UDP perform the same. Above that, TCP
-  queues frames for hundreds of milliseconds to seconds, while UDP still delivers almost every
-  frame on time: 1250 Mbps at about 10 ms, 1500 Mbps at about 12–17 ms. UDP adds about
-  250–500 Mbps of usable Wi-Fi bitrate.
+- **Wi-Fi: TCP is the bottleneck in the burst test.** At 1000 Mbps TCP and UDP perform the same.
+  Above that, TCP queues frames for hundreds of milliseconds to seconds, while UDP still delivers
+  almost every frame on time: 1250 Mbps at about 10 ms, 1500 Mbps at about 12–17 ms.
+- **Live, UDP delivers every frame, but tracking becomes the limit** ([live results](#live-results-65)).
+  At 1500 Mbps UDP kept ALVR's latency estimate at 42 ms where TCP queued to 112 ms. Fresh FPS
+  was about 115 with either transport, because the headset's tracking packets reach the PC late
+  on a link this busy.
 - **No IP fragmentation.** On the measured Wi-Fi path every fragmented datagram was lost (8, 32
   and 60 KB: 0 of 1656 frames arrived). Each datagram must fit a 1500-byte MTU. ALVR's own UDP
   stream (65000-byte packets) cannot work on such a network.
@@ -84,6 +87,70 @@ must be awake for these numbers; with the proximity hold expired, every Wi-Fi re
   1472 bytes (`PYROWAVE_UDP_DATAGRAM`). The client assembles them with the same code as the wired
   connections and hands complete frames to the same decoder. Nothing is retransmitted; a frame
   missing a datagram is skipped, and the next complete frame replaces it. Select it with
-  **PyroWave → Transport → UDP**. Live results are in [WIRELESS.md](WIRELESS.md).
-- **Later:** forward error correction could recover the 0.2–3% of frames that lose a datagram.
-  Windows UDP segmentation offload could cut the server's send cost.
+  **PyroWave → Transport → UDP**. Live results are [below](#live-results-65).
+- **Later:** forward error correction could recover frames that lose a datagram, if a link turns
+  out to lose them; this one did not. Windows UDP segmentation offload could cut the server's send
+  cost.
+
+## Live results (`.65`)
+
+The settings were:
+
+- `.65` local builds `c909f7f`, `bd67b5a` and `2a168d8` (the later two add only diagnostics).
+- 207 Hz, 2080x2208 per eye from a 3072x3216 render, Haar, no foveation.
+- Wi-Fi 6E only: the wired entry was removed from the test session while USB adb stayed attached
+  for the harness.
+- Two 10 s blocks per cell after the settle, with a 60 deg/s pan in the PC scene.
+- The first block of every cell ran at GPU level 4 (640 MHz) and the second at level 7 (690 MHz);
+  the memory clock moved between 2092, 2736 and 3196 MHz.
+
+**Fresh FPS** counts distinct frame timestamps shown. The **estimate** is ALVR's total latency
+estimate, not motion-to-photon.
+
+| Bitrate | Order | Transport | Fresh FPS | Estimate |
+| --- | --- | --- | --- | --- |
+| 1000 Mbps | AB | UDP / TCP | 189.7 / 187.6 | 33.0 / 31.9 ms |
+| 1250 Mbps | ABBA | TCP, UDP, UDP, TCP | 171.0, 177.3, 180.7, 169.2 | 36.4, 33.9, 34.9, 34.9 ms |
+| 1250 Mbps | later runs | UDP | 175.7, 174.8, 176.6, 170.0 | |
+| 1500 Mbps | AB | TCP / UDP | 110.1 / 110.3 | **112.4 / 42.5 ms** |
+| 1500 Mbps | later runs | UDP | 116.0, 112.3, 116.3, 120.0, 118.0 | |
+
+What the diagnostics showed:
+
+- **The transport delivers.**
+  - At 1500 Mbps the server sent 207 frames/s of 637 datagrams each, spending 1.9–2.5 ms per
+    frame in `send_to`.
+  - The headset completed 9260 frames in 45 s and dropped 38, all while the stream started.
+  - At 1250 Mbps it dropped none.
+  - The kernel reported no receive-buffer errors.
+- **The frames repeat poses.** The server matches each SteamVR frame to the tracking sample it
+  was rendered from (`PoseHistory::GetBestPoseMatch`). When no new tracking has arrived, the next
+  frame carries the same timestamp. The client shows it, but fresh FPS counts it once.
+
+| Bitrate | Frames with the previous frame's timestamp | Tracking arrival gap p90 / p99 / max |
+| --- | --- | --- |
+| 1000 Mbps | about 2% | 3.7–4.0 / 6.1–8.7 / 9–45 ms |
+| 1250 Mbps | 8–15% | 4.5–4.6 / 9.1–9.9 / 24–39 ms |
+| 1500 Mbps | 41–45% | 6.6–8.3 / 15.5–17.5 / 25–39 ms |
+
+Gaps include the zero gaps between the client's several packets per pose. The tracking packets
+travel up a link the video keeps busy, so they arrive late and bunched.
+
+Moving ALVR's stream socket (which carries tracking) from TCP to UDP changed nothing: 116.3 and
+176.6 fresh FPS at 1500 and 1250 Mbps.
+
+So on this link:
+
+- UDP is never worse than TCP.
+- At 1250 Mbps UDP shows about 8 more fresh frames per second.
+- At 1500 Mbps UDP avoids TCP's queue, but nothing yet fixes the late tracking.
+
+Fixing the tracking would take the server rendering from a predicted pose for the frame's own
+display time and sending that pose with the frame, because the client can only reproject with
+poses it has sent.
+
+The diagnostics stay in the build as error-level lines:
+
+- `[Q3PW_TRANSPORT]` on the client: frames complete, dropped and missing per transport.
+- `[Q3PW_UDP_SEND]` on the server: frames, repeated timestamps, datagrams and send time.
+- `[Q3PW_TRACKING_RX]` on the server: tracking arrival gaps.
