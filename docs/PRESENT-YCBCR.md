@@ -68,8 +68,8 @@ fence falls by 0.85 ms.
 ## Live (Quest 3, owner settings, October 7)
 
 3072x3216 render, 2080x2208 per eye stream, 207 Hz, 1000 Mbps Haar 4:2:0, Adaptive downsample,
-quality scene panning at 60 deg/s, headset awake, f4a0bf2 client over the 5246dff (.61) streamer.
-Three ABBA runs of 12 s windows, means of the two blocks per arm. The GPU ran mostly at 640 MHz:
+quality scene panning at 60 deg/s, headset awake, over the 5246dff (.61) streamer.
+Three ABBA runs of mode 4 against mode 5 (f4a0bf2), then one against the default build (run 4), 12 s windows, means of the two blocks per arm. The GPU ran mostly at 640 MHz:
 manually pinning `debug.oculus.gpuLevel=7` did not reach the client in these runs, see below.
 
 | run | arm | fresh FPS | lost/s | fence p50 | GPU decode p50 | convert p50 | eye copy p50 | ALVR latency estimate |
@@ -80,7 +80,10 @@ manually pinning `debug.oculus.gpuLevel=7` did not reach the client in these run
 | 2 | mode 5 | **190.0** | 19.6 | **4.13 ms** | 2.67 ms | none | **3.76 ms** | 33.4 ms |
 | 3 | mode 4 | 174.5 | 32.7 | 5.48 ms | 2.64 ms | 1.30 ms | 5.16 ms | 33.4 ms |
 | 3 | mode 5 | **187.0** | 20.8 | **4.68 ms** | 2.85 ms | none | **4.26 ms** | 33.3 ms |
+| 4 | mode 4 (`haar32=4`) | 184.9 | 23.0 | 4.80 ms | 2.53 ms | 0.88 ms | 4.47 ms | 35.8 ms |
+| 4 | default (6bc09da) | **197.6** | 10.1 | **4.44 ms** | 2.90 ms | none | **3.78 ms** | 29.8 ms |
 
+Run 4 checks the 6bc09da build with no property set: the client logs `requested=5 active=5`.
 Mode 5 had more fresh frames, fewer lost frames and a shorter fence in every run, and the eye copy
 was 0.5-0.9 ms cheaper because it reads 18 MB per frame instead of 37 MB. Decode grows by about
 0.2 ms (stores into the imported buffer), as standalone predicted. Run 3 had a weak final mode 4
