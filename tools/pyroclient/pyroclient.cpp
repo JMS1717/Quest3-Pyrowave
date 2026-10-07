@@ -1311,14 +1311,15 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
     char fuse_prop[PROP_VALUE_MAX] = {};
     __system_property_get("debug.q3pw.fuse_color", fuse_prop);
     {
-        // Multilevel Haar (docs/HAAR32.md), default mode 4; "0" to "5" selects a mode. Fused colour
+        // Multilevel Haar (docs/HAAR32.md), default mode 5 (docs/PRESENT-YCBCR.md), which steps down
+        // to mode 4 where it cannot apply; "0" to "5" selects a mode. Fused colour
         // and fused dequant replace passes it owns, so requesting either turns the default off.
         char haar32_prop[PROP_VALUE_MAX] = {}, dequant_haar_prop[PROP_VALUE_MAX] = {};
         __system_property_get("debug.q3pw.dequant_haar", dequant_haar_prop);
         const bool explicit_mode = __system_property_get("debug.q3pw.haar32", haar32_prop) > 0 &&
                                    haar32_prop[0] >= '0' && haar32_prop[0] <= '5' && !haar32_prop[1];
         c->haar32_requested = explicit_mode ? haar32_prop[0] - '0'
-                              : !strcmp(fuse_prop, "1") || !strcmp(dequant_haar_prop, "1") ? 0 : 4;
+                              : !strcmp(fuse_prop, "1") || !strcmp(dequant_haar_prop, "1") ? 0 : 5;
         // Decoder V2 for CDF 5/3 (docs/DECODER-V2.md), default mode 3; "0" to "3" selects a mode.
         char v2_prop[PROP_VALUE_MAX] = {};
         const bool explicit_v2 = __system_property_get("debug.q3pw.cdf53v2", v2_prop) > 0 &&

@@ -1,6 +1,8 @@
 # Multilevel inverse Haar (`debug.q3pw.haar32`)
 
-Status: default on in mode 4 (`debug.q3pw.haar32` unset). `0` to `4` select a mode; requesting
+Status: default on in mode 5 (`debug.q3pw.haar32` unset; [PRESENT-YCBCR.md](PRESENT-YCBCR.md)),
+which steps down to mode 4 without storage on the output buffer, with limited range or with Catmull-Rom
+chroma. `0` to `5` select a mode; requesting
 `debug.q3pw.fuse_color=1` or `debug.q3pw.dequant_haar=1` turns the default off, since those
 experiments replace passes this one owns. The client logs `[Q3PW_HAAR32] requested=N active=M
 packed_luma=0|1 dual_chroma=0|1` and steps down to the best mode the decoder accepts (CDF wavelets, 4:4:4, the
@@ -188,7 +190,8 @@ and 3; `dqprobe`, `h32nostore` and `h32nofetch` are the cost probes (`AB_SKIP_GA
    cheaper (best 1.78 to 1.67 ms; bench arm 2.03 to 1.72 ms) but the conversion pass went from
    0.89 to 1.71 ms, and the standalone fence p50 rose from 4.13 to 5.19 ms. Each fragment then
    fetches four RGBA16F band texels instead of one RGBA8 texel, and the pass is bandwidth-bound.
-   The remaining route is to drop the pass: hand ALVR's GLES eye render the packed luma and chroma
-   buffers and convert to RGB there.
+   Done 2026-10-07 by dropping the pass instead: mode 5 ([PRESENT-YCBCR.md](PRESENT-YCBCR.md)),
+   now the default, writes packed luma and chroma into the output buffer and ALVR's eye render
+   converts; live fence -0.35 to -0.8 ms and +2 to +12 fresh FPS over mode 4.
 4. **Queueing.** ALVR's vsync-queue estimate is about 11.4 ms in every arm; the adaptive-buffering
    policies in the optimization plan are the next latency lever once decode has headroom.
