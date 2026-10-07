@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb927ee89ab5 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..5dc69f10ad978c8326e425553127567c15ec3282 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f5dfee88cf9296c1d93315f224ffeb92
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..c6d1bd9e7caaf974cd3dd93c6f47c180c57525a0 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..e0ef87f0b30714e301eeb6acbc94e4563e039a77 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..c6d1bd9e7caaf974cd3dd93c6f47c180
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.65"
++version = "20.13.0-quest3.pyro.66"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -11686,7 +11686,7 @@ index 554dcb40352e5dc65370bd245aed0c276b09a7c2..a729f4b6b3eec9e433e51a6474b27af4
      "rt-multi-thread",
      "macros",
 diff --git a/alvr/server_core/src/bitrate.rs b/alvr/server_core/src/bitrate.rs
-index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..e57afb4088ce4382f426a9b5e7a18b0bc182e087 100644
+index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..38d35a685b272a6ac3d0f1aa73a9d0e62729238a 100644
 --- a/alvr/server_core/src/bitrate.rs
 +++ b/alvr/server_core/src/bitrate.rs
 @@ -1,7 +1,7 @@
@@ -11698,10 +11698,15 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..e57afb4088ce4382f426a9b5e7a18b0b
  };
  use std::{
      collections::VecDeque,
-@@ -10,11 +10,160 @@ use std::{
+@@ -9,15 +9,216 @@ use std::{
+ };
  
  const UPDATE_INTERVAL: Duration = Duration::from_secs(1);
- 
++// About 80 ms at 207 Hz: smooths present jitter but follows a scene change within a few frames.
++const PRESENT_EMA_FRAMES: f32 = 16.0;
++// Relative framerate change that is worth new encoder parameters.
++const FRAMERATE_CHANGE: f32 = 0.03;
++
 +/// PyroWave's fixed GPU reconstruction cost scales mainly with resolution, not bytes.
 +/// The hardware-decoder limiter compounds reductions even below that fixed cost and
 +/// can starve the stream. Keep network/encoder feedback, but disable this limiter for
@@ -11715,7 +11720,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..e57afb4088ce4382f426a9b5e7a18b0b
 +    }
 +    effective
 +}
-+
+ 
  pub struct DynamicEncoderParams {
      pub bitrate_bps: f32,
      pub framerate: f32,
@@ -11854,12 +11859,64 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..e57afb4088ce4382f426a9b5e7a18b0b
 +            Some(params.bitrate_bps)
 +        );
 +    }
++
++    #[test]
++    fn constant_bitrate_follows_the_present_rate() {
++        let mut config = SessionConfig::default().to_settings().video.bitrate;
++        config.mode = BitrateMode::ConstantMbps(1000);
++        assert!(config.adapt_to_framerate.enabled());
++        let mut manager = BitrateManager::new(1, 200.0);
++        assert!((manager.get_encoder_params(&config).unwrap().0.framerate - 200.0).abs() < 0.5);
++        let present = |manager: &mut BitrateManager, fps: f32, frames: u32| {
++            let mut now = manager.last_frame_instant;
++            for _ in 0..frames {
++                now += Duration::from_secs_f32(1.0 / fps);
++                manager.report_frame_present_at(now, &config.adapt_to_framerate);
++            }
++        };
++        let age = |manager: &mut BitrateManager| {
++            manager.last_update_instant = Instant::now() - UPDATE_INTERVAL;
++        };
++
++        // A slower game gets bigger frames at the next periodic update, not before.
++        present(&mut manager, 150.0, 200);
++        assert!(manager.get_encoder_params(&config).is_none());
++        age(&mut manager);
++        let framerate = manager.get_encoder_params(&config).unwrap().0.framerate;
++        assert!((framerate - 150.0).abs() < 1.0, "{framerate}");
++        // Unchanged, nothing new.
++        age(&mut manager);
++        present(&mut manager, 150.0, 50);
++        assert!(manager.get_encoder_params(&config).is_none());
++
++        // A faster game shrinks the frames at once.
++        present(&mut manager, 200.0, 50);
++        let framerate = manager.get_encoder_params(&config).unwrap().0.framerate;
++        assert!(framerate > 160.0, "{framerate}");
++
++        // A stall is capped at twice the nominal frame size.
++        present(&mut manager, 20.0, 100);
++        age(&mut manager);
++        let framerate = manager.get_encoder_params(&config).unwrap().0.framerate;
++        assert!((framerate - 100.0).abs() < 0.5, "{framerate}");
++
++        // Disabled, the refresh rate is used as before.
++        config.adapt_to_framerate = Switch::Disabled;
++        let framerate = manager.get_encoder_params(&config).unwrap().0.framerate;
++        assert!((framerate - 200.0).abs() < 0.5, "{framerate}");
++    }
 +}
 +
  pub struct BitrateManager {
      nominal_frame_interval: Duration,
-     frame_interval_average: SlidingWindowAverage<Duration>,
-@@ -30,6 +179,7 @@ pub struct BitrateManager {
+-    frame_interval_average: SlidingWindowAverage<Duration>,
++    present_interval_ema_s: f32,
++    // The framerate in the last parameters handed to the encoder.
++    last_framerate: f32,
+     // note: why packet_sizes_bits_history is a queue and not a sliding average? Because some
+     // network samples will be dropped but not any packet size sample
+     packet_bytes_history: VecDeque<(Duration, usize)>,
+@@ -30,16 +231,15 @@ pub struct BitrateManager {
      dynamic_decoder_max_bytes_per_frame: f32,
      previous_config: Option<BitrateConfig>,
      update_needed: bool,
@@ -11867,7 +11924,19 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..e57afb4088ce4382f426a9b5e7a18b0b
  }
  
  impl BitrateManager {
-@@ -56,9 +206,18 @@ impl BitrateManager {
+     pub fn new(max_history_size: usize, initial_framerate: f32) -> Self {
+         Self {
+             nominal_frame_interval: Duration::from_secs_f32(1. / initial_framerate),
+-            frame_interval_average: SlidingWindowAverage::new(
+-                Duration::from_millis(16),
+-                max_history_size,
+-            ),
++            present_interval_ema_s: 1. / initial_framerate,
++            last_framerate: initial_framerate,
+             packet_bytes_history: VecDeque::new(),
+             packet_bytes_average: SlidingWindowAverage::new(50000.0, max_history_size),
+             network_latency_average: SlidingWindowAverage::new(
+@@ -56,33 +256,65 @@ impl BitrateManager {
              dynamic_decoder_max_bytes_per_frame: f32::MAX,
              previous_config: None,
              update_needed: true,
@@ -11886,7 +11955,67 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..e57afb4088ce4382f426a9b5e7a18b0b
      // Note: This is used to calculate the framerate/frame interval. The frame present is the most
      // accurate event for this use.
      pub fn report_frame_present(&mut self, config: &Switch<BitrateAdaptiveFramerateConfig>) {
-@@ -157,6 +316,12 @@ impl BitrateManager {
+-        let now = Instant::now();
++        self.report_frame_present_at(Instant::now(), config);
++    }
+ 
+-        let interval = now - self.last_frame_instant;
++    // Every presented frame is encoded, so the present rate is the rate the bitrate is spread
++    // over. A game that renders 160 fps on a 207 Hz panel presents 160 frames a second; budgeting
++    // bitrate / 207 per frame then sends only 77% of the bitrate and starves complex scenes.
++    fn report_frame_present_at(
++        &mut self,
++        now: Instant,
++        config: &Switch<BitrateAdaptiveFramerateConfig>,
++    ) {
++        let interval = now.saturating_duration_since(self.last_frame_instant);
+         self.last_frame_instant = now;
+ 
+-        if let Some(config) = config.as_option() {
+-            let interval_ratio =
+-                interval.as_secs_f32() / self.frame_interval_average.get_average().as_secs_f32();
+-
+-            self.frame_interval_average.submit_sample(interval);
+-
+-            if interval_ratio > config.framerate_reset_threshold_multiplier
+-                || interval_ratio < 1.0 / config.framerate_reset_threshold_multiplier
+-            {
+-                // Clear most of the samples, keep some for stability
+-                self.frame_interval_average.retain(5);
++        // One stall must not dominate the average; the budget is capped at present anyway.
++        let nominal_s = self.nominal_frame_interval.as_secs_f32();
++        let sample_s = interval.as_secs_f32().min(nominal_s * 4.0);
++        self.present_interval_ema_s += (sample_s - self.present_interval_ema_s) / PRESENT_EMA_FRAMES;
++
++        if config.enabled() {
++            // A rising frame rate shrinks the frames: apply it at once, otherwise frames sized
++            // for the slower rate overshoot the bitrate and queue on the link. A falling rate
++            // grows them and waits for the periodic update.
++            let framerate = self.adapted_framerate(config);
++            if framerate > self.last_framerate * (1.0 + FRAMERATE_CHANGE) {
+                 self.update_needed = true;
+             }
+         }
+     }
+ 
++    // The present rate the bitrate is spread over. It is at least the nominal rate divided by the
++    // configured multiplier, so a slow game gets at most that many times the nominal frame size.
++    fn adapted_framerate(&self, config: &Switch<BitrateAdaptiveFramerateConfig>) -> f32 {
++        let nominal_s = self.nominal_frame_interval.as_secs_f32();
++        let Some(config) = config.as_option() else {
++            return 1.0 / f32::min(nominal_s, 1.0);
++        };
++        let max_multiplier = config.framerate_reset_threshold_multiplier.max(1.0);
++        let interval_s = self
++            .present_interval_ema_s
++            .clamp(nominal_s * 0.5, nominal_s * max_multiplier);
++        1.0 / f32::min(interval_s, 1.0)
++    }
++
+     pub fn report_frame_encoded(
+         &mut self,
+         timestamp: Duration,
+@@ -157,28 +389,41 @@ impl BitrateManager {
              .map(|prev| config != prev)
              .unwrap_or(true)
          {
@@ -11898,8 +12027,37 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..e57afb4088ce4382f426a9b5e7a18b0b
 +            }
              self.previous_config = Some(config.clone());
              // Continue method. Always update bitrate in this case
-         } else if !self.update_needed
-@@ -178,7 +343,9 @@ impl BitrateManager {
+-        } else if !self.update_needed
+-            && (now < self.last_update_instant + UPDATE_INTERVAL
+-                || matches!(config.mode, BitrateMode::ConstantMbps(_)))
+-        {
+-            return None;
++        } else if !self.update_needed {
++            if now < self.last_update_instant + UPDATE_INTERVAL {
++                return None;
++            }
++            // A constant bitrate only needs new parameters when the framerate it is spread over
++            // moved.
++            let framerate = self.adapted_framerate(&config.adapt_to_framerate);
++            if matches!(config.mode, BitrateMode::ConstantMbps(_))
++                && (framerate / self.last_framerate - 1.0).abs() <= FRAMERATE_CHANGE
++            {
++                return None;
++            }
+         }
+ 
+         self.last_update_instant = now;
+         self.update_needed = false;
+ 
+-        let frame_interval = if config.adapt_to_framerate.enabled() {
+-            self.frame_interval_average.get_average()
+-        } else {
+-            self.nominal_frame_interval
+-        };
++        let framerate = self.adapted_framerate(&config.adapt_to_framerate);
++        self.last_framerate = framerate;
++        let frame_interval = Duration::from_secs_f32(1.0 / framerate);
+ 
          let mut bitrate_directives = BitrateDirectives::default();
  
          let bitrate_bps = match &config.mode {
@@ -11910,7 +12068,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..e57afb4088ce4382f426a9b5e7a18b0b
              BitrateMode::Adaptive {
                  saturation_multiplier,
                  max_throughput_mbps,
-@@ -196,10 +363,19 @@ impl BitrateManager {
+@@ -196,10 +441,19 @@ impl BitrateManager {
                  bitrate_directives.scaled_calculated_throughput_bps = Some(throughput_bps);
  
                  if decoder_latency_limiter.enabled() {
@@ -11934,6 +12092,15 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..e57afb4088ce4382f426a9b5e7a18b0b
                  }
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
+@@ -249,7 +503,7 @@ impl BitrateManager {
+         Some((
+             DynamicEncoderParams {
+                 bitrate_bps,
+-                framerate: 1.0 / f32::min(frame_interval.as_secs_f32(), 1.0),
++                framerate,
+             },
+             bitrate_directives,
+         ))
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
 index fc176da39833633bc7fbac803ebe345c7832fbdb..23c94cb7b62b6e8e3b9400cfcfeb90adc9109abe 100644
 --- a/alvr/server_core/src/connection.rs
@@ -15333,7 +15500,7 @@ index d7d0dbbfcbfc7eaacf6f4ff5f0c47f882f1eee1a..e85a1e8a6f60414317ee82c6b1a251c5
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..a61060487c8f3446bcc69ccf3483bb9237b53042 100644
+index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..3e017ca326573fc42e34a2cf70895637b3a86967 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -15360,6 +15527,26 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..a61060487c8f3446bcc69ccf3483bb92
          min_throughput_mbps: Switch<u64>,
  
          #[schema(strings(display_name = "Maximum network latency"))]
+@@ -445,8 +445,8 @@ pub enum BitrateMode {
+ #[derive(SettingsSchema, Serialize, Deserialize, Clone, PartialEq)]
+ pub struct BitrateAdaptiveFramerateConfig {
+     #[schema(strings(
+-        display_name = "FPS reset threshold multiplier",
+-        help = "If the framerate changes more than this factor, trigger a parameters update",
++        display_name = "Max frame size multiplier",
++        help = "A game presenting below the refresh rate gets bigger frames, up to this many times the frame size at the refresh rate",
+     ))]
+     #[schema(flag = "real-time")]
+     #[schema(gui(slider(min = 1.0, max = 3.0, step = 0.1)))]
+@@ -460,7 +460,7 @@ pub struct BitrateConfig {
+     pub mode: BitrateMode,
+ 
+     #[schema(strings(
+-        help = "Ensure that the specified bitrate value is respected regardless of the framerate"
++        help = "Spread the bitrate over the frames actually presented, not the refresh rate, so a game below the refresh rate gets bigger frames"
+     ))]
+     #[schema(flag = "real-time")]
+     #[schema(flag = "hidden")]
 @@ -582,14 +582,12 @@ pub enum CodecType {
      // HEVC and AV1 stay in the enum (session files and the wire format know them) but are not
      // offered: on the Galaxy XR the hardware HEVC decoder measured ~8x slower than H.264.
@@ -15618,6 +15805,15 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..a61060487c8f3446bcc69ccf3483bb92
              max_buffering_frames: 1.5,
              buffering_history_weight: 0.90,
              enforce_server_frame_pacing: true,
+@@ -1784,7 +1891,7 @@ pub fn session_settings_default() -> SettingsDefault {
+                     variant: BitrateModeDefaultVariant::ConstantMbps,
+                 },
+                 adapt_to_framerate: SwitchDefault {
+-                    enabled: false,
++                    enabled: true,
+                     content: BitrateAdaptiveFramerateConfigDefault {
+                         framerate_reset_threshold_multiplier: 2.0,
+                     },
 @@ -1796,15 +1903,27 @@ pub fn session_settings_default() -> SettingsDefault {
                  variant: CodecTypeDefaultVariant::PyroWave,
              },
