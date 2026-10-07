@@ -67,7 +67,7 @@ index d44dc0fb80aafa468d14fbf30536551fac0da8bc..df9b440598ab8612a8e9d218bba4df3c
  {
  	if (!decoder)
 diff --git a/pyrowave_decoder.cpp b/pyrowave_decoder.cpp
-index d2ca014b7ba09be6781c6a98c819e53d63094182..299d35c4bba2704cc857140eb2ee68b06089bf9f 100644
+index d2ca014b7ba09be6781c6a98c819e53d63094182..bb0aa67a2092f25ed22efb94ec827d126702d846 100644
 --- a/pyrowave_decoder.cpp
 +++ b/pyrowave_decoder.cpp
 @@ -104,15 +104,35 @@ struct Decoder::Impl final : public WaveletBuffers
@@ -227,7 +227,7 @@ index d2ca014b7ba09be6781c6a98c819e53d63094182..299d35c4bba2704cc857140eb2ee68b0
  
  			cmd.set_specialization_constant(0, levels);
  			cmd.set_specialization_constant(1, root_below_top);
-@@ -976,10 +1045,122 @@ bool Decoder::Impl::idwt_haar32(CommandBuffer &cmd, const ViewBuffers &views)
+@@ -976,10 +1045,137 @@ bool Decoder::Impl::idwt_haar32(CommandBuffer &cmd, const ViewBuffers &views)
  	return true;
  }
  
@@ -270,6 +270,8 @@ index d2ca014b7ba09be6781c6a98c819e53d63094182..299d35c4bba2704cc857140eb2ee68b0
 +	// PYROWAVE_V2_LEVEL_TIMES=1 adds one GPU interval per level ("iDWT L<n>") for profiling.
 +	const bool level_times = timestamp_recording && getenv("PYROWAVE_V2_LEVEL_TIMES");
 +	QueryPoolHandle level_start = level_times ? cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT) : QueryPoolHandle{};
++	const bool dispatch_times = level_times && atoi(getenv("PYROWAVE_V2_LEVEL_TIMES")) == 2;
++	QueryPoolHandle dispatch_start = dispatch_times ? cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT) : QueryPoolHandle{};
 +
 +	for (int input_level = DecompositionLevels - 1; input_level >= 0; input_level--)
 +	{
@@ -323,6 +325,19 @@ index d2ca014b7ba09be6781c6a98c819e53d63094182..299d35c4bba2704cc857140eb2ee68b0
 +			// One invocation per 2x2 coefficient quad, 8x8 invocations per group.
 +			cmd.dispatch((push.band_size.x + 15) / 16, (push.band_size.y + 15) / 16, 1);
 +			cmd.end_region();
++			if (dispatch_times)
++			{
++				// PYROWAVE_V2_LEVEL_TIMES=2: serialize and time every dispatch ("iDWT L<n> c<c>").
++				cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
++				            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
++				auto dispatch_end = cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
++				static const char *const dnames[5][3] = {
++					{ "iDWT L0 c0", "iDWT L0 c1", "iDWT L0 c2" }, { "iDWT L1 c0", "iDWT L1 c1", "iDWT L1 c2" },
++					{ "iDWT L2 c0", "iDWT L2 c1", "iDWT L2 c2" }, { "iDWT L3 c0", "iDWT L3 c1", "iDWT L3 c2" },
++					{ "iDWT L4 c0", "iDWT L4 c1", "iDWT L4 c2" } };
++				device->register_time_interval("GPU", std::move(dispatch_start), QueryPoolHandle(dispatch_end), dnames[input_level][c]);
++				dispatch_start = dispatch_end;
++			}
 +		}
 +		cmd.set_specialization_constant_mask(0);
 +		cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
@@ -350,7 +365,7 @@ index d2ca014b7ba09be6781c6a98c819e53d63094182..299d35c4bba2704cc857140eb2ee68b0
      if (haar && fused_haar)
      {
          cmd.set_program(shaders.idwt_haar_fused[Configuration::get().get_precision()]);
-@@ -1423,12 +1604,12 @@ bool Decoder::Impl::allocate_packed()
+@@ -1423,12 +1619,12 @@ bool Decoder::Impl::allocate_packed()
  	info.initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
  	info.layers = NumFrequencyBandsPerLevel * NumComponents;
  	info.layout = ImageLayout::General;
@@ -365,7 +380,7 @@ index d2ca014b7ba09be6781c6a98c819e53d63094182..299d35c4bba2704cc857140eb2ee68b0
  	{
  		for (int component = 0; component < NumComponents; component++)
  		{
-@@ -1441,6 +1622,9 @@ bool Decoder::Impl::allocate_packed()
+@@ -1441,6 +1637,9 @@ bool Decoder::Impl::allocate_packed()
  			view_info.base_layer = 4 * component;
  			view_info.layers = 4;
  			packed_layer_views[component][level] = device->create_image_view(view_info);
@@ -375,7 +390,7 @@ index d2ca014b7ba09be6781c6a98c819e53d63094182..299d35c4bba2704cc857140eb2ee68b0
  		}
  	}
  	return true;
-@@ -1448,13 +1632,39 @@ bool Decoder::Impl::allocate_packed()
+@@ -1448,13 +1647,39 @@ bool Decoder::Impl::allocate_packed()
  
  bool Decoder::set_haar32(int mode)
  {
