@@ -117,6 +117,24 @@ To install:
 
 Keep the previous pair.
 
+## Known issues
+
+Found in review after merge. The fixes are planned for alpha.10.
+
+- **Occasional broken frames with wired video connections.** When a game stutters, the PC can
+  send two frames with the same timestamp. Their slices then mix in one frame, and one frame
+  can show partly black.
+  - Workaround: set **Wired video connections** (`video.pyrowave.wired_video_connections`) to 0.
+    Video then uses the stream socket.
+- **The quality floor overrides Auto.** Auto bitrate never goes below 0.25 bits per stream
+  pixel, about 500 Mbit/s at 207 Hz with 2080x2208. On a congested link frames drop instead.
+- **Packed YCbCr fallback.** If the eye-copy YCbCr program fails to build on a driver, packed
+  frames can show wrong colours, or the client can stop at stream start.
+  - Workaround: set `debug.q3pw.haar32=4` (`debug.q3pw.cdf53v2=4` with CDF 5/3) for the
+    previous RGBA output.
+- **The "207 Hz (measured)" profile name** refers to 10-12 s screens. Sustained play at that
+  profile is not yet measured.
+
 ## Not in this release
 
 - No claim of sustained 207 fresh FPS, optical latency or perceptual parity with Virtual Desktop.
