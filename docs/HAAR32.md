@@ -1,9 +1,11 @@
 # Multilevel inverse Haar (`debug.q3pw.haar32`)
 
-Status: default on in mode 3 (`debug.q3pw.haar32` unset). `0`, `1`, `2`, `3` select a mode; requesting
+Status: default on in mode 5 (`debug.q3pw.haar32` unset; [PRESENT-YCBCR.md](PRESENT-YCBCR.md)),
+which steps down to mode 4 without storage on the output buffer, with limited range or with Catmull-Rom
+chroma. `0` to `5` select a mode; requesting
 `debug.q3pw.fuse_color=1` or `debug.q3pw.dequant_haar=1` turns the default off, since those
 experiments replace passes this one owns. The client logs `[Q3PW_HAAR32] requested=N active=M
-packed_luma=0|1` and steps down to the best mode the decoder accepts (CDF wavelets, 4:4:4, the
+packed_luma=0|1 dual_chroma=0|1` and steps down to the best mode the decoder accepts (CDF wavelets, 4:4:4, the
 fragment decode path and precisions other than 1 fall back to mode 0 or 1).
 
 | mode | what changes |
@@ -12,6 +14,29 @@ fragment decode path and precisions other than 1 fall back to mode 0 or 1).
 | 1 | multilevel inverse Haar, two dispatches per plane |
 | 2 | 1 + levels 0-1 stored as RGBA16F 2x2 quads |
 | 3 | 2 + luma written as an RGBA8 plane of half size, one 2x2 pixel quad per texel |
+| 4 | 3 + Cb and Cr reconstructed by one dispatch into one RG8 plane |
+
+## Mode 4: both chroma planes in one RG8 plane
+
+A cost probe (`PYROWAVE_HAAR32_PROBE=3`, which drops the chroma final-pass stores and lets the
+compiler drop the work feeding them) put the chroma final pass at 0.44 of mode 3's 2.09 ms at
+492 MHz. Mode 4 runs that pass once for both components (the `DUAL` variant of
+`idwt_haar32.comp`, second component on bindings 4-6) and stores Cb and Cr together into an RG8
+plane: half the store instructions, and the conversion pass reads both with one bilinear fetch.
+Output is bit-identical to mode 3 (`decoder_ab haar32qd` with `AB_ALLOW_DIFF=1` reports the same
+differing counts against the base decoder as `haar32qo`).
+
+| | mode 3 | mode 4 |
+|---|---|---|
+| bench p50, 4160x2208, 604 KB, 492 MHz, interleaved | 2.10 ms | 2.03 ms |
+| live fresh FPS, ABBA 12 s windows (blocks) | 183.7 (185.3 / 182.1) | **190.4** (190.6 / 190.2) |
+| live decode fence p50 | 4.94 ms | **4.71** |
+| live stale frames per second | 23.9 | 17.3 |
+
+Live settings, 2026-10-06: the owner's 3072x3216 render, 2080x2208 per eye encoded, 207 Hz,
+1000 Mbit/s, Haar 4:2:0, no foveation, Adaptive downsample, `quality_scene` panning at 60 deg/s.
+Most of the live gain is in the conversion and fence, not the decode interval, so the single
+fetch matters more than the halved stores. The in-headset screenshots show correct colour.
 
 ## What it does
 
@@ -157,11 +182,24 @@ and 3; `dqprobe`, `h32nostore` and `h32nofetch` are the cost probes (`AB_SKIP_GA
    operations per plane (CPU-verified, saved privately as a patch). Standalone, mode 3 with it ran
    3.04 ms against 3.005-3.04 ms without, so the plane loop is not the cost. Mode 3 dequant without its
    stores measured 1.09 ms (probe, one block at 640 MHz), so stores are now only about 0.25 ms;
-   the rest is per-block header loads, subgroup scans and barriers. Probe those next.
-2. **Chroma stores.** With luma packed, the two R8 chroma planes now take twice the luma plane's
-   stores. Interleaving Cb/Cr into one RG8 plane halves them and keeps hardware bilinear upsampling
-   in the conversion pass.
-3. **Conversion pass** (0.9 ms live in mode 3) and the ALVR eye render it feeds: the next large
-   item, toward Vulkan-native presentation.
+   the rest is per-block header loads, subgroup scans and barriers. Rejected 2026-10-07 (mode 5,
+   `decoder_ab wavelets`, six interleaved blocks): sharing each 8x8 block's control words through
+   shared memory instead of reloading them after the barrier (exact), and summing the subgroup
+   totals after one barrier instead of a scan between two (exact only with the barrier kept even
+   for one subgroup: skipping it on `gl_NumSubgroups == 1` decoded wrong signs on Adreno). Dequant
+   stage means 0.930 ms base against 0.898-0.911 ms for the variants, inside the block-to-block
+   spread (0.81-1.04 ms), and total p50 2.068-2.092 ms against 2.083 ms. Neither header loads nor
+   barriers are the cost; the remaining work is spread over the plane loop, sign clocking and the
+   13.4k workgroups themselves.
+2. **Chroma stores.** Done: mode 4.
+3. **Conversion pass** (0.9 ms live in mode 4, about 37 MB of RGBA8 written per frame) and the ALVR
+   eye render it feeds: the next large item. Rejected 2026-10-06: folding the final luma level into
+   the conversion pass (`debug.q3pw.fuse_color=1` on the packed level 0, mode 4). Decode got
+   cheaper (best 1.78 to 1.67 ms; bench arm 2.03 to 1.72 ms) but the conversion pass went from
+   0.89 to 1.71 ms, and the standalone fence p50 rose from 4.13 to 5.19 ms. Each fragment then
+   fetches four RGBA16F band texels instead of one RGBA8 texel, and the pass is bandwidth-bound.
+   Done 2026-10-07 by dropping the pass instead: mode 5 ([PRESENT-YCBCR.md](PRESENT-YCBCR.md)),
+   now the default, writes packed luma and chroma into the output buffer and ALVR's eye render
+   converts; live fence -0.35 to -0.8 ms and +2 to +12 fresh FPS over mode 4.
 4. **Queueing.** ALVR's vsync-queue estimate is about 11.4 ms in every arm; the adaptive-buffering
    policies in the optimization plan are the next latency lever once decode has headroom.

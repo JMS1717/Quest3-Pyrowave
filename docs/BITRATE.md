@@ -3,13 +3,59 @@
 Settings → Presets has a **5–2000 Mbps slider**, an **Auto bitrate** checkbox and
 the padded resolution/frame budget. In manual mode the slider sets the codec payload
 rate cap. In Auto mode it sets an enabled maximum; feedback can lower the requested
-rate. The minimum floor is disabled when Auto is selected so congestion can be relieved.
-Detailed latency limiters and an optional minimum are under Video → Bitrate → Adaptive.
+rate. Selecting Auto disables Auto's own optional minimum (Video → Bitrate → Adaptive), but the
+PyroWave quality floor below still applies.
+Detailed latency limiters and that optional minimum are under Video → Bitrate → Adaptive.
 For PyroWave the hardware decoder latency limiter is ignored: a target below fixed
 GPU reconstruction time otherwise drives bitrate toward zero without reaching the
 requested frame rate. Network/encoder feedback still applies. This policy does not
 change hardware codecs; changing bitrate controls also clears an old learned decoder cap.
 Resolution/refresh/codec changes require restarting SteamVR. Bitrate updates are live.
+
+## Quality floor
+
+With PyroWave the streamer never requests less than **0.25 bits per padded stream pixel per
+frame** (both eyes, 4:2:0), rounded up to 50 Mbps. That applies to the constant bitrate, Auto and
+the headset menu alike (`BitrateManager::set_quality_floor_mbps`,
+`alvr_session::beta::quality_floor_mbps`). The dashboard shows it under the per-frame budget, and
+the driver logs `[Q3PW_QUALITY_FLOOR]`. 4:4:4 doubles the raw samples and the floor; that factor
+is not measured, so it errs high. `ALVR_PYROWAVE_NO_QUALITY_FLOOR=1` in the streamer's environment
+lifts the floor for codec measurements.
+
+| Stream per eye | Refresh | Floor |
+|---|---:|---:|
+| 2064×2208 (full panel) | 72 Hz | 200 Mbps |
+| 2064×2208 | 120 Hz | 300 Mbps |
+| 2064×2208 | 207 Hz | 500 Mbps |
+| 2064×2208, 4:4:4 | 120 Hz | 600 Mbps |
+| 1552×1664 (scaled panel) | 240 Hz | 350 Mbps |
+
+How it was measured (October 7, `tools/downsample/csf_study.py`): 4 `quality_scene` crops at
+3072×3216 were filtered to 2080×2208 and coded with the live Haar 4:2:0 encoder
+([ENCODER-CSF.md](ENCODER-CSF.md)) at 207 Hz:
+
+| Mbps | bits/pixel | PSNR-HVS-M | smooth-area Y | smooth-area Cb/Cr |
+|---:|---:|---:|---:|---:|
+| 150 | 0.08 | 11.56 | 49.58 | 42.96 |
+| 250 | 0.13 | 12.48 | 52.03 | 46.15 |
+| 350 | 0.18 | 13.18 | 52.91 | 48.69 |
+| 450 | 0.24 | 13.72 | 53.59 | 50.21 |
+| 600 | 0.32 | 14.28 | 54.85 | 52.94 |
+| 800 | 0.42 | 14.90 | 55.77 | 54.48 |
+| 1000 | 0.53 | 15.34 | 56.43 | 55.02 |
+| previous encoder, 1000 | 0.53 | 14.65 | 53.87 | 46.10 |
+
+Quality falls smoothly with no knee, so the floor is anchored to a configuration the owner had
+judged: the previous encoder at 1000 Mbps / 207 Hz, which looked pixelated next to Virtual
+Desktop. Smooth areas, where Haar blocking shows, drop below that at about 0.25 bits per pixel
+(475 Mbps at 207 Hz). The quality scene is a stress board of gratings, text and noise. Game
+content compresses better, but the floor scales with pixels per second, not content. A network
+that cannot carry the floor drops frames instead of lowering the bitrate.
+
+Checked in the headset (13ff836, 207 Hz, 2080×2208 per eye, 12 s pan blocks): with the slider at
+300 Mbps the streamer logged `[Q3PW_QUALITY_FLOOR] 500 Mbps` and requested 500 Mbps from the
+encoder for every frame, at 193.5 fresh FPS; with the slider at 1000 Mbps it requested 1000 Mbps
+(the floor does not lower anything), at 191.1 fresh FPS.
 
 PyroWave receives ALVR's dynamic bitrate and sets its maximum frame size to
 `floor(bitrate_bits_per_second / 8 / round(refresh_hz))`, aligned down to four bytes.
@@ -119,3 +165,63 @@ single final1000 compositor image retained correct eye mapping/orientation;
 lower-bitrate and in-headset quality acceptance were not tested. ALVR total/network
 latency estimates with a stationary headset are not optical motion-to-photon.
 [Sanitized metrics, exact byte budgets and package provenance](../results/PAYLOAD-NATIVE120-2026-10-05.json).
+
+## Owner settings at 207 Hz: where bitrate stops paying, October 7
+
+Live, Quest 3 over USB (ADB forward), 3072x3216 render into 2080x2208 per eye, 207 Hz, Haar 4:2:0
+with mode 5 decode, quality scene panning at 60 deg/s. Cells ran 1000, 2000, 1500, 2000 and
+1000 Mbps, two 12 s blocks each.
+
+| Mbit/s | frame cap | fresh FPS (blocks) | lost/s | GPU decode p50 | network p50 / p95 (ALVR) | ALVR latency estimate p50 |
+|---|---|---|---|---|---|---|
+| 1000 | 604 KB | 196.3, 197.8, 198.0, 193.6 | 9-14 | 2.78 ms | 3.2 / 4.7 ms | 32.1 ms |
+| 1500 | 906 KB | 193.8, 190.6 | 15-25 | 2.82 ms | 4.6 / 7.9 ms | 35.7 ms |
+| 2000 | 1208 KB | 170.1, 168.6, 167.4, 169.8 | 40-44 | 3.00 ms | 7.0 / 12.2 ms | 39.9 ms |
+
+Decode barely changes with bitrate. The loss at 2000 Mbps is the link: a frame takes longer to
+arrive than the 4.83 ms frame period. Offline, Haar at 2000 Mbit/s scores +4.9 dB PSNR-HVS-M over
+1000 ([DECODER-V2.md](DECODER-V2.md)), so the transport now limits image quality at this rate.
+
+The USB link itself carries 3.5-3.65 Gbit/s of continuous data through `adb forward`, but frames
+arrive in bursts. A device-side receiver that acknowledges each burst, paced at 207 Hz with 65 KB
+writes like ALVR's shards, measured send-to-acknowledge (p50 / p95):
+
+| burst | 1 connection | 2 connections | 4 connections |
+|---|---|---|---|
+| 604 KB (1000 Mbps) | 2.81 / 4.22 ms | 2.34 / 3.68 ms | 2.53 / 3.70 ms |
+| 1208 KB (2000 Mbps) | 4.74 / 6.16 ms | 4.00 / 5.54 ms | 4.36 / 5.98 ms |
+
+So bursts move at about 1.7-2.4 Gbit/s, half the continuous rate. Splitting a frame over two
+forwarded connections saves about 0.5 ms; more do not help. For now 1000-1500 Mbps is the
+useful range at 207 Hz. Above it, the options are a transport that bypasses ADB (a USB network
+function such as NCM, not yet tried because switching USB functions can drop ADB until someone
+replugs the headset) or fewer bytes per frame for the same quality (a better wavelet).
+
+### CDF 5/3 at the owner's 690 MHz GPU clock, October 7
+
+Same scene and stream, CDF 5/3 with V2 mode 5, maximum GPU clock on (690 MHz in every VrApi line),
+one streamer session per cell in the order 700, 1000, 1500, 1500, 1000, 700 Mbps, 12 s each:
+
+| Mbit/s | frame cap | fresh FPS | lost/s | GPU decode p50 | fence p50 | offline PSNR-HVS-M (60 deg/s pan) |
+|---|---|---|---|---|---|---|
+| 700 | 423 KB | 191.2 / 178.9 (mean 185.1) | 16.6 / 28.5 | 2.96 / 3.12 ms | 4.84 / 5.00 ms | 19.0 |
+| 1000 | 604 KB | 177.8 / 180.0 (mean 178.9) | 30.1 / 28.2 | 3.13 / 3.14 | 4.94 / 4.96 | 20.8 |
+| 1500 | 906 KB | 169.6 / 158.9 (mean 164.2) | 38.9 / 49.0 | 3.50 / 4.01 | 5.10 / 5.67 | not scored |
+
+- Unlike Haar, 5/3 decode grows with bitrate (2.96 to 3.50-4.01 ms): V2 runs at 98 % GPU busy, so
+  more coefficients to dequantize cost frames directly. 1000 Mbit/s costs about 6 fresh FPS against
+  700, 1500 about 21.
+- The two 700 cells differ by 12 FPS. The memory clock moves between 2092, 2736 and 3196 MHz from
+  cell to cell (VrApi `Mem=`) and is not pinned by the GPU level; at this load it is the largest
+  noise source left.
+- At 700 Mbit/s a frame carries about 0.35 bit per sample; the stream is bitrate-starved by any
+  inter-frame codec's standard, and each step up is visible offline (+1.8 dB to 1000). For the
+  owner's 207 Hz target, CDF 5/3 at 700-1000 Mbit/s is the useful range; the trade is the user's.
+- A first attempt switched the bitrate inside one streamer session, with the harness relaunching
+  the client for each block. With the maximum GPU clock on, every relaunch makes the server release
+  GPU level 7 (it does so whenever the client is not running, so other VR apps never inherit it),
+  re-apply it when the client starts, and restart the client once more. Two of four such
+  back-to-back restarts came back at 72 or 90 Hz, so that run is discarded and this sweep uses one
+  session per bitrate. All 11 fresh-session cells that day started at 207 Hz; a client reopened
+  seconds after closing it was not checked with the owner's settings.
+

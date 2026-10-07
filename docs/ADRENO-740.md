@@ -57,9 +57,9 @@ of real game content to size zero-skipping before anyone builds it.
 
 | Change | Reason | Before | After | Headset result | Status |
 |---|---|---|---|---|---|
-| LPAC decode queue | Preemption and serialization on the graphics pipe | 117.7 unique/s, 5.9 ms decode, 8.0 ms fence | — | not run | CONTINUE (needs caps log) |
+| LPAC decode queue | Preemption and serialization on the graphics pipe | 117.7 unique/s, 5.9 ms decode, 8.0 ms fence | — | October 7 caps log (driver 810c66ceb7, 06/24/26): family 0 flags 0x19f (graphics, compute, transfer, ...), family 1 flags 0x8 (sparse binding only). No compute-only family, so `lpac=1` logs `reason=no_compute_only_family` and falls back; `pyroclient_test` timing is unchanged (fence p50 3.36-3.42 ms both ways) | DROP for this driver |
 | Eye-image invalidate | Avoid GMEM load on tiled eye copy | ~0.62 ms eye-copy GPU | — | not run | CONTINUE |
-| GPU caps log | Facts for the levers below | unknown families/subgroup range | — | not run | KEEP (diagnostic) |
+| GPU caps log | Facts for the levers below | unknown families/subgroup range | — | subgroup 64 by default, 64-128 with size control, 32 KB shared memory, global priority LOW listed on both families | KEEP (diagnostic) |
 
 ## Decoder levers handed to the decoder owners
 

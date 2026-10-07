@@ -30,5 +30,7 @@ $taskDownsample = Join-Path $PSScriptRoot '..\downsample\frame_downsample.hlsl'
 $taskDownsampleOutput = Join-Path ([System.IO.Path]::GetTempPath()) 'FrameDownsample-check.cso'
 & $taskCompiler /nologo /T ps_5_0 /E main /O3 /Fo $taskDownsampleOutput $taskDownsample
 if ($LASTEXITCODE -ne 0) { throw 'Adaptive downsample shader compilation failed' }
+& $taskCompiler /nologo /T ps_5_0 /E main /O3 /D KERNEL_LANCZOS3=1 /Fo $taskDownsampleOutput $taskDownsample
+if ($LASTEXITCODE -ne 0) { throw 'Adaptive Lanczos downsample shader compilation failed' }
 Remove-Item -LiteralPath $taskDownsampleOutput -Force
-Write-Output 'Adaptive downsample shader compiles for ps_5_0'
+Write-Output 'Adaptive downsample shader (bicubic and Lanczos) compiles for ps_5_0'

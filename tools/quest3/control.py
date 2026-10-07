@@ -109,9 +109,9 @@ def latency_stamp(enabled):
 
 def downsample(mode):
     """PC composition filter from game render to stream size, for render-size A/B screens."""
-    variant = {'adaptive': 'Adaptive', 'bilinear': 'Bilinear'}.get(mode)
+    variant = {'adaptive': 'Adaptive', 'lanczos': 'Lanczos', 'bilinear': 'Bilinear'}.get(mode)
     if variant is None:
-        raise ValueError('Use adaptive or bilinear')
+        raise ValueError('Use adaptive, lanczos or bilinear')
     pyro = session()['session_settings']['video']['pyrowave']
     if 'render_downsample_filter' not in pyro:
         raise ValueError('The downsample filter requires a streamer with the adaptive filter')
@@ -224,7 +224,7 @@ def main():
     r.add_argument('--profile',choices=tuple(profiles()))
     f=sub.add_parser('foveation');f.add_argument('--mode',choices=['off','light'],required=True)
     d=sub.add_parser('downsample',help='Game render -> stream filter; requires a SteamVR restart')
-    d.add_argument('--mode',choices=['adaptive','bilinear'],required=True)
+    d.add_argument('--mode',choices=['adaptive','lanczos','bilinear'],required=True)
     f.add_argument('--profile',choices=['light','balanced','strong'])
     ls=sub.add_parser('latency-stamp',help='Diagnostic clock stamp in each eye; requires a SteamVR restart')
     ls.add_argument('--state',choices=['on','off'],required=True)

@@ -266,10 +266,10 @@ index a5a446842d4799523d0e06fbfb7253bb13d6c7db..566cdde2b0f58ca90d722104983a4464
          .context("Failed to list ADB devices")?;
 diff --git a/alvr/adb/src/display_override.rs b/alvr/adb/src/display_override.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a3374e236
+index 0000000000000000000000000000000000000000..1e58855f94e3ae6e1f923ca096ea307e719eabe5
 --- /dev/null
 +++ b/alvr/adb/src/display_override.rs
-@@ -0,0 +1,500 @@
+@@ -0,0 +1,592 @@
 +//! Opt-in Quest 3 display and GPU developer properties, managed by the PC over USB.
 +//!
 +//! Any whole refresh rate can be forced (measured October 6, 2026): 144-207 Hz with the full
@@ -286,6 +286,10 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +//! The original values are saved before the first change and restored, the same way, when the
 +//! request is withdrawn or the server shuts down. With nothing requested and nothing saved this
 +//! module issues no ADB commands at all.
++//!
++//! A property is restored only while it still holds the value this module wrote. HorizonOS writes
++//! `debug.oculus.refreshRate` itself (72 when a VR app starts with it empty), and the user may set
++//! these properties too; restoring over such a value restarted the client in an endless loop.
 +
 +use anyhow::{bail, Result};
 +use std::{
@@ -338,13 +342,20 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +    Some((field("hactive=")?, field("vactive=")?, field("fps=")?))
 +}
 +
-+/// The property values the PC wants, given the originals saved before the first change.
-+pub fn targets(request: Request, original: &[String; 3]) -> [String; 3] {
++/// The property values the PC wants. Requested properties take the requested values; the others
++/// go back to the originals saved before the first change, but only while they still hold the
++/// value this module last wrote (`applied`; `None` for state saved before that was recorded).
++pub fn targets(request: Request, original: &[String; 3], current: &[String; 3],
++               applied: Option<&[Option<String>; 3]>) -> [String; 3] {
++    let release = |i: usize| {
++        let ours = applied.map_or(true, |applied| applied[i].as_deref() == Some(current[i].as_str()));
++        if ours { original[i].clone() } else { current[i].clone() }
++    };
 +    let (scaling, rate) = match request.rate_hz {
 +        Some(hz) => (if request.scaled() { "1".into() } else { String::new() }, hz.to_string()),
-+        None => (original[0].clone(), original[1].clone()),
++        None => (release(0), release(1)),
 +    };
-+    [scaling, rate, if request.gpu_level_7 { "7".into() } else { original[2].clone() }]
++    [scaling, rate, if request.gpu_level_7 { "7".into() } else { release(2) }]
 +}
 +
 +/// What to apply this loop iteration. The headset is only changed for the Quest3-Pyrowave client:
@@ -369,6 +380,15 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +    }
 +}
 +
++/// "name: old -> new" for each property that changes, so a log shows what triggered a restart.
++fn describe_changes(current: &[String; 3], want: &[String; 3]) -> String {
++    let changes: Vec<String> = PROPERTIES.iter().zip(current.iter().zip(want))
++        .filter(|(_, (from, to))| from != to)
++        .map(|(name, (from, to))| format!("{name}: '{from}' -> '{to}'"))
++        .collect();
++    if changes.is_empty() { "panel mode only".into() } else { changes.join(", ") }
++}
++
 +fn valid_value(value: &str) -> bool {
 +    value.len() <= 8 && value.chars().all(|c| c.is_ascii_digit())
 +}
@@ -383,7 +403,9 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +        Self { state_path, verified: None }
 +    }
 +
-+    fn saved(&self, serial: &str) -> Result<Option<[String; 3]>> {
++    /// The saved originals and, from state files with `format=2`, the values this module last
++    /// wrote (`applied.<property>=<value>`).
++    fn saved(&self, serial: &str) -> Result<Option<([String; 3], Option<[Option<String>; 3]>)>> {
 +        let Ok(text) = fs::read_to_string(&self.state_path) else {
 +            return Ok(None);
 +        };
@@ -392,20 +414,33 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +            bail!("Saved Quest display values belong to another headset: {}", self.state_path.display());
 +        }
 +        let mut values: [String; 3] = Default::default();
++        let mut applied: [Option<String>; 3] = Default::default();
++        let mut tracked = false;
 +        for line in lines {
-+            if let Some((name, value)) = line.split_once('=') {
++            if line == "format=2" {
++                tracked = true;
++            } else if let Some((name, value)) = line.split_once('=') {
++                let (name, slot) = match name.strip_prefix("applied.") {
++                    Some(name) => (name, true),
++                    None => (name, false),
++                };
 +                if let Some(index) = PROPERTIES.iter().position(|p| *p == name) {
-+                    values[index] = value.to_owned();
++                    if slot { applied[index] = Some(value.to_owned()) } else { values[index] = value.to_owned() }
 +                }
 +            }
 +        }
-+        Ok(Some(values))
++        Ok(Some((values, tracked.then_some(applied))))
 +    }
 +
-+    fn save(&self, serial: &str, values: &[String; 3]) -> Result<()> {
-+        let mut text = format!("{serial}\n");
++    fn save(&self, serial: &str, values: &[String; 3], applied: &[Option<String>; 3]) -> Result<()> {
++        let mut text = format!("{serial}\nformat=2\n");
 +        for (name, value) in PROPERTIES.iter().zip(values) {
 +            text.push_str(&format!("{name}={value}\n"));
++        }
++        for (name, value) in PROPERTIES.iter().zip(applied) {
++            if let Some(value) = value {
++                text.push_str(&format!("applied.{name}={value}\n"));
++            }
 +        }
 +        fs::write(&self.state_path, text)?;
 +        Ok(())
@@ -462,14 +497,15 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +        // A saved state means this module may have changed the panel mode earlier.
 +        let had_saved = saved.is_some();
 +        let current = Self::current(shell)?;
-+        let original = match saved {
-+            Some(values) => values,
++        let (original, applied) = match saved {
++            Some(saved) => saved,
 +            None => {
-+                self.save(serial, &current)?;
-+                current.clone()
++                let applied = Default::default();
++                self.save(serial, &current, &applied)?;
++                (current.clone(), Some(applied))
 +            }
 +        };
-+        let want = targets(request, &original);
++        let want = targets(request, &original, &current, applied.as_ref());
 +        // Verified earlier and the values still hold: skip the panel check. A headset reboot
 +        // clears the properties, which this comparison notices.
 +        if self.verified == Some(request) && current == want {
@@ -509,16 +545,29 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +            }
 +        })();
 +        let released = shell.shell("am broadcast -a com.oculus.vrpowermanager.automation_disable");
-+        let applied = result?;
++        let done = result;
++        // Whatever was written is this module's to restore, even when the mode never switched.
++        if done.is_ok() {
++            let mut written = applied.unwrap_or_default();
++            for (i, value) in want.iter().enumerate() {
++                let requested = if i == 2 { request.gpu_level_7 } else { request.rate_hz.is_some() };
++                if requested || *value != current[i] {
++                    written[i] = Some(value.clone());
++                }
++            }
++            self.save(serial, &original, &written)?;
++        }
++        let done = done?;
 +        released?;
-+        if !applied {
++        if !done {
 +            return Ok(Some("Waiting for the headset display mode to change".into()));
 +        }
 +        self.finish(request)?;
++        let changes = describe_changes(&current, &want);
 +        Ok(Some(if let Some(hz) = request.rate_hz {
-+            format!("Headset display switched to {hz} Hz; restarting the client")
++            format!("Headset display switched to {hz} Hz ({changes}); restarting the client")
 +        } else {
-+            "Headset display and GPU values updated; restarting the client".into()
++            format!("Headset display and GPU values updated ({changes}); restarting the client")
 +        }))
 +    }
 +
@@ -759,6 +808,49 @@ index 0000000000000000000000000000000000000000..ea852f7c9c3a6ffdf5313d83e299d84a
 +        assert_eq!(effective_request(ON, false, true, false), ON);
 +        assert_eq!(effective_request(ON, false, false, true), ON);
 +        assert_eq!(effective_request(ON, false, false, false), Request::default());
++    }
++
++    #[test]
++    fn values_written_by_others_are_left_alone() {
++        // GPU clock only. HorizonOS writes refreshRate=72 whenever the client starts with it
++        // empty; restoring the saved empty value over that restarted the client forever.
++        let quest = FakeQuest::new(true);
++        quest.props.borrow_mut().insert(RATE.into(), String::new());
++        let path = state_path("foreign");
++        let mut display = DisplayOverride::new(path.clone());
++        let gpu = Request { rate_hz: None, gpu_level_7: true };
++        assert!(display.ensure(&quest, "serial", gpu).unwrap().is_some());
++        assert_eq!(quest.prop(GPU_LEVEL), "7");
++        quest.props.borrow_mut().insert(RATE.into(), "72".into());
++        let mut display = DisplayOverride::new(path.clone());
++        assert_eq!(display.ensure(&quest, "serial", gpu).unwrap(), None);
++        assert_eq!(display.ensure(&quest, "serial", gpu).unwrap(), None);
++        assert_eq!(quest.prop(RATE), "72");
++        // Withdrawn: the GPU level this module wrote goes back; the OS's rate stays.
++        assert!(display.ensure(&quest, "serial", Request::default()).unwrap().is_some());
++        assert_eq!((quest.prop(RATE), quest.prop(GPU_LEVEL)), ("72".into(), String::new()));
++        assert!(!path.exists());
++        // A GPU level the user changed after this module wrote it is not taken back either.
++        display.ensure(&quest, "serial", gpu).unwrap();
++        quest.props.borrow_mut().insert(GPU_LEVEL.into(), "5".into());
++        assert!(DisplayOverride::new(path.clone()).ensure(&quest, "serial", Request::default()).unwrap().is_none());
++        assert_eq!(quest.prop(GPU_LEVEL), "5");
++        assert!(!path.exists());
++    }
++
++    #[test]
++    fn state_saved_before_tracking_still_restores() {
++        let quest = FakeQuest::new(true);
++        let path = state_path("legacy");
++        let mut display = DisplayOverride::new(path.clone());
++        display.ensure(&quest, "serial", ON).unwrap();
++        // The older format: originals only.
++        fs::write(&path, format!("serial\n{SCALING}=\n{RATE}=120\n{GPU_LEVEL}=\n")).unwrap();
++        let mut display = DisplayOverride::new(path.clone());
++        assert!(display.ensure(&quest, "serial", Request::default()).unwrap().is_some());
++        assert_eq!(*quest.mode.borrow(), (4128, 2208, 120));
++        assert_eq!((quest.prop(RATE), quest.prop(GPU_LEVEL)), ("120".into(), String::new()));
++        assert!(!path.exists());
 +    }
 +
 +    #[test]
@@ -7353,7 +7445,7 @@ index 0000000000000000000000000000000000000000..358b58d00e5683ff20e7a17d0195a072
 +    }
 +}
 diff --git a/alvr/dashboard/src/dashboard/components/settings.rs b/alvr/dashboard/src/dashboard/components/settings.rs
-index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..47509f0dbfd8d054bc5d071c21a13bf803375169 100644
+index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..bbcec7bef3394472feb0aedc2cd4664fb150b608 100644
 --- a/alvr/dashboard/src/dashboard/components/settings.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings.rs
 @@ -4,7 +4,7 @@ use super::{
@@ -7419,7 +7511,7 @@ index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..47509f0dbfd8d054bc5d071c21a13bf8
                              ui.end_row();
  
                              path_value_pairs.extend(self.refresh_rate_preset.ui(ui));
-@@ -241,3 +251,140 @@ impl SettingsTab {
+@@ -241,3 +251,158 @@ impl SettingsTab {
          requests
      }
  }
@@ -7550,7 +7642,25 @@ index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..47509f0dbfd8d054bc5d071c21a13bf8
 +            ui.label(format!("{}×{} / eye • {:.2} ms • ≤{} B/frame • {:.2}:1 raw/payload{}",
 +                b.eye_width, b.eye_height, b.frame_ms, b.payload_bytes, b.raw_to_payload,
 +                if automatic { " at ceiling" } else { "" }))
-+                .on_hover_text("PyroWave 8-bit codec payload after 32-pixel padding. Excludes network overhead. This budget does not prove decode speed or image quality. Resolution/refresh changes need a SteamVR restart.");
++                .on_hover_text("PyroWave 8-bit codec payload after 32-pixel padding. Excludes network overhead. This budget does not prove decode speed or image quality. Resolution and refresh changes apply about 2 s after the last edit: the stream reconnects and SteamVR restarts.");
++            let floor = alvr_session::beta::quality_floor_mbps(
++                res["Absolute"]["width"].as_u64().unwrap_or(0) as u32,
++                res["Absolute"]["height"]["content"].as_u64().unwrap_or(0) as u32,
++                video["preferred_fps"].as_f64().unwrap_or(0.0),
++                video["pyrowave"]["chroma_444"].as_bool().unwrap_or(false),
++            );
++            if let (true, Some(floor)) = (pyrowave, floor) {
++                ui.end_row();
++                ui.label("Quality floor");
++                let text = if mbps < floor {
++                    format!("{floor} Mbps: the streamer raises this setting to {floor} Mbps")
++                } else if automatic {
++                    format!("{floor} Mbps: Auto never requests less")
++                } else {
++                    format!("{floor} Mbps")
++                };
++                ui.label(text).on_hover_text("PyroWave never requests less than 0.25 bits per stream pixel per frame (4:2:0; twice that for 4:4:4). Below it, smooth areas measured worse than the previous encoder at 1000 Mbps, 207 Hz and full panel size. The network must carry at least this rate.");
++            }
 +        } else {
 +            ui.label("Choose a valid resolution and refresh rate");
 +        }
@@ -7958,10 +8068,10 @@ index 3be93190b208e2811ea657244046718f516760da..c6baa56d8ed6ed3a8613666363d82115
          assert_eq!(r["window"]["frames"], 900);
 diff --git a/alvr/graphics/resources/direct_eye_fragment.glsl b/alvr/graphics/resources/direct_eye_fragment.glsl
 new file mode 100644
-index 0000000000000000000000000000000000000000..901d8fa8216e092e4738ef026991c89f6ba793ba
+index 0000000000000000000000000000000000000000..b664b8244cebd480e2c841109fbf2f6bae735105
 --- /dev/null
 +++ b/alvr/graphics/resources/direct_eye_fragment.glsl
-@@ -0,0 +1,29 @@
+@@ -0,0 +1,34 @@
 +#version 300 es
 +#extension GL_OES_EGL_image_external_essl3 : require
 +precision highp float;
@@ -7972,12 +8082,17 @@ index 0000000000000000000000000000000000000000..901d8fa8216e092e4738ef026991c89f
 +in vec2 uv;
 +out vec4 out_color;
 +// Q3PW_FOVEATION_FUNCTION
++// Q3PW_PRESENT_FUNCTION
 +void main() {
 +    vec2 sample_uv = uv;
 +#ifdef Q3PW_FFE
 +    sample_uv = light_foveated_uv(uv);
 +#endif
++#ifdef Q3PW_PRESENT_YCBCR
++    vec3 color = q3pw_present_sample(sample_uv);
++#else
 +    vec3 color = texture(tex, sample_uv).rgb;
++#endif
 +    if (fix_limited_range != 0)
 +        color = vec3(16.0 / 255.0) + (219.0 / 255.0) * color;
 +    if (srgb_correction != 0) {
@@ -8027,12 +8142,112 @@ index 0000000000000000000000000000000000000000..bc6bee02decfec1a7df24f18e8fd2991
 +@fragment fn fragment_main(in: VertexOutput) -> @location(0) vec4<f32> {
 +    return textureSample(panel, panel_sampler, in.uv);
 +}
+diff --git a/alvr/graphics/resources/present_ycbcr.glsl b/alvr/graphics/resources/present_ycbcr.glsl
+new file mode 100644
+index 0000000000000000000000000000000000000000..83e14668d088b2af058ee8aecf8c9fe0d15f6108
+--- /dev/null
++++ b/alvr/graphics/resources/present_ycbcr.glsl
+@@ -0,0 +1,75 @@
++// PyroWave Haar mode 5 (Quest3-Pyrowave docs/PRESENT-YCBCR.md): `tex` is a frame_size.x x
++// frame_size.y/2 RGBA8 buffer. x < frame_size.x/2 holds luma as 2x2 pixel quads ((0,0), (1,0),
++// (0,1), (1,1) in RGBA); x >= frame_size.x/2 holds the 4:2:0 chroma, one pixel per texel with Cb
++// in R and Cr in G. Mode 6 is the same buffer 3/4 as wide: each chroma texel holds two horizontally
++// adjacent pixels, (Cb, Cr) of the left one in RG and of the right one in BA. Full-range BT.709 with
++// bilinear chroma, the conversion pyroclient's convert.frag does in the other modes. The external
++// sampler must filter linearly.
++precision highp float;
++uniform highp vec2 q3pw_frame_size;
++highp vec2 q3pw_tex_size;
++
++float q3pw_luma(highp ivec2 p) {
++    vec4 quad = texture(tex, (vec2(p >> 1) + 0.5) / q3pw_tex_size);
++    int i = (p.x & 1) | ((p.y & 1) << 1);
++    return i == 0 ? quad.r : i == 1 ? quad.g : i == 2 ? quad.b : quad.a;
++}
++
++// uv spans the whole frame, both eyes.
++vec3 q3pw_present_sample(highp vec2 uv) {
++    highp vec2 pos = uv * q3pw_frame_size;
++    highp ivec2 last = ivec2(q3pw_frame_size) - 1;
++    q3pw_tex_size = vec2(textureSize(tex, 0));
++#ifdef Q3PW_FFE
++    // Filter luma bilinearly like the RGBA path's sampler, but only along axes in a compressed
++    // band: the centre maps 1:1 onto decoded pixels, so there the nearest pixel is exact. Each
++    // packed luma read is a texture fetch, and filtering everywhere cost about 2 ms per frame.
++    // The renderer draws each band with a scissor and a program compiled for it
++    // (Q3PW_FFE_FILTER_X/Y); with run-time branches the drivers fetched all four pixels anyway.
++    highp vec2 p = pos - 0.5;
++    // Centre offsets are multiples of a quarter pixel; rounding with 0.375 never meets a tie.
++    highp vec2 base = floor(p + 0.375);
++#ifdef Q3PW_FFE_FILTER_X
++    base.x = floor(p.x);
++#endif
++#ifdef Q3PW_FFE_FILTER_Y
++    base.y = floor(p.y);
++#endif
++    vec2 f = p - base;
++    highp ivec2 i0 = clamp(ivec2(base), ivec2(0), last);
++    highp ivec2 i1 = clamp(ivec2(base) + 1, ivec2(0), last);
++    float Y = q3pw_luma(i0);
++#ifdef Q3PW_FFE_FILTER_X
++    Y = mix(Y, q3pw_luma(ivec2(i1.x, i0.y)), f.x);
++#endif
++#ifdef Q3PW_FFE_FILTER_Y
++    float below = q3pw_luma(ivec2(i0.x, i1.y));
++#ifdef Q3PW_FFE_FILTER_X
++    below = mix(below, q3pw_luma(i1), f.x);
++#endif
++    Y = mix(Y, below, f.y);
++#endif
++#else
++    float Y = q3pw_luma(clamp(ivec2(pos), ivec2(0), last));
++#endif
++    // Chroma texel space; clamping to the outer texel centres keeps the filter inside the chroma
++    // half, as CLAMP_TO_EDGE does on a separate plane.
++    highp vec2 half_size = q3pw_frame_size * 0.5;
++    highp vec2 c = clamp(pos * 0.5, vec2(0.5), half_size - 0.5);
++    highp float v = c.y / half_size.y;
++    vec2 chroma;
++    if (q3pw_tex_size.x < q3pw_frame_size.x) {
++        // Mode 6: the hardware filters vertically; mix the two nearest pixels horizontally.
++        highp float k = floor(c.x - 0.5);
++        float f = c.x - 0.5 - k;
++        highp float t = floor(k * 0.5);
++        vec4 a = texture(tex, vec2((half_size.x + t + 0.5) / q3pw_tex_size.x, v));
++        vec4 b = texture(tex, vec2((half_size.x + t + 1.5) / q3pw_tex_size.x, v));
++        bool odd = k - 2.0 * t > 0.5;
++        chroma = mix(odd ? a.ba : a.rg, odd ? b.rg : a.ba, f) - 0.5;
++    } else {
++        chroma = texture(tex, vec2((half_size.x + c.x) / q3pw_tex_size.x, v)).rg - 0.5;
++    }
++    return clamp(vec3(Y + 1.5748 * chroma.y, Y - 0.1873 * chroma.x - 0.4681 * chroma.y, Y + 1.8556 * chroma.x),
++                 0.0, 1.0);
++}
+diff --git a/alvr/graphics/resources/staging_fragment.glsl b/alvr/graphics/resources/staging_fragment.glsl
+index 7bfba12ca0479598b4060b84664695a82c96411d..7236535dfbd7196f77a29c1e5f9dbc279e211dae 100644
+--- a/alvr/graphics/resources/staging_fragment.glsl
++++ b/alvr/graphics/resources/staging_fragment.glsl
+@@ -10,8 +10,14 @@ const float LIMITED_MAX = 235.0 / 255.0;
+ in vec2 uv;
+ out vec4 out_color;
+ 
++// Q3PW_PRESENT_FUNCTION
++
+ void main() {
++#ifdef Q3PW_PRESENT_YCBCR
++    vec3 color = q3pw_present_sample(uv);
++#else
+     vec3 color = texture(tex, uv).rgb;
++#endif
+ #ifdef FIX_LIMITED_RANGE
+     color = LIMITED_MIN + ((LIMITED_MAX - LIMITED_MIN) * color);
+ #endif
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1d6ba58e3
+index 0000000000000000000000000000000000000000..e12bfbe6a02ed29dbfa15c2ef26969ce306d99a4
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,481 @@
+@@ -0,0 +1,646 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -8048,9 +8263,39 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +extern "C" {
 +    fn AHardwareBuffer_acquire(buffer: *const c_void);
 +    fn AHardwareBuffer_release(buffer: *const c_void);
++    fn AHardwareBuffer_describe(buffer: *const c_void, desc: *mut AHardwareBufferDesc);
 +    fn __android_log_write(priority: i32, tag: *const std::ffi::c_char,
 +                           text: *const std::ffi::c_char) -> i32;
 +    fn __system_property_get(name: *const std::ffi::c_char, value: *mut std::ffi::c_char) -> i32;
++}
++
++#[cfg(target_os = "android")]
++#[repr(C)]
++#[derive(Default)]
++struct AHardwareBufferDesc { width: u32, height: u32, layers: u32, format: u32, usage: u64, stride: u32, rfu0: u32, rfu1: u64 }
++
++/// PyroWave modes 5 and 6 hand over packed YCbCr instead of RGBA: one RGBA8 buffer of the full
++/// frame's width (both eyes; 3/4 of it in mode 6) and half its height
++/// (resources/present_ycbcr.glsl). Any other buffer, including every MediaCodec frame, is RGBA of
++/// the full frame.
++/// `eye` is the decoded size per eye, which light foveation makes smaller than the view.
++pub(super) fn present_ycbcr_layout(buffer: *const c_void, eye: UVec2) -> bool {
++    #[cfg(target_os = "android")]
++    {
++        if buffer.is_null() { return false; }
++        let mut desc = AHardwareBufferDesc::default();
++        unsafe { AHardwareBuffer_describe(buffer, &mut desc) };
++        (desc.width == 2 * eye.x || desc.width == 2 * eye.x / 4 * 3) && desc.height * 2 == eye.y
++    }
++    #[cfg(not(target_os = "android"))]
++    { let _ = (buffer, eye); false }
++}
++
++/// Fragment source with the packed-YCbCr sampling compiled in (`present`) or not.
++pub(super) fn present_ycbcr_source(source: &str, present: bool) -> String {
++    if !present { return source.to_owned(); }
++    source.replacen("#version 300 es", "#version 300 es\n#define Q3PW_PRESENT_YCBCR", 1)
++        .replace("// Q3PW_PRESENT_FUNCTION", include_str!("../resources/present_ycbcr.glsl"))
 +}
 +
 +// Discard each eye image before its full-screen draw, so a tiled (GMEM) Adreno pass need not load
@@ -8105,8 +8350,15 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +    vertex_array: gl::VertexArray,
 +    framebuffers: [Vec<gl::Framebuffer>; 2],
 +    resolution: UVec2,
++    // Decoded size per eye: smaller than `resolution` with light foveation.
++    decoded: UVec2,
 +    view_idx: gl::UniformLocation,
 +    flip_y: gl::UniformLocation,
++    // The same copy for PyroWave Haar mode 5 buffers: (program, view_idx, flip_y) for each luma
++    // filter (bit 0 along x, bit 1 along y; only filter 0 without light foveation) ...
++    present: Option<Vec<(gl::Program, gl::UniformLocation, gl::UniformLocation)>>,
++    // ... drawn per eye as these scissored regions of the eye image.
++    regions: [Vec<(usize, [i32; 4])>; 2],
 +    flip: bool,
 +    asynchronous: Cell<bool>,
 +    copy_wait_ns: i32,
@@ -8126,7 +8378,30 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +    release_last_log: RefCell<Instant>,
 +}
 +
-+unsafe fn compile_program(gl: &gl::Context, foveation: bool) -> Result<gl::Program, String> {
++/// Light foveation regions of an eye image in window coordinates, for the packed-YCbCr draw:
++/// (luma filter, [x, y, width, height]). Filter bit 0 or 1 is set where the x or y axis is
++/// compressed (outside params' lo..hi band), so only there does the shader filter luma; the centre
++/// maps 1:1 onto decoded pixels. Without foveation the whole image takes filter 0.
++pub(super) fn foveation_regions(size: UVec2, params: Option<&[f32; 16]>, eye: usize, flip_y: bool) -> Vec<(usize, [i32; 4])> {
++    let Some(params) = params else { return vec![(0, [0, 0, size.x as i32, size.y as i32])] };
++    // The shader mirrors x for eye 1 and y when flipping, so the bands mirror with it.
++    let axis = |n: u32, lo: f32, hi: f32, mirror: bool| {
++        let (lo, hi) = if mirror { (1.0 - hi, 1.0 - lo) } else { (lo, hi) };
++        let n = n as i32;
++        let a = ((lo * n as f32).round() as i32).clamp(0, n);
++        let b = ((hi * n as f32).round() as i32).clamp(a, n);
++        [(1, 0, a), (0, a, b), (1, b, n)].into_iter().filter(|(_, start, end)| end > start)
++    };
++    let mut regions = Vec::new();
++    for (filter_y, y0, y1) in axis(size.y, params[3], params[5], flip_y) {
++        for (filter_x, x0, x1) in axis(size.x, params[2], params[4], eye == 1) {
++            regions.push((filter_x | filter_y << 1, [x0, y0, x1 - x0, y1 - y0]));
++        }
++    }
++    regions
++}
++
++unsafe fn compile_program(gl: &gl::Context, foveation: bool, present: bool, filter: usize) -> Result<gl::Program, String> {
 +    let program = gl.create_program()?;
 +    let mut shaders = Vec::new();
 +    let result = (|| {
@@ -8140,6 +8415,12 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +                source.replace("#version 300 es", "#version 300 es\n#define Q3PW_FFE")
 +                    .replace("// Q3PW_FOVEATION_FUNCTION", include_str!("../resources/light_foveation.glsl"))
 +            } else { source.to_owned() };
++            let source = if kind == gl::FRAGMENT_SHADER { present_ycbcr_source(&source, present) } else { source };
++            let source = if kind == gl::FRAGMENT_SHADER && filter != 0 {
++                let defines = [(1, "Q3PW_FFE_FILTER_X"), (2, "Q3PW_FFE_FILTER_Y")].iter()
++                    .filter(|(bit, _)| filter & bit != 0).map(|(_, name)| format!("\n#define {name}")).collect::<String>();
++                source.replacen("#version 300 es", &format!("#version 300 es{defines}"), 1)
++            } else { source };
 +            gl.shader_source(shader, &source);
 +            gl.compile_shader(shader);
 +            if !gl.get_shader_compile_status(shader) {
@@ -8175,26 +8456,50 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +                config.srgb_correction, config.encoding_gamma));
 +            let invalidate = eye_invalidate_requested();
 +            import_diagnostic(4, format!("[Q3PW_EYE_INVALIDATE] requested={invalidate} active={invalidate}"));
-+            let program = compile_program(gl, config.foveation.is_some())?;
++            let program = compile_program(gl, config.foveation.is_some(), false, 0)?;
++            // Compiled up front so the first mode-5 frame does not stall; without them such frames
++            // take the staging path, which converts them too.
++            let filters = if config.foveation.is_some() { 4 } else { 1 };
++            let mut present_programs = Some(Vec::new());
++            for filter in 0..filters {
++                match compile_program(gl, config.foveation.is_some(), true, filter) {
++                    Ok(program) => present_programs.as_mut().unwrap().push(program),
++                    Err(error) => {
++                        import_diagnostic(5, format!("[Q3PW_PRESENT_YCBCR] direct program {filter} failed: {error}"));
++                        for program in present_programs.take().unwrap() { gl.delete_program(program); }
++                        break;
++                    }
++                }
++            }
 +            let source_texture = match gl.create_texture() {
 +                Ok(texture) => texture,
-+                Err(e) => { gl.delete_program(program); return Err(e); }
++                Err(e) => {
++                    for &present in present_programs.iter().flatten() { gl.delete_program(present); }
++                    gl.delete_program(program);
++                    return Err(e);
++                }
 +            };
 +            let vertex_array = match gl.create_vertex_array() {
 +                Ok(array) => array,
 +                Err(e) => {
 +                    gl.delete_texture(source_texture);
++                    for &present in present_programs.iter().flatten() { gl.delete_program(present); }
 +                    gl.delete_program(program);
 +                    return Err(e);
 +                }
 +            };
 +            let mut framebuffers: [Vec<gl::Framebuffer>; 2] = [vec![], vec![]];
-+            let setup = (|| {
++            let decoded = config.foveation.as_ref().map_or(config.resolution, |(_, _, encoded)| *encoded);
++            let frame_size = (2 * decoded.x, decoded.y);
++            let init_program = |program: gl::Program, present: bool| -> Result<(gl::UniformLocation, gl::UniformLocation), String> {
 +                let location = |name: &str| gl.get_uniform_location(program, name)
 +                    .ok_or_else(|| format!("Direct eye copy missing uniform {name}"));
 +                let view_idx = location("view_idx")?;
 +                let flip_y = location("flip_y")?;
 +                gl.use_program(Some(program));
++                if present {
++                    gl.uniform_2_f32(Some(&location("q3pw_frame_size")?), frame_size.0 as f32, frame_size.1 as f32);
++                }
 +                gl.uniform_1_i32(Some(&location("tex")?), 0);
 +                gl.uniform_1_i32(Some(&location("fix_limited_range")?), config.fix_limited_range as i32);
 +                gl.uniform_1_i32(Some(&location("srgb_correction")?), (config.srgb_correction && !bypass_srgb) as i32);
@@ -8208,6 +8513,21 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +                    import_diagnostic(4, format!("[Q3PW_LIGHT_FFE] direct=true expanded_eye={}x{} encoded_eye={}x{} edge={:.2}x{:.2} fixed=true",
 +                        config.resolution.x, config.resolution.y, encoded.x, encoded.y, values[2], values[3]));
 +                }
++                Ok((view_idx, flip_y))
++            };
++            let present = present_programs.and_then(|programs| {
++                let ready = programs.iter().map(|&present| init_program(present, true)
++                    .map(|(view_idx, flip_y)| (present, view_idx, flip_y))).collect::<Result<Vec<_>, _>>();
++                ready.map_err(|error| {
++                    import_diagnostic(5, format!("[Q3PW_PRESENT_YCBCR] direct program setup failed: {error}"));
++                    for &present in &programs { gl.delete_program(present); }
++                }).ok()
++            });
++            let regions = [0, 1].map(|eye| foveation_regions(config.resolution,
++                config.foveation.as_ref().map(|(_, params, _)| params), eye, flip));
++            import_diagnostic(4, format!("[Q3PW_PRESENT_YCBCR] direct program ready={}", present.is_some()));
++            let setup = (|| {
++                let (view_idx, flip_y) = init_program(program, false)?;
 +                for eye in 0..2 {
 +                    if config.textures[eye].is_empty() {
 +                        return Err("Direct eye copy empty swapchain".into());
@@ -8234,8 +8554,8 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +                    let timer = RefCell::new(super::eye_timer::EyeTimer::new(&context));
 +                    let native_release = NativeRelease::new(&context);
 +                    Ok(Self { context, program, source_texture,
-+                    vertex_array, framebuffers, resolution: config.resolution,
-+                    view_idx, flip_y, flip, asynchronous: Cell::new(asynchronous),
++                    vertex_array, framebuffers, resolution: config.resolution, decoded,
++                    view_idx, flip_y, present, regions, flip, asynchronous: Cell::new(asynchronous),
 +                    image_cache_enabled: Cell::new(image_cache_requested && cfg!(target_os = "android")),
 +                    timer,
 +                    native_release, release_active: Cell::new(true), source_release_token: Cell::new(0),
@@ -8247,6 +8567,7 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +                    for framebuffer in framebuffers.into_iter().flatten() { gl.delete_framebuffer(framebuffer); }
 +                    gl.delete_vertex_array(vertex_array);
 +                    gl.delete_texture(source_texture);
++                    for (present, _, _) in present.into_iter().flatten() { gl.delete_program(present); }
 +                    gl.delete_program(program);
 +                    Err(e)
 +                }
@@ -8414,8 +8735,8 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +        let started = Instant::now();
 +        let cached = self.cached_source_texture(buffer);
 +        let source_texture = cached.unwrap_or(self.source_texture);
++        let present = self.present.as_ref().filter(|_| present_ycbcr_layout(buffer, self.decoded));
 +        let draw = || {
-+            gl.use_program(Some(self.program));
 +            gl.bind_vertex_array(Some(self.vertex_array));
 +            gl.viewport(0, 0, self.resolution.x as i32, self.resolution.y as i32);
 +            for state in [gl::SCISSOR_TEST, gl::STENCIL_TEST, gl::DEPTH_TEST, gl::BLEND, gl::CULL_FACE] {
@@ -8435,14 +8756,32 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
 +            gl.tex_parameter_i32(GL_TEXTURE_EXTERNAL_OES, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
-+            gl.uniform_1_i32(Some(&self.flip_y), self.flip as i32);
++            match present {
++                Some(_) => gl.enable(gl::SCISSOR_TEST),
++                None => {
++                    gl.use_program(Some(self.program));
++                    gl.uniform_1_i32(Some(&self.flip_y), self.flip as i32);
++                }
++            }
 +            let query = self.timer.borrow_mut().as_mut().and_then(|timer| timer.begin(gl));
 +            for (eye, &index) in indices.iter().enumerate() {
 +                gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, Some(self.framebuffers[eye][index as usize]));
 +                if self.invalidate { gl.invalidate_framebuffer(gl::DRAW_FRAMEBUFFER, &[gl::COLOR_ATTACHMENT0]); }
-+                gl.uniform_1_i32(Some(&self.view_idx), eye as i32);
-+                gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
++                let Some(programs) = present else {
++                    gl.uniform_1_i32(Some(&self.view_idx), eye as i32);
++                    gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
++                    continue;
++                };
++                for &(filter, [x, y, width, height]) in &self.regions[eye] {
++                    let (program, view_idx, flip_y) = &programs[filter];
++                    gl.use_program(Some(*program));
++                    gl.uniform_1_i32(Some(flip_y), self.flip as i32);
++                    gl.uniform_1_i32(Some(view_idx), eye as i32);
++                    gl.scissor(x, y, width, height);
++                    gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
++                }
 +            }
++            if present.is_some() { gl.disable(gl::SCISSOR_TEST); }
 +            if let Some(index) = query {
 +                if let Some(timer) = self.timer.borrow_mut().as_mut() { timer.end(gl, index); }
 +            }
@@ -8510,8 +8849,49 @@ index 0000000000000000000000000000000000000000..3f9a93aca0eeaa004b773f06af4579b1
 +            for framebuffer in self.framebuffers.iter().flatten() { gl.delete_framebuffer(*framebuffer); }
 +            gl.delete_vertex_array(self.vertex_array);
 +            gl.delete_texture(self.source_texture);
++            for (present, _, _) in self.present.iter().flatten() { gl.delete_program(*present); }
 +            gl.delete_program(self.program);
 +        }
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn foveation_regions_tile_each_eye() {
++        let size = UVec2::new(2080, 2208);
++        let mut params = [0.0; 16];
++        (params[2], params[3], params[4], params[5]) = (0.2, 0.25, 0.75, 0.7);
++        assert_eq!(foveation_regions(size, None, 1, true), vec![(0, [0, 0, 2080, 2208])]);
++        for eye in 0..2 {
++            for flip in [false, true] {
++                let regions = foveation_regions(size, Some(&params), eye, flip);
++                assert_eq!(regions.len(), 9);
++                let mut covered = vec![0u8; (size.x * size.y) as usize];
++                for &(_, [x, y, w, h]) in &regions {
++                    for row in y..y + h {
++                        for column in x..x + w { covered[(row * 2080 + column) as usize] += 1; }
++                    }
++                }
++                assert!(covered.iter().all(|&c| c == 1));
++                // The unfiltered centre, mirrored in x for eye 1 and in y when flipped.
++                let centre = regions.iter().find(|(filter, _)| *filter == 0).unwrap().1;
++                let x0 = if eye == 1 { 520 } else { 416 };
++                let y0 = if flip { 662 } else { 552 };
++                assert_eq!(centre, [x0, y0, 1144, 994]);
++                // Filtered along x left and right of the centre, along y above and below it.
++                assert!(regions.iter().all(|&(filter, [x, y, w, h])|
++                    (filter & 1 != 0) == (x + w <= x0 || x >= x0 + 1144)
++                        && (filter & 2 != 0) == (y + h <= y0 || y >= y0 + 994)));
++            }
++        }
++        // An uncompressed axis has no edge bands.
++        (params[2], params[4]) = (0.0, 1.0);
++        let regions = foveation_regions(size, Some(&params), 0, false);
++        assert_eq!(regions.len(), 3);
++        assert!(regions.iter().all(|(filter, [x, _, w, _])| filter & 1 == 0 && *x == 0 && *w == 2080));
 +    }
 +}
 diff --git a/alvr/graphics/src/eye_timer.rs b/alvr/graphics/src/eye_timer.rs
@@ -9710,10 +10090,58 @@ index 0000000000000000000000000000000000000000..48250e406a41c41a26bd7b7cbace664e
 +    }
 +}
 diff --git a/alvr/graphics/src/staging.rs b/alvr/graphics/src/staging.rs
-index febd2c3c380f456eb1e695b1748566e8b05c6c4f..779de33ca83d78d9b52c92193b54f60b00056503 100644
+index febd2c3c380f456eb1e695b1748566e8b05c6c4f..798099bca21d6e3d93c58c323f88380f1cae4030 100644
 --- a/alvr/graphics/src/staging.rs
 +++ b/alvr/graphics/src/staging.rs
-@@ -117,7 +117,7 @@ impl StagingRenderer {
+@@ -1,4 +1,4 @@
+-use super::{ck, GraphicsContext};
++use super::{ck, direct_eye::{present_ycbcr_layout, present_ycbcr_source}, GraphicsContext};
+ use crate::GL_TEXTURE_EXTERNAL_OES;
+ use alvr_common::glam::{IVec2, UVec2};
+ use glow::{self as gl, HasContext};
+@@ -52,6 +52,9 @@ pub struct StagingRenderer {
+     context: Rc<GraphicsContext>,
+     program: gl::Program,
+     view_idx_uloc: gl::UniformLocation,
++    // PyroWave Haar mode 5 buffers (packed YCbCr): program and its view_idx.
++    present_program: gl::Program,
++    present_view_idx_uloc: gl::UniformLocation,
+     surface_texture: gl::Texture,
+     framebuffers: [gl::Framebuffer; 2],
+     viewport_size: IVec2,
+@@ -81,6 +84,11 @@ impl StagingRenderer {
+             include_str!("../resources/staging_vertex.glsl"),
+             frag_str.as_str(),
+         );
++        let present_program = create_program(
++            gl,
++            include_str!("../resources/staging_vertex.glsl"),
++            &present_ycbcr_source(&frag_str, true),
++        );
+ 
+         unsafe {
+             // This is an external surface and storage should not be initialized
+@@ -104,12 +112,19 @@ impl StagingRenderer {
+             ck!(gl.bind_framebuffer(gl::FRAMEBUFFER, None));
+ 
+             let view_idx_uloc = ck!(gl.get_uniform_location(program, "view_idx")).unwrap();
++            let present_view_idx_uloc = ck!(gl.get_uniform_location(present_program, "view_idx")).unwrap();
++            ck!(gl.use_program(Some(present_program)));
++            let frame_size_uloc = ck!(gl.get_uniform_location(present_program, "q3pw_frame_size")).unwrap();
++            ck!(gl.uniform_2_f32(Some(&frame_size_uloc), 2.0 * view_resolution.x as f32, view_resolution.y as f32));
++            ck!(gl.use_program(None));
+ 
+             Self {
+                 context,
+                 program,
+                 surface_texture,
+                 view_idx_uloc,
++                present_program,
++                present_view_idx_uloc,
+                 framebuffers: framebuffers.try_into().unwrap(),
+                 viewport_size: view_resolution.as_ivec2(),
+             }
+@@ -117,15 +132,21 @@ impl StagingRenderer {
      }
  
      #[allow(unused_variables)]
@@ -9721,9 +10149,28 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..779de33ca83d78d9b52c92193b54f60b
 +    pub unsafe fn render(&self, hardware_buffer: *mut c_void, wait_for_copy: bool) {
          let gl = &self.context.gl_context;
          self.context.make_current();
++        let present = present_ycbcr_layout(hardware_buffer, self.viewport_size.as_uvec2());
++        let (program, view_idx_uloc) = if present {
++            (self.present_program, &self.present_view_idx_uloc)
++        } else {
++            (self.program, &self.view_idx_uloc)
++        };
  
-@@ -140,6 +140,11 @@ impl StagingRenderer {
-                     ck!(gl.uniform_1_i32(Some(&self.view_idx_uloc), i as i32));
+         self.context.render_ahardwarebuffer_using_texture(
+             hardware_buffer,
+             self.surface_texture,
+             || unsafe {
+-                ck!(gl.use_program(Some(self.program)));
++                ck!(gl.use_program(Some(program)));
+ 
+                 ck!(gl.viewport(0, 0, self.viewport_size.x, self.viewport_size.y));
+                 ck!(gl.disable(gl::SCISSOR_TEST));
+@@ -137,9 +158,14 @@ impl StagingRenderer {
+                     ck!(gl.active_texture(gl::TEXTURE0));
+                     ck!(gl.bind_texture(GL_TEXTURE_EXTERNAL_OES, Some(self.surface_texture)));
+                     ck!(gl.bind_sampler(0, None));
+-                    ck!(gl.uniform_1_i32(Some(&self.view_idx_uloc), i as i32));
++                    ck!(gl.uniform_1_i32(Some(view_idx_uloc), i as i32));
                      ck!(gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4));
                  }
 +                // A PyroWave hardware buffer is reused by a separate Vulkan queue.
@@ -9734,6 +10181,14 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..779de33ca83d78d9b52c92193b54f60b
              },
          );
      }
+@@ -152,6 +178,7 @@ impl Drop for StagingRenderer {
+ 
+         unsafe {
+             ck!(gl.delete_program(self.program));
++            ck!(gl.delete_program(self.present_program));
+             ck!(gl.delete_texture(self.surface_texture));
+             for framebuffer in &self.framebuffers {
+                 ck!(gl.delete_framebuffer(*framebuffer));
 diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
 index 737b7d0053f8a34698696f465c816627e95d9287..6dd30146b4953ef58938730b76b754f4c1a4d613 100644
 --- a/alvr/graphics/src/stream.rs
@@ -10017,7 +10472,7 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..85fdf624efc16bea4b70ffd3ee5b6c89
              }),
          };
 diff --git a/alvr/server_core/src/bitrate.rs b/alvr/server_core/src/bitrate.rs
-index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..869fa779ca44f72241dd5b2423600cba2686120b 100644
+index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..32d9601f7a9835e93115859e328c9b04c89fc4c4 100644
 --- a/alvr/server_core/src/bitrate.rs
 +++ b/alvr/server_core/src/bitrate.rs
 @@ -1,7 +1,7 @@
@@ -10029,7 +10484,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..869fa779ca44f72241dd5b2423600cba
  };
  use std::{
      collections::VecDeque,
-@@ -10,11 +10,96 @@ use std::{
+@@ -10,11 +10,128 @@ use std::{
  
  const UPDATE_INTERVAL: Duration = Duration::from_secs(1);
  
@@ -10090,6 +10545,38 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..869fa779ca44f72241dd5b2423600cba
 +    }
 +
 +    #[test]
++    fn quality_floor_raises_constant_and_auto_bitrates() {
++        let mut config = SessionConfig::default().to_settings().video.bitrate;
++        config.mode = BitrateMode::ConstantMbps(100);
++        let mut manager = BitrateManager::new(1, 120.0);
++        manager.set_quality_floor_mbps(Some(300));
++        assert_eq!(manager.get_encoder_params(&config).unwrap().0.bitrate_bps, 300e6);
++        config.mode = BitrateMode::ConstantMbps(1000);
++        assert_eq!(manager.get_encoder_params(&config).unwrap().0.bitrate_bps, 1000e6);
++        manager.set_quality_floor_mbps(None);
++        config.mode = BitrateMode::ConstantMbps(100);
++        assert_eq!(manager.get_encoder_params(&config).unwrap().0.bitrate_bps, 100e6);
++
++        config.mode = BitrateMode::Adaptive {
++            saturation_multiplier: 1.0,
++            max_throughput_mbps: Switch::Enabled(1000),
++            min_throughput_mbps: Switch::Disabled,
++            max_network_latency_ms: Switch::Disabled,
++            encoder_latency_limiter: Switch::Disabled,
++            decoder_latency_limiter: Switch::Disabled,
++        };
++        let mut manager = BitrateManager::new(1, 120.0);
++        manager.set_quality_floor_mbps(Some(300));
++        // 10,000 bytes per 40 ms is 2 Mbps of measured throughput.
++        let timestamp = Duration::from_secs(1);
++        manager.report_frame_encoded(timestamp, Duration::from_millis(1), 10_000);
++        manager.report_frame_latencies(&config.mode, timestamp, Duration::from_millis(40), Duration::from_millis(2));
++        let (params, directives) = manager.get_encoder_params(&config).unwrap();
++        assert_eq!(params.bitrate_bps, 300e6);
++        assert_eq!(directives.requested_bitrate_bps, 300e6);
++    }
++
++    #[test]
 +    fn decoder_limit_converts_bytes_per_frame_to_bits_per_second() {
 +        let mut manager = BitrateManager::new(1, 120.0);
 +        let mut config = SessionConfig::default().to_settings().video.bitrate;
@@ -10126,7 +10613,33 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..869fa779ca44f72241dd5b2423600cba
  pub struct BitrateManager {
      nominal_frame_interval: Duration,
      frame_interval_average: SlidingWindowAverage<Duration>,
-@@ -157,6 +242,12 @@ impl BitrateManager {
+@@ -30,6 +147,7 @@ pub struct BitrateManager {
+     dynamic_decoder_max_bytes_per_frame: f32,
+     previous_config: Option<BitrateConfig>,
+     update_needed: bool,
++    quality_floor_bps: Option<f32>,
+ }
+ 
+ impl BitrateManager {
+@@ -56,9 +174,17 @@ impl BitrateManager {
+             dynamic_decoder_max_bytes_per_frame: f32::MAX,
+             previous_config: None,
+             update_needed: true,
++            quality_floor_bps: None,
+         }
+     }
+ 
++    /// PyroWave's quality floor (alvr_session::beta::quality_floor_mbps): constant and Auto
++    /// bitrates are raised to at least this. None leaves every mode as configured.
++    pub fn set_quality_floor_mbps(&mut self, mbps: Option<u64>) {
++        self.quality_floor_bps = mbps.map(|mbps| mbps as f32 * 1e6);
++        self.update_needed = true;
++    }
++
+     // Note: This is used to calculate the framerate/frame interval. The frame present is the most
+     // accurate event for this use.
+     pub fn report_frame_present(&mut self, config: &Switch<BitrateAdaptiveFramerateConfig>) {
+@@ -157,6 +283,12 @@ impl BitrateManager {
              .map(|prev| config != prev)
              .unwrap_or(true)
          {
@@ -10139,7 +10652,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..869fa779ca44f72241dd5b2423600cba
              self.previous_config = Some(config.clone());
              // Continue method. Always update bitrate in this case
          } else if !self.update_needed
-@@ -196,10 +287,11 @@ impl BitrateManager {
+@@ -196,10 +328,11 @@ impl BitrateManager {
                  bitrate_directives.scaled_calculated_throughput_bps = Some(throughput_bps);
  
                  if decoder_latency_limiter.enabled() {
@@ -10155,11 +10668,33 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..869fa779ca44f72241dd5b2423600cba
                  }
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
+@@ -244,6 +377,11 @@ impl BitrateManager {
+             }
+         };
+ 
++        let bitrate_bps = match self.quality_floor_bps {
++            Some(floor_bps) if bitrate_bps < floor_bps => floor_bps,
++            _ => bitrate_bps,
++        };
++
+         bitrate_directives.requested_bitrate_bps = bitrate_bps;
+ 
+         Some((
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d1d2a1d41 100644
+index fc176da39833633bc7fbac803ebe345c7832fbdb..278a4c161a0ec5df4b0801a5e976b05ec044942b 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
-@@ -53,7 +53,61 @@ pub struct VideoPacket {
+@@ -43,6 +43,9 @@ use std::{
+ const RETRY_CONNECT_MIN_INTERVAL: Duration = Duration::from_secs(1);
+ const HANDSHAKE_ACTION_TIMEOUT: Duration = Duration::from_secs(2);
+ pub const STREAMING_RECV_TIMEOUT: Duration = Duration::from_millis(500);
++const SETTINGS_CHECK_INTERVAL: Duration = Duration::from_millis(500);
++const SETTINGS_SETTLE_TIME: Duration = Duration::from_secs(2);
++const STATISTICS_CHECK_INTERVAL: Duration = Duration::from_secs(10);
+ const REAL_TIME_UPDATE_INTERVAL: Duration = Duration::from_secs(1);
+ 
+ const MAX_UNREAD_PACKETS: usize = 10; // Applies per stream
+@@ -53,7 +56,61 @@ pub struct VideoPacket {
  }
  
  fn align32(value: f32) -> u32 {
@@ -10222,7 +10757,54 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
  }
  
  fn is_streaming(client_hostname: &str) -> bool {
-@@ -133,25 +187,18 @@ fn openvr_config_with_env(
+@@ -69,6 +126,46 @@ pub fn contruct_openvr_config(session: &SessionConfig) -> OpenvrConfig {
+     openvr_config_with_env(session, &alvr_session::beta::process_env)
+ }
+ 
++/// Settings read only when a stream starts: the SteamVR driver configuration and what stream
++/// negotiation reads. Changing one while streaming takes effect by reconnecting the client; the
++/// next connection restarts SteamVR when the driver configuration changed.
++fn stream_start_settings(session: &SessionConfig) -> serde_json::Map<String, serde_json::Value> {
++    let settings = session.to_settings();
++    let video = &settings.video;
++    let mut map = match serde_json::to_value(contruct_openvr_config(session)) {
++        Ok(serde_json::Value::Object(map)) => map,
++        _ => serde_json::Map::new(),
++    };
++    for (key, value) in [
++        ("preferred_codec", serde_json::to_value(&video.preferred_codec)),
++        ("pyrowave", serde_json::to_value(&video.pyrowave)),
++        ("transcoding_view_resolution", serde_json::to_value(&video.transcoding_view_resolution)),
++        (
++            "emulated_headset_view_resolution",
++            serde_json::to_value(&video.emulated_headset_view_resolution),
++        ),
++        ("preferred_fps", serde_json::to_value(video.preferred_fps)),
++    ] {
++        map.insert(format!("video.{key}"), value.unwrap_or_default());
++    }
++    map
++}
++
++fn changed_settings(
++    before: &serde_json::Map<String, serde_json::Value>,
++    after: &serde_json::Map<String, serde_json::Value>,
++) -> Vec<String> {
++    let mut keys = before
++        .keys()
++        .chain(after.keys())
++        .filter(|key| before.get(*key) != after.get(*key))
++        .cloned()
++        .collect::<Vec<_>>();
++    keys.sort();
++    keys.dedup();
++    keys
++}
++
+ fn openvr_config_with_env(
+     session: &SessionConfig,
+     env: &dyn Fn(&str) -> Option<String>,
+@@ -133,25 +230,18 @@ fn openvr_config_with_env(
          })
          .unwrap_or(false);
  
@@ -10260,7 +10842,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
  
      let mut brightness = 0.0;
      let mut contrast = 0.0;
-@@ -240,7 +287,11 @@ fn openvr_config_with_env(
+@@ -240,7 +330,11 @@ fn openvr_config_with_env(
          pyrowave_enabled: pyrowave.enabled,
          pyrowave_udp: pyrowave.udp,
          pyrowave_wavelet_53: pyrowave.wavelet_53,
@@ -10272,7 +10854,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
          _controller_profile,
          _server_impl_debug: settings.extra.logging.debug_groups.server_impl,
          _client_impl_debug: settings.extra.logging.debug_groups.client_impl,
-@@ -313,12 +364,24 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -313,12 +407,24 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
              let stream_port;
              let client_type;
              let client_autolaunch;
@@ -10297,7 +10879,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
              }
  
              let status = match wired_connection.setup(
-@@ -326,6 +389,7 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -326,6 +432,7 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
                  stream_port,
                  &client_type,
                  client_autolaunch,
@@ -10305,7 +10887,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
              ) {
                  Ok(status) => status,
                  Err(e) => {
-@@ -471,6 +535,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -471,6 +578,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
          thread.join().ok();
      }
  
@@ -10322,7 +10904,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
      alvr_common::dbg_connection!("handshake_loop: End");
  }
  
-@@ -629,6 +703,19 @@ fn connection_pipeline(
+@@ -629,6 +746,19 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -10342,7 +10924,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +736,9 @@ fn connection_pipeline(
+@@ -649,18 +779,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -10364,7 +10946,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -802,6 +880,10 @@ fn connection_pipeline(
+@@ -802,6 +923,10 @@ fn connection_pipeline(
          proto_socket.split(STREAMING_RECV_TIMEOUT).to_con()?;
  
      let mut new_openvr_config = contruct_openvr_config(session_manager_lock.session());
@@ -10375,7 +10957,44 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
      new_openvr_config.eye_resolution_width = stream_view_resolution.x;
      new_openvr_config.eye_resolution_height = stream_view_resolution.y;
      new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
-@@ -869,10 +951,11 @@ fn connection_pipeline(
+@@ -822,6 +947,7 @@ fn connection_pipeline(
+ 
+         crate::notify_restart_driver();
+     }
++    let stream_start_baseline = stream_start_settings(session_manager_lock.session());
+ 
+     dbg_connection!("connection_pipeline: Send StartStream packet");
+     control_sender
+@@ -846,6 +972,28 @@ fn connection_pipeline(
+ 
+     *ctx.bitrate_manager.lock() =
+         BitrateManager::new(initial_settings.video.bitrate.history_size, fps);
++    // Quest3-Pyrowave: never request less than the measured quality floor for this stream size
++    // and refresh rate, whichever control set the bitrate. ALVR_PYROWAVE_NO_QUALITY_FLOOR=1 lifts
++    // it for codec measurements.
++    let quality_floor_mbps = if initial_settings.video.preferred_codec == CodecType::PyroWave
++        && std::env::var_os("ALVR_PYROWAVE_NO_QUALITY_FLOOR").is_none()
++    {
++        alvr_session::beta::quality_floor_mbps(
++            stream_view_resolution.x,
++            stream_view_resolution.y,
++            fps as f64,
++            initial_settings.video.pyrowave.chroma_444,
++        )
++    } else {
++        None
++    };
++    if let Some(mbps) = quality_floor_mbps {
++        info!(
++            "[Q3PW_QUALITY_FLOOR] {mbps} Mbps for {}x{} per eye at {fps} Hz",
++            stream_view_resolution.x, stream_view_resolution.y
++        );
++    }
++    ctx.bitrate_manager.lock().set_quality_floor_mbps(quality_floor_mbps);
+ 
+     let stream_protocol = if wired {
+         SocketProtocol::Tcp
+@@ -869,10 +1017,11 @@ fn connection_pipeline(
  
      // PyroWave over UDP: a plain socket to the client's address. The same resolution fills
      // openvr_config for the C++ encoder, so the two sides cannot disagree.
@@ -10391,7 +11010,51 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
      if pyrowave.enabled {
          info!("{pyrowave}");
      }
-@@ -1102,7 +1185,10 @@ fn connection_pipeline(
+@@ -1081,18 +1230,40 @@ fn connection_pipeline(
+         let ctx = Arc::clone(&ctx);
+         let client_hostname = client_hostname.clone();
+         move || {
++            // The dashboard's graphs and the bitrate controller depend on these reports, so say
++            // when they stop arriving or stop matching server frames instead of going quiet.
++            let mut window = (Instant::now(), 0u32, 0u32); // (start, received, without a server frame)
+             while is_streaming(&client_hostname) {
++                if window.0.elapsed() >= STATISTICS_CHECK_INTERVAL {
++                    let (_, received, unmatched) = window;
++                    if received == 0 || unmatched * 2 > received {
++                        warn!("[Q3PW_STATS] {received} client statistics in {} s, {unmatched} without a server frame",
++                            STATISTICS_CHECK_INTERVAL.as_secs());
++                    }
++                    window = (Instant::now(), 0, 0);
++                }
+                 let data = match statics_receiver.recv(STREAMING_RECV_TIMEOUT) {
+                     Ok(stats) => stats,
+                     Err(ConnectionError::TryAgain(_)) => continue,
+-                    Err(ConnectionError::Other(_)) => return,
++                    Err(ConnectionError::Other(e)) => {
++                        warn!("[Q3PW_STATS] Client statistics stopped: {e}");
++                        return;
++                    }
+                 };
+-                let Ok(client_stats) = data.get_header() else {
+-                    return;
++                let client_stats = match data.get_header() {
++                    Ok(client_stats) => client_stats,
++                    Err(e) => {
++                        warn!("[Q3PW_STATS] Client statistics stopped, unreadable report: {e}");
++                        return;
++                    }
+                 };
++                window.1 += 1;
+ 
+                 if let Some(stats) = &mut *ctx.statistics_manager.write() {
+                     let timestamp = client_stats.target_timestamp;
++                    if !stats.has_frame(timestamp) {
++                        window.2 += 1;
++                    }
+                     let decoder_latency = client_stats.video_decode;
+                     let (network_latency, game_latency) = stats.report_statistics(client_stats);
+ 
+@@ -1102,7 +1273,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -10403,7 +11066,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1201,7 @@ fn connection_pipeline(
+@@ -1115,6 +1289,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -10411,7 +11074,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1218,14 @@ fn connection_pipeline(
+@@ -1131,6 +1306,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -10426,15 +11089,43 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1184,6 +1279,7 @@ fn connection_pipeline(
+@@ -1184,9 +1367,35 @@ fn connection_pipeline(
          let disconnect_notif = Arc::clone(&disconnect_notif);
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
 +        let supported_refresh_rates = streaming_caps.supported_refresh_rates.clone();
          move || {
              let mut disconnection_deadline = Instant::now() + KEEPALIVE_TIMEOUT;
++            let mut next_settings_check = Instant::now() + SETTINGS_CHECK_INTERVAL;
++            let mut settings_changed_since = None;
              while is_streaming(&client_hostname) {
-@@ -1299,6 +1395,9 @@ fn connection_pipeline(
++                // Dashboard edits of stream-start settings would otherwise wait for the next
++                // connection. Wait until edits settle, so a slider drag reconnects once.
++                if Instant::now() >= next_settings_check {
++                    next_settings_check = Instant::now() + SETTINGS_CHECK_INTERVAL;
++                    let changed = changed_settings(
++                        &stream_start_baseline,
++                        &stream_start_settings(SESSION_MANAGER.read().session()),
++                    );
++                    if changed.is_empty() {
++                        settings_changed_since = None;
++                    } else if settings_changed_since
++                        .get_or_insert_with(Instant::now)
++                        .elapsed()
++                        >= SETTINGS_SETTLE_TIME
++                    {
++                        info!(
++                            "[Q3PW_SETTINGS_RECONNECT] Reconnecting to apply {}",
++                            changed.join(", ")
++                        );
++                        control_sender.lock().send(&ServerControlPacket::Restarting).ok();
++                        break;
++                    }
++                }
+                 let packet = match control_receiver.recv(STREAMING_RECV_TIMEOUT) {
+                     Ok(packet) => packet,
+                     Err(ConnectionError::TryAgain(_)) => {
+@@ -1299,6 +1508,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -10444,7 +11135,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1378,6 +1477,22 @@ fn connection_pipeline(
+@@ -1378,6 +1590,22 @@ fn connection_pipeline(
                              };
  
                          match reserved {
@@ -10467,7 +11158,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
                              ReservedClientControlPacket::CustomInteractionProfile {
                                  input_ids,
                                  ..
-@@ -1552,9 +1667,10 @@ mod beta_tests {
+@@ -1552,9 +1780,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -10480,6 +11171,29 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
      }
  
      #[test]
+@@ -1569,4 +1798,22 @@ mod beta_tests {
+         assert!(!config.pyrowave_udp);
+         assert!(config.pyrowave_wavelet_53);
+     }
++
++    #[test]
++    fn stream_start_settings_name_restart_changes_only() {
++        let session = SessionConfig::default();
++        let baseline = stream_start_settings(&session);
++
++        let mut live = session.clone();
++        live.session_settings.video.bitrate.mode.ConstantMbps = 300;
++        assert!(changed_settings(&baseline, &stream_start_settings(&live)).is_empty());
++
++        let mut restart = session.clone();
++        restart.session_settings.video.pyrowave.chroma_444 = true;
++        restart.session_settings.video.preferred_fps = 120.0;
++        assert_eq!(
++            changed_settings(&baseline, &stream_start_settings(&restart)),
++            ["pyrowave_chroma_444", "video.preferred_fps", "video.pyrowave"]
++        );
++    }
+ }
 diff --git a/alvr/server_core/src/lib.rs b/alvr/server_core/src/lib.rs
 index efa67b1d107def4e3e6d9cec00e6056dbece2380..ed3c31b5b43d9d9a178673a059250e1aba9312d1 100644
 --- a/alvr/server_core/src/lib.rs
@@ -10518,7 +11232,7 @@ index efa67b1d107def4e3e6d9cec00e6056dbece2380..ed3c31b5b43d9d9a178673a059250e1a
  
          if let Some((params, stats)) = pair {
 diff --git a/alvr/server_core/src/statistics.rs b/alvr/server_core/src/statistics.rs
-index 365db6463a9bd019ff5548186b873056f77806ae..4ef88aadac7cad6074ebc414745686ab92c83a52 100644
+index 365db6463a9bd019ff5548186b873056f77806ae..7e49dd79843b09a417b15e576bafb443fd60c40c 100644
 --- a/alvr/server_core/src/statistics.rs
 +++ b/alvr/server_core/src/statistics.rs
 @@ -9,6 +9,25 @@ use std::{
@@ -10569,7 +11283,19 @@ index 365db6463a9bd019ff5548186b873056f77806ae..4ef88aadac7cad6074ebc414745686ab
          }
      }
  
-@@ -287,6 +314,22 @@ impl StatisticsManager {
+@@ -113,6 +140,11 @@ impl StatisticsManager {
+         }
+     }
+ 
++    /// Whether a client report for this frame can be matched to the server's record of it.
++    pub fn has_frame(&self, target_timestamp: Duration) -> bool {
++        self.history_buffer.iter().any(|frame| frame.target_timestamp == target_timestamp)
++    }
++
+     pub fn report_frame_present(&mut self, target_timestamp: Duration, offset: Duration) {
+         if let Some(frame) = self
+             .history_buffer
+@@ -287,6 +319,22 @@ impl StatisticsManager {
                  / Duration::max(self.last_frame_present_interval, EPS_INTERVAL).as_secs_f32();
  
              // todo: the dashboard needs to use the first timestamp as the graph time origin.
@@ -10592,7 +11318,7 @@ index 365db6463a9bd019ff5548186b873056f77806ae..4ef88aadac7cad6074ebc414745686ab
              alvr_events::send_event(EventType::GraphStatistics(GraphStatistics {
                  target_timestamp_ns: frame.target_timestamp.as_nanos() as u64,
                  video_packet_bytes: frame.video_packet_bytes,
-@@ -316,6 +359,39 @@ impl StatisticsManager {
+@@ -316,6 +364,39 @@ impl StatisticsManager {
          self.motion_to_photon_latency_average.get_average()
      }
  
@@ -10863,7 +11589,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..f053eb0ae2188a8dd659c3d7bb6c9d1b12b227a8
 --- /dev/null
 +++ b/alvr/server_openvr/cpp/platform/win32/FrameDownsample.hlsl.inc
-@@ -0,0 +1,201 @@
+@@ -0,0 +1,226 @@
 +R"HLSL(
 +// Quest3-Pyrowave PC composition filter (pixel shader, ps_5_0).
 +//
@@ -10871,7 +11597,9 @@ index 0000000000000000000000000000000000000000..f053eb0ae2188a8dd659c3d7bb6c9d1b
 +// resolution. Each output pixel measures its footprint in source texels from the UV derivatives
 +// and applies a Catmull-Rom kernel widened to that footprint, so a 3072x3216 eye is averaged
 +// into a 2080x2208 stream pixel instead of point-sampled. At equal render and stream size the
-+// kernel collapses to the identity on texel centers.
++// kernel collapses to the identity on texel centers. Compiled with KERNEL_LANCZOS3 it uses a
++// 3-lobe Lanczos kernel instead: sharper (more response near the stream's Nyquist frequency)
++// for about 1.8x the fetches.
 +//
 +// Separable weights let each pair of adjacent same-sign texels share one bilinear fetch (exact
 +// for a separable kernel). Pairs that straddle a kernel zero crossing, or are merged by edge
@@ -10905,15 +11633,38 @@ index 0000000000000000000000000000000000000000..f053eb0ae2188a8dd659c3d7bb6c9d1b
 +};
 +
 +// Footprints above this are filtered as if they were this wide (under-filtered, never skipped).
-+// 3.0 keeps the loop at <= 7x7 bilinear pairs and covers render scales up to 3x per axis.
++// 3.0 covers render scales up to 3x per axis: <= 7x7 bilinear pairs for Catmull-Rom (radius 2),
++// <= 10x10 for Lanczos-3 (radius 3).
 +#define MAX_SCALE 3.0
++#ifdef KERNEL_LANCZOS3
++#define KERNEL_RADIUS 3.0
++#define MAX_PAIRS 10
++#else
++#define KERNEL_RADIUS 2.0
 +#define MAX_PAIRS 7
++#endif
 +
 +float CatmullRom(float x) {
 +    x = abs(x);
 +    if (x < 1.0) return (1.5 * x - 2.5) * x * x + 1.0;
 +    if (x < 2.0) return ((-0.5 * x + 2.5) * x - 4.0) * x + 2.0;
 +    return 0.0;
++}
++
++float Lanczos3(float x) {
++    x = abs(x);
++    if (x < 1e-4) return 1.0;
++    if (x >= 3.0) return 0.0;
++    float px = 3.14159265 * x;
++    return 3.0 * sin(px) * sin(px * (1.0 / 3.0)) / (px * px);
++}
++
++float Kernel(float x) {
++#ifdef KERNEL_LANCZOS3
++    return Lanczos3(x);
++#else
++    return CatmullRom(x);
++#endif
 +}
 +
 +struct AxisPair {
@@ -10927,8 +11678,8 @@ index 0000000000000000000000000000000000000000..f053eb0ae2188a8dd659c3d7bb6c9d1b
 +AxisPair MakePair(float first, int k, float center, float invScale, float lo, float hi) {
 +    float ia = first + 2.0 * k;
 +    float ib = ia + 1.0;
-+    float wa = CatmullRom((ia + 0.5 - center) * invScale);
-+    float wb = CatmullRom((ib + 0.5 - center) * invScale);
++    float wa = Kernel((ia + 0.5 - center) * invScale);
++    float wb = Kernel((ib + 0.5 - center) * invScale);
 +    float ja = clamp(ia, lo, hi);
 +    float jb = clamp(ib, lo, hi);
 +    AxisPair r;
@@ -10960,8 +11711,8 @@ index 0000000000000000000000000000000000000000..f053eb0ae2188a8dd659c3d7bb6c9d1b
 +    float2 lo = ceil(bMin - 0.5);
 +    float2 hi = max(lo, floor(bMax - 0.5));
 +    float2 invScale = 1.0 / scale;
-+    float2 first = floor(t - 0.5 - 2.0 * scale);
-+    float2 last = floor(t - 0.5 + 2.0 * scale);
++    float2 first = floor(t - 0.5 - KERNEL_RADIUS * scale);
++    float2 last = floor(t - 0.5 + KERNEL_RADIUS * scale);
 +    int2 pairs = min(int2((last - first + 2.0) * 0.5), MAX_PAIRS);
 +    float2 invSize = 1.0 / size;
 +
@@ -11044,7 +11795,7 @@ index 0000000000000000000000000000000000000000..f053eb0ae2188a8dd659c3d7bb6c9d1b
 +    } else {
 +        color = FilterEye(txLeft, boundsLeft, input.Tex, scale);
 +    }
-+    // Catmull-Rom lobes can undershoot; negative light is never valid input below.
++    // Catmull-Rom and Lanczos lobes can undershoot; negative light is never valid input below.
 +    color = max(color, 0.0);
 +
 +    if (shouldClamp == (uint)1) {
@@ -11093,7 +11844,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
      // Left eye scissor
      m_scissorL.bottom = 0.0f;
      m_scissorL.left = 0.0f;
-@@ -343,6 +351,55 @@ bool FrameRender::Startup() {
+@@ -343,6 +351,61 @@ bool FrameRender::Startup() {
          return false;
      }
  
@@ -11106,14 +11857,20 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
 +        Settings::Instance().m_recommendedTargetWidth / 2, Settings::Instance().m_recommendedTargetHeight,
 +        Settings::Instance().m_renderWidth / 2, Settings::Instance().m_renderHeight,
 +        (double)Settings::Instance().m_recommendedTargetHeight / Settings::Instance().m_renderHeight,
-+        Settings::Instance().m_renderDownsampleFilter == 1 ? "adaptive bicubic" : "single-tap");
-+    if (Settings::Instance().m_renderDownsampleFilter == 1) {
++        Settings::Instance().m_renderDownsampleFilter == 2   ? "adaptive Lanczos-3"
++            : Settings::Instance().m_renderDownsampleFilter == 1 ? "adaptive bicubic"
++                                                                  : "single-tap");
++    const int downsampleFilter = Settings::Instance().m_renderDownsampleFilter;
++    if (downsampleFilter == 1 || downsampleFilter == 2) {
 +        static const char downsampleSource[] =
 +#include "FrameDownsample.hlsl.inc"
 +            ;
++        // Lanczos (2) is the same shader with a 3-lobe kernel instead of Catmull-Rom.
++        const D3D_SHADER_MACRO lanczos[] = {{"KERNEL_LANCZOS3", "1"}, {nullptr, nullptr}};
 +        ComPtr<ID3DBlob> code, errors;
 +        hr = D3DCompile(downsampleSource, sizeof(downsampleSource) - 1, "FrameDownsample",
-+            nullptr, nullptr, "main", "ps_5_0", D3DCOMPILE_OPTIMIZATION_LEVEL3, 0,
++            downsampleFilter == 2 ? lanczos : nullptr, nullptr, "main", "ps_5_0",
++            D3DCOMPILE_OPTIMIZATION_LEVEL3, 0,
 +            code.GetAddressOf(), errors.GetAddressOf());
 +        if (SUCCEEDED(hr)) {
 +            hr = m_pD3DRender->GetDevice()->CreatePixelShader(code->GetBufferPointer(),
@@ -11149,7 +11906,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
      //
      // Create alpha blend state
      // We need alpha blending to support layer.
-@@ -552,9 +609,9 @@ bool FrameRender::Startup() {
+@@ -552,9 +615,9 @@ bool FrameRender::Startup() {
          m_pStagingTexture = yuvTexture;
      }
  
@@ -11162,7 +11919,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
      enablePlanarYuv = PyroWaveEnabled() && !Settings::Instance().m_enableHdr;
      if (enablePlanarYuv) {
          uint32_t texWidth, texHeight;
-@@ -647,6 +704,37 @@ bool FrameRender::Startup() {
+@@ -647,6 +710,37 @@ bool FrameRender::Startup() {
              planarTargets,
              planarParamBuffer.Get()
          );
@@ -11200,7 +11957,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
      }
  
      Debug("Staging Texture created\n");
-@@ -913,6 +1001,23 @@ bool FrameRender::RenderFrame(
+@@ -913,6 +1007,23 @@ bool FrameRender::RenderFrame(
                1 + (inputColorAdjust * 2) },
          };
  
@@ -11224,7 +11981,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
          D3D11_MAPPED_SUBRESOURCE mapped = { 0 };
          hr = m_pD3DRender->GetContext()->Map(
              m_pVertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped
-@@ -949,7 +1054,15 @@ bool FrameRender::RenderFrame(
+@@ -949,7 +1060,15 @@ bool FrameRender::RenderFrame(
          //
  
          m_pD3DRender->GetContext()->VSSetShader(m_pVertexShader.Get(), nullptr, 0);
@@ -11241,7 +11998,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
  
          ID3D11ShaderResourceView* shaderResourceView[2]
              = { pShaderResourceView[0].Get(), pShaderResourceView[1].Get() };
-@@ -974,6 +1087,11 @@ bool FrameRender::RenderFrame(
+@@ -974,6 +1093,11 @@ bool FrameRender::RenderFrame(
          );
      }
  
@@ -11253,7 +12010,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
      // Restore full viewport/scissor rect for the rest
      m_pD3DRender->GetContext()->RSSetViewports(1, &m_viewport);
      m_pD3DRender->GetContext()->RSSetScissorRects(1, &m_scissor);
-@@ -992,6 +1110,12 @@ bool FrameRender::RenderFrame(
+@@ -992,6 +1116,12 @@ bool FrameRender::RenderFrame(
  
      if (enablePlanarYuv) {
          m_planarPipeline->Render();
@@ -11266,7 +12023,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
      }
  
      m_pD3DRender->GetContext()->Flush();
-@@ -999,11 +1123,41 @@ bool FrameRender::RenderFrame(
+@@ -999,11 +1129,41 @@ bool FrameRender::RenderFrame(
      return true;
  }
  
@@ -11676,10 +12433,10 @@ index 861f726c74e38cec9058513ab412ceb08ae2e8bf..e277d11fe8271552f711118c8c26c817
              thread::yield_now();
          }
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
-index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8b479a47a 100644
+index 84100dc7c01a272de5b0b22b22907127bb5e1e18..30e05cbdbc400a9f815aa3772e7dc8ebb11dda71 100644
 --- a/alvr/session/src/beta.rs
 +++ b/alvr/session/src/beta.rs
-@@ -3,25 +3,94 @@
+@@ -3,25 +3,125 @@
  //! environment overrides are applied. The server, the dashboard and the tests all read from here,
  //! so the UI, the defaults and the documentation cannot drift apart.
  
@@ -11757,6 +12514,25 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8
 +    })
 +}
 +
++/// Lowest PyroWave bitrate the streamer requests, in bits per padded stream pixel (both eyes,
++/// 4:2:0) per frame. Measured October 7 (docs/BITRATE.md): below about this rate the encoder's
++/// smooth-area quality falls under what the previous encoder gave at 1000 Mbps, 207 Hz and full
++/// panel size, which already looked pixelated next to Virtual Desktop.
++pub const QUALITY_FLOOR_BITS_PER_PIXEL: f64 = 0.25;
++
++/// The quality floor in Mbps for a stream size and refresh rate, rounded up to 50 Mbps. 4:4:4
++/// doubles the raw samples and the floor (not measured, so it errs high).
++pub fn quality_floor_mbps(width: u32, height: u32, hz: f64, full_chroma: bool) -> Option<u64> {
++    if width == 0 || height == 0 || !hz.is_finite() || hz.round() < 1.0 {
++        return None;
++    }
++    let pixels = 2.0 * f64::from(width.checked_add(31)? / 32 * 32)
++        * f64::from(height.checked_add(31)? / 32 * 32);
++    let chroma = if full_chroma { 2.0 } else { 1.0 };
++    let mbps = pixels * hz.round() * QUALITY_FLOOR_BITS_PER_PIXEL * chroma / 1e6;
++    Some(((mbps / 50.0).ceil() as u64 * 50).min(crate::headset_settings::MAX_BITRATE_MBPS))
++}
++
 +#[cfg(test)]
 +mod budget_tests {
 +    use super::*;
@@ -11776,12 +12552,24 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8
 +        assert!(frame_budget(0, 2208, 120.0, 1000, false).is_none());
 +        assert!(frame_budget(2064, 2208, f64::NAN, 1000, false).is_none());
 +    }
++
++    #[test]
++    fn quality_floor_scales_with_pixels_per_second() {
++        assert_eq!(quality_floor_mbps(2064, 2208, 207.0, false), Some(500));
++        assert_eq!(quality_floor_mbps(2064, 2208, 120.0, false), Some(300));
++        assert_eq!(quality_floor_mbps(2064, 2208, 72.0, false), Some(200));
++        assert_eq!(quality_floor_mbps(2064, 2208, 120.0, true), Some(600));
++        assert_eq!(quality_floor_mbps(1552, 1664, 240.0, false), Some(350));
++        assert_eq!(quality_floor_mbps(8192, 8192, 240.0, true), Some(crate::headset_settings::MAX_BITRATE_MBPS));
++        assert!(quality_floor_mbps(0, 2208, 120.0, false).is_none());
++        assert!(quality_floor_mbps(2064, 2208, f64::NAN, false).is_none());
++    }
 +}
 +
  pub struct StreamingProfile {
      pub name: &'static str,
      pub subtitle: &'static str,
-@@ -33,22 +102,36 @@ fn assign(path: &str, value: json::Value) -> (String, json::Value) {
+@@ -33,22 +133,36 @@ fn assign(path: &str, value: json::Value) -> (String, json::Value) {
      (path.to_owned(), value)
  }
  
@@ -11831,7 +12619,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8
  /// socket values, so switching profiles never leaves one of them at a tester's experiment.
  fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::Value)> {
      let mut list = vec![
-@@ -56,48 +139,206 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
+@@ -56,48 +170,206 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
          assign("video.bitrate.mode.variant", "ConstantMbps".into()),
          assign("video.bitrate.mode.ConstantMbps", mbps.into()),
          assign("video.preferred_fps", json::json!(fps)),
@@ -12068,7 +12856,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8
  }
  
  #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-@@ -186,8 +427,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
+@@ -186,8 +458,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
  #[derive(Clone, Debug, PartialEq)]
  pub struct PyroWaveEffective {
      pub enabled: bool,
@@ -12079,7 +12867,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8
      pub decode_path: PyroWaveDecodePath,
      pub follow_gaze: bool,
      pub overrides: Vec<&'static str>,
-@@ -211,30 +454,24 @@ pub fn pyrowave_effective(
+@@ -211,30 +485,24 @@ pub fn pyrowave_effective(
          value
      };
  
@@ -12118,7 +12906,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8
          decode_path: video.pyrowave.decode_path,
          follow_gaze,
          overrides,
-@@ -255,10 +492,11 @@ impl fmt::Display for PyroWaveEffective {
+@@ -255,10 +523,11 @@ impl fmt::Display for PyroWaveEffective {
          };
          write!(
              f,
@@ -12132,7 +12920,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8
              if self.follow_gaze { "on" } else { "off" },
              if self.overrides.is_empty() {
                  "none".to_owned()
-@@ -279,7 +517,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
+@@ -279,7 +548,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
  }
  
  fn at<'a>(root: &'a json::Value, path: &str) -> Option<&'a json::Value> {
@@ -12186,7 +12974,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..c88a722ae29ac3fa88991c37c8e987f6
 +    );
 +    assert_eq!(
 +        visible_variants(&schema(), &["video", "pyrowave", "render_downsample_filter"]).unwrap(),
-+        sorted(&["Adaptive", "Bilinear"])
++        sorted(&["Adaptive", "Bilinear", "Lanczos"])
      );
      assert_eq!(
          visible_variants(&schema(), &["video", "pyrowave", "decode_path"]).unwrap(),
@@ -12925,7 +13713,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
  }
  
  #[repr(u8)]
-@@ -618,32 +618,128 @@ pub enum PyroWaveWavelet {
+@@ -618,32 +618,130 @@ pub enum PyroWaveWavelet {
  #[schema(gui = "button_group")]
  pub enum PyroWaveDecodePath {
      // The driver heuristic, which picks the fragment path on Qualcomm. Kept for research.
@@ -12941,6 +13729,8 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
 +pub enum RenderDownsampleFilter {
 +    #[schema(strings(display_name = "Adaptive bicubic"))]
 +    Adaptive = 1,
++    #[schema(strings(display_name = "Adaptive Lanczos (sharper)"))]
++    Lanczos = 2,
 +    #[schema(strings(display_name = "Single tap (legacy)"))]
 +    Bilinear = 0,
 +}
@@ -13009,7 +13799,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
 +    #[serde(default)]
 +    #[schema(strings(
 +        display_name = "Game render downsample filter",
-+        help = "How the PC scales the game's render down to the stream resolution, for every codec. Adaptive bicubic averages every game pixel under each stream pixel, so rendering above the stream size sharpens the image without adding bandwidth or headset decode work; it is the identity when both sizes match. Single tap is the previous one-sample filter, kept for A/B comparison. Restart SteamVR after changing this."
++        help = "How the PC scales the game's render down to the stream resolution, for every codec. Adaptive bicubic averages every game pixel under each stream pixel, so rendering above the stream size sharpens the image without adding bandwidth or headset decode work; it is the identity when both sizes match. Adaptive Lanczos uses a 3-lobe Lanczos kernel instead of bicubic: finer detail survives the downscale, with slightly stronger edge halos and about 1.8x the PC GPU work of bicubic in this pass. Single tap is the previous one-sample filter, kept for A/B comparison. Restart SteamVR after changing this."
 +    ))]
 +    #[schema(flag = "steamvr-restart")]
 +    pub render_downsample_filter: RenderDownsampleFilter,
@@ -13058,7 +13848,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
  }
  
  #[repr(u8)]
-@@ -799,23 +895,20 @@ pub struct VideoConfig {
+@@ -799,23 +897,20 @@ pub struct VideoConfig {
      pub bitrate: BitrateConfig,
  
      #[schema(strings(
@@ -13087,7 +13877,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
      pub foveated_encoding: Switch<FoveatedEncodingConfig>,
  
      #[schema(flag = "steamvr-restart")]
-@@ -858,23 +951,25 @@ If you want to reduce the amount of pixelation on the edges, increase the center
+@@ -858,23 +953,25 @@ If you want to reduce the amount of pixelation on the edges, increase the center
      pub mediacodec_extra_options: Vec<(String, MediacodecProperty)>,
  
      #[schema(strings(
@@ -13118,7 +13908,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
      pub preferred_fps: f32,
  
      #[schema(strings(help = "You probably don't want to change this"))]
-@@ -1663,15 +1758,15 @@ pub struct Settings {
+@@ -1663,15 +1760,15 @@ pub struct Settings {
  }
  
  pub fn session_settings_default() -> SettingsDefault {
@@ -13137,7 +13927,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
              },
          },
      };
-@@ -1742,7 +1837,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1742,7 +1839,7 @@ pub fn session_settings_default() -> SettingsDefault {
              adapter_index: 0,
              transcoding_view_resolution: view_resolution.clone(),
              emulated_headset_view_resolution: view_resolution,
@@ -13146,7 +13936,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
              max_buffering_frames: 1.5,
              buffering_history_weight: 0.90,
              enforce_server_frame_pacing: true,
-@@ -1796,15 +1891,26 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1796,15 +1893,26 @@ pub fn session_settings_default() -> SettingsDefault {
                  variant: CodecTypeDefaultVariant::PyroWave,
              },
              pyrowave: PyroWaveConfigDefault {
@@ -13175,7 +13965,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
              },
              encoder_config: EncoderConfigDefault {
                  gui_collapsed: true,
-@@ -1901,7 +2007,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1901,7 +2009,7 @@ pub fn session_settings_default() -> SettingsDefault {
                  }
              },
              foveated_encoding: SwitchDefault {
@@ -13184,7 +13974,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
                  content: FoveatedEncodingConfigDefault {
                      force_enable: false,
                      center_size_x: 0.20,
-@@ -1910,7 +2016,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1910,7 +2018,7 @@ pub fn session_settings_default() -> SettingsDefault {
                      center_shift_y: 0.0,
                      edge_ratio_x: 3.,
                      edge_ratio_y: 4.,
@@ -13193,7 +13983,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
                  },
              },
              clientside_foveation: SwitchDefault {
-@@ -2066,7 +2172,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2066,7 +2174,7 @@ pub fn session_settings_default() -> SettingsDefault {
                                  content: vec![],
                              },
                          },
@@ -13202,7 +13992,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
                      },
                      extra_openvr_props: default_custom_openvr_props,
                      button_mappings: OptionalDefault {
-@@ -2179,16 +2285,12 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2179,16 +2287,12 @@ pub fn session_settings_default() -> SettingsDefault {
                  content: DiscoveryConfigDefault {
                      // Beta: no pairing step. The pre-release protocol ID already keeps stock
                      // ALVR clients out; turn this off to approve each headset by hand.
@@ -13222,7 +14012,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
              },
              wired_client_autolaunch: true,
              web_server_port: 8082,
-@@ -2211,7 +2313,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2211,7 +2315,7 @@ pub fn session_settings_default() -> SettingsDefault {
              server_recv_buffer_bytes: socket_buffer.clone(),
              client_send_buffer_bytes: socket_buffer.clone(),
              client_recv_buffer_bytes: socket_buffer,
@@ -13231,7 +14021,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
              avoid_video_glitching: true,
              minimum_idr_interval_ms: 100,
              enable_on_connect_script: false,
-@@ -2262,7 +2364,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2262,7 +2366,7 @@ pub fn session_settings_default() -> SettingsDefault {
              },
              steamvr_launcher: SteamvrLauncherDefault {
                  driver_launch_action: DriverLaunchActionDefault {
@@ -13240,7 +14030,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..d54e935c5ff42adedf9fa3943521414a
                  },
                  open_close_steamvr_with_dashboard: false,
              },
-@@ -2287,3 +2389,50 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2287,3 +2391,50 @@ pub fn session_settings_default() -> SettingsDefault {
          },
      }
  }

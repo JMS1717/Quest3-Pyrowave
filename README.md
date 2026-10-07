@@ -126,12 +126,20 @@ the radio hop, but still includes ADB forwarding, GPU decode and compositor work
 | **Bitrate** | **Settings → Presets**. The slider sets a fixed payload cap; with Auto it sets a maximum. |
 | **Auto bitrate** | Uses network/encoder latency feedback to lower the requested rate when needed. It cannot guarantee FPS or remove a GPU bottleneck. [Details](docs/BITRATE.md) |
 | **Profiles** | **Settings → Presets → Streaming profile**: the three "(measured)" profiles set refresh, stream size, wavelet, chroma and bitrate together; the game render resolution is kept. [Measurements](docs/HIGH-REFRESH.md) |
-| **Refresh** | Select a runtime-confirmed mode. Restart SteamVR after changing refresh. 240 Hz needs the Quest 3 scaled panel mode (1552x1664 per eye); choosing 240 Hz turns on **Quest 3: switch to 240 Hz over USB**. [Capability detection](docs/REFRESH-RATES.md) |
+| **Refresh** | Select a runtime-confirmed mode; while streaming it applies by itself ([below](#settings-that-restart-steamvr)). 240 Hz needs the Quest 3 scaled panel mode (1552x1664 per eye); choosing 240 Hz turns on **Quest 3: switch to 240 Hz over USB**. [Capability detection](docs/REFRESH-RATES.md) |
 | **Decoder / wavelet** | Quest 3 Auto chooses Compute. Haar/Compute is the measured development recipe; follow the matching build's instructions. [Decoder findings](docs/DECODE-PIPELINE.md) |
 | **Chroma** | Keep **4:2:0** for the baseline. 4:4:4 increased decode cost in the recorded comparison. [Chroma comparison](docs/CHROMA.md) |
 | **Foveation** | Off by default. [Light peripheral encoding](docs/LIGHT-FOVEATION.md) is optional development work, with sustained and in-headset acceptance pending. |
 | **Overlay** | On by default. **Click both thumbsticks together**, release both, then click again to toggle. [Metrics and overrides](docs/OVERLAY.md) |
-| **Controllers** | **Settings → Headset → Controllers → Emulation mode → Quest 3 Touch Plus**; restart SteamVR. |
+| **Controllers** | **Settings → Headset → Controllers → Emulation mode → Quest 3 Touch Plus**; SteamVR restarts to apply it. |
+
+### Settings that restart SteamVR
+
+Settings marked ⚠ (refresh, resolution, codec, wavelet, chroma, foveation, downsample filter,
+controllers and the other SteamVR driver options) are read when a stream starts. Changed while
+streaming, they apply by themselves: 2 s after the last edit the headset reconnects, and SteamVR
+restarts when the driver needs it. The stream is back about 25 s after the edit, so save game
+progress first. Bitrate changes apply live without a reconnect. [Details](docs/SETTINGS-APPLY.md)
 
 The 600 / 800 / 1000 / 1500 / 2000 Mbps high-refresh profiles are experiments.
 At 120 Hz, 1000 Mbps permits approximately **1.04 MB per encoded stereo frame**;

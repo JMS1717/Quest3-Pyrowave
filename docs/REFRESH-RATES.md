@@ -29,6 +29,14 @@ on every path, including when the headset never wakes or the cable is pulled mid
 `.59`, a failed wake returned before that step and left the proximity sensor overridden until a
 later successful change. Unit-tested only; not yet checked on the headset.
 
+HorizonOS writes `debug.oculus.refreshRate=72` itself within a second of a VR app starting with
+the property empty. Up to `.61` the server treated that as a change to undo: with only the GPU
+clock requested it put the saved empty rate back, which restarted the client, which made HorizonOS
+write 72 again, every 4 to 5 seconds without end. The server now records the values it wrote and
+restores a property only while it still holds one of them; values written by HorizonOS or by hand
+afterwards are left alone. Checked on the headset (October 7): one client restart, then streaming
+at 207 Hz with the GPU clock pinned.
+
 Above 207 Hz the panel requires display scaling. HorizonOS exposes the 4128x2208 panel modes up to
 207 Hz; 240 Hz exists only as a 3104x1664 mode (1552x1664 per eye) that the panel upscales. Fine
 detail changes even with a full-chroma encoded stream, so keep 240 Hz results separate from

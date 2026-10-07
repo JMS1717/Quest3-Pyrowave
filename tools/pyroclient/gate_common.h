@@ -178,14 +178,23 @@ void make_source(uint32_t w, uint32_t h, std::vector<uint8_t> &y, std::vector<ui
         }
 }
 
+// AB_WAVELET=53 or 97 selects CDF 5/3 or 9/7 for both the encode and the decoders; default Haar.
+inline pyrowave_wavelet ab_wavelet() {
+    const char *w = getenv("AB_WAVELET");
+    if (w && !strcmp(w, "53")) return PYROWAVE_WAVELET_CDF53;
+    if (w && !strcmp(w, "97")) return PYROWAVE_WAVELET_CDF97;
+    return PYROWAVE_WAVELET_HAAR;
+}
+
 // Encode on a separate default device: a borrowed device owns no queue for PyroWave's own submits.
 std::vector<std::vector<uint8_t>> encode(uint32_t w, uint32_t h, size_t max_bytes, const std::vector<uint8_t> &y,
-                                         const std::vector<uint8_t> &cb, const std::vector<uint8_t> &cr) {
+                                         const std::vector<uint8_t> &cb, const std::vector<uint8_t> &cr,
+                                         pyrowave_wavelet wavelet = ab_wavelet()) {
     pyrowave_device dev = nullptr;
     PW_CHECK(pyrowave_create_default_device(&dev));
     pyrowave_encoder_create_info ei = {};
     ei.device = dev; ei.width = int(w); ei.height = int(h);
-    ei.chroma = PYROWAVE_CHROMA_SUBSAMPLING_420; ei.wavelet = PYROWAVE_WAVELET_HAAR;
+    ei.chroma = PYROWAVE_CHROMA_SUBSAMPLING_420; ei.wavelet = wavelet;
     pyrowave_encoder enc = nullptr;
     PW_CHECK(pyrowave_encoder_create(&ei, &enc));
     pyrowave_cpu_buffer buf = {};

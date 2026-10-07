@@ -55,7 +55,8 @@ work all stay at the stream size.
 | Streaming profiles | Pinned both fields to the profile's size. | Pin the stream only; a chosen game render size survives a profile change. |
 
 The filter setting is `video.pyrowave.render_downsample_filter` (`Bilinear`
-default = the previous single tap, `Adaptive` = optional filtered downsampling) and applies to every
+default = the previous single tap, `Adaptive` = footprint-widened Catmull-Rom, `Lanczos` = the
+same shader compiled with `KERNEL_LANCZOS3`, a 3-lobe Lanczos kernel) and applies to every
 codec. It needs a SteamVR restart. If the runtime compile fails, the driver logs an
 error and keeps the single tap; the Windows build also compiles it with `fxc` so a
 shader error fails CI. The driver log prints the active sizes and filter:
@@ -78,6 +79,40 @@ filter mainly removes the moiré. Fetches per output pixel: up to 3x3 at 1:1 (al
 zero-weight but one when aligned), 5x5 at 1.48x, 7x7 from 2x. PC GPU cost is
 not isolated by the CPU model. The October 5 live filter screen below records
 PC compositor/encoder timing and delivery; it withholds default promotion.
+
+### Lanczos-3 (October 7)
+
+Offline (`tools/downsample/csf_study.py` with `STUDY_FILTER`), 4 `quality_scene` crops rendered
+at 3072x3216, filtered to 2080x2208 and coded with the live Haar 4:2:0 encoder at 1000 Mbps /
+207 Hz, scored against the 3072x3216 source:
+
+| Filter | PSNR-HVS-M | Y | Cb | Cr | smooth Y | edge overshoot | fetches / pixel at 1.48x |
+|---|---|---|---|---|---|---|---|
+| Catmull-Rom (`Adaptive`) | 15.34 | 18.63 | 30.14 | 30.90 | 56.43 | 3.9% | 25 |
+| Lanczos-2 | 15.35 | 18.63 | 30.13 | 30.90 | 56.41 | 4.3% | 25 |
+| Keys cubic a = -0.75 | 15.46 | 18.69 | 30.15 | 30.93 | 56.41 | 5.9% | 25 |
+| Keys cubic a = -1 | 15.55 | 18.74 | 30.14 | 30.93 | 56.37 | 7.9% | 25 |
+| **Lanczos-3 (`Lanczos`)** | **15.55** | **18.73** | 30.12 | 30.90 | 56.30 | 7.0% | 44 |
+| Keys cubic a = -1.5 | 15.70 | 18.82 | 30.10 | 30.89 | 56.10 | 11.8% | 25 |
+
+PSNR-HVS-M keeps rising with sharpening (Keys a = -1.5 has visible halos), so it cannot choose
+the kernel alone. Lanczos-3 has the most fine detail per unit of edge overshoot, the step
+response's largest overshoot, of these kernels. It gains about a third of what 1000 to 1500 Mbps
+gains and costs no bandwidth.
+
+Live, Quest 3 at 207 Hz, 2080x2208 from 3072x3216, 1000 Mbps Haar, af6119f streamer. The setting
+needs a SteamVR restart, so the A/B is at cell level, ABBA, 12 s, 60 deg/s pan:
+
+| Filter | pan fresh FPS | static fresh FPS |
+|---|---|---|
+| Catmull-Rom | 191.6 / 190.8 | 195.6 |
+| Lanczos-3 | 196.9 / 193.3 | 191.7 |
+
+No measurable cost (the run-to-run noise is about 5 FPS; the quality scene leaves the RX 7900 XTX
+idle, so a heavy game's PC frame time is not measured). Static screenshots of the same view: the
+quality board's small text is crisper and higher in contrast with Lanczos-3, the zone plate
+aliases no more than with Catmull-Rom, and no halos are visible. `Lanczos` is the recommended
+choice when the game renders above the stream size. It is opt-in; no profile sets it.
 
 Keep SteamVR's own render resolution at a custom 100 %: SteamVR's automatic
 setting multiplies the recommendation again. Footprints above 3x per axis are

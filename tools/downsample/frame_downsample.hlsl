@@ -4,7 +4,9 @@
 // resolution. Each output pixel measures its footprint in source texels from the UV derivatives
 // and applies a Catmull-Rom kernel widened to that footprint, so a 3072x3216 eye is averaged
 // into a 2080x2208 stream pixel instead of point-sampled. At equal render and stream size the
-// kernel collapses to the identity on texel centers.
+// kernel collapses to the identity on texel centers. Compiled with KERNEL_LANCZOS3 it uses a
+// 3-lobe Lanczos kernel instead: sharper (more response near the stream's Nyquist frequency)
+// for about 1.8x the fetches.
 //
 // Separable weights let each pair of adjacent same-sign texels share one bilinear fetch (exact
 // for a separable kernel). Pairs that straddle a kernel zero crossing, or are merged by edge
@@ -38,15 +40,38 @@ struct PS_INPUT {
 };
 
 // Footprints above this are filtered as if they were this wide (under-filtered, never skipped).
-// 3.0 keeps the loop at <= 7x7 bilinear pairs and covers render scales up to 3x per axis.
+// 3.0 covers render scales up to 3x per axis: <= 7x7 bilinear pairs for Catmull-Rom (radius 2),
+// <= 10x10 for Lanczos-3 (radius 3).
 #define MAX_SCALE 3.0
+#ifdef KERNEL_LANCZOS3
+#define KERNEL_RADIUS 3.0
+#define MAX_PAIRS 10
+#else
+#define KERNEL_RADIUS 2.0
 #define MAX_PAIRS 7
+#endif
 
 float CatmullRom(float x) {
     x = abs(x);
     if (x < 1.0) return (1.5 * x - 2.5) * x * x + 1.0;
     if (x < 2.0) return ((-0.5 * x + 2.5) * x - 4.0) * x + 2.0;
     return 0.0;
+}
+
+float Lanczos3(float x) {
+    x = abs(x);
+    if (x < 1e-4) return 1.0;
+    if (x >= 3.0) return 0.0;
+    float px = 3.14159265 * x;
+    return 3.0 * sin(px) * sin(px * (1.0 / 3.0)) / (px * px);
+}
+
+float Kernel(float x) {
+#ifdef KERNEL_LANCZOS3
+    return Lanczos3(x);
+#else
+    return CatmullRom(x);
+#endif
 }
 
 struct AxisPair {
@@ -60,8 +85,8 @@ struct AxisPair {
 AxisPair MakePair(float first, int k, float center, float invScale, float lo, float hi) {
     float ia = first + 2.0 * k;
     float ib = ia + 1.0;
-    float wa = CatmullRom((ia + 0.5 - center) * invScale);
-    float wb = CatmullRom((ib + 0.5 - center) * invScale);
+    float wa = Kernel((ia + 0.5 - center) * invScale);
+    float wb = Kernel((ib + 0.5 - center) * invScale);
     float ja = clamp(ia, lo, hi);
     float jb = clamp(ib, lo, hi);
     AxisPair r;
@@ -93,8 +118,8 @@ float4 FilterEye(Texture2D tex, float4 bounds, float2 uv, float2 scale) {
     float2 lo = ceil(bMin - 0.5);
     float2 hi = max(lo, floor(bMax - 0.5));
     float2 invScale = 1.0 / scale;
-    float2 first = floor(t - 0.5 - 2.0 * scale);
-    float2 last = floor(t - 0.5 + 2.0 * scale);
+    float2 first = floor(t - 0.5 - KERNEL_RADIUS * scale);
+    float2 last = floor(t - 0.5 + KERNEL_RADIUS * scale);
     int2 pairs = min(int2((last - first + 2.0) * 0.5), MAX_PAIRS);
     float2 invSize = 1.0 / size;
 
@@ -177,7 +202,7 @@ float4 main(PS_INPUT input) : SV_Target {
     } else {
         color = FilterEye(txLeft, boundsLeft, input.Tex, scale);
     }
-    // Catmull-Rom lobes can undershoot; negative light is never valid input below.
+    // Catmull-Rom and Lanczos lobes can undershoot; negative light is never valid input below.
     color = max(color, 0.0);
 
     if (shouldClamp == (uint)1) {

@@ -7,24 +7,28 @@ layout(location = 0) out vec4 color;
 // Packed luma, as in ycbcr_to_rgba.comp.
 layout(constant_id = 0) const bool PACKED_LUMA = false;
 
-float catmull(float a, float b, float c, float d, float t) {
+// PyroWave Haar mode 4 writes Cb and Cr into one RG8 plane (planeCb); planeCr is not read.
+layout(constant_id = 1) const bool DUAL_CHROMA = false;
+
+vec2 catmull(vec2 a, vec2 b, vec2 c, vec2 d, float t) {
     return b + 0.5 * t * (c - a + t * (2.0 * a - 5.0 * b + 4.0 * c - d + t * (3.0 * (b - c) + d - a)));
 }
 
-float sample_chroma(sampler2D plane, vec2 uv) {
+// Returns .r of a single-chroma plane, or Cb and Cr of a DUAL_CHROMA plane.
+vec2 sample_chroma(sampler2D plane, vec2 uv) {
     if (params.chromaFilter == 0)
-        return textureLod(plane, uv, 0.0).r;
+        return textureLod(plane, uv, 0.0).rg;
     vec2 size = vec2(textureSize(plane, 0));
     vec2 coord = uv * size - 0.5;
     vec2 f = fract(coord);
     ivec2 i0 = ivec2(floor(coord));
     ivec2 last = ivec2(size) - 1;
-    float col[4];
+    vec2 col[4];
     for (int x = 0; x < 4; x++) {
-        float row[4];
+        vec2 row[4];
         for (int y = 0; y < 4; y++) {
             ivec2 p = clamp(i0 + ivec2(x - 1, y - 1), ivec2(0), last);
-            row[y] = texelFetch(plane, p, 0).r;
+            row[y] = texelFetch(plane, p, 0).rg;
         }
         col[x] = catmull(row[0], row[1], row[2], row[3], f.y);
     }
@@ -36,8 +40,9 @@ void main() {
     vec2 uv = (vec2(coord) + 0.5) / vec2(textureSize(planeY, 0) * (PACKED_LUMA ? 2 : 1));
     float Y = PACKED_LUMA ? texelFetch(planeY, coord >> 1, 0)[(coord.x & 1) | ((coord.y & 1) << 1)]
                           : texelFetch(planeY, coord, 0).r;
-    float Cb = sample_chroma(planeCb, uv);
-    float Cr = sample_chroma(planeCr, uv);
+    vec2 chroma = sample_chroma(planeCb, uv);
+    float Cb = chroma.x;
+    float Cr = DUAL_CHROMA ? chroma.y : sample_chroma(planeCr, uv).x;
     if (params.limitedRange != 0) {
         Y = (Y - 16.0 / 255.0) * (255.0 / 219.0);
         Cb = (Cb - 128.0 / 255.0) * (255.0 / 224.0);
