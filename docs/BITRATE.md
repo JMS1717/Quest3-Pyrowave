@@ -3,13 +3,54 @@
 Settings → Presets has a **5–2000 Mbps slider**, an **Auto bitrate** checkbox and
 the padded resolution/frame budget. In manual mode the slider sets the codec payload
 rate cap. In Auto mode it sets an enabled maximum; feedback can lower the requested
-rate. The minimum floor is disabled when Auto is selected so congestion can be relieved.
-Detailed latency limiters and an optional minimum are under Video → Bitrate → Adaptive.
+rate. Selecting Auto disables Auto's own optional minimum (Video → Bitrate → Adaptive), but the
+PyroWave quality floor below still applies.
+Detailed latency limiters and that optional minimum are under Video → Bitrate → Adaptive.
 For PyroWave the hardware decoder latency limiter is ignored: a target below fixed
 GPU reconstruction time otherwise drives bitrate toward zero without reaching the
 requested frame rate. Network/encoder feedback still applies. This policy does not
 change hardware codecs; changing bitrate controls also clears an old learned decoder cap.
 Resolution/refresh/codec changes require restarting SteamVR. Bitrate updates are live.
+
+## Quality floor
+
+With PyroWave the streamer never requests less than **0.25 bits per padded stream pixel per
+frame** (both eyes, 4:2:0), rounded up to 50 Mbps. That applies to the constant bitrate, Auto and
+the headset menu alike (`BitrateManager::set_quality_floor_mbps`,
+`alvr_session::beta::quality_floor_mbps`). The dashboard shows it under the per-frame budget, and
+the driver logs `[Q3PW_QUALITY_FLOOR]`. 4:4:4 doubles the raw samples and the floor; that factor
+is not measured, so it errs high. `ALVR_PYROWAVE_NO_QUALITY_FLOOR=1` in the streamer's environment
+lifts the floor for codec measurements.
+
+| Stream per eye | Refresh | Floor |
+|---|---:|---:|
+| 2064×2208 (full panel) | 72 Hz | 200 Mbps |
+| 2064×2208 | 120 Hz | 300 Mbps |
+| 2064×2208 | 207 Hz | 500 Mbps |
+| 2064×2208, 4:4:4 | 120 Hz | 600 Mbps |
+| 1552×1664 (scaled panel) | 240 Hz | 350 Mbps |
+
+How it was measured (October 7, `tools/downsample/csf_study.py`): 4 `quality_scene` crops at
+3072×3216 were filtered to 2080×2208 and coded with the live Haar 4:2:0 encoder
+([ENCODER-CSF.md](ENCODER-CSF.md)) at 207 Hz:
+
+| Mbps | bits/pixel | PSNR-HVS-M | smooth-area Y | smooth-area Cb/Cr |
+|---:|---:|---:|---:|---:|
+| 150 | 0.08 | 11.56 | 49.58 | 42.96 |
+| 250 | 0.13 | 12.48 | 52.03 | 46.15 |
+| 350 | 0.18 | 13.18 | 52.91 | 48.69 |
+| 450 | 0.24 | 13.72 | 53.59 | 50.21 |
+| 600 | 0.32 | 14.28 | 54.85 | 52.94 |
+| 800 | 0.42 | 14.90 | 55.77 | 54.48 |
+| 1000 | 0.53 | 15.34 | 56.43 | 55.02 |
+| previous encoder, 1000 | 0.53 | 14.65 | 53.87 | 46.10 |
+
+Quality falls smoothly with no knee, so the floor is anchored to a configuration the owner had
+judged: the previous encoder at 1000 Mbps / 207 Hz, which looked pixelated next to Virtual
+Desktop. Smooth areas, where Haar blocking shows, drop below that at about 0.25 bits per pixel
+(475 Mbps at 207 Hz). The quality scene is a stress board of gratings, text and noise. Game
+content compresses better, but the floor scales with pixels per second, not content. A network
+that cannot carry the floor drops frames instead of lowering the bitrate.
 
 PyroWave receives ALVR's dynamic bitrate and sets its maximum frame size to
 `floor(bitrate_bits_per_second / 8 / round(refresh_hz))`, aligned down to four bytes.

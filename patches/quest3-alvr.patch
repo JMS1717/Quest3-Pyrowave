@@ -7353,7 +7353,7 @@ index 0000000000000000000000000000000000000000..358b58d00e5683ff20e7a17d0195a072
 +    }
 +}
 diff --git a/alvr/dashboard/src/dashboard/components/settings.rs b/alvr/dashboard/src/dashboard/components/settings.rs
-index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..47509f0dbfd8d054bc5d071c21a13bf803375169 100644
+index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..d4f7bc936ecfdcb66c35e8d6a357721b12a4db61 100644
 --- a/alvr/dashboard/src/dashboard/components/settings.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings.rs
 @@ -4,7 +4,7 @@ use super::{
@@ -7419,7 +7419,7 @@ index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..47509f0dbfd8d054bc5d071c21a13bf8
                              ui.end_row();
  
                              path_value_pairs.extend(self.refresh_rate_preset.ui(ui));
-@@ -241,3 +251,140 @@ impl SettingsTab {
+@@ -241,3 +251,158 @@ impl SettingsTab {
          requests
      }
  }
@@ -7551,6 +7551,24 @@ index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..47509f0dbfd8d054bc5d071c21a13bf8
 +                b.eye_width, b.eye_height, b.frame_ms, b.payload_bytes, b.raw_to_payload,
 +                if automatic { " at ceiling" } else { "" }))
 +                .on_hover_text("PyroWave 8-bit codec payload after 32-pixel padding. Excludes network overhead. This budget does not prove decode speed or image quality. Resolution/refresh changes need a SteamVR restart.");
++            let floor = alvr_session::beta::quality_floor_mbps(
++                res["Absolute"]["width"].as_u64().unwrap_or(0) as u32,
++                res["Absolute"]["height"]["content"].as_u64().unwrap_or(0) as u32,
++                video["preferred_fps"].as_f64().unwrap_or(0.0),
++                video["pyrowave"]["chroma_444"].as_bool().unwrap_or(false),
++            );
++            if let (true, Some(floor)) = (pyrowave, floor) {
++                ui.end_row();
++                ui.label("Quality floor");
++                let text = if mbps < floor {
++                    format!("{floor} Mbps: the streamer raises this setting to {floor} Mbps")
++                } else if automatic {
++                    format!("{floor} Mbps: Auto never requests less")
++                } else {
++                    format!("{floor} Mbps")
++                };
++                ui.label(text).on_hover_text("PyroWave never requests less than 0.25 bits per stream pixel per frame (4:2:0; twice that for 4:4:4). Below it, smooth areas measured worse than the previous encoder at 1000 Mbps, 207 Hz and full panel size. The network must carry at least this rate.");
++            }
 +        } else {
 +            ui.label("Choose a valid resolution and refresh rate");
 +        }
@@ -10229,7 +10247,7 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..85fdf624efc16bea4b70ffd3ee5b6c89
              }),
          };
 diff --git a/alvr/server_core/src/bitrate.rs b/alvr/server_core/src/bitrate.rs
-index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..869fa779ca44f72241dd5b2423600cba2686120b 100644
+index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..32d9601f7a9835e93115859e328c9b04c89fc4c4 100644
 --- a/alvr/server_core/src/bitrate.rs
 +++ b/alvr/server_core/src/bitrate.rs
 @@ -1,7 +1,7 @@
@@ -10241,7 +10259,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..869fa779ca44f72241dd5b2423600cba
  };
  use std::{
      collections::VecDeque,
-@@ -10,11 +10,96 @@ use std::{
+@@ -10,11 +10,128 @@ use std::{
  
  const UPDATE_INTERVAL: Duration = Duration::from_secs(1);
  
@@ -10302,6 +10320,38 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..869fa779ca44f72241dd5b2423600cba
 +    }
 +
 +    #[test]
++    fn quality_floor_raises_constant_and_auto_bitrates() {
++        let mut config = SessionConfig::default().to_settings().video.bitrate;
++        config.mode = BitrateMode::ConstantMbps(100);
++        let mut manager = BitrateManager::new(1, 120.0);
++        manager.set_quality_floor_mbps(Some(300));
++        assert_eq!(manager.get_encoder_params(&config).unwrap().0.bitrate_bps, 300e6);
++        config.mode = BitrateMode::ConstantMbps(1000);
++        assert_eq!(manager.get_encoder_params(&config).unwrap().0.bitrate_bps, 1000e6);
++        manager.set_quality_floor_mbps(None);
++        config.mode = BitrateMode::ConstantMbps(100);
++        assert_eq!(manager.get_encoder_params(&config).unwrap().0.bitrate_bps, 100e6);
++
++        config.mode = BitrateMode::Adaptive {
++            saturation_multiplier: 1.0,
++            max_throughput_mbps: Switch::Enabled(1000),
++            min_throughput_mbps: Switch::Disabled,
++            max_network_latency_ms: Switch::Disabled,
++            encoder_latency_limiter: Switch::Disabled,
++            decoder_latency_limiter: Switch::Disabled,
++        };
++        let mut manager = BitrateManager::new(1, 120.0);
++        manager.set_quality_floor_mbps(Some(300));
++        // 10,000 bytes per 40 ms is 2 Mbps of measured throughput.
++        let timestamp = Duration::from_secs(1);
++        manager.report_frame_encoded(timestamp, Duration::from_millis(1), 10_000);
++        manager.report_frame_latencies(&config.mode, timestamp, Duration::from_millis(40), Duration::from_millis(2));
++        let (params, directives) = manager.get_encoder_params(&config).unwrap();
++        assert_eq!(params.bitrate_bps, 300e6);
++        assert_eq!(directives.requested_bitrate_bps, 300e6);
++    }
++
++    #[test]
 +    fn decoder_limit_converts_bytes_per_frame_to_bits_per_second() {
 +        let mut manager = BitrateManager::new(1, 120.0);
 +        let mut config = SessionConfig::default().to_settings().video.bitrate;
@@ -10338,7 +10388,33 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..869fa779ca44f72241dd5b2423600cba
  pub struct BitrateManager {
      nominal_frame_interval: Duration,
      frame_interval_average: SlidingWindowAverage<Duration>,
-@@ -157,6 +242,12 @@ impl BitrateManager {
+@@ -30,6 +147,7 @@ pub struct BitrateManager {
+     dynamic_decoder_max_bytes_per_frame: f32,
+     previous_config: Option<BitrateConfig>,
+     update_needed: bool,
++    quality_floor_bps: Option<f32>,
+ }
+ 
+ impl BitrateManager {
+@@ -56,9 +174,17 @@ impl BitrateManager {
+             dynamic_decoder_max_bytes_per_frame: f32::MAX,
+             previous_config: None,
+             update_needed: true,
++            quality_floor_bps: None,
+         }
+     }
+ 
++    /// PyroWave's quality floor (alvr_session::beta::quality_floor_mbps): constant and Auto
++    /// bitrates are raised to at least this. None leaves every mode as configured.
++    pub fn set_quality_floor_mbps(&mut self, mbps: Option<u64>) {
++        self.quality_floor_bps = mbps.map(|mbps| mbps as f32 * 1e6);
++        self.update_needed = true;
++    }
++
+     // Note: This is used to calculate the framerate/frame interval. The frame present is the most
+     // accurate event for this use.
+     pub fn report_frame_present(&mut self, config: &Switch<BitrateAdaptiveFramerateConfig>) {
+@@ -157,6 +283,12 @@ impl BitrateManager {
              .map(|prev| config != prev)
              .unwrap_or(true)
          {
@@ -10351,7 +10427,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..869fa779ca44f72241dd5b2423600cba
              self.previous_config = Some(config.clone());
              // Continue method. Always update bitrate in this case
          } else if !self.update_needed
-@@ -196,10 +287,11 @@ impl BitrateManager {
+@@ -196,10 +328,11 @@ impl BitrateManager {
                  bitrate_directives.scaled_calculated_throughput_bps = Some(throughput_bps);
  
                  if decoder_latency_limiter.enabled() {
@@ -10367,8 +10443,20 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..869fa779ca44f72241dd5b2423600cba
                  }
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
+@@ -244,6 +377,11 @@ impl BitrateManager {
+             }
+         };
+ 
++        let bitrate_bps = match self.quality_floor_bps {
++            Some(floor_bps) if bitrate_bps < floor_bps => floor_bps,
++            _ => bitrate_bps,
++        };
++
+         bitrate_directives.requested_bitrate_bps = bitrate_bps;
+ 
+         Some((
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d1d2a1d41 100644
+index fc176da39833633bc7fbac803ebe345c7832fbdb..4f7979c2b4fc747f8630a1bb19e0ec6452cdd507 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -53,7 +53,61 @@ pub struct VideoPacket {
@@ -10587,7 +10675,36 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
      new_openvr_config.eye_resolution_width = stream_view_resolution.x;
      new_openvr_config.eye_resolution_height = stream_view_resolution.y;
      new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
-@@ -869,10 +951,11 @@ fn connection_pipeline(
+@@ -846,6 +928,28 @@ fn connection_pipeline(
+ 
+     *ctx.bitrate_manager.lock() =
+         BitrateManager::new(initial_settings.video.bitrate.history_size, fps);
++    // Quest3-Pyrowave: never request less than the measured quality floor for this stream size
++    // and refresh rate, whichever control set the bitrate. ALVR_PYROWAVE_NO_QUALITY_FLOOR=1 lifts
++    // it for codec measurements.
++    let quality_floor_mbps = if initial_settings.video.preferred_codec == CodecType::PyroWave
++        && std::env::var_os("ALVR_PYROWAVE_NO_QUALITY_FLOOR").is_none()
++    {
++        alvr_session::beta::quality_floor_mbps(
++            stream_view_resolution.x,
++            stream_view_resolution.y,
++            fps as f64,
++            initial_settings.video.pyrowave.chroma_444,
++        )
++    } else {
++        None
++    };
++    if let Some(mbps) = quality_floor_mbps {
++        info!(
++            "[Q3PW_QUALITY_FLOOR] {mbps} Mbps for {}x{} per eye at {fps} Hz",
++            stream_view_resolution.x, stream_view_resolution.y
++        );
++    }
++    ctx.bitrate_manager.lock().set_quality_floor_mbps(quality_floor_mbps);
+ 
+     let stream_protocol = if wired {
+         SocketProtocol::Tcp
+@@ -869,10 +973,11 @@ fn connection_pipeline(
  
      // PyroWave over UDP: a plain socket to the client's address. The same resolution fills
      // openvr_config for the C++ encoder, so the two sides cannot disagree.
@@ -10603,7 +10720,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
      if pyrowave.enabled {
          info!("{pyrowave}");
      }
-@@ -1102,7 +1185,10 @@ fn connection_pipeline(
+@@ -1102,7 +1207,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -10615,7 +10732,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1201,7 @@ fn connection_pipeline(
+@@ -1115,6 +1223,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -10623,7 +10740,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1218,14 @@ fn connection_pipeline(
+@@ -1131,6 +1240,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -10638,7 +10755,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1184,6 +1279,7 @@ fn connection_pipeline(
+@@ -1184,6 +1301,7 @@ fn connection_pipeline(
          let disconnect_notif = Arc::clone(&disconnect_notif);
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
@@ -10646,7 +10763,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
          move || {
              let mut disconnection_deadline = Instant::now() + KEEPALIVE_TIMEOUT;
              while is_streaming(&client_hostname) {
-@@ -1299,6 +1395,9 @@ fn connection_pipeline(
+@@ -1299,6 +1417,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -10656,7 +10773,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1378,6 +1477,22 @@ fn connection_pipeline(
+@@ -1378,6 +1499,22 @@ fn connection_pipeline(
                              };
  
                          match reserved {
@@ -10679,7 +10796,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..efaa78e08a276dc332c7414c7c0b3f3d
                              ReservedClientControlPacket::CustomInteractionProfile {
                                  input_ids,
                                  ..
-@@ -1552,9 +1667,10 @@ mod beta_tests {
+@@ -1552,9 +1689,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -11919,10 +12036,10 @@ index 861f726c74e38cec9058513ab412ceb08ae2e8bf..e277d11fe8271552f711118c8c26c817
              thread::yield_now();
          }
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
-index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8b479a47a 100644
+index 84100dc7c01a272de5b0b22b22907127bb5e1e18..30e05cbdbc400a9f815aa3772e7dc8ebb11dda71 100644
 --- a/alvr/session/src/beta.rs
 +++ b/alvr/session/src/beta.rs
-@@ -3,25 +3,94 @@
+@@ -3,25 +3,125 @@
  //! environment overrides are applied. The server, the dashboard and the tests all read from here,
  //! so the UI, the defaults and the documentation cannot drift apart.
  
@@ -12000,6 +12117,25 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8
 +    })
 +}
 +
++/// Lowest PyroWave bitrate the streamer requests, in bits per padded stream pixel (both eyes,
++/// 4:2:0) per frame. Measured October 7 (docs/BITRATE.md): below about this rate the encoder's
++/// smooth-area quality falls under what the previous encoder gave at 1000 Mbps, 207 Hz and full
++/// panel size, which already looked pixelated next to Virtual Desktop.
++pub const QUALITY_FLOOR_BITS_PER_PIXEL: f64 = 0.25;
++
++/// The quality floor in Mbps for a stream size and refresh rate, rounded up to 50 Mbps. 4:4:4
++/// doubles the raw samples and the floor (not measured, so it errs high).
++pub fn quality_floor_mbps(width: u32, height: u32, hz: f64, full_chroma: bool) -> Option<u64> {
++    if width == 0 || height == 0 || !hz.is_finite() || hz.round() < 1.0 {
++        return None;
++    }
++    let pixels = 2.0 * f64::from(width.checked_add(31)? / 32 * 32)
++        * f64::from(height.checked_add(31)? / 32 * 32);
++    let chroma = if full_chroma { 2.0 } else { 1.0 };
++    let mbps = pixels * hz.round() * QUALITY_FLOOR_BITS_PER_PIXEL * chroma / 1e6;
++    Some(((mbps / 50.0).ceil() as u64 * 50).min(crate::headset_settings::MAX_BITRATE_MBPS))
++}
++
 +#[cfg(test)]
 +mod budget_tests {
 +    use super::*;
@@ -12019,12 +12155,24 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8
 +        assert!(frame_budget(0, 2208, 120.0, 1000, false).is_none());
 +        assert!(frame_budget(2064, 2208, f64::NAN, 1000, false).is_none());
 +    }
++
++    #[test]
++    fn quality_floor_scales_with_pixels_per_second() {
++        assert_eq!(quality_floor_mbps(2064, 2208, 207.0, false), Some(500));
++        assert_eq!(quality_floor_mbps(2064, 2208, 120.0, false), Some(300));
++        assert_eq!(quality_floor_mbps(2064, 2208, 72.0, false), Some(200));
++        assert_eq!(quality_floor_mbps(2064, 2208, 120.0, true), Some(600));
++        assert_eq!(quality_floor_mbps(1552, 1664, 240.0, false), Some(350));
++        assert_eq!(quality_floor_mbps(8192, 8192, 240.0, true), Some(crate::headset_settings::MAX_BITRATE_MBPS));
++        assert!(quality_floor_mbps(0, 2208, 120.0, false).is_none());
++        assert!(quality_floor_mbps(2064, 2208, f64::NAN, false).is_none());
++    }
 +}
 +
  pub struct StreamingProfile {
      pub name: &'static str,
      pub subtitle: &'static str,
-@@ -33,22 +102,36 @@ fn assign(path: &str, value: json::Value) -> (String, json::Value) {
+@@ -33,22 +133,36 @@ fn assign(path: &str, value: json::Value) -> (String, json::Value) {
      (path.to_owned(), value)
  }
  
@@ -12074,7 +12222,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8
  /// socket values, so switching profiles never leaves one of them at a tester's experiment.
  fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::Value)> {
      let mut list = vec![
-@@ -56,48 +139,206 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
+@@ -56,48 +170,206 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
          assign("video.bitrate.mode.variant", "ConstantMbps".into()),
          assign("video.bitrate.mode.ConstantMbps", mbps.into()),
          assign("video.preferred_fps", json::json!(fps)),
@@ -12311,7 +12459,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8
  }
  
  #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-@@ -186,8 +427,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
+@@ -186,8 +458,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
  #[derive(Clone, Debug, PartialEq)]
  pub struct PyroWaveEffective {
      pub enabled: bool,
@@ -12322,7 +12470,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8
      pub decode_path: PyroWaveDecodePath,
      pub follow_gaze: bool,
      pub overrides: Vec<&'static str>,
-@@ -211,30 +454,24 @@ pub fn pyrowave_effective(
+@@ -211,30 +485,24 @@ pub fn pyrowave_effective(
          value
      };
  
@@ -12361,7 +12509,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8
          decode_path: video.pyrowave.decode_path,
          follow_gaze,
          overrides,
-@@ -255,10 +492,11 @@ impl fmt::Display for PyroWaveEffective {
+@@ -255,10 +523,11 @@ impl fmt::Display for PyroWaveEffective {
          };
          write!(
              f,
@@ -12375,7 +12523,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..f5fe0c6dfb4191e1f85c8c71c63c0cc8
              if self.follow_gaze { "on" } else { "off" },
              if self.overrides.is_empty() {
                  "none".to_owned()
-@@ -279,7 +517,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
+@@ -279,7 +548,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
  }
  
  fn at<'a>(root: &'a json::Value, path: &str) -> Option<&'a json::Value> {
