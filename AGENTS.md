@@ -24,6 +24,18 @@ Constraints on that target:
   refresh numbers.
 - **Buffering:** small, bounded buffering is acceptable when measurements justify it.
 
+**Current priorities (owner, October 7 evening, after playing `.65`).** These override the
+order above:
+
+1. Finish the network stack: Wi-Fi without stutter, wired with headroom for 2000 Mbit/s.
+2. Then **sharpness and clarity**, including how bitrate is used and colour. The owner wants an
+   image that looks above native and colour closer to 4:4:4. 4:4:4 is welcome if it can be made
+   affordable. Virtual Desktop is the reference.
+3. Latency after that. It is noticeable, but not the first priority.
+
+Keep finding the real bottleneck and rewriting what is slow; that is what has produced the gains
+so far. The plan is [docs/PLAN.md](docs/PLAN.md).
+
 ## How to work
 
 - **Implement, measure, decide.** Don't stop at analysis. Build the change, benchmark it against
