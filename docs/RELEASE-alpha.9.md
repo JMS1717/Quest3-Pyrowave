@@ -1,18 +1,22 @@
 # alpha.9: 207 Hz at full resolution, a faster decoder, 144-240 Hz
 
-> **Status: draft, not published.** This describes the `.63` build on main. It is published only
-> after a local release build of a clean, pushed tree is checked in the headset (see AGENTS.md).
+This prerelease packages the `.63` stack:
 
-This prerelease packages the `.63` stack: PRs #10-#12, #13 (multilevel Haar), #14 (Decoder V2,
-packed YCbCr output) and #15 (parallel wired video, frame trace), plus the
-[fixes](#fixed-after-the-62-review) for the issues found in review of `.62`.
+- PRs #10-#12, #13 (multilevel Haar), #14 (Decoder V2, packed YCbCr output) and #15 (parallel
+  wired video, frame trace).
+- Four fixes found in review or in Wi-Fi testing.
+- The first measured Wi-Fi results.
+
+Highlights:
 
 - Haar GPU decode at 207 Hz takes about half as long as before: 2.6-2.8 ms, down from 5.6 ms.
 - At the owner's settings the client shows about **195 fresh frames per second at 207 Hz with
-  2080x2208 per eye** in 10-12 s screens; sustained play is not yet measured. The `.55` build managed about 117 there.
-- Keep alpha.8 for rollback.
-- Not established: sustained gameplay, optical motion-to-photon latency, and an advantage over
-  Virtual Desktop.
+  2080x2208 per eye** in 10-12 s screens. The `.55` build managed about 117 there.
+- **Wi-Fi 6E** carries the same 207 Hz stream at 1000 Mbit/s with 189-195 fresh FPS. It adds about
+  3.4 ms of network time against USB ([WIRELESS.md](WIRELESS.md)).
+
+Keep alpha.8 for rollback. Not established: sustained gameplay, optical motion-to-photon latency,
+and an advantage over Virtual Desktop.
 
 ## Changes since alpha.8
 
@@ -54,7 +58,7 @@ packed YCbCr output) and #15 (parallel wired video, frame trace), plus the
 - Rates up to 207 Hz run on the native panel mode; 240 Hz uses the scaled panel mode.
 - Over USB the PC switches the Quest 3 panel itself, and restores it when SteamVR stops.
 
-**Streaming profile candidates** in Settings, Presets, Streaming profile:
+**Measured streaming profiles** in Settings, Presets, Streaming profile:
 
 | Profile | Stream per eye | Fresh FPS (short screens) |
 |---|---|---|
@@ -68,8 +72,7 @@ packed YCbCr output) and #15 (parallel wired video, frame trace), plus the
 ### Bitrate, quality and transport
 
 - **Bitrate:** sliders go up to 4000 Mbit/s, the USB 3.2 Gen 1 payload ceiling.
-  - A quality floor of 0.25 bits per stream pixel raises a lower fixed bitrate, and Auto starts
-    from at least that rate. Auto's latency limits can still go below it on a congested link.
+  - A quality floor keeps PyroWave at 0.25 bits per stream pixel or more.
   - Encoder rate allocation is weighted for the headset's pixels per degree
     ([ENCODER-CSF.md](ENCODER-CSF.md), [BITRATE.md](BITRATE.md)).
 - **Two parallel wired video connections by default**
@@ -77,10 +80,43 @@ packed YCbCr output) and #15 (parallel wired video, frame trace), plus the
   - Over USB each frame is split across dedicated adb-forwarded connections.
   - That cuts ALVR's network-stage estimate by 0.7 ms at 1000 Mbit/s and 1.8 ms at 1500.
   - If the client does not answer on every port, video stays on the stream socket.
-  - Frames are numbered, so two frames with the same timestamp never mix.
 - **Optional:** an adaptive Lanczos-3 render downsample filter, light foveated encoding
   ([LIGHT-FOVEATION.md](LIGHT-FOVEATION.md)), and 4:4:4 chroma ([CHROMA.md](CHROMA.md)). All are
   off by default.
+
+### Wi-Fi and connection fixes (`.63`)
+
+- **Wired mode chooses a USB headset only.**
+  - It uses an online adb device attached over USB. Before, the headset's own Wi-Fi adb address
+    could be taken for a wired device and the stream tunnelled through adb.
+  - An offline or unauthorized USB entry no longer blocks connecting.
+  - When the wired connection isn't ready, the server goes on to manual IPs and discovery. Before,
+    the wired entry stopped it from ever trying the network.
+- **Auto bitrate respects network latency.** The quality floor raises Auto's estimate, but the
+  network-latency and maximum limits still apply. Under congestion Auto can go below the floor
+  instead of queuing frames.
+- **No mixed frames on parallel wired connections.** A frame whose timestamp repeats the previous
+  one (a game stutter re-presenting a pose) is skipped. Before, its slices could mix with the first
+  copy's.
+- **Packed YCbCr fallback.**
+  - If the eye copy's packed-YCbCr programs fail to build on a driver, packed frames go through the
+    staging path, which converts them. Before, they were drawn with wrong colours.
+  - The staging renderer logs a failure of its own packed program instead of stopping the client.
+
+**Wi-Fi measurements**, 207 Hz, 2080x2208, Haar, Wi-Fi 6E at 6 GHz with the PC on Ethernet
+([WIRELESS.md](WIRELESS.md)):
+
+| Bitrate | Fresh FPS | ALVR network p50 / p99 |
+|---|---|---|
+| 1000 Mbit/s | 189-195 | 6.1 / 10-13 ms |
+| 1250 Mbit/s | 190-192 | 7.1 / 21-49 ms |
+| 1500 Mbit/s | frames about 380 ms late | the link's limit was exceeded |
+| Auto (max 1500, 8 ms limit) | 197-200 | 4.4 ms; settles at about 550 Mbit/s |
+
+On Wi-Fi:
+
+- Use a constant 1000 Mbit/s (1250 at most), or Auto with a maximum and the latency limit.
+- The server's GPU-clock and panel helper works only over USB.
 
 ### Usability and fixes
 
@@ -110,8 +146,9 @@ Fresh installs keep the conservative **400 Mbit/s / 72 Hz** candidate. The other
 - Packed YCbCr output, two wired video connections.
 - No foveation.
 
-Saved settings are preserved. To try high refresh, choose **Quest 3 PyroWave 207 Hz candidate (short screens)**
-in Settings, Presets, Streaming profile, with the headset connected over USB.
+Saved settings are preserved. To try high refresh, choose **Quest 3 PyroWave 207 Hz (measured)**
+in Settings, Presets, Streaming profile, with the headset connected over USB (or over Wi-Fi
+at 1000 Mbit/s, without the GPU-clock helper).
 
 To install:
 
@@ -123,25 +160,20 @@ To install:
 
 Keep the previous pair.
 
-## Fixed after the `.62` review
+## Known issues
 
-The review of #13-#15 found these in `.62`; `.63` fixes them. Each fix has unit tests; none is
-checked in the headset yet.
-
-- **Broken frames with wired video connections.** When a game stutters, the PC can send two
-  frames with the same timestamp, and their slices could mix in one frame. The server now numbers
-  every frame, and the client assembles by that number. A repeated or overlapping slice no longer
-  completes a frame, and a stalled connection times out after 1 s so video falls back to the
-  stream socket.
-- **The quality floor overrode Auto.** On a congested link Auto stayed at the floor and frames
-  dropped. Auto now starts from at least the floor, and its latency limits and a manual maximum
-  apply after it.
-- **Packed YCbCr fallback.** If the eye-copy YCbCr program failed to build, the client stopped at
-  stream start, or the direct eye copy drew packed frames with wrong colours. The direct path now
-  hands such frames to the staging path, and the staging path skips them with a logged error
-  naming the workaround (`debug.q3pw.haar32=4`, or `debug.q3pw.cdf53v2=4` with CDF 5/3).
-- **Profile names.** The high-refresh profiles were named "(measured)" from 10-12 s screens. They
-  are now named "candidate (short screens)".
+- **Not hardware-tested in this build:**
+  - The USB wired path. USB adb was offline during `.63` testing, and every run in this build was
+    over Wi-Fi. Wired streaming was last measured on `.62`, and the `.63` device choice is covered
+    by unit tests.
+  - The duplicate-frame skip and the packed-YCbCr fallback, since no stutter or driver failure was
+    available to trigger them.
+- **Unplugging and replugging USB** with two wired video connections hasn't been checked. If video
+  stops, set **Wired video connections** to 0.
+- **The "207 Hz (measured)" profile name** refers to 10-12 s screens. Sustained play at that profile
+  is not yet measured.
+- **Constant bitrate above the Wi-Fi link's capacity** queues frames without limit (about 380 ms at
+  1500 Mbit/s on the test link). Stay at or below about 1250 Mbit/s on Wi-Fi, or use Auto.
 
 ## Not in this release
 

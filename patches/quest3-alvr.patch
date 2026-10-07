@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb70793402f169 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..99a6c61993c3719d9bbe5d3063fd9b66ddc256d0 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -138,7 +138,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -147,7 +147,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -156,7 +156,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -165,7 +165,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -174,7 +174,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_common",
   "jni",
@@ -183,7 +183,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -192,7 +192,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -201,12 +201,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d36f6c3084ed7c07678fd0a1a5eb7079
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..478c055777b78bb9484f2c807cddcbdc5b4ed37a 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..9de57211be247dbdd6890b3cc395b7418bcdf051 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -214,7 +214,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..478c055777b78bb9484f2c807cddcbdc
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.63"
++version = "20.13.0-quest3.pyro.64"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -863,7 +863,7 @@ index 0000000000000000000000000000000000000000..1e58855f94e3ae6e1f923ca096ea307e
 +    }
 +}
 diff --git a/alvr/adb/src/lib.rs b/alvr/adb/src/lib.rs
-index 64660b1e8e559354c4fb96d88ec579f08fe243ec..d6b423b1a58ba49dfef43b572bf4ea7975b2202d 100644
+index 64660b1e8e559354c4fb96d88ec579f08fe243ec..7e504a2ec4d281c99c2c8f1c6e4ddc21043f60dd 100644
 --- a/alvr/adb/src/lib.rs
 +++ b/alvr/adb/src/lib.rs
 @@ -1,12 +1,22 @@
@@ -891,7 +891,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..d6b423b1a58ba49dfef43b572bf4ea79
  
  pub enum WiredConnectionStatus {
      Ready,
-@@ -15,6 +25,34 @@ pub enum WiredConnectionStatus {
+@@ -15,6 +25,53 @@ pub enum WiredConnectionStatus {
  
  pub struct WiredConnection {
      adb_path: String,
@@ -919,6 +919,25 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..d6b423b1a58ba49dfef43b572bf4ea79
 +    Ok(())
 +}
 +
++/// The headset for the wired connection: an online device attached over USB.
++///
++/// Wireless debugging devices (`ip:port`, or mDNS `adb-..._adb-tls-connect._tcp`) are skipped.
++/// Forwarding the stream through adb's Wi-Fi tunnel is slower than connecting to the headset
++/// directly, which the handshake loop does next. Offline and unauthorized entries are skipped
++/// too; one of those listed first made every wired setup fail and kept the server from trying
++/// the network.
++fn usb_device_serial(adb_path: &str) -> Result<Option<String>> {
++    Ok(commands::list_devices(adb_path)?
++        .into_iter()
++        .filter(|d| matches!(d.connection_state, Some(parse::ConnectionState::Device)))
++        .filter_map(|d| d.serial)
++        .find(|s| is_usb_serial(s)))
++}
++
++fn is_usb_serial(serial: &str) -> bool {
++    !serial.contains(':') && !serial.contains("._adb-tls-") && !serial.starts_with("emulator-")
++}
++
 +impl display_override::Shell for AdbShell<'_> {
 +    fn shell(&self, command: &str) -> Result<String> {
 +        commands::shell(self.adb_path, self.device_serial, command)
@@ -926,24 +945,21 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..d6b423b1a58ba49dfef43b572bf4ea79
  }
  
  impl WiredConnection {
-@@ -23,8 +61,38 @@ impl WiredConnection {
+@@ -23,8 +80,35 @@ impl WiredConnection {
          download_progress_callback: impl Fn(usize, Option<usize>),
      ) -> Result<Self> {
          let adb_path = commands::require_adb(layout, download_progress_callback)?;
 +        let display = Mutex::new(display_override::DisplayOverride::new(
 +            layout.config_dir.join("quest3_display_override.txt"),
 +        ));
- 
--        Ok(Self { adb_path })
++
 +        Ok(Self { adb_path, display, restarted_at: Mutex::new(None) })
 +    }
-+
+ 
+-        Ok(Self { adb_path })
 +    /// Put back the Quest display/GPU values saved by an earlier request (server shutdown).
 +    pub fn restore_display(&self) -> Result<()> {
-+        let Some(device_serial) = commands::list_devices(&self.adb_path)?
-+            .into_iter()
-+            .filter_map(|d| d.serial)
-+            .find(|s| !s.starts_with("127.0.0.1"))
++        let Some(device_serial) = usb_device_serial(&self.adb_path)?
 +        else {
 +            return Ok(());
 +        };
@@ -966,15 +982,20 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..d6b423b1a58ba49dfef43b572bf4ea79
      }
  
      pub fn setup(
-@@ -33,6 +101,7 @@ impl WiredConnection {
+@@ -33,18 +117,19 @@ impl WiredConnection {
          stream_port: u16,
          client_type: &ClientFlavor,
          client_autolaunch: bool,
 +        display_request: display_override::Request,
      ) -> Result<WiredConnectionStatus> {
-         let Some(device_serial) = commands::list_devices(&self.adb_path)?
-             .into_iter()
-@@ -44,7 +113,10 @@ impl WiredConnection {
+-        let Some(device_serial) = commands::list_devices(&self.adb_path)?
+-            .into_iter()
+-            .filter_map(|d| d.serial)
+-            .find(|s| !s.starts_with("127.0.0.1"))
++        let Some(device_serial) = usb_device_serial(&self.adb_path)?
+         else {
+             return Ok(WiredConnectionStatus::NotReady(
+                 "No wired devices found".to_owned(),
              ));
          };
  
@@ -986,7 +1007,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..d6b423b1a58ba49dfef43b572bf4ea79
          let forwarded_ports: HashSet<u16> =
              commands::list_forwarded_ports(&self.adb_path, &device_serial)?
                  .into_iter()
-@@ -65,6 +137,34 @@ impl WiredConnection {
+@@ -65,6 +150,34 @@ impl WiredConnection {
              ));
          };
  
@@ -1021,7 +1042,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..d6b423b1a58ba49dfef43b572bf4ea79
          if commands::get_process_id(&self.adb_path, &device_serial, &process_name)?.is_none() {
              if client_autolaunch {
                  commands::start_application(&self.adb_path, &device_serial, &process_name)?;
-@@ -86,14 +186,9 @@ impl WiredConnection {
+@@ -86,14 +199,9 @@ impl WiredConnection {
      }
  }
  
@@ -1039,6 +1060,39 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..d6b423b1a58ba49dfef43b572bf4ea79
  
  pub fn get_process_name(
      adb_path: &str,
+@@ -132,3 +240,32 @@ pub fn get_process_name(
+         })
+         .map(|name| name.to_string())
+ }
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn only_usb_serials_are_wired() {
++        assert!(is_usb_serial("1WMHTEST000000"));
++        assert!(!is_usb_serial("192.168.1.20:41525"));
++        assert!(!is_usb_serial("127.0.0.1:5555"));
++        assert!(!is_usb_serial("adb-1WMHTEST000000-AbCdEf._adb-tls-connect._tcp"));
++        assert!(!is_usb_serial("emulator-5554"));
++    }
++
++    #[test]
++    fn offline_and_wireless_devices_are_listed_but_not_chosen() {
++        let lines = [
++            "1WMHTEST000000         offline transport_id:3",
++            "192.168.1.20:41525     device product:eureka model:Quest_3 device:eureka transport_id:4",
++        ];
++        let chosen = lines
++            .iter()
++            .filter_map(|l| parse::parse_device(l))
++            .filter(|d| matches!(d.connection_state, Some(parse::ConnectionState::Device)))
++            .filter_map(|d| d.serial)
++            .find(|s| is_usb_serial(s));
++        assert_eq!(chosen, None);
++    }
++}
 diff --git a/alvr/adb/src/windows_launcher.rs b/alvr/adb/src/windows_launcher.rs
 new file mode 100644
 index 0000000000000000000000000000000000000000..057b458db4253a7c044c8c1592cd29afd46199c9
@@ -8348,7 +8402,7 @@ index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..f76ada6ae430f45c2633def8cab0287e
 +    changes
 +}
 diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
-index efb0f8e89507b93f737f085742bd9daec993d444..694e98b18400205756b555286864eb2941f7c94f 100644
+index efb0f8e89507b93f737f085742bd9daec993d444..7f3178927d4f5332a3fbf9551dd7b77632956b0c 100644
 --- a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 @@ -323,7 +323,7 @@ pub fn streaming_profile_schema() -> PresetSchemaNode {
@@ -8510,9 +8564,9 @@ index efb0f8e89507b93f737f085742bd9daec993d444..694e98b18400205756b555286864eb29
 +            names,
 +            [
 +                "Quest 3 PyroWave 400 Mbps / 72 Hz candidate",
-+                "Quest 3 PyroWave native 120 Hz candidate (short screens)",
-+                "Quest 3 PyroWave 207 Hz candidate (short screens)",
-+                "Quest 3 PyroWave 240 Hz scaled panel candidate (short screens)",
++                "Quest 3 PyroWave native 120 Hz (measured)",
++                "Quest 3 PyroWave 207 Hz (measured)",
++                "Quest 3 PyroWave 240 Hz scaled panel (measured)",
 +                "Quest 3 PyroWave 600 Mbps / 90 Hz candidate",
 +                "Quest 3 PyroWave 600 Mbps / 120 Hz experiment",
 +                "Quest 3 PyroWave 800 Mbps / 120 Hz experiment",
@@ -11669,7 +11723,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..e57afb4088ce4382f426a9b5e7a18b0b
  
                  if let Switch::Enabled(max_ms) = max_network_latency_ms {
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a00e5d329 100644
+index fc176da39833633bc7fbac803ebe345c7832fbdb..9d9780201b95031c9f320b28380ff6490fde5c67 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -43,6 +43,9 @@ use std::{
@@ -11946,7 +12000,42 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
          _controller_profile,
          _server_impl_debug: settings.extra.logging.debug_groups.server_impl,
          _client_impl_debug: settings.extra.logging.debug_groups.client_impl,
-@@ -313,12 +510,24 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -283,9 +480,13 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+                     && hostname.as_str() == WIRED_CLIENT_HOSTNAME
+             })
+         {
++            // Quest3-Pyrowave: when the wired connection is not ready (no USB headset, adb
++            // unavailable), fall through to manual IPs and discovery instead of retrying wired
++            // only. A headset reachable over the network, or a second client, used to be ignored
++            // for as long as the wired entry existed.
+             // Make sure the wired connection is created once and kept alive
+             let wired_connection = if let Some(connection) = &wired_connection {
+-                connection
++                Some(connection)
+             } else {
+                 let connection = match WiredConnection::new(
+                     FILESYSTEM_LAYOUT.get().unwrap(),
+@@ -297,53 +498,63 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+                         };
+                     },
+                 ) {
+-                    Ok(connection) => connection,
++                    Ok(connection) => Some(connection),
+                     Err(e) => {
+                         error!("{e:?}");
+-                        thread::sleep(RETRY_CONNECT_MIN_INTERVAL);
+-                        continue;
++                        None
+                     }
+                 };
+ 
+-                wired_connection = Some(connection);
++                wired_connection = connection;
+ 
+-                wired_connection.as_ref().unwrap()
++                wired_connection.as_ref()
+             };
+ 
              let stream_port;
              let client_type;
              let client_autolaunch;
@@ -11970,16 +12059,53 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
 +                };
              }
  
-             let status = match wired_connection.setup(
-@@ -326,6 +535,7 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
-                 stream_port,
-                 &client_type,
-                 client_autolaunch,
-+                display_request,
-             ) {
-                 Ok(status) => status,
-                 Err(e) => {
-@@ -471,6 +681,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+-            let status = match wired_connection.setup(
+-                CONTROL_PORT,
+-                stream_port,
+-                &client_type,
+-                client_autolaunch,
+-            ) {
+-                Ok(status) => status,
+-                Err(e) => {
+-                    error!("{e:?}");
+-                    thread::sleep(RETRY_CONNECT_MIN_INTERVAL);
+-                    continue;
+-                }
+-            };
++            let status = wired_connection.map(|connection| {
++                connection.setup(
++                    CONTROL_PORT,
++                    stream_port,
++                    &client_type,
++                    client_autolaunch,
++                    display_request,
++                )
++            });
+ 
+-            #[cfg_attr(not(debug_assertions), expect(unused_variables))]
+-            if let WiredConnectionStatus::NotReady(s) = status {
+-                dbg_connection!("handshake_loop: Wired connection not ready: {s}");
+-                thread::sleep(RETRY_CONNECT_MIN_INTERVAL);
+-                continue;
++            match status {
++                Some(Ok(WiredConnectionStatus::Ready)) => {
++                    let client_ip = IpAddr::V4(Ipv4Addr::LOCALHOST);
++                    wired_client_ips.insert(client_ip, WIRED_CLIENT_HOSTNAME.to_owned());
++                }
++                #[cfg_attr(not(debug_assertions), expect(unused_variables))]
++                Some(Ok(WiredConnectionStatus::NotReady(s))) => {
++                    dbg_connection!("handshake_loop: Wired connection not ready: {s}");
++                }
++                Some(Err(e)) => error!("{e:?}"),
++                None => (),
+             }
+-
+-            let client_ip = IpAddr::V4(Ipv4Addr::LOCALHOST);
+-            wired_client_ips.insert(client_ip, WIRED_CLIENT_HOSTNAME.to_owned());
+         }
+ 
+         if !wired_client_ips.is_empty()
+@@ -471,6 +682,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
          thread.join().ok();
      }
  
@@ -11996,7 +12122,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
      alvr_common::dbg_connection!("handshake_loop: End");
  }
  
-@@ -629,6 +849,19 @@ fn connection_pipeline(
+@@ -629,6 +850,19 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -12016,7 +12142,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +882,9 @@ fn connection_pipeline(
+@@ -649,18 +883,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -12038,7 +12164,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -802,6 +1026,10 @@ fn connection_pipeline(
+@@ -802,6 +1027,10 @@ fn connection_pipeline(
          proto_socket.split(STREAMING_RECV_TIMEOUT).to_con()?;
  
      let mut new_openvr_config = contruct_openvr_config(session_manager_lock.session());
@@ -12049,7 +12175,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
      new_openvr_config.eye_resolution_width = stream_view_resolution.x;
      new_openvr_config.eye_resolution_height = stream_view_resolution.y;
      new_openvr_config.target_eye_resolution_width = target_view_resolution.x;
-@@ -822,6 +1050,7 @@ fn connection_pipeline(
+@@ -822,6 +1051,7 @@ fn connection_pipeline(
  
          crate::notify_restart_driver();
      }
@@ -12057,7 +12183,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
  
      dbg_connection!("connection_pipeline: Send StartStream packet");
      control_sender
-@@ -846,6 +1075,29 @@ fn connection_pipeline(
+@@ -846,6 +1076,29 @@ fn connection_pipeline(
  
      *ctx.bitrate_manager.lock() =
          BitrateManager::new(initial_settings.video.bitrate.history_size, fps);
@@ -12087,7 +12213,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
  
      let stream_protocol = if wired {
          SocketProtocol::Tcp
-@@ -869,10 +1121,11 @@ fn connection_pipeline(
+@@ -869,10 +1122,11 @@ fn connection_pipeline(
  
      // PyroWave over UDP: a plain socket to the client's address. The same resolution fills
      // openvr_config for the C++ encoder, so the two sides cannot disagree.
@@ -12103,7 +12229,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
      if pyrowave.enabled {
          info!("{pyrowave}");
      }
-@@ -886,6 +1139,14 @@ fn connection_pipeline(
+@@ -886,6 +1140,14 @@ fn connection_pipeline(
              Err(e) => error!("[PYROWAVE] UDP socket: {e}"),
          }
      }
@@ -12118,7 +12244,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
      let game_audio_sender: alvr_sockets::StreamSender<()> = stream_socket.request_stream(AUDIO);
      let mut microphone_receiver: alvr_sockets::StreamReceiver<()> =
          stream_socket.subscribe_to_stream(AUDIO, MAX_UNREAD_PACKETS);
-@@ -911,6 +1172,15 @@ fn connection_pipeline(
+@@ -911,6 +1173,15 @@ fn connection_pipeline(
                          Err(RecvTimeoutError::Disconnected) => return,
                      };
  
@@ -12134,7 +12260,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
                  let mut buffer = video_sender.get_buffer(&header).unwrap();
                  // todo: make encoder write to socket buffers directly to avoid copy
                  buffer
-@@ -1081,18 +1351,40 @@ fn connection_pipeline(
+@@ -1081,18 +1352,40 @@ fn connection_pipeline(
          let ctx = Arc::clone(&ctx);
          let client_hostname = client_hostname.clone();
          move || {
@@ -12178,7 +12304,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
                      let decoder_latency = client_stats.video_decode;
                      let (network_latency, game_latency) = stats.report_statistics(client_stats);
  
-@@ -1102,7 +1394,10 @@ fn connection_pipeline(
+@@ -1102,7 +1395,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -12190,7 +12316,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1410,7 @@ fn connection_pipeline(
+@@ -1115,6 +1411,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -12198,7 +12324,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1427,14 @@ fn connection_pipeline(
+@@ -1131,6 +1428,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -12213,7 +12339,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1184,9 +1488,35 @@ fn connection_pipeline(
+@@ -1184,9 +1489,35 @@ fn connection_pipeline(
          let disconnect_notif = Arc::clone(&disconnect_notif);
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
@@ -12249,7 +12375,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
                  let packet = match control_receiver.recv(STREAMING_RECV_TIMEOUT) {
                      Ok(packet) => packet,
                      Err(ConnectionError::TryAgain(_)) => {
-@@ -1299,6 +1629,9 @@ fn connection_pipeline(
+@@ -1299,6 +1630,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -12259,7 +12385,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1378,6 +1711,22 @@ fn connection_pipeline(
+@@ -1378,6 +1712,22 @@ fn connection_pipeline(
                              };
  
                          match reserved {
@@ -12282,7 +12408,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
                              ReservedClientControlPacket::CustomInteractionProfile {
                                  input_ids,
                                  ..
-@@ -1552,9 +1901,10 @@ mod beta_tests {
+@@ -1552,9 +1902,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -12295,7 +12421,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..ff1427c5c777bcdebbdc888db41a9b0a
      }
  
      #[test]
-@@ -1569,4 +1919,22 @@ mod beta_tests {
+@@ -1569,4 +1920,22 @@ mod beta_tests {
          assert!(!config.pyrowave_udp);
          assert!(config.pyrowave_wavelet_53);
      }
@@ -12710,7 +12836,7 @@ index 5aae602d8294a0021308113b2f59799eaa7dba82..2f68f660a49913b593f84749fa254d44
          Debug("Try to use VideoEncoderNVENC.\n");
 diff --git a/alvr/server_openvr/cpp/platform/win32/FrameDownsample.hlsl.inc b/alvr/server_openvr/cpp/platform/win32/FrameDownsample.hlsl.inc
 new file mode 100644
-index 0000000000000000000000000000000000000000..33444c8537afcbdcfb9004c3c975921af401983d
+index 0000000000000000000000000000000000000000..f053eb0ae2188a8dd659c3d7bb6c9d1b12b227a8
 --- /dev/null
 +++ b/alvr/server_openvr/cpp/platform/win32/FrameDownsample.hlsl.inc
 @@ -0,0 +1,226 @@
@@ -12941,7 +13067,7 @@ index 0000000000000000000000000000000000000000..33444c8537afcbdcfb9004c3c975921a
 +}
 +)HLSL"
 diff --git a/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp b/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
-index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..9904dd876fa3b009f765ef075ff77be581e49f64 100644
+index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba7defdf83 100644
 --- a/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
 +++ b/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
 @@ -3,8 +3,10 @@
@@ -13557,7 +13683,7 @@ index 861f726c74e38cec9058513ab412ceb08ae2e8bf..e277d11fe8271552f711118c8c26c817
              thread::yield_now();
          }
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
-index 84100dc7c01a272de5b0b22b22907127bb5e1e18..482eb8a5864e6fe6e4c1bc7e01a1f5212f619ef0 100644
+index 84100dc7c01a272de5b0b22b22907127bb5e1e18..3f181a7dfed8b63e7612a58fbf4acc978941925d 100644
 --- a/alvr/session/src/beta.rs
 +++ b/alvr/session/src/beta.rs
 @@ -3,25 +3,125 @@
@@ -13743,7 +13869,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..482eb8a5864e6fe6e4c1bc7e01a1f521
  /// socket values, so switching profiles never leaves one of them at a tester's experiment.
  fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::Value)> {
      let mut list = vec![
-@@ -56,48 +170,208 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
+@@ -56,48 +170,207 @@ fn shared(codec: &str, mbps: u64, fps: f32, percent: u32) -> Vec<(String, json::
          assign("video.bitrate.mode.variant", "ConstantMbps".into()),
          assign("video.bitrate.mode.ConstantMbps", mbps.into()),
          assign("video.preferred_fps", json::json!(fps)),
@@ -13815,14 +13941,13 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..482eb8a5864e6fe6e4c1bc7e01a1f521
 -    pyrowave.extend([
 -        assign("video.pyrowave.transport.variant", "Udp".into()),
 -        assign("video.pyrowave.wavelet.variant", "Cdf97".into()),
-+/// Profiles screened on Quest 3 (October 6, 2026 for 120 and 240 Hz, October 7 for 207 Hz with the
-+/// multilevel Haar decoder; 10-12 s screens, see docs/HIGH-REFRESH.md and docs/FRAME-TRACE.md).
-+/// Sustained play is not measured, so they are named candidates.
++/// Profiles measured on Quest 3 (October 6, 2026 for 120 and 240 Hz, October 7 for 207 Hz with the
++/// multilevel Haar decoder; short screens, see docs/HIGH-REFRESH.md and docs/FRAME-TRACE.md).
 +/// Haar/Compute/TCP, 4:2:0, 1000 Mbps; the stream size is explicit because 2080x2208 and 1440x1536
 +/// are not panel percentages.
 +pub const MEASURED_PROFILES: [(&str, f32, (u32, u32), bool, bool, &str); 3] = [
 +    (
-+        "Quest 3 PyroWave native 120 Hz candidate (short screens)",
++        "Quest 3 PyroWave native 120 Hz (measured)",
 +        120.0,
 +        (2064, 2208),
 +        false,
@@ -13830,7 +13955,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..482eb8a5864e6fe6e4c1bc7e01a1f521
 +        "Haar, 4:2:0, 1000 Mbps, full panel; about 119 fresh FPS in short screens, best detail",
 +    ),
 +    (
-+        "Quest 3 PyroWave 207 Hz candidate (short screens)",
++        "Quest 3 PyroWave 207 Hz (measured)",
 +        207.0,
 +        (2080, 2208),
 +        false,
@@ -13838,7 +13963,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..482eb8a5864e6fe6e4c1bc7e01a1f521
 +        "Haar, 4:2:0, 1000 Mbps, 2080x2208 per eye, maximum GPU clock over USB; about 195 fresh FPS in short screens",
 +    ),
 +    (
-+        "Quest 3 PyroWave 240 Hz scaled panel candidate (short screens)",
++        "Quest 3 PyroWave 240 Hz scaled panel (measured)",
 +        240.0,
 +        (1440, 1536),
 +        true,
@@ -13982,7 +14107,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..482eb8a5864e6fe6e4c1bc7e01a1f521
  }
  
  #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-@@ -186,8 +460,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
+@@ -186,8 +459,10 @@ pub fn visible_variants(root: &SchemaNode, path: &[&str]) -> Option<Vec<String>>
  #[derive(Clone, Debug, PartialEq)]
  pub struct PyroWaveEffective {
      pub enabled: bool,
@@ -13993,7 +14118,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..482eb8a5864e6fe6e4c1bc7e01a1f521
      pub decode_path: PyroWaveDecodePath,
      pub follow_gaze: bool,
      pub overrides: Vec<&'static str>,
-@@ -211,30 +487,24 @@ pub fn pyrowave_effective(
+@@ -211,30 +486,24 @@ pub fn pyrowave_effective(
          value
      };
  
@@ -14032,7 +14157,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..482eb8a5864e6fe6e4c1bc7e01a1f521
          decode_path: video.pyrowave.decode_path,
          follow_gaze,
          overrides,
-@@ -255,10 +525,11 @@ impl fmt::Display for PyroWaveEffective {
+@@ -255,10 +524,11 @@ impl fmt::Display for PyroWaveEffective {
          };
          write!(
              f,
@@ -14046,7 +14171,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..482eb8a5864e6fe6e4c1bc7e01a1f521
              if self.follow_gaze { "on" } else { "off" },
              if self.overrides.is_empty() {
                  "none".to_owned()
-@@ -279,7 +550,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
+@@ -279,7 +549,8 @@ fn json_eq(a: &json::Value, b: &json::Value) -> bool {
  }
  
  fn at<'a>(root: &'a json::Value, path: &str) -> Option<&'a json::Value> {

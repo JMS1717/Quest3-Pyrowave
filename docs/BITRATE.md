@@ -24,7 +24,9 @@ rounded up to 50 Mbps (`BitrateManager::set_quality_floor_mbps`,
   at a blocky bitrate. The network and encoder latency limiters and a manual maximum are applied
   after it, so on a congested link Auto still lowers the bitrate under the floor. In `.62` the
   floor was applied after them, and a link that could not carry it dropped frames instead.
-  The `.63` behaviour is covered by unit tests and has not yet been checked in the headset.
+  Checked over Wi-Fi 6E on `.63`: with a 1500 Mbps maximum and the 8 ms network-latency limit,
+  Auto settled at about 550 Mbps, below the 1000 Mbps the link carries cleanly
+  ([WIRELESS.md](WIRELESS.md)).
 
 The dashboard shows the floor under the per-frame budget, and the driver logs
 `[Q3PW_QUALITY_FLOOR]`. 4:4:4 doubles the raw samples and the floor; that factor is not measured,
