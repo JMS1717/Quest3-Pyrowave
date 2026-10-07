@@ -15,39 +15,33 @@ SteamVR integration, tracking, controllers and audio.
 [**Settings**](#settings-and-quality) · [**Performance**](#measured-performance) ·
 [**Troubleshooting**](#troubleshooting) · [**Build / contribute**](#build-benchmark-and-contribute)
 
-> **Research preview.** SteamVR video, audio and tracking have worked in tested
-> setups. Sustained native-resolution 120 fresh FPS and lower latency than
-> Virtual Desktop remain unproven. A selected refresh rate or a 120 FPS counter
-> does not establish 120 distinct displayed frames.
+> **Research preview.** SteamVR video, audio and tracking work in tested setups.
+> Short screens reach about 195 fresh frames per second at 207 Hz with full-resolution
+> 2080 × 2208 per-eye streams. Sustained gameplay, optical motion-to-photon latency and an
+> advantage over Virtual Desktop remain unproven. A selected refresh rate or an FPS counter
+> does not establish that many distinct displayed frames.
 
 ## Current status
 
-| Track | What to expect |
+| | |
 | --- | --- |
-| **Published preview: alpha.8 / `.51`** | Matching APK and Windows server with bounded frame waiting, automatic decode priority, independent resolution controls and safety fixes. [Release notes](docs/RELEASE-alpha.8.md) |
-| **Development: `.55`** | [PR #9](https://github.com/JMS1717/Quest3-Pyrowave/pull/9) integrates overlay modes, independent game/stream controls, optional foveation profiles and diagnostics. Tested `2b289f8` passed short Quest screens near 119 fresh FPS. Amended `9da8560` passed all five signed CI jobs and artifact review; Bilinear stays the default. [Measurements and limits](docs/PR-9-REVIEW.md). |
-| **Development: `.57` (PR #10)** | SteamVR runs at **240 Hz**: the PC switches the Quest 3 panel to its 240 Hz scaled mode over USB when 240 Hz is chosen, and restores it afterwards. Three measured streaming profiles (native 120, 207, 240) and eye-image invalidation by default. Short screens: about 119 fresh FPS at native 120 Hz, 196 at 207 Hz and 223-230 at 240 Hz with 1280x1376-1440x1536 per eye. [Results and limits](docs/HIGH-REFRESH.md) |
-| **Working experimental target** | **2080 × 2208 per eye · 120 Hz · 1000 Mbps · 4:2:0 · no foveated encoding**, with Vulkan Compute decoding. Sustained acceptance is still pending. |
-| **Defaults preserved** | Conservative 400 Mbps / 72 Hz candidate; 4:2:0, TCP and Quest 3 Auto → Compute. Development keeps synchronous decoding and the 4 ms selection wait. |
-
-Publication notifications, prerecording and experimental fence handoffs remain
-off by default. Exact final-color fusion is included as an opt-in experiment;
-its earlier 120 Hz screen showed no delivery gain. Haar H2 remains excluded.
-Foveation, thread hints and eye invalidation remain off, and Bilinear remains the
-default filter. A 15-second no-decode probe reached 206.9 FPS at 207 Hz; this is
-runtime cadence, not 207 Hz streaming. See the [integration review](docs/PR-9-REVIEW.md)
-and [whole-stack scorecard](docs/WHOLE-STACK-SCORECARD.md).
+| **Latest preview: alpha.9 / `.62`** | A decoder about twice as fast as alpha.8's, any refresh rate from 144 to 240 Hz with PC-driven panel switching over USB, Decoder V2 for smoother CDF 5/3 images, bitrate up to 4000 Mbps, and two parallel wired video connections. [Release notes](docs/RELEASE-alpha.9.md) |
+| **Best measured high-refresh setting** | **207 Hz · 2080 × 2208 per eye · Haar · 1000 Mbps · 4:2:0 · no foveation · maximum GPU clock over USB**: 194-197 fresh FPS in 10-12 s screens with a 60°/s pan. [Frame trace](docs/FRAME-TRACE.md) |
+| **Smoothest image** | CDF 5/3 (Decoder V2) removes Haar's block edges. It costs about 2 fresh FPS at 700 Mbps and more at higher bitrates. [Decoder V2](docs/DECODER-V2.md) |
+| **What limits 207 Hz** | Frames that finish too close to the display deadline, the eye copy's fill cost (about 0.8 ms), and a headset memory clock the app cannot control. [Details](docs/FRAME-TRACE.md#what-limits-207-hz-now) |
+| **Fresh-install defaults** | Conservative 400 Mbps / 72 Hz candidate, Haar, 4:2:0, TCP, Quest 3 Auto → Compute. Pick a measured profile to go higher. |
 
 ## Why explore PyroWave?
 
 | Capability | What it enables |
 | --- | --- |
-| **Quest GPU decode** | Custom Vulkan wavelet reconstruction on Adreno, with measured decode and completion times. |
+| **Quest GPU decode** | Custom Vulkan wavelet reconstruction on Adreno: Haar in about 2.6 ms and CDF 5/3 in about 3-4 ms per 2080 × 2208 stereo frame at 690 MHz, written straight into the buffer the eye pass reads. |
 | **USB and Wi-Fi** | ALVR wired TCP forwarding or LAN streaming. UDP is a separate experimental path. |
-| **Bitrate control** | A 5–2000 Mbps slider, high-bitrate presets and latency-driven Auto bitrate. |
+| **High refresh** | Any whole rate from 144 to 240 Hz; the PC switches the Quest 3 panel over USB and restores it afterwards. |
+| **Bitrate control** | A 5–4000 Mbps slider, a quality floor, measured profiles and latency-driven Auto bitrate. |
 | **Independent render / encode sizes** | Render a larger PC source while keeping the Quest's decoded pixel count fixed. |
 | **Chroma choices** | 4:2:0 by default; optional 4:4:4 for controlled quality comparisons. |
-| **Local performance overlay** | A client-rendered 3D panel: both-thumbstick clicks cycle Compact / Full / Hidden; a hold opens settings in `.55`. |
+| **Local performance overlay** | A client-rendered 3D panel: both-thumbstick clicks cycle Compact / Full / Hidden; a hold opens settings. |
 | **Reproducible research** | Pinned upstream sources, matching platform builds, regression checks and published measurements. |
 
 Decoded Vulkan images cross an AHardwareBuffer bridge into GLES/OpenXR eye
@@ -61,16 +55,17 @@ a matched quality or latency advantage over those codecs or Virtual Desktop.
 
 ## Download a matching build
 
-The latest published preview is **[v0.1.0-alpha.8](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.8)**.
+The latest published preview is **[v0.1.0-alpha.9](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.9)**.
 
 | Download | Purpose |
 | --- | --- |
-| [**Quest APK**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.8/Quest3-Pyrowave-dev.apk) | Install on the Quest 3. |
-| [**Windows server ZIP**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.8/Quest3-Pyrowave-Windows.zip) | Dashboard, SteamVR driver and required bundled files. |
-| [**SHA-256 checksums**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.8/SHA256SUMS.txt) | Verify the downloads. |
+| [**Quest APK**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.9/Quest3-Pyrowave-dev.apk) | Install on the Quest 3. |
+| [**Windows server ZIP**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.9/Quest3-Pyrowave-Windows.zip) | Dashboard, SteamVR driver and required bundled files. |
+| [**SHA-256 checksums**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.9/SHA256SUMS.txt) | Verify the downloads. |
 
-Read the [alpha.8 release notes](docs/RELEASE-alpha.8.md) for its setup and optional
-direct-eye-copy mode. For development builds, choose a **successful full run** in
+Read the [alpha.9 release notes](docs/RELEASE-alpha.9.md) for what changed and what is
+still opt-in. [alpha.8](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.8)
+remains available for rollback. For development builds, choose a **successful full run** in
 [GitHub Actions](https://github.com/JMS1717/Quest3-Pyrowave/actions/workflows/ci.yml)
 and download both `Quest3-Pyrowave-Android` and `Quest3-Pyrowave-Windows` artifacts
 from that same run. Tests-only runs produce no installable pair.
@@ -101,8 +96,9 @@ Keep your previous matching pair for rollback.
 4. On Quest, open **Quest3 PyroWave** from **Unknown Sources**. On PC, explicitly
    trust the discovered headset in the dashboard, then start SteamVR.
 5. In **Settings → Presets**, start with **Quest 3 PyroWave 400 Mbps / 72 Hz
-   candidate**. Once that works, try the 600 Mbps / 90 Hz candidate before the
-   higher-rate experiments.
+   candidate**. Once that works over USB, choose a measured **Streaming profile**:
+   **native 120 Hz** for the most frames per pixel, **207 Hz** for full resolution at
+   high refresh, or **240 Hz scaled panel** for the highest rate at 1440 × 1536 per eye.
 
 These are starting candidates, not guaranteed performance levels. The full
 [installation and rollback guide](docs/BUILD.md#install-and-rollback) covers
@@ -125,9 +121,11 @@ the radio hop, but still includes ADB forwarding, GPU decode and compositor work
 | --- | --- |
 | **Bitrate** | **Settings → Presets**. The slider sets a fixed payload cap; with Auto it sets a maximum. |
 | **Auto bitrate** | Uses network/encoder latency feedback to lower the requested rate when needed. It cannot guarantee FPS or remove a GPU bottleneck. [Details](docs/BITRATE.md) |
-| **Profiles** | **Settings → Presets → Streaming profile**: the three "(measured)" profiles set refresh, stream size, wavelet, chroma and bitrate together; the game render resolution is kept. [Measurements](docs/HIGH-REFRESH.md) |
-| **Refresh** | Select a runtime-confirmed mode; while streaming it applies by itself ([below](#settings-that-restart-steamvr)). 240 Hz needs the Quest 3 scaled panel mode (1552x1664 per eye); choosing 240 Hz turns on **Quest 3: switch to 240 Hz over USB**. [Capability detection](docs/REFRESH-RATES.md) |
-| **Decoder / wavelet** | Quest 3 Auto chooses Compute. Haar/Compute is the measured development recipe; follow the matching build's instructions. [Decoder findings](docs/DECODE-PIPELINE.md) |
+| **Profiles** | **Settings → Presets → Streaming profile**: the three "(measured)" profiles set refresh, stream size, wavelet, chroma, bitrate and GPU clock together; the game render resolution is kept. Native 120 Hz (2064 × 2208, about 119 fresh FPS), 207 Hz (2080 × 2208, about 195) and 240 Hz scaled panel (1440 × 1536, about 223-228). [Measurements](docs/HIGH-REFRESH.md) |
+| **Refresh** | 72-120 Hz, or any whole rate from 144 to 240 Hz with **Preferred FPS**; while streaming it applies by itself ([below](#settings-that-restart-steamvr)). Over USB the PC switches the panel: 144-207 Hz natively, above 207 Hz in the scaled panel mode (1552 × 1664 per eye). [Capability detection](docs/REFRESH-RATES.md) |
+| **Wavelet** | **Haar** (default) is fastest. **CDF 5/3** uses Decoder V2 and gives smoother gradients without Haar's 8-pixel block edges, for a few fresh FPS; pair it with the maximum GPU clock. [Decoder V2](docs/DECODER-V2.md), [decoder findings](docs/DECODE-PIPELINE.md) |
+| **GPU clock** | **Quest 3: maximum GPU clock** (690 MHz, over USB) helps whenever decoding limits the frame rate; the measured 207 and 240 Hz profiles turn it on. [Details](docs/HIGH-REFRESH.md) |
+| **Wired video connections** | Two by default over USB: each frame is split across parallel adb-forwarded connections, which shortens network time at 1000 Mbps and above. 0 restores the single stream socket. [Details](docs/BITRATE.md) |
 | **Chroma** | Keep **4:2:0** for the baseline. 4:4:4 increased decode cost in the recorded comparison. [Chroma comparison](docs/CHROMA.md) |
 | **Foveation** | Off by default. [Light peripheral encoding](docs/LIGHT-FOVEATION.md) is optional development work, with sustained and in-headset acceptance pending. |
 | **Overlay** | On by default. **Click both thumbsticks together**, release both, then click again to toggle. [Metrics and overrides](docs/OVERLAY.md) |
@@ -141,16 +139,17 @@ streaming, they apply by themselves: 2 s after the last edit the headset reconne
 restarts when the driver needs it. The stream is back about 25 s after the edit, so save game
 progress first. Bitrate changes apply live without a reconnect. [Details](docs/SETTINGS-APPLY.md)
 
-The 600 / 800 / 1000 / 1500 / 2000 Mbps high-refresh profiles are experiments.
+The 600 / 800 / 1000 / 1500 / 2000 Mbps 120 Hz presets are experiments.
 At 120 Hz, 1000 Mbps permits approximately **1.04 MB per encoded stereo frame**;
-2000 Mbps permits approximately **2.08 MB**. These are payload ceilings, not
-guaranteed utilization or quality. More bitrate can increase decode and network
-cost. [Profile math and measured bitrate comparisons](docs/BITRATE.md).
+at 207 Hz it permits about **0.60 MB**. These are payload ceilings, not
+guaranteed utilization or quality. More bitrate improves quality but costs decode time,
+most of all with CDF 5/3: at 207 Hz, 5/3 measured 185 fresh FPS at 700 Mbps, 179 at
+1000 and 164 at 1500. [Profile math and measured bitrate comparisons](docs/BITRATE.md).
 
-90/120 Hz and extended 144/207 Hz requests are runtime-gated. An accepted refresh
-does not imply an equal fresh-frame rate. 240 Hz exists only in the developer
-display-scaling mode, which the PC applies over USB (or `tools/quest3/refresh_scaling.py`
-by hand); do not assume every OS/runtime exposes the same modes.
+Refresh rates above 120 Hz are runtime-gated; an accepted refresh does not imply an
+equal fresh-frame rate. Rates above 120 Hz rely on the panel switch the PC applies over
+USB (or `tools/quest3/refresh_scaling.py` by hand); do not assume every OS/runtime
+exposes the same modes.
 
 ### Sharper PC source without a larger Quest decode
 
@@ -179,27 +178,41 @@ first, then independent geometry, since those presets can set both sizes togethe
 
 ## Measured performance
 
-Recent stationary native-resolution USB screens used **120 Hz, 1000 Mbps,
-4:2:0, no foveation, Haar/Compute, one synchronous worker and a 4 ms selection wait**.
+Short live screens on Quest 3 over USB, October 6-7, 2026. Unless noted:
 
-| Observation | Evidence / interpretation |
-| --- | --- |
-| **About 117 distinct targets/s** | Recent `.48`/`.50` screens, despite an ALVR client counter around 120. Sustained fresh 120 remains unmet. [Whole-stack scorecard](docs/WHOLE-STACK-SCORECARD.md) |
-| **GPU decode p50 5.90 ms; conversion p50 0.77 ms** | `.50` classification window. Native decode-to-fence p50 was 7.98 ms; these measure different intervals. [Stage findings](docs/WHOLE-STACK-SCORECARD.md#decision) |
-| **PC source about 120.7 frames/s** | Two `.48` control windows, with encode median about 2.1 ms and network estimate 4.3–4.5 ms. These are not additive optical latency measurements. [Stage breakdown](docs/WHOLE-STACK-SCORECARD.md#what-is-measured) |
-| **4:4:4 was substantially slower** | Earlier matched comparison: about 100 fresh FPS at 1000 Mbps / 4:2:0 versus 66 at 2000 Mbps / 4:4:4. Keep 4:2:0 as default. [Full comparison](docs/CHROMA.md) |
-| **Larger PC source, unchanged Quest decode** | Separation worked in short native/larger/native screens; no sustained FPS or repeatable quality/latency win established. [Resolution experiment](docs/RENDER-ENCODE-RESOLUTION.md#first-controlled-quest-3-screen) |
+- 2080 × 2208 per eye encoded from a 3072 × 3216 render, 4:2:0, no foveation
+- maximum GPU clock (690 MHz)
+- a 60°/s pan, ABBA order
+- 10-12 s windows after a 3-5 s settle
 
-These are short screening measurements, not sustained gameplay, optical FPS or
-motion-to-photon tests. Earlier pacing screens still had p1 near 60. ALVR's
-estimated pipeline latency is not a measured motion-to-photon result.
+Blocks whose headset memory clock changed mid-window were rejected.
 
-In these captures, frames were still decoding when selection expired, while
-the PC supplied enough frames. Longer waits, publication notifications and prerecording
-did not establish a delivery gain; defaults stay unchanged. New shader candidates
-need correctness evidence before promotion. Read the
-[whole-stack scorecard](docs/WHOLE-STACK-SCORECARD.md),
-[producer findings](docs/PRODUCER-PRERECORD.md) and [reviewed results](results/).
+| Setting | Fresh FPS | Notes |
+| --- | --- | --- |
+| **207 Hz, Haar, 1000 Mbps** | **194-197** | GPU decode p50 2.67 ms, eye copy 1.05-1.10 ms; frame age at display 30.4 ms p50. [Frame trace](docs/FRAME-TRACE.md) |
+| 207 Hz, CDF 5/3, 700 Mbps | 185-193 | Two runs; in the matched comparison about 2 FPS below Haar. Visibly smoother gradients. [Decoder V2](docs/DECODER-V2.md) |
+| 207 Hz, CDF 5/3, 1000 / 1500 Mbps | 179 / 164 | Quality rises about 1.8 dB PSNR-HVS-M from 700 to 1000 Mbps. [Bitrate](docs/BITRATE.md) |
+| 240 Hz scaled panel, 1440 × 1536, Haar | 223-230 | Measured on October 6, before the faster decoder. [High refresh](docs/HIGH-REFRESH.md) |
+| 120 Hz, 2064 × 2208, Haar | about 119 | Measured on October 6, before the faster decoder. |
+| 207 Hz, 4:4:4 | 68 | 4:2:0 stays the default. [Chroma](docs/CHROMA.md) |
+
+What the trace shows at 207 Hz:
+
+- Decode keeps up: 203 of 206 frames per second are decoded and published.
+- The rest are lost after publication:
+  - The render loop occasionally misses a display period.
+  - About 5 % of display intervals receive two frames, so one is superseded.
+  - A few intervals receive none.
+- Opt-in experiments trade latency for a few frames:
+  - A release fence keeps every display period.
+  - A short frame hold shows both frames of a burst.
+  - Neither is a default.
+
+These are short screening measurements, not sustained gameplay or optical
+motion-to-photon tests. ALVR's estimated pipeline latency (about 30-33 ms at these
+settings) is not a measured motion-to-photon result. The headset's memory clock
+(2092 / 2736 / 3196 MHz) is not under app control and moves results by several FPS
+between sessions. Read the [engineering handoff](docs/HANDOFF.md) and [reviewed results](results/).
 
 ## Troubleshooting
 
@@ -209,7 +222,7 @@ need correctness evidence before promotion. Read the
 | **Audio works, but video is black or corrupt** | Check APK/server provenance, selected codec and foveation settings. Preserve logs and report exact settings. |
 | **USB is plugged in, but video uses Wi-Fi** | Check the wired peer and ADB forwards using the [USB verification steps](docs/USB.md). |
 | **Game never appears in the headset** | Check SteamVR's active headset and the game's OpenXR runtime. [OpenXR setup and VD rollback](docs/OPENXR.md) |
-| **FPS is below selected refresh** | Compare fresh-frame delivery, GPU decode and completion timing. Increasing bitrate alone may make it worse. |
+| **FPS is below selected refresh** | Use a measured profile over USB with the maximum GPU clock. Compare fresh-frame delivery, GPU decode and completion timing; more bitrate or CDF 5/3 costs decode time. |
 | **Overlay will not hide** | A benchmark's forced-visible override can take precedence over the controller chord. [Clear the override](docs/OVERLAY.md). |
 | **Wrong controller model** | Select Quest 3 Touch Plus. Older saved sessions or game-specific meshes can differ. |
 | **APK update fails** | Compare signing certificates; PR builds can use different keys. Follow the [signing guide](docs/BUILD.md#android-apk). |
