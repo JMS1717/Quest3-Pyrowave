@@ -1,3 +1,12 @@
+> [!NOTE]
+> **Preserved upstream text.** This is the original README of the Galaxy XR research project
+> ([galaxy-xr-alvr-pyrowave-444](https://github.com/Terminal-ennui/galaxy-xr-alvr-pyrowave-444),
+> pinned in [`sources.lock.json`](../sources.lock.json)) that Quest3-Pyrowave started from. It is
+> kept unchanged for provenance and does not describe Quest3-Pyrowave. Its results and setup
+> steps refer to that project and the Samsung Galaxy XR. Its relative links were written for that
+> project's root folder, so most do not resolve from `docs/` here. For this fork, see the
+> [README](../README.md).
+
 # Galaxy XR ALVR Research: PyroWave 4:4:4
 
 **Full-chroma (4:4:4) experimental wireless PC VR streaming for the Samsung Galaxy XR.** A patched

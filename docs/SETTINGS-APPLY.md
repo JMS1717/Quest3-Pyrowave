@@ -1,6 +1,7 @@
 # Applying stream-start settings
 
-Status: on `claude/decoder-v2` from 89caa8c, checked in the headset on 2026-10-07.
+Status: default behavior since 89caa8c. Released in alpha.9 (`.63`) and on main (`.64`).
+Checked in the headset on 2026-10-07, on the `claude/decoder-v2` branch before it merged.
 
 ## Problem
 
@@ -20,6 +21,11 @@ start every 0.5 s. Once a change has been stable for 2 s (a slider drag reconnec
 headset settings menu already did. The client reconnects; the new connection rebuilds the driver
 configuration and restarts SteamVR when it changed. Settings that only the negotiation reads
 reconnect without a SteamVR restart. Live settings (bitrate) are not compared.
+
+The compared set is the whole driver configuration plus `video.preferred_codec`, every
+`video.pyrowave` setting (wavelet, chroma, transport, wired video connections, the Quest 3 panel
+and GPU-clock helpers and the rest), `video.transcoding_view_resolution`,
+`video.emulated_headset_view_resolution` and `video.preferred_fps`.
 
 ## Checked in the headset
 

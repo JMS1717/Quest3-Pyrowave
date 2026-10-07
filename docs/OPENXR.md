@@ -53,6 +53,11 @@ previously used VDXR, select that runtime again through its configuration UI or
 restore the exact saved manifest path. VD can also use SteamVR; restore your
 previous choice rather than assuming every VD setup needs VDXR.
 
+If you streamed over USB with a refresh rate above 120 Hz or the maximum GPU clock (the 207 Hz
+and 240 Hz profiles), close SteamVR while the headset is still connected over USB. The server then
+puts back the headset's saved refresh, display-scaling and GPU-level values; until it does,
+Virtual Desktop also runs at that rate.
+
 Record which runtime the game actually loaded when reporting a launch failure.
 Share only the relevant error lines, with private identifiers removed. The
 active runtime cannot fix codec corruption, missing controller bindings or

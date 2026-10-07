@@ -1,10 +1,12 @@
 # Client performance overlay
 
-## Development build .55: overlay modes and headset settings menu
+## Current behavior: overlay modes and headset settings menu
 
-Not released. Signed `.55` now has a short Quest 3 Compact/Hidden comparison and
-correct stereo screenshot endpoints. Long-hold menu Apply/restart acceptance is
-still pending. Released `.51` behaves as described in the sections after this one. Preview images are rendered by the same CPU code
+Added in `.55`, released in alpha.9 (`.63`) and also on main (`.64`).
+The `.55` build had a short Quest 3 Compact/Hidden comparison and correct stereo
+screenshot endpoints. A controlled in-headset acceptance test of the menu's
+Apply/restart path is still pending. alpha.8 (`.51`) and earlier builds behaved as
+described in [Earlier behavior](#earlier-behavior-51-and-before). Preview images are rendered by the same CPU code
 the headset uses (`PANEL_PREVIEW=<dir> cargo test -p alvr_graphics preview_dump`),
 over a flat background:
 
@@ -29,7 +31,8 @@ rate and amber at ≥85%; latency green at ≤30 ms and amber at ≤45 ms (estim
 optical); GPU decode green at ≤70% and amber at ≤90% of the frame period.
 
 **Menu.** Rows: refresh rate (only the rates this headset confirmed at startup),
-bitrate (100–2000 Mbps in 50 Mbps steps), stream size per eye (50–100% of the
+bitrate (100–4000 Mbps in 50 Mbps steps; at 207 Hz the measured useful range ends near
+1250 Mbps on Wi-Fi 6E and 1500 Mbps over USB, see [BITRATE.md](BITRATE.md)), stream size per eye (50–100% of the
 2064×2208 panel in 10% steps), game render size per eye (100–200% in 25% steps; the PC
 filters it down to the stream size, so it costs PC GPU time only), chroma (PyroWave
 only) and overlay mode. The size steps match the dashboard's scales. Changed values show in amber. **Apply** sends only
@@ -60,7 +63,12 @@ overlay delivery penalty was isolated. [Measurements and limits](PR-9-REVIEW.md)
 controller mode is Hidden (otherwise the controller's mode), unset follows the
 controllers.
 
-## Released .51 behavior
+## Earlier behavior (.51 and before)
+
+This section is the record for alpha.8 (`.51`) and earlier builds. In current builds the
+chord cycles Compact → Full → Hidden instead of toggling on/off, and the panel content is
+as described above. The `debug.q3pw.overlay_visible` override, the metric definitions
+and the log-summary tool below still apply.
 
 The Quest app displays a head-relative OpenXR quad below the center of view, at
 1.2 m depth, visible in both eyes. The panel is rendered locally alongside the video;
