@@ -33,11 +33,11 @@ Vulkan handles wavelet decoding; ALVR supplies SteamVR integration, tracking, co
 |  |  |
 | --- | --- |
 | **Latest release** | **alpha.8 / `.51`**: native-frame pacing, independent PC render and stream sizes, and safety fixes. [Release notes →](docs/RELEASE-alpha.8.md) |
-| **On main, not yet released** | **`.62`**: a decoder about twice as fast, any refresh rate from 144 to 240 Hz with PC-driven panel switching over USB, Decoder V2 for smoother CDF 5/3 images, bitrate up to 4000 Mbps, and two parallel wired video connections. It is held back for the fixes in its [known issues](docs/RELEASE-alpha.9.md#known-issues) and an in-headset check of the exact release build. [Draft notes →](docs/RELEASE-alpha.9.md) |
+| **On main, not yet released** | **`.63`**: a decoder about twice as fast, any refresh rate from 144 to 240 Hz with PC-driven panel switching over USB, Decoder V2 for smoother CDF 5/3 images, bitrate up to 4000 Mbps, and two parallel wired video connections. It includes the [fixes](docs/RELEASE-alpha.9.md#fixed-after-the-62-review) for the issues found in review of `.62`, and waits for an in-headset check of the exact release build. [Draft notes →](docs/RELEASE-alpha.9.md) |
 | **Best measured high-refresh setting** | **207 Hz · 2080 × 2208 per eye · Haar · 1000 Mbps · 4:2:0 · no foveation · maximum GPU clock over USB**: 194–197 fresh FPS in 10–12 s screens with a 60°/s pan. [Frame trace →](docs/FRAME-TRACE.md) |
 | **Smoothest image** | CDF 5/3 (Decoder V2) removes Haar's block edges, for about 2 fresh FPS at 700 Mbps and more at higher bitrates. [Decoder V2 →](docs/DECODER-V2.md) |
 | **What limits 207 Hz** | Frames that finish too close to the display deadline, the eye copy's fill cost (about 0.8 ms), and a headset memory clock the app cannot control. [Details →](docs/FRAME-TRACE.md#what-limits-207-hz-now) |
-| **Fresh-install defaults** | A conservative 400 Mbps / 72 Hz candidate: Haar, 4:2:0, TCP, Quest 3 Auto → Compute. Pick a measured profile to go higher. |
+| **Fresh-install defaults** | A conservative 400 Mbps / 72 Hz candidate: Haar, 4:2:0, TCP, Quest 3 Auto → Compute. Pick a streaming profile candidate to go higher. |
 
 ## ✨ Why PyroWave?
 
@@ -46,7 +46,7 @@ Vulkan handles wavelet decoding; ALVR supplies SteamVR integration, tracking, co
 | 🎮 **Quest GPU decode** | Custom Vulkan wavelet reconstruction on Adreno: Haar in about 2.6 ms and CDF 5/3 in about 3–4 ms per 2080 × 2208 stereo frame at 690 MHz, written straight into the buffer the eye pass reads. |
 | 🔌 **USB and Wi-Fi** | ALVR wired TCP forwarding or LAN streaming. UDP is a separate experimental path. |
 | ⚡ **High refresh** | Any whole rate from 144 to 240 Hz; over USB the PC switches the Quest 3 panel and restores it afterwards. |
-| 📶 **Bitrate control** | A 5–4000 Mbps slider, a quality floor, measured profiles and latency-driven Auto bitrate. |
+| 📶 **Bitrate control** | A 5–4000 Mbps slider, a quality floor, screened profile candidates and latency-driven Auto bitrate. |
 | 🖼️ **Independent render and encode sizes** | Render a sharper PC source while keeping the Quest's decoded pixel count fixed. |
 | 🎨 **Chroma choices** | 4:2:0 by default; optional 4:4:4 for controlled quality comparisons. |
 | 📊 **Performance overlay** | A client-rendered 3D panel: clicking both thumbsticks cycles Compact / Full / Hidden; a hold opens settings. |
@@ -87,7 +87,7 @@ The current preview is **[v0.1.0-alpha.8](https://github.com/JMS1717/Quest3-Pyro
 | 🔐 [**SHA-256 checksums**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.8/SHA256SUMS.txt) | Verify the downloads. |
 
 Read the [alpha.8 release notes](docs/RELEASE-alpha.8.md) for what changed and what is still opt-in.
-The faster `.62` stack on main is described in the [draft alpha.9 notes](docs/RELEASE-alpha.9.md).
+The faster `.63` stack on main is described in the [draft alpha.9 notes](docs/RELEASE-alpha.9.md).
 It is published only after its known issues are fixed and the exact release build looks correct
 in the headset.
 
@@ -112,8 +112,8 @@ Tests-only runs produce no installable pair.
 ## 🚀 Quick start
 
 > [!NOTE]
-> This guide and the settings below describe the `.62` stack on main. The 144–240 Hz range, the
-> "(measured)" streaming profiles, the 4000 Mbps ceiling and the wired video connections are not in
+> This guide and the settings below describe the `.63` stack on main. The 144–240 Hz range, the
+> high-refresh streaming profiles, the 4000 Mbps ceiling and the wired video connections are not in
 > alpha.8. The alpha.8 settings are in its [release notes](docs/RELEASE-alpha.8.md).
 
 ### What you need
@@ -162,9 +162,9 @@ controller emulation and restoring another driver.
 
 | Setting | Where and what to start with |
 | --- | --- |
-| **Bitrate** | **Settings → Presets.** The slider sets a fixed payload cap; with Auto it sets a maximum. PyroWave keeps a quality floor of 0.25 bits per stream pixel (about 500 Mbps at 207 Hz with 2080 × 2208 per eye) and raises lower settings to it. [Details](docs/BITRATE.md) |
-| **Auto bitrate** | Lowers the requested rate from network/encoder latency feedback, but not below the quality floor: on a congested link it drops frames instead. It cannot guarantee FPS or remove a GPU bottleneck. |
-| **Profiles** | **Settings → Presets → Streaming profile.** The three "(measured)" profiles set refresh, stream size, wavelet, chroma, bitrate and GPU clock together and keep the game's render resolution. [Measurements](docs/HIGH-REFRESH.md) |
+| **Bitrate** | **Settings → Presets.** The slider sets a fixed payload cap; with Auto it sets a maximum. PyroWave keeps a quality floor of 0.25 bits per stream pixel (about 500 Mbps at 207 Hz with 2080 × 2208 per eye) and raises a lower fixed setting to it. [Details](docs/BITRATE.md) |
+| **Auto bitrate** | Starts from at least the quality floor and lowers the requested rate from network/encoder latency feedback, below the floor on a congested link. It cannot guarantee FPS or remove a GPU bottleneck. |
+| **Profiles** | **Settings → Presets → Streaming profile.** The three "candidate (short screens)" profiles set refresh, stream size, wavelet, chroma, bitrate and GPU clock together and keep the game's render resolution. [Measurements](docs/HIGH-REFRESH.md) |
 | **Refresh** | 72–120 Hz, or any whole rate from 144 to 240 Hz with **Preferred FPS**. Over USB the PC switches the panel: 144–207 Hz natively, above 207 Hz in the scaled panel mode (1552 × 1664 per eye). [Capability detection](docs/REFRESH-RATES.md) |
 | **Wavelet** | **Haar** (default) is fastest. **CDF 5/3** uses Decoder V2 and gives smoother gradients without Haar's 8-pixel block edges, for a few fresh FPS; pair it with the maximum GPU clock. [Decoder V2](docs/DECODER-V2.md) · [decoder findings](docs/DECODE-PIPELINE.md) |
 | **GPU clock** | **Quest 3: maximum GPU clock** (690 MHz, over USB) helps whenever decoding limits the frame rate. The measured 207 and 240 Hz profiles turn it on. [Details](docs/HIGH-REFRESH.md) |

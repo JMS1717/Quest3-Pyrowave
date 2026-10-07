@@ -3,8 +3,8 @@
 Settings → Presets has a **5–2000 Mbps slider**, an **Auto bitrate** checkbox and
 the padded resolution/frame budget. In manual mode the slider sets the codec payload
 rate cap. In Auto mode it sets an enabled maximum; feedback can lower the requested
-rate. Selecting Auto disables Auto's own optional minimum (Video → Bitrate → Adaptive), but the
-PyroWave quality floor below still applies.
+rate. Selecting Auto disables Auto's own optional minimum (Video → Bitrate → Adaptive). Auto
+starts from at least the PyroWave quality floor below, and its latency limiters can go under it.
 Detailed latency limiters and that optional minimum are under Video → Bitrate → Adaptive.
 For PyroWave the hardware decoder latency limiter is ignored: a target below fixed
 GPU reconstruction time otherwise drives bitrate toward zero without reaching the
@@ -14,13 +14,22 @@ Resolution/refresh/codec changes require restarting SteamVR. Bitrate updates are
 
 ## Quality floor
 
-With PyroWave the streamer never requests less than **0.25 bits per padded stream pixel per
-frame** (both eyes, 4:2:0), rounded up to 50 Mbps. That applies to the constant bitrate, Auto and
-the headset menu alike (`BitrateManager::set_quality_floor_mbps`,
-`alvr_session::beta::quality_floor_mbps`). The dashboard shows it under the per-frame budget, and
-the driver logs `[Q3PW_QUALITY_FLOOR]`. 4:4:4 doubles the raw samples and the floor; that factor
-is not measured, so it errs high. `ALVR_PYROWAVE_NO_QUALITY_FLOOR=1` in the streamer's environment
-lifts the floor for codec measurements.
+With PyroWave the floor is **0.25 bits per padded stream pixel per frame** (both eyes, 4:2:0),
+rounded up to 50 Mbps (`BitrateManager::set_quality_floor_mbps`,
+`alvr_session::beta::quality_floor_mbps`).
+
+- **Constant bitrate**, from the dashboard or the headset menu: a lower setting is raised to the
+  floor.
+- **Auto** (since `.63`): the throughput estimate is raised to the floor, so Auto does not idle
+  at a blocky bitrate. The network and encoder latency limiters and a manual maximum are applied
+  after it, so on a congested link Auto still lowers the bitrate under the floor. In `.62` the
+  floor was applied after them, and a link that could not carry it dropped frames instead.
+  The `.63` behaviour is covered by unit tests and has not yet been checked in the headset.
+
+The dashboard shows the floor under the per-frame budget, and the driver logs
+`[Q3PW_QUALITY_FLOOR]`. 4:4:4 doubles the raw samples and the floor; that factor is not measured,
+so it errs high. `ALVR_PYROWAVE_NO_QUALITY_FLOOR=1` in the streamer's environment lifts the floor
+for codec measurements.
 
 | Stream per eye | Refresh | Floor |
 |---|---:|---:|
@@ -49,8 +58,7 @@ Quality falls smoothly with no knee, so the floor is anchored to a configuration
 judged: the previous encoder at 1000 Mbps / 207 Hz, which looked pixelated next to Virtual
 Desktop. Smooth areas, where Haar blocking shows, drop below that at about 0.25 bits per pixel
 (475 Mbps at 207 Hz). The quality scene is a stress board of gratings, text and noise. Game
-content compresses better, but the floor scales with pixels per second, not content. A network
-that cannot carry the floor drops frames instead of lowering the bitrate.
+content compresses better, but the floor scales with pixels per second, not content.
 
 Checked in the headset (13ff836, 207 Hz, 2080×2208 per eye, 12 s pan blocks): with the slider at
 300 Mbps the streamer logged `[Q3PW_QUALITY_FLOOR] 500 Mbps` and requested 500 Mbps from the

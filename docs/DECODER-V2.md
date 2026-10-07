@@ -94,7 +94,7 @@ same Adreno float-to-half behaviour documented for haar32.
 
 ## Live at 207 Hz
 
-The client enables V2 with `debug.q3pw.cdf53v2` (0-5; default 5 since 2026-10-07, 3 in the runs below). It only applies to CDF 5/3
+The client enables V2 with `debug.q3pw.cdf53v2` (0-6; default 5 since 2026-10-07, 3 in the runs below). It only applies to CDF 5/3
 streams; the client logs `[Q3PW_CDF53V2] requested=3 active=3`. The test configuration (2026-10-06)
 was:
 

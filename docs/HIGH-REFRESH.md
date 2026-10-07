@@ -106,7 +106,7 @@ and 1664x1760 at 144 Hz.
 - a cheaper eye copy ([FRAME-TRACE.md](FRAME-TRACE.md))
 
 **207 Hz at the full 2080x2208 per eye now reaches about 194-197 fresh FPS** with the maximum GPU
-clock, against 117 in the table above. The "207 Hz (measured)" profile now uses that size, so the
+clock, against 117 in the table above. The "207 Hz candidate (short screens)" profile (named "207 Hz (measured)" before `.63`) now uses that size, so the
 "avoid 207 Hz at native resolution" advice below no longer holds. The 120 and 240 Hz rows above
 have not been remeasured with the new decoder.
 
