@@ -1,11 +1,15 @@
 # alpha.9: 207 Hz at full resolution, a faster decoder, 144-240 Hz
 
+> **Status: draft, not published.** The `.62` build on main has the [known issues](#known-issues)
+> below. It is released only after they are fixed and the exact release build is checked in the
+> headset.
+
 This prerelease packages the `.62` stack: PRs #10-#12 (merged), #13 (multilevel Haar), #14
 (Decoder V2, packed YCbCr output) and #15 (parallel wired video, frame trace).
 
 - Haar GPU decode at 207 Hz takes about half as long as before: 2.6-2.8 ms, down from 5.6 ms.
 - At the owner's settings the client shows about **195 fresh frames per second at 207 Hz with
-  2080x2208 per eye**. The `.55` build managed about 117 there.
+  2080x2208 per eye** in 10-12 s screens; sustained play is not yet measured. The `.55` build managed about 117 there.
 - Keep alpha.8 for rollback.
 - Not established: sustained gameplay, optical motion-to-photon latency, and an advantage over
   Virtual Desktop.
@@ -116,6 +120,24 @@ To install:
    this server.
 
 Keep the previous pair.
+
+## Known issues
+
+Found in review after merge. The fixes are planned for alpha.10.
+
+- **Occasional broken frames with wired video connections.** When a game stutters, the PC can
+  send two frames with the same timestamp. Their slices then mix in one frame, and one frame
+  can show partly black.
+  - Workaround: set **Wired video connections** (`video.pyrowave.wired_video_connections`) to 0.
+    Video then uses the stream socket.
+- **The quality floor overrides Auto.** Auto bitrate never goes below 0.25 bits per stream
+  pixel, about 500 Mbit/s at 207 Hz with 2080x2208. On a congested link frames drop instead.
+- **Packed YCbCr fallback.** If the eye-copy YCbCr program fails to build on a driver, packed
+  frames can show wrong colours, or the client can stop at stream start.
+  - Workaround: set `debug.q3pw.haar32=4` (`debug.q3pw.cdf53v2=4` with CDF 5/3) for the
+    previous RGBA output.
+- **The "207 Hz (measured)" profile name** refers to 10-12 s screens. Sustained play at that
+  profile is not yet measured.
 
 ## Not in this release
 
