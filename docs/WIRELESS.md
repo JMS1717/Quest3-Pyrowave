@@ -1,0 +1,100 @@
+# Wi-Fi streaming
+
+October 7, 2026: the first measured PyroWave runs over Wi-Fi, on the `.63` build.
+
+## Setup
+
+- **Headset link:** Quest 3 on Wi-Fi 6E at 6 GHz (6295 MHz channel), 2401 Mbit/s PHY rate, RSSI -45 dBm.
+- **PC link:** 2.5 GbE Ethernet to the same router.
+- **Stream settings:**
+  - 207 Hz panel, 2080x2208 per eye encoded from a 3072x3216 render.
+  - Haar, 4:2:0, TCP, no foveation, mode 5 (packed YCbCr).
+- **GPU clock:** level 7 (690 MHz) set through `debug.oculus.gpuLevel`. The server's own GPU-clock
+  and panel helper works only over USB adb.
+- **Motion:** a 60°/s pan.
+- **Windows:**
+  - Bitrates switched live within one stream, in ABBA order.
+  - 4 s settle, then a 10 s measurement.
+- **Connection:**
+  - The server connected to the headset's network entry (manual IP), and the stream came from
+    that address.
+  - USB adb was offline during these runs. That also exercised the `.63` fallback from a wired
+    entry that isn't ready to the network.
+
+**Fresh FPS** is the client's `Q3PW_FRESH` taken count: distinct decoded frames shown. **Network**
+is ALVR's network-stage estimate (`network_s`). Neither is motion-to-photon.
+
+## Results
+
+### 700 vs 1000 Mbit/s
+
+The memory clock changed inside two of the four blocks:
+
+| Bitrate | Fresh FPS by block | Network p50 / p90 / p99 |
+|---|---|---|
+| 700 Mbit/s | 192.8\*, 193.0 | 5.1 / 6.5 / 9-14 ms |
+| 1000 Mbit/s | 189.0, 195.1\* | 6.1 / 7.6 / 10-27 ms |
+
+\* The memory clock changed during the block.
+
+### 1000 vs 1250 Mbit/s
+
+All four blocks were valid, at a 2736 MHz memory clock:
+
+| Bitrate | Fresh FPS by block | Network p50 / p90 / p99 |
+|---|---|---|
+| 1000 Mbit/s | 192.5, 194.9 | 6.1 / 7.6 / 10-13 ms |
+| 1250 Mbit/s | 190.1, 192.5 | 7.0-7.2 / 9.7 / 21-49 ms |
+
+### 1000 vs 1500 Mbit/s
+
+| Bitrate | Result |
+|---|---|
+| 1000 Mbit/s | Same as above: about 6 ms network p50. |
+| 1500 Mbit/s | **Unusable.** The first block's network p90 was 19.7 ms and p99 115 ms. In the second block a queue had built up and frames arrived **about 380 ms late**, while the headset still showed about 193 distinct, stale frames per second. Back at 1000 Mbit/s it recovered at once. |
+
+### Constant 1000 Mbit/s vs Auto
+
+Auto here used a 1500 Mbit/s maximum and the 8 ms network-latency limit.
+
+| Mode | Settled bitrate | Fresh FPS by block | Network p50 / p99 | ALVR total estimate |
+|---|---|---|---|---|
+| Constant 1000 | 1000 Mbit/s | 193.0\*, 187.6 | 6.0 / 10-40 ms | 30-33 ms |
+| Auto | 540-555 Mbit/s | 200.3, 197.3\* | 4.4 / 8-13 ms | 28 ms |
+
+\* The memory clock changed during the block.
+
+The Auto blocks ran partly at a lower memory clock (2092 against 2736 MHz), so their extra fresh
+frames are not a clean comparison.
+
+## What this means
+
+- **Fresh frames:** Wi-Fi 6E at 6 GHz carries 207 Hz at full resolution with about the same fresh
+  FPS as USB (189-195 against 194-197).
+- **The cost is latency:** at 1000 Mbit/s ALVR's network stage is about 6.1 ms. Over USB it is
+  about 2.7 ms with two wired video connections, or 3.0 ms with one.
+- **The link's limit:** the usable ceiling on this link is between 1250 and 1500 Mbit/s. A PHY rate
+  of 2401 Mbit/s does not mean 2400 Mbit/s of video.
+- **No back-pressure above the limit:** a constant bitrate above what the link delivers is not
+  throttled. TCP queues the excess and latency grows without limit.
+- **Auto is the safe choice, but conservative:**
+  - With the `.63` fix the quality floor no longer overrides Auto's network-latency limit.
+  - On this link Auto settled at about 550 Mbit/s, about half of what the link carries cleanly.
+  - ALVR's estimator divides one frame's bytes by its network time, so it stays conservative.
+
+**Recommendation for Wi-Fi:**
+
+- Constant **1000 Mbit/s** for quality, **1250 at most**.
+- Auto (with a maximum and the latency limit) when latency matters more than bitrate.
+- Keep the PC on Ethernet and the headset on a nearby 6 GHz access point.
+
+## Not yet established
+
+These results don't cover:
+
+- other routers, 5 GHz links or a busy network
+- sustained play
+- optical latency
+- tuning Auto's saturation multiplier towards the link's real capacity
+- whether parallel connections would shorten Wi-Fi network time, as they do over USB (they are
+  used only for wired clients)

@@ -22,6 +22,47 @@ supported by evidence. Preserve correctness, rollback and honest measurements;
 the previous agent's process is not mandatory. A handoff does not automatically
 resume paused hardware work or unattended workers.
 
+## October 7 evening: `.63`, Wi-Fi, alpha.9
+
+Branch `claude/wifi-adb-fixes`, released as alpha.9. USB adb was offline all evening. Every hardware
+run used adb over Wi-Fi (the private harness takes `Q3PW_ADB_SERIAL`) and streamed over Wi-Fi.
+
+**Fixes in `.63`:**
+
+- **Wired mode device choice.** Wired mode now uses only an online adb device with a USB serial.
+  Before, it took the first non-loopback device: possibly the headset's own Wi-Fi adb address, or an
+  offline USB entry. The handshake loop now falls through to manual IPs and discovery when wired
+  isn't ready. Before, the wired entry blocked network connections entirely.
+- **Auto bitrate.** The quality floor raises Auto's estimate but no longer overrides the
+  network-latency and maximum limits.
+- **Parallel wired video.** A frame whose timestamp repeats the previous one is skipped, so two
+  frames can no longer mix slices.
+- **Packed YCbCr fallback.**
+  - Packed frames go to the staging path when the eye copy's packed programs fail to build.
+  - The staging renderer no longer panics when its packed program fails.
+
+**Wi-Fi results** ([WIRELESS.md](WIRELESS.md)), Wi-Fi 6E at 6 GHz, PC on 2.5 GbE, 207 Hz, 2080x2208,
+Haar:
+
+- **1000 Mbit/s:** 189-195 fresh FPS, about the same as USB. ALVR's network stage is about 6.1 ms
+  p50, against about 2.7 ms over USB.
+- **1250 Mbit/s:** works, with worse network tails (p99 21-49 ms).
+- **1500 Mbit/s:** a TCP queue grows to about 380 ms.
+- **Auto:** with an 8 ms latency limit it settles at about 550 Mbit/s.
+
+**Not hardware-tested on `.63`:**
+
+- the USB wired path; USB adb was offline, so only unit tests cover the device choice
+- the duplicate-timestamp skip
+- the packed-fallback paths, since no driver failure was available to trigger them
+
+Next:
+
+- Recheck USB streaming and the unplug/replug test once the cable is reconnected.
+- Tune Auto towards the link's real capacity on Wi-Fi.
+- Try parallel connections over Wi-Fi.
+- Continue P2A (selection), P3 (quality) and P4 (optical latency) from the afternoon list.
+
 ## October 7 afternoon: 207 Hz trace and scorecard
 
 Branch `claude/frame-trace` (on top of `claude/wired-parallel-video`, PR #15). Owner target:
