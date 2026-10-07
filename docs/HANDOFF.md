@@ -18,6 +18,8 @@ State:
 
 - **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.65` (`.64` plus the opt-in
   Wi-Fi UDP transport), not released.
+- **On `claude/frame-budget`:** `.68`, with server-predicted head poses and UDP as the Wi-Fi
+  default ([below](#october-7-late-night-66-68-on-claudeframe-budget)).
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
   194-197 fresh FPS over USB with the direct eye copy, 189-195 over Wi-Fi 6E.
 - **Not established:** sustained gameplay, optical motion-to-photon latency, image quality on par
@@ -48,6 +50,53 @@ The owner permits improving the workflow, test duration and architecture when
 supported by evidence. Preserve correctness, rollback and honest measurements;
 the previous agent's process is not mandatory. A handoff does not automatically
 resume paused hardware work or unattended workers.
+
+## October 7, late night: `.66`-`.68` on `claude/frame-budget`
+
+Builds from branch `claude/frame-budget`, local only:
+
+| Build | Commit | Change |
+| --- | --- | --- |
+| `.66` | `c9c38c5` | Frame budget from the present rate, on by default |
+| `.67` | `cec2857` | `[Q3PW_PRESENT]` counts the compositor presents the driver receives; the scene gains a frame-time cap |
+| `.68` | `864ef69` | Server-predicted head poses; UDP becomes the Wi-Fi default |
+
+**Frame budget:** neutral in tests. SteamVR presents at the panel rate even when the game is
+slower, because it reprojects into a new present every vsync. Giving a slower game the full
+bitrate needs the game's own rate. See
+[BITRATE.md](BITRATE.md#frame-budget-from-the-present-rate-66-67-october-7).
+
+**Wi-Fi tracking:**
+
+- On `.67`, UDP beat TCP for ALVR's stream socket: 2.85% against 4.2% repeated poses at 120 Hz
+  and 1250 Mbps.
+- CS7 didn't help, so EF stays.
+- On `.68`, the PC extrapolates the head pose when no sample arrives before a vsync, and the
+  headset repeats the same extrapolation to reproject. ABBA gave 0.45% repeated poses with it and
+  2.25% without.
+- Wired was unchanged: about 187 fresh FPS at 207 Hz, on or off.
+- The under-2% checkpoint is met in the harness. The owner's worn test for head-movement stutter
+  is still needed.
+- See [TRANSPORT.md](TRANSPORT.md#late-tracking-on-wi-fi-67-68).
+
+**Defaults in `.68`:**
+
+- The stream socket and PyroWave transport are UDP; USB always uses TCP.
+- `headset.extrapolate_late_head_poses` is on; changing it needs a SteamVR restart.
+
+**Harness notes:**
+
+- Session snapshots read every key the plan sets. A new setting therefore has to be added to
+  both runtimes' `session.json` before a cell can set it.
+- The Wi-Fi setup replaces the runtime's client entry with `q3pw-wifi.client`. Restore the wired
+  entry before a USB cell, or the "wired" cell streams over Wi-Fi.
+
+**Next:**
+
+1. Owner test of `.68` over Wi-Fi with head movement.
+2. Supersampled stream at 120 Hz (PLAN 2.3).
+3. Four wired connections at 2000 Mbps (PLAN 1.4).
+4. The game's own frame rate for the budget (PLAN 2.1).
 
 ## October 7, night: `.65`, transport measured and Wi-Fi UDP video
 

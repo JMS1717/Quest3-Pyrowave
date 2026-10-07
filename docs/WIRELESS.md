@@ -118,8 +118,10 @@ below the 190-192 measured on `.63`.
 
 **Recommendation for Wi-Fi:**
 
-- Transport **UDP** (opt-in in `.65`): never worse than TCP here, and above the link's limit it
-  skips frames instead of queueing them.
+- Transport **UDP** (opt-in in `.65`, the default from `.68`): never worse than TCP here, and above
+  the link's limit it skips frames instead of queueing them.
+- From `.68` the PC predicts head poses when tracking arrives late. At 120 Hz and 1250 Mbit/s this
+  cut repeated poses from 2.25% to 0.45% ([TRANSPORT.md](TRANSPORT.md#late-tracking-on-wi-fi-67-68)).
 - Constant **1000 Mbit/s** for quality, **1250 at most**.
 - Auto (with a maximum and the latency limit) when latency matters more than bitrate.
 - Keep the PC on Ethernet and the headset on a nearby 6 GHz access point.

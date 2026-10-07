@@ -90,6 +90,9 @@ At 207 Hz and 1000 Mbit/s the total was 35.3 ms: encoder 4.8 ms and vsync queue 
 - Verify on the air by A/B: tracking gap p99, repeated-pose rate and fresh FPS at 1000 and 1250
   Mbit/s.
 - The Windows side doesn't matter for the uplink.
+- **Done (`.67`):** CS7 reached the air but didn't help (3.8–4.8% repeated, against 2.8–2.9% with
+  EF). UDP for the stream socket beat TCP (2.85% against 4.2%). EF and UDP stay
+  ([TRANSPORT.md](TRANSPORT.md#late-tracking-on-wi-fi-67-68)).
 
 **1.2 Server-predicted poses (if 1.1 isn't enough).**
 
@@ -97,9 +100,16 @@ At 207 Hz and 1000 Mbit/s the total was 35.3 ms: encoder 4.8 ms and vsync queue 
   time from the latest sample and its velocity, rather than reusing the last pose.
 - The frame carries that pose, so the client reprojects with what the frame was rendered from.
 - This is a protocol change.
+- **Done (`.68`, on by default):** 120 Hz and 1250 Mbit/s over Wi-Fi, ABBA, gave 0.45% repeated
+  poses with it and 2.25% without. Wired was unchanged. Still needed: the owner's worn test for
+  head-movement stutter, and sustained play.
 
 **1.3 Make UDP the Wi-Fi default** once 1.1/1.2 remove the stutter. Then delete the old
 PyroWave UDP path (`pyrowave_udp.rs`, the C++ `VideoSendUdp`).
+
+- **Default done (`.68`):** the stream socket and PyroWave transport default to UDP. USB stays TCP.
+- The connection already forces the encoder's `pyrowave_udp` off; the server slices UDP in Rust.
+  So the C++ `VideoSendUdp` path is dead code and can go.
 
 **1.4 Wired headroom for 2000 Mbit/s.**
 
@@ -138,6 +148,12 @@ whether audio on the stream socket stalls behind video.
   can burst.
 - A game below the panel rate then gets the whole bitrate.
 - This is small and fixes the 207 Hz complaint directly.
+- **`.66`/`.67`:** the budget follows the present rate and is on by default. It was neutral in
+  tests: SteamVR presents at the panel rate even when the game is slower, because it reprojects
+  into a new present every vsync
+  ([BITRATE.md](BITRATE.md#frame-budget-from-the-present-rate-66-67-october-7)).
+- **Next:** take the game's own rate from the compositor's frame timing, or stream at the game
+  rate and let the headset reproject.
 
 **2.2 A clarity budget: where is sharpness lost?**
 
@@ -302,8 +318,9 @@ developer tool.
 ## Night order (no fixed window; stop in time to restore)
 
 1. **No headset:** 2.2 clarity budget and the 2.4 entropy estimate on captured frames.
-2. **Wi-Fi:** 1.1 tracking priority, A/B over Wi-Fi.
-3. **Build:** 2.1 frame budget, checked live at 207 Hz with a game below 207.
+2. **Wi-Fi:** 1.1 tracking priority, A/B over Wi-Fi. *Done: 1.1 and 1.2 in `.67`/`.68`.*
+3. **Build:** 2.1 frame budget, checked live at 207 Hz with a game below 207. *Done in
+   `.66`/`.67`: neutral; it needs the game's own rate.*
 4. **USB:** 2.3 supersampled stream and 1.4 four connections at 2000 Mbit/s.
 5. **Hand-off:** write up results, one PR, and set up the play runtime for the owner's next test.
 

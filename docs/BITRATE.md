@@ -299,3 +299,39 @@ not motion-to-photon.
   fresh FPS and 2.71 ms network against 177.4 and 3.04 ms with the setting at 0 (1000 Mbit/s).
 - Not yet measured: unplugging the cable mid-stream; 3 or 4 connections; Haar, whose decode does not grow with bitrate and so may
   turn the shorter arrival into frames; sustained play.
+
+### Frame budget from the present rate (`.66`, `.67`), October 7
+
+Before `.66`, constant bitrate was divided by the refresh rate. A game presenting 150–180 fps on
+a 207 Hz panel therefore got `bitrate / 207` per frame and used only 77–87% of the bitrate.
+
+`.66` turns **Adapt to framerate** on by default. It follows an exponential average of the
+present interval:
+
+- rising rates apply at once
+- falling rates apply at the 1 s update
+- the result is bounded
+
+Wired, CDF 5/3, 207 Hz, 1000 Mbps, fresh FPS, ABBA (adapt off is A, on is B):
+
+| Scene | A | B | B | A |
+| --- | --- | --- | --- | --- |
+| Harness scene | 188.3 | 190.2 | 191.6 | 193.0 |
+| Scene held to a 6 ms frame | 192.6 | 189.5 | 191.7 | 192.7 |
+| Scene held to a 6 ms frame (repeat) | 193.9 | 188.3 | 189.4 | 190.5 |
+
+Adapt made no difference, because the present rate never dropped. `.67` counts what the driver
+receives (`[Q3PW_PRESENT]`, one line per second):
+
+- With the scene held to 6 ms or made GPU-bound by overdraw, SteamVR still presented 192–208
+  frames per second.
+- Each present had new compositor textures, and at most 2 per second repeated a pose.
+- SteamVR's compositor reprojects the game's last frame into a new present at every vsync, so
+  the driver's present rate is the panel rate, not the game's.
+
+So the frame budget only helps when SteamVR itself presents below refresh. Giving a slower game
+the full bitrate needs the game's own frame rate. One way is the compositor's frame timing
+(reprojection flags). Another is to stream at the game rate and let the headset reproject.
+This is in [PLAN.md](PLAN.md) 2.1.
+
+Adapt stays on: it is neutral here and right when presents do drop.
