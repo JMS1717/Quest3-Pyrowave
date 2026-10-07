@@ -8931,10 +8931,10 @@ index 7bfba12ca0479598b4060b84664695a82c96411d..7236535dfbd7196f77a29c1e5f9dbc27
  #endif
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..a54e69acd9b130d59918da2058ea3b719107c4ef
+index 0000000000000000000000000000000000000000..cf6cf522e20ae4be80c7b7078410cca3bd0cd6f9
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,694 @@
+@@ -0,0 +1,700 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -9454,6 +9454,12 @@ index 0000000000000000000000000000000000000000..a54e69acd9b130d59918da2058ea3b71
 +    /// The caller has acquired/waited both indices and retains the PyroWave
 +    /// source lease until poll_copy completes. These textures are borrowed;
 +    /// this object owns ONLY its FBOs/program/external texture/VAO.
++    /// False for a packed-YCbCr buffer when the packed programs failed to build: drawing it with
++    /// the RGBA program would show wrong colours, so the staging path converts it instead.
++    pub fn renders(&self, buffer: *const c_void) -> bool {
++        self.present.is_some() || !present_ycbcr_layout(buffer, self.decoded)
++    }
++
 +    pub unsafe fn render(&self, buffer: *mut c_void, indices: [u32; 2]) {
 +        if self.pending.borrow().is_some() { self.drain_copy(); }
 +        if self.release_fd.borrow().is_some() { self.reject_release_fence(); }
@@ -10825,7 +10831,7 @@ index 0000000000000000000000000000000000000000..48250e406a41c41a26bd7b7cbace664e
 +    }
 +}
 diff --git a/alvr/graphics/src/staging.rs b/alvr/graphics/src/staging.rs
-index febd2c3c380f456eb1e695b1748566e8b05c6c4f..798099bca21d6e3d93c58c323f88380f1cae4030 100644
+index febd2c3c380f456eb1e695b1748566e8b05c6c4f..dffc85d893b25ed47b15834d4c5ffe524d360829 100644
 --- a/alvr/graphics/src/staging.rs
 +++ b/alvr/graphics/src/staging.rs
 @@ -1,4 +1,4 @@
@@ -10834,49 +10840,130 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..798099bca21d6e3d93c58c323f88380f
  use crate::GL_TEXTURE_EXTERNAL_OES;
  use alvr_common::glam::{IVec2, UVec2};
  use glow::{self as gl, HasContext};
-@@ -52,6 +52,9 @@ pub struct StagingRenderer {
+@@ -9,42 +9,49 @@ fn create_program(
+     vertex_shader_source: &str,
+     fragment_shader_source: &str,
+ ) -> gl::Program {
++    try_create_program(gl, vertex_shader_source, fragment_shader_source)
++        .unwrap_or_else(|error| panic!("{error}"))
++}
++
++fn try_create_program(
++    gl: &gl::Context,
++    vertex_shader_source: &str,
++    fragment_shader_source: &str,
++) -> Result<gl::Program, String> {
+     unsafe {
+         let vertex_shader = ck!(gl.create_shader(gl::VERTEX_SHADER).unwrap());
+         ck!(gl.shader_source(vertex_shader, vertex_shader_source));
+         ck!(gl.compile_shader(vertex_shader));
+         if !gl.get_shader_compile_status(vertex_shader) {
+-            panic!(
+-                "Failed to compile vertex shader: {}",
+-                gl.get_shader_info_log(vertex_shader)
+-            );
++            let log = gl.get_shader_info_log(vertex_shader);
++            gl.delete_shader(vertex_shader);
++            return Err(format!("Failed to compile vertex shader: {log}"));
+         }
+ 
+         let fragment_shader = ck!(gl.create_shader(gl::FRAGMENT_SHADER).unwrap());
+         ck!(gl.shader_source(fragment_shader, fragment_shader_source));
+         ck!(gl.compile_shader(fragment_shader));
+         if !gl.get_shader_compile_status(fragment_shader) {
+-            panic!(
+-                "Failed to compile fragment shader: {}",
+-                gl.get_shader_info_log(fragment_shader)
+-            );
++            let log = gl.get_shader_info_log(fragment_shader);
++            gl.delete_shader(vertex_shader);
++            gl.delete_shader(fragment_shader);
++            return Err(format!("Failed to compile fragment shader: {log}"));
+         }
+ 
+         let program = ck!(gl.create_program().unwrap());
+         ck!(gl.attach_shader(program, vertex_shader));
+         ck!(gl.attach_shader(program, fragment_shader));
+         ck!(gl.link_program(program));
+-        if !gl.get_program_link_status(program) {
+-            panic!(
+-                "Failed to link program: {}",
+-                gl.get_program_info_log(program)
+-            );
+-        }
+-
++        let linked = gl.get_program_link_status(program);
+         ck!(gl.delete_shader(vertex_shader));
+         ck!(gl.delete_shader(fragment_shader));
++        if !linked {
++            let log = gl.get_program_info_log(program);
++            gl.delete_program(program);
++            return Err(format!("Failed to link program: {log}"));
++        }
+ 
+-        program
++        Ok(program)
+     }
+ }
+ 
+@@ -52,6 +59,9 @@ pub struct StagingRenderer {
      context: Rc<GraphicsContext>,
      program: gl::Program,
      view_idx_uloc: gl::UniformLocation,
-+    // PyroWave Haar mode 5 buffers (packed YCbCr): program and its view_idx.
-+    present_program: gl::Program,
-+    present_view_idx_uloc: gl::UniformLocation,
++    // PyroWave mode 5/6 buffers (packed YCbCr): program and its view_idx. None when the driver
++    // cannot build it; the stream must not stop for a program only packed frames need.
++    present: Option<(gl::Program, gl::UniformLocation)>,
      surface_texture: gl::Texture,
      framebuffers: [gl::Framebuffer; 2],
      viewport_size: IVec2,
-@@ -81,6 +84,11 @@ impl StagingRenderer {
+@@ -81,6 +91,18 @@ impl StagingRenderer {
              include_str!("../resources/staging_vertex.glsl"),
              frag_str.as_str(),
          );
-+        let present_program = create_program(
++        let present_program = try_create_program(
 +            gl,
 +            include_str!("../resources/staging_vertex.glsl"),
 +            &present_ycbcr_source(&frag_str, true),
-+        );
++        )
++        .map_err(|error| {
++            alvr_common::error!(
++                "[Q3PW_PRESENT_YCBCR] staging program failed: {error}; packed frames cannot be \
++                 converted (set debug.q3pw.haar32=4, or debug.q3pw.cdf53v2=4 with CDF 5/3)"
++            )
++        })
++        .ok();
  
          unsafe {
              // This is an external surface and storage should not be initialized
-@@ -104,12 +112,19 @@ impl StagingRenderer {
+@@ -104,12 +126,27 @@ impl StagingRenderer {
              ck!(gl.bind_framebuffer(gl::FRAMEBUFFER, None));
  
              let view_idx_uloc = ck!(gl.get_uniform_location(program, "view_idx")).unwrap();
-+            let present_view_idx_uloc = ck!(gl.get_uniform_location(present_program, "view_idx")).unwrap();
-+            ck!(gl.use_program(Some(present_program)));
-+            let frame_size_uloc = ck!(gl.get_uniform_location(present_program, "q3pw_frame_size")).unwrap();
-+            ck!(gl.uniform_2_f32(Some(&frame_size_uloc), 2.0 * view_resolution.x as f32, view_resolution.y as f32));
-+            ck!(gl.use_program(None));
++            let present = present_program.map(|present_program| {
++                let view_idx_uloc =
++                    ck!(gl.get_uniform_location(present_program, "view_idx")).unwrap();
++                ck!(gl.use_program(Some(present_program)));
++                let frame_size_uloc =
++                    ck!(gl.get_uniform_location(present_program, "q3pw_frame_size")).unwrap();
++                ck!(gl.uniform_2_f32(
++                    Some(&frame_size_uloc),
++                    2.0 * view_resolution.x as f32,
++                    view_resolution.y as f32
++                ));
++                ck!(gl.use_program(None));
++                (present_program, view_idx_uloc)
++            });
  
              Self {
                  context,
                  program,
                  surface_texture,
                  view_idx_uloc,
-+                present_program,
-+                present_view_idx_uloc,
++                present,
                  framebuffers: framebuffers.try_into().unwrap(),
                  viewport_size: view_resolution.as_ivec2(),
              }
-@@ -117,15 +132,21 @@ impl StagingRenderer {
+@@ -117,15 +154,24 @@ impl StagingRenderer {
      }
  
      #[allow(unused_variables)]
@@ -10884,11 +10971,14 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..798099bca21d6e3d93c58c323f88380f
 +    pub unsafe fn render(&self, hardware_buffer: *mut c_void, wait_for_copy: bool) {
          let gl = &self.context.gl_context;
          self.context.make_current();
-+        let present = present_ycbcr_layout(hardware_buffer, self.viewport_size.as_uvec2());
-+        let (program, view_idx_uloc) = if present {
-+            (self.present_program, &self.present_view_idx_uloc)
-+        } else {
-+            (self.program, &self.view_idx_uloc)
++        let packed = present_ycbcr_layout(hardware_buffer, self.viewport_size.as_uvec2());
++        // Without the packed program a packed frame is drawn as RGBA: wrong colours, logged
++        // once at setup, but the stream keeps running.
++        let (program, view_idx_uloc) = match &self.present {
++            Some((present_program, present_view_idx_uloc)) if packed => {
++                (*present_program, present_view_idx_uloc)
++            }
++            _ => (self.program, &self.view_idx_uloc),
 +        };
  
          self.context.render_ahardwarebuffer_using_texture(
@@ -10900,7 +10990,7 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..798099bca21d6e3d93c58c323f88380f
  
                  ck!(gl.viewport(0, 0, self.viewport_size.x, self.viewport_size.y));
                  ck!(gl.disable(gl::SCISSOR_TEST));
-@@ -137,9 +158,14 @@ impl StagingRenderer {
+@@ -137,9 +183,14 @@ impl StagingRenderer {
                      ck!(gl.active_texture(gl::TEXTURE0));
                      ck!(gl.bind_texture(GL_TEXTURE_EXTERNAL_OES, Some(self.surface_texture)));
                      ck!(gl.bind_sampler(0, None));
@@ -10916,16 +11006,18 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..798099bca21d6e3d93c58c323f88380f
              },
          );
      }
-@@ -152,6 +178,7 @@ impl Drop for StagingRenderer {
+@@ -152,6 +203,9 @@ impl Drop for StagingRenderer {
  
          unsafe {
              ck!(gl.delete_program(self.program));
-+            ck!(gl.delete_program(self.present_program));
++            if let Some((present_program, _)) = &self.present {
++                ck!(gl.delete_program(*present_program));
++            }
              ck!(gl.delete_texture(self.surface_texture));
              for framebuffer in &self.framebuffers {
                  ck!(gl.delete_framebuffer(*framebuffer));
 diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
-index 737b7d0053f8a34698696f465c816627e95d9287..6dd30146b4953ef58938730b76b754f4c1a4d613 100644
+index 737b7d0053f8a34698696f465c816627e95d9287..048ba0d9b48ec4293bb81d663e91bf9bc237beb7 100644
 --- a/alvr/graphics/src/stream.rs
 +++ b/alvr/graphics/src/stream.rs
 @@ -1,10 +1,10 @@
@@ -11085,7 +11177,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..6dd30146b4953ef58938730b76b754f4
 +        if self.direct_eye_enabled && !source.is_null() && passthrough.is_none()
 +            && view_params.iter().all(|view| view.reprojection_rotation == Quat::IDENTITY)
 +        {
-+            if let Some(renderer) = &self.direct_eye_renderer {
++            if let Some(renderer) = self.direct_eye_renderer.as_ref().filter(|r| r.renders(source)) {
 +                renderer.render(source, [view_params[0].swapchain_index, view_params[1].swapchain_index]);
 +                self.last_copy_direct.set(true);
 +                return;
@@ -11579,7 +11671,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..4c5bfdceccfaef7209b4698c67488967
  
          Some((
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da39833633bc7fbac803ebe345c7832fbdb..4d2d816d5343e6bdfe26f45a3f711dd0820d7d28 100644
+index fc176da39833633bc7fbac803ebe345c7832fbdb..5d5465f955f35afa624c2822532566bec52f11c1 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -43,6 +43,9 @@ use std::{
@@ -12085,11 +12177,27 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4d2d816d5343e6bdfe26f45a3f711dd0
      let game_audio_sender: alvr_sockets::StreamSender<()> = stream_socket.request_stream(AUDIO);
      let mut microphone_receiver: alvr_sockets::StreamReceiver<()> =
          stream_socket.subscribe_to_stream(AUDIO, MAX_UNREAD_PACKETS);
-@@ -911,6 +1158,15 @@ fn connection_pipeline(
+@@ -903,6 +1150,7 @@ fn connection_pipeline(
+     let video_send_thread = thread::spawn({
+         let client_hostname = client_hostname.clone();
+         move || {
++            let mut last_wired_timestamp = None;
+             while is_streaming(&client_hostname) {
+                 let VideoPacket { header, payload } =
+                     match video_channel_receiver.recv_timeout(STREAMING_RECV_TIMEOUT) {
+@@ -911,6 +1159,23 @@ fn connection_pipeline(
                          Err(RecvTimeoutError::Disconnected) => return,
                      };
  
 +                if let Some(sender) = &wired_video {
++                    // The client assembles parallel slices by timestamp. When a game stutters,
++                    // SteamVR can hand over two frames with the same pose timestamp; their slices
++                    // would then mix into one broken frame. The repeat shows the same pose, so
++                    // skip it.
++                    if last_wired_timestamp == Some(header.timestamp) {
++                        continue;
++                    }
++                    last_wired_timestamp = Some(header.timestamp);
 +                    if sender.send(VideoPacket { header, payload }) {
 +                        continue;
 +                    }
@@ -12101,7 +12209,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4d2d816d5343e6bdfe26f45a3f711dd0
                  let mut buffer = video_sender.get_buffer(&header).unwrap();
                  // todo: make encoder write to socket buffers directly to avoid copy
                  buffer
-@@ -1081,18 +1337,40 @@ fn connection_pipeline(
+@@ -1081,18 +1346,40 @@ fn connection_pipeline(
          let ctx = Arc::clone(&ctx);
          let client_hostname = client_hostname.clone();
          move || {
@@ -12145,7 +12253,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4d2d816d5343e6bdfe26f45a3f711dd0
                      let decoder_latency = client_stats.video_decode;
                      let (network_latency, game_latency) = stats.report_statistics(client_stats);
  
-@@ -1102,7 +1380,10 @@ fn connection_pipeline(
+@@ -1102,7 +1389,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -12157,7 +12265,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4d2d816d5343e6bdfe26f45a3f711dd0
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1396,7 @@ fn connection_pipeline(
+@@ -1115,6 +1405,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -12165,7 +12273,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4d2d816d5343e6bdfe26f45a3f711dd0
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1413,14 @@ fn connection_pipeline(
+@@ -1131,6 +1422,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -12180,7 +12288,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4d2d816d5343e6bdfe26f45a3f711dd0
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1184,9 +1474,35 @@ fn connection_pipeline(
+@@ -1184,9 +1483,35 @@ fn connection_pipeline(
          let disconnect_notif = Arc::clone(&disconnect_notif);
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
@@ -12216,7 +12324,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4d2d816d5343e6bdfe26f45a3f711dd0
                  let packet = match control_receiver.recv(STREAMING_RECV_TIMEOUT) {
                      Ok(packet) => packet,
                      Err(ConnectionError::TryAgain(_)) => {
-@@ -1299,6 +1615,9 @@ fn connection_pipeline(
+@@ -1299,6 +1624,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -12226,7 +12334,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4d2d816d5343e6bdfe26f45a3f711dd0
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1378,6 +1697,22 @@ fn connection_pipeline(
+@@ -1378,6 +1706,22 @@ fn connection_pipeline(
                              };
  
                          match reserved {
@@ -12249,7 +12357,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4d2d816d5343e6bdfe26f45a3f711dd0
                              ReservedClientControlPacket::CustomInteractionProfile {
                                  input_ids,
                                  ..
-@@ -1552,9 +1887,10 @@ mod beta_tests {
+@@ -1552,9 +1896,10 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -12262,7 +12370,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4d2d816d5343e6bdfe26f45a3f711dd0
      }
  
      #[test]
-@@ -1569,4 +1905,22 @@ mod beta_tests {
+@@ -1569,4 +1914,22 @@ mod beta_tests {
          assert!(!config.pyrowave_udp);
          assert!(config.pyrowave_wavelet_53);
      }
