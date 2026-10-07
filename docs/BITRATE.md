@@ -119,3 +119,35 @@ single final1000 compositor image retained correct eye mapping/orientation;
 lower-bitrate and in-headset quality acceptance were not tested. ALVR total/network
 latency estimates with a stationary headset are not optical motion-to-photon.
 [Sanitized metrics, exact byte budgets and package provenance](../results/PAYLOAD-NATIVE120-2026-10-05.json).
+
+## Owner settings at 207 Hz: where bitrate stops paying, October 7
+
+Live, Quest 3 over USB (ADB forward), 3072x3216 render into 2080x2208 per eye, 207 Hz, Haar 4:2:0
+with mode 5 decode, quality scene panning at 60 deg/s. Cells ran 1000, 2000, 1500, 2000 and
+1000 Mbps, two 12 s blocks each.
+
+| Mbit/s | frame cap | fresh FPS (blocks) | lost/s | GPU decode p50 | network p50 / p95 (ALVR) | ALVR latency estimate p50 |
+|---|---|---|---|---|---|---|
+| 1000 | 604 KB | 196.3, 197.8, 198.0, 193.6 | 9-14 | 2.78 ms | 3.2 / 4.7 ms | 32.1 ms |
+| 1500 | 906 KB | 193.8, 190.6 | 15-25 | 2.82 ms | 4.6 / 7.9 ms | 35.7 ms |
+| 2000 | 1208 KB | 170.1, 168.6, 167.4, 169.8 | 40-44 | 3.00 ms | 7.0 / 12.2 ms | 39.9 ms |
+
+Decode barely changes with bitrate. The loss at 2000 Mbps is the link: a frame takes longer to
+arrive than the 4.83 ms frame period. Offline, Haar at 2000 Mbit/s scores +4.9 dB PSNR-HVS-M over
+1000 ([DECODER-V2.md](DECODER-V2.md)), so the transport now limits image quality at this rate.
+
+The USB link itself carries 3.5-3.65 Gbit/s of continuous data through `adb forward`, but frames
+arrive in bursts. A device-side receiver that acknowledges each burst, paced at 207 Hz with 65 KB
+writes like ALVR's shards, measured send-to-acknowledge (p50 / p95):
+
+| burst | 1 connection | 2 connections | 4 connections |
+|---|---|---|---|
+| 604 KB (1000 Mbps) | 2.81 / 4.22 ms | 2.34 / 3.68 ms | 2.53 / 3.70 ms |
+| 1208 KB (2000 Mbps) | 4.74 / 6.16 ms | 4.00 / 5.54 ms | 4.36 / 5.98 ms |
+
+So bursts move at about 1.7-2.4 Gbit/s, half the continuous rate. Splitting a frame over two
+forwarded connections saves about 0.5 ms; more do not help. For now 1000-1500 Mbps is the
+useful range at 207 Hz. Above it, the options are a transport that bypasses ADB (a USB network
+function such as NCM, not yet tried because switching USB functions can drop ADB until someone
+replugs the headset) or fewer bytes per frame for the same quality (a better wavelet).
+
