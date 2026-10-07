@@ -1,7 +1,30 @@
 # Engineering handoff: Quest3-Pyrowave
 
-Prepared October 4, 2026. Read [AGENTS.md](../AGENTS.md) first. Machine-specific
-state, raw captures, signing material and rollback snapshots stay outside this repo.
+Prepared October 4, 2026, with dated updates through October 7. Read [AGENTS.md](../AGENTS.md)
+first. Machine-specific state, raw captures, signing material and rollback snapshots stay outside
+this repo.
+
+## Current goal and state (October 7)
+
+The goal is the one in [AGENTS.md](../AGENTS.md#goal). Where it differs from the October 4
+objective below, AGENTS.md wins:
+
+- a 3072x3216 per-eye PC render, streamed at 2080x2208 per eye at 207 Hz
+- about 200-207 fresh displayed frames per second, at 1000-1500 Mbit/s
+- under 30 ms optical motion-to-photon (the October 4 text says 15-20 ms)
+- no visible foveation; 4:2:0 is fine
+
+State:
+
+- **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.64`, not released.
+- **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
+  194-197 fresh FPS over USB with the direct eye copy, 189-195 over Wi-Fi 6E.
+- **Not established:** sustained gameplay, optical motion-to-photon latency, image quality on par
+  with Virtual Desktop.
+
+The per-claim summary is the [scorecard](WHOLE-STACK-SCORECARD.md). The current next steps are
+[after the `.64` section](#next-steps-after-64). The dated sections below are a record and stay as
+written.
 
 ## Objective and acceptance
 
@@ -50,6 +73,26 @@ resume paused hardware work or unattended workers.
   - Rust tests: client_core 73 (3 new wired-video tests), server_core 13, packets 7, adb 17,
     session 39. Python: 183.
 - **Not checked:** USB parallel wired video, the path the numbering changes. USB adb was offline.
+
+## Next steps after `.64`
+
+Collected from the `.64`, `.63` and October 7 afternoon notes below:
+
+1. **USB on `.64`.** Once USB adb is back, recheck parallel wired video over USB, the path the
+   slice numbering changes. Then run the unplug/replug test with two wired connections. Simulate an
+   unplug by restarting the PC's adb server, not with `adb reconnect`, which once left adb offline
+   until a physical replug.
+2. **Auto on Wi-Fi.** Tune Auto towards the link's real capacity. On the tested link it settled
+   at about 550 Mbit/s, about half of what the link carried cleanly.
+3. **Parallel connections over Wi-Fi.** They are used only for wired clients today. Check whether
+   they shorten Wi-Fi network time as they do over USB.
+4. **P2A, selection.** Find lower-latency selection than the 6 ms frame hold, for example a 2.8 ms
+   selection wait with release_fd.
+5. **P3, offline quality.** Compare CDF 5/3 and Haar at 1000, 1300 and 1500 Mbit/s.
+6. **P4, optical latency.** Measure with a camera at 240 fps or more and at least 50 pairs
+   ([OPTICAL-LATENCY.md](OPTICAL-LATENCY.md)).
+7. **Sustained gameplay** at the "207 Hz (measured)" profile, with thermals at the 690 MHz GPU clock.
+8. **Release from `.64`** after in-headset screenshots of that exact build look correct.
 
 ## October 7 evening: `.63`, Wi-Fi, alpha.9
 
@@ -219,12 +262,17 @@ and PR #8's fused kernel (correct, no speedup) are not adopted. Details and limi
 
 ## Current engineering state
 
+This section, "Read these first" and "Highest-value next experiment" describe the October 5 state
+at 120 Hz. They are kept as a record. For the current state see
+[Current goal and state](#current-goal-and-state-october-7) and the
+[scorecard](WHOLE-STACK-SCORECARD.md).
+
 PR #3 integrates diagnostics and safety work while keeping the experiments off.
 See the [integration review and excluded Haar candidate](PR-3-REVIEW.md).
 The owner's Codex hardware pause remains in effect; merging source does not
 resume unattended tests. Installed-build statements below are historical records,
-not fresh device readbacks. The [scorecard](WHOLE-STACK-SCORECARD.md) records the
-later `.50`/`.51` screens and the reported `.51` installation.
+not fresh device readbacks. The [scorecard's October 5 summary](WHOLE-STACK-SCORECARD.md#earlier-scorecard-october-5-120-hz)
+records the later `.50`/`.51` screens; the `.51` installation report is in its git history.
 
 **Chip-level levers (October 5, draft PR #7, not run on hardware):** [ADRENO-740.md](ADRENO-740.md)
 and [XR2-GEN2-SOC.md](XR2-GEN2-SOC.md) rank GPU, CPU, memory, DSP, USB and power levers. Built
@@ -295,7 +343,7 @@ colour is active. The hardware plan starts with the Quest `dequant_haar_gate` an
 lobby cadence.
 
 Use the [next overnight plan](NEXT-OVERNIGHT.md) and the
-[October 5 scorecard](WHOLE-STACK-SCORECARD.md). The server already submits
+[October 5 scorecard](WHOLE-STACK-SCORECARD.md#earlier-scorecard-october-5-120-hz). The server already submits
 about 120 frames/s. About 3 unique targets/s are still missed after the
 half-frame wait, and that wait is already at its cap. `.49` passed review with
 native libraries identical to `.48` and is not installed.
@@ -528,26 +576,28 @@ Useful reconstructed paths: `alvr/client_core/src/video_decoder/`,
 
 ## Efficient validation and publication
 
-Early performance screens can usually run 5–15 seconds after verified startup
-and source coverage. Promising results still need repeated sustained
+Short screens are 10-12 seconds after a 3-5 second settle, per AGENTS.md and
+[BENCHMARKING.md](BENCHMARKING.md). Promising results still need repeated sustained
 thermal/gameplay validation. Improve test design rather than rerunning everything.
 
 When nobody is playing VR, iterate with the [local fast build](LOCAL-BUILD.md)
-(`python tools/local/fast_build.py build`): 30 seconds to 2 minutes per edit for a stable-signed
+(`python tools/local/fast_build.py build`): about 1-3 minutes per edit for a stable-signed
 APK plus the Windows streamer, versus about 20 minutes per CI run. It refuses to start while
-SteamVR runs. Reviewed CI builds stay the evidence for releases and published measurements.
+SteamVR runs. Releases are local builds of a clean, committed and pushed tree, checked in the
+headset first; CI cross-checks every PR push.
 
 Use [CI](../.github/workflows/ci.yml) for heavy builds while the PC may be used:
 
 ```text
-python -m unittest discover -s tests -v
+python -m pytest -q tests
 gh workflow run ci.yml --ref main -f tests_only=true
 gh workflow run ci.yml --ref main
 gh workflow run native-probes.yml --ref main
 ```
 
-Choose checks appropriate to the change. The latest suite included 77 Python
-checks, three chart regressions, Rust/portable C++ ownership checks and software
+Choose checks appropriate to the change. At `.64` the suite had 183 Python tests,
+and the Rust unit tests of the touched crates passed (client_core 73, server_core 13,
+packets 7, adb 17, session 39). CI adds portable C++ ownership checks and software
 GLES mapping/readback. `tests_only` produces no installable pair; native-probes
 produces diagnostics, not a release. Native/protocol/shader edits need matching
 reviewed builds; check packaged library/shader hashes, version, certificate and
