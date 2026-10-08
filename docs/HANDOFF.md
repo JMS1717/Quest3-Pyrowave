@@ -18,8 +18,9 @@ State:
 
 - **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.65` (`.64` plus the opt-in
   Wi-Fi UDP transport), not released.
-- **On `claude/frame-budget`:** `.68`, with server-predicted head poses and UDP as the Wi-Fi
-  default ([below](#october-7-late-night-66-68-on-claudeframe-budget)).
+- **On `claude/frame-budget`:** `.73`. It has server-predicted head poses, UDP as the Wi-Fi
+  default, Stream resolution up to 125 %, four wired connections and the Sharpening setting
+  ([below](#october-7-late-night-66-73-on-claudeframe-budget)).
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
   194-197 fresh FPS over USB with the direct eye copy, 189-195 over Wi-Fi 6E.
 - **Not established:** sustained gameplay, optical motion-to-photon latency, image quality on par
@@ -51,7 +52,7 @@ supported by evidence. Preserve correctness, rollback and honest measurements;
 the previous agent's process is not mandatory. A handoff does not automatically
 resume paused hardware work or unattended workers.
 
-## October 7, late night: `.66`-`.68` on `claude/frame-budget`
+## October 7, late night: `.66`-`.73` on `claude/frame-budget`
 
 Builds from branch `claude/frame-budget`, local only:
 
@@ -60,6 +61,9 @@ Builds from branch `claude/frame-budget`, local only:
 | `.66` | `c9c38c5` | Frame budget from the present rate, on by default |
 | `.67` | `cec2857` | `[Q3PW_PRESENT]` counts the compositor presents the driver receives; the scene gains a frame-time cap |
 | `.68` | `864ef69` | Server-predicted head poses; UDP becomes the Wi-Fi default |
+| `.69` | `c01280a` | Stream resolution up to 125 % |
+| `.70` | `71e5ce2` | Four wired video connections by default |
+| `.71`-`.73` | `ae7b380`, `8d0fc77`, `e38216f` | Sharpening: debug property, then setting, then centre-only |
 
 **Frame budget:** neutral in tests. SteamVR presents at the panel rate even when the game is
 slower, because it reprojects into a new present every vsync. Giving a slower game the full
@@ -98,11 +102,24 @@ bitrate needs the game's own rate. See
 - At 1500 Mbps, offline, it keeps 1.3 dB more detail than the panel-size stream.
 - See [RENDER-ENCODE-RESOLUTION.md](RENDER-ENCODE-RESOLUTION.md#supersampled-stream-at-120-hz-68-october-7).
 
+**Sharpening (`.71`-`.73`):**
+
+- The setting is Video > PyroWave > Sharpening (0-100, off by default).
+- It applies CAS to luma in the eye shader, in the centre 60 % of each eye.
+- At 50:
+  - no frame-rate cost at 120 Hz with stream 100 %;
+  - about 5 FPS at 207 Hz;
+  - about 8 FPS at 120 Hz with stream 125 %.
+- Headset screenshots measure about 40 % more detail.
+- See [SHARPENING.md](SHARPENING.md).
+
 **Next:**
 
 1. Owner tests:
-   - `.68`/`.69` over Wi-Fi with head movement.
+   - `.68`+ over Wi-Fi with head movement.
    - 120 Hz, 1500 Mbps, stream 125 % with game render 150 %, against stream 100 %.
+   - At 120 Hz, stream 100 %: Sharpening 50 against 0. Check whether the edge of the centre region
+     shows.
 2. The game's own frame rate for the budget (PLAN 2.1).
 3. (Done in `.70`: four wired connections by default. Network p99 is 2.6 ms shorter and the
    frame rate is unchanged. See

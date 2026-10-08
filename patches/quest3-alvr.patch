@@ -16240,7 +16240,7 @@ index d7d0dbbfcbfc7eaacf6f4ff5f0c47f882f1eee1a..e85a1e8a6f60414317ee82c6b1a251c5
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..527cff817b6d1ea84efc813816e9ac93e7327c1e 100644
+index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..9a4d1dc946501cfbb5ad9cb051b88490217ce251 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -16418,7 +16418,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..527cff817b6d1ea84efc813816e9ac93
 +    pub wired_video_connections: u32,
 +
 +    #[serde(default)]
-+    #[schema(strings(display_name = "Sharpening", help = "Contrast-adaptive sharpening (AMD FidelityFX CAS) of brightness in the headset, as it draws each frame; 0 is off. Fine detail and text look crisper; edges that are already sharp are left alone, but noise and compression artifacts are sharpened too. At 50 the October 7 measurement showed no frame-rate cost at 120 Hz but about 1.8 ms later decodes, and about 19 fewer frames per second at 207 Hz. Not applied with light foveated encoding. Restart SteamVR."))]
++    #[schema(strings(display_name = "Sharpening", help = "Contrast-adaptive sharpening (AMD FidelityFX CAS) of brightness in the headset, as it draws each frame; 0 is off. It covers the centre of each eye (60 % of its width and height), where you usually look. Fine detail and text look crisper; noise and compression artifacts are sharpened too. Measured at 50 over USB: no frame-rate cost at 120 Hz with Stream resolution 100 %, about 5 fewer frames per second at 207 Hz, and about 8 fewer at 120 Hz with Stream resolution 125 %, which already fills the headset GPU. Not applied with light foveated encoding. Restart SteamVR."))]
 +    #[schema(gui(slider(min = 0, max = 100, step = 10)))]
 +    #[schema(flag = "steamvr-restart")]
 +    pub sharpening: u32,

@@ -227,6 +227,15 @@ The largest loss decides what to build next.
   YCbCr. Opt-in, with its cost measured.
 - Virtual Desktop has a sharpening filter on by default and offers Snapdragon GSR, and the owner
   compares against it.
+- **Done (`.73`, [SHARPENING.md](SHARPENING.md)):** the Sharpening setting (0–100, off by
+  default) applies CAS to luma in the eye shader, in the centre 60 % of each eye. At 50, headset
+  screenshots measure about 40 % more detail. Frame-rate cost:
+  - 120 Hz with stream 100 %: none.
+  - 207 Hz: about 5 FPS.
+  - 120 Hz with stream 125 %: about 8 FPS. Whole-image sharpening cost 19 FPS in both of these
+    cases.
+
+  **Next:** the owner's A/B. A cheaper form would sharpen in the decoder's last pass.
 
 **2.8 FP16 precision.** If 2.2 shows a plateau at 1500 Mbit/s and above, use FP32 for luma or for
 the coarse levels.
