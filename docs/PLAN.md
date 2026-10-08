@@ -210,7 +210,18 @@ The largest loss decides what to build next.
     +2.4–2.6 at 207/1500, +3.3–3.5 at 120/1500.
   - A static per-group code without neighbour context saves only 8–10% (+0.6–1.2 dB).
   - zstd saves 11%.
-  - **Next:** a decode-throughput prototype on Adreno decides whether this is worth building.
+- **Prototyped (October 8, [ENTROPY.md](ENTROPY.md#a-real-coder-and-its-decode-on-the-quest-october-8)):**
+  - A per-block rANS coder with quad contexts codes a 120 Hz / 1500 frame 20.5% smaller,
+    losslessly.
+  - The Quest decodes it in 2.65 ms. The best layout is lane-interleaved stores, the longest
+    blocks first and branch-uniform steps. That misses the 2 ms target.
+  - It would fit at 120 Hz, fused with dequantization, but not at 207 Hz.
+  - **Parked** until the owner's 120 Hz tests show where the clarity gap is.
+  - Building it needs:
+    - the live encoder's quantized blocks, to confirm the saving;
+    - a PC encoder;
+    - rate control on coded bytes;
+    - a decode fused with dequantization.
 
 **2.5 Modernize 4:4:4.**
 

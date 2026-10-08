@@ -167,7 +167,13 @@ bitrate needs the game's own rate. See
 4. Entropy coding (PLAN 2.4, [ENTROPY.md](ENTROPY.md)):
    - A context coder would save about 25% of the bits, worth +2.0–3.5 dB.
    - A cheap static per-group code saves only 8–10%.
-   - Next: a decode-throughput prototype on Adreno, and dumped game frames to confirm the saving.
+   - Prototyped October 8 (`tools/entropy/`):
+     - A per-block rANS coder codes a 120 Hz / 1500 frame 20.5% smaller.
+     - The Quest decodes it, exact, in 2.65 ms. That misses the 2 ms target, but it would fit at
+       120 Hz.
+     - Parked until the owner's 120 Hz tests. See
+       [ENTROPY.md](ENTROPY.md#a-real-coder-and-its-decode-on-the-quest-october-8) for what
+       building it needs.
 
 ## October 7, night: `.65`, transport measured and Wi-Fi UDP video
 

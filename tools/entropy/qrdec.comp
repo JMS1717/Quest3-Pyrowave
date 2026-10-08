@@ -1,0 +1,304 @@
+#version 450
+#extension GL_EXT_control_flow_attributes : require
+// QR block decoder (prototype): one invocation decodes one 32x32 block of one band.
+// Mirrors qr::decode_block in qrcodec.hpp; see there for the format. Results: docs/ENTROPY.md.
+//
+// A context's 16 cumulative frequencies arrive in two 16-byte loads issued together, and the
+// symbol search is compares on those registers (cheaper on Adreno than a bucket lookup plus
+// dependent loads, or a packed-u16 search with a second load).
+layout(local_size_x_id = 0) in;
+// Bit 0: leave all-zero 8x8s and blocks unwritten (the output was cleared beforehand).
+// Bit 3: lane-interleaved output: u32 (y * 16 + i) of the block decoded by thread t of a workgroup
+// of L is at (workgroup * 512 + y * 16 + i) * L + t, so the threads' stores coalesce.
+// Bit 6: branch-uniform decode (requires bit 0): every loop iteration decodes one step (an 8x8
+// flag, a quad pattern or a coefficient) with the same instructions, and loads a stream word
+// only when a renormalization consumes one.
+// Bit 2 (timing only, structured decode): write one checksum per block instead of the coefficients.
+layout(constant_id = 1) const uint kFlags = 0u;
+
+// Per context: cum[0..15] as eight u32 (cum[2k] | cum[2k+1] << 16); cum[16] = 4096 is implicit.
+layout(std430, set = 0, binding = 0) readonly buffer Tables { uvec4 cum_tab[]; };
+layout(std430, set = 0, binding = 1) readonly buffer Bands { uint bands[]; };      // [band][5]
+layout(std430, set = 0, binding = 2) readonly buffer Offsets { uint block_offset[]; };
+layout(std430, set = 0, binding = 3) readonly buffer BlockBand { uint block_band[]; };
+layout(std430, set = 0, binding = 4) readonly buffer Words { uint words[]; };      // u16 pairs
+layout(std430, set = 0, binding = 5) writeonly buffer Out { uint outv[]; };        // i16 pairs
+layout(std430, set = 0, binding = 6) readonly buffer Order { uint order[]; };
+
+layout(push_constant) uniform Push { uint block_count; };
+
+const uint kProbBits = 12u;
+const uint kRansL = 65536u;
+const uint kCtxPerClass = 30u;
+
+uint pos;
+uint x;
+uint next_word;   // word_at(pos), loaded ahead so a renormalization doesn't wait for memory
+
+uint word_at(uint i) { return (words[i >> 1] >> ((i & 1u) << 4)) & 0xffffu; }
+
+void renorm() {
+    if (x < kRansL) { x = (x << 16) | next_word; pos++; next_word = word_at(pos); }
+}
+
+uint raw_bits(uint n) {
+    uint v = x & ((1u << n) - 1u);
+    x >>= n;
+    renorm();
+    return v;
+}
+
+// The symbol whose range holds slot = x mod 4096, and that range.
+uint find_sym(uint ctx, uint slot, out uint lo, out uint hi) {
+    uvec4 a = cum_tab[ctx * 2u], b = cum_tab[ctx * 2u + 1u];
+    uint c[16] = uint[16](a.x & 0xffffu, a.x >> 16, a.y & 0xffffu, a.y >> 16, a.z & 0xffffu, a.z >> 16, a.w & 0xffffu, a.w >> 16,
+                          b.x & 0xffffu, b.x >> 16, b.y & 0xffffu, b.y >> 16, b.z & 0xffffu, b.z >> 16, b.w & 0xffffu, b.w >> 16);
+    // cum is nondecreasing: the symbol is the number of cum[1..15] <= slot; its range is
+    // [largest cum <= slot, smallest cum > slot)
+    uint s = 0u;
+    lo = 0u;
+    hi = 4096u;
+    [[unroll]] for (uint t = 1u; t < 16u; t++) {
+        bool le = c[t] <= slot;
+        s += le ? 1u : 0u;
+        lo = le ? c[t] : lo;
+        hi = le ? hi : min(hi, c[t]);
+    }
+    return s;
+}
+
+uint decode_sym(uint ctx) {
+    uint slot = x & 4095u, lo, hi;
+    uint s = find_sym(ctx, slot, lo, hi);
+    x = (hi - lo) * (x >> kProbBits) + slot - lo;
+    renorm();
+    return s;
+}
+
+uint mag_ctx(uint sum) {
+    // buckets 1 2 3 4 6 8 12 16 24 32 48 64 128
+    if (sum < 5u) return sum;
+    if (sum < 6u) return 4u;
+    if (sum < 8u) return 5u;
+    if (sum < 12u) return 6u;
+    if (sum < 16u) return 7u;
+    if (sum < 24u) return 8u;
+    if (sum < 32u) return 9u;
+    if (sum < 48u) return 10u;
+    if (sum < 64u) return 11u;
+    if (sum < 128u) return 12u;
+    return 13u;
+}
+
+// Raw-field width of a magnitude class: the low bits and the sign.
+uint class_raw_bits(uint c) { return c < 4u ? 1u : c < 15u ? 2u + ((c - 4u) >> 1) : 17u; }
+
+// Magnitude from its class and raw field (sign in bit 0).
+uint class_magnitude(uint c, uint f) {
+    uint m;
+    if (c < 4u) {
+        m = c;
+    } else if (c < 15u) {
+        uint e = 2u + ((c - 4u) >> 1);
+        m = (1u << e) | (((c - 4u) & 1u) << (e - 1u)) | (f >> 1);
+    } else {
+        m = f >> 1;
+    }
+    return m + 1u;
+}
+
+// One nonzero coefficient: magnitude class, then low bits and sign in one raw field.
+int decode_coef(uint kctx, inout uint mx) {
+    uint c = decode_sym(kctx);
+    uint n = class_raw_bits(c);
+    // fields over 12 bits are read as their top 5 bits, then 12
+    uint f = n == 17u ? raw_bits(5u) << 12 : 0u;
+    f |= raw_bits(n == 17u ? 12u : n);
+    uint m = class_magnitude(c, f);
+    mx = max(mx, m);
+    return (f & 1u) != 0u ? -int(m) : int(m);
+}
+
+uint g_row0, g_stride;
+
+// u32 index of row y, pair i of the block
+uint oaddr(uint y, uint i) {
+    if ((kFlags & 8u) != 0u)
+        return (gl_WorkGroupID.x * 512u + y * 16u + i) * gl_WorkGroupSize.x + gl_LocalInvocationID.x;
+    return g_row0 + y * g_stride + i;
+}
+
+uint get8(uint v, uint i) { return (v >> (i << 3)) & 0xffu; }
+uint set8(uint v, uint i, uint val) { uint sh = i << 3; return (v & ~(0xffu << sh)) | (val << sh); }
+
+void renorm_uniform() {
+    bool r = x < kRansL;
+    x = r ? (x << 16) | next_word : x;
+    pos += r ? 1u : 0u;
+    if (r) next_word = word_at(pos);
+}
+
+void decode_flat(uint cbase) {
+    // step kinds
+    const uint kFlag = 0u, kPattern = 1u, kCoef = 2u;
+    uint mode = kFlag;
+    uint e = 0u;        // 8x8 in the block, raster order
+    uint q = 0u;        // quad in the 8x8, raster order
+    uint pat = 0u;      // nonzero coefficients of the quad still to decode
+    uint mx = 0u, w0 = 0u, w1 = 0u;
+    uint left = 0u, rowq = 0u, kctx = 0u, patctx = 0u;
+    uvec4 colq = uvec4(0u);
+    while (e < 16u) {
+        // the symbol: an 8x8 flag has none (its search runs and is discarded)
+        uint slot = x & 4095u, lo, hi;
+        uint s = find_sym(mode == kPattern ? patctx : kctx, slot, lo, hi);
+        uint xd = (hi - lo) * (x >> kProbBits) + slot - lo;
+        x = mode == kFlag ? x : xd;
+        renorm_uniform();
+        // the raw field: 1 bit for a flag, none for a pattern, the class's low bits and sign for a
+        // coefficient (17 bits read as 5 then 12)
+        uint n = mode == kFlag ? 1u : mode == kPattern ? 0u : class_raw_bits(s);
+        uint n1 = n == 17u ? 5u : n, n2 = n == 17u ? 12u : 0u;
+        uint f1 = x & ((1u << n1) - 1u);
+        x >>= n1;
+        renorm_uniform();
+        uint f2 = x & ((1u << n2) - 1u);
+        x >>= n2;
+        renorm_uniform();
+        uint f = (f1 << n2) | f2;
+
+        bool quad_done = false;
+        bool next_quad = false;
+        if (mode == kFlag) {
+            if (f != 0u) {
+                mode = kPattern;
+                q = 0u;
+                next_quad = true;
+            } else {
+                colq[e & 3u] = 0u;
+                rowq = 0u;
+                e++;
+            }
+        } else if (mode == kPattern) {
+            pat = s;
+            mx = 0u;
+            w0 = 0u;
+            w1 = 0u;
+            if (pat == 0u) quad_done = true;
+            else mode = kCoef;
+        } else {
+            uint m = class_magnitude(s, f);
+            mx = max(mx, m);
+            uint v = ((f & 1u) != 0u ? 0u - m : m) & 0xffffu;
+            uint k = uint(findLSB(pat));
+            uint sh = (k & 1u) << 4;
+            if (k < 2u) w0 |= v << sh;
+            else w1 |= v << sh;
+            pat &= pat - 1u;
+            if (pat == 0u) quad_done = true;
+        }
+        if (quad_done) {
+            uint qy = q >> 2, qx = q & 3u, sbx = e & 3u;
+            uint QY = (e >> 2) * 4u + qy, QX = sbx * 4u + qx;
+            if (w0 != 0u || w1 != 0u) {
+                outv[oaddr(QY * 2u, QX)] = w0;
+                outv[oaddr(QY * 2u + 1u, QX)] = w1;
+            }
+            mx = min(mx, 128u);
+            colq[sbx] = set8(colq[sbx], qx, mx);
+            left = mx;
+            if (qx == 3u) rowq = set8(rowq, qy, left);
+            q++;
+            if (q == 16u) {
+                mode = kFlag;
+                e++;
+                if ((e & 3u) == 0u) rowq = 0u;
+            } else {
+                mode = kPattern;
+                next_quad = true;
+            }
+        }
+        if (next_quad) {
+            uint qy = q >> 2, qx = q & 3u;
+            if (qx == 0u) left = get8(rowq, qy);
+            uint up = get8(colq[e & 3u], qx);
+            patctx = cbase + min(left, 3u) * 4u + min(up, 3u);
+            kctx = cbase + 16u + mag_ctx(left + up);
+        }
+    }
+}
+
+void main() {
+    if (gl_GlobalInvocationID.x >= block_count) return;
+    uint block = order[gl_GlobalInvocationID.x];
+    uint band = block_band[block];
+    uint cls = bands[band * 5u], w = bands[band * 5u + 1u];
+    uint out_offset = bands[band * 5u + 3u], first = bands[band * 5u + 4u];
+    uint local_i = block - first, bw = w >> 5;
+    uint bx = local_i % bw, by = local_i / bw;
+    // output index of the block's top-left pair, in u32 (two coefficients) units
+    g_row0 = (out_offset + by * 32u * w + bx * 32u) >> 1;
+    g_stride = w >> 1;
+
+    uint off = block_offset[block];
+    if (off == 0xffffffffu) {
+        if ((kFlags & 1u) == 0u)
+            for (uint y = 0u; y < 32u; y++)
+                for (uint i = 0u; i < 16u; i++) outv[oaddr(y, i)] = 0u;
+        return;
+    }
+    pos = off;
+    x = (word_at(pos) << 16) | word_at(pos + 1u);
+    pos += 2u;
+    next_word = word_at(pos);
+    uint cbase = cls * kCtxPerClass;
+    if ((kFlags & 64u) != 0u) {
+        decode_flat(cbase);
+        return;
+    }
+    // latest decoded quad maximum (clamped to 128) of each quad column, four per 8x8 column
+    uvec4 colq = uvec4(0u);
+    uint acc = 0u;
+
+    for (uint sy = 0u; sy < 16u; sy += 4u) {
+        uint rowq = 0u;   // latest quad maximum of each of this 8x8 row's four quad rows
+        [[unroll]] for (uint sbx = 0u; sbx < 4u; sbx++) {
+            uint sx = sbx * 4u;
+            uint col = colq[sbx];
+            if (raw_bits(1u) == 0u) {
+                colq[sbx] = 0u;
+                rowq = 0u;
+                if ((kFlags & 5u) == 0u)
+                    for (uint y = 0u; y < 8u; y++)
+                        for (uint i = 0u; i < 4u; i++) outv[oaddr(sy * 2u + y, sx + i)] = 0u;
+                continue;
+            }
+            for (uint qy = 0u; qy < 4u; qy++) {
+                uint QY = sy + qy;
+                uint left = sbx > 0u ? get8(rowq, qy) : 0u;
+                for (uint qx = 0u; qx < 4u; qx++) {
+                    uint QX = sx + qx;
+                    uint up = get8(col, qx);
+                    uint pat = decode_sym(cbase + min(left, 3u) * 4u + min(up, 3u));
+                    uint kctx = cbase + 16u + mag_ctx(left + up);
+                    uint mx = 0u;
+                    int v0 = (pat & 1u) != 0u ? decode_coef(kctx, mx) : 0;
+                    int v1 = (pat & 2u) != 0u ? decode_coef(kctx, mx) : 0;
+                    int v2 = (pat & 4u) != 0u ? decode_coef(kctx, mx) : 0;
+                    int v3 = (pat & 8u) != 0u ? decode_coef(kctx, mx) : 0;
+                    mx = min(mx, 128u);
+                    col = set8(col, qx, mx);
+                    left = mx;
+                    acc ^= (uint(v0) & 0xffffu) | (uint(v1) << 16) ^ (uint(v2) * 7u) ^ (uint(v3) * 13u);
+                    if ((kFlags & 4u) == 0u && ((kFlags & 1u) == 0u || pat != 0u)) {
+                        outv[oaddr(QY * 2u, QX)] = (uint(v0) & 0xffffu) | (uint(v1) << 16);
+                        outv[oaddr(QY * 2u + 1u, QX)] = (uint(v2) & 0xffffu) | (uint(v3) << 16);
+                    }
+                }
+                rowq = set8(rowq, qy, left);
+            }
+            colq[sbx] = col;
+        }
+    }
+    if ((kFlags & 4u) != 0u) outv[oaddr(0u, 0u)] = acc;
+}
