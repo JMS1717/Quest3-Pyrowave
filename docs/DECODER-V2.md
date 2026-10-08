@@ -313,6 +313,24 @@ Each candidate passed the exactness gate unless noted. All were timed interleave
 The Adreno 740 decode is throughput-bound. Only less work helps; reordering or fusing dispatches
 does not.
 
+**Reconstruction point (October 8, offline, rejected).** Dequant rebuilds a nonzero coefficient at
+the centre of its quantization bin (`+ 0.5`). A Laplacian source would favour a point nearer zero,
+which would be a free gain. Tried in a scratch PC build (two specialization constants: magnitude
+1 and larger), CDF 5/3, 125 % stream from the 3072x3216 quality-scene crops (Lanczos-3), 120 Hz,
+1500 Mbps:
+
+| one : rest | Y PSNR against the coded input | PSNR-HVS-M against the coded input | PSNR-HVS-M against the source |
+|---|---:|---:|---:|
+| 0.5 : 0.5 (shipped) | **31.14 dB** | 30.63 | 18.65 |
+| 0.375 : 0.5 | 31.08 | 30.53 | 18.62 |
+| 0.375 : 0.375 | 31.01 | 30.51 | 18.52 |
+| 0.5 : 0.6 | 31.13 | 30.62 | 18.72 |
+| 0.6 : 0.6 | 31.11 | 30.63 | 18.74 |
+
+The centre is already best for the codec's own error. Points above it score higher against the
+source only because they amplify detail, which is sharpening; the PC sharpening already does that
+where it is tuned.
+
 Mode 6 (`debug.q3pw.cdf53v2=6`, opt-in) stores two chroma pixels per texel and cuts V2 decode from
 2.77 to 2.40 ms standalone (2.88 against 3.15 ms live), but live fresh FPS did not change; see
 [PRESENT-YCBCR.md](PRESENT-YCBCR.md#mode-6-two-chroma-pixels-per-texel-opt-in-october-7).
