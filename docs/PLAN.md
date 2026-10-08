@@ -306,6 +306,11 @@ The largest loss decides what to build next.
   See [DECODER-V2.md](DECODER-V2.md#mode-7-444-packed-into-the-hardware-buffer-74-october-7).
 - Next: the eye pass's chroma reads cost about 21 FPS at 207 Hz; the 4:4:4 decode is about 1 ms
   longer than 4:2:0. Owner test: 4:4:4 at 120 Hz, 1500 and 2000 Mbps.
+- **October 8 trace (`.92`):** at 120 Hz / 2000 4:4:4 the headset GPU is the limit, not USB. The
+  decoder's wall time is about 8.0 ms per frame, frames queue 2.4 ms for it, and the render loop
+  misses 3-6 periods a second. At 1500 it keeps up. A faster 4:4:4 decode (or fewer bytes for the
+  same detail) is what makes 2000 pay
+  ([FRESHNESS.md](FRESHNESS.md#where-120-hz--2000--444-loses-frames-92-october-8)).
 
 **2.6 Rate control.**
 
