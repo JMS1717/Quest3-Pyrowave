@@ -14221,21 +14221,22 @@ index 0000000000000000000000000000000000000000..f053eb0ae2188a8dd659c3d7bb6c9d1b
 +}
 +)HLSL"
 diff --git a/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp b/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
-index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba7defdf83 100644
+index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..faaa8e4021d3a9cd1891b51ef962b5aef09fd966 100644
 --- a/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
 +++ b/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
-@@ -3,8 +3,10 @@
+@@ -3,8 +3,11 @@
  #include "alvr_server/Settings.h"
  #include "alvr_server/Utils.h"
  #include "alvr_server/bindings.h"
 +#include "latency_stamp.h"
  
++#include <algorithm>
  #include <cstdlib>
 +#include <cstring>
  
  extern uint64_t g_DriverTestMode;
  
-@@ -188,6 +190,12 @@ bool FrameRender::Startup() {
+@@ -188,6 +191,12 @@ bool FrameRender::Startup() {
      m_viewport.TopLeftX = 0;
      m_viewport.TopLeftY = 0;
  
@@ -14248,7 +14249,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
      // Left eye scissor
      m_scissorL.bottom = 0.0f;
      m_scissorL.left = 0.0f;
-@@ -343,6 +351,61 @@ bool FrameRender::Startup() {
+@@ -343,6 +352,61 @@ bool FrameRender::Startup() {
          return false;
      }
  
@@ -14310,7 +14311,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
      //
      // Create alpha blend state
      // We need alpha blending to support layer.
-@@ -552,9 +615,9 @@ bool FrameRender::Startup() {
+@@ -552,9 +616,9 @@ bool FrameRender::Startup() {
          m_pStagingTexture = yuvTexture;
      }
  
@@ -14323,7 +14324,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
      enablePlanarYuv = PyroWaveEnabled() && !Settings::Instance().m_enableHdr;
      if (enablePlanarYuv) {
          uint32_t texWidth, texHeight;
-@@ -647,6 +710,37 @@ bool FrameRender::Startup() {
+@@ -647,6 +711,37 @@ bool FrameRender::Startup() {
              planarTargets,
              planarParamBuffer.Get()
          );
@@ -14361,7 +14362,88 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
      }
  
      Debug("Staging Texture created\n");
-@@ -913,6 +1007,23 @@ bool FrameRender::RenderFrame(
+@@ -666,6 +761,71 @@ void FrameRender::SetViewsConfig(
+     m_eyeToHead[1] = eyeToHeadRight;
+ }
+ 
++void FrameRender::BeginGpuTiming() {
++    auto* device = m_pD3DRender->GetDevice();
++    auto* context = m_pD3DRender->GetContext();
++    // Read the oldest set first: issued GpuTimingRing frames ago, so normally complete.
++    auto& set = m_gpuTiming[m_gpuTimingFrame % GpuTimingRing];
++    if (set.issued) {
++        D3D11_QUERY_DATA_TIMESTAMP_DISJOINT dj = {};
++        UINT64 t[3] = {};
++        bool ready = context->GetData(set.disjoint.Get(), &dj, sizeof(dj), D3D11_ASYNC_GETDATA_DONOTFLUSH) == S_OK;
++        for (int i = 0; ready && i < 3; i++)
++            ready = context->GetData(set.stamps[i].Get(), &t[i], sizeof(t[i]), D3D11_ASYNC_GETDATA_DONOTFLUSH) == S_OK;
++        if (ready && !dj.Disjoint && dj.Frequency != 0) {
++            const double ms = 1000.0 / (double)dj.Frequency;
++            m_gpuTimingMs[0].push_back((float)((t[1] - t[0]) * ms));
++            m_gpuTimingMs[1].push_back((float)((t[2] - t[1]) * ms));
++        }
++        set.issued = false;
++    }
++    const uint64_t now = GetTimestampUs();
++    if (m_gpuTimingWindowStart == 0)
++        m_gpuTimingWindowStart = now;
++    if (now - m_gpuTimingWindowStart >= 1000000 && !m_gpuTimingMs[0].empty()) {
++        float q[2][3];
++        const size_t n = m_gpuTimingMs[0].size();
++        for (int s = 0; s < 2; s++) {
++            auto& v = m_gpuTimingMs[s];
++            std::sort(v.begin(), v.end());
++            q[s][0] = v[n / 2];
++            q[s][1] = v[n * 9 / 10];
++            q[s][2] = v[n - 1];
++            v.clear();
++        }
++        Info("[Q3PW_RENDER_GPU] frames=%zu compose=%.2f/%.2f/%.2f convert=%.2f/%.2f/%.2f (p50/p90/max ms)\n",
++             n, q[0][0], q[0][1], q[0][2], q[1][0], q[1][1], q[1][2]);
++        m_gpuTimingWindowStart = now;
++    }
++    if (!set.disjoint) {
++        D3D11_QUERY_DESC desc = { D3D11_QUERY_TIMESTAMP_DISJOINT, 0 };
++        if (FAILED(device->CreateQuery(&desc, set.disjoint.GetAddressOf())))
++            return;
++        desc.Query = D3D11_QUERY_TIMESTAMP;
++        for (auto& stamp : set.stamps)
++            if (FAILED(device->CreateQuery(&desc, stamp.GetAddressOf())))
++                return;
++    }
++    context->Begin(set.disjoint.Get());
++    context->End(set.stamps[0].Get());
++}
++
++void FrameRender::StampGpuTiming(int index) {
++    auto& set = m_gpuTiming[m_gpuTimingFrame % GpuTimingRing];
++    if (set.stamps[index])
++        m_pD3DRender->GetContext()->End(set.stamps[index].Get());
++}
++
++void FrameRender::EndGpuTiming() {
++    auto& set = m_gpuTiming[m_gpuTimingFrame % GpuTimingRing];
++    if (set.disjoint && set.stamps[2]) {
++        m_pD3DRender->GetContext()->End(set.stamps[2].Get());
++        m_pD3DRender->GetContext()->End(set.disjoint.Get());
++        set.issued = true;
++    }
++    m_gpuTimingFrame++;
++}
++
+ bool FrameRender::RenderFrame(
+     ID3D11Texture2D* pTexture[][2],
+     vr::VRTextureBounds_t bounds[][2],
+@@ -675,6 +835,8 @@ bool FrameRender::RenderFrame(
+     const std::string& message,
+     const std::string& debugText
+ ) {
++    BeginGpuTiming();
++
+     // Set render target
+     m_pD3DRender->GetContext()->OMSetRenderTargets(1, m_pRenderTargetView.GetAddressOf(), NULL);
+ 
+@@ -913,6 +1075,23 @@ bool FrameRender::RenderFrame(
                1 + (inputColorAdjust * 2) },
          };
  
@@ -14385,7 +14467,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
          D3D11_MAPPED_SUBRESOURCE mapped = { 0 };
          hr = m_pD3DRender->GetContext()->Map(
              m_pVertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped
-@@ -949,7 +1060,15 @@ bool FrameRender::RenderFrame(
+@@ -949,7 +1128,15 @@ bool FrameRender::RenderFrame(
          //
  
          m_pD3DRender->GetContext()->VSSetShader(m_pVertexShader.Get(), nullptr, 0);
@@ -14402,10 +14484,12 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
  
          ID3D11ShaderResourceView* shaderResourceView[2]
              = { pShaderResourceView[0].Get(), pShaderResourceView[1].Get() };
-@@ -974,6 +1093,11 @@ bool FrameRender::RenderFrame(
+@@ -974,6 +1161,13 @@ bool FrameRender::RenderFrame(
          );
      }
  
++    StampGpuTiming(1);
++
 +    // Stamp the composed eyes, before color correction, foveation and YCbCr conversion.
 +    if (m_stampContext) {
 +        DrawLatencyStamp();
@@ -14414,7 +14498,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
      // Restore full viewport/scissor rect for the rest
      m_pD3DRender->GetContext()->RSSetViewports(1, &m_viewport);
      m_pD3DRender->GetContext()->RSSetScissorRects(1, &m_scissor);
-@@ -992,6 +1116,12 @@ bool FrameRender::RenderFrame(
+@@ -992,18 +1186,55 @@ bool FrameRender::RenderFrame(
  
      if (enablePlanarYuv) {
          m_planarPipeline->Render();
@@ -14426,8 +14510,9 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
 +        m_pD3DRender->GetContext()->OMSetRenderTargets(0, nullptr, nullptr);
      }
  
++    EndGpuTiming();
      m_pD3DRender->GetContext()->Flush();
-@@ -999,11 +1129,41 @@ bool FrameRender::RenderFrame(
+ 
      return true;
  }
  
@@ -14471,18 +14556,21 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..e3e4b938ad7c6decc42e59ae397954ba
  }
  
 diff --git a/alvr/server_openvr/cpp/platform/win32/FrameRender.h b/alvr/server_openvr/cpp/platform/win32/FrameRender.h
-index 8136dda8cff38b25068adcfb5a7e816c908a5074..03a2d90918c87f4750148ca6a24e6eb603c619b7 100644
+index 8136dda8cff38b25068adcfb5a7e816c908a5074..0bdb166a5ed0d7d4f6d12abddd3b81f4a645963e 100644
 --- a/alvr/server_openvr/cpp/platform/win32/FrameRender.h
 +++ b/alvr/server_openvr/cpp/platform/win32/FrameRender.h
-@@ -5,6 +5,7 @@
+@@ -3,8 +3,10 @@
+ #include <memory>
+ #include <stdint.h>
  #include <string>
++#include <vector>
  
  #include <d3d11.h>
 +#include <d3d11_1.h>
  #include <d3dcompiler.h>
  #include <directxcolors.h>
  #include <directxmath.h>
-@@ -69,7 +70,7 @@ public:
+@@ -69,7 +71,7 @@ public:
  
      ComPtr<ID3D11Texture2D> GetTexture();
  
@@ -14491,7 +14579,32 @@ index 8136dda8cff38b25068adcfb5a7e816c908a5074..03a2d90918c87f4750148ca6a24e6eb6
      /// path is off. Shared textures, so they can be imported by a Vulkan encoder.
      void GetPlanarTextures(ID3D11Texture2D* out[3]);
      bool HasPlanarTextures() const { return enablePlanarYuv; }
-@@ -97,6 +98,12 @@ private:
+@@ -78,6 +80,24 @@ public:
+     static bool PyroWaveEnabled();
+ 
+ private:
++    // GPU time of RenderFrame from D3D11 timestamp queries, logged once a second as
++    // [Q3PW_RENDER_GPU] (ms): compose = the layer draw with its downsample, convert = colour
++    // correction, foveation and the YCbCr planes. A ring of query sets is read a few frames late
++    // without blocking.
++    static constexpr int GpuTimingRing = 4;
++    struct GpuTimingSet {
++        ComPtr<ID3D11Query> disjoint;
++        ComPtr<ID3D11Query> stamps[3];
++        bool issued = false;
++    };
++    GpuTimingSet m_gpuTiming[GpuTimingRing];
++    uint64_t m_gpuTimingFrame = 0;
++    std::vector<float> m_gpuTimingMs[2];
++    uint64_t m_gpuTimingWindowStart = 0;
++    void BeginGpuTiming();
++    void StampGpuTiming(int index);
++    void EndGpuTiming();
++
+     std::shared_ptr<CD3DRender> m_pD3DRender;
+     ComPtr<ID3D11Texture2D> m_pStagingTexture;
+ 
+@@ -97,6 +117,12 @@ private:
      D3D11_VIEWPORT m_viewportL, m_viewportR, m_viewport;
      D3D11_RECT m_scissorL, m_scissorR, m_scissor;
  
@@ -14504,7 +14617,7 @@ index 8136dda8cff38b25068adcfb5a7e816c908a5074..03a2d90918c87f4750148ca6a24e6eb6
      ComPtr<ID3D11BlendState> m_pBlendStateFirst;
      ComPtr<ID3D11BlendState> m_pBlendState;
  
-@@ -125,9 +132,16 @@ private:
+@@ -125,9 +151,16 @@ private:
      std::unique_ptr<d3d_render_utils::RenderPipelineYUV> m_yuvPipeline;
  
      ComPtr<ID3D11Texture2D> m_planarTextures[3];
