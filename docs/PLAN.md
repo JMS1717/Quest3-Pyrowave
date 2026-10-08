@@ -199,6 +199,12 @@ The largest loss decides what to build next.
 - If the saving is 25% or more, design a GPU coder for both ends: the encoder on the PC's
   compute, the decoder on Adreno compute.
 - The same Mbit/s would then carry much more detail, and that is what makes 4:4:4 affordable.
+- **Estimated (October 7, [ENTROPY.md](ENTROPY.md)):**
+  - A context coder saves 21–27% of the bits on harness frames: +2.0 dB PSNR at 207 Hz/1000,
+    +2.4–2.6 at 207/1500, +3.3–3.5 at 120/1500.
+  - A static per-group code without neighbour context saves only 8–10% (+0.6–1.2 dB).
+  - zstd saves 11%.
+  - **Next:** a decode-throughput prototype on Adreno decides whether this is worth building.
 
 **2.5 Modernize 4:4:4.**
 

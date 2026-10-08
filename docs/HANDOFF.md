@@ -107,7 +107,10 @@ bitrate needs the game's own rate. See
 3. (Done in `.70`: four wired connections by default. Network p99 is 2.6 ms shorter and the
    frame rate is unchanged. See
    [BITRATE.md](BITRATE.md#four-wired-connections-69-default-from-70-october-7).)
-4. An entropy-coding estimate on game frames (PLAN 2.4), for sharpness at 207 Hz.
+4. Entropy coding (PLAN 2.4, [ENTROPY.md](ENTROPY.md)):
+   - A context coder would save about 25% of the bits, worth +2.0–3.5 dB.
+   - A cheap static per-group code saves only 8–10%.
+   - Next: a decode-throughput prototype on Adreno, and dumped game frames to confirm the saving.
 
 ## October 7, night: `.65`, transport measured and Wi-Fi UDP video
 
