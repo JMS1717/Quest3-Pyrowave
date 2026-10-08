@@ -214,6 +214,12 @@ The largest loss decides what to build next.
 - Add full-resolution chroma to the CDF 5/3 present path, then measure against 4:2:0.
 - If full 4:4:4 doesn't fit, keep part of it: 4:2:2, or a larger share of bits for chroma.
 - Target 120 Hz at 1500–2000 Mbit/s wired.
+- **`.74`: Decoder V2 mode 7** (4:4:4 packed into the present buffer) is the 4:4:4 default for
+  CDF 5/3. Wired at 120 Hz: 116 fresh FPS at 1500 Mbps and 109-113 at 2000, against 98-106 before
+  (4:2:0: 117-119). At 207 Hz/1000: 132 against 103.
+  See [DECODER-V2.md](DECODER-V2.md#mode-7-444-packed-into-the-hardware-buffer-74-october-7).
+- Next: the eye pass's chroma reads cost about 21 FPS at 207 Hz; the 4:4:4 decode is about 1 ms
+  longer than 4:2:0. Owner test: 4:4:4 at 120 Hz, 1500 and 2000 Mbps.
 
 **2.6 Rate control.**
 

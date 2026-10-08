@@ -3,6 +3,13 @@
 Keep 4:2:0 as the default. 4:4:4 remains an optional quality mode: spare USB
 bandwidth did not make its GPU reconstruction cost free in the current decoder.
 
+**`.74` (October 7, late night):** 4:4:4 with CDF 5/3 now has a packed present path, Decoder V2
+mode 7. At 120 Hz wired it reaches 116 fresh FPS at 1500 Mbps and 109-113 at 2000, against 98-106
+on the old path and 117-119 for 4:2:0; see
+[DECODER-V2.md](DECODER-V2.md#mode-7-444-packed-into-the-hardware-buffer-74-october-7). Offline at
+the same byte cap, 4:4:4 at 2000 Mbps keeps the luma detail of 4:2:0 at 1500 with mean ΔE 7.6
+instead of 11.5. Haar 4:4:4 still uses the old path.
+
 **Current (alpha.9 and `.64`).** 4:2:0 is the default and **Full chroma (4:4:4)** is opt-in.
 The latest check is the [October 7 run at 207 Hz](#october-7-check-at-207-hz): 68.1 fresh FPS
 with 4:4:4 against 189.3 with 4:2:0, because 4:4:4 decodes twice the chroma and has no packed

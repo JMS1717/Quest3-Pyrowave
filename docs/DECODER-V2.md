@@ -262,6 +262,40 @@ the client sends no view configuration, tracking or statistics (`stream_input_lo
 whole iteration). Video keeps playing, so it looks like a server fault. The harness now renews its
 proximity hold while it waits for the stream. A worn headset is not affected.
 
+## Mode 7: 4:4:4 packed into the hardware buffer (`.74`, October 7)
+
+4:4:4 used to fall back to mode 3: an R8 plane per chroma component and pyroclient's conversion
+pass. Mode 7 is mode 5 for 4:4:4:
+
+- One RGBA8 hardware buffer, 3/2 of the frame width x half its height.
+- Luma, Cb and Cr each as 2x2 pixel quads (width/2 x height/2 texels), at x = 0, width/2 and width.
+  The final iDWT pass of every component stores quads at its offset; no shader change was needed.
+- ALVR's eye shader reads Cb and Cr from the same texel and channel as the luma pixel, with no
+  chroma filtering (`present_ycbcr.glsl`), and `present_ycbcr_layout` accepts the 3/2 width.
+- 4:4:4 with CDF 5/3 asks for mode 7 by default. `debug.q3pw.cdf53v2=3` forces the old path.
+  Without storage on the AHB or with fused colour it falls back to mode 3.
+
+Wired, CDF 5/3, stream 2080x2208, GPU clock 690 MHz, 4:4:4 cells. A is `cdf53v2=3` (old path),
+B the default mode 7. Fence and GPU decode are p50 ms.
+
+| Point | Pattern | Fresh FPS A / B | Fence A / B | GPU decode A / B |
+| --- | --- | --- | --- | --- |
+| 120 Hz, 1500 Mbps, pan | ABBA | 106.3 / **116.2** | 8.26 / 6.01 | 5.62 / 4.56 |
+| 120 Hz, 2000 Mbps, pan | ABBA | 98.3 / **109.2** | 8.87 / 7.02 | 6.09 / 5.52 |
+| 120 Hz, 2000 Mbps, static | ABAB | 99.1 / **112.9** | 8.77 / 6.82 | 6.03 / 5.45 |
+| 207 Hz, 1000 Mbps, pan | ABBA | 102.9 / **131.8** | 9.25 / 7.07 | 6.54 / 5.16 |
+
+- 4:2:0 reference with the same build, 120 Hz, 2000 Mbps, pan: 117.0-118.8 FPS, fence 5.5-6.0 ms,
+  decode 4.2-4.7 ms.
+- Colour: screenshots of A and B differ by 1.1-1.5 levels per channel (mean absolute), against
+  1.0-1.4 between two blocks of the same arm. Nothing is swapped or misplaced.
+- Where the rest goes: at 207 Hz, `debug.q3pw.eye_probe=3` (luma only, no chroma reads) gave 151.0
+  against 129.9 FPS. The two chroma fetches per pixel read twice the bytes of 4:2:0 from a linear
+  buffer. The larger 4:4:4 decode (about 1 ms more than 4:2:0) is the other part.
+
+Next for 4:4:4: a per-pixel (Y, Cb, Cr) layout would need one fetch per pixel but a final pass that
+writes all three components at once; measure the eye-pass cost first with the GPU timer.
+
 ## Tried and rejected
 
 Each candidate passed the exactness gate unless noted. All were timed interleaved against mode 3.

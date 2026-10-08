@@ -18,9 +18,9 @@ State:
 
 - **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.65` (`.64` plus the opt-in
   Wi-Fi UDP transport), not released.
-- **On `claude/frame-budget`:** `.73`. It has server-predicted head poses, UDP as the Wi-Fi
-  default, Stream resolution up to 125 %, four wired connections and the Sharpening setting
-  ([below](#october-7-late-night-66-73-on-claudeframe-budget)).
+- **On `claude/frame-budget`:** `.74`. It has server-predicted head poses, UDP as the Wi-Fi
+  default, Stream resolution up to 125 %, four wired connections, the Sharpening setting and a
+  fast 4:4:4 path ([below](#october-7-late-night-66-74-on-claudeframe-budget)).
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
   194-197 fresh FPS over USB with the direct eye copy, 189-195 over Wi-Fi 6E.
 - **Not established:** sustained gameplay, optical motion-to-photon latency, image quality on par
@@ -52,7 +52,7 @@ supported by evidence. Preserve correctness, rollback and honest measurements;
 the previous agent's process is not mandatory. A handoff does not automatically
 resume paused hardware work or unattended workers.
 
-## October 7, late night: `.66`-`.73` on `claude/frame-budget`
+## October 7, late night: `.66`-`.74` on `claude/frame-budget`
 
 Builds from branch `claude/frame-budget`, local only:
 
@@ -64,6 +64,7 @@ Builds from branch `claude/frame-budget`, local only:
 | `.69` | `c01280a` | Stream resolution up to 125 % |
 | `.70` | `71e5ce2` | Four wired video connections by default |
 | `.71`-`.73` | `ae7b380`, `8d0fc77`, `e38216f` | Sharpening: debug property, then setting, then centre-only |
+| `.74` | `0f3c97a` | Decoder V2 mode 7: 4:4:4 packed into the present buffer |
 
 **Frame budget:** neutral in tests. SteamVR presents at the panel rate even when the game is
 slower, because it reprojects into a new present every vsync. Giving a slower game the full
@@ -113,9 +114,19 @@ bitrate needs the game's own rate. See
 - Headset screenshots measure about 40 % more detail.
 - See [SHARPENING.md](SHARPENING.md).
 
+**Fast 4:4:4 (`.74`):**
+
+- Full chroma (4:4:4) with CDF 5/3 now uses Decoder V2 mode 7. Luma, Cb and Cr are packed as
+  quads into one buffer, and the eye shader converts them, with no conversion pass.
+- Wired at 120 Hz: 116 fresh FPS at 1500 Mbps and 109-113 at 2000, against 98-106 on the old path.
+  4:2:0 gets 117-119. At 207 Hz/1000: 132 against 103.
+- Screenshot colour matches the old path.
+- See [DECODER-V2.md](DECODER-V2.md#mode-7-444-packed-into-the-hardware-buffer-74-october-7).
+
 **Next:**
 
 1. Owner tests:
+   - 4:4:4 (Full chroma), CDF 5/3, 120 Hz at 1500 and 2000 Mbps, on `.74`.
    - `.68`+ over Wi-Fi with head movement.
    - 120 Hz, 1500 Mbps, stream 125 % with game render 150 %, against stream 100 %.
    - At 120 Hz, stream 100 %: Sharpening 50 against 0. Check whether the edge of the centre region
