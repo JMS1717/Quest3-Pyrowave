@@ -87,7 +87,10 @@ must be awake for these numbers; with the proximity hold expired, every Wi-Fi re
   1472 bytes (`PYROWAVE_UDP_DATAGRAM`). The client assembles them with the same code as the wired
   connections and hands complete frames to the same decoder. Nothing is retransmitted; a frame
   missing a datagram is skipped, and the next complete frame replaces it. Select it with
-  **PyroWave → Transport → UDP**. Live results are [below](#live-results-65).
+  **PyroWave → Transport → UDP**. Live results are [below](#live-results-65). The server's video
+  thread does the slicing (`UdpVideoSender`). The older path, where the encoder sent its own
+  fragments (`VideoSendUdp`) to a separate client decoder (`pyrowave_udp.rs`), was deleted in
+  `.93`.
 - **Later:** forward error correction could recover frames that lose a datagram, if a link turns
   out to lose them; this one did not. Windows UDP segmentation offload could cut the server's send
   cost.

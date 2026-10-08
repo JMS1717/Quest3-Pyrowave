@@ -18,7 +18,7 @@ State:
 
 - **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.65` (`.64` plus the opt-in
   Wi-Fi UDP transport), not released.
-- **On `claude/frame-budget`:** `.92`. It has:
+- **On `claude/frame-budget`:** `.93` (`.92` without the dead encoder-side UDP path). It has:
   - server-predicted head poses;
   - UDP as the Wi-Fi default;
   - Stream resolution up to 125 %;
@@ -34,7 +34,8 @@ State:
     (the stream was refused until the app was reopened);
   - a client restart with `am start -S -W`, plus a retry if the restarted client has no activity
     ([REFRESH-RATES.md](REFRESH-RATES.md)).
-- **Owner's play runtime (October 8):** `.92` (`4b760b5`) is installed on the headset. The
+- **Owner's play runtime (October 8):** `.92` (`4b760b5`) is installed on the headset (`.93`
+  was checked live, then `.92` was put back to match the play runtime). The
   matching Windows build with the owner's saved session is staged outside the repo
   (`workspace/runtime-local92-play`); Virtual Desktop's registration is untouched.
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
@@ -96,6 +97,7 @@ Builds from branch `claude/frame-budget`, local only:
 | `.90` | `cab4918` | `.89` without the `.87` hold; 4 of 4 restarts streamed first time |
 | `.91` | `7d332d2` | A restarted client with no activity after 10 s is started once more |
 | `.92` | `4b760b5` | The client restart uses `am start -S -W` (12 of 12 direct starts, against 14 of 16) |
+| `.93` | `3ee2cdc` | The old encoder-side PyroWave UDP path is deleted (PLAN 1.3); no behaviour change |
 
 **Frame budget:**
 

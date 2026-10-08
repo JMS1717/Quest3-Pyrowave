@@ -117,8 +117,13 @@ At 207 Hz and 1000 Mbit/s the total was 35.3 ms: encoder 4.8 ms and vsync queue 
 PyroWave UDP path (`pyrowave_udp.rs`, the C++ `VideoSendUdp`).
 
 - **Default done (`.68`):** the stream socket and PyroWave transport default to UDP. USB stays TCP.
-- The connection already forces the encoder's `pyrowave_udp` off; the server slices UDP in Rust.
-  So the C++ `VideoSendUdp` path is dead code and can go.
+- **Old path deleted (`.93`, October 8):** the connection already forced the encoder's
+  `pyrowave_udp` off and the server slices UDP in Rust, so the C++ `VideoSendUdp`, the server's
+  `send_video_udp_packet`, `OpenvrConfig.pyrowave_udp` and the client's `pyrowave_udp.rs` decoder
+  were unreachable. All four are gone (763 lines). Decoder config byte 10 stays in the layout and
+  is always 0. Checked live: wired 120 Hz / 1500 / 4:4:4 gave 111.3 and 117.0 fresh FPS (`.92`:
+  111.4 and 113.1). Wi-Fi UDP/EF at 120 Hz / 1000 gave 0.3% repeated poses (26/7807) and 117.1
+  fresh FPS (`.92`: 0.6%, 115.5). An old `session.json` that still has `pyrowave_udp` loads.
 
 **1.4 Wired headroom for 2000 Mbit/s.**
 
