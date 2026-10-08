@@ -155,14 +155,23 @@ whether audio on the stream socket stalls behind video.
     runtime always offers) runs again, at most twice.
   - Checked by starting the app with the headset asleep: no probe until the wake, then all rates
     up to 207 Hz confirmed. Two 207 Hz harness arms streamed at 185–187 fps.
-  - HorizonOS writes `debug.oculus.refreshRate=72` itself when a VR app starts with it empty, so
-    a 72 there is not a sign of a leftover override.
+  - HorizonOS writes `debug.oculus.refreshRate=72` itself when the shell takes over after a VR
+    app exits, and clears it about a second after the next VR app starts, so a 72 there is not a
+    sign of a leftover override.
 - **`.86` (October 8):** the probe no longer reads a 72 there as a pin; a real 72 Hz pin still
   shows as failed rates. Open: on the harness (panel rate set by the harness, maximum GPU clock by
   the server) the server's GPU restart sometimes leaves the panel held at 72 Hz with the
   properties cleared; a relaunch recovers
-  ([REFRESH-RATES.md](REFRESH-RATES.md)). Check that it can't happen in the owner's setup, where
-  the server sets the panel rate itself.
+  ([REFRESH-RATES.md](REFRESH-RATES.md)).
+- **Fixed in `.89`-`.90` (October 8): the server held the panel at 72 Hz itself.** It read the
+  properties, woke the headset, then wrote all three back. The client that had just started
+  cleared `refreshRate` in between, so the server wrote the old 72 back, a change while awake that
+  pins the panel; then it restarted the client into the pin. This affected the owner's setup too
+  (maximum GPU clock on): 3 of 7 restarts stuck on `.86`-`.87`, and 3 of 4 on `.88`, whose pause
+  before the restart widened the window. The server now writes only the values that change: 8 of 8
+  restarts streamed first time on `.89`-`.90`, at 109-110 fresh FPS (120 Hz, 2000 Mbit/s, 4:4:4).
+  The `.87` proximity hold around the restart was dropped in `.90`; it was not the cause, and its
+  release woke the unworn headset into the Quick Actions menu.
 
 **1.7 A light play-session logger.**
 

@@ -274,10 +274,10 @@ index a5a446842d4799523d0e06fbfb7253bb13d6c7db..566cdde2b0f58ca90d722104983a4464
          .context("Failed to list ADB devices")?;
 diff --git a/alvr/adb/src/display_override.rs b/alvr/adb/src/display_override.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..32bddb419996b4fb8fce3ce3adf7aacc5e038d7c
+index 0000000000000000000000000000000000000000..d0e6cce8b1d59bba110232cf1f36f57b3ea7c585
 --- /dev/null
 +++ b/alvr/adb/src/display_override.rs
-@@ -0,0 +1,623 @@
+@@ -0,0 +1,625 @@
 +//! Opt-in Quest 3 display and GPU developer properties, managed by the PC over USB.
 +//!
 +//! Any whole refresh rate can be forced (measured October 6, 2026): 144-207 Hz with the full
@@ -295,9 +295,11 @@ index 0000000000000000000000000000000000000000..32bddb419996b4fb8fce3ce3adf7aacc
 +//! request is withdrawn or the server shuts down. With nothing requested and nothing saved this
 +//! module issues no ADB commands at all.
 +//!
-+//! A property is restored only while it still holds the value this module wrote. HorizonOS writes
-+//! `debug.oculus.refreshRate` itself (72 when a VR app starts with it empty), and the user may set
-+//! these properties too; restoring over such a value restarted the client in an endless loop.
++//! A property is restored only while it still holds the value this module wrote, and only values
++//! that change are written. HorizonOS writes `debug.oculus.refreshRate` itself (72 when the shell
++//! takes over after a VR app exits, cleared again about a second after a VR app starts), and the
++//! user may set these properties too; restoring over such a value restarted the client in an
++//! endless loop.
 +
 +use anyhow::{bail, Result};
 +use std::{
@@ -7704,7 +7706,7 @@ index 0000000000000000000000000000000000000000..594514baa0411df1f4e3c3dbf7506737
 +}
 diff --git a/alvr/client_openxr/src/refresh_probe.rs b/alvr/client_openxr/src/refresh_probe.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..4a6503cebe392cc0222790483cf2632984bd1ce5
+index 0000000000000000000000000000000000000000..aabdc9684074823279d5178429646757c2afe529
 --- /dev/null
 +++ b/alvr/client_openxr/src/refresh_probe.rs
 @@ -0,0 +1,227 @@
@@ -7737,10 +7739,10 @@ index 0000000000000000000000000000000000000000..4a6503cebe392cc0222790483cf26329
 +
 +/// The rate a system override (`debug.oculus.refreshRate`) pins, if the property holds one.
 +///
-+/// 72 is not taken as an override. HorizonOS writes 72 itself when a VR app starts with the
-+/// property empty, so after any client restart the property reads 72 while the app starts at 72 Hz;
-+/// treating that as a pin probed only 72 and refused every stream (October 8, after the server's
-+/// GPU-clock restart). A full probe still finds out if 72 really is forced: the other rates fail
++/// 72 is not taken as an override. HorizonOS writes 72 itself when the shell takes over after a
++/// VR app exits, and clears it about a second after the next VR app starts, so a starting client
++/// usually reads 72; treating that as a pin probed only 72 and refused every stream (October 8,
++/// after the server's GPU-clock restart). A full probe still finds out if 72 really is forced: the other rates fail
 +/// to confirm and the probe is retried.
 +pub fn override_rate(property: &str) -> Option<f32> {
 +    property.trim().parse::<f32>().ok().filter(|hz| hz.is_finite() && *hz > 72.5)

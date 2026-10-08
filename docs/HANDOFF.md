@@ -18,7 +18,7 @@ State:
 
 - **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.65` (`.64` plus the opt-in
   Wi-Fi UDP transport), not released.
-- **On `claude/frame-budget`:** `.86`. It has:
+- **On `claude/frame-budget`:** `.90`. It has:
   - server-predicted head poses;
   - UDP as the Wi-Fi default;
   - Stream resolution up to 125 %;
@@ -29,7 +29,9 @@ State:
   - the opt-in setting "Stream only the game's frames"
     ([below](#october-7-late-night-66-74-on-claudeframe-budget));
   - audio cut-out diagnostics;
-  - a refresh-rate probe that no longer runs while the headset sleeps.
+  - a refresh-rate probe that no longer runs while the headset sleeps;
+  - a fix for the server's display helper, which held the panel at 72 Hz after its client restart
+    (the stream was refused until the app was reopened).
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
   194-197 fresh FPS over USB with the direct eye copy, 189-195 over Wi-Fi 6E.
 - **Not established:** sustained gameplay, optical motion-to-photon latency, image quality on par
@@ -83,6 +85,10 @@ Builds from branch `claude/frame-budget`, local only:
 | `.84` | `8b0b764` | Audio diagnostics: the client's `[Q3PW_AUDIO]` statistics; the scene can play silence |
 | `.85` | `df7f838` | The refresh-rate probe waits until the app is shown and re-probes an unreliable result (PLAN 1.6) |
 | `.86` | `036a648` | The probe no longer reads a refreshRate of 72 as a pin (HorizonOS writes it) |
+| `.87` | `cab68b3` | Proximity held through the server's client restart (rejected: not the cause) |
+| `.88` | `fe9e231` | 2.5 s pause in the server's client restart (rejected: 3 of 4 restarts stuck) |
+| `.89` | `6b20675` | The display helper writes only the values that change (fixes the 72 Hz hold) |
+| `.90` | `cab4918` | `.89` without the `.87` hold; 4 of 4 restarts streamed first time |
 
 **Frame budget:**
 

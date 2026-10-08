@@ -17,28 +17,32 @@ APK after changing the environment to run a fresh probe. Startup can briefly cha
 
 **`.85`-`.86` (October 8).** The probe runs only while the app is shown, and a full probe in which
 90 or 120 Hz fails to confirm is repeated up to twice. From `.86` a property value of 72 is not
-read as a pin: HorizonOS writes 72 itself when a VR app starts with the property empty, so after
-any client restart the property reads 72 while the app starts at 72 Hz. If 72 really is pinned,
-the full probe shows it (every other rate fails) at the cost of about 15 s per round.
+read as a pin. HorizonOS writes 72 itself when the shell takes over after a VR app exits, and
+clears it about a second after the next VR app starts (watched with the property, the resumed
+activity and the client pid polled every 0.3 s), so a starting client usually reads 72. If 72 really
+is pinned, the full probe shows it (every other rate fails) at the cost of about 15 s per round.
 
-Seen on the harness the same night (USB, the server's maximum GPU clock on, the panel rate set by
-the harness, not by the server): the server's GPU-clock change restarts the client, and within
-about a second of a client start both `debug.oculus.refreshRate` and `debug.oculus.gpuLevel` were
-read back empty; the restarted client then found the panel held at 72 Hz, where every request,
-including 207, failed to confirm. The writer of the empty values was not identified.
+**`.89`-`.90` (October 8): the server's display helper pinned 72 Hz itself.** With only the maximum
+GPU clock requested, the helper read the three properties, woke the headset (about 2 s), then
+wrote all three. The client it was about to restart had started in the meantime and cleared
+`refreshRate`, so the helper wrote the 72 it had read back: a change while awake, which holds the
+panel at 72 Hz. The restarted client then confirmed only 72 (every request "succeeded" without
+changing the rate), reported [72, 80], and the server refused the stream until the app was
+reopened. Whether the client's clear landed before the helper's read was a race, so it struck
+about half the time, in the owner's setup as well as on the harness:
 
-The same happened with the harness leaving the display alone, as in the owner's setup (120 Hz,
-2000 Mbit/s, 4:4:4): two of three first launches came back with only [72, 80]. The common factor
-is that the server hands the proximity sensor back before the restart, so the unworn headset
-falls asleep and the restarted client starts asleep. It stayed held at 72 Hz after the wake,
-which `.85`'s wait for the app to be shown does not cure. With the harness holding the proximity
-override for 25 s after each start, as a wearer would, both launches streamed first time (110.9
-and 110.7 fresh FPS). The harness also now tries three launches instead of two. A worn headset
-stays awake, so the owner is probably unaffected; that is not yet confirmed. The owner's setup
-was checked on October 7: one client restart, then 207 Hz.
+| Build | Server restarts | Stuck at 72 Hz |
+|---|---|---|
+| `.86`-`.87` | 7 | 3 |
+| `.88` (2.5 s pause before the restart) | 4 | 3 |
+| `.89`-`.90` (write only the values that change) | 8 | 0 |
 
-**Next:** have the server restart the client before it hands proximity back, or not at all when
-only the GPU clock changes and the headset is asleep.
+All at 120 Hz, 2000 Mbit/s, 4:4:4, with the server setting the GPU clock and the harness leaving
+the display properties alone. `.90` streamed at 110.2 and 109.3 fresh FPS. Two earlier theories
+were wrong and are reverted: that the restarted client started with the headset asleep (`.87` held
+proximity through the restart; its delayed release then blinked the unworn headset asleep, and the
+wake opened the Quick Actions menu over the client), and that the shell's write raced the restart
+(`.88` paused 2.5 s, which made it worse).
 
 ## 240 Hz developer experiment
 
