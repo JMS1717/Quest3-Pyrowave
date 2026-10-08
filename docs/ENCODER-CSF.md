@@ -97,6 +97,27 @@ same trade-off as Haar and the default is kept:
 | levels >= 2 x2 | 15.56 | 50.0 |
 | no boost (3/1) | 15.75 | 46.5 |
 
+**Level weights for the 125 % stream (October 8, rejected).** At 2592x2784 quantization costs
+3.0 dB at 1500 Mbps against 0.7 dB at 2080 ([CLARITY-BUDGET.md](CLARITY-BUDGET.md)), and part of
+level 0 lies above the panel's density. The idea: discount level 0 so its bits go to levels the
+compositor's bilinear keeps. `tools/downsample/clarity_budget.py`, 2592x2784, CDF 5/3, 120 Hz,
+2 crops, scored at 25 px/deg after a bilinear display, with an experimental per-level amplitude
+weight (`PYROWAVE_LEVEL_SCALE`, PC tools only):
+
+| Level weights (0,1,2,3,4) | 1500: PSNR-HVS-M / Cb / ΔE | 2000: PSNR-HVS-M | 1500 with the Quality profile's Lanczos + PC sharpen 30 |
+|---|---|---|---|
+| 1,1,1,1,1 (default) | **23.99** / 33.36 / 4.29 | **24.59** | 25.68 |
+| 0.7,1,1,1,1 | 23.78 / 33.65 / 4.19 | 24.48 | 25.63 |
+| 0.5,1,1,1,1 | 23.39 / 33.86 / 4.18 | 24.32 | 25.34 |
+| 0.35,1,1,1,1 | 22.65 / 34.08 / 4.17 | 23.95 | 24.67 |
+| 1.4,1,1,1,1 | 23.92 / 33.03 / 4.49 | 24.61 | 25.48 |
+| 2,1,1,1,1 | 23.66 / 32.49 / 4.76 | 24.53 | 25.09 |
+| 1,1,1,0.5,0.5 (coarse boost 3 instead of 6) | 24.15 / 33.56 / 4.27 | 24.67 | 26.00 |
+
+Level 0 is not wasted at 125 %: discounting it costs luma and only moves bits to chroma, and
+boosting it costs both. Halving the coarse boost gains 0.16-0.32 dB, the same detail-for-gradients
+trade as the 5/3 sweep above, so the default stays.
+
 **Rejected: activity masking from in-band coefficients.** Weighting each block's distortion by
 `(1 + A / offset)^-s`, where A is the block's largest coefficient, made smooth areas worse
 (smooth Y 49.2 dB fell to 44 to 48 dB). In Haar a smooth gradient produces large detail
