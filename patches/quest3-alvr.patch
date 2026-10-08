@@ -14581,7 +14581,7 @@ index adef8973ea6259daa44f167f0c57b9c35a7f1769..f0de49ce72eea7a6ab8dbf0caac3b4d9
      std::mutex m_presentMutex;
  };
 diff --git a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
-index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..07c3fddc750d9d8908f11b3ef4c8f276594e6a44 100644
+index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..04402e8e72dd5d3b721da0af567ea5ab82d4c70f 100644
 --- a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
 +++ b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
 @@ -12,8 +12,10 @@
@@ -14733,7 +14733,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..07c3fddc750d9d8908f11b3ef4c8f276
                                                  Settings::Instance().m_useFullRangeEncoding ? 1 : 0,
                                                  (int32_t)(m_framerate ? m_framerate : 72), 1, 0 };
                      fwrite("PYROWAVE", 1, 8, wave);
-@@ -412,6 +421,40 @@ void VideoEncoderPyroWave::DumpPlanes() {
+@@ -412,6 +421,43 @@ void VideoEncoderPyroWave::DumpPlanes() {
            (unsigned long long)m_frameCount);
  }
  
@@ -14755,6 +14755,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..07c3fddc750d9d8908f11b3ef4c8f276
 +        m_timingWindowStart = ticks[0];
 +    if ((ticks[TimingStages] - m_timingWindowStart) * msPerTick < 1000.0)
 +        return;
++    static const char* const names[TimingStages] = { "fence", "submit", "gpu", "packetize", "send" };
 +    float q[TimingStages][3];
 +    const size_t n = m_stageMs[0].size();
 +    for (int s = 0; s < TimingStages; s++) {
@@ -14765,16 +14766,18 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..07c3fddc750d9d8908f11b3ef4c8f276
 +        q[s][2] = v[n - 1];
 +        v.clear();
 +    }
-+    Info("[Q3PW_ENCODE_TIMING] frames=%zu fence=%.2f/%.2f/%.2f encode=%.2f/%.2f/%.2f "
-+         "send=%.2f/%.2f/%.2f (p50/p90/max ms)\n",
-+         n, q[0][0], q[0][1], q[0][2], q[1][0], q[1][1], q[1][2], q[2][0], q[2][1], q[2][2]);
++    char line[512];
++    int len = snprintf(line, sizeof(line), "[Q3PW_ENCODE_TIMING] frames=%zu", n);
++    for (int s = 0; s < TimingStages && len > 0 && len < (int)sizeof(line); s++)
++        len += snprintf(line + len, sizeof(line) - len, " %s=%.2f/%.2f/%.2f", names[s], q[s][0], q[s][1], q[s][2]);
++    Info("%s (p50/p90/max ms)\n", line);
 +    m_timingWindowStart = ticks[TimingStages];
 +}
 +
  void VideoEncoderPyroWave::Transmit(
      ID3D11Texture2D* /*pTexture*/,
      uint64_t /*presentationTime*/,
-@@ -424,17 +467,24 @@ void VideoEncoderPyroWave::Transmit(
+@@ -424,17 +470,24 @@ void VideoEncoderPyroWave::Transmit(
      auto params = GetDynamicEncoderParams();
      if (params.updated) {
          m_bitrateBps = params.bitrate_bps;
@@ -14803,7 +14806,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..07c3fddc750d9d8908f11b3ef4c8f276
  
      // Order the D3D11 render before the Vulkan read. A shared fence imported as a timeline
      // semaphore would avoid the CPU round trip; this is the simpler correct version, and the
-@@ -449,6 +499,7 @@ void VideoEncoderPyroWave::Transmit(
+@@ -449,6 +502,7 @@ void VideoEncoderPyroWave::Transmit(
          return;
      }
      WaitForSingleObject(m_fenceEvent, INFINITE);
@@ -14811,7 +14814,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..07c3fddc750d9d8908f11b3ef4c8f276
  
      if (!m_dumpTriggerDir.empty() && (m_frameCount % 8) == 0)
          PollDumpTrigger();
-@@ -482,10 +533,11 @@ void VideoEncoderPyroWave::Transmit(
+@@ -482,16 +536,18 @@ void VideoEncoderPyroWave::Transmit(
          Error("[PYROWAVE] encode failed: %d\n", (int)encoded);
          return;
      }
@@ -14826,10 +14829,19 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..07c3fddc750d9d8908f11b3ef4c8f276
      size_t numPackets = 0;
      if (pyrowave_encoder_compute_num_packets(m_pyroEncoder, packetBoundary, &numPackets)
          != PYROWAVE_SUCCESS) {
-@@ -503,22 +555,39 @@ void VideoEncoderPyroWave::Transmit(
+         Error("[PYROWAVE] compute_num_packets failed\n");
          return;
      }
- 
++    ticks[3] = QpcNow();
+     std::vector<pyrowave_packet> packets(numPackets ? numPackets : 1);
+     size_t outPackets = 0;
+     if (pyrowave_encoder_packetize(
+@@ -502,23 +558,41 @@ void VideoEncoderPyroWave::Transmit(
+         Error("[PYROWAVE] packetize failed\n");
+         return;
+     }
++    ticks[4] = QpcNow();
++
 +    // The receiver decodes one complete independent codec frame. Never truncate codec bytes
 +    // to meet bitrate, and never send a partial/oversized frame after a failed rate target.
 +    if (outPackets != 1 || packets[0].offset > m_bitstream.size()
@@ -14839,7 +14851,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..07c3fddc750d9d8908f11b3ef4c8f276
 +            outPackets, outPackets ? packets[0].size : 0, frameByteBudget);
 +        return;
 +    }
-+
+ 
      for (size_t i = 0; i < outPackets; i++) {
          uint8_t* buf = m_bitstream.data() + packets[i].offset;
          int len = (int)packets[i].size;
@@ -14877,17 +14889,17 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..07c3fddc750d9d8908f11b3ef4c8f276
              BitstreamTap::Submit(targetTimestampNs, insertIDR, buf, len);
              continue;
          }
-@@ -545,6 +614,8 @@ void VideoEncoderPyroWave::Transmit(
+@@ -545,6 +619,8 @@ void VideoEncoderPyroWave::Transmit(
               packets[0].size,
               rateControl.maximum_bitstream_size);
      }
-+    ticks[3] = QpcNow();
++    ticks[5] = QpcNow();
 +    ReportStageTiming(ticks);
      m_frameCount++;
  }
  
 diff --git a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.h b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.h
-index a0356d3dd4231a40ffe4b1bce4fb9b1427528aeb..cd05845e64f9aa8bcae96641fcf9d26d9ea7dacd 100644
+index a0356d3dd4231a40ffe4b1bce4fb9b1427528aeb..6a5dfb1b35b5f684ca9ffabdb1539a32c55ff98e 100644
 --- a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.h
 +++ b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.h
 @@ -23,9 +23,8 @@
@@ -14902,15 +14914,16 @@ index a0356d3dd4231a40ffe4b1bce4fb9b1427528aeb..cd05845e64f9aa8bcae96641fcf9d26d
  class VideoEncoderPyroWave : public VideoEncoder {
  public:
      VideoEncoderPyroWave(
-@@ -84,6 +83,14 @@ private:
+@@ -84,6 +83,15 @@ private:
      uint64_t m_bitrateBps = 0;
      uint32_t m_framerate = 0;
      uint64_t m_frameCount = 0;
 +
 +    // Per-stage CPU time of Transmit, logged once a second as [Q3PW_ENCODE_TIMING] (ms):
-+    // fence = waiting for the D3D11 render, encode = the synchronous Vulkan encode,
-+    // send = packetize and hand to the transport.
-+    static constexpr int TimingStages = 3;
++    // fence = waiting for the D3D11 render, submit = recording and submitting the Vulkan encode,
++    // gpu = waiting for it (and its readback copy), packetize = copying blocks out of the
++    // readback buffer, send = handing the frame to the transport.
++    static constexpr int TimingStages = 5;
 +    std::vector<float> m_stageMs[TimingStages];
 +    uint64_t m_timingWindowStart = 0;
 +    void ReportStageTiming(const uint64_t (&ticks)[TimingStages + 1]);
