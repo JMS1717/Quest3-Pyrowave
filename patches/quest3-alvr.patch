@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa88d8ec955 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..f0ce54e946bcd7022668ce6b0be2734937101690 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..582337ce1793e40803b64752adc09aa8
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..380fec45e85e30854d5f1afaee24bb5ccbee7b66 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..9f4b4329e96c8ba75b8d9884219a43e802814715 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..380fec45e85e30854d5f1afaee24bb5c
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.100"
++version = "20.13.0-quest3.pyro.101"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -936,7 +936,7 @@ index 0000000000000000000000000000000000000000..1b8cb4c86bde06af9befd60e0e29bf21
 +    }
 +}
 diff --git a/alvr/adb/src/lib.rs b/alvr/adb/src/lib.rs
-index 64660b1e8e559354c4fb96d88ec579f08fe243ec..694773efe717d70bd6cab9e4646699f4ffe3b406 100644
+index 64660b1e8e559354c4fb96d88ec579f08fe243ec..4e4d289e7b4e56c91b78924782b6e46eac6e7e6e 100644
 --- a/alvr/adb/src/lib.rs
 +++ b/alvr/adb/src/lib.rs
 @@ -1,12 +1,45 @@
@@ -966,14 +966,14 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..694773efe717d70bd6cab9e4646699f4
 +/// The least time between two attempts to clear a 72 Hz pin.
 +const PIN_72_RETRY: Duration = Duration::from_secs(60);
 +/// Display-change restarts allowed within `OVERRIDE_LOOP_WINDOW`. On October 8 the properties
-+/// were reset after every restart (`refreshRate` 72 or empty, `gpuLevel` empty; Meta Quest Link's
-+/// OVRServer was running), and the helper restarted the client every 5 s indefinitely, so the
-+/// stream never started. Past the limit the helper stops forcing the panel for
++/// were reset after every restart (`refreshRate` 72 or empty, `gpuLevel` empty) on Horizon OS
++/// build 209, which reportedly blocks rates above 120 Hz, and the helper restarted the client every
++/// 5 s indefinitely, so the stream never started. Past the limit the helper stops forcing the panel for
 +/// `OVERRIDE_LOOP_PAUSE` and says why.
 +const OVERRIDE_LOOP_RESTARTS: usize = 4;
 +const OVERRIDE_LOOP_WINDOW: Duration = Duration::from_secs(90);
 +const OVERRIDE_LOOP_PAUSE: Duration = Duration::from_secs(300);
-+pub const OVERRIDE_LOOP_MESSAGE: &str = "The headset resets its refresh rate after every client restart, so the panel cannot be held at the selected rate. Close Meta Quest Link (OVRServer) on this PC if it runs, or choose 120 Hz. Retrying in 5 minutes";
++pub const OVERRIDE_LOOP_MESSAGE: &str = "The headset resets its refresh rate after every client restart, so the panel cannot be held at the selected rate. The October 2026 Horizon OS update (build 209) is reported to block rates above 120 Hz: choose 120 Hz until Meta fixes it. Retrying in 5 minutes";
 +
 +/// Whether a restart at `now` would be one too many, given earlier restarts; prunes the list.
 +fn override_loop(restarts: &mut Vec<Instant>, now: Instant) -> bool {

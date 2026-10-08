@@ -200,9 +200,9 @@ whether audio on the stream socket stalls behind video.
   144-207 Hz without forcing, but `.94` (force only above 207 Hz) was rejected. In one of two runs a
   72 left by the shell after the GPU-clock restart pinned the panel, and the stream was refused
   ([72, 80]) until the client restarted again. Forcing's rewrite had been covering that case.
-  Next: the helper clears a 72 that pins the panel (the client confirms only 72/80 while the
-  property reads 72) and restarts once; then stop forcing native rates. Measure refusals and
-  restarts per run over at least 8 runs against `.93`.
+  `.95` clears such a 72 pin. Stopping forcing native rates is held back: Horizon OS build 209
+  (auto-installed October 8) reportedly blocks rates above 120 Hz, so the runtime may no longer
+  grant 144-207 Hz by itself. Next: check whether forcing over USB still works on build 209.
 
 **1.7 A light play-session logger.**
 

@@ -177,16 +177,23 @@ A 207 Hz harness cell on `.98` never streamed.
     time `gpuLevel` was empty as well.
   - The client's probe saw only 72/80/90/120 Hz. Every request above 120 was rejected
     (`ERROR_DISPLAY_REFRESH_RATE_UNSUPPORTED_FB`), so the server refused the stream each time.
-- **Likely cause, not proven:** Meta Quest Link's `OVRServer_x64` had been running on the PC since
-  the owner's other streaming test. The same 207 Hz switch worked earlier that day without it.
-  `gpuLevel` being cleared is new; HorizonOS alone only rewrites `refreshRate`.
+- **Likely cause: a Horizon OS update.** The headset had installed Horizon OS build 209
+  (`ro.vros.build.version=209`, built October 6, 2026) automatically. Virtual Desktop's developer
+  reports that this update broke refresh rates above 120 Hz. The same 207 Hz switch worked earlier
+  that day. `gpuLevel` being cleared is also new; before, HorizonOS rewrote only `refreshRate`.
+  Our first guess was Meta Quest Link's `OVRServer_x64`, which was running on the PC; it is not
+  ruled out, but the update explains the rejected rates better.
 - **Fix (`.100`):** at most four display-change restarts within 90 s.
   - The fifth stops the helper forcing the panel for 5 minutes.
   - It logs, and shows in the dashboard status: *"The headset resets its refresh rate after every
-    client restart… Close Meta Quest Link (OVRServer) on this PC if it runs, or choose 120 Hz."*
+    client restart… choose 120 Hz until Meta fixes it."* (`.101` names the Horizon OS update;
+    `.100` named Meta Quest Link.)
   - The client then stays up, and the server's rate check reports the unsupported rate instead of
     looping.
-- **Not yet checked:** a 207 Hz switch with OVRServer closed, to confirm the cause. Two
+- **Held back:** not forcing native rates (the `.94` idea on top of the `.95` pin clear). It relies
+  on the runtime granting 144-207 Hz by itself, which build 209 appears to stop.
+- **Not yet checked:** whether forcing `debug.oculus.refreshRate` over USB still reaches 144-207 Hz
+  on build 209. If it does, wired 207 Hz works where wireless apps cannot. Two
   stale state files from interrupted runs (`.97`, `.98` runtime folders) also still record
   `applied.gpuLevel=7`.
 

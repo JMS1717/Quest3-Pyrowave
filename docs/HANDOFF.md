@@ -68,7 +68,17 @@ State:
   - On the headset at 120 Hz / 1500 / 2080 (static): PC k=0.15 looked crisper than headset 50 at
     the same frame rate.
   - Two new profiles, **Competitive 207 Hz** and **Quality 120 Hz**, fold in CDF 5/3, the better
-    downsample kernel and PC sharpening. Neither has been run as a whole yet.
+    downsample kernel and PC sharpening. Quality held about 117 FPS on the headset while panning;
+    Competitive has not been run.
+- **October 8, evening: Horizon OS build 209 blocks rates above 120 Hz.** The headset updated itself
+  (`ro.vros.build.version=209`, built October 6). Virtual Desktop's developer reports the update
+  broke high refresh rates. A 207 Hz cell on `.98` had already looped: the client was offered only
+  72/80/90/120 Hz.
+  - `.100` stops that loop after four display-change restarts in 90 s and pauses forcing for
+    5 minutes. `.101` points its message at the OS update instead of Meta Quest Link
+    ([REFRESH-RATES.md](REFRESH-RATES.md#restart-loop-with-meta-quest-link-running-october-8-100)).
+  - The 207 Hz work (Competitive profile, not forcing native rates) waits for a fixed OS, or for a
+    check that forcing over USB still works on build 209. Until then, work at 120 Hz.
 - **Headset client (October 8, afternoon):** `.99` is installed for testing. The owner's `.92`
   play pair is still staged (`workspace/runtime-local92-play`). Reinstall its APK before playing
   `.92`, or play the `.99` pair. Virtual Desktop's registration is untouched.
