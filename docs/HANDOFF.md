@@ -18,9 +18,10 @@ State:
 
 - **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.65` (`.64` plus the opt-in
   Wi-Fi UDP transport), not released.
-- **On `claude/frame-budget`:** `.75`. It has server-predicted head poses, UDP as the Wi-Fi
-  default, Stream resolution up to 125 %, four wired connections, the Sharpening setting and a
-  fast 4:4:4 path ([below](#october-7-late-night-66-74-on-claudeframe-budget)).
+- **On `claude/frame-budget`:** `.78`. It has server-predicted head poses, UDP as the Wi-Fi
+  default, Stream resolution up to 125 %, four wired connections, the Sharpening setting, a
+  fast 4:4:4 path and a high-priority encode queue
+  ([below](#october-7-late-night-66-74-on-claudeframe-budget)).
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
   194-197 fresh FPS over USB with the direct eye copy, 189-195 over Wi-Fi 6E.
 - **Not established:** sustained gameplay, optical motion-to-photon latency, image quality on par
@@ -66,6 +67,9 @@ Builds from branch `claude/frame-budget`, local only:
 | `.71`-`.73` | `ae7b380`, `8d0fc77`, `e38216f` | Sharpening: debug property, then setting, then centre-only |
 | `.74` | `0f3c97a` | Decoder V2 mode 7: 4:4:4 packed into the present buffer |
 | `.75` | `a1cc167` | Sharpening uses a linear kernel instead of CAS |
+| `.76` | `11dc2e4`, `43daf79`, `375c3ee` | Encoder stage timing, `[Q3PW_ENCODE_TIMING]` and `[Q3PW_RENDER_GPU]` |
+| `.77` | `e7e6bec`, `937ba46` | GPU priority experiments (`ALVR_PYROWAVE_QUEUE`, D3D11 thread priority) |
+| `.78` | `90788e7` | PyroWave encodes on a high-priority compute queue by default |
 
 **Frame budget:** neutral in tests. SteamVR presents at the panel rate even when the game is
 slower, because it reprojects into a new present every vsync. Giving a slower game the full
@@ -135,6 +139,18 @@ bitrate needs the game's own rate. See
 - `.75` changes the kernel from CAS to linear: +1.69 instead of +1.23 dB offline at 120 Hz / 2080,
   fewer overshooting pixels, and about 10 FPS cheaper than CAS at 207 Hz
   ([SHARPENING.md](SHARPENING.md)).
+
+**Latency, server side (`.76`-`.78`, [LATENCY.md](LATENCY.md)):**
+
+- ALVR's "encoder" stage (3.0-3.6 ms at 120 Hz / 1500, 5.7-6.5 ms under a game-like GPU load) is
+  mostly waiting for the game's frame to finish on the GPU. PyroWave's own encode is about 0.3 ms.
+- `.78` encodes on a compute queue at high global priority: the encode's GPU wait falls from
+  0.63-0.72 to 0.37-0.39 ms (ABBA) and the stage to 2.0-2.8 ms. `ALVR_PYROWAVE_QUEUE=graphics`
+  restores the old queue.
+- Probes show the streamer's GPU work runs beside a game's, not behind it, so moving the frame
+  render from D3D11 to Vulkan would not help. D3D11 GPU thread priority changed nothing.
+- On `.78` the estimate is 39.8 ms. The large stages are the vsync queue (13.7 ms, the runtime's
+  lead), network (5.7) and decoder (5.4).
 
 **Next:**
 

@@ -267,6 +267,12 @@ From the table above, in order:
    display time the client targets, and its queue depth.
 2. **Encoder, 5.7 ms:** PyroWave itself encodes 4K in under 0.2 ms, so this is mostly something
    else. Candidates: the downsample, copies, readback, or GPU contention with the game. Trace it.
+
+   **Traced (`.76`-`.78`, [LATENCY.md](LATENCY.md)):** the stage is mostly the game's frame still
+   rendering on the GPU after SteamVR hands it over. The streamer's part is about 1.5 ms: render
+   0.6-0.9, encode 0.4, CPU 0.5. `.78` encodes on a high-priority compute queue, which cuts the
+   encode wait by 0.3 ms. Under a game-like load the streamer's work runs beside the game's, so a
+   Vulkan rewrite of the frame render would not help. **Done** for the server side.
 3. **Network, 6.8 ms at 1.5 MB per frame:** pipeline it. Send blocks as they are encoded, and
    start decoding coarse levels while fine ones arrive.
 4. **Optical motion-to-photon:** measure it, as AGENTS.md requires.
