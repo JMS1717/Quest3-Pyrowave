@@ -116,6 +116,10 @@ PyroWave UDP path (`pyrowave_udp.rs`, the C++ `VideoSendUdp`).
 - Use 4 adb connections. At 2000 Mbit/s the burst benchmark gave p99 7–10 ms with 4 connections,
   against 10–11 ms with 2 ([TRANSPORT.md](TRANSPORT.md#usb)).
 - 4:4:4 and supersampled streams need this.
+- **Done (`.70`):** four connections are the default. They cut network p99 by 2.6–2.7 ms at 1000
+  and 2000 Mbit/s, with the same frame rate. At 2000 Mbit/s and 120 Hz a frame takes about 7 ms
+  over USB whatever the connection count: the cable is near its limit
+  ([BITRATE.md](BITRATE.md#four-wired-connections-69-default-from-70-october-7)).
 
 **1.5 Audio cut-outs** (USB, 207 Hz). Reproduce with audio logging on both ends, and check
 whether audio on the stream socket stalls behind video.

@@ -300,6 +300,25 @@ not motion-to-photon.
 - Not yet measured: unplugging the cable mid-stream; 3 or 4 connections; Haar, whose decode does not grow with bitrate and so may
   turn the shorter arrival into frames; sustained play.
 
+### Four wired connections (`.69`, default from `.70`), October 7
+
+Wired, CDF 5/3, ABBA, 2 against 4 video connections:
+
+| Setting | Connections | Fresh FPS | Network p50 | Network p99 |
+| --- | --- | --- | --- | --- |
+| 207 Hz, 2080x2208, 1000 Mbps | 2 | 186.7, 190.2 | 2.7, 2.7 ms | 7.9, 7.8 ms |
+| 207 Hz, 2080x2208, 1000 Mbps | 4 | 190.6, 186.4 | 2.8, 2.7 ms | 5.2, 5.1 ms |
+| 120 Hz, 2592x2784, 2000 Mbps | 2 | 110.2, 112.9 | 7.6, 7.4 ms | 18.2, 16.7 ms |
+| 120 Hz, 2592x2784, 2000 Mbps | 4 | 111.0, 110.8 | 7.0, 6.9 ms | 14.8, 14.9 ms |
+
+- With four connections the frame rate is the same, and the network tail is 2.6–2.7 ms shorter.
+  `.70` makes four the default.
+- At 2000 Mbps a 120 Hz frame is about 2.1 MB. It takes about 7 ms over the USB link, which
+  carries 2.3–2.6 Gbps in bursts ([TRANSPORT.md](TRANSPORT.md#usb)). That is most of the
+  8.3 ms frame, and fresh FPS falls from about 116 at 1500 Mbps to about 111.
+- So 2000 Mbps at 120 Hz is near the cable's limit whatever the connection count. Above it,
+  more bits per frame have to come from coding efficiency, not bitrate.
+
 ### Frame budget from the present rate (`.66`, `.67`), October 7
 
 Before `.66`, constant bitrate was divided by the refresh rate. A game presenting 150–180 fps on

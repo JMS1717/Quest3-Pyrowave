@@ -103,8 +103,10 @@ bitrate needs the game's own rate. See
 1. Owner tests:
    - `.68`/`.69` over Wi-Fi with head movement.
    - 120 Hz, 1500 Mbps, stream 125 % with game render 150 %, against stream 100 %.
-2. Four wired connections at 2000 Mbps (PLAN 1.4).
-3. The game's own frame rate for the budget (PLAN 2.1).
+2. The game's own frame rate for the budget (PLAN 2.1).
+3. (Done in `.70`: four wired connections by default. Network p99 is 2.6 ms shorter and the
+   frame rate is unchanged. See
+   [BITRATE.md](BITRATE.md#four-wired-connections-69-default-from-70-october-7).)
 4. An entropy-coding estimate on game frames (PLAN 2.4), for sharpness at 207 Hz.
 
 ## October 7, night: `.65`, transport measured and Wi-Fi UDP video

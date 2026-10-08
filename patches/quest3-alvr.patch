@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557a9f6160c 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..ad8eab8fec85c17bd814c2a5808f259e541dd352 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..2f66805f5441ae965d0f55bf73b2b557
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..1c45b40f5002d49293a0fd697e91e5e2a910e396 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..9a0f96264d8ddeea8b7822e49ac1f8102d1727a0 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..1c45b40f5002d49293a0fd697e91e5e2
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.69"
++version = "20.13.0-quest3.pyro.70"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -15370,7 +15370,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..40abde43f43530c676feec55cc19daf0
  
  /// The profile whose every assignment the session (`session_settings` as JSON) currently holds,
 diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
-index 985a4d04e505ecaf29120bcc61b525476eb7caf2..da399578385b9624af8ce4bbb085b22aabced03b 100644
+index 985a4d04e505ecaf29120bcc61b525476eb7caf2..27d82b32fb92e2e8e744bb8403eb4a6a987e736e 100644
 --- a/alvr/session/src/beta_tests.rs
 +++ b/alvr/session/src/beta_tests.rs
 @@ -31,7 +31,7 @@ fn video_shows_only_codec_experiment_controls() {
@@ -15716,8 +15716,8 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..da399578385b9624af8ce4bbb085b22a
 +}
 +
 +#[test]
-+fn wired_video_uses_two_connections_by_default() {
-+    assert_eq!(default_settings().video.pyrowave.wired_video_connections, 2);
++fn wired_video_uses_four_connections_by_default() {
++    assert_eq!(default_settings().video.pyrowave.wired_video_connections, 4);
 +}
 diff --git a/alvr/session/src/headset_settings.rs b/alvr/session/src/headset_settings.rs
 new file mode 100644
@@ -16096,7 +16096,7 @@ index d7d0dbbfcbfc7eaacf6f4ff5f0c47f882f1eee1a..e85a1e8a6f60414317ee82c6b1a251c5
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..225100008b349d9029e411f948347d4db9449a4c 100644
+index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..9fbf352512c4bc79592ce2f43023b25291464d2c 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -16268,7 +16268,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..225100008b349d9029e411f948347d4d
 +    pub quest3_max_gpu_clock: bool,
 +
 +    #[serde(default = "default_wired_video_connections")]
-+    #[schema(strings(display_name = "Wired video connections", help = "USB only. Each frame is split across this many dedicated connections (ports 9950 to 9953, forwarded over adb), which deliver large frames sooner: one adb-forwarded connection tops out at about 2 Gbit/s. Two cut ALVR's network time by about 0.7 ms at 1000 Mbit/s and 1.8 ms at 1500 at 207 Hz. 0 sends video on ALVR's stream connection, as before. A client that does not answer falls back to 0. Restart SteamVR."))]
++    #[schema(strings(display_name = "Wired video connections", help = "USB only. Each frame is split across this many dedicated connections (ports 9950 to 9953, forwarded over adb), which deliver large frames sooner: one adb-forwarded connection tops out at about 2 Gbit/s. Two cut ALVR's network time by about 0.7 ms at 1000 Mbit/s and 1.8 ms at 1500 at 207 Hz; four cut its p99 by a further 2.6-2.7 ms at 1000 and 2000 Mbit/s, with the same frame rate. 0 sends video on ALVR's stream connection, as before. A client that does not answer falls back to 0. Restart SteamVR."))]
 +    #[schema(gui(slider(min = 0, max = 4)))]
 +    #[schema(flag = "steamvr-restart")]
 +    pub wired_video_connections: u32,
@@ -16282,7 +16282,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..225100008b349d9029e411f948347d4d
 +/// Only these fixed profiles are exposed by Quest3-Pyrowave. Generic stale
 +/// foveation/force-enable/gaze/environment settings cannot modify their geometry.
 +fn default_wired_video_connections() -> u32 {
-+    2
++    4
 +}
 +
 +fn default_true() -> bool {
@@ -16465,7 +16465,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..225100008b349d9029e411f948347d4d
 +                },
 +                quest3_240hz_display_scaling: false,
 +                quest3_max_gpu_clock: false,
-+                wired_video_connections: 2,
++                wired_video_connections: 4,
 +                latency_stamp: false,
              },
              encoder_config: EncoderConfigDefault {
