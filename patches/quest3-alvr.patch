@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1666f7435 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028cdc51d735 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..721a2587d401f3675c183be15f7a14b1
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..6d0b53ba94c9ef982ee89f0e248c44259871dd4a 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..b2c030104dc42a5b668222fda5e2aca6c9e9ce10 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..6d0b53ba94c9ef982ee89f0e248c4425
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.83"
++version = "20.13.0-quest3.pyro.84"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -1253,6 +1253,166 @@ index 0000000000000000000000000000000000000000..057b458db4253a7c044c8c1592cd29af
 +        std::process::exit(57);
 +    }
 +}
+diff --git a/alvr/audio/src/lib.rs b/alvr/audio/src/lib.rs
+index 6892e3ba9d8715841d1b5f8b514e98ed532ebbe9..6140a53877898901680c6c4937ca49d9972af258 100644
+--- a/alvr/audio/src/lib.rs
++++ b/alvr/audio/src/lib.rs
+@@ -23,11 +23,18 @@ use cpal::{
+ use rodio::{OutputStream, Source};
+ use std::{
+     collections::{HashMap, VecDeque},
+-    sync::Arc,
++    sync::{
++        atomic::{AtomicU64, Ordering},
++        Arc,
++    },
+     thread,
+-    time::Duration,
++    time::{Duration, Instant},
+ };
+ 
++// [Q3PW_AUDIO]: playback batches the audio callback had to fill with silence because the buffer
++// ran dry (counted by get_next_frame_batch, reported by receive_samples_loop).
++static SILENT_BATCHES: AtomicU64 = AtomicU64::new(0);
++
+ static VIRTUAL_MICROPHONE_PAIRS: Lazy<HashMap<&str, &str>> = Lazy::new(|| {
+     [
+         ("CABLE Input", "CABLE Output"),
+@@ -426,10 +433,82 @@ pub fn get_next_frame_batch(
+ 
+         batch
+     } else {
++        SILENT_BATCHES.fetch_add(1, Ordering::Relaxed);
+         vec![0.; batch_frames_count * channels_count]
+     }
+ }
+ 
++/// [Q3PW_AUDIO] statistics of the receive loop, logged every 5 s while packets arrive.
++struct AudioReceiveStats {
++    window_start: Instant,
++    last_packet: Option<Instant>,
++    packets: u64,
++    gap_ms_max: f32,
++    gaps_over_20ms: u64,
++    buffer_frames_min: usize,
++    buffer_frames_max: usize,
++    losses: u64,
++    recoveries: u64,
++    overflows: u64,
++}
++
++impl AudioReceiveStats {
++    fn new() -> Self {
++        SILENT_BATCHES.store(0, Ordering::Relaxed);
++        Self {
++            window_start: Instant::now(),
++            last_packet: None,
++            packets: 0,
++            gap_ms_max: 0.,
++            gaps_over_20ms: 0,
++            buffer_frames_min: usize::MAX,
++            buffer_frames_max: 0,
++            losses: 0,
++            recoveries: 0,
++            overflows: 0,
++        }
++    }
++
++    fn on_packet(&mut self) {
++        let now = Instant::now();
++        if let Some(last) = self.last_packet {
++            let gap_ms = (now - last).as_secs_f32() * 1000.;
++            self.gap_ms_max = self.gap_ms_max.max(gap_ms);
++            self.gaps_over_20ms += (gap_ms > 20.) as u64;
++        }
++        self.last_packet = Some(now);
++        self.packets += 1;
++    }
++
++    fn on_buffer(&mut self, frames: usize, sample_rate_hz: usize) {
++        self.buffer_frames_min = self.buffer_frames_min.min(frames);
++        self.buffer_frames_max = self.buffer_frames_max.max(frames);
++        let elapsed = self.window_start.elapsed();
++        if elapsed >= Duration::from_secs(5) {
++            let silent = SILENT_BATCHES.swap(0, Ordering::Relaxed);
++            let ms = |f: usize| f as f32 * 1000. / sample_rate_hz.max(1) as f32;
++            alvr_common::error!(
++                "[Q3PW_AUDIO] window_s={:.1} packets={} gap_ms_max={:.1} gaps_over_20ms={} \
++                 buffer_ms_min={:.1} buffer_ms_max={:.1} silent_batches={} recovered={} \
++                 loss={} overflow={}",
++                elapsed.as_secs_f32(),
++                self.packets,
++                self.gap_ms_max,
++                self.gaps_over_20ms,
++                ms(self.buffer_frames_min),
++                ms(self.buffer_frames_max),
++                silent,
++                self.recoveries,
++                self.losses,
++                self.overflows
++            );
++            let last_packet = self.last_packet;
++            *self = Self::new();
++            self.last_packet = last_packet;
++        }
++    }
++}
++
+ // The receive loop is resposible for ensuring smooth transitions in case of disruptions (buffer
+ // underflow, overflow, packet loss). In case the computation takes too much time, the audio
+ // callback will gracefully handle an interruption, and the callback timing and sound wave
+@@ -443,6 +522,9 @@ pub fn receive_samples_loop(
+     average_buffer_frames_count: usize,
+ ) -> Result<()> {
+     let mut recovery_sample_buffer = vec![];
++    let mut stats = AudioReceiveStats::new();
++    // The batch is batch_ms of audio; the configured batch is 10 ms unless changed.
++    let sample_rate_hz = batch_frames_count * 100;
+     while is_running() {
+         let data = match receiver.recv(Duration::from_millis(500)) {
+             Ok(data) => data,
+@@ -450,6 +532,7 @@ pub fn receive_samples_loop(
+             Err(ConnectionError::Other(e)) => return Err(e),
+         };
+         let (_, packet) = data.get()?;
++        stats.on_packet();
+ 
+         let new_samples = packet
+             .chunks_exact(2)
+@@ -460,6 +543,7 @@ pub fn receive_samples_loop(
+ 
+         if data.had_packet_loss() {
+             info!("Audio packet loss!");
++            stats.losses += 1;
+ 
+             if sample_buffer_ref.len() / channels_count < batch_frames_count {
+                 sample_buffer_ref.clear();
+@@ -506,6 +590,7 @@ pub fn receive_samples_loop(
+ 
+                 sample_buffer_ref.extend(recovery_sample_buffer.drain(..));
+                 info!("Audio recovered");
++                stats.recoveries += 1;
+             }
+         } else {
+             sample_buffer_ref.extend(&new_samples);
+@@ -515,6 +600,7 @@ pub fn receive_samples_loop(
+         let buffer_frames_size = sample_buffer_ref.len() / channels_count;
+         if buffer_frames_size > 2 * average_buffer_frames_count + batch_frames_count {
+             info!("Audio buffer overflow! size: {buffer_frames_size}");
++            stats.overflows += 1;
+ 
+             let drained_samples = sample_buffer_ref
+                 .drain(0..(buffer_frames_size - average_buffer_frames_count) * channels_count)
+@@ -530,6 +616,9 @@ pub fn receive_samples_loop(
+                 }
+             }
+         }
++        let buffered_frames = sample_buffer_ref.len() / channels_count;
++        drop(sample_buffer_ref);
++        stats.on_buffer(buffered_frames, sample_rate_hz);
+     }
+ 
+     Ok(())
 diff --git a/alvr/client_core/src/c_api.rs b/alvr/client_core/src/c_api.rs
 index 80b24fc63a535f17c1d62bb29fef2245c90a8a5c..25a7cc028bed1408e151fe26d11d7c23885862ab 100644
 --- a/alvr/client_core/src/c_api.rs

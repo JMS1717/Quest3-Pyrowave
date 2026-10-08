@@ -20,6 +20,7 @@ import ctypes
 import json
 import math
 import os
+import sys
 import time
 from pathlib import Path
 
@@ -259,6 +260,16 @@ def main():
         frame_ms = float(os.environ.get('Q3PW_SCENE_FRAME_MS') or 0)
         # Redraw each eye this many times: a GPU-bound game, which also delays SteamVR's compositor.
         overdraw = max(1, int(os.environ.get('Q3PW_SCENE_OVERDRAW') or 1))
+        # Q3PW_SCENE_AUDIO=silence plays digital silence on the default output for the whole run:
+        # inaudible, but it keeps the PC's audio loopback capture, and so the streamed game audio,
+        # running, as a game's sound would.
+        if os.environ.get('Q3PW_SCENE_AUDIO') == 'silence' and sys.platform == 'win32':
+            import wave, winsound
+            silence = root / 'silence.wav'
+            with wave.open(str(silence), 'wb') as w:
+                w.setnchannels(2); w.setsampwidth(2); w.setframerate(48000)
+                w.writeframes(bytes(4 * 48000 * 2))
+            winsound.PlaySound(str(silence), winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_LOOP)
         frames = 0; offset_px = 0.0; start = time.monotonic(); last_control = start
         (root / 'ready.json').write_text(json.dumps({
             'source_eye_size': [width, height], 'px_per_deg': px_per_deg,
@@ -325,6 +336,9 @@ def main():
         (root / 'scene.json').write_text(json.dumps({'frames_submitted': frames,
                                                      'seconds': time.monotonic() - start}, indent=2))
     finally:
+        if os.environ.get('Q3PW_SCENE_AUDIO') == 'silence' and sys.platform == 'win32':
+            import winsound
+            winsound.PlaySound(None, 0)
         openvr.shutdown()
         if window:
             glfw.destroy_window(window)
