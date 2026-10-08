@@ -16,6 +16,7 @@ Run with: python -m tools.quest3.quality_scene --out <dir> --seconds 60 [--pan-d
 Requires: pip install numpy opencv-python openvr glfw PyOpenGL
 """
 import argparse
+import ctypes
 import json
 import math
 import os
@@ -264,6 +265,13 @@ def main():
             'pan_deg_s': pan, 'world_size': [ww, wh], 'started_unix_ns': time.time_ns()}))
         log = (root / 'frames.csv').open('w')
         log.write('frame,unix_ns,offset_px,pan_deg_s\n')
+        # The compositor's per-frame timing as the application side sees it (what fpsVR reads):
+        # how often each frame was presented and whether it was reprojected.
+        timing_log = (root / 'timing.csv').open('w')
+        timing_log.write('frame_index,system_s,presents,mispresented,dropped,reprojection_flags,'
+                         'client_interval_ms\n')
+        timings = (openvr.Compositor_FrameTiming * 128)()
+        last_timing_index = 0; last_timing = start
         while time.monotonic() - start < args.seconds and not (args.stop_file and args.stop_file.exists()):
             compositor.waitGetPoses(poses, None)
             now = time.monotonic()
@@ -296,12 +304,24 @@ def main():
             GL.glFlush()
             log.write(f'{frames},{time.time_ns()},{offset_px:.3f},{pan}\n')
             frames += 1
+            if now - last_timing > 0.25:
+                last_timing = now
+                timings[0].m_nSize = ctypes.sizeof(openvr.Compositor_FrameTiming)
+                count, _ = compositor.getFrameTimings(timings)
+                for t in timings[:count]:
+                    if t.m_nFrameIndex > last_timing_index:
+                        last_timing_index = t.m_nFrameIndex
+                        timing_log.write(f'{t.m_nFrameIndex},{t.m_flSystemTimeInSeconds:.6f},'
+                                         f'{t.m_nNumFramePresents},{t.m_nNumMisPresented},'
+                                         f'{t.m_nNumDroppedFrames},{t.m_nReprojectionFlags},'
+                                         f'{t.m_flClientFrameIntervalMs:.3f}\n')
             # Advance by the frame period the compositor paces us at.
             offset_px = (offset_px + pan * px_per_deg / 207.0) % ww
             if frame_ms:
                 while time.monotonic() - now < frame_ms / 1000:
                     pass
         log.close()
+        timing_log.close()
         (root / 'scene.json').write_text(json.dumps({'frames_submitted': frames,
                                                      'seconds': time.monotonic() - start}, indent=2))
     finally:
