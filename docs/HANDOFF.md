@@ -18,7 +18,7 @@ State:
 
 - **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.65` (`.64` plus the opt-in
   Wi-Fi UDP transport), not released.
-- **On `claude/frame-budget`:** `.83`. It has:
+- **On `claude/frame-budget`:** `.84`. It has:
   - server-predicted head poses;
   - UDP as the Wi-Fi default;
   - Stream resolution up to 125 %;
@@ -27,7 +27,8 @@ State:
   - a fast 4:4:4 path;
   - a high-priority encode queue;
   - the opt-in setting "Stream only the game's frames"
-    ([below](#october-7-late-night-66-74-on-claudeframe-budget)).
+    ([below](#october-7-late-night-66-74-on-claudeframe-budget));
+  - audio cut-out diagnostics.
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
   194-197 fresh FPS over USB with the direct eye copy, 189-195 over Wi-Fi 6E.
 - **Not established:** sustained gameplay, optical motion-to-photon latency, image quality on par
@@ -78,6 +79,7 @@ Builds from branch `claude/frame-budget`, local only:
 | `.78` | `90788e7` | PyroWave encodes on a high-priority compute queue by default |
 | `.79`-`.82` | `8a91b0d`, `6bc5632`, `f3a77db`, `b7cb64b` | The game's frame rate from SteamVR's frame timing (diagnostics, then detection) |
 | `.83` | `8137a94` | Setting: Stream only the game's frames (off by default) |
+| `.84` | `8b0b764` | Audio diagnostics: the client's `[Q3PW_AUDIO]` statistics; the scene can play silence |
 
 **Frame budget:**
 
@@ -92,6 +94,11 @@ Builds from branch `claude/frame-budget`, local only:
 - A game at full rate is unaffected.
 - How it looks and feels in the headset is untested
   ([BITRATE.md](BITRATE.md#streaming-only-the-games-frames-79-83-october-8)).
+
+**Audio (`.84`):** the harness found no cut-outs at 207/1000 or 120/1500 wired. Audio arrived at
+100 packets/s with gaps of at most 22 ms, and the headset buffer never ran dry while streaming.
+The owner's cut-outs need a real game on `.84`; the server log then shows `[Q3PW_AUDIO]`
+windows ([PLAN.md 1.5](PLAN.md)).
 
 **Wi-Fi tracking:**
 
@@ -199,6 +206,8 @@ Builds from branch `claude/frame-budget`, local only:
    - on against off;
    - look for sharper frames, and for judder or rougher head rotation.
    - If clean, make it the default (PLAN 2.1).
+   - Play on `.84` or later, so a cut-out shows in the server log as `[Q3PW_AUDIO]` windows
+     with `silent_batches` above 0 (PLAN 1.5).
 3. (Done in `.70`: four wired connections by default. Network p99 is 2.6 ms shorter and the
    frame rate is unchanged. See
    [BITRATE.md](BITRATE.md#four-wired-connections-69-default-from-70-october-7).)

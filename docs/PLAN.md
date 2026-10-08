@@ -124,6 +124,23 @@ PyroWave UDP path (`pyrowave_udp.rs`, the C++ `VideoSendUdp`).
 **1.5 Audio cut-outs** (USB, 207 Hz). Reproduce with audio logging on both ends, and check
 whether audio on the stream socket stalls behind video.
 
+- **Instrumented (`.84`):** the client logs `[Q3PW_AUDIO]` every 5 s and forwards it to the
+  server log. Each line has packets, the largest gap between packets, the buffer range, silent
+  playback batches, recoveries, losses and overflows. The quality scene can play digital silence
+  (`Q3PW_SCENE_AUDIO=silence`), so loopback capture has something to send. The harness turns game
+  audio off unless a cell turns it on.
+- **Not reproduced on the harness (October 8, wired CDF 5/3, 207/1000 at 182–185 fps and 120/1500):**
+  - Over about 160 s of steady streaming: 100 packets/s, the largest gap 22 ms, no losses or
+    overflows, the buffer 60–70 ms, and no silent batches after the start-up fill.
+  - The only gap (3.3 s) came when the harness closed SteamVR Home and before the scene's sound
+    started. WASAPI loopback sends nothing while the PC plays nothing, so that gap was harness
+    timing, not a stream stall.
+  - Video does not starve audio on the stream socket at 207 Hz.
+- **Next:** the owner plays a real game on `.84` or later. The cut-outs then show in the
+  server log as `[Q3PW_AUDIO]` windows with `silent_batches > 0`. Large `gap_ms_max` would point at
+  the PC side (capture or the game). Silent batches with normal packet gaps would point at the
+  headset's playback.
+
 **1.6 Refresh-rate switching that works.**
 
 - A leftover `debug.oculus.refreshRate` pins the app's rate probe to 72/80 Hz.
