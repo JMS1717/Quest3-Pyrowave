@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d83a32e297 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..578ba289f883e6a3d23d955315577362f1576bd5 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0e3664c743c146c69cb16f1e4cc4c9d8
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..a576dba2c9c297beb8c42d88c2dfd30baad3f011 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..8174e0d42eea660cd6ca1ef0381b2cf755ade582 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..a576dba2c9c297beb8c42d88c2dfd30b
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.91"
++version = "20.13.0-quest3.pyro.92"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -904,7 +904,7 @@ index 0000000000000000000000000000000000000000..d0e6cce8b1d59bba110232cf1f36f57b
 +    }
 +}
 diff --git a/alvr/adb/src/lib.rs b/alvr/adb/src/lib.rs
-index 64660b1e8e559354c4fb96d88ec579f08fe243ec..497a7c062886193123addcc83e5dee6b56a12697 100644
+index 64660b1e8e559354c4fb96d88ec579f08fe243ec..2362f51547ab180574ac1b09a85a87dab2b03ff0 100644
 --- a/alvr/adb/src/lib.rs
 +++ b/alvr/adb/src/lib.rs
 @@ -1,12 +1,24 @@
@@ -934,7 +934,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..497a7c062886193123addcc83e5dee6b
  
  pub enum WiredConnectionStatus {
      Ready,
-@@ -15,6 +27,55 @@ pub enum WiredConnectionStatus {
+@@ -15,6 +27,59 @@ pub enum WiredConnectionStatus {
  
  pub struct WiredConnection {
      adb_path: String,
@@ -951,12 +951,16 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..497a7c062886193123addcc83e5dee6b
 +
 +/// Restart the client after a display change. `monkey`, which `start_application` uses, injects a
 +/// random input event after launching; on Quest that event closed the freshly started client.
++///
++/// `-S -W`: the activity manager stops the app and waits for the new launch itself. A separate
++/// `am force-stop` followed at once by `am start` lost the start for a client that had been up for
++/// about 3 s (2 of 16 trials, October 8): a new process came up with no activity. With `-S -W`, 12
++/// of 12 started.
 +fn restart_client(adb_path: &str, device_serial: &str, process_name: &str) -> Result<()> {
-+    commands::shell(adb_path, device_serial, &format!("am force-stop {process_name}"))?;
 +    let started = commands::shell(
 +        adb_path,
 +        device_serial,
-+        &format!("am start -n {process_name}/android.app.NativeActivity"),
++        &format!("am start -S -W -n {process_name}/android.app.NativeActivity"),
 +    )?;
 +    if started.contains("Error") {
 +        commands::start_application(adb_path, device_serial, process_name)?;
@@ -990,7 +994,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..497a7c062886193123addcc83e5dee6b
  }
  
  impl WiredConnection {
-@@ -23,8 +84,54 @@ impl WiredConnection {
+@@ -23,8 +88,54 @@ impl WiredConnection {
          download_progress_callback: impl Fn(usize, Option<usize>),
      ) -> Result<Self> {
          let adb_path = commands::require_adb(layout, download_progress_callback)?;
@@ -1046,7 +1050,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..497a7c062886193123addcc83e5dee6b
      }
  
      pub fn setup(
-@@ -33,18 +140,19 @@ impl WiredConnection {
+@@ -33,18 +144,19 @@ impl WiredConnection {
          stream_port: u16,
          client_type: &ClientFlavor,
          client_autolaunch: bool,
@@ -1071,7 +1075,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..497a7c062886193123addcc83e5dee6b
          let forwarded_ports: HashSet<u16> =
              commands::list_forwarded_ports(&self.adb_path, &device_serial)?
                  .into_iter()
-@@ -65,6 +173,35 @@ impl WiredConnection {
+@@ -65,6 +177,35 @@ impl WiredConnection {
              ));
          };
  
@@ -1107,7 +1111,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..497a7c062886193123addcc83e5dee6b
          if commands::get_process_id(&self.adb_path, &device_serial, &process_name)?.is_none() {
              if client_autolaunch {
                  commands::start_application(&self.adb_path, &device_serial, &process_name)?;
-@@ -76,7 +213,7 @@ impl WiredConnection {
+@@ -76,7 +217,7 @@ impl WiredConnection {
                      "ALVR client is not running".to_owned(),
                  ))
              }
@@ -1116,7 +1120,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..497a7c062886193123addcc83e5dee6b
              Ok(WiredConnectionStatus::NotReady(
                  "ALVR client is paused".to_owned(),
              ))
-@@ -86,14 +223,9 @@ impl WiredConnection {
+@@ -86,14 +227,9 @@ impl WiredConnection {
      }
  }
  
@@ -1134,7 +1138,7 @@ index 64660b1e8e559354c4fb96d88ec579f08fe243ec..497a7c062886193123addcc83e5dee6b
  
  pub fn get_process_name(
      adb_path: &str,
-@@ -132,3 +264,32 @@ pub fn get_process_name(
+@@ -132,3 +268,32 @@ pub fn get_process_name(
          })
          .map(|name| name.to_string())
  }
