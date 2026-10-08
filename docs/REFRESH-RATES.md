@@ -168,6 +168,28 @@ Virtual Desktop, runs in the 240 Hz scaled mode.
 - Once in the scaled mode, restoring the properties while asleep left the panel at 240 Hz through
   four sleep/wake cycles. Changing them again while awake returned it to 4128x2208 at 120 Hz.
 
+### Restart loop with Meta Quest Link running (October 8, `.100`)
+
+A 207 Hz harness cell on `.98` never streamed.
+
+- **What happened:** the helper restarted the client every 5-6 s for over 3 minutes.
+  - After each restart the properties had been reset: `refreshRate` was 72 or empty, and every other
+    time `gpuLevel` was empty as well.
+  - The client's probe saw only 72/80/90/120 Hz. Every request above 120 was rejected
+    (`ERROR_DISPLAY_REFRESH_RATE_UNSUPPORTED_FB`), so the server refused the stream each time.
+- **Likely cause, not proven:** Meta Quest Link's `OVRServer_x64` had been running on the PC since
+  the owner's other streaming test. The same 207 Hz switch worked earlier that day without it.
+  `gpuLevel` being cleared is new; HorizonOS alone only rewrites `refreshRate`.
+- **Fix (`.100`):** at most four display-change restarts within 90 s.
+  - The fifth stops the helper forcing the panel for 5 minutes.
+  - It logs, and shows in the dashboard status: *"The headset resets its refresh rate after every
+    client restart… Close Meta Quest Link (OVRServer) on this PC if it runs, or choose 120 Hz."*
+  - The client then stays up, and the server's rate check reports the unsupported rate instead of
+    looping.
+- **Not yet checked:** a 207 Hz switch with OVRServer closed, to confirm the cause. Two
+  stale state files from interrupted runs (`.97`, `.98` runtime folders) also still record
+  `applied.gpuLevel=7`.
+
 ### Runtime and SteamVR acceptance
 
 With the override active, the lobby ran at 240 Hz: `xrGetDisplayRefreshRateFB` reported 240.0,
