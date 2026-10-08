@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf68b336a4f 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..95b853def7c39cfadee0e0156a26529f0e0daa82 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..27ddac52582cbecb487b6d4c3fa8ebf6
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..a1c273570f1d1def83ec33b7878728aabcddfeef 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..4b2c713329e8f26e8f449c79ceae8312e1030638 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..a1c273570f1d1def83ec33b7878728aa
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.93"
++version = "20.13.0-quest3.pyro.94"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -8663,7 +8663,7 @@ index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..f76ada6ae430f45c2633def8cab0287e
 +    changes
 +}
 diff --git a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
-index efb0f8e89507b93f737f085742bd9daec993d444..38b3d7815258908f6404ae737127ae890880ada7 100644
+index efb0f8e89507b93f737f085742bd9daec993d444..e223cd765620b601c6a830f224574752b8b92636 100644
 --- a/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 +++ b/alvr/dashboard/src/dashboard/components/settings_controls/presets/builtin_schema.rs
 @@ -323,7 +323,7 @@ pub fn streaming_profile_schema() -> PresetSchemaNode {
@@ -8797,8 +8797,8 @@ index efb0f8e89507b93f737f085742bd9daec993d444..38b3d7815258908f6404ae737127ae89
 +                        "session_settings.video.preferred_fps",
 +                        &format!("{:?}", hz as f32),
 +                    )];
-+                    // The runtime grants these only when the panel is forced to them; let the PC
-+                    // set the panel over USB (natively up to 207 Hz, scaled above).
++                    // Above 207 Hz the PC must set the panel over USB (scaled mode). The server
++                    // ignores the setting for 165-200 Hz, which the runtime grants by itself.
 +                    if matches!(hz, 165 | 180 | 200 | 240) {
 +                        modifiers.push(bool_modifier(
 +                            "session_settings.video.pyrowave.quest3_240hz_display_scaling",
@@ -12384,7 +12384,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..38d35a685b272a6ac3d0f1aa73a9d0e6
              bitrate_directives,
          ))
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a559d2fad 100644
+index fc176da39833633bc7fbac803ebe345c7832fbdb..2a7c489d75f280c048f11fb69b17c0986045c3be 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -43,6 +43,9 @@ use std::{
@@ -12784,7 +12784,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
              } else {
                  let connection = match WiredConnection::new(
                      FILESYSTEM_LAYOUT.get().unwrap(),
-@@ -297,53 +603,63 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -297,53 +603,65 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
                          };
                      },
                  ) {
@@ -12816,12 +12816,14 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
                  client_type = connection.wired_client_type.clone();
                  client_autolaunch = connection.wired_client_autolaunch;
 +                let video = &session_manager_lock.settings().video;
-+                // The helper forces the selected rate when it is above 120 Hz: natively up to
-+                // 207 Hz, in the scaled panel mode above that.
++                // The helper forces the selected rate only above 207 Hz, in the scaled panel
++                // mode. The runtime grants every native rate up to 207 Hz to the client's own
++                // request (all of 144-207 confirmed, October 8); forcing them made HorizonOS's
++                // own refresh-rate writes around each client restart restart it again.
 +                let rate = video.preferred_fps.round();
 +                display_request = alvr_adb::display_override::Request {
 +                    rate_hz: (video.pyrowave.quest3_240hz_display_scaling
-+                        && rate > 120.0
++                        && rate > alvr_adb::display_override::NATIVE_MAX_HZ as f32
 +                        && rate <= alvr_adb::display_override::SCALED_MAX_HZ as f32)
 +                        .then_some(rate as u32),
 +                    gpu_level_7: video.pyrowave.quest3_max_gpu_clock,
@@ -12874,7 +12876,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
          }
  
          if !wired_client_ips.is_empty()
-@@ -471,6 +787,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
+@@ -471,6 +789,16 @@ pub fn handshake_loop(ctx: Arc<ConnectionContext>, lifecycle_state: Arc<RwLock<L
          thread.join().ok();
      }
  
@@ -12891,7 +12893,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
      alvr_common::dbg_connection!("handshake_loop: End");
  }
  
-@@ -629,6 +955,19 @@ fn connection_pipeline(
+@@ -629,6 +957,19 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -12911,7 +12913,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +988,9 @@ fn connection_pipeline(
+@@ -649,18 +990,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -12933,7 +12935,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -822,6 +1152,7 @@ fn connection_pipeline(
+@@ -822,6 +1154,7 @@ fn connection_pipeline(
  
          crate::notify_restart_driver();
      }
@@ -12941,7 +12943,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
  
      dbg_connection!("connection_pipeline: Send StartStream packet");
      control_sender
-@@ -846,6 +1177,29 @@ fn connection_pipeline(
+@@ -846,6 +1179,29 @@ fn connection_pipeline(
  
      *ctx.bitrate_manager.lock() =
          BitrateManager::new(initial_settings.video.bitrate.history_size, fps);
@@ -12971,7 +12973,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
  
      let stream_protocol = if wired {
          SocketProtocol::Tcp
-@@ -867,25 +1221,33 @@ fn connection_pipeline(
+@@ -867,25 +1223,33 @@ fn connection_pipeline(
  
      let mut video_sender = stream_socket.request_stream(VIDEO);
  
@@ -13020,7 +13022,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
      let game_audio_sender: alvr_sockets::StreamSender<()> = stream_socket.request_stream(AUDIO);
      let mut microphone_receiver: alvr_sockets::StreamReceiver<()> =
          stream_socket.subscribe_to_stream(AUDIO, MAX_UNREAD_PACKETS);
-@@ -911,6 +1273,20 @@ fn connection_pipeline(
+@@ -911,6 +1275,20 @@ fn connection_pipeline(
                          Err(RecvTimeoutError::Disconnected) => return,
                      };
  
@@ -13041,7 +13043,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
                  let mut buffer = video_sender.get_buffer(&header).unwrap();
                  // todo: make encoder write to socket buffers directly to avoid copy
                  buffer
-@@ -1081,18 +1457,40 @@ fn connection_pipeline(
+@@ -1081,18 +1459,40 @@ fn connection_pipeline(
          let ctx = Arc::clone(&ctx);
          let client_hostname = client_hostname.clone();
          move || {
@@ -13085,7 +13087,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
                      let decoder_latency = client_stats.video_decode;
                      let (network_latency, game_latency) = stats.report_statistics(client_stats);
  
-@@ -1102,7 +1500,10 @@ fn connection_pipeline(
+@@ -1102,7 +1502,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -13097,7 +13099,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1516,7 @@ fn connection_pipeline(
+@@ -1115,6 +1518,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -13105,7 +13107,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1533,14 @@ fn connection_pipeline(
+@@ -1131,6 +1535,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -13120,7 +13122,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1184,9 +1594,35 @@ fn connection_pipeline(
+@@ -1184,9 +1596,35 @@ fn connection_pipeline(
          let disconnect_notif = Arc::clone(&disconnect_notif);
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
@@ -13156,7 +13158,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
                  let packet = match control_receiver.recv(STREAMING_RECV_TIMEOUT) {
                      Ok(packet) => packet,
                      Err(ConnectionError::TryAgain(_)) => {
-@@ -1299,6 +1735,9 @@ fn connection_pipeline(
+@@ -1299,6 +1737,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -13166,7 +13168,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1378,6 +1817,22 @@ fn connection_pipeline(
+@@ -1378,6 +1819,22 @@ fn connection_pipeline(
                              };
  
                          match reserved {
@@ -13189,7 +13191,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
                              ReservedClientControlPacket::CustomInteractionProfile {
                                  input_ids,
                                  ..
-@@ -1487,7 +1942,6 @@ fn connection_pipeline(
+@@ -1487,7 +1944,6 @@ fn connection_pipeline(
  
      // This requests shutdown from threads
      *ctx.video_channel_sender.lock() = None;
@@ -13197,7 +13199,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..c2a98c28cee1c90deffa39378c546b8a
      *ctx.haptics_sender.lock() = None;
  
      *ctx.video_recording_file.lock() = None;
-@@ -1552,21 +2006,37 @@ mod beta_tests {
+@@ -1552,21 +2008,37 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -16636,7 +16638,7 @@ index d7d0dbbfcbfc7eaacf6f4ff5f0c47f882f1eee1a..007dea0b48fe2a2eafb3eb460a705b99
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd30512626e09b8a7 100644
+index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..30cd3bc2b211eec85a299cd96b8e189330c37aa3 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -16800,7 +16802,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
 +    pub render_downsample_filter: RenderDownsampleFilter,
 +
 +    #[serde(default)]
-+    #[schema(strings(display_name = "Quest 3: set the panel refresh rate over USB", help = "With the headset on USB and a rate above 120 Hz selected, the PC wakes the headset, sets its panel to exactly that rate and restarts the client so it confirms the rate. Up to 207 Hz the panel keeps its full 4128x2208 resolution; above 207 Hz it uses the developer display-scaling mode (3104x1664, 1552x1664 per eye), where streams of about 1280x1376 to 1552x1664 per eye suit the panel. The previous headset values are restored when 120 Hz or less is selected or SteamVR closes; until then other VR apps, Virtual Desktop included, also run at that rate. (The setting key keeps its original name, quest3_240hz_display_scaling, so saved sessions still load.)"))]
++    #[schema(strings(display_name = "Quest 3: set the panel refresh rate over USB", help = "With the headset on USB and a rate above 207 Hz selected, the PC wakes the headset, switches its panel to the developer display-scaling mode (3104x1664, 1552x1664 per eye) at exactly that rate and restarts the client so it confirms the rate; streams of about 1280x1376 to 1552x1664 per eye suit that mode. Rates up to 207 Hz need nothing from the PC: the headset grants them to the client at the full 4128x2208 panel resolution. The previous headset values are restored when 207 Hz or less is selected or SteamVR closes; until then other VR apps, Virtual Desktop included, also run at that rate. (The setting key keeps its original name, quest3_240hz_display_scaling, so saved sessions still load.)"))]
 +    pub quest3_240hz_display_scaling: bool,
 +
 +    #[serde(default)]
