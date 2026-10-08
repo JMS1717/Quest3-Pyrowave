@@ -347,6 +347,26 @@ then scores against the render, using PSNR-HVS-M luma at the render's pixels per
   headset (more luma detail or full colour) is the owner's call.
 - 125 % 4:4:4 doesn't fit 120 Hz: the decode alone is 7.8 ms.
 
+**3072x3216 per eye, no downsample (October 8, owner request).** `.99`, wired, 120 Hz,
+1500 Mbps, CDF 5/3, 4:2:0, PC sharpening 30, maximum GPU clock, one 12 s panning cell:
+**94.1 fresh FPS**, 26.5 lost frames a second, GPU decode p50 8.8 ms (fence 9.9 ms), longer
+than the 8.33 ms period. The decoder sets the rate, as it did on older builds (65 FPS then).
+Offline at the same byte cap it also looks worse than 125 %: the same bytes spread over 37 % more
+pixels quantize harder.
+
+| Mbps (120 Hz) | 3072x3216 PSNR-HVS-M | 2592x2784 PSNR-HVS-M |
+|---|---|---|
+| 1000 | 21.51 | 23.72 |
+| 1500 | 23.28 | 25.68 |
+| 2000 | 24.13 | 26.73 |
+
+So 125 % stays the largest useful stream at 120 Hz: streaming the render 1:1 costs both frame
+rate and detail.
+
+At 1000 Mbps (Wi-Fi) the stream sizes compare as follows (same method): 2080 22.09, 110 % 22.94,
+120 % 23.53, 125 % 23.72 dB; at 800 Mbps 120 % is best (22.30 against 22.12 for 125 %). The
+`.102` Wi-Fi Quality profile uses 120 %.
+
 **`.69`** adds 110 %, 120 % and 125 % to **Stream resolution**. They are meant for 120 Hz or
 less, with the game render resolution at least as large (150 % recommended). At 207 Hz the
 decoder already sets the frame rate at 100 %, so a supersampled stream doesn't fit there.
