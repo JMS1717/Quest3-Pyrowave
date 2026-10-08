@@ -90,8 +90,24 @@ State:
       refusing the handshake.
     - The forced GPU level stops after the headset clears it twice, until the server restarts.
       The `display_override` unit test for this has not been run yet.
+  - **Tried for 120 Hz at full size, each in ABBA order (fresh FPS):**
+
+    | Change | Result | Notes |
+    |---|---|---|
+    | Haar instead of CDF 5/3 | 76.5-77 full eye, 79-82 at 67 % (CDF: 66-68 and 73-77) | Bench: 3.7-4.0 against 5.1 ms |
+    | Decode at default queue priority (67 % eye, CDF) | 83-87 fresh, but the app drops to 85-87 of 120 frames: judder | Low stays |
+    | Render-loop frame wait 0 instead of 4000 µs (Haar, 67 %) | 75-76 against 79-82 | The wait stays |
+
+    Live decode takes about twice the standalone time while the GPU reports 87-91 % busy. The
+    loss is time-slicing against the eye draw and compositor. The next idea is a decode gate:
+    start each decode right after the eye draw, at normal priority. Serially it fits (Haar
+    about 4 ms + eye + compositor 0.9 ms).
   - **Harness traps:**
     - A force-stopped client often comes back pinned at 72 Hz.
+    - Set `debug.oculus.refreshRate=120` while awake, before `am start`. That made 4 of 4 starts
+      clean.
+    - Re-assert proximity every 5 s while measuring, or the unworn headset sleeps after about
+      15 s and SteamVR drops to 10 frames a second.
     - Sleep, clear `debug.oculus.refreshRate`, then wake helps but adds a compositor layer
       (TW about 1.4 ms).
     - The running server rewrites `session.json` on shutdown. Edit it only after SteamVR exits.
