@@ -240,6 +240,11 @@ clock), two 12 s blocks per bitrate, p50 (p90) ms:
 - **The decoder doesn't:** at 2000 its wall time per frame (8.0-8.1 ms) is the whole period, so
   frames queue 2.4 ms for it, and 187 of 191 and 219 of 231 empty selections found a frame still
   decoding. The headset GPU is full: the render loop also misses 3-6 display periods a second.
+- **Decode stages** (`[Q3PW_DECODE_STAGE]`, 4:4:4): the inverse wavelet transform takes 2.8-3.2 ms
+  per frame at either bitrate, and dequantization 2.1-2.3 ms at 2000 against 1.5-1.6 ms at 1500.
+  Dequantization scales with the bytes; the transform over three full-size planes is the larger
+  fixed cost. The entropy-coding prototype (2.65 ms for a 20 % smaller frame) would replace
+  dequantization, not shorten this decode.
 - **At 1500** the decoder keeps up and the render loop holds every period. The frames lost there
   (about 7 a second) are publication phase: a frame finishing just after a selection.
 - **The cost of 2000 in latency** is about 5 ms on the client (arrival to taken). The frame age
