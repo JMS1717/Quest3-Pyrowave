@@ -63,6 +63,17 @@ State:
     its text is clearly crisper, its zone plate keeps more detail but shows moiré, and its colour was
     weaker. That colour gap is fixed in `.103`-`.105` (next bullet). The private screenshots stay
     outside the repo.
+- **October 8, night, `.106`: wired 120 Hz quality is the first choice in the dashboard.** The owner's
+  direction is maximum quality and lowest latency at a smooth 120 Hz over USB, set from the PC
+  as Virtual Desktop does.
+  - **Streaming profile** now lists **Quality 120 Hz** first (marked recommended for wired),
+    then Wi-Fi Quality and Competitive 207 Hz. The fresh install is still the 400 Mbps / 72 Hz
+    candidate.
+  - **Stream resolution** adds 135 % and 150 % (3096x3312, close to VD's 3072-wide Godlike), labelled "below
+    120 Hz": the headset decodes 125 % within the frame and larger sizes at about 90-105 FPS.
+  - New **Colour** row on Presets: Vivid (Quest gamut, default) or Accurate (Rec. 709).
+  - Dashboard and session tests only. Not run on the headset (the client is unchanged apart
+    from its version).
 - **October 8, night, `.103`-`.105`: colour now matches Virtual Desktop**
   ([CHROMA.md](CHROMA.md#colour-against-virtual-desktop-october-8-103-105)).
   - `.103` fixes a bug: the headset squeezed every PyroWave frame into 16-235 (a MediaCodec
@@ -89,7 +100,8 @@ State:
   - The 207 Hz work (Competitive profile, not forcing native rates) waits for a fixed OS, or for a
     check that forcing over USB still works on build 209. Until then, work at 120 Hz.
 - **Headset client (October 8, night):** `.105` is installed for testing (pair
-  `workspace/runtime-local105-e3891a0`). The owner's `.92`
+  `workspace/runtime-local105-e3891a0`). `.106` is built and staged
+  (`workspace/review/local106-c39362c`), not installed. The owner's `.92`
   play pair is still staged (`workspace/runtime-local92-play`). Reinstall its APK before playing
   `.92`, or play the `.99` pair. Virtual Desktop's registration is untouched.
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
