@@ -339,8 +339,9 @@ then scores against the render, using PSNR-HVS-M luma at the render's pixels per
 | 2592x2784 (125 %) | 4:2:0 | 108.0, 108.1 | |
 | 2592x2784 (125 %) | 4:4:4 | 88-90 | 7.8 ms |
 
-- At 2000 Mbps the USB link, not the decoder, holds 2080 4:4:4 near 110 FPS: a 2.08 MB frame
-  takes 7.1-8.1 ms of the 8.33 ms period.
+- At 2000 Mbps the headset's decoder holds 2080 4:4:4 near 110 FPS: its wall time per frame is
+  about 8 ms of the 8.33 ms period, while USB moves the 2.08 MB frame in about 5 ms
+  ([FRESHNESS.md](FRESHNESS.md#where-120-hz--2000--444-loses-frames-92-october-8)).
 - 125 % 4:2:0 costs about 2 FPS against 2080 4:4:4. Offline it is about 3.0 dB PSNR-HVS-M better
   than 2080 at 2000 Mbps ([CLARITY-BUDGET.md](CLARITY-BUDGET.md)). Which looks better in the
   headset (more luma detail or full colour) is the owner's call.

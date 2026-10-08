@@ -120,6 +120,30 @@ connections, p50 (p90) ms over one 10 s block:
   207 Hz. It is nearly flat in milliseconds, so it is the runtime's display pipeline, not frames
   queued by the client.
 
+## The game stage has two modes in the test scene (October 8)
+
+Across 20 live runs on `.78`-`.92`, ALVR's game stage (frame present minus the arrival of the head
+sample it used) sat in one of two modes per connection:
+
+| Refresh | Low mode | High mode |
+|---|---|---|
+| 120 Hz | 1.1-4.0 ms | 8.9-13.0 ms |
+| 207 Hz | 1.1-1.9 ms | 5.1-5.6 ms |
+
+- The high mode is about one display period more, and ALVR's total rises with it (for example 42
+  against 58-61 ms at 120 Hz).
+- **When:** the first block after SteamVR starts was in the low mode in 18 of 20 runs. After the
+  client reconnects into the same SteamVR session (the harness restarts it between blocks), most
+  connections land in the high mode and stay there for the whole connection. A 2 s timeline shows
+  a clean step at the reconnect, not a drift.
+- **Not a stale pose:** the client sends head samples at three times the refresh rate, so the
+  newest sample at a vsync is under a third of a period old. The extra period is most likely
+  SteamVR running the near-empty test scene one frame ahead (not verified in SteamVR's timing).
+- **What it means:** with a real game, rendering fills that period anyway
+  ([above](#client-side-78-120-hz--1500-frame-trace)), so this is not a latency saving to chase.
+  It does confound harness comparisons: compare ALVR totals and frame ages only between blocks in
+  the same game-stage mode, or compare the stages after the game stage.
+
 ## Already tried
 
 - D3D11 GPU thread priority 7 (`IDXGIDevice::SetGPUThreadPriority`, granted): no change in the render's
