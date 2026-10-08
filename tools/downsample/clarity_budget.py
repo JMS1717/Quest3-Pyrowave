@@ -88,7 +88,7 @@ def main():
     def show(planes, kernel):
         """Stream planes (chroma at stream or half size) to the display size. kernel is the display
         resampling, optionally after '+'-joined steps on the stream: casNN (the Sharpening setting
-        NN) and up<f> (a Catmull-Rom upscale by f into a larger eye swapchain)."""
+        NN), linK (a linear cross sharpen, K/100 per neighbour) and up<f> (a Catmull-Rom upscale by f into a larger eye swapchain)."""
         y = planes[0]
         h, w = y.shape
         cb, cr = (cv2.resize(c, (w, h), interpolation=cv2.INTER_LINEAR) if c.shape != y.shape else c
@@ -98,6 +98,12 @@ def main():
         for step in steps:
             if step.startswith('cas'):
                 planes[0] = cas(planes[0], 0.125 + 0.075 * int(step[3:]) / 100)
+            elif step.startswith('lin'):
+                # A linear cross sharpen with weight k/100 per neighbour (CAS without the adaptivity).
+                k = int(step[3:]) / 100
+                f = planes[0].astype(np.float32)
+                q = np.pad(f, 1, mode='edge')
+                planes[0] = to_u8(f + k * (4 * f - q[:-2, 1:-1] - q[2:, 1:-1] - q[1:-1, :-2] - q[1:-1, 2:]))
             elif step.startswith('up'):
                 f = float(step[2:])
                 planes = [to_u8(resample(p, round(w * f), round(h * f), 'catmull')) for p in planes]
