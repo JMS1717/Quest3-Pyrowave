@@ -423,7 +423,24 @@ Wired, CDF 5/3, 2080x2208, 207 Hz, 1000 Mbit/s, adapt on, pan 60 deg/s, scene he
     against SteamVR's reprojection;
   - real games and Wi-Fi;
   - with SteamVR Motion Smoothing, whose synthesized frames are not streamed;
-  - the image quality gain from 1.7x the bytes per frame.
+  - the image quality gain from 1.7x the bytes per frame in the headset.
+- **Image quality, offline:** `tools/downsample/clarity_budget.py`, one run, 2080x2208,
+  CDF 5/3, PSNR-HVS-M at 25 px/deg, bilinear display. Before coding the score is 20.93 dB. A
+  121 fps game streamed alone gets the per-frame budget of 120 Hz / 1000:
+
+  | Per-frame budget | Bytes per eye | HVS-M | Coding loss | ΔE |
+  | --- | --- | --- | --- | --- |
+  | 207 Hz / 1000 (every compositor frame) | 302 KB | 19.11 | −1.82 dB | 6.26 |
+  | 120 Hz / 1000 (the game's frames only) | 521 KB | 20.29 | −0.64 dB | 5.24 |
+  | 120 Hz / 1500 (reference) | 781 KB | 20.70 | −0.23 dB | 4.67 |
+
+  - This recovers about two thirds of the quantization loss.
+  - The absolute levels differ from the October 7 table in
+    [CLARITY-BUDGET.md](CLARITY-BUDGET.md); compare within this run only.
+- **Static scene in the headset** (`.83`, pan 0, the same 8 ms scene): the screenshot's mean
+  absolute Laplacian was 6.77 / 6.77 off and 7.25 / 6.95 on. Fresh frames: 187 / 184 off;
+  120 / 151 on (the scene ran faster in the second block). This is a small, consistent rise; the
+  metric is coarse.
 - **Setting:** `video.pyrowave.game_frames_only`, off by default, restart SteamVR.
   `ALVR_Q3PW_GAME_FRAMES_ONLY=0/1` overrides it for A/B runs. The harness cannot set the
   setting itself: it runs SteamVR without the dashboard, so the derived `openvr_config` key
