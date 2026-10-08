@@ -129,10 +129,29 @@ Not yet measured:
 - how it looks.
 
 Sharpening before a lossy coder can make ringing and noise more visible, and the owner asked for
-subjective judgement over PSNR. Next steps:
+subjective judgement over PSNR.
 
-1. a PC-side linear pre-sharpen in the server's downsample pass, as an option;
-2. an in-headset A/B against headset sharpening at the same strength;
+### Server option (source only, not yet built or measured)
+
+`ALVR_Q3PW_PRESHARPEN=N` in vrserver's environment (1–50, k = N/100 per neighbour; unset is off)
+adds one pass after the planar YCbCr conversion in `FrameRender.cpp`.
+
+- It sharpens the full-size gamma luma plane into a second shared R8 texture, which the encoder
+  imports in place of the plain plane. This is the same kernel as the offline `+linK` rows.
+- Neighbours are clamped to the pixel's own eye and to the frame edge.
+- Chroma and its 4:2:0 box are unchanged.
+- The server logs `[PYROWAVE] luma pre-sharpen k=…` when it is on.
+- With foveated encoding the pass runs on the compressed frame, so the periphery is sharpened more
+  in display terms. Measure it with foveation off first.
+- The shader compiles with `fxc` for ps_5_0.
+- It is an environment variable rather than a setting until a headset A/B shows it is worth
+  keeping.
+
+Next steps:
+
+1. build, then run the server tests;
+2. an in-headset A/B, static and panning, at 120 Hz / 1500 / 2080: PC 15 against headset linear 50
+   against off. Record the server's `[Q3PW_RENDER_GPU]` convert time for the PC's cost;
 3. the 2592 rows.
 
 ## Open

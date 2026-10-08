@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797fd17909b1 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..f12329daa7c95b95a26b3f27d03849efd88fa2b9 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797f
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..52567896c322ff1a1db0bd2a0dc11375e48a5a06 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..5690502eea7da65bd3ce5a03ed42d89515e8dbb6 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..52567896c322ff1a1db0bd2a0dc11375
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.97"
++version = "20.13.0-quest3.pyro.98"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -14296,22 +14296,23 @@ index 0000000000000000000000000000000000000000..f053eb0ae2188a8dd659c3d7bb6c9d1b
 +}
 +)HLSL"
 diff --git a/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp b/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
-index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..faaa8e4021d3a9cd1891b51ef962b5aef09fd966 100644
+index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..a53d0b467360fa9e3c9370a276472b8d635b9b82 100644
 --- a/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
 +++ b/alvr/server_openvr/cpp/platform/win32/FrameRender.cpp
-@@ -3,8 +3,11 @@
+@@ -3,8 +3,12 @@
  #include "alvr_server/Settings.h"
  #include "alvr_server/Utils.h"
  #include "alvr_server/bindings.h"
 +#include "latency_stamp.h"
  
 +#include <algorithm>
++#include <cstdio>
  #include <cstdlib>
 +#include <cstring>
  
  extern uint64_t g_DriverTestMode;
  
-@@ -188,6 +191,12 @@ bool FrameRender::Startup() {
+@@ -188,6 +192,12 @@ bool FrameRender::Startup() {
      m_viewport.TopLeftX = 0;
      m_viewport.TopLeftY = 0;
  
@@ -14324,7 +14325,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..faaa8e4021d3a9cd1891b51ef962b5ae
      // Left eye scissor
      m_scissorL.bottom = 0.0f;
      m_scissorL.left = 0.0f;
-@@ -343,6 +352,61 @@ bool FrameRender::Startup() {
+@@ -343,6 +353,61 @@ bool FrameRender::Startup() {
          return false;
      }
  
@@ -14386,7 +14387,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..faaa8e4021d3a9cd1891b51ef962b5ae
      //
      // Create alpha blend state
      // We need alpha blending to support layer.
-@@ -552,9 +616,9 @@ bool FrameRender::Startup() {
+@@ -552,9 +617,9 @@ bool FrameRender::Startup() {
          m_pStagingTexture = yuvTexture;
      }
  
@@ -14399,7 +14400,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..faaa8e4021d3a9cd1891b51ef962b5ae
      enablePlanarYuv = PyroWaveEnabled() && !Settings::Instance().m_enableHdr;
      if (enablePlanarYuv) {
          uint32_t texWidth, texHeight;
-@@ -647,6 +711,37 @@ bool FrameRender::Startup() {
+@@ -647,6 +712,81 @@ bool FrameRender::Startup() {
              planarTargets,
              planarParamBuffer.Get()
          );
@@ -14434,10 +14435,54 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..faaa8e4021d3a9cd1891b51ef962b5ae
 +                    quadVertexShader.Get(), cso, m_chroma420Textures[i].Get());
 +            }
 +        }
++        // Luma pre-sharpen on the PC (docs/SHARPENING.md): the eye shader's linear cross kernel,
++        // Y + k (4Y - neighbours), applied to the gamma-encoded stream luma before encoding, so the
++        // headset spends nothing. ALVR_Q3PW_PRESHARPEN=N sets k = N/100 (1-50); unset or 0 is off.
++        // Neighbours stay inside the pixel's own eye.
++        int presharpen = 0;
++        if (const char* v = getenv("ALVR_Q3PW_PRESHARPEN")) {
++            presharpen = atoi(v);
++        }
++        if (presharpen > 0 && presharpen <= 50) {
++            char k[32], eyeWidth[16], height[16];
++            snprintf(k, sizeof(k), "%.4f", presharpen / 100.0);
++            snprintf(eyeWidth, sizeof(eyeWidth), "%u", texWidth / 2);
++            snprintf(height, sizeof(height), "%u", texHeight);
++            const D3D_SHADER_MACRO macros[] = {
++                { "SHARPEN_K", k }, { "EYE_WIDTH", eyeWidth }, { "HEIGHT", height }, { nullptr, nullptr }
++            };
++            const char* shader = R"(
++                Texture2D<float> source : register(t0);
++                float main(float4 position : SV_Position) : SV_Target {
++                    int2 p = int2(position.xy);
++                    int lo = p.x < EYE_WIDTH ? 0 : EYE_WIDTH;
++                    int hi = lo + EYE_WIDTH - 1;
++                    float c = source.Load(int3(p, 0));
++                    float n = source.Load(int3(p.x, max(p.y - 1, 0), 0));
++                    float s = source.Load(int3(p.x, min(p.y + 1, HEIGHT - 1), 0));
++                    float w = source.Load(int3(max(p.x - 1, lo), p.y, 0));
++                    float e = source.Load(int3(min(p.x + 1, hi), p.y, 0));
++                    return saturate(c + SHARPEN_K * (4.0 * c - n - s - w - e));
++                })";
++            ComPtr<ID3DBlob> code, errors;
++            OK_OR_THROW(D3DCompile(shader, strlen(shader), "Quest3LumaPresharpen", macros,
++                nullptr, "main", "ps_5_0", D3DCOMPILE_OPTIMIZATION_LEVEL3, 0,
++                code.GetAddressOf(), errors.GetAddressOf()), L"Luma pre-sharpen shader compile failed.");
++            std::vector<uint8_t> cso((uint8_t*)code->GetBufferPointer(),
++                (uint8_t*)code->GetBufferPointer() + code->GetBufferSize());
++            planeDesc.Width = texWidth;
++            planeDesc.Height = texHeight;
++            OK_OR_THROW(m_pD3DRender->GetDevice()->CreateTexture2D(&planeDesc, nullptr,
++                m_lumaSharpenTexture.ReleaseAndGetAddressOf()), L"Pre-sharpen texture creation failed.");
++            m_lumaSharpenPipeline = std::make_unique<RenderPipeline>(m_pD3DRender->GetDevice());
++            m_lumaSharpenPipeline->Initialize({m_planarTextures[0].Get()},
++                quadVertexShader.Get(), cso, m_lumaSharpenTexture.Get());
++            Warn("[PYROWAVE] luma pre-sharpen k=%s per neighbour\n", k);
++        }
      }
  
      Debug("Staging Texture created\n");
-@@ -666,6 +761,71 @@ void FrameRender::SetViewsConfig(
+@@ -666,6 +806,71 @@ void FrameRender::SetViewsConfig(
      m_eyeToHead[1] = eyeToHeadRight;
  }
  
@@ -14509,7 +14554,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..faaa8e4021d3a9cd1891b51ef962b5ae
  bool FrameRender::RenderFrame(
      ID3D11Texture2D* pTexture[][2],
      vr::VRTextureBounds_t bounds[][2],
-@@ -675,6 +835,8 @@ bool FrameRender::RenderFrame(
+@@ -675,6 +880,8 @@ bool FrameRender::RenderFrame(
      const std::string& message,
      const std::string& debugText
  ) {
@@ -14518,7 +14563,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..faaa8e4021d3a9cd1891b51ef962b5ae
      // Set render target
      m_pD3DRender->GetContext()->OMSetRenderTargets(1, m_pRenderTargetView.GetAddressOf(), NULL);
  
-@@ -913,6 +1075,23 @@ bool FrameRender::RenderFrame(
+@@ -913,6 +1120,23 @@ bool FrameRender::RenderFrame(
                1 + (inputColorAdjust * 2) },
          };
  
@@ -14542,7 +14587,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..faaa8e4021d3a9cd1891b51ef962b5ae
          D3D11_MAPPED_SUBRESOURCE mapped = { 0 };
          hr = m_pD3DRender->GetContext()->Map(
              m_pVertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped
-@@ -949,7 +1128,15 @@ bool FrameRender::RenderFrame(
+@@ -949,7 +1173,15 @@ bool FrameRender::RenderFrame(
          //
  
          m_pD3DRender->GetContext()->VSSetShader(m_pVertexShader.Get(), nullptr, 0);
@@ -14559,7 +14604,7 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..faaa8e4021d3a9cd1891b51ef962b5ae
  
          ID3D11ShaderResourceView* shaderResourceView[2]
              = { pShaderResourceView[0].Get(), pShaderResourceView[1].Get() };
-@@ -974,6 +1161,13 @@ bool FrameRender::RenderFrame(
+@@ -974,6 +1206,13 @@ bool FrameRender::RenderFrame(
          );
      }
  
@@ -14573,12 +14618,15 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..faaa8e4021d3a9cd1891b51ef962b5ae
      // Restore full viewport/scissor rect for the rest
      m_pD3DRender->GetContext()->RSSetViewports(1, &m_viewport);
      m_pD3DRender->GetContext()->RSSetScissorRects(1, &m_scissor);
-@@ -992,18 +1186,55 @@ bool FrameRender::RenderFrame(
+@@ -992,18 +1231,61 @@ bool FrameRender::RenderFrame(
  
      if (enablePlanarYuv) {
          m_planarPipeline->Render();
 +        for (auto& pipeline : m_chroma420Pipelines) {
 +            if (pipeline) pipeline->Render();
++        }
++        if (m_lumaSharpenPipeline) {
++            m_lumaSharpenPipeline->Render();
 +        }
 +        ID3D11ShaderResourceView* none = nullptr;
 +        m_pD3DRender->GetContext()->PSSetShaderResources(0, 1, &none);
@@ -14627,11 +14675,14 @@ index 3b23460a55a0e15b5e0f6a43af2f882a594cbfb3..faaa8e4021d3a9cd1891b51ef962b5ae
 -        out[i] = m_planarTextures[i].Get();
 +        out[i] = i > 0 && m_chroma420Textures[i - 1]
 +            ? m_chroma420Textures[i - 1].Get() : m_planarTextures[i].Get();
++    }
++    if (m_lumaSharpenTexture) {
++        out[0] = m_lumaSharpenTexture.Get();
      }
  }
  
 diff --git a/alvr/server_openvr/cpp/platform/win32/FrameRender.h b/alvr/server_openvr/cpp/platform/win32/FrameRender.h
-index 8136dda8cff38b25068adcfb5a7e816c908a5074..0bdb166a5ed0d7d4f6d12abddd3b81f4a645963e 100644
+index 8136dda8cff38b25068adcfb5a7e816c908a5074..ae6d9c5fdb0b24ddb2f103a9ef77b592bc4739e6 100644
 --- a/alvr/server_openvr/cpp/platform/win32/FrameRender.h
 +++ b/alvr/server_openvr/cpp/platform/win32/FrameRender.h
 @@ -3,8 +3,10 @@
@@ -14692,13 +14743,17 @@ index 8136dda8cff38b25068adcfb5a7e816c908a5074..0bdb166a5ed0d7d4f6d12abddd3b81f4
      ComPtr<ID3D11BlendState> m_pBlendStateFirst;
      ComPtr<ID3D11BlendState> m_pBlendState;
  
-@@ -125,9 +151,16 @@ private:
+@@ -125,9 +151,20 @@ private:
      std::unique_ptr<d3d_render_utils::RenderPipelineYUV> m_yuvPipeline;
  
      ComPtr<ID3D11Texture2D> m_planarTextures[3];
 +    ComPtr<ID3D11Texture2D> m_chroma420Textures[2];
 +    std::unique_ptr<d3d_render_utils::RenderPipeline> m_chroma420Pipelines[2];
      std::unique_ptr<d3d_render_utils::RenderPipelinePlanar> m_planarPipeline;
++    // Luma pre-sharpen (ALVR_Q3PW_PRESHARPEN): the sharpened copy of m_planarTextures[0] that the
++    // encoder imports instead. Null when off.
++    ComPtr<ID3D11Texture2D> m_lumaSharpenTexture;
++    std::unique_ptr<d3d_render_utils::RenderPipeline> m_lumaSharpenPipeline;
      bool enablePlanarYuv = false;
  
 +    // Optical latency stamp (video.pyrowave.latency_stamp): null when off or without D3D11.1.
