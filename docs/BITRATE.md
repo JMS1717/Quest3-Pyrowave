@@ -354,3 +354,86 @@ the full bitrate needs the game's own frame rate. One way is the compositor's fr
 This is in [PLAN.md](PLAN.md) 2.1.
 
 Adapt stays on: it is neutral here and right when presents do drop.
+
+### Streaming only the game's frames (`.79`–`.83`), October 8
+
+The driver sees one present per vsync, so the game's own frame rate has to come from SteamVR's
+frame timing (`IVRServerDriverHost::GetFrameTimings`, `Compositor_FrameTiming`).
+
+**What the timing contains.** Every entry is a compositor frame, not a game frame. With the
+scene held to 8 ms (about 120 fps) on a 207 Hz panel, every entry had:
+
+- a frame index one higher than the previous entry
+- `m_nNumFramePresents` = 1
+- reprojection flags 0
+- no mispresented or dropped frames
+
+The driver's view (`.80`, `[Q3PW_FRAMETIMING]`) and the scene's own view
+(`IVRCompositor::GetFrameTimings`, logged to `timing.csv` by `tools/quest3/quality_scene.py`)
+were the same. So "same frame index as the last present" (`.79`) never fires.
+
+**The signal.** `m_flClientFrameIntervalMs` is non-zero only in compositor frames that received
+a new game frame, and 0 in frames where SteamVR re-showed the last one. In the scene's log:
+
+- 116 non-zero entries per second out of 200
+- 119–122 per second in each 1 s window, against the scene's 120–122
+- the non-zero values were 8.1–14 ms
+
+In the driver's 128-entry history, 74–76 non-zero entries per 0.62 s means 121 fps.
+
+**`.81`–`.83`:**
+
+- At each present, the driver checks the timing entries newer than the last present. If none
+  has a non-zero client interval, the present re-shows the game's previous frame.
+- With **Stream only the game's frames** on, that present is neither encoded nor reported to
+  the bitrate manager. The headset re-shows the previous frame, with its own rotation
+  correction.
+- **Adapt to framerate** then spreads the bitrate over the game's rate. It is bounded at 2x
+  the nominal frame size by `framerate_reset_threshold_multiplier`.
+- Safeguards:
+  - every frame is streamed while no game frame has arrived for 100 ms (SteamVR's own scene, a
+    loading or stalled game);
+  - at most 3 presents in a row are skipped.
+- `.81` without the first safeguard skipped every frame before the scene started, and the
+  stream never came up.
+
+Wired, CDF 5/3, 2080x2208, 207 Hz, 1000 Mbit/s, adapt on, pan 60 deg/s, scene held to 8 ms
+(about 121 fps). Median of the statistics events after warm-up:
+
+| | Off (`.81`) | On (`.82`) |
+| --- | --- | --- |
+| Fresh frames/s, A / B | 189.3 / 189.0 | 119.8 / 120.5 |
+| Game frames/s (scene) | 120–122 | 120–123 |
+| Frames streamed/s | 208 | 122 |
+| Bytes per frame | 604 KB | 1025 KB (1.70x) |
+| Link | 1000 Mbit/s | 993 Mbit/s |
+| Headset GPU decode p50 | 3.15 ms | 3.42 / 3.81 ms |
+| ALVR latency estimate | 34.8 ms | 32.9 ms |
+| Vsync queue | 10.8 ms | 15.8 ms |
+
+- **Detection:**
+  - with skipping on, new = scene frames in every 1 s window (121/121, 121/122, 123/123), with
+    85–87 skips per second;
+  - with skipping off, 31–42 presents per second found no new timing entry yet and were counted
+    as new (streamed), so detection errs towards streaming.
+- **Game at full rate**, on (`.82`, block A): 0–1 skips per second and 206–208 frames
+  streamed. It is unaffected.
+- **Not measured yet:**
+  - how 120 frames on a 207 Hz panel feel in the headset (judder, head-rotation smoothness)
+    against SteamVR's reprojection;
+  - real games and Wi-Fi;
+  - with SteamVR Motion Smoothing, whose synthesized frames are not streamed;
+  - the image quality gain from 1.7x the bytes per frame.
+- **Setting:** `video.pyrowave.game_frames_only`, off by default, restart SteamVR.
+  `ALVR_Q3PW_GAME_FRAMES_ONLY=0/1` overrides it for A/B runs. The harness cannot set the
+  setting itself: it runs SteamVR without the dashboard, so the derived `openvr_config` key
+  changes only after a restart that never happens. Harness runs use the environment variable.
+
+Already tried:
+
+| Idea | Result |
+| --- | --- |
+| Repeat = latest timing entry has the last present's frame index (`.79`) | Never repeats: one entry per compositor frame |
+| `m_nNumFramePresents`, `m_nReprojectionFlags`, mispresented/dropped counts | Always 1 / 0 / 0 / 0 for a slow game, from driver and app side |
+| Same compositor textures or same pose across presents (`.67`) | Each present has new textures and a new pose |
+| Skip repeats with no fallback (`.81`) | No stream before the game starts |

@@ -1,6 +1,6 @@
 # Engineering handoff: Quest3-Pyrowave
 
-Prepared October 4, 2026, with dated updates through October 7. Read [AGENTS.md](../AGENTS.md)
+Prepared October 4, 2026, with dated updates through October 8. Read [AGENTS.md](../AGENTS.md)
 first. Machine-specific state, raw captures, signing material and rollback snapshots stay outside
 this repo.
 
@@ -18,10 +18,16 @@ State:
 
 - **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.65` (`.64` plus the opt-in
   Wi-Fi UDP transport), not released.
-- **On `claude/frame-budget`:** `.78`. It has server-predicted head poses, UDP as the Wi-Fi
-  default, Stream resolution up to 125 %, four wired connections, the Sharpening setting, a
-  fast 4:4:4 path and a high-priority encode queue
-  ([below](#october-7-late-night-66-74-on-claudeframe-budget)).
+- **On `claude/frame-budget`:** `.83`. It has:
+  - server-predicted head poses;
+  - UDP as the Wi-Fi default;
+  - Stream resolution up to 125 %;
+  - four wired connections;
+  - the Sharpening setting;
+  - a fast 4:4:4 path;
+  - a high-priority encode queue;
+  - the opt-in setting "Stream only the game's frames"
+    ([below](#october-7-late-night-66-74-on-claudeframe-budget)).
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
   194-197 fresh FPS over USB with the direct eye copy, 189-195 over Wi-Fi 6E.
 - **Not established:** sustained gameplay, optical motion-to-photon latency, image quality on par
@@ -70,11 +76,22 @@ Builds from branch `claude/frame-budget`, local only:
 | `.76` | `11dc2e4`, `43daf79`, `375c3ee` | Encoder stage timing, `[Q3PW_ENCODE_TIMING]` and `[Q3PW_RENDER_GPU]` |
 | `.77` | `e7e6bec`, `937ba46` | GPU priority experiments (`ALVR_PYROWAVE_QUEUE`, D3D11 thread priority) |
 | `.78` | `90788e7` | PyroWave encodes on a high-priority compute queue by default |
+| `.79`-`.82` | `8a91b0d`, `6bc5632`, `f3a77db`, `b7cb64b` | The game's frame rate from SteamVR's frame timing (diagnostics, then detection) |
+| `.83` | `8137a94` | Setting: Stream only the game's frames (off by default) |
 
-**Frame budget:** neutral in tests. SteamVR presents at the panel rate even when the game is
-slower, because it reprojects into a new present every vsync. Giving a slower game the full
-bitrate needs the game's own rate. See
-[BITRATE.md](BITRATE.md#frame-budget-from-the-present-rate-66-67-october-7).
+**Frame budget:**
+
+- On its own it is neutral in tests. SteamVR presents at the panel rate even when the game is
+  slower, because it reprojects into a new present every vsync
+  ([BITRATE.md](BITRATE.md#frame-budget-from-the-present-rate-66-67-october-7)).
+- `.83` (October 8) finds the game's new frames in SteamVR's frame timing: entries with a
+  non-zero client frame interval.
+- With the opt-in **Stream only the game's frames**, the driver streams only those frames. At
+  207 Hz / 1000 Mbit/s, a game at 121 fps got 1025 KB per frame instead of 604 KB (1.7x), with
+  the same 120 new frames a second.
+- A game at full rate is unaffected.
+- How it looks and feels in the headset is untested
+  ([BITRATE.md](BITRATE.md#streaming-only-the-games-frames-79-83-october-8)).
 
 **Wi-Fi tracking:**
 
@@ -100,6 +117,15 @@ bitrate needs the game's own rate. See
   both runtimes' `session.json` before a cell can set it.
 - The Wi-Fi setup replaces the runtime's client entry with `q3pw-wifi.client`. Restore the wired
   entry before a USB cell, or the "wired" cell streams over Wi-Fi.
+- October 8: three cells failed with "No stream after relaunch". In each, the panel stayed at
+  72 Hz, the client then confirmed only 72/80 Hz, and the server refused 207.
+  - One case came between arms, after the server's display helper restarted the client
+    ("Failed to find resumed state line").
+  - What fixed it, with the headset awake:
+    1. force-stop the app;
+    2. `setprop debug.oculus.refreshRate ''`, then `207`;
+    3. restore the previous value.
+  - This is PLAN #33, reliable refresh switching.
 
 **Supersampled stream (`.69`):**
 
@@ -160,7 +186,11 @@ bitrate needs the game's own rate. See
    - 120 Hz, 1500 Mbps, stream 125 % with game render 150 %, against stream 100 %.
    - At 120 Hz, stream 100 %: Sharpening 50 against 0. Check whether the edge of the centre region
      shows.
-2. The game's own frame rate for the budget (PLAN 2.1).
+2. Owner test of `.83` **Stream only the game's frames**:
+   - 207 Hz, 1000 Mbps, a real game that runs below 207 fps;
+   - on against off;
+   - look for sharper frames, and for judder or rougher head rotation.
+   - If clean, make it the default (PLAN 2.1).
 3. (Done in `.70`: four wired connections by default. Network p99 is 2.6 ms shorter and the
    frame rate is unchanged. See
    [BITRATE.md](BITRATE.md#four-wired-connections-69-default-from-70-october-7).)

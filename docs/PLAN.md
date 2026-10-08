@@ -156,8 +156,16 @@ whether audio on the stream socket stalls behind video.
   tests: SteamVR presents at the panel rate even when the game is slower, because it reprojects
   into a new present every vsync
   ([BITRATE.md](BITRATE.md#frame-budget-from-the-present-rate-66-67-october-7)).
-- **Next:** take the game's own rate from the compositor's frame timing, or stream at the game
-  rate and let the headset reproject.
+- **`.83` (October 8): Stream only the game's frames**, an opt-in setting.
+  - A compositor timing entry with a non-zero client frame interval marks a new game frame.
+  - The driver streams only those and lets the headset re-show them.
+  - At 207 Hz / 1000 Mbit/s with a game at 121 fps: 1025 KB per frame instead of 604 KB
+    (1.7x), with the same 120 new frames a second.
+  - A full-rate game is unaffected.
+  - Details in
+    [BITRATE.md](BITRATE.md#streaming-only-the-games-frames-79-83-october-8).
+- **Next:** the owner's headset test of how it looks and feels against off, at 207 Hz with a
+  real game below 207 fps. If it is clean, make it the default.
 
 **2.2 A clarity budget: where is sharpness lost?**
 
@@ -385,7 +393,9 @@ developer tool.
 1. **No headset:** 2.2 clarity budget and the 2.4 entropy estimate on captured frames.
 2. **Wi-Fi:** 1.1 tracking priority, A/B over Wi-Fi. *Done: 1.1 and 1.2 in `.67`/`.68`.*
 3. **Build:** 2.1 frame budget, checked live at 207 Hz with a game below 207. *Done in
-   `.66`/`.67`: neutral; it needs the game's own rate.*
+   `.66`/`.67`: neutral; it needs the game's own rate. `.83` (October 8) adds the game's rate
+   and the opt-in "Stream only the game's frames": 1.7x the bytes per frame at 121 fps on
+   207 Hz.*
 4. **USB:** 2.3 supersampled stream and 1.4 four connections at 2000 Mbit/s.
 5. **Hand-off:** write up results, one PR, and set up the play runtime for the owner's next test.
 
