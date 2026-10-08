@@ -18,7 +18,7 @@ State:
 
 - **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.65` (`.64` plus the opt-in
   Wi-Fi UDP transport), not released.
-- **On `claude/frame-budget`:** `.85`. It has:
+- **On `claude/frame-budget`:** `.86`. It has:
   - server-predicted head poses;
   - UDP as the Wi-Fi default;
   - Stream resolution up to 125 %;
@@ -82,6 +82,7 @@ Builds from branch `claude/frame-budget`, local only:
 | `.83` | `8137a94` | Setting: Stream only the game's frames (off by default) |
 | `.84` | `8b0b764` | Audio diagnostics: the client's `[Q3PW_AUDIO]` statistics; the scene can play silence |
 | `.85` | `df7f838` | The refresh-rate probe waits until the app is shown and re-probes an unreliable result (PLAN 1.6) |
+| `.86` | `036a648` | The probe no longer reads a refreshRate of 72 as a pin (HorizonOS writes it) |
 
 **Frame budget:**
 

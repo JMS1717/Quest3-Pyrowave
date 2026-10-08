@@ -15,6 +15,20 @@ match `xrGetDisplayRefreshRateFB` and at least three consecutive `xrWaitFrame` p
 confirmed capabilities to ALVR. A request failure or timeout is a recorded result. Reopen the
 APK after changing the environment to run a fresh probe. Startup can briefly change lobby refresh.
 
+**`.85`-`.86` (October 8).** The probe runs only while the app is shown, and a full probe in which
+90 or 120 Hz fails to confirm is repeated up to twice. From `.86` a property value of 72 is not
+read as a pin: HorizonOS writes 72 itself when a VR app starts with the property empty, so after
+any client restart the property reads 72 while the app starts at 72 Hz. If 72 really is pinned,
+the full probe shows it (every other rate fails) at the cost of about 15 s per round.
+
+Seen on the harness the same night (USB, the server's maximum GPU clock on, the panel rate set by
+the harness, not by the server): the server's GPU-clock change restarts the client, and within
+about a second of a client start both `debug.oculus.refreshRate` and `debug.oculus.gpuLevel` were
+read back empty; the restarted client then found the panel held at 72 Hz, where every request,
+including 207, failed to confirm. The writer of the empty values was not identified. A relaunch
+usually recovers, so the harness now tries three launches instead of two. The owner's own setup
+(the server sets the panel rate itself) was checked on October 7: one client restart, then 207 Hz.
+
 ## 240 Hz developer experiment
 
 **Current (`.60` and later, including `.64`).** The dashboard offers 72, 80, 90, 120, 144, 165,

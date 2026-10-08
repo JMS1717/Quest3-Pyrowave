@@ -157,6 +157,12 @@ whether audio on the stream socket stalls behind video.
     up to 207 Hz confirmed. Two 207 Hz harness arms streamed at 185–187 fps.
   - HorizonOS writes `debug.oculus.refreshRate=72` itself when a VR app starts with it empty, so
     a 72 there is not a sign of a leftover override.
+- **`.86` (October 8):** the probe no longer reads a 72 there as a pin; a real 72 Hz pin still
+  shows as failed rates. Open: on the harness (panel rate set by the harness, maximum GPU clock by
+  the server) the server's GPU restart sometimes leaves the panel held at 72 Hz with the
+  properties cleared; a relaunch recovers
+  ([REFRESH-RATES.md](REFRESH-RATES.md)). Check that it can't happen in the owner's setup, where
+  the server sets the panel rate itself.
 
 **1.7 A light play-session logger.**
 
@@ -324,6 +330,10 @@ From the table above, in order:
 1. **Vsync queue, 14 ms:** decoded frames wait almost two frames for display. Check the predicted
    display time the client targets, and its queue depth. **Checked:** it is 13.8 ms at 120 Hz and 12.9 ms at 207 Hz,
    nearly flat in milliseconds, so it is the runtime's display pipeline, not a client queue.
+   **October 8:** a faster eye copy (decode at LOW priority) moved it by only 0.5 ms at 207 Hz,
+   so the runtime's lead does not follow the app's frame time
+   ([LATENCY.md](LATENCY.md#already-tried)). At 207 Hz the client stages shrink only with less
+   GPU work per frame.
 2. **Encoder, 5.7 ms:** PyroWave itself encodes 4K in under 0.2 ms, so this is mostly something
    else. Candidates: the downsample, copies, readback, or GPU contention with the game. Trace it.
 

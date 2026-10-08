@@ -128,6 +128,22 @@ connections, p50 (p90) ms over one 10 s block:
 - Decode at default instead of LOW priority (`debug.q3pw.decode_priority=default`, `.78`, 120 Hz /
   1500, ABBA, 8 s blocks): 115.6 and 114.3 fresh FPS against 117.1 and 119.7 for LOW. The decode
   was no shorter (decode 5.35-5.45 ms against 4.97-6.45 ms). LOW stays.
+- **Does a faster eye copy shorten the vsync queue?** (October 8, `.85`, 207 Hz / 1000, CDF 5/3,
+  ABBA, 12 s blocks, both arms at GPU level 4.) At 207 Hz the eye copy waits behind the decode
+  (client compositor 4.8 ms for a 1.1 ms pass). If the runtime set its lead from the app's frame
+  time, letting the copy run first should cut the vsync queue by a display period.
+  `debug.q3pw.decode_priority=low` does let it run first:
+
+  | Arm | Fresh FPS | Decoder | Decoder queue | Client compositor | Vsync queue | Total |
+  | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+  | default | 177.5-177.6 | 7.5-7.7 | 2.6 | 4.8-4.9 | 10.65-10.68 | 32.4-36.0 |
+  | LOW | 141.6-145.9 | 9.0-9.5 | 0.13-0.17 | 2.8-2.9 | 10.17-10.24 | 29.6-32.5 |
+
+  The vsync queue moved by only 0.5 ms. The runtime's lead does not follow the app's frame time,
+  so the hypothesis is rejected. LOW saves about 3.4 ms of client stages, because a decode that
+  finishes late is taken at once, but it costs 32-36 fresh FPS at 207 Hz. Not adopted. (The
+  release fence's earlier result points the same way: removing the CPU wait raised the
+  estimate; see [RELEASE-FENCE-EXPERIMENT.md](RELEASE-FENCE-EXPERIMENT.md).)
 
 ## Next
 
@@ -137,4 +153,7 @@ connections, p50 (p90) ms over one 10 s block:
   at the cost of several decode submissions per frame.
 - Decoder queue (2.7 ms): the decoded frame waits for the client's next render.
 - The vsync queue is the Quest runtime's prediction lead ([FRESHNESS.md](FRESHNESS.md)); no ALVR
-  setting reaches it.
+  setting reaches it, and a faster app frame does not shorten it (above).
+- At 207 Hz the GPU is the limit. The client stages shrink only with less GPU work per frame
+  (decode, eye pass): the decoder stage is 7.5 ms for a 2.7-3.4 ms decode because the decode
+  queues behind the eye copy and the compositor.
