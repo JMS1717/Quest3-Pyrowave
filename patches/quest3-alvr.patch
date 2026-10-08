@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f30b17f7f 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..f474790198207b5f1386352a2bbc797fd17909b1 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..45a9c3262a075904f0b42bff1b8c1ea7f49f16de 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..52567896c322ff1a1db0bd2a0dc11375e48a5a06 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..45a9c3262a075904f0b42bff1b8c1ea7
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.96"
++version = "20.13.0-quest3.pyro.97"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -4172,7 +4172,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601497aaca790db25fa1b37423948fdfaa86..4b46b81f5b7cd18e97bc90f7d9a8e1a13ca832f0 100644
+index 2e22601497aaca790db25fa1b37423948fdfaa86..97b711b1eec7b5774584da3282d5b4081eab694b 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -4412,7 +4412,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..4b46b81f5b7cd18e97bc90f7d9a8e1a1
 +        refresh_hz,
 +        cfg.chroma444,
 +    );
-+    super::logcat_info("PYROWAVE", &format!("[Q3PW_PRIORITY] policy refresh_hz={refresh_hz} chroma444={} low={low_priority}", cfg.chroma444));
++    super::logcat_info("PYROWAVE", &format!("[Q3PW_PRIORITY] policy refresh_hz={refresh_hz} chroma444={} low={low_priority} frame={}x{}", cfg.chroma444, cfg.width, cfg.height));
 +    let prerecord_len = unsafe { libc::__system_property_get(c"debug.q3pw.prerecord_mode".as_ptr(), property.as_mut_ptr().cast()) };
 +    let prerecord_requested = prerecord_len == 1 && property[0] == b'1';
 +    let other_mode = handoff || ready_requested || release_requested || async_requested || producer_probe ||
@@ -5847,6 +5847,37 @@ index 30b0e81f826fc22dd6db995b9406c260cd9472c4..50d1bb61daf0c27bc7e5b13a307bdc88
 +        );
      }
  }
+diff --git a/alvr/client_openxr/src/graphics.rs b/alvr/client_openxr/src/graphics.rs
+index 949db5cfff2c927c979bd63f88ebe37320b97fc9..d29bf8a83ca9aeab265723df63d6f2239db239cf 100644
+--- a/alvr/client_openxr/src/graphics.rs
++++ b/alvr/client_openxr/src/graphics.rs
+@@ -49,7 +49,25 @@ pub fn create_swapchain(
+         mip_count: 1,
+     };
+ 
+-    session.create_swapchain(&swapchain_info).unwrap()
++    let swapchain = session.create_swapchain(&swapchain_info).unwrap();
++    // Meta fixed foveated rendering for the eye draw (XR_FB_foveation): lowers the shading rate
++    // toward the edges of the swapchain, where the lens already blurs. The profile was created
++    // but never applied, so the setting did nothing.
++    if let (Some(profile), Some(update)) =
++        (foveation, session.instance().exts().fb_swapchain_update_state)
++    {
++        let state = xr::sys::SwapchainStateFoveationFB {
++            ty: xr::sys::SwapchainStateFoveationFB::TYPE,
++            next: std::ptr::null_mut(),
++            flags: xr::sys::SwapchainStateFoveationFlagsFB::EMPTY,
++            profile: profile.as_raw(),
++        };
++        let result = unsafe {
++            (update.update_swapchain)(swapchain.as_raw(), (&raw const state).cast())
++        };
++        alvr_common::error!("[Q3PW_CLIENT_FFR] swapchain foveation applied result={result:?}");
++    }
++    swapchain
+ }
+ 
+ pub struct ProjectionLayerAlphaConfig {
 diff --git a/alvr/client_openxr/src/interaction.rs b/alvr/client_openxr/src/interaction.rs
 index 7765bb459f73e9d7d5a9f296a498f09a0df43706..1a2b8152c628566294dfb840971d5b3ed5a67ae3 100644
 --- a/alvr/client_openxr/src/interaction.rs
@@ -7599,7 +7630,7 @@ index 0000000000000000000000000000000000000000..aabdc9684074823279d5178429646757
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe995e4e278f3903d05f84a50db089f21cfc..bb6de09d40ccc32590d8d36004d85ae8680e643e 100644
+index b87dfe995e4e278f3903d05f84a50db089f21cfc..93e4aff731cc75bf31087917486a7b1d86be3ac8 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -1,3 +1,6 @@
@@ -7637,7 +7668,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..bb6de09d40ccc32590d8d36004d85ae8
 +            foveated_encoding_config: (config.negotiated_config.enable_foveated_encoding
 +                && config.settings.video.pyrowave.light_foveated_encoding)
 +                .then(|| alvr_session::pyrowave_foveation(config.settings.video.pyrowave.foveation_profile)),
-+            clientside_foveation_config: None,
++            clientside_foveation_config: config.settings.video.clientside_foveation.as_option().cloned(),
              upscaling: config.settings.video.upscaling.as_option().cloned(),
 +            sharpening: config.settings.video.pyrowave.sharpening,
              force_software_decoder: config.settings.video.force_software_decoder,
@@ -9352,10 +9383,10 @@ index 7bfba12ca0479598b4060b84664695a82c96411d..7236535dfbd7196f77a29c1e5f9dbc27
  #endif
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..55e946b358f2c5471347f66da595cf34f40bf265
+index 0000000000000000000000000000000000000000..d873840509f4f05d2d7f93a51c57efcc9fb9f238
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,803 @@
+@@ -0,0 +1,813 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -9552,6 +9583,7 @@ index 0000000000000000000000000000000000000000..55e946b358f2c5471347f66da595cf34
 +    resolution: UVec2,
 +    // Decoded size per eye: smaller than `resolution` with light foveation.
 +    decoded: UVec2,
++    layout_logged: Cell<bool>,
 +    view_idx: gl::UniformLocation,
 +    flip_y: gl::UniformLocation,
 +    // The same copy for PyroWave Haar mode 5 buffers: (program, view_idx, flip_y) for each luma
@@ -9788,7 +9820,7 @@ index 0000000000000000000000000000000000000000..55e946b358f2c5471347f66da595cf34
 +                    let timer = RefCell::new(super::eye_timer::EyeTimer::new(&context));
 +                    let native_release = NativeRelease::new(&context);
 +                    Ok(Self { context, program, source_texture,
-+                    vertex_array, framebuffers, resolution: config.resolution, decoded,
++                    vertex_array, framebuffers, resolution: config.resolution, decoded, layout_logged: Cell::new(false),
 +                    view_idx, flip_y, present, regions, flip, asynchronous: Cell::new(asynchronous),
 +                    image_cache_enabled: Cell::new(image_cache_requested && cfg!(target_os = "android")),
 +                    timer,
@@ -9975,6 +10007,15 @@ index 0000000000000000000000000000000000000000..55e946b358f2c5471347f66da595cf34
 +        let cached = self.cached_source_texture(buffer);
 +        let source_texture = cached.unwrap_or(self.source_texture);
 +        let present = self.present.as_ref().filter(|_| present_ycbcr_layout(buffer, self.decoded));
++        if self.present.is_some() && present.is_none() && !self.layout_logged.replace(true) {
++            #[cfg(target_os = "android")]
++            {
++                let mut desc = AHardwareBufferDesc::default();
++                if !buffer.is_null() { AHardwareBuffer_describe(buffer, &mut desc); }
++                import_diagnostic(5, format!("[Q3PW_PRESENT_YCBCR] buffer {}x{} is not packed YCbCr for decoded eye {}x{}; drawn as RGBA",
++                    desc.width, desc.height, self.decoded.x, self.decoded.y));
++            }
++        }
 +        let draw = || {
 +            gl.bind_vertex_array(Some(self.vertex_array));
 +            gl.viewport(0, 0, self.resolution.x as i32, self.resolution.y as i32);
@@ -11520,7 +11561,7 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..511452f640c7be2646defd4dadbf341c
              for framebuffer in &self.framebuffers {
                  ck!(gl.delete_framebuffer(*framebuffer));
 diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
-index 737b7d0053f8a34698696f465c816627e95d9287..ea1ee98be4aaa3815c7d7328ead92b66d382b654 100644
+index 737b7d0053f8a34698696f465c816627e95d9287..d9da5a48976046eaddd4927bd6094e3ad0b8a7a7 100644
 --- a/alvr/graphics/src/stream.rs
 +++ b/alvr/graphics/src/stream.rs
 @@ -1,10 +1,10 @@
@@ -11545,7 +11586,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..ea1ee98be4aaa3815c7d7328ead92b66
      context: Rc<GraphicsContext>,
      staging_renderer: StagingRenderer,
      pipeline: RenderPipeline,
-@@ -72,6 +74,12 @@ pub struct StreamRenderer {
+@@ -72,6 +74,13 @@ pub struct StreamRenderer {
      ffe_params_buffer: Buffer,
      /// `None` when foveated encoding is off, in which case there is nothing to steer.
      foveated_encoding: Option<(UVec2, FoveatedEncodingConfig)>,
@@ -11555,10 +11596,11 @@ index 737b7d0053f8a34698696f465c816627e95d9287..ea1ee98be4aaa3815c7d7328ead92b66
 +    direct_eye_enabled: bool,
 +    leased_pyrowave_buffer: Cell<*mut c_void>,
 +    last_copy_direct: Cell<bool>,
++    staging_logged: Cell<bool>,
  }
  
  impl StreamRenderer {
-@@ -87,9 +95,27 @@ impl StreamRenderer {
+@@ -87,9 +96,27 @@ impl StreamRenderer {
          fix_limited_range: bool,
          encoding_gamma: f32,
          upscaling: Option<UpscalingConfig>,
@@ -11586,7 +11628,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..ea1ee98be4aaa3815c7d7328ead92b66
          let target_format = super::gl_format_to_wgpu(target_format);
  
          let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-@@ -292,15 +318,82 @@ impl StreamRenderer {
+@@ -292,15 +319,83 @@ impl StreamRenderer {
          );
  
          Self {
@@ -11604,6 +11646,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..ea1ee98be4aaa3815c7d7328ead92b66
 +            direct_eye_enabled: false,
 +            leased_pyrowave_buffer: Cell::new(ptr::null_mut()),
 +            last_copy_direct: Cell::new(false),
++            staging_logged: Cell::new(false),
 +        }
 +    }
 +
@@ -11669,7 +11712,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..ea1ee98be4aaa3815c7d7328ead92b66
      /// Move the full-resolution centre to match the server's, for the frame about to be drawn.
      ///
      /// Per eye: the horizontal frusta are asymmetric and mirrored, so one shared shift is only
-@@ -333,9 +426,30 @@ impl StreamRenderer {
+@@ -333,9 +428,36 @@ impl StreamRenderer {
          view_params: [StreamViewParams; 2],
          passthrough: Option<&PassthroughMode>,
      ) {
@@ -11690,6 +11733,12 @@ index 737b7d0053f8a34698696f465c816627e95d9287..ea1ee98be4aaa3815c7d7328ead92b66
 +                self.last_copy_direct.set(true);
 +                return;
 +            }
++        }
++        if self.direct_eye_enabled && !source.is_null() && !self.staging_logged.replace(true) {
++            alvr_common::error!("[Q3PW_STAGING_FALLBACK] passthrough={} rotated={} can_render={:?}",
++                passthrough.is_some(),
++                view_params.iter().any(|view| view.reprojection_rotation != Quat::IDENTITY),
++                self.direct_eye_renderer.as_ref().map(|r| r.can_render(source)));
 +        }
 +        self.drain_import_copy();
          // if hardware_buffer is available copy stream to staging texture

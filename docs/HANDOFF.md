@@ -34,6 +34,19 @@ State:
     (the stream was refused until the app was reopened);
   - a client restart with `am start -S -W`, plus a retry if the restarted client has no activity
     ([REFRESH-RATES.md](REFRESH-RATES.md)).
+- **October 8, later, `.95`-`.97` on the same branch:**
+  - `.95` clears a 72 Hz panel pin the headset left behind ([REFRESH-RATES.md](REFRESH-RATES.md)).
+  - `.96` keeps the binocular middle at full density in all three peripheral-encoding profiles
+    ([LIGHT-FOVEATION.md](LIGHT-FOVEATION.md#where-the-full-density-band-sits-96)).
+  - `.97` makes Meta fixed foveated rendering work for the eye draw (hidden setting, off by
+    default) and adds layout diagnostics.
+  - Result ([table](LIGHT-FOVEATION.md#above-125--through-foveation-october-8-96-97)): above 125 % is
+    not cheap at 120 Hz. Strong 148 % with FFR Medium gets 99.7 fresh FPS against about 109 for
+    uniform 125 %. At 90 Hz, 148 % holds 87 of 90.
+  - **Harness pitfall:** live A/B arms cannot change resolution or foveation (they need a SteamVR
+    restart), so such comparisons need one cell per configuration.
+  - Next, per the owner: a Virtual Desktop quality baseline, then cheap quality wins, then 207 Hz
+    scheduling.
 - **Owner's play runtime (October 8):** `.92` (`4b760b5`) is installed on the headset (`.93`
   was checked live, then `.92` was put back to match the play runtime). The
   matching Windows build with the owner's saved session is staged outside the repo

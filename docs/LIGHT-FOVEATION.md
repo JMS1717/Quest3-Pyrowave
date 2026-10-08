@@ -11,12 +11,38 @@ rendering workload.
 
 ## What changes
 
-The fixed center occupies approximately **80% of each eye's width and height**,
-with full sampling density there. A smooth ALVR spatial remapping compresses the
-remaining outer bands with a gentle **1.5× edge ratio**. Neither eye follows gaze,
-and both shifts are zero. The Quest reconstructs the original expanded view in
-the existing direct-eye draw, preserving its color/range handling and buffer
-ownership. There is no extra full-frame reconstruction pass in that direct path.
+Light keeps a full-density band of about **80% of each eye's width and height**. A smooth ALVR
+spatial remapping compresses the remaining outer bands with a gentle **1.5× edge ratio**. Neither
+eye follows gaze. The Quest reconstructs the original expanded view in the existing direct-eye
+draw, preserving its color/range handling and buffer ownership. There is no extra full-frame
+reconstruction pass in that direct path.
+
+### Where the full-density band sits (`.96`)
+
+Each Quest 3 eye sees 54° outward, 40° toward the nose, 44° up and 55° down. The middle of each
+eye's image therefore looks about 15° outward and 5° down. Up to `.95` the band was centred on
+the image, so it compressed the nasal side of each eye: the middle of the view, which both eyes
+see. That is the opposite of fixed-foveation practice, which keeps the binocular overlap and the
+straight-ahead direction at full density and compresses only the periphery.
+
+From `.96` the band is shifted, using ALVR's existing `center_shift`:
+
+- Horizontally it covers the binocular overlap (±40° from straight ahead) in both eyes. Only the
+  outer, one-eye periphery is compressed. The shift is mirrored for the right eye, and it stays
+  below 0.9 so the inner edge band keeps a non-zero width.
+- Vertically the band is centred on straight ahead.
+
+| Profile | Encoded per eye from 2080×2208 | Fewer pixels | Full density, horizontal | Full density, vertical |
+| --- | --- | ---: | --- | --- |
+| Light (1.5×) | 1952×2080 | 11.6% | −43.7° to +39.2° | +43.2° to −44.3° |
+| Balanced (1.75×) | 1888×1920 | 21.1% | −41.8° to +39.0° | +39.2° to −39.1° |
+| Strong (2×) | 1856×1792 | 27.6% | −41.8° to +39.1° | +35.5° to −35.9° |
+
+Angles are for the left eye (negative is outward); the right eye mirrors them. Each value was
+chosen so the client's f32 sizing and the server's mixed-precision sizing round sizes and shifts
+to the same pixel for every eye size from 512 to 4096. `tests/test_foveation.py` checks that
+agreement and the coverage, and `python -m tools.quest3.foveation --profile strong` prints a
+profile's angles.
 
 | Native120 / 4:2:0 comparison | Full frame | Light mode |
 | --- | --- | --- |
@@ -28,7 +54,7 @@ ownership. There is no extra full-frame reconstruction pass in that direct path.
 Light mode saves **11.59% encoded pixels** after alignment, not a promised
 11.59% performance gain. Conversion, eye draws and runtime presentation still
 cost time. The nominal center covers about 64% of image area, and alignment makes
-each axis slightly less than 80%. It is a fixed image-center profile; lens frusta,
+each axis slightly less than 80%. It is a fixed, non-gaze profile; lens frusta,
 IPD, fit and looking toward peripheral text affect how noticeable it is. Human
 in-headset acceptance remains necessary.
 
@@ -158,6 +184,70 @@ Strong foveation still decodes about 0.8 ms faster (2.24 against 3.03 ms GPU dec
 resolution the decoder is not the limit, so it does not raise fresh FPS. In-headset screenshots
 of the same view with foveation off and with Strong show the same image, with no seams at region
 edges. Perceptual acceptance of the softer periphery remains pending.
+
+## Above 125 % through foveation (October 8, `.96`-`.97`)
+
+The question: can foveation deliver a stream above 125 % more cheaply? The idea is to render
+3072x3216 per eye, keep the binocular middle at full density, and encode about the pixel count of
+uniform 125 %.
+
+Strong encodes 3072x3216 as 2720x2592 per eye, which is 7.05 MP against 7.22 MP for uniform
+2592x2784. The decode stays close. The eye draw does not, because the swapchain takes the
+expanded 3072x3216.
+
+Meta fixed foveated rendering (`XR_FB_foveation`) lowers the shading rate of that draw toward
+the swapchain edges. ALVR's hidden `video.clientside_foveation` setting created the profile but
+never applied it. Two gaps:
+
+- the client never read the setting;
+- the swapchain never received the profile.
+
+`.97` fixes both. The setting stays hidden and off, and the beta profiles still force it off.
+The client logs `[Q3PW_CLIENT_FFR] swapchain foveation applied result=SUCCESS` when the profile
+takes.
+
+Setup: Quest 3 over USB, CDF 5/3, 4:2:0, 2000 Mbps, a 60 deg/s pan, 12 s windows, its own
+SteamVR start per cell.
+
+| Hz | Stream | Client FFR | Fresh FPS | Lost/s | GPU decode p50 | Eye draw p50 |
+|---:|---|---|---:|---:|---:|---:|
+| 120 | uniform 2592x2784 (125 %) | off | 108.1, 109.0, 109.5 | 13-14 | 4.8-4.9 ms | 1.88 ms |
+| 120 | uniform 2592x2784 | High | 104.8, 111.4 | 12-18 | 4.8-5.5 ms | 1.67 ms |
+| 120 | Strong from 3072x3216 (148 %) | off | 87.0, 87.1, 87.4 | 34 | 5.7 ms | 3.24 ms |
+| 120 | Strong from 3072x3216 | Low | 92.8 | 29 | 5.6 ms | |
+| 120 | Strong from 3072x3216 | Medium | 99.7 | 22 | 5.3 ms | 1.94 ms |
+| 120 | Strong from 3072x3216 | High | 99.0 | 22 | 5.6 ms | 1.96 ms |
+| 90 | uniform 2592x2784 | off | 87.9 | 2.5 | 5.9 ms | |
+| 90 | Strong from 3072x3216 | Medium | 87.4 | 3.7 | 5.1 ms | |
+| 90 | Strong from 3584x3840 (174 %) | Medium | 75.1 | 15 | 7.3 ms | |
+
+- **At 120 Hz, more than 125 % is not cheap.**
+  - FFR Medium cuts the eye draw by 40 %, recovering 12 of the 22 FPS that Strong 148 % lost.
+  - It still runs about 10 FPS below uniform 125 %, which itself is at about 109 of 120.
+  - The Quest GPU is the limit: decode plus eye draw take about the whole 8.3 ms.
+  - Medium is the knee. High buys nothing more.
+- **At 90 Hz, 148 % fits.** Strong 148 % with FFR Medium holds 87 of 90 FPS, the same as uniform 125 %.
+  174 % does not fit: its decode alone takes 7.3 ms.
+- **Not judged:**
+  - whether 148 % looks sharper than 125 % in the headset;
+  - whether FFR Medium is visible.
+
+  The pan moves the scene between cells, so the screenshots cannot be compared crop for crop.
+  An in-headset A/B is needed.
+
+  The Quest compositor resamples the eye buffer onto a 2064x2208 panel. Past the lens's centre
+  density, extra eye-buffer pixels act only as supersampling.
+
+Pitfall found on the way: the live A/B harness applies only live settings between arms.
+Resolution and foveation need a SteamVR restart. A foveated arm in the same session kept
+encoding 5184x2784 while the client expected 5440x2592, and drew the packed buffer as RGBA (a
+grey-green image). Restart-only settings now go in separate cells.
+
+`.97` diagnostics to make this visible:
+
+- `[Q3PW_PRIORITY] ... frame=WxH`;
+- a once-per-session `[Q3PW_PRESENT_YCBCR] buffer ... is not packed YCbCr` warning;
+- `[Q3PW_STAGING_FALLBACK]`.
 
 ## Mapping safeguards and inspiration
 
