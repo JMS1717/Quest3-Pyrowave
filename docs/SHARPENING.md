@@ -182,7 +182,12 @@ The roadmap's two modes are streaming profiles that fold in the cheap PC-side wi
 
 - The kernel and strength follow the offline bests for each point. The Quality strength is lighter
   because at 2592 the headset kernel scored best at about 0.10.
-- Not yet run as a whole on the headset.
+- **Quality on the headset (`.99`, USB, panning scene, three 12 s blocks):**
+  - 106.8, 116.7 and 117.4 fresh FPS, the first block still settling; decode fence p50 7.8 ms.
+  - The server logged `luma pre-sharpen k=0.0900`, so the setting reaches the pass.
+  - Unsharpened 125 % measured 117-118.5 earlier, and headset sharpening at 125 % cost about 8 FPS.
+    So the PC location gives 125 % sharpened at the unsharpened frame rate.
+- Competitive has not been run yet.
 
 Next:
 
