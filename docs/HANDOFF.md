@@ -126,6 +126,14 @@ Builds from branch `claude/frame-budget`, local only:
     2. `setprop debug.oculus.refreshRate ''`, then `207`;
     3. restore the previous value.
   - This is PLAN #33, reliable refresh switching.
+  - **Cause** (harness only): the server's GPU-level change wakes the headset and then broadcasts
+    `automation_disable`. That also drops the harness's proximity hold, and the headset on the
+    desk sleeps.
+  - The harness then set `debug.oculus.refreshRate` to the value it already held. HorizonOS
+    ignores a set that doesn't change the value.
+  - **Fix:** `live56.py` now clears the property first whenever the panel is not at the rate.
+    The next cell passed both arms with no relaunch.
+  - For a worn headset the helper's release is correct.
 
 **Supersampled stream (`.69`):**
 
