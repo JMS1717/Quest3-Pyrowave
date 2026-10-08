@@ -1,8 +1,17 @@
 diff --git a/pyrowave-shared.def b/pyrowave-shared.def
-index ae28020b147fd25a9fe65707816de834a3b3ef6c..84269f8fd3632e6a9e963971d7319822ae69cf8e 100644
+index ae28020b147fd25a9fe65707816de834a3b3ef6c..0aed760c1876c74d3bd9c9677def9468d66b3f3a 100644
 --- a/pyrowave-shared.def
 +++ b/pyrowave-shared.def
-@@ -44,6 +44,7 @@ EXPORTS
+@@ -4,6 +4,8 @@ EXPORTS
+ 	pyrowave_get_api_version
+ 	pyrowave_create_default_device
+ 	pyrowave_create_device_by_compat
++	pyrowave_create_device_by_compat_with_priority
++	pyrowave_device_get_queue_priority
+ 	pyrowave_create_device
+ 	pyrowave_device_set_command_buffer
+ 	pyrowave_device_next_context_ready
+@@ -44,6 +46,7 @@ EXPORTS
  	pyrowave_decoder_decode_is_ready_with_sideband
  	pyrowave_decoder_set_fused_dequant_haar
  	pyrowave_decoder_set_haar32
@@ -11,10 +20,29 @@ index ae28020b147fd25a9fe65707816de834a3b3ef6c..84269f8fd3632e6a9e963971d7319822
  	pyrowave_decoder_decode_cpu_buffer_synchronous
  	pyrowave_decoder_destroy
 diff --git a/pyrowave.h b/pyrowave.h
-index d0a203736bb98cbc56577bcca8c55670167edeaa..d08e7674ef0d3852829f96acac6f1fd4e28f185c 100644
+index d0a203736bb98cbc56577bcca8c55670167edeaa..01a4b9798842f905477af942b477e7235279fba8 100644
 --- a/pyrowave.h
 +++ b/pyrowave.h
-@@ -554,11 +554,35 @@ PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_fused_dequant_haar(pyro
+@@ -162,6 +162,18 @@ PYROWAVE_PUBLIC_API pyrowave_result pyrowave_create_device_by_compat(
+ 	const pyrowave_luid *device_luid, // If non-NULL, needs to match VkPhysicalDeviceIDProperties::deviceLUID
+ 	pyrowave_device *device);
+ 
++// As pyrowave_create_device_by_compat, with every queue of the device created at a global priority
++// (VK_KHR_global_priority): 0 the default (medium), 1 high, 2 realtime. When the driver lacks the
++// extension or refuses the priority (VK_ERROR_NOT_PERMITTED), the device is created at the default;
++// pyrowave_device_get_queue_priority reports what was granted.
++PYROWAVE_PUBLIC_API pyrowave_result pyrowave_create_device_by_compat_with_priority(
++	uint32_t vid, uint32_t pid,
++	const pyrowave_uuid *device_uuid, const pyrowave_uuid *driver_uuid, const pyrowave_luid *device_luid,
++	int queue_priority, pyrowave_device *device);
++
++// The global priority the device's queues were created at: 0 default, 1 high, 2 realtime.
++PYROWAVE_PUBLIC_API int pyrowave_device_get_queue_priority(pyrowave_device device);
++
+ // For performance debugging, reports GPU timestamps.
+ PYROWAVE_PUBLIC_API void
+ pyrowave_device_report_performance_stats(pyrowave_device device, pyrowave_message_cb cb, void *userdata, bool reset);
+@@ -554,11 +566,35 @@ PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_fused_dequant_haar(pyro
   * pixels at equal PSNR. enabled=2 also stores levels 0-1 quad-packed (RGBA16F, one 2x2 quad of a
   * band per texel; precision 1 only), which only this pass can read. enabled=3 additionally writes
   * luma as an RGBA8_UNORM plane of half width and height, each texel one 2x2 pixel quad ((0,0),
@@ -52,10 +80,134 @@ index d0a203736bb98cbc56577bcca8c55670167edeaa..d08e7674ef0d3852829f96acac6f1fd4
  {
  	pyrowave_device device;
 diff --git a/pyrowave_c.cpp b/pyrowave_c.cpp
-index d44dc0fb80aafa468d14fbf30536551fac0da8bc..df9b440598ab8612a8e9d218bba4df3c668649e1 100644
+index d44dc0fb80aafa468d14fbf30536551fac0da8bc..15f4f0de606ccd1397a33aaffec6cb6f6892ed4e 100644
 --- a/pyrowave_c.cpp
 +++ b/pyrowave_c.cpp
-@@ -1432,6 +1432,13 @@ pyrowave_result pyrowave_decoder_set_fused_dequant_haar(pyrowave_decoder decoder
+@@ -36,14 +36,88 @@ void pyrowave_get_api_version(uint32_t *major, uint32_t *minor, uint32_t *patch)
+ 	*patch = PYROWAVE_API_VERSION_PATCH;
+ }
+ 
++// Creates Granite's device with a global priority chained onto each of its queues, retrying at the
++// default priority when the driver refuses.
++struct PriorityDeviceFactory : DeviceFactory
++{
++	int requested = 0;
++	int granted = 0;
++
++	VkDevice create_device(VkPhysicalDevice gpu, const VkDeviceCreateInfo *info) override
++	{
++		VkDevice device = VK_NULL_HANDLE;
++		const char *ext_name = nullptr;
++		if (requested > 0)
++		{
++			uint32_t count = 0;
++			vkEnumerateDeviceExtensionProperties(gpu, nullptr, &count, nullptr);
++			std::vector<VkExtensionProperties> props(count);
++			vkEnumerateDeviceExtensionProperties(gpu, nullptr, &count, props.data());
++			for (auto &prop : props)
++			{
++				if (strcmp(prop.extensionName, VK_KHR_GLOBAL_PRIORITY_EXTENSION_NAME) == 0)
++					ext_name = VK_KHR_GLOBAL_PRIORITY_EXTENSION_NAME;
++				else if (!ext_name && strcmp(prop.extensionName, VK_EXT_GLOBAL_PRIORITY_EXTENSION_NAME) == 0)
++					ext_name = VK_EXT_GLOBAL_PRIORITY_EXTENSION_NAME;
++			}
++		}
++
++		if (ext_name)
++		{
++			std::vector<const char *> exts(info->ppEnabledExtensionNames,
++			                               info->ppEnabledExtensionNames + info->enabledExtensionCount);
++			bool present = false;
++			for (auto *e : exts)
++				present = present || strcmp(e, ext_name) == 0;
++			if (!present)
++				exts.push_back(ext_name);
++
++			std::vector<VkDeviceQueueCreateInfo> queues(info->pQueueCreateInfos,
++			                                            info->pQueueCreateInfos + info->queueCreateInfoCount);
++			std::vector<VkDeviceQueueGlobalPriorityCreateInfoKHR> priorities(queues.size());
++			for (size_t i = 0; i < queues.size(); i++)
++			{
++				priorities[i] = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_GLOBAL_PRIORITY_CREATE_INFO_KHR };
++				priorities[i].globalPriority = requested >= 2 ? VK_QUEUE_GLOBAL_PRIORITY_REALTIME_KHR
++				                                              : VK_QUEUE_GLOBAL_PRIORITY_HIGH_KHR;
++				priorities[i].pNext = queues[i].pNext;
++				queues[i].pNext = &priorities[i];
++			}
++
++			VkDeviceCreateInfo tmp = *info;
++			tmp.enabledExtensionCount = uint32_t(exts.size());
++			tmp.ppEnabledExtensionNames = exts.data();
++			tmp.pQueueCreateInfos = queues.data();
++			if (vkCreateDevice(gpu, &tmp, nullptr, &device) == VK_SUCCESS)
++			{
++				granted = requested >= 2 ? 2 : 1;
++				return device;
++			}
++			device = VK_NULL_HANDLE;
++		}
++
++		granted = 0;
++		if (vkCreateDevice(gpu, info, nullptr, &device) != VK_SUCCESS)
++			return VK_NULL_HANDLE;
++		return device;
++	}
++};
++
+ struct pyrowave_device_opaque
+ {
++	PriorityDeviceFactory priority_factory;
+ 	Context context;
+ 	Device device;
+ 	VkCommandBuffer cmd = VK_NULL_HANDLE;
+ 	CommandBuffer::Type queue_type = CommandBuffer::Type::Generic;
++	int queue_priority = 0;
+ };
+ 
++int pyrowave_device_get_queue_priority(pyrowave_device device)
++{
++	return device ? device->queue_priority : 0;
++}
++
+ int pyrowave_device_next_context_ready(pyrowave_device device)
+ {
+     if (!device || device->cmd) return -1;
+@@ -63,6 +137,14 @@ pyrowave_result pyrowave_create_device_by_compat(
+ 	const pyrowave_uuid *driver_uuid, // If non-NULL, needs to match VkPhysicalDeviceIDProperties::driverUUID
+ 	const pyrowave_luid *device_luid, // If non-NULL, needs to match VkPhysicalDeviceIDProperties::deviceLUID
+ 	pyrowave_device *device)
++{
++	return pyrowave_create_device_by_compat_with_priority(vid, pid, device_uuid, driver_uuid, device_luid, 0, device);
++}
++
++pyrowave_result pyrowave_create_device_by_compat_with_priority(
++	uint32_t vid, uint32_t pid,
++	const pyrowave_uuid *device_uuid, const pyrowave_uuid *driver_uuid, const pyrowave_luid *device_luid,
++	int queue_priority, pyrowave_device *device)
+ {
+ 	// TODO: Find a better way to do this.
+ 	Util::set_thread_logging_interface(&null_logger);
+@@ -73,6 +155,11 @@ pyrowave_result pyrowave_create_device_by_compat(
+ 	auto *dev = new pyrowave_device_opaque();
+ 	dev->context.set_num_thread_indices(1);
+ 	dev->context.set_system_handles({});
++	if (queue_priority > 0)
++	{
++		dev->priority_factory.requested = queue_priority;
++		dev->context.set_device_factory(&dev->priority_factory);
++	}
+ 
+ 	VkApplicationInfo app_info = { VK_STRUCTURE_TYPE_APPLICATION_INFO };
+ 	app_info.apiVersion = VK_API_VERSION_1_2;
+@@ -148,6 +235,7 @@ pyrowave_result pyrowave_create_device_by_compat(
+ 	context_opts.lean_memory_mode = true;
+ 
+ 	dev->device.set_context(dev->context, context_opts);
++	dev->queue_priority = queue_priority > 0 ? dev->priority_factory.granted : 0;
+ 	*device = dev;
+ 	return PYROWAVE_SUCCESS;
+ }
+@@ -1432,6 +1520,13 @@ pyrowave_result pyrowave_decoder_set_fused_dequant_haar(pyrowave_decoder decoder
  	return decoder->decoder.set_fused_dequant_haar(enabled != 0) ? PYROWAVE_SUCCESS : PYROWAVE_ERROR_NOT_IMPLEMENTED;
  }
  

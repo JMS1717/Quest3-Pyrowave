@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1b6e9ad59 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..d8475f14369dfa3fa8eed263bb63bcd248ea7b2e 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d95dbf944c3f15b6f65b198c3d1536f1
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..6a7de022c40b83259001485299e506323e758919 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..bec5d95c1e755986750e9258bc4c39f0461d9322 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..6a7de022c40b83259001485299e50632
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.76"
++version = "20.13.0-quest3.pyro.77"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -14694,7 +14694,7 @@ index adef8973ea6259daa44f167f0c57b9c35a7f1769..f0de49ce72eea7a6ab8dbf0caac3b4d9
      std::mutex m_presentMutex;
  };
 diff --git a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
-index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..04402e8e72dd5d3b721da0af567ea5ab82d4c70f 100644
+index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..89e111fc21ee85378552733adddcef8418c4f1ba 100644
 --- a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
 +++ b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
 @@ -12,8 +12,10 @@
@@ -14718,7 +14718,47 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..04402e8e72dd5d3b721da0af567ea5ab
  
  VideoEncoderPyroWave::VideoEncoderPyroWave(
      std::shared_ptr<CD3DRender> pD3DRender, int width, int height, ID3D11Texture2D* planes[3]
-@@ -122,10 +127,10 @@ void VideoEncoderPyroWave::Initialize() {
+@@ -65,11 +70,37 @@ void VideoEncoderPyroWave::Initialize() {
+     DXGI_ADAPTER_DESC adapterDesc;
+     OK_OR_THROW(adapter->GetDesc(&adapterDesc), L"No adapter desc.");
+ 
++    // GPU scheduling experiments (docs/LATENCY.md). Most of the encoder stage is the frame waiting
++    // for the GPU behind other work, not the work itself:
++    // - ALVR_D3D_GPU_PRIORITY=-7..7: IDXGIDevice::SetGPUThreadPriority for the frame render.
++    // - ALVR_PYROWAVE_QUEUE=graphics|compute[-high|-realtime]: the queue family PyroWave encodes
++    //   on and the global priority of the encoder device's queues. Default: graphics, default
++    //   priority.
++    if (const char* p = std::getenv("ALVR_D3D_GPU_PRIORITY")) {
++        const int priority = std::atoi(p);
++        const HRESULT hr = dxgiDevice->SetGPUThreadPriority(priority);
++        INT readback = 0;
++        dxgiDevice->GetGPUThreadPriority(&readback);
++        Info("[Q3PW_ENCODE_QUEUE] d3d11 gpu thread priority %d: hr=0x%08x now %d\n", priority,
++             (unsigned)hr, (int)readback);
++    }
++    int queuePriority = 0;
++    bool computeQueue = false;
++    if (const char* q = std::getenv("ALVR_PYROWAVE_QUEUE")) {
++        computeQueue = std::strncmp(q, "compute", 7) == 0;
++        queuePriority = std::strstr(q, "-realtime") ? 2 : std::strstr(q, "-high") ? 1 : 0;
++    }
++
+     static_assert(sizeof(LUID) == sizeof(pyrowave_luid), "LUID size mismatch");
+-    PYRO_OR_THROW(pyrowave_create_device_by_compat(
++    PYRO_OR_THROW(pyrowave_create_device_by_compat_with_priority(
+         0, 0, nullptr, nullptr, reinterpret_cast<pyrowave_luid*>(&adapterDesc.AdapterLuid),
+-        &m_pyroDevice
++        queuePriority, &m_pyroDevice
+     ));
++    if (computeQueue && pyrowave_device_set_queue_type(m_pyroDevice, VK_QUEUE_COMPUTE_BIT) != PYROWAVE_SUCCESS)
++        computeQueue = false;
++    Info("[Q3PW_ENCODE_QUEUE] encode queue %s, priority requested %d granted %d\n",
++         computeQueue ? "compute" : "graphics", queuePriority,
++         pyrowave_device_get_queue_priority(m_pyroDevice));
+ 
+     if (!pyrowave_device_confirm_interop_support(m_pyroDevice)) {
+         throw MakeException("PyroWave reports no external memory/semaphore interop on this GPU.");
+@@ -122,10 +153,10 @@ void VideoEncoderPyroWave::Initialize() {
      encoderInfo.device = m_pyroDevice;
      encoderInfo.width = m_renderWidth;
      encoderInfo.height = m_renderHeight;
@@ -14732,7 +14772,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..04402e8e72dd5d3b721da0af567ea5ab
  
      // What H.264 carries as SPS/PPS, PyroWave carries here: the client's DecoderConfig payload.
      // Sent on the next RequestIdr, which the client issues as soon as it sees a frame it cannot
-@@ -134,27 +139,27 @@ void VideoEncoderPyroWave::Initialize() {
+@@ -134,27 +165,27 @@ void VideoEncoderPyroWave::Initialize() {
      // u8 full_range, little endian.
      {
          // ... u8 transport (1 = our UDP socket), u16 deadline_us (one frame period),
@@ -14767,7 +14807,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..04402e8e72dd5d3b721da0af567ea5ab
      }
  
      OK_OR_THROW(
-@@ -215,9 +220,9 @@ void VideoEncoderPyroWave::Initialize() {
+@@ -215,9 +246,9 @@ void VideoEncoderPyroWave::Initialize() {
      // stream is neither H.264 nor HEVC whatever it is called.
      BitstreamTap::Start(m_codec, m_renderWidth, m_renderHeight);
  
@@ -14779,7 +14819,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..04402e8e72dd5d3b721da0af567ea5ab
  }
  
  void VideoEncoderPyroWave::Shutdown() {
-@@ -313,19 +318,23 @@ void VideoEncoderPyroWave::DumpPlanes() {
+@@ -313,19 +344,23 @@ void VideoEncoderPyroWave::DumpPlanes() {
      // as a 29 dB luma loss -- lifted blacks and banding -- in an encoder that is actually exact.
      // Declare what the data really is.
      if (first) {
@@ -14807,7 +14847,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..04402e8e72dd5d3b721da0af567ea5ab
          D3D11_MAPPED_SUBRESOURCE mapped;
          if (FAILED(context->Map(m_dumpStaging.Get(), 0, D3D11_MAP_READ, 0, &mapped))) {
              Error("[PYROWAVE] failed to map plane %d for dump\n", i);
-@@ -333,10 +342,10 @@ void VideoEncoderPyroWave::DumpPlanes() {
+@@ -333,10 +368,10 @@ void VideoEncoderPyroWave::DumpPlanes() {
              return;
          }
          const uint8_t* src = static_cast<const uint8_t*>(mapped.pData);
@@ -14821,7 +14861,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..04402e8e72dd5d3b721da0af567ea5ab
          }
          context->Unmap(m_dumpStaging.Get(), 0);
      }
-@@ -362,12 +371,12 @@ void VideoEncoderPyroWave::DumpPlanes() {
+@@ -362,12 +397,12 @@ void VideoEncoderPyroWave::DumpPlanes() {
          pyrowave_cpu_buffer cpu = {};
          for (int i = 0; i < 3; i++) {
              cpu.data[i] = planes[i].data();
@@ -14837,7 +14877,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..04402e8e72dd5d3b721da0af567ea5ab
  
          pyrowave_rate_control rc = {};
          rc.maximum_bitstream_size = m_bitrateBps && m_framerate
-@@ -387,7 +396,7 @@ void VideoEncoderPyroWave::DumpPlanes() {
+@@ -387,7 +422,7 @@ void VideoEncoderPyroWave::DumpPlanes() {
                  std::string wavePath = m_dumpPath + ".cpu.wave";
                  FILE* wave = nullptr;
                  if (fopen_s(&wave, wavePath.c_str(), "wb") == 0 && wave) {
@@ -14846,7 +14886,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..04402e8e72dd5d3b721da0af567ea5ab
                                                  Settings::Instance().m_useFullRangeEncoding ? 1 : 0,
                                                  (int32_t)(m_framerate ? m_framerate : 72), 1, 0 };
                      fwrite("PYROWAVE", 1, 8, wave);
-@@ -412,6 +421,43 @@ void VideoEncoderPyroWave::DumpPlanes() {
+@@ -412,6 +447,43 @@ void VideoEncoderPyroWave::DumpPlanes() {
            (unsigned long long)m_frameCount);
  }
  
@@ -14890,7 +14930,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..04402e8e72dd5d3b721da0af567ea5ab
  void VideoEncoderPyroWave::Transmit(
      ID3D11Texture2D* /*pTexture*/,
      uint64_t /*presentationTime*/,
-@@ -424,17 +470,24 @@ void VideoEncoderPyroWave::Transmit(
+@@ -424,17 +496,24 @@ void VideoEncoderPyroWave::Transmit(
      auto params = GetDynamicEncoderParams();
      if (params.updated) {
          m_bitrateBps = params.bitrate_bps;
@@ -14919,7 +14959,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..04402e8e72dd5d3b721da0af567ea5ab
  
      // Order the D3D11 render before the Vulkan read. A shared fence imported as a timeline
      // semaphore would avoid the CPU round trip; this is the simpler correct version, and the
-@@ -449,6 +502,7 @@ void VideoEncoderPyroWave::Transmit(
+@@ -449,6 +528,7 @@ void VideoEncoderPyroWave::Transmit(
          return;
      }
      WaitForSingleObject(m_fenceEvent, INFINITE);
@@ -14927,7 +14967,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..04402e8e72dd5d3b721da0af567ea5ab
  
      if (!m_dumpTriggerDir.empty() && (m_frameCount % 8) == 0)
          PollDumpTrigger();
-@@ -482,16 +536,18 @@ void VideoEncoderPyroWave::Transmit(
+@@ -482,16 +562,18 @@ void VideoEncoderPyroWave::Transmit(
          Error("[PYROWAVE] encode failed: %d\n", (int)encoded);
          return;
      }
@@ -14949,7 +14989,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..04402e8e72dd5d3b721da0af567ea5ab
      std::vector<pyrowave_packet> packets(numPackets ? numPackets : 1);
      size_t outPackets = 0;
      if (pyrowave_encoder_packetize(
-@@ -502,23 +558,41 @@ void VideoEncoderPyroWave::Transmit(
+@@ -502,23 +584,41 @@ void VideoEncoderPyroWave::Transmit(
          Error("[PYROWAVE] packetize failed\n");
          return;
      }
@@ -15002,7 +15042,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..04402e8e72dd5d3b721da0af567ea5ab
              BitstreamTap::Submit(targetTimestampNs, insertIDR, buf, len);
              continue;
          }
-@@ -545,6 +619,8 @@ void VideoEncoderPyroWave::Transmit(
+@@ -545,6 +645,8 @@ void VideoEncoderPyroWave::Transmit(
               packets[0].size,
               rateControl.maximum_bitstream_size);
      }
