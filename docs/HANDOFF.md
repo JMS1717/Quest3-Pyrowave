@@ -113,6 +113,21 @@ State:
     Even serialized, decode takes 5 ms live against 3.3-4 ms on the bench, so full size does not
     fit 120 Hz on this GPU. For 120 Hz, the clarity work moves to the largest stream that fits
     (125-135 %).
+  - **125 % in SteamVR Home is slower than the quality-scene numbers.** Fresh FPS at 120 Hz,
+    2000 Mbps, unworn headset:
+
+    | Arm | Fresh FPS |
+    |---|---|
+    | CDF 5/3, 2608x2752, `.109` | 88-91 (decode 7.3-7.8 ms) |
+    | Same, PC sharpening off | 91-92 |
+    | Same, Quest colour off | 89 (no effect) |
+    | Decoder mode 4 instead of 5 | 61-62 |
+    | `.97`'s own pair today | 92 |
+    | Haar, 135 % | 83 |
+
+    `.97` measured 108-109 at 125 % with 4.8 ms decode on the 60°/s quality-scene pan, so the gap
+    is content, not code. Real game content can decode much slower than the quality scene,
+    which matters for every "fits at 120 Hz" claim. Re-measure the profiles on real game content.
   - **Harness traps:**
     - A force-stopped client often comes back pinned at 72 Hz.
     - Set `debug.oculus.refreshRate=120` while awake, before `am start`. That made 4 of 4 starts
