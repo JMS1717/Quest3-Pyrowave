@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b0ccd64dd 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..23ce5a112289e714718599a5ed37824f30b17f7f 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..fb5682d4d3e09170aa4a45b01313907b
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..5a60861d20fa2a325e6662ba70f99d4c89bbc01e 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..45a9c3262a075904f0b42bff1b8c1ea7f49f16de 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..5a60861d20fa2a325e6662ba70f99d4c
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.95"
++version = "20.13.0-quest3.pyro.96"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -11520,7 +11520,7 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..511452f640c7be2646defd4dadbf341c
              for framebuffer in &self.framebuffers {
                  ck!(gl.delete_framebuffer(*framebuffer));
 diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
-index 737b7d0053f8a34698696f465c816627e95d9287..5c33bdadfcdba12ee11c05ef44d0f8b71eb55de6 100644
+index 737b7d0053f8a34698696f465c816627e95d9287..ea1ee98be4aaa3815c7d7328ead92b66d382b654 100644
 --- a/alvr/graphics/src/stream.rs
 +++ b/alvr/graphics/src/stream.rs
 @@ -1,10 +1,10 @@
@@ -11558,7 +11558,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..5c33bdadfcdba12ee11c05ef44d0f8b7
  }
  
  impl StreamRenderer {
-@@ -87,9 +95,26 @@ impl StreamRenderer {
+@@ -87,9 +95,27 @@ impl StreamRenderer {
          fix_limited_range: bool,
          encoding_gamma: f32,
          upscaling: Option<UpscalingConfig>,
@@ -11579,13 +11579,14 @@ index 737b7d0053f8a34698696f465c816627e95d9287..5c33bdadfcdba12ee11c05ef44d0f8b7
 +                    let (encoded, constants) = foveated_encoding_shader_constants(base_view_resolution, config.clone());
 +                    let static_values = ["VIEW_WIDTH_RATIO", "VIEW_HEIGHT_RATIO", "EDGE_X_RATIO", "EDGE_Y_RATIO", "C2_X", "C2_Y"]
 +                        .map(|key| constants[key] as f32);
-+                    (static_values, foveated_encoding_dynamic_params(base_view_resolution, config.clone(), glam::Vec2::ZERO), encoded)
++                    let shift = glam::vec2(config.center_shift_x, config.center_shift_y);
++                    (static_values, foveated_encoding_dynamic_params(base_view_resolution, config.clone(), shift), encoded)
 +                }) });
 +
          let target_format = super::gl_format_to_wgpu(target_format);
  
          let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-@@ -292,15 +317,82 @@ impl StreamRenderer {
+@@ -292,15 +318,82 @@ impl StreamRenderer {
          );
  
          Self {
@@ -11668,7 +11669,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..5c33bdadfcdba12ee11c05ef44d0f8b7
      /// Move the full-resolution centre to match the server's, for the frame about to be drawn.
      ///
      /// Per eye: the horizontal frusta are asymmetric and mirrored, so one shared shift is only
-@@ -333,9 +425,30 @@ impl StreamRenderer {
+@@ -333,9 +426,30 @@ impl StreamRenderer {
          view_params: [StreamViewParams; 2],
          passthrough: Option<&PassthroughMode>,
      ) {
@@ -12443,7 +12444,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..38d35a685b272a6ac3d0f1aa73a9d0e6
              bitrate_directives,
          ))
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da39833633bc7fbac803ebe345c7832fbdb..4a94636f4005ad5ec5adbfc601e53b9357557fb6 100644
+index fc176da39833633bc7fbac803ebe345c7832fbdb..68788dd70c0d9a5a23cf0867cbbce59b89cc44c2 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -43,6 +43,9 @@ use std::{
@@ -12806,8 +12807,8 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..4a94636f4005ad5ec5adbfc601e53b93
 +    let enable_foveated_encoding = light.is_some();
 +    let foveation_center_size_x = light.as_ref().map_or(0.0, |c| c.center_size_x);
 +    let foveation_center_size_y = light.as_ref().map_or(0.0, |c| c.center_size_y);
-+    let foveation_center_shift_x = 0.0;
-+    let foveation_center_shift_y = 0.0;
++    let foveation_center_shift_x = light.as_ref().map_or(0.0, |c| c.center_shift_x);
++    let foveation_center_shift_y = light.as_ref().map_or(0.0, |c| c.center_shift_y);
 +    let foveation_edge_ratio_x = light.as_ref().map_or(1.0, |c| c.edge_ratio_x);
 +    let foveation_edge_ratio_y = light.as_ref().map_or(1.0, |c| c.edge_ratio_y);
  
@@ -16702,7 +16703,7 @@ index d7d0dbbfcbfc7eaacf6f4ff5f0c47f882f1eee1a..007dea0b48fe2a2eafb3eb460a705b99
      // these settings are not used on the C++ side, but we need them to correctly trigger a SteamVR
      // restart
 diff --git a/alvr/session/src/settings.rs b/alvr/session/src/settings.rs
-index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd30512626e09b8a7 100644
+index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..67e9480b8db6f598bc5393d4a2074e32ed3186a7 100644
 --- a/alvr/session/src/settings.rs
 +++ b/alvr/session/src/settings.rs
 @@ -405,7 +405,7 @@ pub struct DecoderLatencyLimiter {
@@ -16774,7 +16775,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
  }
  
  #[repr(u8)]
-@@ -618,32 +618,155 @@ pub enum PyroWaveWavelet {
+@@ -618,32 +618,166 @@ pub enum PyroWaveWavelet {
  #[schema(gui = "button_group")]
  pub enum PyroWaveDecodePath {
      // The driver heuristic, which picks the fragment path on Qualcomm. Kept for research.
@@ -16803,30 +16804,30 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
 +    }
 +}
 +
-+/// Fixed, non-gaze peripheral profiles. Balanced and strong exist to measure the
-+/// Quest decode budget for 144/207 Hz; only light has in-headset screens so far.
++/// Fixed, non-gaze peripheral profiles. Each keeps the binocular overlap (what both eyes see) at
++/// full density and centres the vertical band on straight ahead; see `pyrowave_foveation`.
 +#[repr(u8)]
 +#[derive(SettingsSchema, Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq, Default)]
 +#[schema(gui = "button_group")]
 +pub enum PyroWaveFoveationProfile {
 +    #[default]
-+    #[schema(strings(display_name = "Light (80% center, 1.5x)"))]
++    #[schema(strings(display_name = "Light (1.5x edges)"))]
 +    Light = 0,
-+    #[schema(strings(display_name = "Balanced (68% center, 1.75x, candidate)"))]
++    #[schema(strings(display_name = "Balanced (1.75x edges, candidate)"))]
 +    Balanced = 1,
-+    #[schema(strings(display_name = "Strong (60% center, 2x, candidate)"))]
++    #[schema(strings(display_name = "Strong (2x edges, candidate)"))]
 +    Strong = 2,
 +}
 +
  #[derive(SettingsSchema, Serialize, Deserialize, Clone, PartialEq, Debug)]
  pub struct PyroWaveConfig {
 +    #[serde(default)]
-+    #[schema(strings(display_name = "Light peripheral encoding (experimental)", help = "Fixed 80% center width/height, gentle 1.5x edge compression. Reduces encoded pixels; reconstructed view stays full size. Quest 3 matched client required. Compare quality and pacing; restart SteamVR. Off preserves full-frame encoding."))]
++    #[schema(strings(display_name = "Light peripheral encoding (experimental)", help = "Compresses the outer edges of each eye's image and keeps the middle, which both eyes see, at full resolution. Reduces encoded pixels; reconstructed view stays full size. Quest 3 matched client required. Compare quality and pacing; restart SteamVR. Off preserves full-frame encoding."))]
 +    #[schema(flag = "steamvr-restart")]
 +    pub light_foveated_encoding: bool,
 +
 +    #[serde(default)]
-+    #[schema(strings(display_name = "Peripheral encoding profile (experimental)", help = "Used only when peripheral encoding is on. Light: about 12% fewer encoded pixels. Balanced: about 24%. Strong: about 35%. Balanced and Strong are decode-budget candidates for 144/207 Hz without in-headset quality acceptance. Restart SteamVR."))]
++    #[schema(strings(display_name = "Peripheral encoding profile (experimental)", help = "Used only when peripheral encoding is on. All three keep the area both eyes see (40 degrees either side of straight ahead) at full resolution and compress only the outer, one-eye edge horizontally. Vertically: Light keeps about 43 degrees up and down, Balanced 39, Strong 35. Light: about 12% fewer encoded pixels. Balanced: about 21%. Strong: about 28%. Balanced and Strong lack in-headset quality acceptance. Restart SteamVR."))]
 +    #[schema(flag = "steamvr-restart")]
 +    pub foveation_profile: PyroWaveFoveationProfile,
 +
@@ -16910,15 +16911,26 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
 +    codec == CodecType::PyroWave && requested && supported
 +}
 +
++/// Fixed geometry for the Quest 3, whose left eye sees 54 degrees outward, 40 inward, 44 up and
++/// 55 down (the right eye mirrors it). The middle of each eye image therefore looks about 15
++/// degrees outward and 5 down, so a band centred on the image would compress the inner side of
++/// each eye, which is the middle of the view that both eyes see. Instead:
++/// - Horizontally the full-density band spans about 42 degrees outward to 39 inward, covering the
++///   binocular overlap (40 degrees either side of straight ahead) in both eyes. Only the outer,
++///   one-eye periphery is compressed. The shift is positive toward the nose for both eyes, since
++///   ALVR mirrors the right eye, and stays below 0.9 so the inner edge band keeps some width.
++/// - Vertically the band is centred on straight ahead (the shift is in the image's downward axis).
++/// Each value is chosen so the f32 client and the mixed-precision server round sizes and shifts to
++/// the same pixel for every eye size from 512 to 4096. Keep in step with
++/// tools/quest3/foveation.py PROFILES, whose tests check that and the coverage.
 +pub fn pyrowave_foveation(profile: PyroWaveFoveationProfile) -> FoveatedEncodingConfig {
-+    // Keep in step with tools/quest3/foveation.py PROFILES.
-+    let (center, edge) = match profile {
-+        PyroWaveFoveationProfile::Light => (0.8, 1.5),
-+        PyroWaveFoveationProfile::Balanced => (0.68, 1.75),
-+        PyroWaveFoveationProfile::Strong => (0.6, 2.0),
++    let ((center_x, center_y), (shift_x, shift_y), edge) = match profile {
++        PyroWaveFoveationProfile::Light => ((0.8, 0.8), (0.889, -0.889), 1.5),
++        PyroWaveFoveationProfile::Balanced => ((0.77, 0.68), (0.889, -0.611), 1.75),
++        PyroWaveFoveationProfile::Strong => ((0.77, 0.6), (0.889, -0.471), 2.0),
 +    };
-+    FoveatedEncodingConfig { force_enable: false, center_size_x: center, center_size_y: center,
-+        center_shift_x: 0.0, center_shift_y: 0.0, edge_ratio_x: edge, edge_ratio_y: edge,
++    FoveatedEncodingConfig { force_enable: false, center_size_x: center_x, center_size_y: center_y,
++        center_shift_x: shift_x, center_shift_y: shift_y, edge_ratio_x: edge, edge_ratio_y: edge,
 +        follow_gaze: false }
 +}
 +
@@ -16934,7 +16946,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
  }
  
  #[repr(u8)]
-@@ -799,23 +922,20 @@ pub struct VideoConfig {
+@@ -799,23 +933,20 @@ pub struct VideoConfig {
      pub bitrate: BitrateConfig,
  
      #[schema(strings(
@@ -16963,7 +16975,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
      pub foveated_encoding: Switch<FoveatedEncodingConfig>,
  
      #[schema(flag = "steamvr-restart")]
-@@ -858,23 +978,25 @@ If you want to reduce the amount of pixelation on the edges, increase the center
+@@ -858,23 +989,25 @@ If you want to reduce the amount of pixelation on the edges, increase the center
      pub mediacodec_extra_options: Vec<(String, MediacodecProperty)>,
  
      #[schema(strings(
@@ -16994,7 +17006,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
      pub preferred_fps: f32,
  
      #[schema(strings(help = "You probably don't want to change this"))]
-@@ -1395,6 +1517,14 @@ Tilted: the world gets tilted when long pressing the oculus button. This is usef
+@@ -1395,6 +1528,14 @@ Tilted: the world gets tilted when long pressing the oculus button. This is usef
      ))]
      #[schema(gui(slider(min = 0, max = 200, step = 5)), suffix = "ms")]
      pub max_prediction_ms: u64,
@@ -17009,7 +17021,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
  }
  
  #[derive(SettingsSchema, Serialize, Deserialize, Clone, Copy)]
-@@ -1425,8 +1555,9 @@ pub enum SocketBufferSize {
+@@ -1425,8 +1566,9 @@ pub enum SocketBufferSize {
  #[derive(SettingsSchema, Serialize, Deserialize, Clone)]
  pub struct ConnectionConfig {
      #[schema(strings(
@@ -17021,7 +17033,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
      ))]
      pub stream_protocol: SocketProtocol,
  
-@@ -1663,15 +1794,15 @@ pub struct Settings {
+@@ -1663,15 +1805,15 @@ pub struct Settings {
  }
  
  pub fn session_settings_default() -> SettingsDefault {
@@ -17040,7 +17052,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
              },
          },
      };
-@@ -1742,7 +1873,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1742,7 +1884,7 @@ pub fn session_settings_default() -> SettingsDefault {
              adapter_index: 0,
              transcoding_view_resolution: view_resolution.clone(),
              emulated_headset_view_resolution: view_resolution,
@@ -17049,7 +17061,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
              max_buffering_frames: 1.5,
              buffering_history_weight: 0.90,
              enforce_server_frame_pacing: true,
-@@ -1784,7 +1915,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1784,7 +1926,7 @@ pub fn session_settings_default() -> SettingsDefault {
                      variant: BitrateModeDefaultVariant::ConstantMbps,
                  },
                  adapt_to_framerate: SwitchDefault {
@@ -17058,7 +17070,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
                      content: BitrateAdaptiveFramerateConfigDefault {
                          framerate_reset_threshold_multiplier: 2.0,
                      },
-@@ -1796,6 +1927,11 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1796,6 +1938,11 @@ pub fn session_settings_default() -> SettingsDefault {
                  variant: CodecTypeDefaultVariant::PyroWave,
              },
              pyrowave: PyroWaveConfigDefault {
@@ -17070,7 +17082,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
                  transport: PyroWaveTransportDefault {
                      variant: PyroWaveTransportDefaultVariant::Udp,
                  },
-@@ -1803,8 +1939,17 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1803,8 +1950,17 @@ pub fn session_settings_default() -> SettingsDefault {
                      variant: PyroWaveWaveletDefaultVariant::Cdf97,
                  },
                  decode_path: PyroWaveDecodePathDefault {
@@ -17089,7 +17101,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
              },
              encoder_config: EncoderConfigDefault {
                  gui_collapsed: true,
-@@ -1901,7 +2046,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1901,7 +2057,7 @@ pub fn session_settings_default() -> SettingsDefault {
                  }
              },
              foveated_encoding: SwitchDefault {
@@ -17098,7 +17110,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
                  content: FoveatedEncodingConfigDefault {
                      force_enable: false,
                      center_size_x: 0.20,
-@@ -1910,7 +2055,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -1910,7 +2066,7 @@ pub fn session_settings_default() -> SettingsDefault {
                      center_shift_y: 0.0,
                      edge_ratio_x: 3.,
                      edge_ratio_y: 4.,
@@ -17107,7 +17119,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
                  },
              },
              clientside_foveation: SwitchDefault {
-@@ -2066,7 +2211,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2066,7 +2222,7 @@ pub fn session_settings_default() -> SettingsDefault {
                                  content: vec![],
                              },
                          },
@@ -17116,7 +17128,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
                      },
                      extra_openvr_props: default_custom_openvr_props,
                      button_mappings: OptionalDefault {
-@@ -2168,27 +2313,24 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2168,27 +2324,24 @@ pub fn session_settings_default() -> SettingsDefault {
                  variant: RotationRecenteringModeDefaultVariant::Yaw,
              },
              max_prediction_ms: 100,
@@ -17150,7 +17162,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
              },
              wired_client_autolaunch: true,
              web_server_port: 8082,
-@@ -2211,7 +2353,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2211,7 +2364,7 @@ pub fn session_settings_default() -> SettingsDefault {
              server_recv_buffer_bytes: socket_buffer.clone(),
              client_send_buffer_bytes: socket_buffer.clone(),
              client_recv_buffer_bytes: socket_buffer,
@@ -17159,7 +17171,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
              avoid_video_glitching: true,
              minimum_idr_interval_ms: 100,
              enable_on_connect_script: false,
-@@ -2262,7 +2404,7 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2262,7 +2415,7 @@ pub fn session_settings_default() -> SettingsDefault {
              },
              steamvr_launcher: SteamvrLauncherDefault {
                  driver_launch_action: DriverLaunchActionDefault {
@@ -17168,7 +17180,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
                  },
                  open_close_steamvr_with_dashboard: false,
              },
-@@ -2287,3 +2429,50 @@ pub fn session_settings_default() -> SettingsDefault {
+@@ -2287,3 +2440,64 @@ pub fn session_settings_default() -> SettingsDefault {
          },
      }
  }
@@ -17182,7 +17194,7 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
 +        let config = pyrowave_light_foveation();
 +        assert_eq!((config.center_size_x, config.center_size_y), (0.8, 0.8));
 +        assert_eq!((config.edge_ratio_x, config.edge_ratio_y), (1.5, 1.5));
-+        assert_eq!((config.center_shift_x, config.center_shift_y), (0.0, 0.0));
++        assert_eq!((config.center_shift_x, config.center_shift_y), (0.889, -0.889));
 +        assert!(!config.follow_gaze && !config.force_enable);
 +        assert!(pyrowave_light_foveation_enabled(CodecType::PyroWave, true, true));
 +        assert!(!pyrowave_light_foveation_enabled(CodecType::PyroWave, false, true));
@@ -17205,12 +17217,26 @@ index 1009e99ad875bbf1bd113d66b1a237dac9162c2f..44d7ffaf0438f95f05cb919fd3051262
 +    fn stronger_profiles_are_fixed_and_recognized() {
 +        assert_eq!(crate::SessionConfig::default().to_settings().video.pyrowave.foveation_profile,
 +            PyroWaveFoveationProfile::Light);
-+        for (profile, center, edge) in [(PyroWaveFoveationProfile::Light, 0.8, 1.5),
++        for (profile, center_y, edge) in [(PyroWaveFoveationProfile::Light, 0.8, 1.5),
 +            (PyroWaveFoveationProfile::Balanced, 0.68, 1.75), (PyroWaveFoveationProfile::Strong, 0.6, 2.0)] {
 +            let config = pyrowave_foveation(profile);
-+            assert_eq!((config.center_size_x, config.center_size_y), (center, center));
++            assert_eq!(config.center_size_y, center_y);
 +            assert_eq!((config.edge_ratio_x, config.edge_ratio_y), (edge, edge));
-+            assert_eq!((config.center_shift_x, config.center_shift_y), (0.0, 0.0));
++            // Quest 3 left eye: tan of 54 degrees outward, 40 inward, 44 up, 55 down.
++            let (outer, inner, up, down) = (-1.3764f32, 0.8391f32, 0.9657f32, -1.4281f32);
++            let band = |center: f32, shift: f32| {
++                let c0 = (1.0 - center) / 2.0;
++                (c0 * (shift + 1.0), c0 * (shift - 1.0) + 1.0)
++            };
++            let degrees = |tan: f32| tan.atan().to_degrees();
++            // Horizontally the band covers the binocular overlap, +-40 degrees, to within a degree.
++            let (lo, hi) = band(config.center_size_x, config.center_shift_x);
++            assert!(degrees(outer + lo * (inner - outer)) <= -40.0);
++            assert!(degrees(outer + hi * (inner - outer)) >= 39.0 && hi < 1.0);
++            // Vertically it is centred on straight ahead (y runs down the image).
++            let (lo, hi) = band(config.center_size_y, config.center_shift_y);
++            let (top, bottom) = (degrees(up - lo * (up - down)), degrees(up - hi * (up - down)));
++            assert!((top + bottom).abs() < 1.5 && lo > 0.0, "{profile:?}: {top} {bottom}");
 +            assert!(!config.follow_gaze && !config.force_enable);
 +            assert!(is_pyrowave_foveation(&config));
 +        }
