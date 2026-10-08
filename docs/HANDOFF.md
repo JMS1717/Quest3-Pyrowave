@@ -61,10 +61,17 @@ State:
 
     The Pyrowave captures of the same static scene are still to do (USB, 120 Hz: 2592 at 2000 Mbps,
     2080 at 1000 and at 500 Mbps). The private screenshots stay outside the repo.
-- **Owner's play runtime (October 8):** `.92` (`4b760b5`) is installed on the headset (`.93`
-  was checked live, then `.92` was put back to match the play runtime). The
-  matching Windows build with the owner's saved session is staged outside the repo
-  (`workspace/runtime-local92-play`); Virtual Desktop's registration is untouched.
+- **October 8, afternoon, `.98`-`.99`: sharpening moves to the PC**
+  ([SHARPENING.md](SHARPENING.md#in-the-streamer-98-option-99-setting)).
+  - New setting **Sharpening location**, PC by default: the streamer sharpens luma before
+    encoding, so the Quest does no extra work.
+  - On the headset at 120 Hz / 1500 / 2080 (static): PC k=0.15 looked crisper than headset 50 at
+    the same frame rate.
+  - Two new profiles, **Competitive 207 Hz** and **Quality 120 Hz**, fold in CDF 5/3, the better
+    downsample kernel and PC sharpening. Neither has been run as a whole yet.
+- **Headset client (October 8, afternoon):** `.99` is installed for testing. The owner's `.92`
+  play pair is still staged (`workspace/runtime-local92-play`). Reinstall its APK before playing
+  `.92`, or play the `.99` pair. Virtual Desktop's registration is untouched.
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
   194-197 fresh FPS over USB with the direct eye copy, 189-195 over Wi-Fi 6E.
 - **Not established:** sustained gameplay, optical motion-to-photon latency, image quality on par

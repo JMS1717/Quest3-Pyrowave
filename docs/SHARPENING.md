@@ -131,28 +131,64 @@ Not yet measured:
 Sharpening before a lossy coder can make ringing and noise more visible, and the owner asked for
 subjective judgement over PSNR.
 
-### Server option (source only, not yet built or measured)
+### In the streamer (`.98` option, `.99` setting)
 
-`ALVR_Q3PW_PRESHARPEN=N` in vrserver's environment (1–50, k = N/100 per neighbour; unset is off)
-adds one pass after the planar YCbCr conversion in `FrameRender.cpp`.
+**Video > PyroWave > Sharpening location** chooses where the Sharpening setting runs. It needs a
+SteamVR restart.
 
-- It sharpens the full-size gamma luma plane into a second shared R8 texture, which the encoder
-  imports in place of the plain plane. This is the same kernel as the offline `+linK` rows.
-- Neighbours are clamped to the pixel's own eye and to the frame edge.
-- Chroma and its 4:2:0 box are unchanged.
-- The server logs `[PYROWAVE] luma pre-sharpen k=…` when it is on.
-- With foveated encoding the pass runs on the compressed frame, so the periphery is sharpened more
-  in display terms. Measure it with foveation off first.
-- The shader compiles with `fxc` for ps_5_0.
-- It is an environment variable rather than a setting until a headset A/B shows it is worth
-  keeping.
+- **PC, before encoding (default):** one pass after the planar YCbCr conversion in
+  `FrameRender.cpp`.
+  - It sharpens the full-size gamma luma plane into a second shared R8 texture, which the encoder
+    imports in place of the plain plane. This is the same kernel and scale as the headset's,
+    k = 0.003 per percent, and the same as the offline `+linK` rows.
+  - Neighbours are clamped to the pixel's own eye. Chroma and its 4:2:0 box are unchanged.
+  - The headset's sharpening is off with this location, so the image is never sharpened twice.
+  - The server logs `[PYROWAVE] luma pre-sharpen k=…`.
+  - `ALVR_Q3PW_PRESHARPEN=N` in vrserver's environment overrides k with N/100, for A/B tests.
+  - With foveated encoding the pass runs on the compressed frame, so the periphery is sharpened
+    more in display terms. This is not measured.
+- **Headset, centre only:** the `.75` eye-shader path above.
 
-Next steps:
+The default strength is still 0. The product profiles set it (below).
 
-1. build, then run the server tests;
-2. an in-headset A/B, static and panning, at 120 Hz / 1500 / 2080: PC 15 against headset linear 50
-   against off. Record the server's `[Q3PW_RENDER_GPU]` convert time for the PC's cost;
-3. the 2592 rows.
+On the headset (`.98`, wired, 120 Hz / 1500 / 2080, static `quality_scene`, one cell of three
+blocks per arm, sharpening as noted):
+
+| Arm | Fresh FPS | Screenshot Laplacian (top of left eye) |
+| --- | --- | --- |
+| Off | 119.5 | 15.6 |
+| **PC k=0.15** | 118.1 | **21.5** |
+| Headset linear 50 (centre 60 %) | 118.5 | 18.3 |
+
+- PC sharpening is visibly crisper than both: line edges and the zone plate have more contrast,
+  with no visible halos (crops kept privately).
+- The Quest's system Library panel covered the centre of both eyes. The Laplacian is from the top
+  band above it, outside the headset kernel's centre rectangle, so it understates headset
+  sharpening at the centre.
+- The 207 Hz panning cell didn't start its stream after the relaunch (`No stream after relaunch`),
+  so the 207 Hz frame rate with PC sharpening isn't measured.
+
+### Product profiles (`.99`)
+
+The roadmap's two modes are streaming profiles that fold in the cheap PC-side wins:
+
+| | Competitive 207 Hz | Quality 120 Hz |
+| --- | --- | --- |
+| Stream per eye | 2080x2208 | 125 % (2592x2784 padded) |
+| Codec | CDF 5/3, 4:2:0, 1000 Mbps | CDF 5/3, 4:2:0, 1500 Mbps |
+| Downsample | Adaptive bicubic | Adaptive Lanczos |
+| Sharpening | PC, 60 (k=0.18) | PC, 30 (k=0.09) |
+| Other | max GPU clock, 4 wired connections | max GPU clock, 4 wired connections |
+
+- The kernel and strength follow the offline bests for each point. The Quality strength is lighter
+  because at 2592 the headset kernel scored best at about 0.10.
+- Not yet run as a whole on the headset.
+
+Next:
+
+1. the owner's in-headset look at both profiles;
+2. the 2592 offline rows;
+3. the 207 Hz frame rate with PC sharpening (expected unchanged; the Quest does no extra work).
 
 ## Open
 
