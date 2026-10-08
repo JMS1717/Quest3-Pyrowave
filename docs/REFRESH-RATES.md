@@ -44,6 +44,23 @@ proximity through the restart; its delayed release then blinked the unworn heads
 wake opened the Quick Actions menu over the client), and that the shell's write raced the restart
 (`.88` paused 2.5 s, which made it worse).
 
+**`.91`-`.92` (October 8): a restarted client with no activity.** In 2 of the 8 harness restarts on
+`.89`-`.90`, the restarted client came up as a process with no resumed activity, and the server
+looped on "Failed to find resumed state line" until the app was reopened. The restart was `am
+force-stop` followed at once by `am start`. Repeating that directly on a client that had been up
+for about 3 s lost the start in 2 of 16 trials; `am start -S -W` (the activity manager stops the
+app and waits for the new launch) started it in 12 of 12. `.91` starts a restarted client once
+more if it has no activity 10 s after the restart (seen to fire and recover in about 10 s). `.92`
+restarts with `am start -S -W`; 4 of 4 harness restarts at 120 Hz streamed with no retry. The
+`.91` retry stays as a fallback.
+
+**Next: the forced 207 Hz path churns.** With the owner's display setup at 207 Hz (1000 Mbit/s),
+the server restarts the client one to three times per run before the rate holds: the shell's 72
+write after the client exits and the clear about 1 s after the next start undo the forced 207,
+and the helper sees the difference and restarts again. Each run converges in about 10-15 s and
+then streams at 185-190 fresh FPS (`.90` and `.92` alike, so this is not new). Writing the rate
+after the shell's exit write, or not restarting for a cleared value, should remove the churn.
+
 ## 240 Hz developer experiment
 
 **Current (`.60` and later, including `.64`).** The dashboard offers 72, 80, 90, 120, 144, 165,

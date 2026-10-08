@@ -18,7 +18,7 @@ State:
 
 - **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.65` (`.64` plus the opt-in
   Wi-Fi UDP transport), not released.
-- **On `claude/frame-budget`:** `.90`. It has:
+- **On `claude/frame-budget`:** `.92`. It has:
   - server-predicted head poses;
   - UDP as the Wi-Fi default;
   - Stream resolution up to 125 %;
@@ -31,7 +31,12 @@ State:
   - audio cut-out diagnostics;
   - a refresh-rate probe that no longer runs while the headset sleeps;
   - a fix for the server's display helper, which held the panel at 72 Hz after its client restart
-    (the stream was refused until the app was reopened).
+    (the stream was refused until the app was reopened);
+  - a client restart with `am start -S -W`, plus a retry if the restarted client has no activity
+    ([REFRESH-RATES.md](REFRESH-RATES.md)).
+- **Owner's play runtime (October 8):** `.92` (`4b760b5`) is installed on the headset. The
+  matching Windows build with the owner's saved session is staged outside the repo
+  (`workspace/runtime-local92-play`); Virtual Desktop's registration is untouched.
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
   194-197 fresh FPS over USB with the direct eye copy, 189-195 over Wi-Fi 6E.
 - **Not established:** sustained gameplay, optical motion-to-photon latency, image quality on par
@@ -89,6 +94,8 @@ Builds from branch `claude/frame-budget`, local only:
 | `.88` | `fe9e231` | 2.5 s pause in the server's client restart (rejected: 3 of 4 restarts stuck) |
 | `.89` | `6b20675` | The display helper writes only the values that change (fixes the 72 Hz hold) |
 | `.90` | `cab4918` | `.89` without the `.87` hold; 4 of 4 restarts streamed first time |
+| `.91` | `7d332d2` | A restarted client with no activity after 10 s is started once more |
+| `.92` | `4b760b5` | The client restart uses `am start -S -W` (12 of 12 direct starts, against 14 of 16) |
 
 **Frame budget:**
 

@@ -172,6 +172,13 @@ whether audio on the stream socket stalls behind video.
   restarts streamed first time on `.89`-`.90`, at 109-110 fresh FPS (120 Hz, 2000 Mbit/s, 4:4:4).
   The `.87` proximity hold around the restart was dropped in `.90`; it was not the cause, and its
   release woke the unworn headset into the Quick Actions menu.
+- **Fixed in `.91`-`.92` (October 8): a restarted client sometimes had no activity** (2 of 8
+  harness restarts; the server waited until the app was reopened). The restart is now `am start -S
+  -W` (12 of 12 direct starts, against 14 of 16 with a separate force-stop), with one more start if
+  the client still has no activity after 10 s.
+- **Open: the forced 207 Hz path restarts the client one to three times** before the rate holds
+  (about 10-15 s), because HorizonOS's exit write and start clear undo the forced rate
+  ([REFRESH-RATES.md](REFRESH-RATES.md)).
 
 **1.7 A light play-session logger.**
 

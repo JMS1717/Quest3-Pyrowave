@@ -330,6 +330,22 @@ then scores against the render, using PSNR-HVS-M luma at the render's pixels per
   shows less after the lens, so the visible gain is smaller than the table suggests. An
   in-headset A/B is the test that counts.
 
+**125 % at 2000 Mbps (`.90`, October 8).** Wired, 120 Hz, CDF 5/3, the owner's display setup
+(maximum GPU clock), 3072x3216 render:
+
+| Stream per eye | Chroma | Fresh FPS | GPU decode p50 |
+| --- | --- | --- | --- |
+| 2080x2208 | 4:4:4 | 110.2, 109.3 | about 5.2 ms |
+| 2592x2784 (125 %) | 4:2:0 | 108.0, 108.1 | |
+| 2592x2784 (125 %) | 4:4:4 | 88-90 | 7.8 ms |
+
+- At 2000 Mbps the USB link, not the decoder, holds 2080 4:4:4 near 110 FPS: a 2.08 MB frame
+  takes 7.1-8.1 ms of the 8.33 ms period.
+- 125 % 4:2:0 costs about 2 FPS against 2080 4:4:4. Offline it is about 3.0 dB PSNR-HVS-M better
+  than 2080 at 2000 Mbps ([CLARITY-BUDGET.md](CLARITY-BUDGET.md)). Which looks better in the
+  headset (more luma detail or full colour) is the owner's call.
+- 125 % 4:4:4 doesn't fit 120 Hz: the decode alone is 7.8 ms.
+
 **`.69`** adds 110 %, 120 % and 125 % to **Stream resolution**. They are meant for 120 Hz or
 less, with the game render resolution at least as large (150 % recommended). At 207 Hz the
 decoder already sets the frame rate at 100 %, so a supersampled stream doesn't fit there.
