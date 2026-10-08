@@ -63,6 +63,38 @@ State:
     its text is clearly crisper, its zone plate keeps more detail but shows moiré, and its colour was
     weaker. That colour gap is fixed in `.103`-`.105` (next bullet). The private screenshots stay
     outside the repo.
+- **October 8, late night, `.107`-`.108`: full 3072x3216 stream (no downsample).** The owner asked for
+  Virtual Desktop's Godlike resolution streamed at full size. Same 3072x3216 render, 2000 Mbps,
+  CDF 5/3 mode 5, 690 MHz GPU clock, SteamVR Home, wired:
+
+  | Panel | Configuration | Fresh FPS | Decode p50 (GPU) |
+  |---|---|---|---|
+  | 90 Hz | full eye swapchain | **90.1 of 90** | 5.4 ms |
+  | 120 Hz | full eye swapchain (`.107`, earlier, owner wearing) | 97.7 | 9.0 ms |
+  | 120 Hz | full eye swapchain (`.107` and `.108`, later) | 66-68 | 10.5-11 ms |
+  | 120 Hz | eye swapchain at 67 % (`.108`) | 71-77 | 8.3-9.2 ms |
+
+  - **Full resolution holds at 90 Hz, not at 120 Hz.** Decode alone takes about 5.1-5.4 ms when the
+    GPU is otherwise idle. At 120 Hz the 3072 eye draw (about 3 ms) and the compositor
+    (0.9-1.4 ms) preempt it every 8.3 ms, stretching it to 9-11 ms. To fit 120 Hz, decode must
+    drop to about 4 ms together with the smaller eye swapchain.
+  - `.107` adds an opt-in phase lock (`debug.q3pw.phase_lock=1`): publish decoded frames just
+    before the render loop wakes. It gives nothing once decode exceeds the frame period.
+    Decoder mode 6 (two chroma pixels per texel) is faster on the bench but slower live at
+    3072 (77.8 FPS).
+  - `.108` adds a hidden `debug.q3pw.eye_percent` (50-99, unfoveated only): the eye draw goes
+    into a smaller swapchain with a bilinear luma tap. Same `.107`/`.108` numbers in the same
+    conditions, so `.108` has no regression.
+  - `.108` also fixes two server faults:
+    - A missing configured audio device now falls back to the default output instead of
+      refusing the handshake.
+    - The forced GPU level stops after the headset clears it twice, until the server restarts.
+      The `display_override` unit test for this has not been run yet.
+  - **Harness traps:**
+    - A force-stopped client often comes back pinned at 72 Hz.
+    - Sleep, clear `debug.oculus.refreshRate`, then wake helps but adds a compositor layer
+      (TW about 1.4 ms).
+    - The running server rewrites `session.json` on shutdown. Edit it only after SteamVR exits.
 - **October 8, night, `.106`: wired 120 Hz quality is the first choice in the dashboard.** The owner's
   direction is maximum quality and lowest latency at a smooth 120 Hz over USB, set from the PC
   as Virtual Desktop does.
@@ -99,9 +131,11 @@ State:
     ([REFRESH-RATES.md](REFRESH-RATES.md#restart-loop-with-meta-quest-link-running-october-8-100)).
   - The 207 Hz work (Competitive profile, not forcing native rates) waits for a fixed OS, or for a
     check that forcing over USB still works on build 209. Until then, work at 120 Hz.
-- **Headset client (October 8, night):** `.105` is installed for testing (pair
-  `workspace/runtime-local105-e3891a0`). `.106` is built and staged
-  (`workspace/review/local106-c39362c`), not installed. The owner's `.92`
+- **Headset client (October 8, late night):** `.108` is installed with its pair
+  `workspace/runtime-local108-play` (3072x3216 stream, 90 Hz, 2000 Mbps, game audio off).
+  `.107` is staged in `workspace/review/local107-27a064f` with `workspace/runtime-local107-play`.
+  Earlier: `.105` (pair `workspace/runtime-local105-e3891a0`) and `.106` (staged in
+  `workspace/review/local106-c39362c`). The owner's `.92`
   play pair is still staged (`workspace/runtime-local92-play`). Reinstall its APK before playing
   `.92`, or play the `.99` pair. Virtual Desktop's registration is untouched.
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):

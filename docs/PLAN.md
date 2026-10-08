@@ -231,6 +231,21 @@ whether audio on the stream socket stalls behind video.
 
 ## Phase 2: sharpness and clarity (the main focus)
 
+**2.0 (October 8, late night) Full 3072x3216 at 120 Hz.** Owner priority: Godlike resolution at
+120 Hz with good colour, bitrate and latency.
+
+- Full size holds 90/90 at 90 Hz but reaches only 66-98 fresh FPS at 120 Hz
+  ([HANDOFF](HANDOFF.md#current-goal-and-state-october-7)).
+- Decode is about 5.2 ms standalone. With the 67 % eye swapchain (`.108`) and the compositor,
+  it must fall to about 4 ms.
+- Candidates, cheapest first:
+  - drop the per-stage GPU timestamps (`debug.q3pw.decode_stages`) in play;
+  - fold dequant (about 1.7 ms) into the first inverse level;
+  - halve chroma stores at L1;
+  - run decode at a lower queue priority than the eye draw so the compositor's preemption costs
+    less.
+- Until then, the full-size profile is 90 Hz, and 125-135 % is the 120 Hz choice.
+
 **2.1 Frame budget from the real frame rate.**
 
 - Cap each frame at `bitrate / measured frame rate`: smoothed, bounded, never above what the link
