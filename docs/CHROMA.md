@@ -126,3 +126,33 @@ The levers that do reduce colour bleed are bits and wavelet: higher bitrate (see
 [BITRATE.md](BITRATE.md)) and 4:4:4 or CDF 5/3, both of which cost decode time. This is a deliberately dense synthetic scene;
 a natural game frame should be checked before the trade is decided. Scripts:
 `workspace/state/claude-oct6/chroma_study.py`, `guided_study.py` (private workspace).
+
+## Quality 120 Hz: 4:4:4 or a larger stream? (October 8)
+
+The Quality profile streams 2592x2784 in 4:2:0. The question was whether 4:4:4 would serve the
+same byte budget better. Offline, CDF 5/3, 120 Hz, 2 crops of `quality_scene`, every arm with the
+profile's PC prefilter (Lanczos-3 and a linear luma sharpen of 0.09 per neighbour). The headset
+decode (FP16) is shown with a bilinear display and scored against the ideal at 25 px/deg. The
+script is a variant of `tools/downsample/clarity_budget.py`.
+
+| Stream | Chroma | Mbps | PSNR-HVS-M | Y | Cb | Cr | ΔE |
+|---|---|---|---|---|---|---|---|
+| 2080x2208 | 4:2:0 | 1500 | 22.69 | 25.95 | 32.66 | 33.11 | 4.42 |
+| 2080x2208 | 4:4:4 | 1500 | 22.70 | 25.98 | 34.25 | 35.33 | 4.37 |
+| 2592x2784 | 4:2:0 | 1500 | **25.68** | **27.61** | 33.00 | 33.72 | **4.28** |
+| 2592x2784 | 4:4:4 | 1500 | 25.79 | 27.71 | 33.07 | 34.22 | 4.41 |
+| 2080x2208 | 4:2:0 | 2000 | 22.89 | 26.23 | 33.21 | 33.41 | 3.93 |
+| 2080x2208 | 4:4:4 | 2000 | 22.89 | 26.24 | 36.36 | 37.40 | 3.75 |
+| 2592x2784 | 4:2:0 | 2000 | **26.73** | **28.55** | 33.80 | 34.37 | 3.75 |
+| 2592x2784 | 4:4:4 | 2000 | 26.77 | 28.60 | 34.88 | 36.22 | 3.82 |
+
+- **The larger stream wins.** 2592 in 4:2:0 keeps 3.0-3.8 dB more luma detail than 2080 in 4:4:4,
+  and its overall colour error is the same or lower. 4:4:4 at 2080 gains 1.6-3.2 dB of Cb/Cr PSNR,
+  but the colour of fine detail also depends on luma, which the larger stream carries.
+- **4:4:4 costs no luma at the same byte cap**, at either size: the rate control finds the extra
+  chroma cheap. 2592 in 4:4:4 would be a free chroma gain at 2000 Mbps, but the headset cannot
+  decode it at 120 Hz. 2080 in 4:4:4 at 2000 is already decoder-bound
+  ([FRESHNESS.md](FRESHNESS.md#where-120-hz--2000--444-loses-frames-92-october-8)).
+- So the Quality profile stays at 125 % in 4:2:0. 4:4:4 there needs a faster decode (the Ultra
+  track), not a different trade-off.
+- Limits: one synthetic scene, static, no motion. The owner's in-headset view decides.
