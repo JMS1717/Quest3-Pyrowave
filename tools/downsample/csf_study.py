@@ -47,7 +47,8 @@ ppd = sh / 99.0
 for mbps in mbps_list:
     cap = int(mbps * 1e6 / 8 / hz / 2) // 4 * 4
     for v in variants:
-        env = dict(os.environ, PYROWAVE_WAVELET='haar')
+        # STUDY_WAVELET=53 studies CDF 5/3 (the PC tools' PYROWAVE_WAVELET); Haar by default.
+        env = dict(os.environ, PYROWAVE_WAVELET=os.environ.get('STUDY_WAVELET', 'haar'))
         cpd, chroma, aq, lf = (v.split(':') + ['', '', ''])[:4]
         for key in ('PYROWAVE_CPD_NYQUIST', 'PYROWAVE_CHROMA_CSF', 'PYROWAVE_AQ', 'PYROWAVE_LF_BOOST'):
             env.pop(key, None)

@@ -85,6 +85,18 @@ the amplitude weight (`PYROWAVE_LF_BOOST=<level>,<factor>`, default `3,6`).
 
 x6 is the first setting with less blocking than upstream, and it keeps most of the detail gain.
 
+**CDF 5/3 (Oct 8, `STUDY_WAVELET=53`, 1000 Mbps at 207 Hz, 4 crops).** The 5/3 coarse levels
+fail as soft ringing rather than blocks, so the boost was re-swept on that wavelet. It shows the
+same trade-off as Haar and the default is kept:
+
+| 5/3, 1000 Mbps | PSNR-HVS-M | smooth Y |
+|---|---|---|
+| levels >= 3 x6 (default) | 15.50 | 54.0 |
+| levels >= 3 x3 | 15.62 | 52.3 |
+| levels >= 4 x4 | 15.70 | 48.9 |
+| levels >= 2 x2 | 15.56 | 50.0 |
+| no boost (3/1) | 15.75 | 46.5 |
+
 **Rejected: activity masking from in-band coefficients.** Weighting each block's distortion by
 `(1 + A / offset)^-s`, where A is the block's largest coefficient, made smooth areas worse
 (smooth Y 49.2 dB fell to 44 to 48 dB). In Haar a smooth gradient produces large detail
