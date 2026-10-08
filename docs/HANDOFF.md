@@ -18,7 +18,7 @@ State:
 
 - **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.65` (`.64` plus the opt-in
   Wi-Fi UDP transport), not released.
-- **On `claude/frame-budget`:** `.84`. It has:
+- **On `claude/frame-budget`:** `.85`. It has:
   - server-predicted head poses;
   - UDP as the Wi-Fi default;
   - Stream resolution up to 125 %;
@@ -28,7 +28,8 @@ State:
   - a high-priority encode queue;
   - the opt-in setting "Stream only the game's frames"
     ([below](#october-7-late-night-66-74-on-claudeframe-budget));
-  - audio cut-out diagnostics.
+  - audio cut-out diagnostics;
+  - a refresh-rate probe that no longer runs while the headset sleeps.
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
   194-197 fresh FPS over USB with the direct eye copy, 189-195 over Wi-Fi 6E.
 - **Not established:** sustained gameplay, optical motion-to-photon latency, image quality on par
@@ -80,6 +81,7 @@ Builds from branch `claude/frame-budget`, local only:
 | `.79`-`.82` | `8a91b0d`, `6bc5632`, `f3a77db`, `b7cb64b` | The game's frame rate from SteamVR's frame timing (diagnostics, then detection) |
 | `.83` | `8137a94` | Setting: Stream only the game's frames (off by default) |
 | `.84` | `8b0b764` | Audio diagnostics: the client's `[Q3PW_AUDIO]` statistics; the scene can play silence |
+| `.85` | `df7f838` | The refresh-rate probe waits until the app is shown and re-probes an unreliable result (PLAN 1.6) |
 
 **Frame budget:**
 

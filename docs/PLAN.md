@@ -147,6 +147,16 @@ whether audio on the stream socket stalls behind video.
 - At 144 Hz the USB display helper looped: it set 144, restarted the client, the value was reset,
   and it repeated.
 - A rate change should be one setting and no manual relaunch.
+- **Fixed in `.85` (October 8): rates probed while the headset slept.**
+  - The server restarts the client after a GPU-level change. If the headset was asleep then, the
+    app probed rates it could not switch to: only 72 Hz confirmed, it reported [72, 80], and the
+    server refused 207 Hz until the app was reopened.
+  - The probe now runs only while the app is shown. A probe that misses 90 or 120 Hz (rates the
+    runtime always offers) runs again, at most twice.
+  - Checked by starting the app with the headset asleep: no probe until the wake, then all rates
+    up to 207 Hz confirmed. Two 207 Hz harness arms streamed at 185–187 fps.
+  - HorizonOS writes `debug.oculus.refreshRate=72` itself when a VR app starts with it empty, so
+    a 72 there is not a sign of a leftover override.
 
 **1.7 A light play-session logger.**
 
