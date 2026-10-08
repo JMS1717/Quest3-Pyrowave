@@ -25,9 +25,20 @@ Seen on the harness the same night (USB, the server's maximum GPU clock on, the 
 the harness, not by the server): the server's GPU-clock change restarts the client, and within
 about a second of a client start both `debug.oculus.refreshRate` and `debug.oculus.gpuLevel` were
 read back empty; the restarted client then found the panel held at 72 Hz, where every request,
-including 207, failed to confirm. The writer of the empty values was not identified. A relaunch
-usually recovers, so the harness now tries three launches instead of two. The owner's own setup
-(the server sets the panel rate itself) was checked on October 7: one client restart, then 207 Hz.
+including 207, failed to confirm. The writer of the empty values was not identified.
+
+The same happened with the harness leaving the display alone, as in the owner's setup (120 Hz,
+2000 Mbit/s, 4:4:4): two of three first launches came back with only [72, 80]. The common factor
+is that the server hands the proximity sensor back before the restart, so the unworn headset
+falls asleep and the restarted client starts asleep. It stayed held at 72 Hz after the wake,
+which `.85`'s wait for the app to be shown does not cure. With the harness holding the proximity
+override for 25 s after each start, as a wearer would, both launches streamed first time (110.9
+and 110.7 fresh FPS). The harness also now tries three launches instead of two. A worn headset
+stays awake, so the owner is probably unaffected; that is not yet confirmed. The owner's setup
+was checked on October 7: one client restart, then 207 Hz.
+
+**Next:** have the server restart the client before it hands proximity back, or not at all when
+only the GPU clock changes and the headset is asleep.
 
 ## 240 Hz developer experiment
 
