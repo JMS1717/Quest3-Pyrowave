@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b2373241437e963 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..c8fc3672540bdbf25a9b92ccad1600f3286edc68 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9b9898cf8d7e182a3af1a80c1b237324
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..4cdc60406ab149d80d4c58c337a4f02efed672fd 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..ff820cd9749f64f625dbf6647e6ee271315e83a9 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..4cdc60406ab149d80d4c58c337a4f02e
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.72"
++version = "20.13.0-quest3.pyro.73"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -9423,10 +9423,10 @@ index 7bfba12ca0479598b4060b84664695a82c96411d..7236535dfbd7196f77a29c1e5f9dbc27
  #endif
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..8ba800c2e936db635d5537f0c470836a6caabe7e
+index 0000000000000000000000000000000000000000..a166f089b7ef804924b5b4240047f12f44968cf7
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,728 @@
+@@ -0,0 +1,783 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -9537,6 +9537,37 @@ index 0000000000000000000000000000000000000000..8ba800c2e936db635d5537f0c470836a
 +    }
 +    #[cfg(not(target_os = "android"))]
 +    { -1 }
++}
++
++// Share of each eye axis that is sharpened, in percent (`debug.q3pw.sharpen_area`, 10-100, for
++// tests). The rest of the eye is drawn without sharpening: the extra luma reads cost about 1 ms per
++// frame over the whole image (October 7), and the centre is where the eye usually looks.
++fn sharpen_area_requested() -> u32 {
++    #[cfg(target_os = "android")]
++    {
++        let mut value = [0u8; 92];
++        let len = unsafe { __system_property_get(c"debug.q3pw.sharpen_area".as_ptr(), value.as_mut_ptr().cast()) };
++        std::str::from_utf8(&value[..len.max(0) as usize]).ok()
++            .and_then(|v| v.trim().parse::<u32>().ok()).filter(|n| (10..=100).contains(n)).unwrap_or(SHARPEN_AREA)
++    }
++    #[cfg(not(target_os = "android"))]
++    { SHARPEN_AREA }
++}
++
++const SHARPEN_AREA: u32 = 60;
++
++/// Sharpening regions of an eye image: (program, [x, y, width, height]) with program 1, the
++/// sharpened one, on a centre rectangle `area` percent of each axis, moved 5 % of the width towards
++/// the nose (the lens axis sits nasal of the image centre), and program 0 around it.
++pub(super) fn sharpen_regions(size: UVec2, area: u32, eye: usize) -> Vec<(usize, [i32; 4])> {
++    let (w, h) = (size.x as i32, size.y as i32);
++    let (cw, ch) = ((w * area as i32 / 100).min(w), (h * area as i32 / 100).min(h));
++    let shift = if eye == 0 { w / 20 } else { -(w / 20) };
++    let x0 = ((w - cw) / 2 + shift).clamp(0, w - cw);
++    let y0 = (h - ch) / 2;
++    [(0, [0, 0, w, y0]), (0, [0, y0 + ch, w, h - y0 - ch]), (0, [0, y0, x0, ch]),
++     (0, [x0 + cw, y0, w - x0 - cw, ch]), (1, [x0, y0, cw, ch])]
++        .into_iter().filter(|(_, [_, _, width, height])| *width > 0 && *height > 0).collect()
 +}
 +
 +// Initialization diagnostics bypass the mirrored-log severity filter. No per-frame
@@ -9703,14 +9734,17 @@ index 0000000000000000000000000000000000000000..8ba800c2e936db635d5537f0c470836a
 +                -1 => config.sharpening.min(100) as i32,
 +                requested => requested,
 +            };
-+            if sharpen != 0 { import_diagnostic(4, format!("[Q3PW_SHARPEN] sharpness={sharpen}")); }
++            let sharpen_area = sharpen_area_requested();
++            if sharpen != 0 { import_diagnostic(4, format!("[Q3PW_SHARPEN] sharpness={sharpen} area={sharpen_area}")); }
 +            let program = compile_program(gl, config.foveation.is_some(), false, 0, 0, 0)?;
 +            // Compiled up front so the first mode-5 frame does not stall; without them such frames
-+            // take the staging path (can_render), which converts them too.
-+            let filters = if config.foveation.is_some() { 4 } else { 1 };
++            // take the staging path (can_render), which converts them too. With foveation they are
++            // the four filter combinations; with sharpening, plain (0) and sharpened (1).
++            let filters = if config.foveation.is_some() { 4 } else if sharpen != 0 { 2 } else { 1 };
 +            let mut present_programs = Some(Vec::new());
 +            for filter in 0..filters {
-+                match compile_program(gl, config.foveation.is_some(), true, filter, probe, sharpen) {
++                let (ffe_filter, sharpen) = if config.foveation.is_some() { (filter, 0) } else { (0, sharpen * filter as i32) };
++                match compile_program(gl, config.foveation.is_some(), true, ffe_filter, probe, sharpen) {
 +                    Ok(program) => present_programs.as_mut().unwrap().push(program),
 +                    Err(error) => {
 +                        import_diagnostic(5, format!("[Q3PW_PRESENT_YCBCR] direct program {filter} failed: {error}"));
@@ -9771,8 +9805,11 @@ index 0000000000000000000000000000000000000000..8ba800c2e936db635d5537f0c470836a
 +                    for &present in &programs { gl.delete_program(present); }
 +                }).ok()
 +            });
-+            let regions = [0, 1].map(|eye| foveation_regions(config.resolution,
-+                config.foveation.as_ref().map(|(_, params, _)| params), eye, flip));
++            let regions = [0, 1].map(|eye| if sharpen != 0 {
++                sharpen_regions(config.resolution, sharpen_area, eye)
++            } else {
++                foveation_regions(config.resolution, config.foveation.as_ref().map(|(_, params, _)| params), eye, flip)
++            });
 +            import_diagnostic(4, format!("[Q3PW_PRESENT_YCBCR] direct program ready={}", present.is_some()));
 +            let setup = (|| {
 +                let (view_idx, flip_y) = init_program(program, false)?;
@@ -10119,6 +10156,24 @@ index 0000000000000000000000000000000000000000..8ba800c2e936db635d5537f0c470836a
 +#[cfg(test)]
 +mod tests {
 +    use super::*;
++
++    #[test]
++    fn sharpen_regions_tile_each_eye() {
++        let size = UVec2::new(2080, 2208);
++        for area in [10, 60, 100] {
++            for eye in 0..2 {
++                let regions = sharpen_regions(size, area, eye);
++                assert_eq!(regions.iter().map(|(_, [_, _, w, h])| w * h).sum::<i32>(), 2080 * 2208);
++                let centre = regions.iter().filter(|(program, _)| *program == 1).collect::<Vec<_>>();
++                assert_eq!(centre.len(), 1);
++                let [x, y, w, h] = centre[0].1;
++                assert_eq!((w, h), (2080 * area as i32 / 100, 2208 * area as i32 / 100));
++                assert!(x >= 0 && y >= 0 && x + w <= 2080 && y + h <= 2208);
++                // Towards the nose: right of centre for the left eye, left of it for the right.
++                if area < 100 { assert_eq!(x + w / 2 > 1040, eye == 0); }
++            }
++        }
++    }
 +
 +    #[test]
 +    fn foveation_regions_tile_each_eye() {
