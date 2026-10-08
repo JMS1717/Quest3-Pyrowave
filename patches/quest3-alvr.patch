@@ -14694,7 +14694,7 @@ index adef8973ea6259daa44f167f0c57b9c35a7f1769..f0de49ce72eea7a6ab8dbf0caac3b4d9
      std::mutex m_presentMutex;
  };
 diff --git a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
-index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..89e111fc21ee85378552733adddcef8418c4f1ba 100644
+index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..7fc16f95544fc212cb271d946dbe1340f6983184 100644
 --- a/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
 +++ b/alvr/server_openvr/cpp/platform/win32/VideoEncoderPyroWave.cpp
 @@ -12,8 +12,10 @@
@@ -14733,7 +14733,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..89e111fc21ee85378552733adddcef84
 +        const HRESULT hr = dxgiDevice->SetGPUThreadPriority(priority);
 +        INT readback = 0;
 +        dxgiDevice->GetGPUThreadPriority(&readback);
-+        Info("[Q3PW_ENCODE_QUEUE] d3d11 gpu thread priority %d: hr=0x%08x now %d\n", priority,
++        Warn("[Q3PW_ENCODE_QUEUE] d3d11 gpu thread priority %d: hr=0x%08x now %d\n", priority,
 +             (unsigned)hr, (int)readback);
 +    }
 +    int queuePriority = 0;
@@ -14752,7 +14752,7 @@ index fc0632b8d79d66c79f6dbb3f6aaee8610b6687a7..89e111fc21ee85378552733adddcef84
      ));
 +    if (computeQueue && pyrowave_device_set_queue_type(m_pyroDevice, VK_QUEUE_COMPUTE_BIT) != PYROWAVE_SUCCESS)
 +        computeQueue = false;
-+    Info("[Q3PW_ENCODE_QUEUE] encode queue %s, priority requested %d granted %d\n",
++    Warn("[Q3PW_ENCODE_QUEUE] encode queue %s, priority requested %d granted %d\n",
 +         computeQueue ? "compute" : "graphics", queuePriority,
 +         pyrowave_device_get_queue_priority(m_pyroDevice));
  
