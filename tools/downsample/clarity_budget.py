@@ -50,6 +50,13 @@ def cas(y, peak):
     return to_u8(np.clip((f + wgt * (n + s + w + e)) / (1 + 4 * wgt), 0, 1) * 255)
 
 
+def lin(y, k):
+    """A linear cross sharpen of luma with weight k/100 per neighbour (the eye shader's `.75` kernel)."""
+    f = y.astype(np.float32)
+    q = np.pad(f, 1, mode='edge')
+    return to_u8(f + k / 100 * (4 * f - q[:-2, 1:-1] - q[2:, 1:-1] - q[1:-1, :-2] - q[1:-1, 2:]))
+
+
 def lab(y, cb, cr):
     yf, u, v = y.astype(np.float32), cb.astype(np.float32) - 128, cr.astype(np.float32) - 128
     bgr = np.clip(np.stack([yf + 1.8556 * u, yf - 0.1873 * u - 0.4681 * v, yf + 1.5748 * v], -1), 0, 255)
@@ -70,6 +77,10 @@ def main():
     ap.add_argument('--display', nargs='*', default=['lanczos3', 'up1.25+bilinear', 'up1.5+bilinear', 'cas50+bilinear',
                                                      'cas100+bilinear', 'cas50+up1.25+bilinear'],
                     help='display paths scored on the first point (see show())')
+    ap.add_argument('--prefilters', nargs='*', default=[],
+                    help='PC-side stream filters, coded at every point and shown with bilinear: a downsample '
+                         'kernel (catmull, lanczos3, ...) optionally followed by +linK (a linear cross sharpen of '
+                         'luma, K/100 per neighbour) before 4:2:0 and encoding')
     args = ap.parse_args()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -99,11 +110,7 @@ def main():
             if step.startswith('cas'):
                 planes[0] = cas(planes[0], 0.125 + 0.075 * int(step[3:]) / 100)
             elif step.startswith('lin'):
-                # A linear cross sharpen with weight k/100 per neighbour (CAS without the adaptivity).
-                k = int(step[3:]) / 100
-                f = planes[0].astype(np.float32)
-                q = np.pad(f, 1, mode='edge')
-                planes[0] = to_u8(f + k * (4 * f - q[:-2, 1:-1] - q[2:, 1:-1] - q[1:-1, :-2] - q[1:-1, 2:]))
+                planes[0] = lin(planes[0], int(step[3:]))
             elif step.startswith('up'):
                 f = float(step[2:])
                 planes = [to_u8(resample(p, round(w * f), round(h * f), 'catmull')) for p in planes]
@@ -144,6 +151,27 @@ def main():
                 # Display-path alternatives for the headset decode of the first point.
                 for kernel in args.display:
                     score(decoded, kernel, stream, f'6 display {kernel} {int(hz)} Hz {int(mbps)} Mbps', extra)
+        for prefilter in args.prefilters:
+            # PC-side alternatives: the server spends the work, the headset shows the decode unchanged.
+            kernel, *steps = prefilter.split('+')
+            pre = []
+            for win in windows:
+                y, cb, cr = to_ycbcr(resample(win, tw, th, kernel))
+                for step in steps:
+                    y = lin(y, int(step[3:]))
+                pre.append((y, box420(cb), box420(cr)))
+            for point in args.points:
+                hz, mbps = map(float, point.split(':'))
+                if hz > 120 and tw > 2080:
+                    continue
+                write_y4m(inp, pre, tw, th, '420jpeg', int(hz))
+                cap = int(mbps * 1e6 / 8 / round(hz) / 2) // 4 * 4
+                env = dict(os.environ, PYROWAVE_WAVELET=WAVELET_ENV[args.wavelet], PYROWAVE_PRECISION='1')
+                run([str(TOOLS / 'pyrowave-encode.exe'), str(inp), str(enc), str(cap)], env)
+                run([str(TOOLS / 'pyrowave-decode.exe'), str(enc), str(dec)], env)
+                score(read_y4m(dec, len(pre))[0], 'bilinear', stream,
+                      f'7 PC prefilter {prefilter} {int(hz)} Hz {int(mbps)} Mbps',
+                      {'hz': hz, 'mbps': mbps, 'bytes_cap': cap, 'prefilter': prefilter})
         for p in (inp, enc, dec):
             p.unlink(missing_ok=True)
     (out / 'results.json').write_text(json.dumps({'source': args.source, 'display': [dw, dh], 'ppd': args.ppd,

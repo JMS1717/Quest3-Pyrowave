@@ -362,6 +362,15 @@ The largest loss decides what to build next.
 
   **Next:** the owner's A/B. A cheaper form would sharpen in the decoder's last pass.
 
+  **October 8, offline:** sharpening on the PC before encoding scores at least as well as the
+  headset sharpen ([SHARPENING.md](SHARPENING.md#sharpening-on-the-pc-instead-offline-october-8)).
+  - At 2080 / 120 Hz / 1500, Lanczos-3 plus linear 0.10 scores +2.0 dB over no sharpening; the
+    headset sharpen scores +1.7.
+  - At 207 Hz / 1000 the PC's best is +0.77 dB.
+  - It costs the Quest GPU nothing.
+  - Next: a server-side pre-sharpen option, then an in-headset A/B, since the metric isn't the
+    verdict.
+
 **2.8 FP16 precision.** If 2.2 shows a plateau at 1500 Mbit/s and above, use FP32 for luma or for
 the coarse levels. **Not needed:** 2.2 measured no FP16 loss (under 0.002 dB) at 1000-2000 Mbit/s.
 

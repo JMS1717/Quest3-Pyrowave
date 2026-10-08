@@ -90,6 +90,51 @@ On the headset (ABBA or ABAB, a relaunch per arm):
 - At 207 Hz sharpening still costs about 10 FPS; at 120 Hz with stream 100 % it is free.
 - For the 125 % stream, a lower setting (about 33) scored best.
 
+## Sharpening on the PC instead (offline, October 8)
+
+The idea: spend PC time to save Quest GPU time. Sharpen, or downsample with a sharper kernel, on
+the PC before 4:2:0 and encoding. The headset then shows the decode unchanged.
+
+`tools/downsample/clarity_budget.py --prefilters` codes each variant at the live per-eye byte cap,
+decodes it at headset precision and shows it with bilinear resampling. The metric is luma
+PSNR-HVS-M at 25 px/deg against the ideal render. Setup: 2080x2208 stream, CDF 5/3, two
+`quality_scene` windows.
+
+| Stream filter | 120 Hz / 1500 | 120 Hz / 2000 | 207 Hz / 1000 | ΔE at 120 / 1500 |
+| --- | --- | --- | --- | --- |
+| Catmull-Rom (today), no sharpening | 20.21 | 20.61 | 17.88 | 5.00 |
+| Catmull-Rom, headset linear 50 (`.75`) | 21.90 | | | 4.66 |
+| Lanczos-3 | 20.98 | 21.34 | 18.20 | 4.86 |
+| Keys a=-1.5 | 21.17 | 21.69 | 18.19 | 4.87 |
+| Catmull-Rom + PC linear 0.10 | 21.72 | 22.26 | 18.42 | 4.88 |
+| Catmull-Rom + PC linear 0.15 | 22.09 | 22.57 | 18.60 | 4.87 |
+| Catmull-Rom + PC linear 0.20 | 22.07 | 22.62 | **18.65** | 4.93 |
+| **Lanczos-3 + PC linear 0.10** | **22.23** | **22.70** | 18.56 | 4.83 |
+
+- **Sharpening before encoding scores at least as well as sharpening on the headset.**
+  - At 120 Hz / 1500, PC sharpening scores 22.1-22.2 against 21.9.
+  - At 207 Hz / 1000, the PC's best is +0.77 dB. The headset kernel scored +0.62 dB earlier (table
+    above).
+  - The quantizer spends some bits on the extra high-frequency energy, but less than the gain.
+- **It costs the Quest nothing.** The headset sharpen costs about 10 FPS at 207 Hz and 8 at 120 Hz
+  with a 125 % stream.
+- **The sharper downsample kernels alone gain 0.3-1.0 dB.** The server's existing "Adaptive Lanczos"
+  option already offers Lanczos-3.
+- **Colour is unchanged:** ΔE 4.83-4.93 against 5.00. Only luma is sharpened.
+
+Not yet measured:
+
+- the 2592x2784 stream (the run was stopped for low memory before it);
+- moving content;
+- how it looks.
+
+Sharpening before a lossy coder can make ringing and noise more visible, and the owner asked for
+subjective judgement over PSNR. Next steps:
+
+1. a PC-side linear pre-sharpen in the server's downsample pass, as an option;
+2. an in-headset A/B against headset sharpening at the same strength;
+3. the 2592 rows.
+
 ## Open
 
 - **Owner's in-headset A/B.** Does 50 look better than off at 120 Hz? Is 100 too much? Is the edge
