@@ -165,6 +165,18 @@ whether audio on the stream socket stalls behind video.
 - Store per-second aggregates instead.
 - Forward the client's `[Q3PW_TRANSPORT]` counters to the server log. They were missing for the
   Wi-Fi play, so tonight's Wi-Fi artifacts can't be attributed.
+- **Done (October 8, `tools/quest3/play_log.py`):**
+  - `record OUT` reads only the server's event stream. It writes one CSV row per second (the frame
+    count, latency stages, bytes, fresh frames per second, drops, thermals) and the log text.
+    Memory stays flat.
+  - The client already forwards its error-level lines, so the per-second counters of both ends
+    are in the log: transport, tracking arrival, poses, the game's frames, audio.
+  - `report OUT` prints a per-minute table: fresh FPS p50/p10, the game's fps, repeated and
+    extrapolated poses, the largest tracking gap, the latency estimate and its vsync queue,
+    network, decoder, KB per frame, video drops, audio silent batches and gaps.
+  - `replay EVENTS_JSONL OUT` does the same for a harness phase.
+  - Checked by replaying a 207 Hz wired and a Wi-Fi phase. The Wi-Fi phase gave 0.17–0.19%
+    repeated poses, the same as its harness result.
 
 **Exit:**
 

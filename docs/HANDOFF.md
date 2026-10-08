@@ -210,6 +210,9 @@ windows ([PLAN.md 1.5](PLAN.md)).
    - If clean, make it the default (PLAN 2.1).
    - Play on `.84` or later, so a cut-out shows in the server log as `[Q3PW_AUDIO]` windows
      with `silent_batches` above 0 (PLAN 1.5).
+   - Run `python -m tools.quest3.play_log record <dir outside the repo>` during play, then
+     `report <dir>` for a per-minute table of fresh FPS, poses, latency, drops and audio
+     (PLAN 1.7).
 3. (Done in `.70`: four wired connections by default. Network p99 is 2.6 ms shorter and the
    frame rate is unchanged. See
    [BITRATE.md](BITRATE.md#four-wired-connections-69-default-from-70-october-7).)
