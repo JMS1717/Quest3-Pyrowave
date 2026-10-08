@@ -61,6 +61,25 @@ and the helper sees the difference and restarts again. Each run converges in abo
 then streams at 185-190 fresh FPS (`.90` and `.92` alike, so this is not new). Writing the rate
 after the shell's exit write, or not restarting for a cleared value, should remove the churn.
 
+One run's property timeline (polled every 0.5 s, `.92`, October 8), from the client's start:
+
+| Time | `refreshRate` | What happened |
+|---|---|---|
+| 0.0 s | 72 | Client starts (the shell's value from the last exit) |
+| 1.0 s | empty | HorizonOS clears it |
+| 2.9 s | 207 | Helper writes 207 and the GPU level, then restarts the client |
+| 4.9 s | 72 | The shell takes over and writes 72 over 207 |
+| 8.2 s | 207 | Helper writes 207 again (the new client's activity is not resumed yet) and restarts |
+| 10.2 s | empty | The next client starts; HorizonOS clears 207 |
+| 13.2 s | 207 | Helper writes 207 a third time and restarts |
+| 14.0 s | 207 | This client keeps 207 and streams |
+
+In the next run, one restart was enough: neither the 72 nor the clear happened. What decides
+whether HorizonOS writes 72 on exit or clears on start is not known. Workaround until it is fixed:
+at 207 Hz, leave **Quest 3: set the panel refresh rate over USB** off (as the "207 Hz (measured)"
+profile does). The runtime grants 207 to the client's own request, and only the GPU clock change
+restarts the client, once.
+
 ## 240 Hz developer experiment
 
 **Current (`.60` and later, including `.64`).** The dashboard offers 72, 80, 90, 120, 144, 165,
