@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a831f7625 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..4c9aaa029af32a2614b78f7f1aaa0d0899a75911 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..cf775433d55e90706ed134adea0ec951709f68b5 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..6d1b0a57b23d27d7dc4bf573891f47092c38af26 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..cf775433d55e90706ed134adea0ec951
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.108"
++version = "20.13.0-quest3.pyro.109"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -2968,10 +2968,10 @@ index 0000000000000000000000000000000000000000..84fe7d46be55d89ddedb1142df563458
 +}
 diff --git a/alvr/client_core/src/phase_lock.rs b/alvr/client_core/src/phase_lock.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..caffcb4caafd89954d3464e181665ee0469e29f0
+index 0000000000000000000000000000000000000000..20413aede1af9e76972c06f7a76bcfea46d3d918
 --- /dev/null
 +++ b/alvr/client_core/src/phase_lock.rs
-@@ -0,0 +1,121 @@
+@@ -0,0 +1,214 @@
 +//! Client half of the PyroWave phase lock (`debug.q3pw.phase_lock=1`, read when a stream starts).
 +//!
 +//! The server's virtual vsync free-runs at the nominal rate while the Quest panel runs a little
@@ -3015,10 +3015,76 @@ index 0000000000000000000000000000000000000000..caffcb4caafd89954d3464e181665ee0
 +    ENABLED.load(Ordering::Relaxed)
 +}
 +
++/// Decode gate (`debug.q3pw.decode_gate_us=<start>[,<end>]`, opt-in, read when a stream starts).
++///
++/// At 3072x3216 and 120 Hz the decoder runs beside the eye draw and the compositor and takes about
++/// twice its standalone time (October 8). The gate starts each decode no earlier than `start` after
++/// the render loop's wake, once the eye draw has had the GPU, and a frame that would start later
++/// than `end` waits for the next period's `start`. Negative = off.
++static GATE_START_US: AtomicI64 = AtomicI64::new(-1);
++static GATE_END_US: AtomicI64 = AtomicI64::new(-1);
++
++/// Parses `<start>[,<end>]` in microseconds.
++pub fn parse_gate(value: &str) -> Option<(i64, i64)> {
++    let mut parts = value.trim().split(',');
++    let start = parts.next()?.trim().parse::<i64>().ok().filter(|v| (0..20_000).contains(v))?;
++    let end = match parts.next() {
++        Some(end) => end.trim().parse::<i64>().ok().filter(|&v| v > start && v < 20_000)?,
++        None => -1,
++    };
++    parts.next().is_none().then_some((start, end))
++}
++
++pub fn start_gate(gate: Option<(i64, i64)>) {
++    let (start, end) = gate.unwrap_or((-1, -1));
++    GATE_START_US.store(start, Ordering::Relaxed);
++    GATE_END_US.store(end, Ordering::Relaxed);
++    if gate.is_some() {
++        alvr_common::info!("[Q3PW_DECODE_GATE] start_us={start} end_us={end}");
++    }
++}
++
++#[inline]
++fn gate_enabled() -> bool {
++    GATE_START_US.load(Ordering::Relaxed) >= 0
++}
++
++/// How long a decode that is ready at `now_ns` should wait, given the last wake and period.
++pub fn gate_delay_ns(now_ns: u64, wake_ns: u64, period_ns: u64, start_ns: u64, end_ns: Option<u64>) -> u64 {
++    if wake_ns == 0 || period_ns == 0 || now_ns < wake_ns || now_ns - wake_ns >= 2 * period_ns {
++        return 0;
++    }
++    let since = (now_ns - wake_ns) % period_ns;
++    if since < start_ns {
++        start_ns - since
++    } else if end_ns.is_some_and(|end| since > end) {
++        period_ns - since + start_ns
++    } else {
++        0
++    }
++}
++
++/// Decoder: the wait before submitting the next decode, if the gate is on.
++pub fn gate_delay() -> Option<std::time::Duration> {
++    let start = GATE_START_US.load(Ordering::Relaxed);
++    if start < 0 {
++        return None;
++    }
++    let end = GATE_END_US.load(Ordering::Relaxed);
++    let delay = gate_delay_ns(
++        crate::frame_trace::mono_ns(),
++        WAKE_NS.load(Ordering::Relaxed),
++        PERIOD_NS.load(Ordering::Relaxed),
++        start as u64 * 1000,
++        (end >= 0).then(|| end as u64 * 1000),
++    );
++    (delay > 0).then(|| std::time::Duration::from_nanos(delay))
++}
++
 +/// Render loop: `xrWaitFrame` returned now.
 +#[inline]
 +pub fn on_wake(period_ns: u64) {
-+    if enabled() {
++    if enabled() || gate_enabled() {
 +        WAKE_NS.store(crate::frame_trace::mono_ns(), Ordering::Relaxed);
 +        PERIOD_NS.store(period_ns, Ordering::Relaxed);
 +    }
@@ -3076,7 +3142,34 @@ index 0000000000000000000000000000000000000000..caffcb4caafd89954d3464e181665ee0
 +
 +#[cfg(test)]
 +mod tests {
-+    use super::offset_us;
++    use super::{gate_delay_ns, offset_us, parse_gate};
++
++    #[test]
++    fn decode_gate_waits_for_the_window() {
++        let wake = 1_000_000_000;
++        let start = 2_500_000;
++        // ready during the eye draw: wait until the window opens
++        assert_eq!(gate_delay_ns(wake + 1_000_000, wake, T, start, None), 1_500_000);
++        // inside the window: go now
++        assert_eq!(gate_delay_ns(wake + 3_000_000, wake, T, start, None), 0);
++        // past the end: wait for the next period's window
++        assert_eq!(gate_delay_ns(wake + 5_000_000, wake, T, start, Some(4_000_000)), T - 5_000_000 + start);
++        // the loop missed one wake: still on the period grid
++        assert_eq!(gate_delay_ns(wake + T + 1_000_000, wake, T, start, None), 1_500_000);
++        // no recent wake: never hold a frame
++        assert_eq!(gate_delay_ns(wake + 3 * T, wake, T, start, None), 0);
++        assert_eq!(gate_delay_ns(wake, 0, T, start, None), 0);
++    }
++
++    #[test]
++    fn decode_gate_setting_parses() {
++        assert_eq!(parse_gate("2500"), Some((2500, -1)));
++        assert_eq!(parse_gate(" 2500, 4000 "), Some((2500, 4000)));
++        assert_eq!(parse_gate(""), None);
++        assert_eq!(parse_gate("4000,2500"), None);
++        assert_eq!(parse_gate("-1"), None);
++        assert_eq!(parse_gate("1,2,3"), None);
++    }
 +
 +    const T: u64 = 8_333_333;
 +
@@ -4433,7 +4526,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601497aaca790db25fa1b37423948fdfaa86..f18d1791de03149b592c02ff89b5f2da0df54343 100644
+index 2e22601497aaca790db25fa1b37423948fdfaa86..f00b3c065b8c707ebf5d9c93cff3c0559e797584 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -4726,7 +4819,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..f18d1791de03149b592c02ff89b5f2da
                  )
              };
              if client.is_null() {
-@@ -128,64 +291,260 @@ pub fn video_decoder_split(
+@@ -128,64 +291,271 @@ pub fn video_decoder_split(
                  )));
                  return;
              }
@@ -4796,12 +4889,23 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..f18d1791de03149b592c02ff89b5f2da
                      slot.take()
                  };
 -                let Some((timestamp, data)) = next else {
-+                let Some((timestamp, data, order, _received_at)) = next else {
++                let Some((mut timestamp, mut data, mut order, _received_at)) = next else {
                      continue;
                  };
 -                let pushed = unsafe { pyroclient_push_packet(client, data.as_ptr(), data.len()) };
 -                if pushed < 0 {
 -                    warn!("PyroWave: push_packet failed ({pushed})");
++                // Decode gate (opt-in): start once the eye draw has had the GPU; a newer frame
++                // that arrived meanwhile replaces this one.
++                if !prerecord_enabled {
++                    if let Some(delay) = crate::phase_lock::gate_delay() {
++                        thread::sleep(delay);
++                        if let Some((t, d, o, _)) = pending.frame.lock().take() {
++                            pending.skipped.fetch_add(1, Ordering::Relaxed);
++                            (timestamp, data, order) = (t, d, o);
++                        }
++                    }
++                }
 +                decoded.mark_in_flight();
 +                crate::frame_trace::record(b'S', timestamp.as_nanos() as u64, order as i64, 0);
 +                if ready_requested && ready_checked.elapsed() >= Duration::from_secs(1) {
@@ -7912,7 +8016,7 @@ index 0000000000000000000000000000000000000000..aabdc9684074823279d5178429646757
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe995e4e278f3903d05f84a50db089f21cfc..397180ed4e4e975145a47c11f022aed8cffd94ad 100644
+index b87dfe995e4e278f3903d05f84a50db089f21cfc..a65ae2d9809fb572877a19eeb1b57263d245af92 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -1,3 +1,6 @@
@@ -8091,7 +8195,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..397180ed4e4e975145a47c11f022aed8
              input_thread: None,
              input_thread_running,
              config,
-@@ -235,8 +302,45 @@ impl StreamContext {
+@@ -235,8 +302,50 @@ impl StreamContext {
              renderer,
              decoder: None,
              pending_frame: None,
@@ -8125,6 +8229,11 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..397180ed4e4e975145a47c11f022aed8
 +                .parse()
 +                .unwrap_or(-1500),
 +        );
++        alvr_client_core::phase_lock::start_gate(
++            (platform == Platform::Quest3)
++                .then(|| crate::extra_extensions::perf_settings::system_property("debug.q3pw.decode_gate_us"))
++                .and_then(|value| alvr_client_core::phase_lock::parse_gate(&value)),
++        );
  
 +        alvr_graphics::log_quest_experiment(format!(
 +            "[Q3PW_PRE_WAIT] requested={} (requires Quest3 PyroWave and early_poll)",
@@ -8137,7 +8246,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..397180ed4e4e975145a47c11f022aed8
          this.update_reference_space();
  
          this
-@@ -280,6 +384,10 @@ impl StreamContext {
+@@ -280,6 +389,10 @@ impl StreamContext {
              let refresh_rate = self.config.refresh_rate_hint;
              let running = Arc::clone(&self.input_thread_running);
              move || {
@@ -8148,7 +8257,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..397180ed4e4e975145a47c11f022aed8
                  stream_input_loop(
                      &core_ctx,
                      xr_session,
-@@ -310,6 +418,24 @@ impl StreamContext {
+@@ -310,6 +423,24 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
@@ -8173,7 +8282,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..397180ed4e4e975145a47c11f022aed8
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +464,42 @@ impl StreamContext {
+@@ -338,12 +469,42 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -8218,7 +8327,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..397180ed4e4e975145a47c11f022aed8
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +511,26 @@ impl StreamContext {
+@@ -355,8 +516,26 @@ impl StreamContext {
          }
      }
  
@@ -8245,7 +8354,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..397180ed4e4e975145a47c11f022aed8
      }
  
      pub fn render(
-@@ -364,15 +538,152 @@ impl StreamContext {
+@@ -364,15 +543,152 @@ impl StreamContext {
          frame_interval: Duration,
          vsync_time: Duration,
      ) -> (ProjectionLayerBuilder, Duration) {
@@ -8400,7 +8509,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..397180ed4e4e975145a47c11f022aed8
              }
          }
  
-@@ -401,37 +712,82 @@ impl StreamContext {
+@@ -401,37 +717,82 @@ impl StreamContext {
              ]);
          }
  
@@ -8450,9 +8559,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..397180ed4e4e975145a47c11f022aed8
 +            self.swapchains[1]
 +                .wait_image(xr::Duration::INFINITE)
 +                .unwrap();
- 
--        self.swapchains[0].release_image().unwrap();
--        self.swapchains[1].release_image().unwrap();
++
 +            let render_start = Instant::now();
 +            let acquire_wait_ms = acquire_start.elapsed().as_secs_f32() * 1000.0;
 +
@@ -8479,7 +8586,9 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..397180ed4e4e975145a47c11f022aed8
 +                    self.config.passthrough.as_ref(),
 +                )
 +            };
-+
+ 
+-        self.swapchains[0].release_image().unwrap();
+-        self.swapchains[1].release_image().unwrap();
 +            alvr_client_core::frame_trace::record(b'H', if buffer_ptr.is_null() { 0 } else { timestamp.as_nanos() as u64 },
 +                copy_ready as i64, 0);
 +            if !buffer_ptr.is_null() {
@@ -8513,7 +8622,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..397180ed4e4e975145a47c11f022aed8
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +849,8 @@ impl StreamContext {
+@@ -493,6 +854,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
@@ -8522,7 +8631,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..397180ed4e4e975145a47c11f022aed8
          self.input_thread_running.set(false);
          self.input_thread.take().unwrap().join().ok();
      }
-@@ -510,6 +868,7 @@ fn stream_input_loop(
+@@ -510,6 +873,7 @@ fn stream_input_loop(
      let platform = alvr_system_info::platform();
  
      let mut last_controller_poses = [Pose::default(); 2];
@@ -8530,7 +8639,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..397180ed4e4e975145a47c11f022aed8
      let mut last_palm_poses = [Pose::default(); 2];
      let mut last_view_params = [ViewParams::default(); 2];
  
-@@ -630,7 +989,17 @@ fn stream_input_loop(
+@@ -630,7 +994,17 @@ fn stream_input_loop(
          );
  
          let button_entries = interaction::update_buttons(&xr_session, &int_ctx.button_actions);
