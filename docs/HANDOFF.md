@@ -98,6 +98,7 @@ Builds from branch `claude/frame-budget`, local only:
 | `.91` | `7d332d2` | A restarted client with no activity after 10 s is started once more |
 | `.92` | `4b760b5` | The client restart uses `am start -S -W` (12 of 12 direct starts, against 14 of 16) |
 | `.93` | `3ee2cdc` | The old encoder-side PyroWave UDP path is deleted (PLAN 1.3); no behaviour change |
+| `.94` | `b2d3685` | The panel rate is forced only above 207 Hz (rejected, reverted in `62e4abc`) |
 
 **Frame budget:**
 
@@ -244,9 +245,9 @@ windows ([PLAN.md 1.5](PLAN.md)).
        building it needs.
 5. Engineering next, as of October 8 (`.93`):
    - **The forced 207 Hz churn** (PLAN 1.6): the fix to try and how to measure it are in PLAN.md.
-     Until then, at 207 Hz leave the forced panel rate off. It streams as fast (174-179 against
-     173-175 fresh FPS) with one restart, for the GPU clock
-     ([REFRESH-RATES.md](REFRESH-RATES.md)).
+     `.94` (stop forcing native rates) was rejected: a 72 left by the shell pinned the panel and
+     refused one stream. Keep the forced rate on at 207 Hz; its 10-15 s of restarts also
+     recover from that 72 ([REFRESH-RATES.md](REFRESH-RATES.md)).
    - **4:4:4 decode at 120 Hz / 2000** (PLAN 2.5): the decoder takes 8.0-8.1 ms of the 8.3 ms
      period. The iDWT is about 3 ms at any bitrate, and dequant grows with bitrate (2.1-2.3 ms at
      2000, 1.5-1.6 at 1500). See

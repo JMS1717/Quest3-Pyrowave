@@ -75,13 +75,30 @@ One run's property timeline (polled every 0.5 s, `.92`, October 8), from the cli
 | 14.0 s | 207 | This client keeps 207 and streams |
 
 In the next run, one restart was enough: neither the 72 nor the clear happened. What decides
-whether HorizonOS writes 72 on exit or clears on start is not known. Workaround until it is fixed:
-at 207 Hz, leave **Quest 3: set the panel refresh rate over USB** off (as the "207 Hz (measured)"
-profile does). The runtime grants 207 to the client's own request, and only the GPU clock change
-restarts the client, once. Measured on `.93` (October 8, 207 Hz, 1000 Mbit/s, CDF 5/3, 4:2:0, one
-AB run each): forced off 178.9 and 174.2 fresh FPS, forced on 173.4 and 174.5. Both ran the panel
-at 207 Hz (`[Q3PW_EFFECTIVE] runtime_hz=207`). A `.92` run straight after gave 178.5 and 168.3, so
-the earlier 185-190 was the conditions of those runs, not the build.
+whether HorizonOS writes 72 on exit or clears on start is not known.
+
+The forced rate is not needed to reach 207 Hz. With nothing forced, the client's probe confirmed
+144, 165, 180, 200 and 207 Hz on its own requests. On `.93` (October 8, 207 Hz, 1000 Mbit/s,
+CDF 5/3, 4:2:0, one AB run each), forced off gave 178.9 and 174.2 fresh FPS and forced on gave
+173.4 and 174.5. Both ran the panel at 207 Hz (`[Q3PW_EFFECTIVE] runtime_hz=207`). A `.92` run
+straight after gave 178.5 and 168.3, so the earlier 185-190 came from the conditions of those
+runs, not the build.
+
+**`.94` forced the panel only above 207 Hz (rejected, reverted).** It removed the rate writes as
+intended: the property watch showed `refreshRate` never written, with one client restart per
+block, for the GPU clock. But in one of two runs the first connection was refused ("requested
+207 Hz unsupported; client-confirmed rates [72, 80]"). The GPU-clock restart's wake opened Quick
+Actions over the client, and the shell's 72 stayed set: nothing cleared it, so the panel was
+pinned at 72. The harness got the stream only about a minute later, after the client was
+restarted again. With the rate forced, the helper rewrites 207 over that 72, so part of the
+"churn" is this recovery. None of the other 15 runs tonight was refused (`.92`/`.93`, forced and
+not), so a 72 left behind after a restart is the underlying fault. `.94` streamed at 183.2-184.1
+fresh FPS in both runs (network p50 3.3-3.8 ms), against 166.7-178.9 (7.4-9.2 ms) for the `.93`
+runs around it. That difference is not explained and not claimed.
+
+Next: when the server's rate check refuses a client whose only confirmed rates are 72 and 80 while
+`refreshRate` reads 72, have the helper clear the property while awake and restart the client
+once. That would serve both paths, forced and not. Only then stop forcing native rates.
 
 ## 240 Hz developer experiment
 

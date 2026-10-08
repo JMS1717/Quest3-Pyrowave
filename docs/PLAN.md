@@ -196,11 +196,13 @@ whether audio on the stream socket stalls behind video.
   the client still has no activity after 10 s.
 - **Open: the forced 207 Hz path restarts the client one to three times** before the rate holds
   (about 10-15 s), because HorizonOS's exit write and start clear undo the forced rate
-  ([REFRESH-RATES.md](REFRESH-RATES.md), with one run's property timeline). Workaround: at 207 Hz
-  leave the forced panel rate off; the runtime grants 207 to the client's own request. Fix to try
-  next: after its own restart, the helper waits until the new client's activity is resumed and
-  HorizonOS's clear has passed (about 1.5 s) before it compares the rate, so it writes once and
-  restarts once. Measure restarts per run over at least 8 runs, against `.93`.
+  ([REFRESH-RATES.md](REFRESH-RATES.md), with one run's property timeline). The runtime grants
+  144-207 Hz without forcing, but `.94` (force only above 207 Hz) was rejected. In one of two runs a
+  72 left by the shell after the GPU-clock restart pinned the panel, and the stream was refused
+  ([72, 80]) until the client restarted again. Forcing's rewrite had been covering that case.
+  Next: the helper clears a 72 that pins the panel (the client confirms only 72/80 while the
+  property reads 72) and restarts once; then stop forcing native rates. Measure refusals and
+  restarts per run over at least 8 runs against `.93`.
 
 **1.7 A light play-session logger.**
 
