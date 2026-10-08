@@ -98,10 +98,21 @@ State:
     | Decode at default queue priority (67 % eye, CDF) | 83-87 fresh, but the app drops to 85-87 of 120 frames: judder | Low stays |
     | Render-loop frame wait 0 instead of 4000 µs (Haar, 67 %) | 75-76 against 79-82 | The wait stays |
 
-    Live decode takes about twice the standalone time while the GPU reports 87-91 % busy. The
-    loss is time-slicing against the eye draw and compositor. The next idea is a decode gate:
-    start each decode right after the eye draw, at normal priority. Serially it fits (Haar
-    about 4 ms + eye + compositor 0.9 ms).
+    Live decode takes about twice the standalone time while the GPU reports 87-91 % busy.
+  - **`.109` decode gate, opt-in, rejected as a default.** `debug.q3pw.decode_gate_us=<start>[,<end>]`
+    holds each decode until `start` µs after the render loop's wake. A frame later than `end`
+    waits for the next period. Unit tested. Haar, 67 % eye, 120 Hz:
+
+    | Arm | Fresh FPS | App frames/s | Decode p50 |
+    |---|---|---|---|
+    | off | 80-84 | 120 | 7.1-7.5 ms |
+    | start 3000 | 80-84 | 120 | 7.1-7.4 ms |
+    | window 2500-4500 | 77-78 | 120 | 6.4-6.7 ms |
+    | window 2500-4500, default priority | 80-92 | 114-117 (judder) | 5.0-5.7 ms |
+
+    Even serialized, decode takes 5 ms live against 3.3-4 ms on the bench, so full size does not
+    fit 120 Hz on this GPU. For 120 Hz, the clarity work moves to the largest stream that fits
+    (125-135 %).
   - **Harness traps:**
     - A force-stopped client often comes back pinned at 72 Hz.
     - Set `debug.oculus.refreshRate=120` while awake, before `am start`. That made 4 of 4 starts

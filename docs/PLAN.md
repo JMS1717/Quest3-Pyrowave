@@ -245,6 +245,13 @@ whether audio on the stream socket stalls behind video.
   - run decode at a lower queue priority than the eye draw so the compositor's preemption costs
     less.
 - Until then, the full-size profile is 90 Hz, and 125-135 % is the 120 Hz choice.
+- **Tried October 8 (all in HANDOFF), none reaches 120:**
+  - Haar (+10 %);
+  - default decode priority (judder);
+  - no frame wait;
+  - the `.109` decode gate.
+- Next: the largest stream size that holds 120 Hz with Haar against CDF 5/3. Then
+  compare 90 Hz full size and 120 Hz at that size in the owner's headset.
 
 **2.1 Frame budget from the real frame rate.**
 
