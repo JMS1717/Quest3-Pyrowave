@@ -78,7 +78,10 @@ In the next run, one restart was enough: neither the 72 nor the clear happened. 
 whether HorizonOS writes 72 on exit or clears on start is not known. Workaround until it is fixed:
 at 207 Hz, leave **Quest 3: set the panel refresh rate over USB** off (as the "207 Hz (measured)"
 profile does). The runtime grants 207 to the client's own request, and only the GPU clock change
-restarts the client, once.
+restarts the client, once. Measured on `.93` (October 8, 207 Hz, 1000 Mbit/s, CDF 5/3, 4:2:0, one
+AB run each): forced off 178.9 and 174.2 fresh FPS, forced on 173.4 and 174.5. Both ran the panel
+at 207 Hz (`[Q3PW_EFFECTIVE] runtime_hz=207`). A `.92` run straight after gave 178.5 and 168.3, so
+the earlier 185-190 was the conditions of those runs, not the build.
 
 ## 240 Hz developer experiment
 
