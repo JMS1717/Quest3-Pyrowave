@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee06b18fb0 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..264d35172649eff94af125b8c1d90564d13824d0 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..fb318b9e52d4a5c971af19830673bac0f725f91f 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..95a42ff9e494760f02f24d0fbea3d2b07205898a 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..fb318b9e52d4a5c971af19830673bac0
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.103"
++version = "20.13.0-quest3.pyro.104"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -6000,7 +6000,7 @@ index 7765bb459f73e9d7d5a9f296a498f09a0df43706..1a2b8152c628566294dfb840971d5b3e
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b5f4cb25b 100644
+index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..5dda8180fc69efa9a22e05e4ccec7f2e3f2781a7 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -1,10 +1,16 @@
@@ -6212,7 +6212,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
  
          // Whether anything is correcting for the ~26 ms the runtime predicts ahead. If the
          // compositor does not timewarp and ALVR does not either -- 20.13.0 hardcodes
-@@ -354,8 +452,10 @@ pub fn entry_point() {
+@@ -354,19 +452,35 @@ pub fn entry_point() {
              exts.fb_foveation,
              advertised_extension_names.len(),
          );
@@ -6224,8 +6224,27 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
 +        );
  
          if exts.fb_color_space {
-             xr_session
-@@ -365,8 +465,8 @@ pub fn entry_point() {
+-            xr_session
+-                .set_color_space(xr::ColorSpaceFB::REC709)
+-                .unwrap();
++            // Diagnostic: debug.q3pw.color_space picks the gamut the compositor assumes for our
++            // images, to compare with apps that leave the Horizon OS default. Rec. 709 matches
++            // PC content and stays the default.
++            let request = extra_extensions::perf_settings::system_property("debug.q3pw.color_space");
++            let color_space = match request.as_str() {
++                "cv1" => xr::ColorSpaceFB::RIFT_CV1,
++                "rift_s" => xr::ColorSpaceFB::RIFT_S,
++                "quest" => xr::ColorSpaceFB::QUEST,
++                "p3" => xr::ColorSpaceFB::P3,
++                "rec2020" => xr::ColorSpaceFB::REC2020,
++                "unmanaged" => xr::ColorSpaceFB::UNMANAGED,
++                _ => xr::ColorSpaceFB::REC709,
++            };
++            if !request.is_empty() {
++                alvr_common::error!("[Q3PW_COLOR_SPACE] requested={request} applied={color_space:?}");
++            }
++            xr_session.set_color_space(color_space).unwrap();
+         }
  
          let capabilities = ClientCapabilities {
              default_view_resolution,
@@ -6236,7 +6255,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
              encoder_high_profile: galaxy_xr || platform != Platform::Unknown,
              encoder_10_bits: galaxy_xr || platform != Platform::Unknown,
              encoder_av1: matches!(
-@@ -392,9 +492,16 @@ pub fn entry_point() {
+@@ -392,9 +506,16 @@ pub fn entry_point() {
              Rc::clone(&graphics_context),
              Arc::clone(&interaction_context),
              platform,
@@ -6254,7 +6273,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
          let lobby_body_tracking_config = BodyTrackingSourcesConfig {
              body_tracking_fb: Switch::Disabled,
              body_tracking_bd: Switch::Enabled(BodyTrackingBDConfig::BodyTracking {
-@@ -412,14 +519,29 @@ pub fn entry_point() {
+@@ -412,14 +533,29 @@ pub fn entry_point() {
              .select_sources(&lobby_interaction_sources);
  
          let mut session_running = false;
@@ -6285,7 +6304,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
              while let Some(event) = xr_instance.poll_event(&mut event_storage).unwrap() {
                  match event {
                      xr::Event::EventsLost(event) => {
-@@ -432,14 +554,37 @@ pub fn entry_point() {
+@@ -432,14 +568,37 @@ pub fn entry_point() {
                                  .begin(xr::ViewConfigurationType::PRIMARY_STEREO)
                                  .unwrap();
  
@@ -6324,7 +6343,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
  
                              passthrough_layer = None;
  
-@@ -447,6 +592,8 @@ pub fn entry_point() {
+@@ -447,6 +606,8 @@ pub fn entry_point() {
  
                              xr_session.end().unwrap();
                          }
@@ -6333,7 +6352,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
                          xr::SessionState::EXITING => break 'render_loop,
                          xr::SessionState::LOSS_PENDING => break 'render_loop,
                          _ => (),
-@@ -458,6 +605,9 @@ pub fn entry_point() {
+@@ -458,6 +619,9 @@ pub fn entry_point() {
                          );
  
                          lobby.update_reference_space();
@@ -6343,7 +6362,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
  
                          if let Some(stream) = &mut stream_context {
                              stream.update_reference_space();
-@@ -494,7 +644,40 @@ pub fn entry_point() {
+@@ -494,7 +658,40 @@ pub fn entry_point() {
                          lobby.update_hud_message(&message);
                      }
                      ClientCoreEvent::StreamingStarted(config) => {
@@ -6384,7 +6403,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
  
                          let context = StreamContext::new(
                              Arc::clone(&core_context),
-@@ -512,6 +695,8 @@ pub fn entry_point() {
+@@ -512,6 +709,8 @@ pub fn entry_point() {
                          stream_context = Some(context);
                      }
                      ClientCoreEvent::StreamingStopped => {
@@ -6393,7 +6412,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -562,13 +747,43 @@ pub fn entry_point() {
+@@ -562,13 +761,43 @@ pub fn entry_point() {
                  }
              }
  
@@ -6407,9 +6426,9 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
 +                    } else {
 +                        stream.poll_frame(poll_interval);
 +                    }
-+                }
-+            }
-+
+                 }
+             }
+ 
 +            // Rates change only while the app is shown: a probe while the headset sleeps confirms
 +            // nothing but the current rate.
 +            if let Some(probe) = refresh_probe.as_mut().filter(|_| surface_visible) {
@@ -6431,14 +6450,14 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
 +                        cadence_probe = Some(cadence_probe::CadenceProbe::new(hz, seconds, restore));
 +                    }
 +                    Err(err) => error!("[Q3PW_CADENCE] target_hz={hz} request_rejected={err:?}"),
-                 }
-             }
- 
++                }
++            }
++
 +            let wait_started = loop_probe.then(Instant::now);
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -576,12 +791,91 @@ pub fn entry_point() {
+@@ -576,12 +805,91 @@ pub fn entry_point() {
                      panic!();
                  }
              };
@@ -6531,7 +6550,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +899,15 @@ pub fn entry_point() {
+@@ -605,15 +913,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -6556,7 +6575,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,13 +915,17 @@ pub fn entry_point() {
+@@ -621,13 +929,17 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -6575,7 +6594,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
  
              if !frame_state.should_render {
                  xr_frame_stream
-@@ -654,22 +952,90 @@ pub fn entry_point() {
+@@ -654,22 +966,90 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
@@ -6674,7 +6693,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +1064,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +1078,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
