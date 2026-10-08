@@ -15895,7 +15895,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..40abde43f43530c676feec55cc19daf0
  
  /// The profile whose every assignment the session (`session_settings` as JSON) currently holds,
 diff --git a/alvr/session/src/beta_tests.rs b/alvr/session/src/beta_tests.rs
-index 985a4d04e505ecaf29120bcc61b525476eb7caf2..2322237811eacdde68d2d167e8b89fa7f2b84d37 100644
+index 985a4d04e505ecaf29120bcc61b525476eb7caf2..022247847f28eac15dbab7ba378e15b8e3c4c78f 100644
 --- a/alvr/session/src/beta_tests.rs
 +++ b/alvr/session/src/beta_tests.rs
 @@ -31,7 +31,7 @@ fn video_shows_only_codec_experiment_controls() {
@@ -15907,7 +15907,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..2322237811eacdde68d2d167e8b89fa7
      );
      assert_eq!(
          names(entries, Visibility::Advanced),
-@@ -49,36 +49,43 @@ fn video_shows_only_codec_experiment_controls() {
+@@ -49,36 +49,44 @@ fn video_shows_only_codec_experiment_controls() {
  fn codec_picker_offers_pyrowave_and_h264_only() {
      assert_eq!(
          visible_variants(&schema(), &["video", "preferred_codec"]).unwrap(),
@@ -15935,7 +15935,8 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..2322237811eacdde68d2d167e8b89fa7
 +            "quest3_max_gpu_clock",
 +            "wired_video_connections",
 +            "sharpening",
-+            "latency_stamp"
++            "latency_stamp",
++            "game_frames_only",
 +        ])
 +    );
 +    assert_eq!(
@@ -15967,7 +15968,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..2322237811eacdde68d2d167e8b89fa7
  }
  
  #[test]
-@@ -133,8 +140,11 @@ fn default_settings() -> Settings {
+@@ -133,8 +141,11 @@ fn default_settings() -> Settings {
  fn fresh_install_streams_the_recommended_profile() {
      let s = default_settings();
      assert_eq!(s.video.preferred_codec, CodecType::PyroWave);
@@ -15981,7 +15982,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..2322237811eacdde68d2d167e8b89fa7
      for size in [
          &s.video.transcoding_view_resolution,
          &s.video.emulated_headset_view_resolution,
-@@ -142,33 +152,27 @@ fn fresh_install_streams_the_recommended_profile() {
+@@ -142,33 +153,27 @@ fn fresh_install_streams_the_recommended_profile() {
          assert!(matches!(
              size,
              FrameSize::Absolute {
@@ -16021,7 +16022,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..2322237811eacdde68d2d167e8b89fa7
  }
  
  // Applies session-style assignments the way the dashboard's SetValues does.
-@@ -198,13 +202,45 @@ fn profile(name: &str) -> StreamingProfile {
+@@ -198,13 +203,45 @@ fn profile(name: &str) -> StreamingProfile {
  #[test]
  fn profiles_are_named_for_testers() {
      let profiles = streaming_profiles();
@@ -16074,7 +16075,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..2322237811eacdde68d2d167e8b89fa7
  }
  
  #[test]
-@@ -218,13 +254,16 @@ fn recommended_profile_is_the_fresh_install() {
+@@ -218,13 +255,16 @@ fn recommended_profile_is_the_fresh_install() {
  fn h264_profile_is_the_measured_b15_cell() {
      let s = apply(&profile(H264_PROFILE));
      assert_eq!(s.video.preferred_codec, CodecType::H264);
@@ -16095,7 +16096,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..2322237811eacdde68d2d167e8b89fa7
          }
      ));
      assert_eq!(s.video.max_buffering_frames, 1.5);
-@@ -233,20 +272,66 @@ fn h264_profile_is_the_measured_b15_cell() {
+@@ -233,20 +273,66 @@ fn h264_profile_is_the_measured_b15_cell() {
          EncoderQualityPresetNvidia::P1
      );
      assert_eq!(s.video.encoder_config.entropy_coding, EntropyCoding::Cavlc);
@@ -16171,7 +16172,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..2322237811eacdde68d2d167e8b89fa7
  }
  
  fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
-@@ -263,8 +348,8 @@ fn effective_config_follows_settings_without_env() {
+@@ -263,8 +349,8 @@ fn effective_config_follows_settings_without_env() {
      assert!(e.enabled);
      assert!(e.udp);
      assert!(!e.wavelet_53);
@@ -16182,7 +16183,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..2322237811eacdde68d2d167e8b89fa7
      assert!(e.overrides.is_empty());
  }
  
-@@ -284,6 +369,7 @@ fn effective_config_follows_a_non_default_setting() {
+@@ -284,6 +370,7 @@ fn effective_config_follows_a_non_default_setting() {
  fn research_env_overrides_win_and_are_reported() {
      let mut s = default_settings();
      s.video.preferred_codec = CodecType::H264;
@@ -16190,7 +16191,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..2322237811eacdde68d2d167e8b89fa7
      let e = pyrowave_effective(
          &s,
          &env(&[
-@@ -302,8 +388,7 @@ fn research_env_overrides_win_and_are_reported() {
+@@ -302,8 +389,7 @@ fn research_env_overrides_win_and_are_reported() {
          vec![
              "ALVR_PYROWAVE",
              "ALVR_PYROWAVE_UDP",
@@ -16200,7 +16201,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..2322237811eacdde68d2d167e8b89fa7
          ]
      );
  }
-@@ -320,8 +405,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
+@@ -320,8 +406,8 @@ fn effective_config_log_line_names_chroma_and_every_knob() {
      let line = pyrowave_effective(&default_settings(), &env(&[])).to_string();
      assert_eq!(
          line,
@@ -16211,7 +16212,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..2322237811eacdde68d2d167e8b89fa7
      );
  }
  
-@@ -396,8 +481,8 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
+@@ -396,8 +482,8 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
      let openvr = old_json["openvr_config"].as_object_mut().unwrap();
      for key in [
          "pyrowave_enabled",
@@ -16221,7 +16222,7 @@ index 985a4d04e505ecaf29120bcc61b525476eb7caf2..2322237811eacdde68d2d167e8b89fa7
          "pyrowave_decode_path",
      ] {
          openvr.remove(key).expect(key);
-@@ -410,3 +495,30 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
+@@ -410,3 +496,30 @@ fn a_session_from_before_the_beta_keeps_its_clients() {
          "upgrading must not forget the paired headset"
      );
  }
