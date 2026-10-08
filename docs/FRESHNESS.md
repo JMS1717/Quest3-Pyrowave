@@ -208,3 +208,11 @@ p90 3.5 ms), not from the server's send rate: making that steady with `ALVR_PACI
 changed nothing ([HIGH-REFRESH.md](HIGH-REFRESH.md)). Neither did removing the render-thread
 wait (release fence) or preempting decode (LOW priority). Displaying every frame would need a
 one-frame queue, about 4.8 ms more latency against the 30 ms goal, so it is not pursued.
+
+**The frame hold at 120 Hz (October 8, `.90`).** The owner's setup (120 Hz, 2000 Mbit/s, 4:4:4,
+CDF 5/3, wired) runs 109-111 fresh FPS. Frames arrive at about 116 a second; per second about 108
+are taken, 7.7 superseded and 17.8 selections find nothing. The link, not the decoder, sets that
+pace: a 2.08 MB frame takes 7.1-8.1 ms of the 8.33 ms period over USB (decode about 5.2 ms).
+`debug.q3pw.frame_hold_us=10000`, ABBA, 12 s blocks: 110.8 against 110.7 fresh FPS. Superseded
+frames fell only from 7.7 to 7.1 a second, while ALVR's latency estimate rose by about 5 ms (its
+decoder queue by 0.5-1.3 ms). Rejected. At 1500 Mbit/s the same setup holds about 116.
