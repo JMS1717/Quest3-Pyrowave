@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453e360ddc4 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..10469544552a0a938c061f6c02e3879a831f7625 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..b9014b0f8d2b3599ca9dbad2f1f843f8942b5aaf 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..cf775433d55e90706ed134adea0ec951709f68b5 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..b9014b0f8d2b3599ca9dbad2f1f843f8
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.107"
++version = "20.13.0-quest3.pyro.108"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -274,10 +274,10 @@ index a5a446842d4799523d0e06fbfb7253bb13d6c7db..566cdde2b0f58ca90d722104983a4464
          .context("Failed to list ADB devices")?;
 diff --git a/alvr/adb/src/display_override.rs b/alvr/adb/src/display_override.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..1b8cb4c86bde06af9befd60e0e29bf219437aa94
+index 0000000000000000000000000000000000000000..0e98c6ba0643ea5329e0d83cb0d6217fedc02be7
 --- /dev/null
 +++ b/alvr/adb/src/display_override.rs
-@@ -0,0 +1,657 @@
+@@ -0,0 +1,693 @@
 +//! Opt-in Quest 3 display and GPU developer properties, managed by the PC over USB.
 +//!
 +//! Any whole refresh rate can be forced (measured October 6, 2026): 144-207 Hz with the full
@@ -317,6 +317,10 @@ index 0000000000000000000000000000000000000000..1b8cb4c86bde06af9befd60e0e29bf21
 +pub const NATIVE_MAX_HZ: u32 = 207;
 +/// The highest rate the scaled panel mode runs.
 +pub const SCALED_MAX_HZ: u32 = 240;
++/// Reapplications of a GPU level the headset cleared before this module stops forcing it. After a
++/// headset reboot on October 8 HorizonOS cleared `debug.oculus.gpuLevel` after every client
++/// restart; the helper rewrote it and restarted the client each time and the stream never started.
++pub const GPU_LEVEL_REVERTS: u32 = 2;
 +
 +#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 +pub struct Request {
@@ -406,11 +410,13 @@ index 0000000000000000000000000000000000000000..1b8cb4c86bde06af9befd60e0e29bf21
 +pub struct DisplayOverride {
 +    state_path: PathBuf,
 +    verified: Option<Request>,
++    /// Times the headset cleared a GPU level this module wrote (GPU_LEVEL_REVERTS).
++    gpu_reverts: u32,
 +}
 +
 +impl DisplayOverride {
 +    pub fn new(state_path: PathBuf) -> Self {
-+        Self { state_path, verified: None }
++        Self { state_path, verified: None, gpu_reverts: 0 }
 +    }
 +
 +    /// The saved originals and, from state files with `format=2`, the values this module last
@@ -499,7 +505,10 @@ index 0000000000000000000000000000000000000000..1b8cb4c86bde06af9befd60e0e29bf21
 +    /// Bring the headset to `request`. `Ok(None)`: nothing to do. `Ok(Some(message))`: values or
 +    /// the panel mode changed (or are still changing); restart the client so its refresh probe and
 +    /// GPU level see the new state, then call again.
-+    pub fn ensure(&mut self, shell: &impl Shell, serial: &str, request: Request) -> Result<Option<String>> {
++    pub fn ensure(&mut self, shell: &impl Shell, serial: &str, mut request: Request) -> Result<Option<String>> {
++        if self.gpu_reverts > GPU_LEVEL_REVERTS {
++            request.gpu_level_7 = false;
++        }
 +        let saved = self.saved(serial)?;
 +        if saved.is_none() && request == Request::default() {
 +            return Ok(None);
@@ -515,6 +524,15 @@ index 0000000000000000000000000000000000000000..1b8cb4c86bde06af9befd60e0e29bf21
 +                (current.clone(), Some(applied))
 +            }
 +        };
++        if request.gpu_level_7 && current[2] != "7"
++            && applied.as_ref().is_some_and(|applied| applied[2].as_deref() == Some("7"))
++        {
++            self.gpu_reverts += 1;
++            if self.gpu_reverts > GPU_LEVEL_REVERTS {
++                alvr_common::warn!("[Q3PW_DISPLAY_OVERRIDE] The headset keeps clearing the GPU level; maximum GPU clock is off until the server restarts");
++                request.gpu_level_7 = false;
++            }
++        }
 +        let want = targets(request, &original, &current, applied.as_ref());
 +        // Verified earlier and the values still hold: skip the panel check. A headset reboot
 +        // clears the properties, which this comparison notices.
@@ -843,6 +861,24 @@ index 0000000000000000000000000000000000000000..1b8cb4c86bde06af9befd60e0e29bf21
 +        let _ = fs::remove_file(path);
 +    }
 +
++    #[test]
++    fn stops_forcing_a_gpu_level_the_headset_keeps_clearing() {
++        let quest = FakeQuest::new(true);
++        let path = state_path("gpureverts");
++        let mut display = DisplayOverride::new(path.clone());
++        let gpu = Request { rate_hz: None, gpu_level_7: true };
++        assert!(display.ensure(&quest, "serial", gpu).unwrap().is_some());
++        let mut restarts = 0;
++        for _ in 0..10 {
++            quest.props.borrow_mut().insert(GPU_LEVEL.into(), String::new());
++            if display.ensure(&quest, "serial", gpu).unwrap().is_some() {
++                restarts += 1;
++            }
++        }
++        assert_eq!(restarts, GPU_LEVEL_REVERTS);
++        assert_eq!(quest.prop(GPU_LEVEL), "");
++        let _ = fs::remove_file(path);
++    }
 +    #[test]
 +    fn rates_up_to_207_keep_the_native_panel() {
 +        let quest = FakeQuest::new(false);
@@ -1442,9 +1478,18 @@ index 0000000000000000000000000000000000000000..057b458db4253a7c044c8c1592cd29af
 +    }
 +}
 diff --git a/alvr/audio/src/lib.rs b/alvr/audio/src/lib.rs
-index 6892e3ba9d8715841d1b5f8b514e98ed532ebbe9..6140a53877898901680c6c4937ca49d9972af258 100644
+index 6892e3ba9d8715841d1b5f8b514e98ed532ebbe9..af60ff166047fffd09ead03e642bc67439942d5d 100644
 --- a/alvr/audio/src/lib.rs
 +++ b/alvr/audio/src/lib.rs
+@@ -9,7 +9,7 @@ pub use crate::windows::*;
+ 
+ use alvr_common::{
+     anyhow::{self, anyhow, bail, Context, Result},
+-    info,
++    info, warn,
+     once_cell::sync::Lazy,
+     parking_lot::Mutex,
+     ConnectionError, ToAny,
 @@ -23,11 +23,18 @@ use cpal::{
  use rodio::{OutputStream, Source};
  use std::{
@@ -1466,7 +1511,26 @@ index 6892e3ba9d8715841d1b5f8b514e98ed532ebbe9..6140a53877898901680c6c4937ca49d9
  static VIRTUAL_MICROPHONE_PAIRS: Lazy<HashMap<&str, &str>> = Lazy::new(|| {
      [
          ("CABLE Input", "CABLE Output"),
-@@ -426,10 +433,82 @@ pub fn get_next_frame_batch(
+@@ -96,7 +103,17 @@ impl AudioDevice {
+             None => host
+                 .default_output_device()
+                 .context("No output audio device found")?,
+-            Some(config) => device_from_custom_config(&host, config)?,
++            // A chosen device that is missing (unplugged, renamed, or gone after a reconnect)
++            // falls back to the default output: it refused every handshake on October 8, so the
++            // stream never started.
++            Some(config) => match device_from_custom_config(&host, config) {
++                Ok(device) => device,
++                Err(e) => {
++                    warn!("{e}; using the default output device");
++                    host.default_output_device()
++                        .context("No output audio device found")?
++                }
++            },
+         };
+ 
+         Ok(Self {
+@@ -426,10 +443,82 @@ pub fn get_next_frame_batch(
  
          batch
      } else {
@@ -1549,7 +1613,7 @@ index 6892e3ba9d8715841d1b5f8b514e98ed532ebbe9..6140a53877898901680c6c4937ca49d9
  // The receive loop is resposible for ensuring smooth transitions in case of disruptions (buffer
  // underflow, overflow, packet loss). In case the computation takes too much time, the audio
  // callback will gracefully handle an interruption, and the callback timing and sound wave
-@@ -443,6 +522,9 @@ pub fn receive_samples_loop(
+@@ -443,6 +532,9 @@ pub fn receive_samples_loop(
      average_buffer_frames_count: usize,
  ) -> Result<()> {
      let mut recovery_sample_buffer = vec![];
@@ -1559,7 +1623,7 @@ index 6892e3ba9d8715841d1b5f8b514e98ed532ebbe9..6140a53877898901680c6c4937ca49d9
      while is_running() {
          let data = match receiver.recv(Duration::from_millis(500)) {
              Ok(data) => data,
-@@ -450,6 +532,7 @@ pub fn receive_samples_loop(
+@@ -450,6 +542,7 @@ pub fn receive_samples_loop(
              Err(ConnectionError::Other(e)) => return Err(e),
          };
          let (_, packet) = data.get()?;
@@ -1567,7 +1631,7 @@ index 6892e3ba9d8715841d1b5f8b514e98ed532ebbe9..6140a53877898901680c6c4937ca49d9
  
          let new_samples = packet
              .chunks_exact(2)
-@@ -460,6 +543,7 @@ pub fn receive_samples_loop(
+@@ -460,6 +553,7 @@ pub fn receive_samples_loop(
  
          if data.had_packet_loss() {
              info!("Audio packet loss!");
@@ -1575,7 +1639,7 @@ index 6892e3ba9d8715841d1b5f8b514e98ed532ebbe9..6140a53877898901680c6c4937ca49d9
  
              if sample_buffer_ref.len() / channels_count < batch_frames_count {
                  sample_buffer_ref.clear();
-@@ -506,6 +590,7 @@ pub fn receive_samples_loop(
+@@ -506,6 +600,7 @@ pub fn receive_samples_loop(
  
                  sample_buffer_ref.extend(recovery_sample_buffer.drain(..));
                  info!("Audio recovered");
@@ -1583,7 +1647,7 @@ index 6892e3ba9d8715841d1b5f8b514e98ed532ebbe9..6140a53877898901680c6c4937ca49d9
              }
          } else {
              sample_buffer_ref.extend(&new_samples);
-@@ -515,6 +600,7 @@ pub fn receive_samples_loop(
+@@ -515,6 +610,7 @@ pub fn receive_samples_loop(
          let buffer_frames_size = sample_buffer_ref.len() / channels_count;
          if buffer_frames_size > 2 * average_buffer_frames_count + batch_frames_count {
              info!("Audio buffer overflow! size: {buffer_frames_size}");
@@ -1591,7 +1655,7 @@ index 6892e3ba9d8715841d1b5f8b514e98ed532ebbe9..6140a53877898901680c6c4937ca49d9
  
              let drained_samples = sample_buffer_ref
                  .drain(0..(buffer_frames_size - average_buffer_frames_count) * channels_count)
-@@ -530,6 +616,9 @@ pub fn receive_samples_loop(
+@@ -530,6 +626,9 @@ pub fn receive_samples_loop(
                  }
              }
          }
@@ -7848,7 +7912,7 @@ index 0000000000000000000000000000000000000000..aabdc9684074823279d5178429646757
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe995e4e278f3903d05f84a50db089f21cfc..86753183cc6014abb690a7f08cc0dded4535a942 100644
+index b87dfe995e4e278f3903d05f84a50db089f21cfc..397180ed4e4e975145a47c11f022aed8cffd94ad 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -1,3 +1,6 @@
@@ -7858,6 +7922,15 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..86753183cc6014abb690a7f08cc0dded
  use crate::{
      graphics::{self, ProjectionLayerAlphaConfig, ProjectionLayerBuilder},
      interaction::{self, InteractionContext, InteractionSourcesConfig},
+@@ -8,7 +11,7 @@ use alvr_client_core::{
+ };
+ use alvr_common::{
+     anyhow::Result,
+-    error,
++    error, info,
+     glam::{Quat, UVec2, Vec2},
+     parking_lot::RwLock,
+     Pose, RelaxedAtomic, HAND_LEFT_ID, HAND_RIGHT_ID, HEAD_ID,
 @@ -43,6 +46,8 @@ pub struct ParsedStreamConfig {
      pub foveated_encoding_config: Option<FoveatedEncodingConfig>,
      pub clientside_foveation_config: Option<ClientsideFoveationConfig>,
@@ -7975,7 +8048,31 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..86753183cc6014abb690a7f08cc0dded
          }
  
          let foveation_profile = if let Some(config) = &config.clientside_foveation_config {
-@@ -198,6 +246,7 @@ impl StreamContext {
+@@ -153,8 +201,22 @@ impl StreamContext {
+             None
+         };
+ 
+-        let target_view_resolution =
++        let mut target_view_resolution =
+             compute_target_view_resolution(config.view_resolution, &config.upscaling);
++        // Quest3-Pyrowave: `debug.q3pw.eye_percent` (50-99) draws the eye images into a swapchain
++        // that much smaller than the stream, filtering the decoded frame down. The Quest
++        // compositor shows a 2064x2208 panel per eye, and at 3072x3216 the 1:1 eye draw cost about
++        // 3.2 ms of the 8.3 ms frame (October 8).
++        if config.upscaling.is_none() && config.foveated_encoding_config.is_none() {
++            let percent = crate::extra_extensions::perf_settings::system_property("debug.q3pw.eye_percent")
++                .trim().parse::<u32>().ok().filter(|p| (50..100).contains(p));
++            if let Some(percent) = percent {
++                target_view_resolution = (config.view_resolution * percent / 100 / 2) * 2;
++                info!("[Q3PW_EYE_SCALE] stream={}x{} swapchain={}x{} percent={percent}",
++                    config.view_resolution.x, config.view_resolution.y,
++                    target_view_resolution.x, target_view_resolution.y);
++            }
++        }
+         let format = graphics::swapchain_format(&gfx_ctx, &xr_session, config.enable_hdr);
+ 
+         let swapchains = [
+@@ -198,6 +260,7 @@ impl StreamContext {
              config.use_full_range && !config.enable_hdr, // TODO: figure out why HDR doesn't need the limited range hackfix in staging?
              config.encoding_gamma,
              config.upscaling.clone(),
@@ -7983,7 +8080,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..86753183cc6014abb690a7f08cc0dded
          );
  
          core_ctx.send_active_interaction_profile(
-@@ -228,6 +277,10 @@ impl StreamContext {
+@@ -228,6 +291,10 @@ impl StreamContext {
              view_reference_space,
              swapchains,
              last_good_view_params: [ViewParams::default(); 2],
@@ -7994,7 +8091,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..86753183cc6014abb690a7f08cc0dded
              input_thread: None,
              input_thread_running,
              config,
-@@ -235,8 +288,45 @@ impl StreamContext {
+@@ -235,8 +302,45 @@ impl StreamContext {
              renderer,
              decoder: None,
              pending_frame: None,
@@ -8040,7 +8137,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..86753183cc6014abb690a7f08cc0dded
          this.update_reference_space();
  
          this
-@@ -280,6 +370,10 @@ impl StreamContext {
+@@ -280,6 +384,10 @@ impl StreamContext {
              let refresh_rate = self.config.refresh_rate_hint;
              let running = Arc::clone(&self.input_thread_running);
              move || {
@@ -8051,7 +8148,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..86753183cc6014abb690a7f08cc0dded
                  stream_input_loop(
                      &core_ctx,
                      xr_session,
-@@ -310,6 +404,24 @@ impl StreamContext {
+@@ -310,6 +418,24 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
@@ -8076,7 +8173,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..86753183cc6014abb690a7f08cc0dded
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +450,42 @@ impl StreamContext {
+@@ -338,12 +464,42 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -8121,7 +8218,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..86753183cc6014abb690a7f08cc0dded
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +497,26 @@ impl StreamContext {
+@@ -355,8 +511,26 @@ impl StreamContext {
          }
      }
  
@@ -8148,7 +8245,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..86753183cc6014abb690a7f08cc0dded
      }
  
      pub fn render(
-@@ -364,15 +524,152 @@ impl StreamContext {
+@@ -364,15 +538,152 @@ impl StreamContext {
          frame_interval: Duration,
          vsync_time: Duration,
      ) -> (ProjectionLayerBuilder, Duration) {
@@ -8303,7 +8400,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..86753183cc6014abb690a7f08cc0dded
              }
          }
  
-@@ -401,37 +698,82 @@ impl StreamContext {
+@@ -401,37 +712,82 @@ impl StreamContext {
              ]);
          }
  
@@ -8416,7 +8513,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..86753183cc6014abb690a7f08cc0dded
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +835,8 @@ impl StreamContext {
+@@ -493,6 +849,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
@@ -8425,7 +8522,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..86753183cc6014abb690a7f08cc0dded
          self.input_thread_running.set(false);
          self.input_thread.take().unwrap().join().ok();
      }
-@@ -510,6 +854,7 @@ fn stream_input_loop(
+@@ -510,6 +868,7 @@ fn stream_input_loop(
      let platform = alvr_system_info::platform();
  
      let mut last_controller_poses = [Pose::default(); 2];
@@ -8433,7 +8530,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..86753183cc6014abb690a7f08cc0dded
      let mut last_palm_poses = [Pose::default(); 2];
      let mut last_view_params = [ViewParams::default(); 2];
  
-@@ -630,7 +975,17 @@ fn stream_input_loop(
+@@ -630,7 +989,17 @@ fn stream_input_loop(
          );
  
          let button_entries = interaction::update_buttons(&xr_session, &int_ctx.button_actions);
@@ -9563,10 +9660,10 @@ index 0000000000000000000000000000000000000000..bc6bee02decfec1a7df24f18e8fd2991
 +}
 diff --git a/alvr/graphics/resources/present_ycbcr.glsl b/alvr/graphics/resources/present_ycbcr.glsl
 new file mode 100644
-index 0000000000000000000000000000000000000000..de90c1a3bf5bc8db6c6397518d389ca22841f715
+index 0000000000000000000000000000000000000000..5c560bfb7fa766eed45f3de1ddea9def07229fad
 --- /dev/null
 +++ b/alvr/graphics/resources/present_ycbcr.glsl
-@@ -0,0 +1,128 @@
+@@ -0,0 +1,140 @@
 +// PyroWave Haar mode 5 (Quest3-Pyrowave docs/PRESENT-YCBCR.md): `tex` is a frame_size.x x
 +// frame_size.y/2 RGBA8 buffer. x < frame_size.x/2 holds luma as 2x2 pixel quads ((0,0), (1,0),
 +// (0,1), (1,1) in RGBA); x >= frame_size.x/2 holds the 4:2:0 chroma, one pixel per texel with Cb
@@ -9630,6 +9727,18 @@ index 0000000000000000000000000000000000000000..de90c1a3bf5bc8db6c6397518d389ca2
 +#endif
 +    Y = mix(Y, below, f.y);
 +#endif
++#elif defined(Q3PW_SCALED)
++    // The swapchain is smaller than the decoded frame (debug.q3pw.eye_percent): filter luma
++    // bilinearly, every tap inside the pixel's eye. Chroma is filtered below as always.
++    highp vec2 p = pos - 0.5;
++    highp vec2 base = floor(p);
++    vec2 f = p - base;
++    int eye_w = (last.x + 1) >> 1;
++    int x0 = int(pos.x) >= eye_w ? eye_w : 0;
++    highp ivec2 i0 = ivec2(clamp(int(base.x), x0, x0 + eye_w - 1), clamp(int(base.y), 0, last.y));
++    highp ivec2 i1 = ivec2(clamp(int(base.x) + 1, x0, x0 + eye_w - 1), clamp(int(base.y) + 1, 0, last.y));
++    float Y = mix(mix(q3pw_luma(i0), q3pw_luma(ivec2(i1.x, i0.y)), f.x),
++                  mix(q3pw_luma(ivec2(i0.x, i1.y)), q3pw_luma(i1), f.x), f.y);
 +#elif defined(Q3PW_SHARPEN)
 +    // Sharpening of luma over a cross of neighbours. The pixel's own quad holds one horizontal and
 +    // one vertical neighbour, so this is two extra fetches. The neighbours stay inside the pixel's
@@ -9716,10 +9825,10 @@ index 7bfba12ca0479598b4060b84664695a82c96411d..7236535dfbd7196f77a29c1e5f9dbc27
  #endif
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..d873840509f4f05d2d7f93a51c57efcc9fb9f238
+index 0000000000000000000000000000000000000000..96ebfd1f4a52d23ec80a56e8a2fd02acde178077
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,813 @@
+@@ -0,0 +1,821 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -9898,6 +10007,9 @@ index 0000000000000000000000000000000000000000..d873840509f4f05d2d7f93a51c57efcc
 +pub struct DirectEyeConfig {
 +    pub textures: [Vec<u32>; 2],
 +    pub resolution: UVec2,
++    /// Decoded size per eye without foveation; larger than `resolution` when the swapchain is
++    /// scaled down (debug.q3pw.eye_percent).
++    pub decoded: UVec2,
 +    pub srgb_correction: bool,
 +    pub srgb_target: bool,
 +    pub fix_limited_range: bool,
@@ -9967,7 +10079,7 @@ index 0000000000000000000000000000000000000000..d873840509f4f05d2d7f93a51c57efcc
 +    regions
 +}
 +
-+unsafe fn compile_program(gl: &gl::Context, foveation: bool, present: bool, filter: usize, probe: i32, sharpen: i32) -> Result<gl::Program, String> {
++unsafe fn compile_program(gl: &gl::Context, foveation: bool, present: bool, filter: usize, probe: i32, sharpen: i32, scaled: bool) -> Result<gl::Program, String> {
 +    let program = gl.create_program()?;
 +    let mut shaders = Vec::new();
 +    let result = (|| {
@@ -10000,6 +10112,10 @@ index 0000000000000000000000000000000000000000..d873840509f4f05d2d7f93a51c57efcc
 +                    format!("#define Q3PW_SHARPEN {:.5}", 0.003 * sharpen as f32)
 +                };
 +                source.replacen("#version 300 es", &format!("#version 300 es\n{define}"), 1)
++            } else { source };
++            let source = if kind == gl::FRAGMENT_SHADER && present && !foveation && scaled {
++                source.replacen("#version 300 es", "#version 300 es
++#define Q3PW_SCALED", 1)
 +            } else { source };
 +            gl.shader_source(shader, &source);
 +            gl.compile_shader(shader);
@@ -10040,8 +10156,9 @@ index 0000000000000000000000000000000000000000..d873840509f4f05d2d7f93a51c57efcc
 +            if ablate > 1 { import_diagnostic(4, format!("[Q3PW_EYE_ABLATE] fraction=1/{ablate} image_incorrect=true")); }
 +            let probe = eye_probe_requested();
 +            if probe != 0 { import_diagnostic(4, format!("[Q3PW_EYE_PROBE] mode={probe} image_incorrect=true")); }
++            let scaled = config.foveation.is_none() && config.decoded != config.resolution;
 +            let sharpen = match sharpen_requested() {
-+                _ if config.foveation.is_some() => 0,
++                _ if config.foveation.is_some() || scaled => 0,
 +                -1 => config.sharpening.min(100) as i32,
 +                requested => requested,
 +            };
@@ -10050,7 +10167,7 @@ index 0000000000000000000000000000000000000000..d873840509f4f05d2d7f93a51c57efcc
 +                let kernel = if sharpen_cas_requested() { "cas" } else { "linear" };
 +                import_diagnostic(4, format!("[Q3PW_SHARPEN] sharpness={sharpen} area={sharpen_area} kernel={kernel}"));
 +            }
-+            let program = compile_program(gl, config.foveation.is_some(), false, 0, 0, 0)?;
++            let program = compile_program(gl, config.foveation.is_some(), false, 0, 0, 0, false)?;
 +            // Compiled up front so the first mode-5 frame does not stall; without them such frames
 +            // take the staging path (can_render), which converts them too. With foveation they are
 +            // the four filter combinations; with sharpening, plain (0) and sharpened (1).
@@ -10058,7 +10175,7 @@ index 0000000000000000000000000000000000000000..d873840509f4f05d2d7f93a51c57efcc
 +            let mut present_programs = Some(Vec::new());
 +            for filter in 0..filters {
 +                let (ffe_filter, sharpen) = if config.foveation.is_some() { (filter, 0) } else { (0, sharpen * filter as i32) };
-+                match compile_program(gl, config.foveation.is_some(), true, ffe_filter, probe, sharpen) {
++                match compile_program(gl, config.foveation.is_some(), true, ffe_filter, probe, sharpen, scaled) {
 +                    Ok(program) => present_programs.as_mut().unwrap().push(program),
 +                    Err(error) => {
 +                        import_diagnostic(5, format!("[Q3PW_PRESENT_YCBCR] direct program {filter} failed: {error}"));
@@ -10085,7 +10202,7 @@ index 0000000000000000000000000000000000000000..d873840509f4f05d2d7f93a51c57efcc
 +                }
 +            };
 +            let mut framebuffers: [Vec<gl::Framebuffer>; 2] = [vec![], vec![]];
-+            let decoded = config.foveation.as_ref().map_or(config.resolution, |(_, _, encoded)| *encoded);
++            let decoded = config.foveation.as_ref().map_or(config.decoded, |(_, _, encoded)| *encoded);
 +            let frame_size = (2 * decoded.x, decoded.y);
 +            let init_program = |program: gl::Program, present: bool| -> Result<(gl::UniformLocation, gl::UniformLocation), String> {
 +                let location = |name: &str| gl.get_uniform_location(program, name)
@@ -11927,7 +12044,7 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..0b13bfbd3574acb6b64d7d51ed865c18
              for framebuffer in &self.framebuffers {
                  ck!(gl.delete_framebuffer(*framebuffer));
 diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
-index 737b7d0053f8a34698696f465c816627e95d9287..92baab730b68457574fcc6610dea0099fbb31f10 100644
+index 737b7d0053f8a34698696f465c816627e95d9287..f79f2a6bfafe4ad5928e103d86b3361e4fef814d 100644
 --- a/alvr/graphics/src/stream.rs
 +++ b/alvr/graphics/src/stream.rs
 @@ -1,10 +1,10 @@
@@ -11966,7 +12083,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..92baab730b68457574fcc6610dea0099
  }
  
  impl StreamRenderer {
-@@ -87,9 +96,28 @@ impl StreamRenderer {
+@@ -87,9 +96,29 @@ impl StreamRenderer {
          fix_limited_range: bool,
          encoding_gamma: f32,
          upscaling: Option<UpscalingConfig>,
@@ -11974,13 +12091,14 @@ index 737b7d0053f8a34698696f465c816627e95d9287..92baab730b68457574fcc6610dea0099
      ) -> Self {
          let device = &context.device;
  
-+        let direct_eye_config = (base_view_resolution == target_view_resolution
++        let direct_eye_config = ((base_view_resolution == target_view_resolution
++                || (foveated_encoding.is_none() && target_view_resolution.x < base_view_resolution.x))
 +            && (foveated_encoding.is_none()
 +                || foveated_encoding.as_ref().is_some_and(alvr_session::is_pyrowave_foveation))
 +            && upscaling.is_none()
 +            && matches!(target_format, glow::SRGB8_ALPHA8 | glow::RGBA8))
 +            .then(|| DirectEyeConfig { textures: swapchain_textures.clone(),
-+                resolution: target_view_resolution, srgb_correction: enable_srgb_correction,
++                resolution: target_view_resolution, decoded: base_view_resolution, srgb_correction: enable_srgb_correction,
 +                srgb_target: target_format == glow::SRGB8_ALPHA8,
 +                // Direct eye copy serves only PyroWave, whose buffers are already full range.
 +                fix_limited_range: false, encoding_gamma, sharpening,
@@ -11995,7 +12113,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..92baab730b68457574fcc6610dea0099
          let target_format = super::gl_format_to_wgpu(target_format);
  
          let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-@@ -292,15 +320,83 @@ impl StreamRenderer {
+@@ -292,15 +321,83 @@ impl StreamRenderer {
          );
  
          Self {
@@ -12079,7 +12197,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..92baab730b68457574fcc6610dea0099
      /// Move the full-resolution centre to match the server's, for the frame about to be drawn.
      ///
      /// Per eye: the horizontal frusta are asymmetric and mirrored, so one shared shift is only
-@@ -333,9 +429,36 @@ impl StreamRenderer {
+@@ -333,9 +430,36 @@ impl StreamRenderer {
          view_params: [StreamViewParams; 2],
          passthrough: Option<&PassthroughMode>,
      ) {
