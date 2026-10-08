@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906c9fd3cd0 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..53061dd1f838fcde9d6a542db4345453e360ddc4 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..22fb4520b53a79a0dc59b281bff08906
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..6dbec88127f1096f63c052d2719eed8aaea1d41d 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..b9014b0f8d2b3599ca9dbad2f1f843f8942b5aaf 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..6dbec88127f1096f63c052d2719eed8a
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.106"
++version = "20.13.0-quest3.pyro.107"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -1906,14 +1906,15 @@ index 0000000000000000000000000000000000000000..ed952972c5004d1f1e9d4f0ed674c9dd
 +    }
 +}
 diff --git a/alvr/client_core/src/lib.rs b/alvr/client_core/src/lib.rs
-index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..b47b2735fd634b76347667b0e579be587f09475e 100644
+index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..948d681c56be82ebb8d31198b88e7308f8405a43 100644
 --- a/alvr/client_core/src/lib.rs
 +++ b/alvr/client_core/src/lib.rs
-@@ -7,10 +7,14 @@
+@@ -7,10 +7,15 @@
  
  mod c_api;
  mod connection;
 +pub mod frame_trace;
++pub mod phase_lock;
  mod logging_backend;
  mod sockets;
  mod statistics;
@@ -1924,7 +1925,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..b47b2735fd634b76347667b0e579be58
  
  #[cfg(target_os = "android")]
  mod audio;
-@@ -35,7 +39,7 @@ use std::{
+@@ -35,7 +40,7 @@ use std::{
      collections::{HashSet, VecDeque},
      sync::Arc,
      thread::{self, JoinHandle},
@@ -1933,7 +1934,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..b47b2735fd634b76347667b0e579be58
  };
  use storage::Config;
  
-@@ -91,7 +95,41 @@ pub(crate) fn push_foveation_center(timestamp: Duration, center: [[f32; 2]; 2])
+@@ -91,7 +96,41 @@ pub(crate) fn push_foveation_center(timestamp: Duration, center: [[f32; 2]; 2])
      }
  }
  
@@ -1975,7 +1976,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..b47b2735fd634b76347667b0e579be58
      lifecycle_state: Arc<RwLock<LifecycleState>>,
      event_queue: Arc<Mutex<VecDeque<ClientCoreEvent>>>,
      connection_context: Arc<ConnectionContext>,
-@@ -99,6 +137,11 @@ pub struct ClientCoreContext {
+@@ -99,6 +138,11 @@ pub struct ClientCoreContext {
  }
  
  impl ClientCoreContext {
@@ -1987,7 +1988,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..b47b2735fd634b76347667b0e579be58
      pub fn new(capabilities: ClientCapabilities) -> Self {
          dbg_client_core!("Create");
  
-@@ -115,6 +158,7 @@ impl ClientCoreContext {
+@@ -115,6 +159,7 @@ impl ClientCoreContext {
              alvr_system_info::set_wifi_lock(true);
          }
  
@@ -1995,7 +1996,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..b47b2735fd634b76347667b0e579be58
          let lifecycle_state = Arc::new(RwLock::new(LifecycleState::Idle));
          let event_queue = Arc::new(Mutex::new(VecDeque::new()));
          let connection_context = Arc::new(ConnectionContext::default());
-@@ -122,6 +166,7 @@ impl ClientCoreContext {
+@@ -122,6 +167,7 @@ impl ClientCoreContext {
              let lifecycle_state = Arc::clone(&lifecycle_state);
              let connection_context = Arc::clone(&connection_context);
              let event_queue = Arc::clone(&event_queue);
@@ -2003,7 +2004,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..b47b2735fd634b76347667b0e579be58
              move || {
                  connection::connection_lifecycle_loop(
                      capabilities,
-@@ -133,6 +178,7 @@ impl ClientCoreContext {
+@@ -133,6 +179,7 @@ impl ClientCoreContext {
          });
  
          Self {
@@ -2011,7 +2012,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..b47b2735fd634b76347667b0e579be58
              lifecycle_state,
              event_queue,
              connection_context,
-@@ -140,6 +186,11 @@ impl ClientCoreContext {
+@@ -140,6 +187,11 @@ impl ClientCoreContext {
          }
      }
  
@@ -2023,7 +2024,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..b47b2735fd634b76347667b0e579be58
      pub fn resume(&self) {
          dbg_client_core!("resume");
  
-@@ -218,6 +269,27 @@ impl ClientCoreContext {
+@@ -218,6 +270,27 @@ impl ClientCoreContext {
          }
      }
  
@@ -2051,7 +2052,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..b47b2735fd634b76347667b0e579be58
      pub fn send_buttons(&self, entries: Vec<ButtonEntry>) {
          dbg_client_core!("send_buttons");
  
-@@ -274,16 +346,19 @@ impl ClientCoreContext {
+@@ -274,16 +347,19 @@ impl ClientCoreContext {
  
                  let mut head_pose_queue = self.connection_context.head_pose_queue.write();
  
@@ -2075,7 +2076,7 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..b47b2735fd634b76347667b0e579be58
              } else if let Some(stats) = &*self.connection_context.statistics_manager.lock() {
                  let tracker_timestamp = poll_timestamp
                      + Duration::min(stats.tracker_prediction_offset(), max_prediction);
-@@ -403,13 +478,11 @@ impl ClientCoreContext {
+@@ -403,13 +479,11 @@ impl ClientCoreContext {
              stats.report_compositor_start(timestamp);
          }
  
@@ -2094,7 +2095,17 @@ index 90a7c0ae0a3db07c82e8ef9e879f0f6c1b432e6a..b47b2735fd634b76347667b0e579be58
          let view_params = self.connection_context.view_params.read();
  
          [
-@@ -455,3 +528,36 @@ impl Drop for ClientCoreContext {
+@@ -431,7 +505,8 @@ impl ClientCoreContext {
+             stats.report_submit(timestamp, vsync_queue);
+ 
+             if let Some(sender) = &mut *self.connection_context.statistics_sender.lock() {
+-                if let Some(stats) = stats.summary(timestamp) {
++                if let Some(mut stats) = stats.summary(timestamp) {
++                    stats.phase_error_us = phase_lock::take_error_us();
+                     sender.send_header(&stats).ok();
+                 } else {
+                     warn!("Statistics summary not ready!");
+@@ -455,3 +530,36 @@ impl Drop for ClientCoreContext {
          alvr_system_info::set_wifi_lock(false);
      }
  }
@@ -2889,6 +2900,133 @@ index 0000000000000000000000000000000000000000..84fe7d46be55d89ddedb1142df563458
 +    fn chroma_row_is_hidden_for_hardware_codecs() {
 +        let m = SettingsMenu::new(menu().values().clone(), &[120.0], OverlayMode::Full, false);
 +        assert!(m.lines().iter().all(|l| l.label != "Chroma"));
++    }
++}
+diff --git a/alvr/client_core/src/phase_lock.rs b/alvr/client_core/src/phase_lock.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..caffcb4caafd89954d3464e181665ee0469e29f0
+--- /dev/null
++++ b/alvr/client_core/src/phase_lock.rs
+@@ -0,0 +1,121 @@
++//! Client half of the PyroWave phase lock (`debug.q3pw.phase_lock=1`, read when a stream starts).
++//!
++//! The server's virtual vsync free-runs at the nominal rate while the Quest panel runs a little
++//! slower (8.3350 ms against 8.3333 ms at 120 Hz in the October 8 traces), so decoded frames walk
++//! through the render loop's selection point about every 40 s. Frames published 1.5-2 ms before
++//! `xrWaitFrame` returns held 117-120 fresh FPS; frames published just after it held 107-113,
++//! and the frame's latency swings by most of a period over the same cycle.
++//!
++//! The render loop stores when `xrWaitFrame` returned; the decoder measures each publication
++//! against it. Every `WINDOW` publications the median offset, minus the target, becomes the phase
++//! error the client sends with its statistics. The server moves its virtual vsync by a fraction of
++//! it. Positive error means frames are published too late.
++
++use alvr_common::parking_lot::Mutex;
++use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU64, Ordering};
++
++const WINDOW: usize = 30;
++
++static ENABLED: AtomicBool = AtomicBool::new(false);
++static TARGET_US: AtomicI64 = AtomicI64::new(-1500);
++static WAKE_NS: AtomicU64 = AtomicU64::new(0);
++static PERIOD_NS: AtomicU64 = AtomicU64::new(0);
++static SAMPLES: Mutex<Vec<i64>> = Mutex::new(Vec::new());
++/// Latest window's error, `i64::MIN` once taken.
++static ERROR_US: AtomicI64 = AtomicI64::new(i64::MIN);
++
++/// Called when a stream starts. `target_us` is where publications should land relative to the
++/// wake, negative = before it.
++pub fn start(enable: bool, target_us: i64) {
++    ENABLED.store(enable, Ordering::Relaxed);
++    TARGET_US.store(target_us, Ordering::Relaxed);
++    SAMPLES.lock().clear();
++    ERROR_US.store(i64::MIN, Ordering::Relaxed);
++    if enable {
++        alvr_common::info!("[Q3PW_PHASE_LOCK] client enabled target_us={target_us} window={WINDOW}");
++    }
++}
++
++#[inline]
++pub fn enabled() -> bool {
++    ENABLED.load(Ordering::Relaxed)
++}
++
++/// Render loop: `xrWaitFrame` returned now.
++#[inline]
++pub fn on_wake(period_ns: u64) {
++    if enabled() {
++        WAKE_NS.store(crate::frame_trace::mono_ns(), Ordering::Relaxed);
++        PERIOD_NS.store(period_ns, Ordering::Relaxed);
++    }
++}
++
++/// Signed offset of `now_ns` from the nearest wake, in microseconds: positive after the last
++/// wake (late), negative before the next one (early). `None` when the loop is not waking.
++pub fn offset_us(now_ns: u64, wake_ns: u64, period_ns: u64) -> Option<i64> {
++    if wake_ns == 0 || period_ns == 0 || now_ns < wake_ns {
++        return None;
++    }
++    let since = now_ns - wake_ns;
++    if since >= 2 * period_ns {
++        return None;
++    }
++    let since = since % period_ns;
++    let signed = if since < period_ns / 2 { since as i64 } else { since as i64 - period_ns as i64 };
++    Some(signed / 1000)
++}
++
++/// Decoder: a frame was published now.
++pub fn on_publish() {
++    if !enabled() {
++        return;
++    }
++    let Some(offset) = offset_us(
++        crate::frame_trace::mono_ns(),
++        WAKE_NS.load(Ordering::Relaxed),
++        PERIOD_NS.load(Ordering::Relaxed),
++    ) else {
++        return;
++    };
++    let mut samples = SAMPLES.lock();
++    samples.push(offset);
++    if samples.len() >= WINDOW {
++        samples.sort_unstable();
++        let median = samples[samples.len() / 2];
++        let early = samples.iter().filter(|&&s| s < 0).count();
++        samples.clear();
++        drop(samples);
++        let error = median - TARGET_US.load(Ordering::Relaxed);
++        ERROR_US.store(error, Ordering::Relaxed);
++        static WINDOWS: AtomicU64 = AtomicU64::new(0);
++        if WINDOWS.fetch_add(1, Ordering::Relaxed) % 8 == 0 {
++            alvr_common::info!("[Q3PW_PHASE_LOCK] median_us={median} error_us={error} early={early}/{WINDOW}");
++        }
++    }
++}
++
++/// Statistics sender: the newest window's error, once.
++pub fn take_error_us() -> Option<i32> {
++    let error = ERROR_US.swap(i64::MIN, Ordering::Relaxed);
++    (error != i64::MIN).then(|| error.clamp(i32::MIN as i64, i32::MAX as i64) as i32)
++}
++
++#[cfg(test)]
++mod tests {
++    use super::offset_us;
++
++    const T: u64 = 8_333_333;
++
++    #[test]
++    fn offset_is_signed_around_the_nearest_wake() {
++        let wake = 1_000_000_000;
++        assert_eq!(offset_us(wake + 500_000, wake, T), Some(500));
++        // 1.5 ms before the next wake
++        assert_eq!(offset_us(wake + T - 1_500_000, wake, T), Some(-1500));
++        // the loop missed a wake: still measured against the period grid
++        assert_eq!(offset_us(wake + T + 200_000, wake, T), Some(200));
++        assert_eq!(offset_us(wake + 3 * T, wake, T), None);
++        assert_eq!(offset_us(wake - 1, wake, T), None);
++        assert_eq!(offset_us(wake, 0, T), None);
 +    }
 +}
 diff --git a/alvr/client_core/src/statistics.rs b/alvr/client_core/src/statistics.rs
@@ -4231,7 +4369,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601497aaca790db25fa1b37423948fdfaa86..97b711b1eec7b5774584da3282d5b4081eab694b 100644
+index 2e22601497aaca790db25fa1b37423948fdfaa86..f18d1791de03149b592c02ff89b5f2da0df54343 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -4524,7 +4662,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..97b711b1eec7b5774584da3282d5b408
                  )
              };
              if client.is_null() {
-@@ -128,64 +291,259 @@ pub fn video_decoder_split(
+@@ -128,64 +291,260 @@ pub fn video_decoder_split(
                  )));
                  return;
              }
@@ -4739,6 +4877,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..97b711b1eec7b5774584da3282d5b408
 +                }
 +                crate::frame_trace::record(b'U', timestamp.as_nanos() as u64, published as i64, (info.wait_ms * 1000.0) as i64);
 +                if published {
++                    crate::phase_lock::on_publish();
 +                    report_frame_decoded(Ok(timestamp));
 +                }
 +                if !warmed.contains(&(out as usize)) && warmed.len()<3 { warmed.push(out as usize); }
@@ -6000,7 +6139,7 @@ index 7765bb459f73e9d7d5a9f296a498f09a0df43706..1a2b8152c628566294dfb840971d5b3e
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..5dda8180fc69efa9a22e05e4ccec7f2e3f2781a7 100644
+index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..912fa275be84098e38d9322b4e1ad0ae755fdde5 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -1,10 +1,16 @@
@@ -6457,11 +6596,12 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..5dda8180fc69efa9a22e05e4ccec7f2e
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -576,12 +805,91 @@ pub fn entry_point() {
+@@ -576,12 +805,92 @@ pub fn entry_point() {
                      panic!();
                  }
              };
 +            let wait_call_ms = wait_started.map_or(0.0, |s| s.elapsed().as_secs_f64() * 1000.0);
++            alvr_client_core::phase_lock::on_wake(frame_state.predicted_display_period.as_nanos() as u64);
 +            if alvr_client_core::frame_trace::enabled() {
 +                use alvr_client_core::frame_trace::{mono_ns, record, record_at};
 +                record(b'W', frame_state.predicted_display_time.as_nanos() as u64,
@@ -6550,7 +6690,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..5dda8180fc69efa9a22e05e4ccec7f2e
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +913,15 @@ pub fn entry_point() {
+@@ -605,15 +914,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -6575,7 +6715,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..5dda8180fc69efa9a22e05e4ccec7f2e
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,13 +929,17 @@ pub fn entry_point() {
+@@ -621,13 +930,17 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -6594,7 +6734,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..5dda8180fc69efa9a22e05e4ccec7f2e
  
              if !frame_state.should_render {
                  xr_frame_stream
-@@ -654,22 +966,90 @@ pub fn entry_point() {
+@@ -654,22 +967,90 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
@@ -6693,7 +6833,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..5dda8180fc69efa9a22e05e4ccec7f2e
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +1078,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +1079,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
@@ -7708,7 +7848,7 @@ index 0000000000000000000000000000000000000000..aabdc9684074823279d5178429646757
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe995e4e278f3903d05f84a50db089f21cfc..7ba519760eb622431b332a6faf2d737190e8adee 100644
+index b87dfe995e4e278f3903d05f84a50db089f21cfc..86753183cc6014abb690a7f08cc0dded4535a942 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -1,3 +1,6 @@
@@ -7854,7 +7994,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..7ba519760eb622431b332a6faf2d7371
              input_thread: None,
              input_thread_running,
              config,
-@@ -235,8 +288,38 @@ impl StreamContext {
+@@ -235,8 +288,45 @@ impl StreamContext {
              renderer,
              decoder: None,
              pending_frame: None,
@@ -7881,6 +8021,13 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..7ba519760eb622431b332a6faf2d7371
          };
 +        alvr_client_core::frame_trace::start(platform == Platform::Quest3
 +            && crate::extra_extensions::perf_settings::system_property("debug.q3pw.frame_trace") == "1");
++        alvr_client_core::phase_lock::start(
++            platform == Platform::Quest3
++                && crate::extra_extensions::perf_settings::system_property("debug.q3pw.phase_lock") == "1",
++            crate::extra_extensions::perf_settings::system_property("debug.q3pw.phase_target_us")
++                .parse()
++                .unwrap_or(-1500),
++        );
  
 +        alvr_graphics::log_quest_experiment(format!(
 +            "[Q3PW_PRE_WAIT] requested={} (requires Quest3 PyroWave and early_poll)",
@@ -7893,7 +8040,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..7ba519760eb622431b332a6faf2d7371
          this.update_reference_space();
  
          this
-@@ -280,6 +363,10 @@ impl StreamContext {
+@@ -280,6 +370,10 @@ impl StreamContext {
              let refresh_rate = self.config.refresh_rate_hint;
              let running = Arc::clone(&self.input_thread_running);
              move || {
@@ -7904,7 +8051,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..7ba519760eb622431b332a6faf2d7371
                  stream_input_loop(
                      &core_ctx,
                      xr_session,
-@@ -310,6 +397,24 @@ impl StreamContext {
+@@ -310,6 +404,24 @@ impl StreamContext {
          };
  
          if let Some(config) = maybe_config {
@@ -7929,7 +8076,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..7ba519760eb622431b332a6faf2d7371
              let (mut sink, source) = video_decoder::create_decoder(
                  config.clone(),
                  {
-@@ -338,12 +443,42 @@ impl StreamContext {
+@@ -338,12 +450,42 @@ impl StreamContext {
      /// predicted display time is stale by the length of that wait and every frame targets a
      /// slot further out than necessary (vsync_queue 35-39 ms, ~2.7 periods). Polling before
      /// xrWaitFrame is the reorder that lets the prediction be made with the frame in hand.
@@ -7974,7 +8121,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..7ba519760eb622431b332a6faf2d7371
          if let Some((_, source)) = &mut self.decoder {
              while Instant::now() < deadline {
                  if let Some(frame) = source.get_frame() {
-@@ -355,8 +490,26 @@ impl StreamContext {
+@@ -355,8 +497,26 @@ impl StreamContext {
          }
      }
  
@@ -8001,7 +8148,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..7ba519760eb622431b332a6faf2d7371
      }
  
      pub fn render(
-@@ -364,15 +517,152 @@ impl StreamContext {
+@@ -364,15 +524,152 @@ impl StreamContext {
          frame_interval: Duration,
          vsync_time: Duration,
      ) -> (ProjectionLayerBuilder, Duration) {
@@ -8156,7 +8303,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..7ba519760eb622431b332a6faf2d7371
              }
          }
  
-@@ -401,37 +691,82 @@ impl StreamContext {
+@@ -401,37 +698,82 @@ impl StreamContext {
              ]);
          }
  
@@ -8269,7 +8416,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..7ba519760eb622431b332a6faf2d7371
  
          if !buffer_ptr.is_null() {
              if let Some(xr_now) = crate::xr_runtime_now(self.xr_session.instance()) {
-@@ -493,6 +828,8 @@ impl StreamContext {
+@@ -493,6 +835,8 @@ impl StreamContext {
  
  impl Drop for StreamContext {
      fn drop(&mut self) {
@@ -8278,7 +8425,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..7ba519760eb622431b332a6faf2d7371
          self.input_thread_running.set(false);
          self.input_thread.take().unwrap().join().ok();
      }
-@@ -510,6 +847,7 @@ fn stream_input_loop(
+@@ -510,6 +854,7 @@ fn stream_input_loop(
      let platform = alvr_system_info::platform();
  
      let mut last_controller_poses = [Pose::default(); 2];
@@ -8286,7 +8433,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..7ba519760eb622431b332a6faf2d7371
      let mut last_palm_poses = [Pose::default(); 2];
      let mut last_view_params = [ViewParams::default(); 2];
  
-@@ -630,7 +968,17 @@ fn stream_input_loop(
+@@ -630,7 +975,17 @@ fn stream_input_loop(
          );
  
          let button_entries = interaction::update_buttons(&xr_session, &int_ctx.button_actions);
@@ -11972,7 +12119,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..92baab730b68457574fcc6610dea0099
  
          let mut encoder = self
 diff --git a/alvr/packets/src/lib.rs b/alvr/packets/src/lib.rs
-index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..da7627b56361a059959f152fc617db89e34118d9 100644
+index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..2a8416ef65d0d791d6d0ca575b3e727934c197b4 100644
 --- a/alvr/packets/src/lib.rs
 +++ b/alvr/packets/src/lib.rs
 @@ -247,6 +247,8 @@ pub enum ReservedClientControlPacket {
@@ -12041,7 +12188,17 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..da7627b56361a059959f152fc617db89
  // Note: face_data does not respect target_timestamp.
  #[derive(Serialize, Deserialize, Default)]
  pub struct Tracking {
-@@ -457,6 +502,32 @@ pub struct RealTimeConfig {
+@@ -413,6 +458,9 @@ pub struct ClientStatistics {
+     pub rendering: Duration,
+     pub vsync_queue: Duration,
+     pub total_pipeline_latency: Duration,
++    /// PyroWave phase lock: median publication offset from the render loop's wake minus its
++    /// target, microseconds, positive = late. Sent once per measurement window.
++    pub phase_error_us: Option<i32>,
+ }
+ 
+ #[derive(Serialize, Deserialize, Clone, Debug)]
+@@ -457,6 +505,32 @@ pub struct RealTimeConfig {
      pub passthrough: Option<PassthroughMode>,
  }
  
@@ -12074,7 +12231,7 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..da7627b56361a059959f152fc617db89
  pub fn encode_real_time_config(config: &RealTimeConfig) -> Result<ServerControlPacket> {
      Ok(ServerControlPacket::ReservedBuffer(bincode::serialize(
          config,
-@@ -477,15 +548,15 @@ pub struct ViewParams {
+@@ -477,15 +551,15 @@ pub struct ViewParams {
  
  // ---- PyroWave over UDP ----
  //
@@ -12094,7 +12251,7 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..da7627b56361a059959f152fc617db89
  /// Datagram payload budget below a 1500-byte MTU with IPv4/UDP headers and ours.
  pub const PYROWAVE_UDP_PAYLOAD: usize = 1400 - PYROWAVE_UDP_HEADER_LEN;
  
-@@ -531,6 +602,141 @@ impl PyroWavePacketHeader {
+@@ -531,6 +605,141 @@ impl PyroWavePacketHeader {
      }
  }
  
@@ -12236,7 +12393,7 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..da7627b56361a059959f152fc617db89
  #[cfg(test)]
  mod pyrowave_udp_tests {
      use super::*;
-@@ -570,6 +776,32 @@ mod pyrowave_udp_tests {
+@@ -570,6 +779,32 @@ mod pyrowave_udp_tests {
      }
  }
  
@@ -12269,7 +12426,7 @@ index 6b4ac58f85a99a481dcbe3e913f6c9e4fd93ffc7..da7627b56361a059959f152fc617db89
  #[cfg(test)]
  mod beta_telemetry_tests {
      use super::*;
-@@ -586,6 +818,14 @@ mod beta_telemetry_tests {
+@@ -586,6 +821,14 @@ mod beta_telemetry_tests {
                  partial: 3,
                  gpu_decode_ms: vec![3.2, 3.4],
                  fence_ms: vec![4.9, 5.1],
@@ -13714,7 +13871,7 @@ index efa67b1d107def4e3e6d9cec00e6056dbece2380..54e92554b18f9dd67ce3cdd5dc6fc142
          dbg_server_core!("report_composed");
  
 diff --git a/alvr/server_core/src/statistics.rs b/alvr/server_core/src/statistics.rs
-index 365db6463a9bd019ff5548186b873056f77806ae..7e49dd79843b09a417b15e576bafb443fd60c40c 100644
+index 365db6463a9bd019ff5548186b873056f77806ae..b5e84af2c900710bd4416e4af534cc7640e546bb 100644
 --- a/alvr/server_core/src/statistics.rs
 +++ b/alvr/server_core/src/statistics.rs
 @@ -9,6 +9,25 @@ use std::{
@@ -13777,7 +13934,35 @@ index 365db6463a9bd019ff5548186b873056f77806ae..7e49dd79843b09a417b15e576bafb443
      pub fn report_frame_present(&mut self, target_timestamp: Duration, offset: Duration) {
          if let Some(frame) = self
              .history_buffer
-@@ -287,6 +319,22 @@ impl StatisticsManager {
+@@ -189,6 +221,18 @@ impl StatisticsManager {
+         self.motion_to_photon_latency_average
+             .submit_sample(client_stats.total_pipeline_latency);
+ 
++        // The client measures the phase itself (PyroWave `debug.q3pw.phase_lock=1`); its error
++        // replaces the decoder-queue estimate below.
++        let client_phase = client_stats.phase_error_us.is_some();
++        if let Some(error_us) = client_stats.phase_error_us {
++            let step = self.phase_lock.client_step(error_us as i64);
++            if step >= 0 {
++                self.last_vsync_time += Duration::from_micros(step as u64);
++            } else {
++                self.last_vsync_time -= Duration::from_micros((-step) as u64);
++            }
++        }
++
+         if let Some(frame) = self
+             .history_buffer
+             .iter_mut()
+@@ -196,7 +240,7 @@ impl StatisticsManager {
+         {
+             frame.total_pipeline_latency = client_stats.total_pipeline_latency;
+ 
+-            if self.phase_lock.enabled {
++            if self.phase_lock.enabled && !client_phase {
+                 let step = self.phase_lock.step(client_stats.video_decoder_queue, client_stats.vsync_queue);
+                 if step >= 0 {
+                     self.last_vsync_time += Duration::from_micros(step as u64);
+@@ -287,6 +331,22 @@ impl StatisticsManager {
                  / Duration::max(self.last_frame_present_interval, EPS_INTERVAL).as_secs_f32();
  
              // todo: the dashboard needs to use the first timestamp as the graph time origin.
@@ -13800,7 +13985,7 @@ index 365db6463a9bd019ff5548186b873056f77806ae..7e49dd79843b09a417b15e576bafb443
              alvr_events::send_event(EventType::GraphStatistics(GraphStatistics {
                  target_timestamp_ns: frame.target_timestamp.as_nanos() as u64,
                  video_packet_bytes: frame.video_packet_bytes,
-@@ -316,6 +364,39 @@ impl StatisticsManager {
+@@ -316,6 +376,39 @@ impl StatisticsManager {
          self.motion_to_photon_latency_average.get_average()
      }
  
@@ -13840,6 +14025,66 @@ index 365db6463a9bd019ff5548186b873056f77806ae..7e49dd79843b09a417b15e576bafb443
      pub fn tracker_pose_time_offset(&self) -> Duration {
          // This is the opposite of the client's StatisticsManager::tracker_prediction_offset().
          self.steamvr_pipeline_latency
+@@ -413,6 +506,59 @@ impl PhaseLock {
+     }
+ }
+ 
++impl PhaseLock {
++    /// One window of the client's measured phase error (positive = frames published after the
++    /// render loop's wake). Moves the virtual vsync against it and logs every 2 s.
++    pub fn client_step(&mut self, error_us: i64) -> i64 {
++        let step = client_phase_step_us(error_us);
++        self.shift_total_us += step;
++        self.samples += 1;
++        self.sum_late_us += error_us;
++        if self.last_log.elapsed() >= Duration::from_secs(2) {
++            let n = self.samples.max(1) as i64;
++            alvr_common::info!(
++                "[Q3PW_PHASE_LOCK] server shift {:+.2} ms, client error mean {:+.2} ms over {} windows",
++                self.shift_total_us as f64 / 1000.0,
++                self.sum_late_us as f64 / n as f64 / 1000.0,
++                n
++            );
++            self.samples = 0;
++            self.sum_late_us = 0;
++            self.last_log = Instant::now();
++        }
++        step
++    }
++}
++
++/// Errors inside this band are left alone; the window median still jitters by about this much.
++pub const CLIENT_PHASE_DEADBAND_US: i64 = 150;
++pub const CLIENT_PHASE_GAIN: f32 = 0.5;
++/// Per window (30 frames). The panel-versus-server rate difference is about 50 us per window.
++pub const CLIENT_PHASE_MAX_STEP_US: i64 = 1000;
++
++/// A late frame (positive error) moves the virtual vsync earlier.
++pub fn client_phase_step_us(error_us: i64) -> i64 {
++    if error_us.abs() <= CLIENT_PHASE_DEADBAND_US {
++        return 0;
++    }
++    (-(error_us as f32 * CLIENT_PHASE_GAIN) as i64).clamp(-CLIENT_PHASE_MAX_STEP_US, CLIENT_PHASE_MAX_STEP_US)
++}
++
++#[cfg(test)]
++mod client_phase_tests {
++    use super::*;
++
++    #[test]
++    fn late_frames_move_the_server_earlier_and_steps_are_bounded() {
++        assert_eq!(client_phase_step_us(100), 0);
++        assert_eq!(client_phase_step_us(-150), 0);
++        assert_eq!(client_phase_step_us(800), -400);
++        assert_eq!(client_phase_step_us(-600), 300);
++        assert_eq!(client_phase_step_us(5000), -CLIENT_PHASE_MAX_STEP_US);
++        assert_eq!(client_phase_step_us(-5000), CLIENT_PHASE_MAX_STEP_US);
++    }
++}
++
+ /// How far to move the virtual vsync this frame. The frame was early by `decoder_queue` (it sat
+ /// decoded, waiting for the render loop) or late by `lateness` (the render loop blocked for it);
+ /// the controller aims the early margin at `target` and never moves more than `max_step`.
 diff --git a/alvr/server_core/src/tracking/mod.rs b/alvr/server_core/src/tracking/mod.rs
 index 64f93a6fd54e90b50e5382e09f539f4cefa7817f..9b1a660568e5a7a31d82f5752961acc50e2f9331 100644
 --- a/alvr/server_core/src/tracking/mod.rs
