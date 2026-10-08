@@ -172,6 +172,12 @@ headset's pixels per degree:
 
 The largest loss decides what to build next.
 
+- **Done (October 7, [CLARITY-BUDGET.md](CLARITY-BUDGET.md)):** at 120 Hz the largest loss is the
+  compositor's bilinear display resampling: 2.6 dB PSNR-HVS-M at 2080, against 0.7 dB for
+  quantization at 1500 Mbps. At 207 Hz / 1000 quantization dominates (3.1 dB). FP16 costs nothing.
+  Sharpening 50 recovers 1.2 of the 2.2 dB that a perfect display path would. A bigger eye
+  swapchain with a better upscale recovers almost nothing.
+
 **2.3 Supersampled stream.**
 
 - Encode at SteamVR's lens-corrected recommendation (about 2544x2704 per eye) instead of the
@@ -244,7 +250,7 @@ The largest loss decides what to build next.
   **Next:** the owner's A/B. A cheaper form would sharpen in the decoder's last pass.
 
 **2.8 FP16 precision.** If 2.2 shows a plateau at 1500 Mbit/s and above, use FP32 for luma or for
-the coarse levels.
+the coarse levels. **Not needed:** 2.2 measured no FP16 loss (under 0.002 dB) at 1000-2000 Mbit/s.
 
 **Exit:** the owner sees an image that looks above native and colour that holds up next to
 Virtual Desktop, at 120 Hz.

@@ -123,6 +123,15 @@ bitrate needs the game's own rate. See
 - Screenshot colour matches the old path.
 - See [DECODER-V2.md](DECODER-V2.md#mode-7-444-packed-into-the-hardware-buffer-74-october-7).
 
+**Clarity budget (PLAN 2.2, [CLARITY-BUDGET.md](CLARITY-BUDGET.md)):**
+
+- Offline, scored at the panel's 25 px/deg. At 120 Hz the largest loss is the compositor's bilinear
+  display resampling: 2.6 dB at 2080, against 0.7 dB for quantization at 1500 Mbps.
+- At 207 Hz / 1000, quantization dominates (3.1 dB). FP16 costs nothing.
+- Sharpening 50 recovers 1.2 of the 2.2 dB that is recoverable at 120 Hz / 2080. A bigger eye
+  swapchain recovers almost nothing.
+- So, at 120 Hz / 100 %, Sharpening 50 is the measured choice, pending the owner's look.
+
 **Next:**
 
 1. Owner tests:
