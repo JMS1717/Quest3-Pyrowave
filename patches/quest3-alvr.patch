@@ -15646,7 +15646,7 @@ index 861f726c74e38cec9058513ab412ceb08ae2e8bf..41a924e4c3b3f6a8ebdb039ff83e8cb8
              ReportComposed = Some(report_composed);
              ReportPresent = Some(report_present);
 diff --git a/alvr/session/src/beta.rs b/alvr/session/src/beta.rs
-index 84100dc7c01a272de5b0b22b22907127bb5e1e18..6a87edfaffd9aa37bf8d9d3cfd466e38b0c6f89a 100644
+index 84100dc7c01a272de5b0b22b22907127bb5e1e18..aa80858d74eb5b2fc5132e619cb9edfd0f820109 100644
 --- a/alvr/session/src/beta.rs
 +++ b/alvr/session/src/beta.rs
 @@ -3,25 +3,125 @@
@@ -15999,7 +15999,7 @@ index 84100dc7c01a272de5b0b22b22907127bb5e1e18..6a87edfaffd9aa37bf8d9d3cfd466e38
 -            subtitle: RECOMMENDED_SUBTITLE,
 -            assignments: pyrowave,
 +            name: COMPETITIVE_PROFILE,
-+            subtitle: "USB, 207 Hz, 2080x2208 per eye, CDF 5/3 at 1000 Mbps, maximum GPU clock, PC sharpening 60; lowest latency and smoothest motion",
++            subtitle: "USB, 207 Hz, 2080x2208 per eye, CDF 5/3 at 1000 Mbps, maximum GPU clock, PC sharpening 60; lowest latency and smoothest motion. Horizon OS build 209 (October 2026) is reported to block rates above 120 Hz: use Quality 120 Hz until Meta fixes it",
 +            assignments: competitive,
          },
          StreamingProfile {
