@@ -156,3 +156,31 @@ script is a variant of `tools/downsample/clarity_budget.py`.
 - So the Quality profile stays at 125 % in 4:2:0. 4:4:4 there needs a faster decode (the Ultra
   track), not a different trade-off.
 - Limits: one synthetic scene, static, no motion. The owner's in-headset view decides.
+
+## Colour against Virtual Desktop (October 8, `.103`-`.105`)
+
+Headset screenshots of the static quality scene, same framing. Virtual Desktop: H.264+ at 500 Mbps,
+144 Hz. PyroWave: 120 Hz, 2496x2656 per eye at 1000 Mbps. "Mean S" is the HSV saturation of the
+left eye (pixels brighter than 40); the patches are 24 px averages.
+
+| Capture | Mean S | Brightest (p99.9 R,G,B) | Grey panel | Gradient blue | Fresh FPS |
+|---|---:|---|---|---|---:|
+| Virtual Desktop | 125 | 242, 254, 255 | 125, 129, 143 | 0, 100, 162 | - |
+| `.99` | 87 | 236, 232, 255 | 123, 117, 125 | 30, 93, 138 | 119.5 |
+| `.103` full range | 101 | 255, 251, 255 | 124, 117, 125 | 19, 90, 140 | 119.2 |
+| `.104`, Rift CV1 gamut | 124 | 255, 255, 255 | 210, 208, 230 | 0, 164, 255 | 119.8 |
+| `.104`, P3 gamut | 114 | 255, 251, 255 | 125, 116, 125 | 0, 92, 144 | 119.8 |
+| `.105` default (Quest gamut) | 126 | 255, 253, 255 | 118, 118, 132 | 0, 89, 153 | 118.9 |
+
+- **A range bug (`.103`).** The headset's eye shaders squeezed every frame into 16-235. ALVR does
+  this to undo MediaCodec's YCbCr sampling, but PyroWave converts YCbCr itself at the encoded range,
+  so its blacks sat at about 17 and its whites at about 236. The direct eye copy and the staging
+  path now leave PyroWave frames at full range; H.264/HEVC/AV1 keep the old correction.
+- **Gamut (`.105`).** ALVR declares Rec. 709 to the compositor. Virtual Desktop's white point and
+  saturation match the Quest gamut (`XR_COLOR_SPACE_QUEST_FB`), which Horizon shows more saturated
+  and with a cooler white. New setting **Quest colour**, on by default, for every codec. Off restores
+  Rec. 709, the colour-accurate choice for PC content. `debug.q3pw.color_space`
+  (`cv1`, `rift_s`, `quest`, `p3`, `rec2020`, `unmanaged`) overrides it for tests.
+- Neither change costs frame rate. Screenshots are not an in-headset judgement; the owner's view
+  decides. Luma detail is unchanged: PyroWave's text is crisper than VD's, and its zone plate keeps
+  more detail but shows moiré.

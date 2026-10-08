@@ -374,6 +374,12 @@ The largest loss decides what to build next.
 **2.8 FP16 precision.** If 2.2 shows a plateau at 1500 Mbit/s and above, use FP32 for luma or for
 the coarse levels. **Not needed:** 2.2 measured no FP16 loss (under 0.002 dB) at 1000-2000 Mbit/s.
 
+**2.9 Colour against Virtual Desktop.** **Done (`.103`-`.105`,
+[CHROMA.md](CHROMA.md#colour-against-virtual-desktop-october-8-103-105)):** the headset no longer
+squeezes PyroWave frames into 16-235, and the new **Quest colour** setting (on by default) shows the
+stream in the Quest gamut, as VD does. Screenshot saturation and white point now match VD's.
+**Next:** the owner's view.
+
 **Exit:** the owner sees an image that looks above native and colour that holds up next to
 Virtual Desktop, at 120 Hz.
 

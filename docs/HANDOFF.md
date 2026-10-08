@@ -59,8 +59,17 @@ State:
     | Link | PC on Ethernet, headset on Wi-Fi 6E |
     | Reported latency | about 38 ms (VD's own figure, not motion-to-photon) |
 
-    The Pyrowave captures of the same static scene are still to do (USB, 120 Hz: 2592 at 2000 Mbps,
-    2080 at 1000 and at 500 Mbps). The private screenshots stay outside the repo.
+    Pyrowave was captured on the same scene and framing (`.99`, 120 Hz, 2496x2656 at 1000 Mbps):
+    its text is clearly crisper, its zone plate keeps more detail but shows moiré, and its colour was
+    weaker. That colour gap is fixed in `.103`-`.105` (next bullet). The private screenshots stay
+    outside the repo.
+- **October 8, night, `.103`-`.105`: colour now matches Virtual Desktop**
+  ([CHROMA.md](CHROMA.md#colour-against-virtual-desktop-october-8-103-105)).
+  - `.103` fixes a bug: the headset squeezed every PyroWave frame into 16-235 (a MediaCodec
+    work-around), lifting blacks and dulling whites and colour.
+  - `.105` adds **Quest colour** (on by default): the stream uses the headset's own gamut, as VD
+    does, instead of Rec. 709. Saturation and white point now match VD's screenshot.
+  - Frame rate unchanged (119 fresh FPS in the same static cell). Not yet seen by the owner.
 - **October 8, afternoon, `.98`-`.99`: sharpening moves to the PC**
   ([SHARPENING.md](SHARPENING.md#in-the-streamer-98-option-99-setting)).
   - New setting **Sharpening location**, PC by default: the streamer sharpens luma before
@@ -79,7 +88,8 @@ State:
     ([REFRESH-RATES.md](REFRESH-RATES.md#restart-loop-with-meta-quest-link-running-october-8-100)).
   - The 207 Hz work (Competitive profile, not forcing native rates) waits for a fixed OS, or for a
     check that forcing over USB still works on build 209. Until then, work at 120 Hz.
-- **Headset client (October 8, afternoon):** `.99` is installed for testing. The owner's `.92`
+- **Headset client (October 8, night):** `.105` is installed for testing (pair
+  `workspace/runtime-local105-e3891a0`). The owner's `.92`
   play pair is still staged (`workspace/runtime-local92-play`). Reinstall its APK before playing
   `.92`, or play the `.99` pair. Virtual Desktop's registration is untouched.
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
