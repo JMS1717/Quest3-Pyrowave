@@ -47,6 +47,20 @@ State:
     restart), so such comparisons need one cell per configuration.
   - Next, per the owner: a Virtual Desktop quality baseline, then cheap quality wins, then 207 Hz
     scheduling.
+  - **VD baseline, started.** The same static quality scene (3072x3216 source) was streamed through
+    Virtual Desktop at the owner's own settings, which were left unchanged:
+
+    | VD setting | Value |
+    |---|---|
+    | Quality | Godlike, 106 % (SteamVR target 3072x3264) |
+    | Codec | H.264+ at 500 Mbps, automatic bitrate off |
+    | Refresh | 144 Hz, held 144/144 |
+    | Spacewarp | off |
+    | Link | PC on Ethernet, headset on Wi-Fi 6E |
+    | Reported latency | about 38 ms (VD's own figure, not motion-to-photon) |
+
+    The Pyrowave captures of the same static scene are still to do (USB, 120 Hz: 2592 at 2000 Mbps,
+    2080 at 1000 and at 500 Mbps). The private screenshots stay outside the repo.
 - **Owner's play runtime (October 8):** `.92` (`4b760b5`) is installed on the headset (`.93`
   was checked live, then `.92` was put back to match the play runtime). The
   matching Windows build with the owner's saved session is staged outside the repo
