@@ -215,6 +215,15 @@ entry), repeated poses were 0.2%, with 164 fresh FPS and no dropped frames.
 Wired (USB, TCP, 207 Hz, 1000 Mbps, ABBA) is unaffected: fresh FPS was 184.6 and 189.5 with
 extrapolation on, and 185.6 and 187.5 with it off.
 
+**Rechecked on `.92` (October 8),** extrapolation on, UDP/EF, 120 Hz, CDF 5/3, three 10 s blocks:
+
+| Bitrate | Repeated | Extrapolated vsyncs | Fresh FPS | Lost frames/s | Network p50 / p90 / p99 | Tracking gap max |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1000 Mbps | 0.6% (45 / 7806) | 166 / 7807 | 115.5 | 8.0 | 9.8 / 11.9 / 48.8 ms | 156 ms |
+| 1250 Mbps | 0.5% (39 / 7808) | 459 / 7809 | 111.7 | 12.7 | 11.0 / 22.0 / 56.2 ms | 81 ms |
+
+The client found every pose (`missing=0`).
+
 Still untested:
 
 - Whether head movement looks smoother in the headset.

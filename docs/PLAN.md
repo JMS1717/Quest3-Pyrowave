@@ -103,6 +103,15 @@ At 207 Hz and 1000 Mbit/s the total was 35.3 ms: encoder 4.8 ms and vsync queue 
 - **Done (`.68`, on by default):** 120 Hz and 1250 Mbit/s over Wi-Fi, ABBA, gave 0.45% repeated
   poses with it and 2.25% without. Wired was unchanged. Still needed: the owner's worn test for
   head-movement stutter, and sustained play.
+- **Rechecked on `.92` (October 8):** Wi-Fi 6E, UDP/EF, 120 Hz, CDF 5/3, three 10 s blocks per
+  bitrate (about 7,800 frames each):
+
+  | Bitrate | Repeated poses | Fresh FPS | Network p50 / p99 |
+  |---|---|---|---|
+  | 1000 Mbit/s | 0.6% | 115.5 | 9.8 / 48.8 ms |
+  | 1250 Mbit/s | 0.5% | 111.7 | 11.0 / 56.2 ms |
+
+  The harness target (under 2%) holds. The worn test is still open.
 
 **1.3 Make UDP the Wi-Fi default** once 1.1/1.2 remove the stutter. Then delete the old
 PyroWave UDP path (`pyrowave_udp.rs`, the C++ `VideoSendUdp`).
@@ -117,9 +126,13 @@ PyroWave UDP path (`pyrowave_udp.rs`, the C++ `VideoSendUdp`).
   against 10–11 ms with 2 ([TRANSPORT.md](TRANSPORT.md#usb)).
 - 4:4:4 and supersampled streams need this.
 - **Done (`.70`):** four connections are the default. They cut network p99 by 2.6–2.7 ms at 1000
-  and 2000 Mbit/s, with the same frame rate. At 2000 Mbit/s and 120 Hz a frame takes about 7 ms
-  over USB whatever the connection count: the cable is near its limit
+  and 2000 Mbit/s, with the same frame rate. At 2000 Mbit/s and 120 Hz ALVR's network stage is
+  about 7 ms whatever the connection count
   ([BITRATE.md](BITRATE.md#four-wired-connections-69-default-from-70-october-7)).
+- **October 8 frame trace (`.92`):** the transfer itself (first slice to complete frame) is about
+  5 ms for a 2.08 MB frame, and all 120 frames a second arrive. At 2000 Mbit/s the headset's
+  decode, not USB, is the limit
+  ([FRESHNESS.md](FRESHNESS.md#where-120-hz--2000--444-loses-frames-92-october-8)).
 
 **1.5 Audio cut-outs** (USB, 207 Hz). Reproduce with audio logging on both ends, and check
 whether audio on the stream socket stalls behind video.
