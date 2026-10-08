@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c327713b0cca3 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..3563c1b82aa7168538105dd6b73108620fd7c421 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..0527d8a61db72b174258229ca73c3277
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..8a323d5a2ece777d14cb3b5075f5127d4a1c314d 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..7ea5953e34fdab5c5e20ec3ddc35c1bdb3f02217 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..8a323d5a2ece777d14cb3b5075f5127d
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.81"
++version = "20.13.0-quest3.pyro.82"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -14635,7 +14635,7 @@ index 8136dda8cff38b25068adcfb5a7e816c908a5074..0bdb166a5ed0d7d4f6d12abddd3b81f4
          typedef enum _D3DKMT_SCHEDULINGPRIORITYCLASS {
              D3DKMT_SCHEDULINGPRIORITYCLASS_IDLE,
 diff --git a/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.cpp b/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.cpp
-index d1a18787cf61087043cd1ad091bfcad4b26035a1..c9248a63840c337ecbb771df76c44ca5290bb360 100644
+index d1a18787cf61087043cd1ad091bfcad4b26035a1..e84596f95b2170038885d1cf44ca07214712f9e4 100644
 --- a/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.cpp
 +++ b/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.cpp
 @@ -1,4 +1,5 @@
@@ -14652,7 +14652,7 @@ index d1a18787cf61087043cd1ad091bfcad4b26035a1..c9248a63840c337ecbb771df76c44ca5
  
      (*pIndices)[0]++;
      (*pIndices)[0] %= 3;
-@@ -201,7 +203,47 @@ void OvrDirectModeComponent::Present(vr::SharedTextureHandle_t syncTexture) {
+@@ -201,7 +203,55 @@ void OvrDirectModeComponent::Present(vr::SharedTextureHandle_t syncTexture) {
  
      m_presentMutex.lock();
  
@@ -14681,6 +14681,9 @@ index d1a18787cf61087043cd1ad091bfcad4b26035a1..c9248a63840c337ecbb771df76c44ca5
 +        m_lastTimingFrameIndex = newestIndex;
 +        m_repeatAppFrames += repeatAppFrame;
 +        m_newAppFrames += !repeatAppFrame;
++        if (newAppFrame) {
++            m_lastNewAppFrameUs = GetTimestampUs();
++        }
 +        m_clientIntervalMsSum += recent[recentCount - 1].m_flClientFrameIntervalMs;
 +    } else {
 +        m_timingFails++;
@@ -14692,8 +14695,13 @@ index d1a18787cf61087043cd1ad091bfcad4b26035a1..c9248a63840c337ecbb771df76c44ca5
 +        const char* v = getenv("ALVR_Q3PW_GAME_FRAMES_ONLY");
 +        return v && v[0] == '1';
 +    }();
-+    const bool skip = gameFramesOnly && repeatAppFrame && m_submitLayer > 0;
++    // Stream every compositor frame while no game is delivering frames (SteamVR's own scene, a
++    // stalled or loading game), and never skip more than three in a row.
++    const bool gameActive = GetTimestampUs() - m_lastNewAppFrameUs < 100000;
++    const bool skip = gameFramesOnly && repeatAppFrame && gameActive && m_consecutiveSkips < 3
++        && m_submitLayer > 0;
 +    m_skippedRepeats += skip;
++    m_consecutiveSkips = skip ? m_consecutiveSkips + 1 : 0;
 +
 +    if (!skip) {
 +        ReportPresent(m_targetTimestampNs, 0);
@@ -14701,7 +14709,7 @@ index d1a18787cf61087043cd1ad091bfcad4b26035a1..c9248a63840c337ecbb771df76c44ca5
  
      bool useMutex = true;
  
-@@ -215,6 +257,73 @@ void OvrDirectModeComponent::Present(vr::SharedTextureHandle_t syncTexture) {
+@@ -215,6 +265,73 @@ void OvrDirectModeComponent::Present(vr::SharedTextureHandle_t syncTexture) {
          // return;
      }
  
@@ -14776,10 +14784,10 @@ index d1a18787cf61087043cd1ad091bfcad4b26035a1..c9248a63840c337ecbb771df76c44ca5
      if (!pSyncTexture) {
          Warn("[VDispDvr] SyncTexture is NULL!");
 diff --git a/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.h b/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.h
-index adef8973ea6259daa44f167f0c57b9c35a7f1769..eb346faf84dc5991f6d533d48cdfdb2a5ddb1d6e 100644
+index adef8973ea6259daa44f167f0c57b9c35a7f1769..16c8978e40f93aa8c53877ec6120536ffa588782 100644
 --- a/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.h
 +++ b/alvr/server_openvr/cpp/platform/win32/OvrDirectModeComponent.h
-@@ -71,5 +71,18 @@ private:
+@@ -71,5 +71,20 @@ private:
      uint64_t m_targetTimestampNs;
      uint64_t m_prevTargetTimestampNs;
  
@@ -14795,6 +14803,8 @@ index adef8973ea6259daa44f167f0c57b9c35a7f1769..eb346faf84dc5991f6d533d48cdfdb2a
 +    uint32_t m_newAppFrames = 0, m_repeatAppFrames = 0, m_timingFails = 0, m_maxFramePresents = 0,
 +             m_skippedRepeats = 0, m_sameTimingIndex = 0;
 +    double m_clientIntervalMsSum = 0;
++    uint64_t m_lastNewAppFrameUs = 0;
++    uint32_t m_consecutiveSkips = 0;
 +
      std::mutex m_presentMutex;
  };
