@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a57c86469f 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..474dc224a0b160014daf1f1e44509fee06b18fb0 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c04eca2eb7a07482011e14ccfd79c7a5
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..a0c45e75e1a76de99f13ca82559f472c9660416c 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..fb318b9e52d4a5c971af19830673bac0f725f91f 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..a0c45e75e1a76de99f13ca82559f472c
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.102"
++version = "20.13.0-quest3.pyro.103"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -11465,7 +11465,7 @@ index 0000000000000000000000000000000000000000..48250e406a41c41a26bd7b7cbace664e
 +    }
 +}
 diff --git a/alvr/graphics/src/staging.rs b/alvr/graphics/src/staging.rs
-index febd2c3c380f456eb1e695b1748566e8b05c6c4f..511452f640c7be2646defd4dadbf341c5005b63a 100644
+index febd2c3c380f456eb1e695b1748566e8b05c6c4f..0b13bfbd3574acb6b64d7d51ed865c188bd68cc9 100644
 --- a/alvr/graphics/src/staging.rs
 +++ b/alvr/graphics/src/staging.rs
 @@ -1,4 +1,4 @@
@@ -11474,7 +11474,7 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..511452f640c7be2646defd4dadbf341c
  use crate::GL_TEXTURE_EXTERNAL_OES;
  use alvr_common::glam::{IVec2, UVec2};
  use glow::{self as gl, HasContext};
-@@ -48,10 +48,53 @@ fn create_program(
+@@ -48,10 +48,55 @@ fn create_program(
      }
  }
  
@@ -11521,6 +11521,8 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..511452f640c7be2646defd4dadbf341c
      context: Rc<GraphicsContext>,
      program: gl::Program,
      view_idx_uloc: gl::UniformLocation,
++    // PyroWave RGBA buffers when `program` applies the limited-range fix.
++    pyrowave_rgba: Option<(gl::Program, gl::UniformLocation)>,
 +    // PyroWave mode 5 and 6 buffers (packed YCbCr): program and its view_idx. None when the
 +    // driver rejected the program; such frames are then skipped rather than drawn as RGBA.
 +    present: Option<(gl::Program, gl::UniformLocation)>,
@@ -11528,22 +11530,45 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..511452f640c7be2646defd4dadbf341c
      surface_texture: gl::Texture,
      framebuffers: [gl::Framebuffer; 2],
      viewport_size: IVec2,
-@@ -81,6 +124,11 @@ impl StagingRenderer {
+@@ -68,9 +113,8 @@ impl StagingRenderer {
+         context.make_current();
+ 
+         // Add #defines into the shader after the first line
+-        let mut frag_lines: Vec<&str> = include_str!("../resources/staging_fragment.glsl")
+-            .lines()
+-            .collect();
++        let full_range_str = include_str!("../resources/staging_fragment.glsl");
++        let mut frag_lines: Vec<&str> = full_range_str.lines().collect();
+         if fix_limited_range {
+             frag_lines.insert(1, "#line 0 1\n#define FIX_LIMITED_RANGE");
+         }
+@@ -81,6 +125,19 @@ impl StagingRenderer {
              include_str!("../resources/staging_vertex.glsl"),
              frag_str.as_str(),
          );
++        // The limited-range fix compensates for MediaCodec's YCbCr sampling. PyroWave converts
++        // YCbCr itself at the encoded range, so its buffers are already full range: the fix would
++        // squeeze them into 16-235, lifting blacks and washing out colour.
++        let pyrowave_program = fix_limited_range.then(|| create_program(
++            gl,
++            include_str!("../resources/staging_vertex.glsl"),
++            full_range_str,
++        ));
 +        let present_program = try_create_program(
 +            gl,
 +            include_str!("../resources/staging_vertex.glsl"),
-+            &present_ycbcr_source(&frag_str, true),
++            &present_ycbcr_source(full_range_str, true),
 +        );
  
          unsafe {
              // This is an external surface and storage should not be initialized
-@@ -104,12 +152,33 @@ impl StagingRenderer {
+@@ -104,12 +161,37 @@ impl StagingRenderer {
              ck!(gl.bind_framebuffer(gl::FRAMEBUFFER, None));
  
              let view_idx_uloc = ck!(gl.get_uniform_location(program, "view_idx")).unwrap();
++            let pyrowave_rgba = pyrowave_program.map(|program| {
++                (program, ck!(gl.get_uniform_location(program, "view_idx")).unwrap())
++            });
 +            let present = present_program.and_then(|present_program| {
 +                let locations = gl.get_uniform_location(present_program, "view_idx")
 +                    .zip(gl.get_uniform_location(present_program, "q3pw_frame_size"));
@@ -11569,21 +11594,28 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..511452f640c7be2646defd4dadbf341c
                  program,
                  surface_texture,
                  view_idx_uloc,
++                pyrowave_rgba,
 +                present,
 +                present_skipped: std::cell::Cell::new(0),
                  framebuffers: framebuffers.try_into().unwrap(),
                  viewport_size: view_resolution.as_ivec2(),
              }
-@@ -117,15 +186,28 @@ impl StagingRenderer {
+@@ -117,15 +199,34 @@ impl StagingRenderer {
      }
  
      #[allow(unused_variables)]
 -    pub unsafe fn render(&self, hardware_buffer: *mut c_void) {
-+    pub unsafe fn render(&self, hardware_buffer: *mut c_void, wait_for_copy: bool) {
++    /// `pyrowave`: the buffer comes from the PyroWave decoder, which is already full range and is
++    /// reused by a separate Vulkan queue once the copy finishes.
++    pub unsafe fn render(&self, hardware_buffer: *mut c_void, pyrowave: bool) {
          let gl = &self.context.gl_context;
          self.context.make_current();
++        let wait_for_copy = pyrowave;
 +        let (program, view_idx_uloc) = if !present_ycbcr_layout(hardware_buffer, self.viewport_size.as_uvec2()) {
-+            (self.program, &self.view_idx_uloc)
++            match &self.pyrowave_rgba {
++                Some((program, view_idx)) if pyrowave => (*program, view_idx),
++                _ => (self.program, &self.view_idx_uloc),
++            }
 +        } else if let Some((program, view_idx)) = &self.present {
 +            (*program, view_idx)
 +        } else {
@@ -11605,7 +11637,7 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..511452f640c7be2646defd4dadbf341c
  
                  ck!(gl.viewport(0, 0, self.viewport_size.x, self.viewport_size.y));
                  ck!(gl.disable(gl::SCISSOR_TEST));
-@@ -137,9 +219,14 @@ impl StagingRenderer {
+@@ -137,9 +238,14 @@ impl StagingRenderer {
                      ck!(gl.active_texture(gl::TEXTURE0));
                      ck!(gl.bind_texture(GL_TEXTURE_EXTERNAL_OES, Some(self.surface_texture)));
                      ck!(gl.bind_sampler(0, None));
@@ -11621,16 +11653,17 @@ index febd2c3c380f456eb1e695b1748566e8b05c6c4f..511452f640c7be2646defd4dadbf341c
              },
          );
      }
-@@ -152,6 +239,7 @@ impl Drop for StagingRenderer {
+@@ -152,6 +258,8 @@ impl Drop for StagingRenderer {
  
          unsafe {
              ck!(gl.delete_program(self.program));
++            if let Some((program, _)) = &self.pyrowave_rgba { ck!(gl.delete_program(*program)); }
 +            if let Some((program, _)) = &self.present { ck!(gl.delete_program(*program)); }
              ck!(gl.delete_texture(self.surface_texture));
              for framebuffer in &self.framebuffers {
                  ck!(gl.delete_framebuffer(*framebuffer));
 diff --git a/alvr/graphics/src/stream.rs b/alvr/graphics/src/stream.rs
-index 737b7d0053f8a34698696f465c816627e95d9287..d9da5a48976046eaddd4927bd6094e3ad0b8a7a7 100644
+index 737b7d0053f8a34698696f465c816627e95d9287..92baab730b68457574fcc6610dea0099fbb31f10 100644
 --- a/alvr/graphics/src/stream.rs
 +++ b/alvr/graphics/src/stream.rs
 @@ -1,10 +1,10 @@
@@ -11669,7 +11702,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..d9da5a48976046eaddd4927bd6094e3a
  }
  
  impl StreamRenderer {
-@@ -87,9 +96,27 @@ impl StreamRenderer {
+@@ -87,9 +96,28 @@ impl StreamRenderer {
          fix_limited_range: bool,
          encoding_gamma: f32,
          upscaling: Option<UpscalingConfig>,
@@ -11685,7 +11718,8 @@ index 737b7d0053f8a34698696f465c816627e95d9287..d9da5a48976046eaddd4927bd6094e3a
 +            .then(|| DirectEyeConfig { textures: swapchain_textures.clone(),
 +                resolution: target_view_resolution, srgb_correction: enable_srgb_correction,
 +                srgb_target: target_format == glow::SRGB8_ALPHA8,
-+                fix_limited_range, encoding_gamma, sharpening,
++                // Direct eye copy serves only PyroWave, whose buffers are already full range.
++                fix_limited_range: false, encoding_gamma, sharpening,
 +                foveation: foveated_encoding.as_ref().map(|config| {
 +                    let (encoded, constants) = foveated_encoding_shader_constants(base_view_resolution, config.clone());
 +                    let static_values = ["VIEW_WIDTH_RATIO", "VIEW_HEIGHT_RATIO", "EDGE_X_RATIO", "EDGE_Y_RATIO", "C2_X", "C2_Y"]
@@ -11697,7 +11731,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..d9da5a48976046eaddd4927bd6094e3a
          let target_format = super::gl_format_to_wgpu(target_format);
  
          let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-@@ -292,15 +319,83 @@ impl StreamRenderer {
+@@ -292,15 +320,83 @@ impl StreamRenderer {
          );
  
          Self {
@@ -11781,7 +11815,7 @@ index 737b7d0053f8a34698696f465c816627e95d9287..d9da5a48976046eaddd4927bd6094e3a
      /// Move the full-resolution centre to match the server's, for the frame about to be drawn.
      ///
      /// Per eye: the horizontal frusta are asymmetric and mirrored, so one shared shift is only
-@@ -333,9 +428,36 @@ impl StreamRenderer {
+@@ -333,9 +429,36 @@ impl StreamRenderer {
          view_params: [StreamViewParams; 2],
          passthrough: Option<&PassthroughMode>,
      ) {
