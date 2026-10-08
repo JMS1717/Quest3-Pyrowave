@@ -94,16 +94,47 @@ would, while a live cell runs:
 | Vsync queue | 13.7 |
 | **Total** | **39.8** |
 
+## Client side (`.78`, 120 Hz / 1500, frame trace)
+
+`debug.q3pw.frame_trace=1` ([FRAME-TRACE.md](FRAME-TRACE.md)), 2080x2208 CDF 5/3 4:2:0 over four wired
+connections, p50 (p90) ms over one 10 s block:
+
+| Stage | ms |
+| --- | --- |
+| First slice to complete frame | 3.05 (3.61) |
+| Complete to decode queue | 0.20 (0.44) |
+| Decode, submit to fence | 5.20 (6.00) |
+| of which GPU decode (timestamps) | 2.83 (5.11) |
+| Decoded to taken by the render loop | 2.89 (3.48) |
+
+- **Transfer:** a 1.56 MB frame crosses in 3.05 ms, about 4.1 Gbit/s over the four adb connections.
+  That is the USB link; it scales with the bitrate (about 2 ms at 1000 Mbit/s).
+- **Decode:** the decode runs at LOW priority ([DECODE-PRIORITY.md](DECODE-PRIORITY.md)), so the eye
+  copy and the runtime's compositor preempt it. Its GPU time is bimodal: 2.8 ms alone, about 5 ms
+  when preempted.
+- **Decoder queue:** the decoded frame waits for the render loop's next `xrWaitFrame`.
+  With a near-empty test scene, game time plus decoder queue is one frame period more than the
+  pipeline needs. In a real game, the game's own rendering takes that period, so moving the
+  server's virtual vsync would not gain it.
+- **Vsync queue:** `predicted_display_time - now` at submit, about 13.8 ms at 120 Hz and 12.9 ms at
+  207 Hz. It is nearly flat in milliseconds, so it is the runtime's display pipeline, not frames
+  queued by the client.
+
 ## Already tried
 
 - D3D11 GPU thread priority 7 (`IDXGIDevice::SetGPUThreadPriority`, granted): no change in the render's
   wait, with or without load.
 - Vulkan realtime global priority: granted for the probe, no faster than high.
+- Decode at default instead of LOW priority (`debug.q3pw.decode_priority=default`, `.78`, 120 Hz /
+  1500, ABBA, 8 s blocks): 115.6 and 114.3 fresh FPS against 117.1 and 119.7 for LOW. The decode
+  was no shorter (decode 5.35-5.45 ms against 4.97-6.45 ms). LOW stays.
 
 ## Next
 
 - Network and decoder (about 11 ms together at 1500 Mbit/s): send blocks as they are encoded and
-  start decoding coarse levels while fine ones arrive.
+  start decoding coarse levels while fine ones arrive. The encode is 0.4 ms, so sending while
+  encoding gains little. Overlapping the 3 ms transfer with dequantization could save about 1 ms,
+  at the cost of several decode submissions per frame.
 - Decoder queue (2.7 ms): the decoded frame waits for the client's next render.
 - The vsync queue is the Quest runtime's prediction lead ([FRESHNESS.md](FRESHNESS.md)); no ALVR
   setting reaches it.

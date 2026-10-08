@@ -264,7 +264,8 @@ Virtual Desktop, at 120 Hz.
 From the table above, in order:
 
 1. **Vsync queue, 14 ms:** decoded frames wait almost two frames for display. Check the predicted
-   display time the client targets, and its queue depth.
+   display time the client targets, and its queue depth. **Checked:** it is 13.8 ms at 120 Hz and 12.9 ms at 207 Hz,
+   nearly flat in milliseconds, so it is the runtime's display pipeline, not a client queue.
 2. **Encoder, 5.7 ms:** PyroWave itself encodes 4K in under 0.2 ms, so this is mostly something
    else. Candidates: the downsample, copies, readback, or GPU contention with the game. Trace it.
 
@@ -275,6 +276,11 @@ From the table above, in order:
    Vulkan rewrite of the frame render would not help. **Done** for the server side.
 3. **Network, 6.8 ms at 1.5 MB per frame:** pipeline it. Send blocks as they are encoded, and
    start decoding coarse levels while fine ones arrive.
+
+   **Traced (`.78`, [LATENCY.md](LATENCY.md#client-side-78-120-hz--1500-frame-trace)):** the frame
+   crosses USB in 3.05 ms (4.1 Gbit/s, the link). Decode takes 5.2 ms from submit, 2.8 ms of it GPU
+   work; LOW priority lets the compositor preempt it, and default priority lost 2-5 FPS. Overlapping
+   transfer and dequantization could save about 1 ms; not started.
 4. **Optical motion-to-photon:** measure it, as AGENTS.md requires.
 
 ## Phase 4: interface and settings revamp (later)
