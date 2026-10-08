@@ -242,6 +242,17 @@ windows ([PLAN.md 1.5](PLAN.md)).
      - Parked until the owner's 120 Hz tests. See
        [ENTROPY.md](ENTROPY.md#a-real-coder-and-its-decode-on-the-quest-october-8) for what
        building it needs.
+5. Engineering next, as of October 8 (`.93`):
+   - **The forced 207 Hz churn** (PLAN 1.6): the fix to try and how to measure it are in PLAN.md.
+     Until then, at 207 Hz leave the forced panel rate off. It streams as fast (174-179 against
+     173-175 fresh FPS) with one restart, for the GPU clock
+     ([REFRESH-RATES.md](REFRESH-RATES.md)).
+   - **4:4:4 decode at 120 Hz / 2000** (PLAN 2.5): the decoder takes 8.0-8.1 ms of the 8.3 ms
+     period. The iDWT is about 3 ms at any bitrate, and dequant grows with bitrate (2.1-2.3 ms at
+     2000, 1.5-1.6 at 1500). See
+     [FRESHNESS.md](FRESHNESS.md#where-120-hz--2000--444-loses-frames-92-october-8).
+   - **Latency** (PLAN 3): ALVR's estimate is 42-61 ms in the test scene. Read the game-stage
+     bimodality in [LATENCY.md](LATENCY.md) before comparing runs.
 
 ## October 7, night: `.65`, transport measured and Wi-Fi UDP video
 
