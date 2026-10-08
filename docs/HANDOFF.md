@@ -18,7 +18,7 @@ State:
 
 - **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.65` (`.64` plus the opt-in
   Wi-Fi UDP transport), not released.
-- **On `claude/frame-budget`:** `.74`. It has server-predicted head poses, UDP as the Wi-Fi
+- **On `claude/frame-budget`:** `.75`. It has server-predicted head poses, UDP as the Wi-Fi
   default, Stream resolution up to 125 %, four wired connections, the Sharpening setting and a
   fast 4:4:4 path ([below](#october-7-late-night-66-74-on-claudeframe-budget)).
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
@@ -65,6 +65,7 @@ Builds from branch `claude/frame-budget`, local only:
 | `.70` | `71e5ce2` | Four wired video connections by default |
 | `.71`-`.73` | `ae7b380`, `8d0fc77`, `e38216f` | Sharpening: debug property, then setting, then centre-only |
 | `.74` | `0f3c97a` | Decoder V2 mode 7: 4:4:4 packed into the present buffer |
+| `.75` | `a1cc167` | Sharpening uses a linear kernel instead of CAS |
 
 **Frame budget:** neutral in tests. SteamVR presents at the panel rate even when the game is
 slower, because it reprojects into a new present every vsync. Giving a slower game the full
@@ -131,6 +132,9 @@ bitrate needs the game's own rate. See
 - Sharpening 50 recovers 1.2 of the 2.2 dB that is recoverable at 120 Hz / 2080. A bigger eye
   swapchain recovers almost nothing.
 - So, at 120 Hz / 100 %, Sharpening 50 is the measured choice, pending the owner's look.
+- `.75` changes the kernel from CAS to linear: +1.69 instead of +1.23 dB offline at 120 Hz / 2080,
+  fewer overshooting pixels, and about 10 FPS cheaper than CAS at 207 Hz
+  ([SHARPENING.md](SHARPENING.md)).
 
 **Next:**
 

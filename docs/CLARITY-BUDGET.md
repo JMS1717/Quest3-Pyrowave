@@ -67,6 +67,9 @@ The same coded frames (120 Hz / 1500 Mbps, headset decode) through different dis
 At 207 Hz / 1000 Mbps (2080), CAS at the strengths of settings 1, 25, 50 and 75 gains 0.36, 0.40,
 0.43 and 0.43 dB.
 
+- **`.75` replaced CAS with a linear sharpen:** 0.15 per neighbour (setting 50) gains 1.69 dB at
+  120 Hz / 2080, 0.62 at 207 Hz / 1000 and 0.64 with the 125 % stream, with fewer overshooting
+  pixels than CAS 50 ([SHARPENING.md](SHARPENING.md)).
 - **Sharpening 50 recovers more than half of the recoverable display loss at 120 Hz / 2080**,
   where it costs no frame rate ([SHARPENING.md](SHARPENING.md)). This backs turning it on for that
   configuration, once the owner has judged halos and the edge of the centre region.

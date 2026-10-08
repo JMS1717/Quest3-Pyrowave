@@ -247,6 +247,10 @@ The largest loss decides what to build next.
   - 120 Hz with stream 125 %: about 8 FPS. Whole-image sharpening cost 19 FPS in both of these
     cases.
 
+  **`.75`:** a linear cross sharpen replaces CAS. Offline it keeps +1.69 dB instead of +1.23 at
+  120 Hz / 2080, with fewer overshooting pixels, and live it costs about 10 FPS less than CAS at
+  207 Hz.
+
   **Next:** the owner's A/B. A cheaper form would sharpen in the decoder's last pass.
 
 **2.8 FP16 precision.** If 2.2 shows a plateau at 1500 Mbit/s and above, use FP32 for luma or for

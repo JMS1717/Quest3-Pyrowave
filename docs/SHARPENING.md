@@ -1,6 +1,6 @@
 # Sharpening on the headset
 
-October 7, 2026, `.71`–`.73`. This covers [PLAN.md](PLAN.md) 2.7. Virtual Desktop sharpens by
+October 7, 2026, `.71`–`.75`. This covers [PLAN.md](PLAN.md) 2.7. Virtual Desktop sharpens by
 default, and the owner compares against it.
 
 ## What it does
@@ -8,11 +8,13 @@ default, and the owner compares against it.
 The setting is **Video > PyroWave > Sharpening**, 0–100. It is off by default and needs a SteamVR
 restart.
 
-- **Algorithm:** AMD FidelityFX CAS (contrast-adaptive sharpening).
-  - It uses the cross neighbourhood: the pixel and its four direct neighbours.
-  - It sharpens brightness (luma) only.
-  - The strength adapts to local contrast, so edges that are already sharp are pushed less.
-  - The peak weight runs from −1/8 at 0 to −1/5 at 100.
+- **Algorithm (`.75`):** a linear sharpen over the cross neighbourhood (the pixel and its four
+  direct neighbours), of brightness (luma) only: `Y + k (4Y − neighbours)`, with k = 0.003 per
+  percent (0.15 at 50).
+  - It pre-compensates the compositor's bilinear lens warp, the largest loss at 120 Hz
+    ([CLARITY-BUDGET.md](CLARITY-BUDGET.md)).
+  - `.71`–`.74` used AMD FidelityFX CAS (contrast-adaptive, peak weight −1/8 at 0 to −1/5 at 100).
+    `debug.q3pw.sharpen_kernel=cas` still selects it for A/B.
 - **Where it runs:** in the eye shader that already converts the packed YCbCr buffer
   (`present_ycbcr.glsl`, CDF 5/3 and Haar mode 5/6), so there is no extra pass.
   - In the packed layout, each 2x2 luma quad is one texel. The pixel's own quad already holds one
@@ -28,7 +30,7 @@ restart.
 - **Test overrides:**
   - `debug.q3pw.sharpen=N` (0–100) overrides the setting; 0 forces it off.
   - `debug.q3pw.sharpen_area=N` (10–100) sets the share of each axis.
-  - The client logs `[Q3PW_SHARPEN] sharpness=… area=…` when sharpening is active.
+  - The client logs `[Q3PW_SHARPEN] sharpness=… area=… kernel=…` when sharpening is active.
 
 ## Measurements
 
@@ -59,6 +61,35 @@ Centre 60 % (`.73`):
   Crops of small text look clearly crisper, with no visible halos and slightly more grain on flat
   areas.
 
+Linear against CAS (`.75`, centre 60 %, setting 50):
+
+Offline ([CLARITY-BUDGET.md](CLARITY-BUDGET.md)), PSNR-HVS-M luma at the panel's 25 px/deg, gain
+over no sharpening on coded frames, and the share of pixels pushed more than 8 levels outside their
+3x3 source range:
+
+| | 2080, 120 Hz / 1500 | 2592, 120 Hz / 1500 | 2080, 207 Hz / 1000 | Overshoot |
+| --- | --- | --- | --- | --- |
+| CAS 50 | +1.23 dB | +0.31 dB | +0.43 dB | 9.8 % |
+| Linear 0.10 per neighbour (setting 33) | +1.40 dB | **+0.76 dB** | +0.51 dB | 5.0 % |
+| **Linear 0.15 (setting 50)** | **+1.69 dB** | +0.64 dB | +0.62 dB | 8.3 % |
+| Linear 0.20 (setting 67) | +1.78 dB | +0.42 dB | +0.67 dB | 10.9 % |
+
+A perfect display path would gain 2.24 dB at 2080 and 1.72 dB at 2592.
+
+On the headset (ABBA or ABAB, a relaunch per arm):
+
+| Cell | A | B | FPS A / B |
+| --- | --- | --- | --- |
+| 120 Hz / 1500 / 2080, static | CAS 50 | linear 50 | 118.0 / 119.3 |
+| 207 Hz / 1000 / 2080, pan | off | linear 50 | 187.5 / 177.6 |
+| 207 Hz / 1000 / 2080, pan | CAS 50 | linear 50 | 166.2 / 175.8 |
+
+- Linear is cheaper than CAS: about 10 FPS more at 207 Hz in the same cell.
+- The screenshot Laplacian is 9.9 with linear and 10.6 with CAS (7.0–7.4 off), in line with its
+  lower overshoot.
+- At 207 Hz sharpening still costs about 10 FPS; at 120 Hz with stream 100 % it is free.
+- For the 125 % stream, a lower setting (about 33) scored best.
+
 ## Open
 
 - **Owner's in-headset A/B.** Does 50 look better than off at 120 Hz? Is 100 too much? Is the edge
@@ -70,5 +101,9 @@ Centre 60 % (`.73`):
 
 ## Already tried
 
+- CAS (`.71`–`.74`): replaced by the linear kernel in `.75`, which keeps more detail with fewer
+  overshooting pixels and costs less.
+- A larger eye swapchain with a Catmull-Rom upscale before the compositor recovers almost nothing
+  (+0.04 dB at 1.25x, +0.36 dB at 1.5x; [CLARITY-BUDGET.md](CLARITY-BUDGET.md)).
 - Sharpening the whole image costs 19 FPS at 207 Hz and at 120 Hz with a 125 % stream, so it was
   replaced by centre-only in `.73`.
