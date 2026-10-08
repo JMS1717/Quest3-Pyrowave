@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028cdc51d735 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..a2dedc7e9c95064116990d6a9a79261f47335eba 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..03d3d80411845034d2660b4fcb16028c
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..b2c030104dc42a5b668222fda5e2aca6c9e9ce10 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..5797331d89b887c85c6990e611f04bf2a6d6e100 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..b2c030104dc42a5b668222fda5e2aca6
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.84"
++version = "20.13.0-quest3.pyro.85"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -6216,7 +6216,7 @@ index 7765bb459f73e9d7d5a9f296a498f09a0df43706..1a2b8152c628566294dfb840971d5b3e
      static TICK: AtomicU64 = AtomicU64::new(0);
      let tick = TICK.fetch_add(1, Ordering::Relaxed);
 diff --git a/alvr/client_openxr/src/lib.rs b/alvr/client_openxr/src/lib.rs
-index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7ad92f0530 100644
+index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..72f7a83f815770791d7a0fd28a0e3e3b5f4cb25b 100644
 --- a/alvr/client_openxr/src/lib.rs
 +++ b/alvr/client_openxr/src/lib.rs
 @@ -1,10 +1,16 @@
@@ -6470,13 +6470,15 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7a
          let lobby_body_tracking_config = BodyTrackingSourcesConfig {
              body_tracking_fb: Switch::Disabled,
              body_tracking_bd: Switch::Enabled(BodyTrackingBDConfig::BodyTracking {
-@@ -412,14 +519,27 @@ pub fn entry_point() {
+@@ -412,14 +519,29 @@ pub fn entry_point() {
              .select_sources(&lobby_interaction_sources);
  
          let mut session_running = false;
 +        let mut surface_visible = false;
 +        let mut refresh_probe = None;
 +        let mut refresh_probed = false;
++        // Probes repeated because the display did not change rates (see RefreshProbe::reliable).
++        let mut refresh_probe_retries = 0;
 +        // Lobby-only no-decode cadence screen, once per app launch; see cadence_probe.rs.
 +        let cadence_request = (platform == Platform::Quest3).then(|| cadence_probe::parse_request(
 +            &extra_extensions::perf_settings::system_property("debug.q3pw.cadence_probe"))).flatten();
@@ -6499,7 +6501,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7a
              while let Some(event) = xr_instance.poll_event(&mut event_storage).unwrap() {
                  match event {
                      xr::Event::EventsLost(event) => {
-@@ -432,14 +552,37 @@ pub fn entry_point() {
+@@ -432,14 +554,37 @@ pub fn entry_point() {
                                  .begin(xr::ViewConfigurationType::PRIMARY_STEREO)
                                  .unwrap();
  
@@ -6538,7 +6540,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7a
  
                              passthrough_layer = None;
  
-@@ -447,6 +590,8 @@ pub fn entry_point() {
+@@ -447,6 +592,8 @@ pub fn entry_point() {
  
                              xr_session.end().unwrap();
                          }
@@ -6547,7 +6549,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7a
                          xr::SessionState::EXITING => break 'render_loop,
                          xr::SessionState::LOSS_PENDING => break 'render_loop,
                          _ => (),
-@@ -458,6 +603,9 @@ pub fn entry_point() {
+@@ -458,6 +605,9 @@ pub fn entry_point() {
                          );
  
                          lobby.update_reference_space();
@@ -6557,7 +6559,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7a
  
                          if let Some(stream) = &mut stream_context {
                              stream.update_reference_space();
-@@ -494,7 +642,40 @@ pub fn entry_point() {
+@@ -494,7 +644,40 @@ pub fn entry_point() {
                          lobby.update_hud_message(&message);
                      }
                      ClientCoreEvent::StreamingStarted(config) => {
@@ -6598,7 +6600,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7a
  
                          let context = StreamContext::new(
                              Arc::clone(&core_context),
-@@ -512,6 +693,8 @@ pub fn entry_point() {
+@@ -512,6 +695,8 @@ pub fn entry_point() {
                          stream_context = Some(context);
                      }
                      ClientCoreEvent::StreamingStopped => {
@@ -6607,7 +6609,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7a
                          if passthrough_layer.is_none() {
                              passthrough_layer = PassthroughLayer::new(&xr_session, platform).ok();
                          }
-@@ -562,13 +745,41 @@ pub fn entry_point() {
+@@ -562,13 +747,43 @@ pub fn entry_point() {
                  }
              }
  
@@ -6624,7 +6626,9 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7a
 +                }
 +            }
 +
-+            if let Some(probe) = &mut refresh_probe {
++            // Rates change only while the app is shown: a probe while the headset sleeps confirms
++            // nothing but the current rate.
++            if let Some(probe) = refresh_probe.as_mut().filter(|_| surface_visible) {
 +                probe.request_next(&xr_session);
 +            }
 +            if let Some((hz, seconds)) = cadence_request.filter(|_| {
@@ -6650,7 +6654,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7a
              let frame_state = match xr_frame_waiter.wait() {
                  Ok(state) => state,
                  Err(e) => {
-@@ -576,12 +787,79 @@ pub fn entry_point() {
+@@ -576,12 +791,91 @@ pub fn entry_point() {
                      panic!();
                  }
              };
@@ -6688,10 +6692,22 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7a
 +                    cadence_probe = None;
 +                }
 +            }
-+            if let Some(probe) = &mut refresh_probe {
-+                if let Some(rates) =
-+                    probe.observe(&xr_session, frame_state.predicted_display_period.as_nanos())
-+                {
++            if let Some(probe) = refresh_probe.as_mut().filter(|_| surface_visible) {
++                let observed =
++                    probe.observe(&xr_session, frame_state.predicted_display_period.as_nanos());
++                if observed.is_some() && !probe.reliable() && refresh_probe_retries < 2 {
++                    refresh_probe_retries += 1;
++                    error!("[Q3PW_PROBE] reliable=false rates={observed:?} retry={refresh_probe_retries}");
++                    refresh_probe = Some(refresh_probe::RefreshProbe::new(
++                        refresh_rates.clone(),
++                        probe.restore_hz(),
++                        refresh_probe::override_rate(
++                            &extra_extensions::perf_settings::system_property(
++                                "debug.oculus.refreshRate",
++                            ),
++                        ),
++                    ));
++                } else if let Some(rates) = observed {
 +                    error!("[Q3PW_CAPS] model=Quest3 rates={rates:?} runtime=true source=probe");
 +                    refresh_rates = rates.clone();
 +                    core_context.set_refresh_rates(rates);
@@ -6731,7 +6747,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7a
              }
  
              // How far ahead the runtime is predicting, measured the instant xrWaitFrame returns
-@@ -605,15 +883,15 @@ pub fn entry_point() {
+@@ -605,15 +899,15 @@ pub fn entry_point() {
              // A measurement build should carry no diagnostics that can change what is measured.
              if reproj_probe_enabled() {
                  if let Some(now) = crate::xr_runtime_now(xr_session.instance()) {
@@ -6756,7 +6772,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7a
                          "[REPROJ] frame {tick}: prediction lead {:.2} ms, display period {:.2} ms \
                           ({:.2} periods ahead), should_render {}",
                          lead_ns as f64 / 1e6,
-@@ -621,13 +899,17 @@ pub fn entry_point() {
+@@ -621,13 +915,17 @@ pub fn entry_point() {
                          lead_ns as f64 / (frame_interval.as_secs_f64() * 1e9).max(1.0),
                          frame_state.should_render,
                      );
@@ -6775,7 +6791,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7a
  
              if !frame_state.should_render {
                  xr_frame_stream
-@@ -654,22 +936,90 @@ pub fn entry_point() {
+@@ -654,22 +952,90 @@ pub fn entry_point() {
                  xr::EnvironmentBlendMode::OPAQUE
              };
  
@@ -6874,7 +6890,7 @@ index a0fd36fa9b8d38eb8f72e379fd880ea4d4443bde..472261c2bfcf8ac4eb0193f326c1be7a
  
              if let Err(e) = res {
                  let time = to_xr_time(display_time);
-@@ -698,7 +1048,9 @@ fn reproj_probe_enabled() -> bool {
+@@ -698,7 +1064,9 @@ fn reproj_probe_enabled() -> bool {
      use std::sync::OnceLock;
      static ENABLED: OnceLock<bool> = OnceLock::new();
      *ENABLED.get_or_init(|| {
@@ -7657,10 +7673,10 @@ index 0000000000000000000000000000000000000000..594514baa0411df1f4e3c3dbf7506737
 +}
 diff --git a/alvr/client_openxr/src/refresh_probe.rs b/alvr/client_openxr/src/refresh_probe.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..be1205ccfde1989670f4732b16b7982a8a9763d3
+index 0000000000000000000000000000000000000000..a656d6441aaee347e3d70c984a72a7571f1a1119
 --- /dev/null
 +++ b/alvr/client_openxr/src/refresh_probe.rs
-@@ -0,0 +1,185 @@
+@@ -0,0 +1,220 @@
 +//! Quest 3 HorizonOS v2.7 permits rates absent from enumeration. Never infer support
 +//! from a property: require request success, runtime frequency and three frame periods.
 +use openxr as xr;
@@ -7674,6 +7690,7 @@ index 0000000000000000000000000000000000000000..be1205ccfde1989670f4732b16b7982a
 +    enumerated: Vec<f32>,
 +    restore: f32,
 +    restoring: bool,
++    forced: bool,
 +}
 +
 +pub fn matches(target: f32, actual: f32, period_ns: i64) -> bool {
@@ -7720,8 +7737,10 @@ index 0000000000000000000000000000000000000000..be1205ccfde1989670f4732b16b7982a
 +
 +impl RefreshProbe {
 +    pub fn new(enumerated: Vec<f32>, restore: f32, override_hz: Option<f32>) -> Self {
++        let pending: VecDeque<f32> = probe_rates(&enumerated, restore, override_hz).into();
 +        Self {
-+            pending: probe_rates(&enumerated, restore, override_hz).into(),
++            forced: pending.len() == 1,
++            pending,
 +            current: None,
 +            stable: 0,
 +            confirmed: vec![],
@@ -7729,6 +7748,24 @@ index 0000000000000000000000000000000000000000..be1205ccfde1989670f4732b16b7982a
 +            restore,
 +            restoring: false,
 +        }
++    }
++
++    /// The rate the display ran when the probe started; it is requested again at the end.
++    pub fn restore_hz(&self) -> f32 {
++        self.restore
++    }
++
++    /// False when an enumerated rate above 72 Hz (90, 120) failed to confirm in a full probe. The
++    /// runtime always accepts those, so the display was not changing rates: seen October 8 when
++    /// the server restarted the client while the headset slept, which left only [72, 80] and
++    /// refused every stream at 207 Hz until the app was reopened.
++    pub fn reliable(&self) -> bool {
++        self.forced
++            || self
++                .enumerated
++                .iter()
++                .filter(|r| **r > 72.5 && PROBE_RATES.contains(r))
++                .all(|r| self.confirmed.contains(r))
 +    }
 +
 +    // Called only while the session runs, before xrWaitFrame. No sleeps on render thread.
@@ -7834,6 +7871,20 @@ index 0000000000000000000000000000000000000000..be1205ccfde1989670f4732b16b7982a
 +        // A property the runtime is not running (left over, or not yet applied) does not force.
 +        assert_eq!(probe_rates(&[72.0, 120.0, 144.0], 144.0, Some(165.0)).len(), 9);
 +        assert_eq!(probe_rates(&enumerated, f32::NAN, Some(120.0)).len(), 9);
++    }
++
++    #[test]
++    fn a_probe_missing_an_enumerated_rate_is_unreliable() {
++        use super::RefreshProbe;
++        let mut probe = RefreshProbe::new(vec![72.0, 80.0, 90.0, 120.0], 72.0, None);
++        probe.confirmed = vec![72.0];
++        assert!(!probe.reliable());
++        probe.confirmed = vec![72.0, 90.0, 120.0, 207.0];
++        assert!(probe.reliable());
++        // A forced rate probes only that rate; the others are not expected.
++        let mut forced = RefreshProbe::new(vec![72.0, 80.0, 90.0, 120.0], 207.0, Some(207.0));
++        forced.confirmed = vec![207.0];
++        assert!(forced.reliable());
 +    }
 +
 +    #[test]
