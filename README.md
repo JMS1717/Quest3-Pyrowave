@@ -129,14 +129,19 @@ Tests-only runs produce no installable pair.
    `io.github.jms1717.quest3pyrowave`.
 4. On the Quest, open **Quest3 PyroWave** from **Unknown Sources**. On the PC, explicitly trust the
    discovered headset in the dashboard, then start SteamVR.
-5. In **Settings → Presets**, start with **Quest 3 PyroWave 400 Mbps / 72 Hz candidate**. Once that
-   works over USB, choose a measured **Streaming profile**:
+5. In **Settings → Presets**, pick a **Streaming profile**. The first three are the product modes:
 
    | Profile | Per-eye stream | Best for |
    | --- | --- | --- |
-   | **Native 120 Hz** | 2064 × 2208 | The most frames per pixel |
-   | **207 Hz** | 2080 × 2208 | Full resolution at high refresh |
-   | **240 Hz scaled panel** | 1440 × 1536 | The highest refresh rate |
+   | **Quest 3 Quality 120 Hz** | 2592 × 2784 (125 %), 1500 Mbps | Wired PCVR: the most detail at a smooth 120 Hz |
+   | **Quest 3 Wi-Fi Quality 120 Hz** | 120 %, 1000 Mbps | Wi-Fi 6/6E with a strong link |
+   | **Quest 3 Competitive 207 Hz** | 2080 × 2208, 1000 Mbps | Lowest latency; Horizon OS build 209 holds the headset at 120 Hz |
+
+   Then set **Game render resolution** to 150 % or more. **Stream resolution** changes the
+   size on its own: 125 % is the largest that holds 120 Hz, and 135 % and 150 % are marked
+   "below 120 Hz". **Colour** chooses **Vivid (Quest)**, the headset's own wide gamut as Virtual
+   Desktop uses, or **Accurate (Rec. 709)**. The fresh install starts on a conservative
+   400 Mbps / 72 Hz candidate.
 
 These are starting candidates, not guaranteed performance levels. The full
 [installation and rollback guide](docs/BUILD.md#install-and-rollback) covers prerequisites,
