@@ -154,3 +154,28 @@ are identical, so the picture doesn't change. An earlier pair of runs that seeme
 same gain did not apply mode 6 at all: the harness set only `debug.q3pw.cdf53v2`, which a Haar
 stream ignores, and identical configurations still differed by 3 FPS. Haar mode is
 `debug.q3pw.haar32`.
+
+## Eye pass cost at full size (October 9, `.119`-`.120`)
+
+Haar 3072x3216 per eye at 120 Hz, mode 6, direct eye copy, wired, LOW decode priority so decode
+can't inflate the eye timer. `debug.q3pw.eye_probe` changes what the eye shader reads (the picture
+is wrong while it is set). Compare only rows at the same GPU level: the clock dropped from level 7
+to 4 halfway through the `.120` sweep.
+
+| Probe | What the eye shader does | Eye GPU p50 | VrApi GPU load |
+| --- | --- | --- | --- |
+| none, level 7 | luma + two chroma fetches | 2.70, 2.72 ms | 0.89-0.92 |
+| 4, level 7 | the same fetches, almost grey output | 2.74 ms | 0.89-0.90 |
+| 3, level 7 | luma only | 1.47, 1.53 ms | 0.74-0.78 |
+| none, level 4 | luma + two chroma fetches | 2.88, 2.90 ms | 0.90 |
+| 4, level 4 | the same fetches, almost grey output | 2.89 ms | 0.91 |
+| 5, level 4 | one chroma fetch | 2.60 ms | 0.90-0.91 |
+| 3, level 4 (599 MHz) | luma only | 1.57, 1.61 ms | 0.85-0.86 |
+
+Reading chroma costs about 1.3 ms of the 2.7 ms eye pass: about 1 ms for the first fetch and
+0.3 ms for the second. Writing a grey picture instead of a colour one changes nothing, so swapchain
+write compression is not the cost. Removing the chroma reads didn't raise fresh FPS at full size
+120 Hz (luma only 118.7 / 117.6 against 117.5); there the remaining losses are frames superseded
+after decode, not GPU time. The cost matters for headroom: higher refresh rates or sizes, and
+heat. Probes 1 and 2 (no buffer reads) put decode at 7 ms and fresh FPS at 84 on this build, so
+their eye timings aren't comparable.

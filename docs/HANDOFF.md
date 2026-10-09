@@ -307,8 +307,13 @@ State:
   - **The maximum GPU clock was not applied in these runs.** `quest3_max_gpu_clock=true`, but
     `debug.oculus.gpuLevel` read empty and VrApi showed level 4 (640 MHz). After the helper's
     `GPU_LEVEL_REVERTS` (2) reapplications it stops until the server restarts. Setting the
-    property by hand held through every harness client restart. Check whether the owner's normal
-    flow gets level 7.
+    property by hand held through every harness client restart. **Fixed in `.121`:** the
+    runtime applies the level live (cleared: level 4 within 3 s; 7: 690 MHz within 6 s), so the
+    helper now rewrites a cleared level without a wake or client restart, and counts reverts only
+    when a display change restarts the client.
+    - Eye pass at full size: chroma reads cost about 1.3 ms of its 2.7 ms (probes 3-5, `.120`),
+      not write compression; removing them didn't raise fresh FPS at full size 120 Hz. See
+      [PRESENT-YCBCR.md](PRESENT-YCBCR.md#eye-pass-cost-at-full-size-october-9-119-120).
   - **Client phase lock and latency (`debug.q3pw.phase_lock=1`, native, 120 Hz, 1500 Mbps).**
     Two alternating rounds, medians of ALVR's estimate:
     - Fresh FPS: 118.9-119.9 with the lock, against 118.4-119.2 without it.

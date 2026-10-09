@@ -282,6 +282,13 @@ whether audio on the stream socket stalls behind video.
   gets default priority; the live ABBA was within noise (automatic 116.3 against LOW 116.9
   mean). Check VrApi's GPU level in every block: it moved between 7 and 4 on October 9 and
   confounds some earlier sets (`release_fd`, one Quality 120 set).
+- **`.121`: GPU level 7 holds through client restarts.** HorizonOS clears `debug.oculus.gpuLevel`
+  whenever the client restarts; the helper gave up after two clears and the GPU fell to 640 MHz.
+  The runtime applies the level live, so the helper now rewrites it without a restart: six
+  restarted blocks all ran at 690 MHz (115-118 fresh FPS at full size 120 Hz).
+- Eye pass at full size: chroma reads are about 1.3 of its 2.7 ms (`.120` probes). Not the FPS
+  limit at full size 120 Hz (frames superseded after decode are), but the largest piece of client
+  GPU time left after decode. A cheaper chroma read is the next eye-pass candidate.
 - Next:
   - the owner compares full size at 90 Hz (about 90) against full size at 120 Hz (about
     116) in the headset;
