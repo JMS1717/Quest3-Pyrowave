@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da89da4bd90 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..91ac980af0bfb6e699ac5fae5cea0467b1783fff 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da8
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..fc7490122a2ca8bb9a10b97c70cb82b60e24991e 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..05fa01244129e765f0924e7d5d89f9cbfc28f765 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..fc7490122a2ca8bb9a10b97c70cb82b6
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.113"
++version = "20.13.0-quest3.pyro.114"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -8021,7 +8021,7 @@ index 0000000000000000000000000000000000000000..aabdc9684074823279d5178429646757
 +    }
 +}
 diff --git a/alvr/client_openxr/src/stream.rs b/alvr/client_openxr/src/stream.rs
-index b87dfe995e4e278f3903d05f84a50db089f21cfc..a65ae2d9809fb572877a19eeb1b57263d245af92 100644
+index b87dfe995e4e278f3903d05f84a50db089f21cfc..8313f67e7d4167319b89ea5b5f5251b998998981 100644
 --- a/alvr/client_openxr/src/stream.rs
 +++ b/alvr/client_openxr/src/stream.rs
 @@ -1,3 +1,6 @@
@@ -8564,7 +8564,9 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..a65ae2d9809fb572877a19eeb1b57263
 +            self.swapchains[1]
 +                .wait_image(xr::Duration::INFINITE)
 +                .unwrap();
-+
+ 
+-        self.swapchains[0].release_image().unwrap();
+-        self.swapchains[1].release_image().unwrap();
 +            let render_start = Instant::now();
 +            let acquire_wait_ms = acquire_start.elapsed().as_secs_f32() * 1000.0;
 +
@@ -8591,9 +8593,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..a65ae2d9809fb572877a19eeb1b57263
 +                    self.config.passthrough.as_ref(),
 +                )
 +            };
- 
--        self.swapchains[0].release_image().unwrap();
--        self.swapchains[1].release_image().unwrap();
++
 +            alvr_client_core::frame_trace::record(b'H', if buffer_ptr.is_null() { 0 } else { timestamp.as_nanos() as u64 },
 +                copy_ready as i64, 0);
 +            if !buffer_ptr.is_null() {
@@ -8636,7 +8636,7 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..a65ae2d9809fb572877a19eeb1b57263
          self.input_thread_running.set(false);
          self.input_thread.take().unwrap().join().ok();
      }
-@@ -510,6 +873,7 @@ fn stream_input_loop(
+@@ -510,11 +873,18 @@ fn stream_input_loop(
      let platform = alvr_system_info::platform();
  
      let mut last_controller_poses = [Pose::default(); 2];
@@ -8644,7 +8644,18 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..a65ae2d9809fb572877a19eeb1b57263
      let mut last_palm_poses = [Pose::default(); 2];
      let mut last_view_params = [ViewParams::default(); 2];
  
-@@ -630,7 +994,17 @@ fn stream_input_loop(
+     let mut deadline = Instant::now();
+     let frame_interval = Duration::from_secs_f32(1.0 / refresh_rate);
++    // The server renders from the newest sample, which is up to one poll interval old and was
++    // predicted for a display time that much too early. `debug.q3pw.input_polls_per_frame`
++    // (1-16, default 3 as upstream) shortens that interval.
++    let polls_per_frame = input_polls_per_frame(
++        &crate::extra_extensions::perf_settings::system_property("debug.q3pw.input_polls_per_frame"));
++    info!("[Q3PW_INPUT_RATE] polls_per_frame={polls_per_frame} interval_us={}", (frame_interval / polls_per_frame).as_micros());
+     while running.value() {
+         let int_ctx = &*interaction_ctx.read();
+         // Streaming related inputs are updated here. Make sure every input poll is done in this
+@@ -630,11 +1000,25 @@ fn stream_input_loop(
          );
  
          let button_entries = interaction::update_buttons(&xr_session, &int_ctx.button_actions);
@@ -8663,6 +8674,15 @@ index b87dfe995e4e278f3903d05f84a50db089f21cfc..a65ae2d9809fb572877a19eeb1b57263
              core_ctx.send_buttons(button_entries);
          }
  
+-        deadline += frame_interval / 3;
++        deadline += frame_interval / polls_per_frame;
+         thread::sleep(deadline.saturating_duration_since(Instant::now()));
+     }
+ }
++
++fn input_polls_per_frame(property: &str) -> u32 {
++    property.trim().parse::<u32>().ok().filter(|n| (1..=16).contains(n)).unwrap_or(3)
++}
 diff --git a/alvr/client_openxr/src/surface_probe.rs b/alvr/client_openxr/src/surface_probe.rs
 new file mode 100644
 index 0000000000000000000000000000000000000000..7bde1488686bc3f5bbfd7b80889607a57dec8557
