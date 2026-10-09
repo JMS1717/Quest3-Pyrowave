@@ -128,6 +128,28 @@ State:
     `.97` measured 108-109 at 125 % with 4.8 ms decode on the 60°/s quality-scene pan, so the gap
     is content, not code. Real game content can decode much slower than the quality scene,
     which matters for every "fits at 120 Hz" claim. Re-measure the profiles on real game content.
+  - **Largest stream that holds 120 Hz in SteamVR Home (`.109`, CDF 5/3 mode 5, wired, unworn).**
+    Each size had its own SteamVR start. Fresh FPS per 20 s block:
+
+    | Stream per eye | Bitrate | Fresh FPS | GPU decode p50 | ALVR decoder stage |
+    |---|---|---|---|---|
+    | 2080x2208 (native) | 1500 | 118.4-119.9 | 3.4-6.9 ms | 6.2-12.4 ms |
+    | 2304x2432 (111 %) | 1500 | 114.9-115.0 | 5.2-5.3 ms | 10.7-11.0 ms |
+    | 2560x2688 (123 %) | 2000 | 90.4-90.5 | 7.3-7.4 ms | 14.3-14.6 ms |
+    | 2816x2944 (135 %) | 2000 | 77.3-80.7 | 8.3-8.7 ms | 16.3-16.4 ms |
+
+    In this scene, 120 Hz holds up to about 110 %. Full 3072x3216 holds at 90 Hz. Virtual
+    Desktop decodes on the Quest's video hardware, but PyroWave decodes on the same GPU as the
+    eye draw and the compositor. That is why VD's Godlike preset runs at high refresh and ours
+    does not.
+  - **Client phase lock and latency (`debug.q3pw.phase_lock=1`, native, 120 Hz, 1500 Mbps).**
+    Two alternating rounds, medians of ALVR's estimate:
+    - Fresh FPS: 118.9-119.9 with the lock, against 118.4-119.2 without it.
+    - Decoder queue: 1.8 ms with the lock, against 1.6-2.6 ms without it.
+    - Total after the game stage: 35.5-38.6 ms with the lock, against 36.8-42.6 ms without it.
+    - The vsync queue is 14.5-14.8 ms in every block.
+    - The spread comes from the decoder stage (6-12 ms), not the lock. The lock stays opt-in.
+    Details are in [LATENCY.md](LATENCY.md#client-phase-lock-at-120-hz-october-8-109).
   - **Harness traps:**
     - A force-stopped client often comes back pinned at 72 Hz.
     - Set `debug.oculus.refreshRate=120` while awake, before `am start`. That made 4 of 4 starts

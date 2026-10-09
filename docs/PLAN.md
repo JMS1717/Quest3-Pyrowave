@@ -250,8 +250,18 @@ whether audio on the stream socket stalls behind video.
   - default decode priority (judder);
   - no frame wait;
   - the `.109` decode gate.
-- Next: the largest stream size that holds 120 Hz with Haar against CDF 5/3. Then
-  compare 90 Hz full size and 120 Hz at that size in the owner's headset.
+- **Largest size at 120 Hz, measured October 8 (`.109`, CDF 5/3, SteamVR Home):**
+  - native: 118-120 fresh FPS;
+  - 111 % (2304x2432, 1500 Mbps): 115;
+  - 123 % (2000 Mbps): 90;
+  - 135 % (2000 Mbps): 77-81.
+
+  See [HANDOFF](HANDOFF.md#current-goal-and-state-october-7). The decode runs on the same GPU as
+  the eye draw, which Virtual Desktop's hardware decode avoids.
+- Next: the owner compares full size at 90 Hz against about 110 % at 120 Hz in the headset. Only
+  a decode that does less work can move this limit. Two candidates:
+  - entropy-skip empty blocks;
+  - decode the finest level only where the lens resolves it.
 
 **2.1 Frame budget from the real frame rate.**
 

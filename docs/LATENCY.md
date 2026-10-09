@@ -169,6 +169,40 @@ sample it used) sat in one of two modes per connection:
   release fence's earlier result points the same way: removing the CPU wait raised the
   estimate; see [RELEASE-FENCE-EXPERIMENT.md](RELEASE-FENCE-EXPERIMENT.md).)
 
+## Client phase lock at 120 Hz (October 8, `.109`)
+
+The `.107` phase lock (`debug.q3pw.phase_lock=1`, target 1.5 ms before the render loop's wake)
+publishes each decoded frame just before the wake. It was meant to shorten the decoder queue.
+
+Setup:
+
+- Quest 3 over USB, native 2080x2208 stream, CDF 5/3 mode 5, 1500 Mbit/s, 120 Hz.
+- SteamVR Home, unworn headset.
+- 20 s blocks in two rounds, in the order shown. Round 1 was A B B A; its first block recorded
+  no trace. Round 2 was A A B B A, with an extra leading A block.
+- Medians of ALVR's GraphStatistics (ms):
+
+| Round | Arm | Fresh FPS | Game | Encoder | Network | Decoder | Decoder queue | Client compositor | Vsync queue | Total |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | lock | 119.8 | 2.9 | 4.3 | 5.1 | 8.9 | 1.8 | 3.3 | 14.7 | 41.5 |
+| 1 | lock | 119.9 | 2.0 | 4.3 | 5.2 | 6.2 | 1.8 | 2.8 | 14.6 | 37.5 |
+| 1 | off | 118.4 | 1.6 | 4.3 | 5.4 | 12.4 | 2.0 | 3.2 | 14.7 | 44.2 |
+| 2 | off | 119.2 | 9.7 | 3.7 | 5.5 | 6.8 | 1.6 | 3.0 | 14.8 | 46.5 |
+| 2 | off | 119.1 | 11.3 | 3.6 | 5.3 | 9.5 | 2.0 | 3.2 | 14.6 | 49.7 |
+| 2 | lock | 118.9 | 3.2 | 4.3 | 5.3 | 6.8 | 1.8 | 2.9 | 14.6 | 38.9 |
+| 2 | lock | 119.8 | 2.6 | 4.3 | 5.1 | 8.5 | 1.8 | 3.2 | 14.8 | 40.9 |
+| 2 | off | 118.7 | 3.2 | 4.3 | 5.2 | 8.1 | 2.6 | 3.0 | 14.5 | 41.5 |
+
+- The game stage switches between its two modes ([above](#the-game-stage-has-two-modes-in-the-test-scene-october-8)),
+  so compare totals minus the game stage. Those are 35.5-38.6 ms with the lock and 36.8-42.6 ms
+  without it.
+- The decoder stage spreads from 6 to 12 ms between blocks, and it sets most of that spread.
+  The decoder queue barely moves: 1.8 ms with the lock against 1.6-2.6 ms without it.
+- The lock stays opt-in. Its gain is within the decoder's noise.
+- At this setting, the floor of ALVR's estimate is the vsync queue (14.7 ms) plus network
+  (5.2 ms) plus decode. It cannot reach 30 ms at 120 Hz without a shorter decode and a shorter
+  transfer.
+
 ## Next
 
 - Network and decoder (about 11 ms together at 1500 Mbit/s): send blocks as they are encoded and
