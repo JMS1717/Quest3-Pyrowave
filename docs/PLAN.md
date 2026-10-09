@@ -258,6 +258,13 @@ whether audio on the stream socket stalls behind video.
 
   See [HANDOFF](HANDOFF.md#current-goal-and-state-october-7). The decode runs on the same GPU as
   the eye draw, which Virtual Desktop's hardware decode avoids.
+- **Tried October 9 (`.112`-`.115`, [DECODE-PRIORITY.md](DECODE-PRIORITY.md)):**
+  - At 90 Hz full size, default decode priority gives 84 fresh FPS against 80 at LOW, because
+    LOW can't keep up there. It stays a manual setting (`decode_priority=default`).
+  - At 80 Hz full size, LOW holds 79-80 with no stale frames, so the LOW rule is unchanged.
+  - A high-priority GL context for the eye draw (`debug.q3pw.gl_priority`, `.113`) is granted
+    but doesn't remove the stale frames at 120 Hz.
+  - Faster tracking polls (`debug.q3pw.input_polls_per_frame`, `.114`) don't help.
 - Next: the owner compares full size at 90 Hz against about 110 % at 120 Hz in the headset. Only
   a decode that does less work can move this limit. Two candidates:
   - entropy-skip empty blocks;
