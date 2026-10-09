@@ -201,3 +201,54 @@ bits the encoder spends there are partly invisible.
 - **Live (`.129`, wired, full size, 120 Hz, 1500 Mbps, two blocks):**
   - 116.3 and 117.9 fresh FPS, against 115-118 before.
   - The encoder does the same work; only which bit planes it keeps changes.
+
+## 5. Coarse-level weight for supersampled streams (`.130`, October 9)
+
+Section 3 chose the 6x coarse weight at 2208 rows as the first setting with no more blocking than
+upstream. At full size, 6x leaves less blocking than upstream, so it spends bits on gradients that
+upstream already drew well enough.
+
+**Study:** as in section 4, with the level-0 frequency at its `.129` value. Upstream is
+`32.64:0.6::99/1` with `PYROWAVE_DISCARD_WEIGHT=0`.
+- **Block steps (`tools/downsample/block_steps.py`):** the mean absolute step of the luma coding error across 16- and 32-pixel
+  boundaries, over the mean step inside them.
+- **Flat areas:** where the encoder input's smoothed Laplacian is below 0.5, which is 36-39 % of
+  the crops.
+- **Flat display PSNR (`d_flat`):** the luma error resampled to 2080x2208, over the same areas.
+
+| Stream, Mbps | Levels 3-4 weight | Display PSNR-HVS-M | Display Y | 16 px / 32 px step | Flat display PSNR |
+| --- | --- | --- | --- | --- | --- |
+| full size, 1500 | upstream | 29.08 | 30.31 | 0.668 / 0.755 | 50.15 |
+| | 6x (`.129`) | 30.28 | 30.75 | 0.584 / 0.578 | 49.92 |
+| | **4.12x (`.130`)** | **30.82** | 31.14 | 0.663 / 0.663 | 49.60 |
+| | 4x | 30.89 | 31.18 | 0.669 / 0.670 | 49.56 |
+| | 3x | 31.45 | 31.46 | 0.721 / 0.756 | 49.17 |
+| | 6x at level 4 only | 31.77 | 31.64 | 0.949 / 0.959 | 47.15 |
+| | none | 32.17 | 32.01 | 1.000 / 1.140 | 46.60 |
+| full size, 1000 | upstream | 25.38 | 27.73 | 0.842 / 0.971 | 48.01 |
+| | 6x (`.129`) | 25.34 | 27.38 | 0.828 / 0.844 | 47.02 |
+| | **4.12x (`.130`)** | **26.00** | 27.79 | 0.856 / 0.891 | 47.20 |
+| | 3x | 26.32 | 28.05 | 0.905 / 0.963 | 47.18 |
+| | 6x at level 4 only | 26.93 | 28.33 | 1.348 / 1.366 | 43.99 |
+| 125 %, 1500 | upstream | 24.46 | 27.69 | 0.597 / 0.623 | 51.95 |
+| | 6x (`.129`) | 25.55 | 28.36 | 0.719 / 0.709 | 48.89 |
+| | 4.75x | 25.60 | 28.40 | 0.751 / 0.746 | 48.80 |
+| | 8x | 25.43 | 28.23 | 0.692 / 0.682 | 48.95 |
+| 125 %, 1000 | upstream | 22.98 | 26.38 | 0.818 / 0.917 | 49.17 |
+| | 6x (`.129`) | 23.86 | 26.79 | 0.880 / 0.868 | 47.78 |
+| | 4.75x | 23.96 | 26.87 | 0.902 / 0.892 | 47.66 |
+| | 12x | 23.26 | 26.30 | 0.838 / 0.828 | 47.20 |
+
+- **Full size:** 4.12x (6x / (3216 / 2208)) matches upstream's 16-pixel blocking and has less at
+  32 pixels, at both rates. It scores +0.54 dB PSNR-HVS-M at 1500 and +0.66 dB at 1000 over 6x,
+  +0.4 dB display luma. Chroma is unchanged. At 1000 Mbps, 6x had only tied upstream on PSNR-HVS-M.
+- **Lower weights add blocking past upstream:** 3x by 8 % at 16 pixels, level 4 alone and none by
+  40-60 %, with the flat display PSNR 3-4 dB down.
+- **125 %:** 6x is already above upstream's blocking. Even 12x does not reach upstream, and 4.75x
+  gains under 0.1 dB, so 6x stays. The `.129` frequency did not cause this: the old 14.1 had a
+  16-pixel step of 0.708 at 1500 and 0.938 at 1000.
+- **Default from `.130`:** streams at least 1.4x the panel's rows use 6x / (rows / 2208); smaller
+  streams keep 6x (`patches/pyrowave-csf-panel.patch`). `PYROWAVE_LF_BOOST` still overrides it.
+- **Live (`.130`, wired, full size, 120 Hz, 1500 Mbps, three blocks):** 116.1, 117.2 and 114.4
+  fresh FPS. In the last block the panel's own vsync fell to 115.7. The same as `.129`.
+- Untested: whether the headset view shows the gradient change. `.129` is the rollback.

@@ -348,6 +348,11 @@ State:
       PSNR-HVS-M at panel resolution, and it is neutral at 125 %. Live full size 120 Hz: 116-118
       fresh, unchanged. See
       [ENCODER-CSF.md](ENCODER-CSF.md#4-supersampled-streams-scale-by-panel-rows-129-october-9).
+    - **`.130` (`local130-15a432f`): coarse-level weight 6x / (rows / 2208) for streams at least
+      1.4x the panel's rows** (4.1x at full size; server side, same patch). It matches upstream's
+      blocking at full size and scores +0.54 dB PSNR-HVS-M at 1500, +0.66 at 1000. 125 % keeps 6x.
+      Live full size 120 Hz: 116.1, 117.2, 114.4 fresh. See
+      [ENCODER-CSF.md](ENCODER-CSF.md#5-coarse-level-weight-for-supersampled-streams-130-october-9).
   - **Client phase lock and latency (`debug.q3pw.phase_lock=1`, native, 120 Hz, 1500 Mbps).**
     Two alternating rounds, medians of ALVR's estimate:
     - Fresh FPS: 118.9-119.9 with the lock, against 118.4-119.2 without it.

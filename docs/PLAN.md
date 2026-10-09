@@ -437,12 +437,20 @@ The largest loss decides what to build next.
 
 **2.6 Rate control.**
 
-- Allow bounded borrowing between frames, so a complex frame can take more than its average.
+- Allow bounded borrowing between frames, so a complex frame can take more than its average
+  (see below).
 - Re-tune the CSF for 120 Hz and supersampled sizes. **Done for supersampled streams (`.129`,
   [ENCODER-CSF.md](ENCODER-CSF.md#4-supersampled-streams-scale-by-panel-rows-129-october-9)):**
   the CSF frequency scales by stream rows over the panel's 2208. At full size that is +0.5 dB
   PSNR-HVS-M at panel resolution (1500 and 1000 Mbps); it is neutral at 125 %.
-- Revisit how hard coarse bands are quantized.
+- Revisit how hard coarse bands are quantized. **Done for full size (`.130`,
+  [ENCODER-CSF.md](ENCODER-CSF.md#5-coarse-level-weight-for-supersampled-streams-130-october-9)):**
+  streams at least 1.4x the panel's rows weight levels 3-4 by 6x / (rows / 2208), 4.1x at full
+  size. That matches upstream's blocking and scores +0.5-0.7 dB PSNR-HVS-M over 6x. 125 % keeps
+  6x, which is already above upstream's blocking there.
+- Bounded borrowing is not started. At full size and 120 Hz the headset decode is the limit, and
+  its time grows with the bytes it reads, so a frame above the average risks a missed refresh.
+  Measure how often live frames run under their cap before building it.
 
 **2.7 Adaptive sharpening on the headset.**
 
