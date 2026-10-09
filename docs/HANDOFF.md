@@ -173,6 +173,30 @@ State:
       CDF 5/3 is 1.5-2.7 dB better.
     - VrApi reports about 7 GPU preemptions per vsync in every configuration, at 90 Hz and at
       120 Hz.
+  - **`.111`: Godlike runs at 80 Hz; Skip invisible detail.**
+    - Full size holds 80 Hz with Haar at 1500 Mbps in the heavy scene: 79.6-80.1 of 80 (`.108`)
+      and 78.5-80.0 of 80 (`.111`). CDF 5/3 at 1500 gave 74-78 of 80. The **Godlike** profile is
+      now 80 Hz, Haar, 1500 Mbps (renamed "Quest 3 Godlike 80 Hz").
+    - **Skip invisible detail** (`video.pyrowave.skip_invisible_detail`, on by default) adds a
+      quality ceiling to the encoder's rate control: every discard in a rate-control bucket
+      below 56 is applied even when the frame fits its budget. Buckets are about 1.5 dB apart
+      in weighted distortion per byte. The new `patches/pyrowave-quality-floor.patch` adds
+      `pyrowave_encoder_set_quality_floor()` plus the shader; `PYROWAVE_RDO_FLOOR=<bucket>`
+      overrides it for experiments. The bitstream is unchanged, so the client is unaffected.
+    - Calibration, `decoder_ab wavelets 6144 3216 2777778` with `AB_SOURCE`:
+
+      | Floor | Photo bytes (dB, Haar / CDF) | Dashboard bytes (dB) |
+      |---|---|---|
+      | off | 2.78 MB (59.5 / 62.2) | 2.78 MB (52.5 / 53.3) |
+      | 54 | 1.61 / 1.21 MB (56.0 / 56.6) | 2.78 MB (unchanged) |
+      | 56 | 0.83 / 0.66 MB (54.6 / 55.1) | 2.52 / 2.39 MB (51.6) |
+      | 58 | 0.62 / 0.54 MB (53.4 / 54.0) | 2.01 MB (48.8) |
+      | 62 | 0.48 / 0.46 MB (51.6 / 52.4) | 1.39-1.46 MB (43.0 / 42.8) |
+
+      The synthetic source was unchanged at 56. CDF decode of the photo fell from 5.76 to 4.11 ms.
+    - Live, in the heavy scene at 2.34 MB per frame, frames still fill the budget with the
+      floor at 56 (confirmed in `openvr_config`). That content needs more than the ceiling
+      allows, so the setting helps only easier content there.
   - **The maximum GPU clock was not applied in these runs.** `quest3_max_gpu_clock=true`, but
     `debug.oculus.gpuLevel` read empty and VrApi showed level 4 (640 MHz). After the helper's
     `GPU_LEVEL_REVERTS` (2) reapplications it stops until the server restarts. Setting the

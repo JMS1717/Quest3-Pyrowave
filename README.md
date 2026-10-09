@@ -134,7 +134,7 @@ Tests-only runs produce no installable pair.
    | Profile | Per-eye stream | Best for |
    | --- | --- | --- |
    | **Quest 3 Quality 120 Hz** | 2272 × 2432 (110 %), 1500 Mbps | Wired PCVR: the most detail at a smooth 120 Hz |
-   | **Quest 3 Godlike 90 Hz** | 3072 × 3216 (full size, no downsample), 2000 Mbps | Wired PCVR: the most detail, at 90 Hz; heavy scenes can fall below 90 |
+   | **Quest 3 Godlike 80 Hz** | 3072 × 3216 (full size, no downsample), Haar, 1500 Mbps | Wired PCVR: the most detail, at a steady 80 Hz |
    | **Quest 3 Wi-Fi Quality 120 Hz** | 110 %, 1000 Mbps | Wi-Fi 6/6E with a strong link |
    | **Quest 3 Competitive 207 Hz** | 2080 × 2208, 1000 Mbps | Lowest latency; Horizon OS build 209 holds the headset at 120 Hz |
 
