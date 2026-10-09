@@ -4,7 +4,14 @@ Prepared October 4, 2026, with dated updates through October 9. Read [AGENTS.md]
 first. Machine-specific state, raw captures, signing material and rollback snapshots stay outside
 this repo.
 
-## October 9: beta.2, `.135`
+## October 9: beta.2, `.135`-`.136`
+
+`.136`: the dashboard's notification bar skips the periodic diagnostics (`[Q3PW_TRACKING_RX]`,
+`[Q3PW_POSE_EXTRAPOLATE]`, `[Q3PW_UDP_SEND]`, `[Q3PW_ENCODE_QUEUE]`, `[Q3PW_LATENCY_STAMP]`,
+`[VIEWS]`); they stay at error/warning level so `crash_log.txt` and `vrserver.txt` keep them for
+`tools/quest3/play_log.py` and the sweeps. A handshake timeout (`TryAgain`) logs at info. A fresh
+`.135` install measured 119 client FPS of 120, 1100 Mbit/s, ALVR latency 35 ms; first connection
+restarts SteamVR once (openvr_config changes), as upstream does.
 
 A fresh install streams **Quality 120** (`session_settings_default` matches
 `beta::QUALITY_PROFILE`: 2270x2429 stream, 3096x3312 render, 120 Hz, 1500 Mbps, CDF 5/3, Compute,
