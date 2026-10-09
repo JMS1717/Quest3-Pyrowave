@@ -280,6 +280,13 @@ State:
       3 FPS, so check the applied mode in the log for every arm.
     - Decode priority on direct, Quality 120: LOW 120.0 against default 119.3 / 119.9 with
       fewer stale frames; the LOW rule at 120 Hz and below stays.
+    - **`.118` verified with no properties set (wired, 1000 Mbps, `local118-cea89c8`):**
+      - full size 120 Hz: LOW (the default rule) 115.4 / 117.1 fresh, default priority 118.3 /
+        115.7 / 118.3; `.117` LOW was 102.2. GPU load 0.88 against 0.94, VrApi app GPU 6.0 ms.
+        The LOW/default gap is inside the noise and LOW has fewer stale frames, so the rule stays;
+      - Godlike 90 full size: 89.5 / 90.1 of 90.1, stale 0-2 a second;
+      - Quality 120: 115.1 / 119.7. In the first block every frame decoded, but 5 a second were
+        superseded before display.
   - **The maximum GPU clock was not applied in these runs.** `quest3_max_gpu_clock=true`, but
     `debug.oculus.gpuLevel` read empty and VrApi showed level 4 (640 MHz). After the helper's
     `GPU_LEVEL_REVERTS` (2) reapplications it stops until the server restarts. Setting the

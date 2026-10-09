@@ -274,9 +274,13 @@ whether audio on the stream socket stalls behind video.
   Full size at 120 Hz is now GPU-bound (load 0.94 at 690 MHz). Bitrate, async copy, the GL
   priority context and `release_fd` don't raise fresh FPS. `release_fd` does keep every
   display period.
+- **`.118`: decoder mode 6 (paired chroma) is the default.** It halves the chroma stores of the
+  last iDWT level. Full size at 120 Hz with no properties set: 115-118 fresh FPS (`.117`: 102 at
+  the default LOW priority, 111-114 at default priority), GPU load 0.88. Godlike 90 89.5-90.1,
+  Quality 120 115-120. A smaller eye swapchain (`eye_percent=67`) gave no FPS at full size.
 - Next:
-  - the owner compares full size at 90 Hz (now about 89) against full size at 120 Hz (about
-    112) in the headset;
+  - the owner compares full size at 90 Hz (about 90) against full size at 120 Hz (about
+    116) in the headset;
   - re-check other rules that were chosen on staging. Decode priority at Quality 120 was
     re-checked on direct: LOW gave 120.0 fresh FPS against 119.3-119.9 at default, with fewer
     stale frames, so the LOW rule at 120 Hz and below stays;
