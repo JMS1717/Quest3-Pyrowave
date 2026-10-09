@@ -284,6 +284,11 @@ whether audio on the stream socket stalls behind video.
   - re-check other rules that were chosen on staging. Decode priority at Quality 120 was
     re-checked on direct: LOW gave 120.0 fresh FPS against 119.3-119.9 at default, with fewer
     stale frames, so the LOW rule at 120 Hz and below stays;
+  - latency lead: the server's "game" interval (tracking received to SteamVR present) settles at
+    either about 2 ms or 9-11 ms per stream start, at every size, and ALVR's total estimate
+    follows it (Quality 120: 34 against 42 ms). The client polls tracking 3 times a frame, so
+    pose age explains at most 2.8 ms: some starts present one frame later. Find what picks the
+    slot (server vsync phase at stream start, SteamVR pacing) and hold the 2 ms one;
   - only less GPU work per frame (decode cost, or the eye copy) lifts full size at 120 Hz. Two candidates:
   - entropy-skip empty blocks;
   - decode the finest level only where the lens resolves it.
