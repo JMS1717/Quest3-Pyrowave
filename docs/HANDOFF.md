@@ -329,6 +329,12 @@ State:
       mode 7: 6.45). Live full size 1500 Mbps: 86-88 fresh at 90 Hz, 90-92 at 120 Hz (4:2:0 on the
       same build 88-90 / 114-118). At 120 Hz the GPU is full (99 %); LOW priority still loses at
       90 Hz. See [HAAR32.md](HAAR32.md#mode-7-444-in-the-present-buffer-124-october-9).
+    - **`.125`-`.126` (`local126-32260a4`): Haar 4:4:4 mode 8** (chroma pairs, one eye-pass fetch
+      for Cb and Cr) is the 4:4:4 default; `debug.q3pw.haar32` accepts `7` and `8` from `.126`
+      (before, the `m7` harness arm silently ran the default). Full size 120 Hz, interleaved and
+      verified per block: 91.0 against 90.6 fresh for mode 7, within noise; app time 0.15 ms
+      lower. The limit is memory traffic plus the 7 ms live decode, not fetch count. See
+      [HAAR32.md](HAAR32.md#mode-8-444-chroma-pairs-125-october-9).
   - **Client phase lock and latency (`debug.q3pw.phase_lock=1`, native, 120 Hz, 1500 Mbps).**
     Two alternating rounds, medians of ALVR's estimate:
     - Fresh FPS: 118.9-119.9 with the lock, against 118.4-119.2 without it.

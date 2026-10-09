@@ -14,7 +14,9 @@ instead of 11.5.
 (6144x3232 decoded) at 1500 Mbps gives 86-88 fresh FPS at 90 Hz and 90-92 at 120 Hz, against
 83.5 and 77.5 for CDF 5/3 4:4:4 and 88-90 / 114-118 for Haar 4:2:0. At 120 Hz the GPU is full:
 decode plus an eye pass with three reads per pixel. See
-[HAAR32.md](HAAR32.md#mode-7-444-in-the-present-buffer-124-october-9).
+[HAAR32.md](HAAR32.md#mode-7-444-in-the-present-buffer-124-october-9). `.125` mode 8 reads both
+chroma components with one fetch: 91.0 against 90.6 fresh at 120 Hz, within noise
+([HAAR32.md](HAAR32.md#mode-8-444-chroma-pairs-125-october-9)).
 
 **Current (alpha.9 and `.64`).** 4:2:0 is the default and **Full chroma (4:4:4)** is opt-in.
 The latest check is the [October 7 run at 207 Hz](#october-7-check-at-207-hz): 68.1 fresh FPS

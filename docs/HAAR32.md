@@ -6,8 +6,9 @@ chroma. `0` to `5` select a mode; requesting
 `debug.q3pw.fuse_color=1` or `debug.q3pw.dequant_haar=1` turns the default off, since those
 experiments replace passes this one owns. The client logs `[Q3PW_HAAR32] requested=N active=M
 packed_luma=0|1 dual_chroma=0|1` and steps down to the best mode the decoder accepts (CDF wavelets, the
-fragment decode path and precisions other than 1 fall back to mode 0 or 1). 4:4:4 asks for mode 7
-from `.124`; before that it took the default decoder.
+fragment decode path and precisions other than 1 fall back to mode 0 or 1). 4:4:4 asks for mode 8
+from `.125` (mode 7 in `.124`; before that it took the default decoder). The property accepts `7`
+and `8` from `.126`; earlier builds ignored them and used the default.
 
 | mode | what changes |
 |---|---|
@@ -19,6 +20,7 @@ from `.124`; before that it took the default decoder.
 | 5 | 4 + luma and chroma written into the present buffer ([PRESENT-YCBCR.md](PRESENT-YCBCR.md)) |
 | 6 | 5 with two chroma pixels per texel |
 | 7 | 4:4:4 only: 3, with luma, Cb and Cr quads in one present buffer 3/2 as wide (`.124`) |
+| 8 | 4:4:4 only: 7 with mode 6's chroma texels, (Cb, Cr) of two pixels each (`.125`) |
 
 ## Mode 7: 4:4:4 in the present buffer (`.124`, October 9)
 
@@ -49,6 +51,28 @@ every block, default decode priority (the `.123` rule). Fresh FPS per block:
 - At 90 Hz the loss is 2-4 frames a second superseded after decode. LOW decode priority loses
   there on average, as it did for CDF 5/3: 83.1 / 82.6 / 83.4 against 85.7 / 87.7 / 82.8 at default
   (interleaved; the last default block fell to the LOW level).
+
+## Mode 8: 4:4:4 chroma pairs (`.125`, October 9)
+
+Mode 8 is mode 6's chroma layout at full resolution. The buffer is the same size as mode 7's, but
+each chroma texel holds (Cb, Cr) of two horizontally adjacent pixels (left in RG, right in BA).
+Pixel row y is in texel row y/2: even rows from x = width/2, odd rows from x = width. The final
+chroma pass reconstructs Cb and Cr in one dispatch (the `DUAL` variant with spec constant 6,
+`ROW_SPLIT`), and the eye shader reads both components with one fetch instead of two. ALVR picks
+the layout from the `q3pw_444_pairs` uniform, which the decoder thread sets from
+`pyroclient_present_layout()`.
+
+- Exactness: `AB_CHROMA=444 AB_ALLOW_DIFF=1 decoder_ab haar32m8` passes (max diff 1).
+- Standalone, 6144x3232, 1.56 MB a frame, 690 MHz, alternating: 4.49 ms against 4.45 ms for mode 7.
+- Live, wired, full size, 120 Hz, 1500 Mbps, eight interleaved blocks with the active mode read
+  from each block's log: fresh FPS **91.9 / 90.7 / 90.2 / 91.1** against 89.5 / 90.7 / 91.4 / 90.8
+  for mode 7. App GPU time is about 0.15 ms lower (median 9.01 against 9.18 ms of the block readings);
+  GPU 99 % in both.
+
+The fetch count was not the cost. Both layouts read the same bytes per pixel, and a luma-only eye
+pass (`.124` probe, +16 FPS) also removed two-thirds of the bytes. Full-size 4:4:4 at 120 Hz is
+limited by memory traffic and the 7 ms live decode. Mode 8 stays the 4:4:4 default because it
+is exact and not slower.
 
 ## Mode 4: both chroma planes in one RG8 plane
 

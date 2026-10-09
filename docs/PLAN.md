@@ -296,6 +296,9 @@ whether audio on the stream socket stalls behind video.
   120 Hz, GPU-bound (decode 7 ms live plus three eye reads per pixel). Next for full-size 4:4:4 at
   120 Hz: about 2.5 ms of client GPU time per frame; measure the eye pass's third read and the
   decode stages first.
+- **`.125`: Haar 4:4:4 mode 8** (one chroma fetch per pixel): within noise of mode 7 (91.0 against
+  90.6 at 120 Hz). Fetch count is not the cost; bytes read and the 7 ms live decode (dequant
+  2.7 ms, iDWT 4.2 ms live) are. Next: fewer bytes or less decode work, not fewer instructions.
 - Eye pass at full size: chroma reads are about 1.3 of its 2.7 ms (`.120` probes). Not the FPS
   limit at full size 120 Hz (frames superseded after decode are), but the largest piece of client
   GPU time left after decode. A cheaper chroma read is the next eye-pass candidate.
@@ -422,7 +425,8 @@ The largest loss decides what to build next.
   ([DECODE-PRIORITY.md](DECODE-PRIORITY.md#444-at-quality-120-october-9-121-122)).
   Full size 4:4:4: 83.5 fresh at 90 Hz, 77.5 at 120 Hz; decode 8.2-8.9 ms is the limit.
 - **`.124`:** Haar 4:4:4 mode 7 raises full size to 86-88 (90 Hz) and 90-92 (120 Hz)
-  ([HAAR32.md](HAAR32.md#mode-7-444-in-the-present-buffer-124-october-9)).
+  ([HAAR32.md](HAAR32.md#mode-7-444-in-the-present-buffer-124-october-9)). `.125` mode 8 is
+  within noise of it ([HAAR32.md](HAAR32.md#mode-8-444-chroma-pairs-125-october-9)).
 
 **2.6 Rate control.**
 
