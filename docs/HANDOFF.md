@@ -288,6 +288,17 @@ State:
       - Godlike 90 full size: 89.5 / 90.1 of 90.1, stale 0-2 a second;
       - Quality 120: 115.1 / 119.7. In the first block every frame decoded, but 5 a second were
         superseded before display.
+    - **`.119` (`local119-32861bd`): automatic decode priority picks LOW only up to 2.0 G decoded
+      pixels a second**, so full size at 120 Hz (2.37 G) now gets default priority; Godlike 90,
+      full size at 80 Hz and Quality 120 keep LOW (unit-tested, not re-run live). ABBABA at full
+      size 120 Hz, GPU level 7 in every block: automatic 118.6 / 114.4 / 116.0 against forced LOW
+      117.4 / 115.5 / 117.7. That's noise, and LOW no longer replaced frames before decode (R 0-0.3
+      a second), so the change is kept only for the `.118` evidence. See
+      [DECODE-PRIORITY.md](DECODE-PRIORITY.md).
+    - **Check the GPU level per block.** VrApi's `CPU4/GPU=4/N,.../MHz` changed between blocks
+      on October 9: the mode 6 ABBAs ran at level 4 (640 MHz) throughout, but the `.118`
+      `release_fd` set mixed level 7 and level 4, and a Quality 120 set mixed 690, 640 and 545
+      MHz. Those comparisons are confounded. The private harness now prints the level per block.
   - **The maximum GPU clock was not applied in these runs.** `quest3_max_gpu_clock=true`, but
     `debug.oculus.gpuLevel` read empty and VrApi showed level 4 (640 MHz). After the helper's
     `GPU_LEVEL_REVERTS` (2) reapplications it stops until the server restarts. Setting the

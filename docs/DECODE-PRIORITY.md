@@ -49,7 +49,7 @@ this is not a latency claim.
 
 | Property | Read | Effect |
 | --- | --- | --- |
-| `debug.q3pw.decode_priority` | at decoder creation | unset/other: LOW only for 4:2:0 at ≤120 Hz (`.112`-`.114` used default at ≤90 Hz; reverted in `.115`); `low`: always LOW; `default`: never |
+| `debug.q3pw.decode_priority` | at decoder creation | unset/other: LOW only for 4:2:0 at ≤120 Hz and at most 2.0 G decoded pixels a second (`.119`; `.112`-`.114` used default at ≤90 Hz, reverted in `.115`); `low`: always LOW; `default`: never |
 
 logcat `[Q3PW_PRIORITY]` reports the policy decision (refresh rate, chroma,
 choice) and what the driver applied.
@@ -88,6 +88,24 @@ queue (1-7 against 2-3 ms) and client compositor (5-8 against 4.5 ms) grow, and 
 lower (63-73 against 64-71 ms). `.112` switched the automatic policy to default at ≤90 Hz; `.115`
 reverts that because the shipped Godlike profile runs at 80 Hz. For full size at 90 Hz, set
 `decode_priority=default` by hand.
+
+## Full size at 120 Hz on direct eye copy (October 9, `.118`-`.119`)
+
+With direct eye copy (`.117`) and mode 6 (`.118`), full size (6144x3216 decoded, both eyes) at
+120 Hz decodes 2.37 G pixels a second. Wired, 1000 Mbps, unworn, SteamVR Home, GPU level 7.
+
+| Build | Arm | Fresh FPS | Replaced before decode | Superseded after decode |
+| --- | --- | --- | --- | --- |
+| `.118` | LOW (the rule then) | 115.2, 117.1 | 2.3-3.3/s | |
+| `.118` | default | 118.2, 115.6, 118.2 | 0-0.3/s | |
+| `.119` | automatic (chose default) | 118.6, 114.4, 116.0 | 0-0.1/s | 1.4-5.7/s |
+| `.119` | LOW forced | 117.4, 115.5, 117.7 | 0-0.3/s | 2.4-3.8/s |
+
+`.119` adds a pixel-rate limit to the automatic rule: LOW only up to 2.0 G decoded pixels a
+second. Only full size at 120 Hz changes (Godlike 90 is 1.78 G, Quality 120 1.32 G, full size at
+80 Hz 1.58 G). In the `.119` ABBA the two arms are within the ±3 FPS block noise and LOW no
+longer replaced frames before decode, so the limit is a small, unproven change kept for the
+earlier `.118` evidence. The client logs `[Q3PW_PRIORITY] policy ... low=false frame=6144x3232`.
 
 ## Limits
 

@@ -278,6 +278,10 @@ whether audio on the stream socket stalls behind video.
   last iDWT level. Full size at 120 Hz with no properties set: 115-118 fresh FPS (`.117`: 102 at
   the default LOW priority, 111-114 at default priority), GPU load 0.88. Godlike 90 89.5-90.1,
   Quality 120 115-120. A smaller eye swapchain (`eye_percent=67`) gave no FPS at full size.
+- **`.119`: LOW decode priority only up to 2.0 G decoded pixels a second.** Full size at 120 Hz
+  gets default priority; the live ABBA was within noise (automatic 116.3 against LOW 116.9
+  mean). Check VrApi's GPU level in every block: it moved between 7 and 4 on October 9 and
+  confounds some earlier sets (`release_fd`, one Quality 120 set).
 - Next:
   - the owner compares full size at 90 Hz (about 90) against full size at 120 Hz (about
     116) in the headset;
