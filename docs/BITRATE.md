@@ -149,7 +149,7 @@ See [complete sanitized distributions](../results/BITRATE-USB-LIVE-2026-10-02.js
 
 Dated record from `.44`. It predates the faster decoder: Haar GPU decode at 2080×2208 now
 measures about 2.7 ms p50 (207 Hz, 690 MHz GPU clock, `.62`), not 6 ms. "Default" below means the native 120 Hz profile's 1000 Mbps; a fresh
-install starts on the 400 Mbps / 72 Hz Starter profile.
+install streams the 1500 Mbps / 120 Hz Quality profile.
 
 The reviewed `.44` pair passed all matching builds and production decoder tests;
 its native libraries are byte-identical to GPU-verified `.42`. One continuous
