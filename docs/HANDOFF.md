@@ -314,6 +314,12 @@ State:
     - Eye pass at full size: chroma reads cost about 1.3 ms of its 2.7 ms (probes 3-5, `.120`),
       not write compression; removing them didn't raise fresh FPS at full size 120 Hz. See
       [PRESENT-YCBCR.md](PRESENT-YCBCR.md#eye-pass-cost-at-full-size-october-9-119-120).
+    - **`.122` (`local122-c09bca8`): LOW decode priority for 4:4:4 too.** Quality 120 4:4:4
+      (CDF 5/3, 1500 Mbps) at default priority gave 109-116 fresh FPS against 4:2:0's 119-120,
+      all of it frames superseded after decode. Forced LOW: 118.6 / 119.6 / 119.9 against 115.7 /
+      113.6 / 116.2 interleaved; on `.122` automatic 119.6 / 118.1 against forced default 110.9 /
+      108.8. Latency within noise. See
+      [DECODE-PRIORITY.md](DECODE-PRIORITY.md#444-at-quality-120-october-9-121-122).
   - **Client phase lock and latency (`debug.q3pw.phase_lock=1`, native, 120 Hz, 1500 Mbps).**
     Two alternating rounds, medians of ALVR's estimate:
     - Fresh FPS: 118.9-119.9 with the lock, against 118.4-119.2 without it.

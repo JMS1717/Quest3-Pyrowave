@@ -286,6 +286,9 @@ whether audio on the stream socket stalls behind video.
   whenever the client restarts; the helper gave up after two clears and the GPU fell to 640 MHz.
   The runtime applies the level live, so the helper now rewrites it without a restart: six
   restarted blocks all ran at 690 MHz (115-118 fresh FPS at full size 120 Hz).
+- **`.122`: 4:4:4 at Quality 120 holds 118-120 fresh FPS** (LOW decode priority, which the
+  automatic rule had withheld from 4:4:4: 109-116 before). 4:4:4 at 120 Hz now costs no FPS
+  against 4:2:0 in this scene. Owner check: Quality 120 4:4:4 against 4:2:0 for colour.
 - Eye pass at full size: chroma reads are about 1.3 of its 2.7 ms (`.120` probes). Not the FPS
   limit at full size 120 Hz (frames superseded after decode are), but the largest piece of client
   GPU time left after decode. A cheaper chroma read is the next eye-pass candidate.
@@ -407,6 +410,9 @@ The largest loss decides what to build next.
   misses 3-6 periods a second. At 1500 it keeps up. A faster 4:4:4 decode (or fewer bytes for the
   same detail) is what makes 2000 pay
   ([FRESHNESS.md](FRESHNESS.md#where-120-hz--2000--444-loses-frames-92-october-8)).
+- **`.122`:** Quality 120 4:4:4 at 1500 Mbps holds 118-120 fresh FPS once decode runs at LOW
+  priority (109-116 at default), level with 4:2:0
+  ([DECODE-PRIORITY.md](DECODE-PRIORITY.md#444-at-quality-120-october-9-121-122)).
 
 **2.6 Rate control.**
 

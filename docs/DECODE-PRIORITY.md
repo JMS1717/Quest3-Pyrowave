@@ -49,7 +49,7 @@ this is not a latency claim.
 
 | Property | Read | Effect |
 | --- | --- | --- |
-| `debug.q3pw.decode_priority` | at decoder creation | unset/other: LOW only for 4:2:0 at ≤120 Hz and at most 2.0 G decoded pixels a second (`.119`; `.112`-`.114` used default at ≤90 Hz, reverted in `.115`); `low`: always LOW; `default`: never |
+| `debug.q3pw.decode_priority` | at decoder creation | unset/other: LOW only at ≤120 Hz and at most 2.0 G decoded pixels a second, 4:2:0 or 4:4:4 (`.122`; 4:2:0 only before; `.119` added the pixel limit; `.112`-`.114` used default at ≤90 Hz, reverted in `.115`); `low`: always LOW; `default`: never |
 
 logcat `[Q3PW_PRIORITY]` reports the policy decision (refresh rate, chroma,
 choice) and what the driver applied.
@@ -106,6 +106,28 @@ second. Only full size at 120 Hz changes (Godlike 90 is 1.78 G, Quality 120 1.32
 80 Hz 1.58 G). In the `.119` ABBA the two arms are within the ±3 FPS block noise and LOW no
 longer replaced frames before decode, so the limit is a small, unproven change kept for the
 earlier `.118` evidence. The client logs `[Q3PW_PRIORITY] policy ... low=false frame=6144x3232`.
+
+## 4:4:4 at Quality 120 (October 9, `.121`-`.122`)
+
+Quality 120 with full chroma: CDF 5/3, 2270x2429 per eye (4544x2432 decoded), 120 Hz, 1500 Mbps,
+wired, unworn, SteamVR Home, GPU level 7 in every block. Until `.121` the automatic rule never
+chose LOW for 4:4:4, which had not been measured.
+
+| Build | Arm | Fresh FPS | Superseded after decode | ALVR latency less game, p50 |
+| --- | --- | --- | --- | --- |
+| `.121` | 4:2:0 (automatic, LOW) | 120.0, 119.8, 119.8, 119.1 | 0-0.7/s | 29.8-33.4 ms |
+| `.121` | 4:4:4 (automatic, default) | 109.1, 115.0, 112.4, 109.5 | 5.1-10.9/s | 35.2-39.4 ms |
+| `.121` | 4:4:4, LOW forced | 118.6, 119.6, 119.9 | 0-0.4/s | 35.9-40.0 ms |
+| `.121` | 4:4:4, default (interleaved) | 115.7, 113.6, 116.2 | 3.9-6.5/s | 35.4-40.1 ms |
+| `.122` | 4:4:4, automatic (LOW) | 119.6, 118.1 | 0.1/s | 35.2-39.0 ms |
+| `.122` | 4:4:4, default forced | 110.9, 108.8 | 9.2-11.0/s | 35.1-36.4 ms |
+
+At default priority the eye copy waits behind the longer 4:4:4 decode and finished frames are
+replaced before they are shown. Under LOW the decoder's GPU time rises from about 5 to 7 ms, but
+the vsync queue shortens by about as much, so latency is within noise. 4:4:4 itself adds
+about 3-6 ms against 4:2:0 at either priority (longer decode). `.122` drops the 4:2:0
+condition: 4:4:4 now gets LOW under the same ≤120 Hz and 2.0 G pixels a second limits. 4:4:4 at
+full size and 90 Hz (1.78 G) also falls under LOW and is not measured.
 
 ## Limits
 
