@@ -240,6 +240,28 @@ State:
       0.83-0.88 and latency estimate 39.8 against 46-50 ms. VrApi stale 2-4 against 0-1 a
       second. The first direct block caught only 4 s of trace at stream start (73 fresh) and is
       discarded.
+    - `.117` with no properties set: Godlike 90 88.9 fresh of 90.1, so the default takes the
+      direct path.
+    - **Full size at 120 Hz on direct (Haar, 3072x3216, 2000 Mbps, `.117`):** LOW 102.2 fresh
+      (17.5 frames a second replaced before decode). Default decode priority 111.1 / 111.8 /
+      112.6 / 114.1, but the render loop sees only 115-116 of 120 display periods and VrApi
+      stale runs 1-22 a second: the synchronous glFinish after the eye draw waits 7.4-7.7 ms
+      behind decode. Staging reached 66-82 here on October 8.
+    - **Async eye copy at full size 120 Hz (`debug.q3pw.async_eye_copy=1`, default priority) is
+      rejected again:** 91.5 / 83.9 against 112.6 / 114.1 synchronous. Stale is 0, but the copy
+      completes 8.4-10.8 ms later behind decode and frames are deferred meanwhile.
+    - **A high-priority GL context does not shorten that wait** (`debug.q3pw.gl_priority=high`,
+      default decode priority, ABBA): 111.2 / 111.0 against 112.7 / 111.5, eye draw to
+      glFinish still 4.9-7.5 ms p50, stale 4-18 a second in both.
+    - **`debug.q3pw.release_fd=1` (flush and a fence handed to the decoder instead of glFinish)
+      at full size 120 Hz, ABBA:** fresh 112.7 / 112.2 against 112.4 / 112.0. The render loop
+      now sees 119.8-120.1 display periods instead of 116.4-116.7, and stale was 0-5 a second
+      in one block (4-14 without), 0-22 in the other. Same fresh FPS; it stays opt-in, but it
+      is the candidate for full size at 120 Hz once a worn test can judge smoothness.
+    - Full size at 120 Hz is now GPU-bound: GPU level 7 (690 MHz), GPU load 0.94, decode 4.8 ms
+      GPU and 7.3 ms to its fence. 1500 Mbps instead of 2000 gives the same 112.9 fresh
+      (decode 4.6 ms). Only less GPU work per frame moves it (decode cost, or the
+      eye copy, see [LIVE-SURFACE-VIDEO.md](LIVE-SURFACE-VIDEO.md)).
   - **The maximum GPU clock was not applied in these runs.** `quest3_max_gpu_clock=true`, but
     `debug.oculus.gpuLevel` read empty and VrApi showed level 4 (640 MHz). After the helper's
     `GPU_LEVEL_REVERTS` (2) reapplications it stops until the server restarts. Setting the
