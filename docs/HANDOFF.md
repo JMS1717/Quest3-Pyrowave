@@ -299,6 +299,11 @@ State:
       on October 9: the mode 6 ABBAs ran at level 4 (640 MHz) throughout, but the `.118`
       `release_fd` set mixed level 7 and level 4, and a Quality 120 set mixed 690, 640 and 545
       MHz. Those comparisons are confounded. The private harness now prints the level per block.
+    - `release_fd` re-run on `.119` at full size 120 Hz, level 7 in all six blocks: on 118.0 /
+      115.2 / 118.9 fresh against off 116.3 / 117.5 / 116.8, a tie (the `.118` "loss" was the
+      clock). With it every display period is served (120.2 against 117.5-119.7 a second), and the
+      client compositor's 4.9 ms moves into the vsync queue (0.6 and 18-20 against 15.5 ms), so
+      ALVR's total is unchanged. Neutral; stays opt-in.
   - **The maximum GPU clock was not applied in these runs.** `quest3_max_gpu_clock=true`, but
     `debug.oculus.gpuLevel` read empty and VrApi showed level 4 (640 MHz). After the helper's
     `GPU_LEVEL_REVERTS` (2) reapplications it stops until the server restarts. Setting the
