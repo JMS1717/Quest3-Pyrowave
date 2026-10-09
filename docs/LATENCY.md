@@ -203,6 +203,36 @@ Setup:
   (5.2 ms) plus decode. It cannot reach 30 ms at 120 Hz without a shorter decode and a shorter
   transfer.
 
+## Full size at 120 Hz (`.127`, October 9)
+
+Godlike full size (3072x3216 per eye), Haar 4:2:0, 1500 Mbit/s, four wired connections, direct
+eye copy, test scene. Frame trace p50 over one block:
+
+| Stage | ms |
+| --- | --- |
+| First slice to complete frame | 3.10 |
+| Complete to decode queue | 0.21 |
+| Decode wall time | 5.86 |
+| of which submit to fence | 5.23 |
+| of which GPU decode (timestamps) | 3.24 |
+| Decoded to taken by the render loop | 0.71 |
+| Render start to eye submit | 4.68 |
+| `xrWaitFrame` return to predicted display | 19.56 (2.35 periods) |
+| Frame age at display | 45.9 |
+
+- **Before submit:** about 0.6 ms of CPU work: the clear, pushing 1.56 MB of packets, the payload
+  copy and recording.
+- **The fence waits about 2 ms beyond the GPU decode**, queued behind the eye pass and the
+  compositor.
+- **The runtime's lead dominates.** 19.6 ms of the 45.9 ms frame age is the Quest runtime's
+  prediction lead. Earlier `release_fd` and LOW-priority runs showed it does not follow the
+  app's frame time.
+- **Below 30 ms (ALVR's estimate) is not reachable at 120 Hz by client work alone.** What is
+  left on the client is about 1 ms or less per lever:
+  - upload the payload without a copy;
+  - overlap the transfer with dequantization (above);
+  - drop the ~0.6 ms CPU preamble.
+
 ## Next
 
 - Network and decoder (about 11 ms together at 1500 Mbit/s): send blocks as they are encoded and
