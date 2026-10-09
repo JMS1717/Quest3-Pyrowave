@@ -37,6 +37,8 @@ struct Arm {
     bool present = false;
     // With present: two chroma pixels per texel, the image 3/4 w wide (mode 6).
     bool pairs = false;
+    // With present: 4:4:4, luma, Cb and Cr quads in one image 3/2 w wide (mode 7; AB_CHROMA=444).
+    bool full = false;
 };
 
 pyrowave_result no_change(pyrowave_decoder) { return PYROWAVE_SUCCESS; }
@@ -48,6 +50,7 @@ const Arm ARMS[] = {
     { "haar32qd", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 4); }, nullptr, nullptr, true, true },
     { "haar32qp", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 5); }, nullptr, nullptr, true, true, true },
     { "haar32m6", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 6); }, nullptr, nullptr, true, true, true, true },
+    { "haar32m7", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 7); }, nullptr, nullptr, true, false, true, false, true },
     // Decoder V2 register-only inverse CDF 5/3; run with AB_WAVELET=53 so the base decodes 5/3 too.
     { "cdf53v2", [](pyrowave_decoder d) { return pyrowave_decoder_set_cdf53v2(d, 1); } },
     { "cdf53v2q", [](pyrowave_decoder d) { return pyrowave_decoder_set_cdf53v2(d, 2); }, nullptr, nullptr, true },
@@ -55,6 +58,7 @@ const Arm ARMS[] = {
     { "cdf53v2qd", [](pyrowave_decoder d) { return pyrowave_decoder_set_cdf53v2(d, 4); }, nullptr, nullptr, true, true },
     { "cdf53v2m5", [](pyrowave_decoder d) { return pyrowave_decoder_set_cdf53v2(d, 5); }, nullptr, nullptr, true, true, true },
     { "cdf53v2m6", [](pyrowave_decoder d) { return pyrowave_decoder_set_cdf53v2(d, 6); }, nullptr, nullptr, true, true, true, true },
+    { "cdf53v2m7", [](pyrowave_decoder d) { return pyrowave_decoder_set_cdf53v2(d, 7); }, nullptr, nullptr, true, false, true, false, true },
     // Controls: the default decoder against itself, and the dedicated pair-local Haar kernel.
     { "base", no_change },
     { "pairs64", no_change, "PYROWAVE_HAAR_PAIRS", "64-column" },
@@ -76,6 +80,7 @@ struct Session {
     bool dual_chroma = false;
     bool present = false;
     bool pairs = false;
+    bool full = false;
 };
 
 Session create_session(const Gpu &g, uint32_t w, uint32_t h, const Arm *arm,
@@ -83,7 +88,9 @@ Session create_session(const Gpu &g, uint32_t w, uint32_t h, const Arm *arm,
     Session s;
     pyrowave_decoder_create_info di = {};
     di.device = g.pyro; di.width = int(w); di.height = int(h);
-    di.chroma = PYROWAVE_CHROMA_SUBSAMPLING_420; di.fragment_path = fragment; di.wavelet = wavelet;
+    const bool chroma444 = ab_chroma444();
+    di.chroma = chroma444 ? PYROWAVE_CHROMA_SUBSAMPLING_444 : PYROWAVE_CHROMA_SUBSAMPLING_420;
+    di.fragment_path = fragment; di.wavelet = wavelet;
     if (arm && arm->env_name) setenv(arm->env_name, arm->env_value, 1);
     PW_CHECK(pyrowave_decoder_create(&di, &s.decoder));
     if (arm && arm->env_name) unsetenv(arm->env_name);
@@ -97,12 +104,14 @@ Session create_session(const Gpu &g, uint32_t w, uint32_t h, const Arm *arm,
     const VkFormat luma_format = s.packed_luma ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R8_UNORM;
     s.present = arm && arm->present;
     s.pairs = arm && arm->pairs;
-    s.planes[0] = s.present ? create_image(g, luma_format, s.pairs ? w / 4 * 3 : w, h / 2, usage) :
+    s.full = arm && arm->full;
+    s.planes[0] = s.present ? create_image(g, luma_format, s.full ? w / 2 * 3 : s.pairs ? w / 4 * 3 : w, h / 2, usage) :
                   s.packed_luma ? create_image(g, luma_format, w / 2, h / 2, usage) : create_image(g, luma_format, w, h, usage);
     s.dual_chroma = arm && arm->dual_chroma;
     const VkFormat chroma_format = s.dual_chroma ? VK_FORMAT_R8G8_UNORM : VK_FORMAT_R8_UNORM;
-    s.planes[1] = create_image(g, chroma_format, w / 2, h / 2, usage);
-    s.planes[2] = create_image(g, VK_FORMAT_R8_UNORM, w / 2, h / 2, usage);
+    const uint32_t cw = chroma444 ? w : w / 2, ch = chroma444 ? h : h / 2;
+    s.planes[1] = create_image(g, chroma_format, cw, ch, usage);
+    s.planes[2] = create_image(g, VK_FORMAT_R8_UNORM, cw, ch, usage);
     for (int i = 0; i < 3; i++) {
         pyrowave_image_view &v = s.buffers.planes[i];
         v.image = s.planes[i].image; v.width = int(s.planes[i].width); v.height = int(s.planes[i].height);
@@ -110,8 +119,9 @@ Session create_session(const Gpu &g, uint32_t w, uint32_t h, const Arm *arm,
         v.mip_level = 0; v.layer = 0; v.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
         v.swizzle = VK_COMPONENT_SWIZZLE_IDENTITY; v.layout = VK_IMAGE_LAYOUT_GENERAL;
     }
-    // Plane 1 aliases plane 0's image; the RG8 plane 1 is never written.
+    // Plane 1 aliases plane 0's image; the RG8 plane 1 is never written. Mode 7: plane 2 too.
     if (s.present) s.buffers.planes[1] = s.buffers.planes[0];
+    if (s.full) s.buffers.planes[2] = s.buffers.planes[0];
     VkCommandBufferAllocateInfo ca = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
     ca.commandPool = g.pool; ca.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY; ca.commandBufferCount = 1;
     VK_CHECK(vkAllocateCommandBuffers(g.device, &ca, &s.cmd));
@@ -208,7 +218,17 @@ double decode(const Gpu &g, Session &s, const std::vector<std::vector<uint8_t>> 
         for (int i = 0; i < 3; i++) {
             const uint8_t *base = static_cast<uint8_t *>(mapped) + offsets[i];
             const size_t tw = s.planes[i].width, th = s.planes[i].height;
-            if (i == 0 && s.present) {
+            if (i == 0 && s.full) {
+                // Mode 7: luma, Cb and Cr quads at texel x = 0, w/2 and w.
+                const size_t fw = tw / 3 * 2, third = tw / 3;
+                for (int p = 0; p < 3; p++) {
+                    (*readback)[p].resize(fw * th * 2);
+                    for (size_t y = 0; y < th * 2; y++)
+                        for (size_t x = 0; x < fw; x++)
+                            (*readback)[p][y * fw + x] =
+                                base[((y / 2) * tw + p * third + x / 2) * 4 + (x & 1) + 2 * (y & 1)];
+                }
+            } else if (i == 0 && s.present) {
                 // Left half: luma quads; right half: Cb in R, Cr in G (mode 6: pixel pairs, the
                 // right pixel's Cb/Cr in B/A).
                 const size_t fw = s.pairs ? tw / 3 * 4 : tw, half = fw / 2;

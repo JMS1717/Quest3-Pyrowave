@@ -161,8 +161,8 @@ struct pyroclient {
     bool present_ycbcr = false;
     // Mode 6: present_ycbcr with two chroma pixels per texel; each buffer is 3/4 width x height/2.
     bool chroma_pairs = false;
-    // Decoder V2 mode 7: present_ycbcr for 4:4:4. Luma, Cb and Cr quads side by side; each buffer is
-    // 3/2 width x height/2. The fallback is mode 3 (planes allocated as for it).
+    // Mode 7 (Haar or Decoder V2): present_ycbcr for 4:4:4. Luma, Cb and Cr quads side by side; each
+    // buffer is 3/2 width x height/2. The fallback is mode 3 (planes allocated as for it).
     bool present_444 = false;
     uint32_t present_width() const { return present_444 ? width / 2 * 3 : chroma_pairs ? width / 4 * 3 : width; }
 
@@ -537,7 +537,9 @@ bool pyroclient::create_planes() {
     // precisions); step down to the best mode it accepts. The plane layout follows the result.
     haar32_mode = 0;
     // Mode 5 leaves colour conversion to ALVR's eye shader, which does full range and bilinear chroma.
-    const int haar32_max = haar32_requested >= 5 && (!full_range || chroma_filter) ? 4 : haar32_requested;
+    // 4:4:4 asks for mode 7 instead of 5-6 (which the decoder refuses for 4:4:4) and falls to mode 3.
+    const int haar32_max = haar32_requested >= 5 && (!full_range || chroma_filter) ? 4
+                         : haar32_requested >= 5 && chroma444 ? 7 : haar32_requested;
     for (int mode = haar32_max; mode > 0 && !haar32_mode; mode--)
         if (pyrowave_decoder_set_haar32(decoder, mode) == PYROWAVE_SUCCESS) haar32_mode = mode;
     cdf53v2_mode = 0;
@@ -547,7 +549,7 @@ bool pyroclient::create_planes() {
     for (int mode = legall53 ? cdf53v2_max : 0; mode > 0 && !cdf53v2_mode; mode--)
         if (pyrowave_decoder_set_cdf53v2(decoder, mode) == PYROWAVE_SUCCESS) cdf53v2_mode = mode;
     packed_luma = haar32_mode >= 3 || cdf53v2_mode >= 2;
-    dual_chroma = haar32_mode >= 4 || (cdf53v2_mode >= 4 && cdf53v2_mode <= 6);
+    dual_chroma = (haar32_mode >= 4 && haar32_mode <= 6) || (cdf53v2_mode >= 4 && cdf53v2_mode <= 6);
     LOGI("[Q3PW_HAAR32] requested=%d active=%d packed_luma=%d dual_chroma=%d", haar32_requested, haar32_mode,
          packed_luma ? 1 : 0, dual_chroma ? 1 : 0);
     LOGI("[Q3PW_CDF53V2] requested=%d active=%d", legall53 ? cdf53v2_requested : 0, cdf53v2_mode);
@@ -1442,11 +1444,12 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
         const char *reason = !c->storage_on_ahb ? "no storage on AHB" : c->fuse_color ? "fused colour" : nullptr;
         if (reason && c->haar32_mode >= 5 && pyrowave_decoder_set_haar32(c->decoder, 4) == PYROWAVE_SUCCESS) c->haar32_mode = 4;
         else if (reason && c->cdf53v2_mode >= 5 && pyrowave_decoder_set_cdf53v2(c->decoder, 4) == PYROWAVE_SUCCESS) c->cdf53v2_mode = 4;
+        else if (reason && c->haar32_mode == 7 && pyrowave_decoder_set_haar32(c->decoder, 3) == PYROWAVE_SUCCESS) c->haar32_mode = 3;
         else if (reason && c->cdf53v2_mode == 7 && pyrowave_decoder_set_cdf53v2(c->decoder, 3) == PYROWAVE_SUCCESS) c->cdf53v2_mode = 3;
         else if (reason) { c->destroy(); delete c; return nullptr; }
         c->present_ycbcr = c->haar32_mode >= 5 || c->cdf53v2_mode >= 5;
         c->chroma_pairs = c->haar32_mode == 6 || c->cdf53v2_mode == 6;
-        c->present_444 = c->cdf53v2_mode == 7;
+        c->present_444 = c->haar32_mode == 7 || c->cdf53v2_mode == 7;
         LOGI("[Q3PW_PRESENT_YCBCR] active=%d chroma_pairs=%d chroma444=%d (%s)", c->present_ycbcr ? 1 : 0,
              c->chroma_pairs ? 1 : 0, c->present_444 ? 1 : 0, reason ? reason : "applied");
     }

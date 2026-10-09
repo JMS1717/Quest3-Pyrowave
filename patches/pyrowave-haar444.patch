@@ -1,0 +1,105 @@
+diff --git a/pyrowave.h b/pyrowave.h
+index 6c0eefece605366251cd477d680c98e5c56496e7..b20f0f4c77f4c180b9933773b2c9692b49c9645e 100644
+--- a/pyrowave.h
++++ b/pyrowave.h
+@@ -580,9 +580,12 @@ PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_fused_dequant_haar(pyro
+  * in R, Cr in G and 0 in B and A, so a consumer can bilinear-filter chroma in hardware. enabled=6 is
+  * enabled=5 with two horizontally adjacent chroma pixels per texel (Cb, Cr of the left pixel in R, G;
+  * of the right one in B, A), so the image is 3/4 of the width (x >= width/2 holds width/4 texels)
+- * and the chroma pass stores half as many texels; the consumer filters chroma horizontally itself. Refused (PYROWAVE_ERROR_NOT_IMPLEMENTED, unchanged) for
+- * CDF wavelets, 4:4:4, the fragment path, PYROWAVE_FUSED_HAAR / PYROWAVE_HAAR_PAIRS, fused dequant and
+- * a skipped final luma pass. Default 0. */
++ * and the chroma pass stores half as many texels; the consumer filters chroma horizontally itself.
++ * enabled=7 is the 4:4:4 layout of pyrowave_decoder_set_cdf53v2(7): planes 0-2 all views of one
++ * RGBA8_UNORM image of 3/2 width x height/2 with luma, Cb and Cr each as 2x2 pixel quads at x = 0,
++ * width/2 and width. 4:4:4 accepts enabled=1-3 and 7, 4:2:0 enabled=1-6. Refused
++ * (PYROWAVE_ERROR_NOT_IMPLEMENTED, unchanged) for CDF wavelets, the fragment path, PYROWAVE_FUSED_HAAR /
++ * PYROWAVE_HAAR_PAIRS, fused dequant and a skipped final luma pass. Default 0. */
+ PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_haar32(pyrowave_decoder decoder, int enabled);
+ 
+ /* Q3PW Decoder V2: register-only inverse CDF 5/3, one dispatch per level and component with no shared
+diff --git a/pyrowave_decoder.cpp b/pyrowave_decoder.cpp
+index 6b2c5309dde8b57fc7285a5f1d3bb0b38aac6691..e535e0c76fe075d6046ba66435d3ce7830a0564a 100644
+--- a/pyrowave_decoder.cpp
++++ b/pyrowave_decoder.cpp
+@@ -97,8 +97,9 @@ struct Decoder::Impl final : public WaveletBuffers
+ 	}
+ 	bool dequant_haar_final(CommandBuffer &cmd, const ViewBuffers &views);
+ 	// Q3PW multilevel Haar: luma levels 4-3 and 2-0, 4:2:0 chroma levels 4 and 3-1, each group in one
+-	// dispatch of idwt_haar32.comp (4:2:0 only, the layout its gate covers). Same arithmetic and FP16
+-	// rounding points as the pair-local Haar path; two barriers instead of five. Default false.
++	// dispatch of idwt_haar32.comp. 4:4:4 chroma takes the luma schedule (modes 1-3 and 7 only). Same
++	// arithmetic and FP16 rounding points as the pair-local Haar path; two barriers instead of five.
++	// Default false.
+ 	bool haar32 = false;
+ 	// Mode 2: levels 0-1 hold quad-packed coefficients (RGBA16F, one 2x2 quad of a band per texel),
+ 	// so dequant stores two texels per invocation instead of eight and the multilevel pass fetches
+@@ -149,7 +150,7 @@ struct Decoder::Impl final : public WaveletBuffers
+ 	{
+ 		if (packed && Configuration::get().get_precision() != 1)
+ 			return false;
+-		return haar && chroma == ChromaSubsampling::Chroma420 && !fragment_path && !fused_haar &&
++		return haar && !fragment_path && !fused_haar &&
+ 		       haar_pairs_mode == 0 && !fused_dequant_haar && !skip_final_luma_idwt;
+ 	}
+ 	bool idwt_haar32(CommandBuffer &cmd, const ViewBuffers &views);
+@@ -910,11 +911,11 @@ bool Decoder::Impl::idwt_haar32(CommandBuffer &cmd, const ViewBuffers &views)
+ 	// A packed luma plane is RGBA8 at half size; anything else would be written out of bounds.
+ 	if (present_output)
+ 	{
+-		for (int i = 0; i < 2; i++)
++		for (int i = 0; i < (present_444_output ? 3 : 2); i++)
+ 			if (views.planes[i]->get_format() != VK_FORMAT_R8G8B8A8_UNORM ||
+ 			    int(views.planes[i]->get_view_width()) != present_width() || int(views.planes[i]->get_view_height()) * 2 != height)
+ 			{
+-				LOGE("Present output needs RGBA8 planes 0-1 of %d x height/2.\n", present_width());
++				LOGE("Present output needs RGBA8 planes 0-%d of %d x height/2.\n", present_444_output ? 2 : 1, present_width());
+ 				return false;
+ 			}
+ 	}
+@@ -1014,7 +1015,7 @@ bool Decoder::Impl::idwt_haar32(CommandBuffer &cmd, const ViewBuffers &views)
+ 			                          packed_ll ? *packed_ll_views[c][bottom - 1] :
+ 			                                      *component_ll_views[c][bottom - 1];
+ 			// Mode 6: the dual chroma pass stores horizontal pixel pairs, flagged by PACK_OUTPUT.
+-			const bool pack_output = packed_ll || (final_pass && c == 0 && packed_luma_output) ||
++			const bool pack_output = packed_ll || (final_pass && (c == 0 || present_444_output) && packed_luma_output) ||
+ 									 (dual && chroma_pairs_output);
+ 			cmd.set_specialization_constant(5, pack_output);
+ 			cmd.set_storage_texture(0, 3, output);
+@@ -1024,10 +1025,10 @@ bool Decoder::Impl::idwt_haar32(CommandBuffer &cmd, const ViewBuffers &views)
+ 			if (final_pass && present_output)
+ 			{
+ 				// Luma quads in width/2 x height/2 texels, then one chroma pixel per texel (a pair in
+-				// mode 6).
++				// mode 6; in mode 7, Cb quads and then Cr quads).
+ 				push.output_size = ivec2(width / 2, height / 2);
+ 				if (c != 0)
+-					push.output_offset.x = width / 2;
++					push.output_offset.x = present_444_output ? c * (width / 2) : width / 2;
+ 				if (c != 0 && chroma_pairs_output)
+ 					push.output_size.x = width / 4;
+ 			}
+@@ -1655,7 +1656,10 @@ bool Decoder::Impl::allocate_packed()
+ 
+ bool Decoder::set_haar32(int mode)
+ {
+-	if (mode < 0 || mode > 6 || (mode && !impl->can_haar32(mode >= 2)))
++	// Mode 7 is mode 5 for 4:4:4 (Decoder V2's layout); 4:4:4 has no dual or paired chroma (4-6).
++	if (mode < 0 || mode > 7 || (mode && !impl->can_haar32(mode >= 2)))
++		return false;
++	if (impl->chroma444() ? mode >= 4 && mode <= 6 : mode == 7)
+ 		return false;
+ 	if (mode >= 5 && (impl->width % 4 || impl->height % 4))
+ 		return false;
+@@ -1666,9 +1670,10 @@ bool Decoder::set_haar32(int mode)
+ 	// Levels 0-3 (PYROWAVE_HAAR32_PACKED_LEVELS=2 restores the levels 0-1 layout for A/B).
+ 	impl->packed_levels = getenv("PYROWAVE_HAAR32_PACKED_LEVELS") ? atoi(getenv("PYROWAVE_HAAR32_PACKED_LEVELS")) : 4;
+ 	impl->packed_luma_output = mode >= 3;
+-	impl->dual_chroma_output = mode >= 4;
++	impl->dual_chroma_output = mode >= 4 && mode <= 6;
+ 	impl->present_output = mode >= 5;
+ 	impl->chroma_pairs_output = mode == 6;
++	impl->present_444_output = mode == 7;
+ 	return true;
+ }
+ 
