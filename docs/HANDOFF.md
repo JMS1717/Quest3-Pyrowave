@@ -335,6 +335,10 @@ State:
       verified per block: 91.0 against 90.6 fresh for mode 7, within noise; app time 0.15 ms
       lower. The limit is memory traffic plus the 7 ms live decode, not fetch count. See
       [HAAR32.md](HAAR32.md#mode-8-444-chroma-pairs-125-october-9).
+    - **`.127` (`local127-e9c06f5`): `[Q3PW_BLOCK_STATS]` with `debug.q3pw.decode_stages=1`**
+      (`patches/pyrowave-block-stats.patch`). At full size 4:2:0, 1500 Mbps, 120 Hz no 32x32 block
+      arrives empty; 45 % of the finest luma 8x8 sub-blocks are coded. Skipping empty blocks is
+      dropped. See [DECODE-STAGE-PROBE.md](DECODE-STAGE-PROBE.md#block-occupancy-127-october-9).
   - **Client phase lock and latency (`debug.q3pw.phase_lock=1`, native, 120 Hz, 1500 Mbps).**
     Two alternating rounds, medians of ALVR's estimate:
     - Fresh FPS: 118.9-119.9 with the lock, against 118.4-119.2 without it.

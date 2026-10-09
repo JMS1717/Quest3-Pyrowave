@@ -313,7 +313,10 @@ whether audio on the stream socket stalls behind video.
     behaviour ([LATENCY.md](LATENCY.md#the-game-stage-has-two-modes-in-the-test-scene-october-8)),
     not a lever: compare latency only between blocks in the same mode;
   - only less GPU work per frame (decode cost, or the eye copy) lifts full size at 120 Hz. Two candidates:
-  - entropy-skip empty blocks;
+  - ~~entropy-skip empty blocks~~: dropped (`.127`). In the harness scene no 32x32 block arrives
+    empty, and skipping the uncoded 8x8 sub-blocks would cut less traffic than the fused dequant
+    experiment, which gave nothing
+    ([DECODE-STAGE-PROBE.md](DECODE-STAGE-PROBE.md#block-occupancy-127-october-9));
   - decode the finest level only where the lens resolves it.
 
 **2.1 Frame budget from the real frame rate.**

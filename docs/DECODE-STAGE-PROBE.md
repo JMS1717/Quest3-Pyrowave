@@ -76,3 +76,30 @@ sampled. Mean rates near117 do not override the missed periods visible in p1.
 Stationary pose-history estimates cannot establish a causal total-latency
 change or optical motion-to-photon. Source/process coverage and restoration
 passed. [All blocks and limitations](../results/DECODE-STAGE-LIVE-2026-10-04.json).
+
+## Block occupancy (`.127`, October 9)
+
+With the probe on, the client also logs `[Q3PW_BLOCK_STATS]` every 120 decodes. It comes from
+`pyrowave_decoder_get_block_stats` (`patches/pyrowave-block-stats.patch`), which counts each
+32x32 block's ballot of coded 8x8 sub-blocks as packets arrive, on the CPU. Entry `cNLM` is
+component N (0 luma) and level M (0 finest); each shows the percentage of 32x32 blocks with nothing
+coded, then the percentage of 8x8 sub-blocks coded.
+
+Live, wired, full size (3072x3216 per eye), Haar 4:2:0, 1500 Mbps, 120 Hz, the harness scene
+(116.3 and 116.7 fresh FPS; the counting doesn't change them):
+
+| Level | Luma: empty 32x32 / coded 8x8 | Cb | Cr |
+| --- | --- | --- | --- |
+| 0 (finest) | 0 % / 45 % | (4:2:0 has no level 0) | |
+| 1 | 0 % / 55 % | 0 % / 30 % | 0 % / 33 % |
+| 2 | 0 % / 70 % | 0 % / 46 % | 0 % / 42 % |
+| 3 | 0 % / 90 % | 0 % / 87 % | 0 % / 86 % |
+| 4 | 0 % / 81 % | 0 % / 81 % | 0 % / 81 % |
+
+- No 32x32 block arrives empty at any level, so skipping empty blocks in the decoder would save
+  nothing in this scene.
+- At the 8x8 level, 55 % of the finest luma detail and 67-70 % of the finest chroma detail is
+  uncoded. The dequant already writes zeros there without decoding. Skipping those zeros in the
+  iDWT as well would remove part of the traffic that the fused dequant + level-0 Haar experiment
+  removed in full, and that gave no speedup ([HIGH-REFRESH.md](HIGH-REFRESH.md)). The PLAN's
+  "entropy-skip empty blocks" candidate is dropped.
