@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e3eadbf7f 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b27030c630445 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..9c320890115718e27afbd4327ba0165e
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..540c77fc29745172de837a536012f8835c57386f 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..6f0de824fecd98f3ef975705e7eb78d0a05431b2 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..540c77fc29745172de837a536012f883
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.111"
++version = "20.13.0-quest3.pyro.112"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -3447,7 +3447,7 @@ index f764033a20a89656e24ff599ce2a39cd5f8338df..d63644247eacf32df8343608ce83fdb2
                          decoder_attempt_setup(config.codec, true, None, &format, &image_reader)?
                      }
 diff --git a/alvr/client_core/src/video_decoder/mod.rs b/alvr/client_core/src/video_decoder/mod.rs
-index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30499725bd 100644
+index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..5023e7ea2ce09ac341e6fbaeb71b189b2151aec8 100644
 --- a/alvr/client_core/src/video_decoder/mod.rs
 +++ b/alvr/client_core/src/video_decoder/mod.rs
 @@ -1,14 +1,18 @@
@@ -3524,7 +3524,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
      if complete {
          FrameDecision::DecodeComplete
      } else if age < deadline {
-@@ -130,22 +150,330 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
+@@ -130,22 +150,332 @@ pub fn dist(samples: &mut Vec<f32>) -> String {
      let mean = samples.iter().sum::<f32>() / n as f32;
      format!(
          "min {:.2} mean {:.2} p50 {:.2} p95 {:.2} p99 {:.2} max {:.2}",
@@ -3850,17 +3850,19 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
 +}
 +
 +/// `debug.q3pw.decode_priority`: `low` or `default` force the queue priority; anything else
-+/// picks LOW only where decode leaves GPU headroom (4:2:0 at <=120 Hz). There it lets the
-+/// eye copy preempt decode; at 144 Hz decode is throughput-bound and LOW cost ~10 FPS.
++/// picks LOW only for 4:2:0 above 90 Hz up to 120 Hz. There the eye copy must preempt decode
++/// to make its deadline. At 144 Hz decode is throughput-bound and LOW cost ~10 FPS. At 90 Hz
++/// and below the copy fits behind decode: full-size Haar 1500 at 90 Hz gave 84 fresh FPS and
++/// 5 ms decode at default against 79.6 and 7 ms at LOW, with the app holding 90 of 90.
 +pub fn pyrowave_low_decode_priority(property: &str, refresh_hz: f32, chroma444: bool) -> bool {
 +    match property.trim() {
 +        "low" => true,
 +        "default" => false,
-+        _ => !chroma444 && refresh_hz > 0.0 && refresh_hz <= 120.5,
++        _ => !chroma444 && refresh_hz > 90.5 && refresh_hz <= 120.5,
      }
  }
  
-@@ -163,8 +491,6 @@ pub struct VideoDecoderConfig {
+@@ -163,8 +493,6 @@ pub struct VideoDecoderConfig {
  enum SinkInner {
      MediaCodec(android::VideoDecoderSink),
      PyroWave(pyrowave::VideoDecoderSink),
@@ -3869,7 +3871,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
  }
  
  pub struct VideoDecoderSink {
-@@ -181,7 +507,6 @@ impl VideoDecoderSink {
+@@ -181,7 +509,6 @@ impl VideoDecoderSink {
              let result = match &mut self.inner {
                  SinkInner::MediaCodec(sink) => sink.push_frame_nal(timestamp, nal),
                  SinkInner::PyroWave(sink) => sink.push_frame_nal(timestamp, nal),
@@ -3877,7 +3879,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
              };
              alvr_common::show_err(result).unwrap_or(false)
          }
-@@ -194,7 +519,6 @@ impl VideoDecoderSink {
+@@ -194,7 +521,6 @@ impl VideoDecoderSink {
  enum SourceInner {
      MediaCodec(android::VideoDecoderSource),
      PyroWave(pyrowave::VideoDecoderSource),
@@ -3885,7 +3887,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
  }
  
  pub struct VideoDecoderSource {
-@@ -203,6 +527,64 @@ pub struct VideoDecoderSource {
+@@ -203,6 +529,64 @@ pub struct VideoDecoderSource {
  }
  
  impl VideoDecoderSource {
@@ -3950,7 +3952,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
      /// If a frame is available, return the timestamp and the AHardwareBuffer.
      pub fn get_frame(&mut self) -> Option<(Duration, *mut std::ffi::c_void)> {
          #[cfg(target_os = "android")]
-@@ -210,7 +592,6 @@ impl VideoDecoderSource {
+@@ -210,7 +594,6 @@ impl VideoDecoderSource {
              match &mut self.inner {
                  SourceInner::MediaCodec(source) => source.dequeue_frame(),
                  SourceInner::PyroWave(source) => source.dequeue_frame(),
@@ -3958,7 +3960,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
              }
          }
          #[cfg(not(target_os = "android"))]
-@@ -219,7 +600,7 @@ impl VideoDecoderSource {
+@@ -219,7 +602,7 @@ impl VideoDecoderSource {
  }
  
  #[cfg(target_os = "android")]
@@ -3967,7 +3969,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
      extern "C" {
          fn __android_log_write(
              prio: i32,
-@@ -229,7 +610,9 @@ fn logcat_info(tag: &str, message: &str) {
+@@ -229,7 +612,9 @@ fn logcat_info(tag: &str, message: &str) {
      }
      let tag = std::ffi::CString::new(tag).unwrap_or_default();
      let text = std::ffi::CString::new(message).unwrap_or_default();
@@ -3978,7 +3980,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
  }
  
  // report_frame_decoded: (target_timestamp: Duration) -> ()
-@@ -248,24 +631,6 @@ pub fn create_decoder(
+@@ -248,24 +633,6 @@ pub fn create_decoder(
                  logcat_info("PYROWAVE", &pyrowave.summary());
              }
          }
@@ -4003,7 +4005,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
          let _ = &report_video_packet_received;
          if config.codec == CodecType::PyroWave {
              let (sink, source) =
-@@ -304,6 +669,264 @@ pub fn create_decoder(
+@@ -304,6 +671,264 @@ pub fn create_decoder(
  mod tests {
      use super::*;
  
@@ -4268,7 +4270,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
      #[test]
      fn config_round_trips_the_encoder_blob() {
          let mut buf = Vec::new();
-@@ -312,53 +935,97 @@ mod tests {
+@@ -312,53 +937,97 @@ mod tests {
          buf.push(1);
          buf.push(0);
          let c = parse_pyrowave_config(&buf).unwrap();
@@ -4379,7 +4381,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
          assert_eq!(dist(&mut Vec::new()), "-");
      }
  
-@@ -392,4 +1059,145 @@ mod tests {
+@@ -392,4 +1061,148 @@ mod tests {
          assert_eq!(slot.take(), Some((Duration::from_millis(2), 0x20)));
          assert!(slot.take().is_none());
      }
@@ -4458,9 +4460,12 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..b2f99c4eeb45c7228a3bfc1450272b30
 +    }
 +
 +    #[test]
-+    fn decode_priority_is_low_only_with_headroom_unless_forced() {
++    fn decode_priority_is_low_only_between_90_and_120_hz_unless_forced() {
 +        assert!(pyrowave_low_decode_priority("", 120.0, false));
-+        assert!(pyrowave_low_decode_priority("auto", 90.0, false));
++        assert!(pyrowave_low_decode_priority("auto", 119.88, false));
++        assert!(!pyrowave_low_decode_priority("", 90.0, false));
++        assert!(!pyrowave_low_decode_priority("", 80.0, false));
++        assert!(!pyrowave_low_decode_priority("", 72.0, false));
 +        assert!(!pyrowave_low_decode_priority("", 144.0, false));
 +        assert!(!pyrowave_low_decode_priority("", 120.0, true));
 +        assert!(!pyrowave_low_decode_priority("", 0.0, false));
