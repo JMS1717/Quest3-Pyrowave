@@ -49,7 +49,7 @@ this is not a latency claim.
 
 | Property | Read | Effect |
 | --- | --- | --- |
-| `debug.q3pw.decode_priority` | at decoder creation | unset/other: LOW only for 4:2:0 at ≤120 Hz; `low`: always LOW; `default`: never |
+| `debug.q3pw.decode_priority` | at decoder creation | unset/other: LOW only for 4:2:0 above 90 Hz up to 120 Hz (`.112`; ≤120 Hz before); `low`: always LOW; `default`: never |
 
 logcat `[Q3PW_PRIORITY]` reports the policy decision (refresh rate, chroma,
 choice) and what the driver applied.
@@ -69,6 +69,23 @@ Mode 5 cut decode to about 2.6 ms of the 4.83 ms period, about the share at whic
 The closing default block was interrupted (the PC ran short of memory and the run was stopped);
 the same build's default measured 195.4-196.5 FPS in the four mode 5 blocks run just before.
 Preempting decode at 207 Hz costs about 30 fresh FPS: keep the automatic policy.
+
+## 90 Hz and below: default priority (October 9, `.112`)
+
+Full 3072x3216 per eye, Haar, 1500 Mbps, 90 Hz, SteamVR Home with the Library dashboard open,
+wired, unworn, GPU level 7, 20 s blocks in ABBA order (`.111`, priority forced by property):
+
+| Arm | Fresh FPS | GPU decode p50 | Fence p50 | VrApi app FPS |
+| --- | --- | --- | --- | --- |
+| default | 84.6 | 5.06 ms | 7.06 ms | 89/90 |
+| LOW | 79.9 | 6.94 ms | 10.74 ms | 91/90 |
+| LOW | 79.3 | 7.10 ms | 10.98 ms | 90/90 |
+| default | 83.4 | 4.88 ms | 6.67 ms | 90/90 |
+
+At 11.1 ms per frame the eye copy still makes its deadline behind an unpreempted decode, so LOW
+only slows the decode: about 2 ms more GPU decode and 4 ms more fence. `.112` therefore picks
+default priority at 90 Hz and below (Godlike 80 Hz included). At 120 Hz full size, default priority
+raised fresh FPS but the app dropped to 85-87 of 120 frames (judder), so LOW stays above 90 Hz.
 
 ## Limits
 
