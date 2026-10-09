@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942873cb140 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..9ff25a5a42ab5f5f64012cda8208438a3c4360e7 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..02b7d7dfae7bd2de17ac917f8058d942
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..80c2a14b7b6ef2948fdcca0eaf420cb913769ba6 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..ed99dc75c1c0392a0c4eeab2762b6ecd1b4e9a97 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..80c2a14b7b6ef2948fdcca0eaf420cb9
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.133"
++version = "20.13.0-quest3.pyro.134"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -15115,7 +15115,7 @@ index 1f849921f4c8c0c7a0be5ddc1f5f26c6f0847c39..3bd71b95f832a8e062b69b86c1e749ed
 +    }
 +}
 diff --git a/alvr/server_openvr/cpp/alvr_server/HMD.cpp b/alvr/server_openvr/cpp/alvr_server/HMD.cpp
-index a9e9313490e6147acddcffd4985716bb2f7be30e..14a5b6c718db1f801fee06c60193d41fcf61383a 100644
+index a9e9313490e6147acddcffd4985716bb2f7be30e..3df9c34e4acba7617b661f1372066ce897c529db 100644
 --- a/alvr/server_openvr/cpp/alvr_server/HMD.cpp
 +++ b/alvr/server_openvr/cpp/alvr_server/HMD.cpp
 @@ -9,6 +9,8 @@
@@ -15127,32 +15127,64 @@ index a9e9313490e6147acddcffd4985716bb2f7be30e..14a5b6c718db1f801fee06c60193d41f
  
  #ifdef _WIN32
  #include "platform/win32/CEncoder.h"
-@@ -272,6 +274,12 @@ void Hmd::StartStreaming() {
+@@ -235,6 +237,7 @@ void Hmd::OnPoseUpdated(uint64_t targetTimestampNs, FfiDeviceMotion motion) {
+ void Hmd::StartStreaming() {
+     Debug("Hmd::StartStreaming");
+ 
++    m_streaming = true;
+     vr::VRDriverInput()->UpdateBooleanComponent(m_proximity, true, 0.0);
+ 
+     if (m_streamComponentsInitialized) {
+@@ -272,9 +275,25 @@ void Hmd::StartStreaming() {
      m_streamComponentsInitialized = true;
  }
  
-+void Hmd::ReassertPresence() {
-+    vr::VRDriverInput()->UpdateBooleanComponent(m_proximity, false, 0.0);
-+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-+    vr::VRDriverInput()->UpdateBooleanComponent(m_proximity, true, 0.0);
++void Hmd::on_standby() {
++    if (!m_streaming.load()) {
++        return;
++    }
++    Warn("[Q3PW_STANDBY] headset entered standby while streaming; waking it\n");
++    std::thread([this] {
++        std::this_thread::sleep_for(std::chrono::milliseconds(100));
++        if (m_streaming.load()) {
++            vr::VRDriverInput()->UpdateBooleanComponent(m_proximity, false, 0.0);
++            std::this_thread::sleep_for(std::chrono::milliseconds(50));
++            vr::VRDriverInput()->UpdateBooleanComponent(m_proximity, true, 0.0);
++        }
++    }).detach();
 +}
 +
  void Hmd::StopStreaming() {
      Debug("Hmd::StopStreaming");
  
++    m_streaming = false;
+     vr::VRDriverInput()->UpdateBooleanComponent(m_proximity, false, 0.0);
+ }
+ 
 diff --git a/alvr/server_openvr/cpp/alvr_server/HMD.h b/alvr/server_openvr/cpp/alvr_server/HMD.h
-index ec6bb9f56cea73daa2cbcb98677285100858b2ea..ae085fe510bc94a4ecb89a58f5a188fce61b8031 100644
+index ec6bb9f56cea73daa2cbcb98677285100858b2ea..1bc6dd5a22fc29e54f1960bcc4436a81e6a002f7 100644
 --- a/alvr/server_openvr/cpp/alvr_server/HMD.h
 +++ b/alvr/server_openvr/cpp/alvr_server/HMD.h
-@@ -28,6 +28,8 @@ public:
-     void OnPoseUpdated(uint64_t targetTimestampNs, FfiDeviceMotion motion);
-     void StartStreaming();
-     void StopStreaming();
-+    // Quest3-Pyrowave: a proximity change wakes SteamVR from standby while streaming.
-+    void ReassertPresence();
-     void SetViewsConfig(FfiViewsConfig config);
+@@ -3,6 +3,7 @@
+ #include "ALVR-common/packet_types.h"
+ #include "TrackedDevice.h"
+ #include "openvr_driver_wrap.h"
++#include <atomic>
+ #include <memory>
+ #ifdef _WIN32
+ #include "platform/win32/OvrDirectModeComponent.h"
+@@ -32,6 +33,11 @@ public:
  
  private:
+     vr::VRInputComponentHandle_t m_proximity;
++    // Quest3-Pyrowave: SteamVR idles a headset whose pose has not changed for about 15 s (a
++    // headset on a desk, or frozen tracking) even when standby is blocked. While streaming, a
++    // proximity change wakes it again, as a stream start does.
++    std::atomic<bool> m_streaming { false };
++    void on_standby() override;
+ 
+     FfiViewsConfig views_config;
+ 
 diff --git a/alvr/server_openvr/cpp/alvr_server/Settings.cpp b/alvr/server_openvr/cpp/alvr_server/Settings.cpp
 index e729ffac8a0d64f7f18c0a948dd9eb6c02fdbc99..95d776e3e2e38740482a04c49afbb81aa09037fb 100644
 --- a/alvr/server_openvr/cpp/alvr_server/Settings.cpp
@@ -15206,7 +15238,7 @@ index 7bed823544ba31eeeebde4643e7a2de0de6424ca..afeede5dcbe0d9084ced0eaf195351a7
      bool m_use10bitEncoder;
      bool m_useFullRangeEncoding;
 diff --git a/alvr/server_openvr/cpp/alvr_server/TrackedDevice.h b/alvr/server_openvr/cpp/alvr_server/TrackedDevice.h
-index 3fbf571be41c554ebae4a96fd58419e47230586c..f1058db70231f1a62741f2643650f0b4f8dd7f00 100644
+index 3fbf571be41c554ebae4a96fd58419e47230586c..7f4e78a0ab6720d90817eb964c06cd1fa1799395 100644
 --- a/alvr/server_openvr/cpp/alvr_server/TrackedDevice.h
 +++ b/alvr/server_openvr/cpp/alvr_server/TrackedDevice.h
 @@ -1,5 +1,6 @@
@@ -15216,77 +15248,55 @@ index 3fbf571be41c554ebae4a96fd58419e47230586c..f1058db70231f1a62741f2643650f0b4
  #include "bindings.h"
  #include "openvr_driver_wrap.h"
  #include <map>
-@@ -30,7 +31,7 @@ private:
+@@ -22,6 +23,7 @@ protected:
+     void submit_pose(vr::DriverPose_t pose);
+     virtual bool activate() = 0;
+     virtual void* get_component(const char*) = 0;
++    virtual void on_standby() {}
+ 
+ private:
+     // ITrackedDeviceServerDriver
+@@ -30,7 +32,7 @@ private:
          this->device_id = vr::k_unTrackedDeviceIndexInvalid;
          this->prop_container = vr::k_ulInvalidPropertyContainer;
      }
 -    void EnterStandby() final { }
-+    void EnterStandby() final { Error("[Q3PW_STANDBY] device %u enters standby\n", object_id); }
++    void EnterStandby() final { on_standby(); }
      void* GetComponent(const char* component_name_and_version) final {
          return get_component(component_name_and_version);
      }
 diff --git a/alvr/server_openvr/cpp/alvr_server/alvr_server.cpp b/alvr/server_openvr/cpp/alvr_server/alvr_server.cpp
-index 184e7552545889824b525400a74813ff2ce239cc..e1bc6e70824dd338ec499cc3af169f5b8a4b8a7e 100644
+index 184e7552545889824b525400a74813ff2ce239cc..9a9658994b102e8d391cf117f7ec1777759894a1 100644
 --- a/alvr/server_openvr/cpp/alvr_server/alvr_server.cpp
 +++ b/alvr/server_openvr/cpp/alvr_server/alvr_server.cpp
-@@ -18,10 +18,14 @@
+@@ -18,9 +18,11 @@
  #include "driverlog.h"
  #include "openvr_driver_wrap.h"
  #include <algorithm>
 +#include <atomic>
-+#include <chrono>
  #include <cmath>
  #include <cstring>
  #include <map>
 +#include <mutex>
  #include <optional>
-+#include <thread>
  
  #ifdef __linux__
- #include "include/openvr_math.h"
-@@ -238,9 +242,38 @@ public:
+@@ -238,7 +240,13 @@ public:
              ShutdownRuntime();
          }
      }
 -    virtual bool ShouldBlockStandbyMode() override { return false; }
--    virtual void EnterStandby() override { Debug("DriverProvider::EnterStandby"); }
--    virtual void LeaveStandby() override { Debug("DriverProvider::LeaveStandby"); }
-+    // Quest3-Pyrowave: SteamVR puts a headset that has not moved for about ten seconds into
-+    // standby and drops to 10 Hz. While a client streams the headset is worn (Horizon OS pauses
-+    // or disconnects the app when it is taken off), so a still head or a headset on a test bench
-+    // must not idle the stream.
-+    std::atomic<bool> streaming { false };
-+    std::atomic<int> block_queries { 0 };
-+    std::atomic<int> last_block { -1 };
-+    virtual bool ShouldBlockStandbyMode() override {
-+        bool block = streaming.load();
-+        block_queries++;
-+        if (last_block.exchange(block) != (int)block) {
-+            Error("[Q3PW_STANDBY] block standby %d (query %d)\n", block, block_queries.load());
-+        }
-+        return block;
-+    }
-+    virtual void EnterStandby() override {
-+        Error("[Q3PW_STANDBY] SteamVR enters standby: streaming %d, %d block queries\n",
-+             streaming.load(), block_queries.load());
-+        // SteamVR does not always ask before entering standby. While streaming, wake it again
-+        // with a presence change, as a stream start does.
-+        if (streaming.load()) {
-+            std::thread([this] {
-+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-+                if (streaming.load() && hmd) {
-+                    hmd->ReassertPresence();
-+                }
-+            }).detach();
-+        }
-+    }
-+    virtual void LeaveStandby() override {
-+        Error("[Q3PW_STANDBY] SteamVR leaves standby: streaming %d\n", streaming.load());
-+    }
++    // Quest3-Pyrowave: while a client streams the headset is worn (Horizon OS pauses or
++    // disconnects the app when it is taken off), so SteamVR must not idle the stream at 10 Hz.
++    // A reconnect overlaps connections: the old one reports its disconnect after the new one
++    // has started, so streaming lasts until the last connection ends.
++    std::atomic<int> connections { 0 };
++    bool streaming() { return connections.load() > 0; }
++    virtual bool ShouldBlockStandbyMode() override { return streaming(); }
+     virtual void EnterStandby() override { Debug("DriverProvider::EnterStandby"); }
+     virtual void LeaveStandby() override { Debug("DriverProvider::LeaveStandby"); }
  } g_driver_provider;
- 
- // bindigs for Rust
-@@ -280,7 +313,6 @@ void (*LogEncoder)(const char* stringPtr);
+@@ -280,7 +288,6 @@ void (*LogEncoder)(const char* stringPtr);
  void (*LogPeriodically)(const char* tag, const char* stringPtr);
  void (*DriverReadyIdle)(bool setDefaultChaprone);
  void (*SetVideoConfigNals)(const unsigned char* configBuffer, int len, int codec);
@@ -15294,21 +15304,30 @@ index 184e7552545889824b525400a74813ff2ce239cc..e1bc6e70824dd338ec499cc3af169f5b
  void (*VideoSend)(
      unsigned long long targetTimestampNs,
      unsigned char* buf,
-@@ -329,9 +361,13 @@ void InitializeStreaming() {
+@@ -326,12 +333,22 @@ void* CppOpenvrEntryPoint(const char* interface_name, int* return_code) {
+ void InitializeStreaming() {
+     Settings::Instance().Load();
+ 
++    g_driver_provider.connections++;
      if (g_driver_provider.hmd) {
          g_driver_provider.hmd->StartStreaming();
      }
-+    g_driver_provider.streaming = true;
-+    Error("[Q3PW_STANDBY] stream started\n");
  }
  
  void DeinitializeStreaming() {
-+    g_driver_provider.streaming = false;
-+    Error("[Q3PW_STANDBY] stream stopped\n");
++    int left = --g_driver_provider.connections;
++    if (left < 0) {
++        g_driver_provider.connections = 0;
++        left = 0;
++    }
++    if (left > 0) {
++        Warn("[Q3PW_STANDBY] a previous connection ended; %d still streaming\n", left);
++        return;
++    }
      if (g_driver_provider.hmd) {
          g_driver_provider.hmd->StopStreaming();
      }
-@@ -353,17 +389,28 @@ void SetFoveationCenter(float leftX, float leftY, float rightX, float rightY) {
+@@ -353,17 +370,28 @@ void SetFoveationCenter(float leftX, float leftY, float rightX, float rightY) {
  #endif
  }
  
