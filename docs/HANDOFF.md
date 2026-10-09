@@ -142,6 +142,42 @@ State:
     Desktop decodes on the Quest's video hardware, but PyroWave decodes on the same GPU as the
     eye draw and the compositor. That is why VD's Godlike preset runs at high refresh and ours
     does not.
+  - **`.110` profiles from these sizes.** **Quality 120 Hz** and **Wi-Fi Quality 120 Hz** now
+    stream 110 % (2272x2432), the largest size that held 120 Hz; 120 % and 125 % are marked
+    "below 120 Hz". A new **Godlike 90 Hz** profile streams the full 3072x3216 with no downsample
+    (CDF 5/3, 2000 Mbps, PC sharpening 30, maximum GPU clock).
+  - **Full size at 90 Hz in heavy content (`.108`, SteamVR Home with the Library dashboard open,
+    wired, unworn).** The earlier 90.1 of 90 was lighter content. Fresh FPS of 90:
+
+    | Wavelet | Bitrate | Fresh FPS | GPU decode p50 |
+    |---|---|---|---|
+    | CDF 5/3 | 2000 | 64-66 (69 at 690 MHz) | |
+    | CDF 5/3 | 1500 | 69 | |
+    | CDF 5/3 | 1000 | 76-78 | |
+    | Haar | 2000 | 70-74 | 7.7 ms |
+    | Haar | 1500 | 78.5-81 | 6.8-7.3 ms |
+
+    Decode cost follows bytes per frame (bitrate / fps; 2000 Mbps at 90 Hz is 2.78 MB). With the
+    GPU otherwise idle (`decoder_ab wavelets 6144 3216 <bytes>`, 690 MHz), CDF 5/3 decodes in
+    4.53 / 4.96 / 5.43 / 5.75 ms at 0.6 / 1.39 / 2.08 / 2.78 MB and Haar in 3.56 / 3.83 / 4.01 /
+    4.17 ms. Dequant is 1.28-1.94 ms of that standalone but about 4.4 ms live at 2000 Mbps
+    (iDWT 3.1-3.5 standalone, 4.8 live): sharing the GPU with the 3072 eye draw inflates it
+    about 2.3x.
+  - **Neither content nor the eye draw explains that inflation.**
+    - Fixed foveated rendering (Static Medium, VrApi `Fov=2`) on the eye draw at 690 MHz:
+      CDF 5/3 2000 gave 65.8-66.1 and Haar 1500 gave 79.8-82.8, the same as without it.
+    - Bench sources: `decoder_ab` now takes `AB_SOURCE=<I420 file>`. At equal clocks, a stock
+      photo and a text-heavy dashboard image cost 15-25 % more dequant than the synthetic source,
+      at both 1.39 and 2.78 MB per frame. On the dashboard image, Haar and CDF 5/3 are within
+      1 dB in luma PSNR: 43.0 against 42.3 dB at 1.39 MB, and 52.5 against 53.3 dB at 2.78 MB. On the photo,
+      CDF 5/3 is 1.5-2.7 dB better.
+    - VrApi reports about 7 GPU preemptions per vsync in every configuration, at 90 Hz and at
+      120 Hz.
+  - **The maximum GPU clock was not applied in these runs.** `quest3_max_gpu_clock=true`, but
+    `debug.oculus.gpuLevel` read empty and VrApi showed level 4 (640 MHz). After the helper's
+    `GPU_LEVEL_REVERTS` (2) reapplications it stops until the server restarts. Setting the
+    property by hand held through every harness client restart. Check whether the owner's normal
+    flow gets level 7.
   - **Client phase lock and latency (`debug.q3pw.phase_lock=1`, native, 120 Hz, 1500 Mbps).**
     Two alternating rounds, medians of ALVR's estimate:
     - Fresh FPS: 118.9-119.9 with the lock, against 118.4-119.2 without it.

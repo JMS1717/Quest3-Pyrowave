@@ -156,9 +156,19 @@ void barrier(VkCommandBuffer cmd, VkImage image, VkImageLayout from, VkImageLayo
 
 // Deterministic, asymmetric content: gradients, a hard diagonal edge, fine stripes, colored
 // blocks and hashed noise, so orientation, eye-edge and rounding errors all show up.
+// AB_SOURCE=<file> loads a raw I420 frame of the same size instead (Y, then Cb, then Cr).
 void make_source(uint32_t w, uint32_t h, std::vector<uint8_t> &y, std::vector<uint8_t> &cb,
                  std::vector<uint8_t> &cr) {
     y.resize(size_t(w) * h); cb.resize(size_t(w / 2) * (h / 2)); cr.resize(cb.size());
+    if (const char *path = getenv("AB_SOURCE")) {
+        FILE *f = fopen(path, "rb");
+        if (!f) { fprintf(stderr, "AB_SOURCE: cannot open %s\n", path); exit(1); }
+        const bool ok = fread(y.data(), 1, y.size(), f) == y.size() && fread(cb.data(), 1, cb.size(), f) == cb.size() &&
+                        fread(cr.data(), 1, cr.size(), f) == cr.size();
+        fclose(f);
+        if (!ok) { fprintf(stderr, "AB_SOURCE: %s is smaller than a %ux%u I420 frame\n", path, w, h); exit(1); }
+        return;
+    }
     auto hash = [](uint32_t x) { x ^= x >> 16; x *= 0x7feb352du; x ^= x >> 15; x *= 0x846ca68bu; x ^= x >> 16; return x; };
     for (uint32_t j = 0; j < h; j++)
         for (uint32_t i = 0; i < w; i++) {

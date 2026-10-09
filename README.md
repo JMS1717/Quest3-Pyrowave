@@ -129,17 +129,18 @@ Tests-only runs produce no installable pair.
    `io.github.jms1717.quest3pyrowave`.
 4. On the Quest, open **Quest3 PyroWave** from **Unknown Sources**. On the PC, explicitly trust the
    discovered headset in the dashboard, then start SteamVR.
-5. In **Settings → Presets**, pick a **Streaming profile**. The first three are the product modes:
+5. In **Settings → Presets**, pick a **Streaming profile**. The first four are the product modes:
 
    | Profile | Per-eye stream | Best for |
    | --- | --- | --- |
-   | **Quest 3 Quality 120 Hz** | 2592 × 2784 (125 %), 1500 Mbps | Wired PCVR: the most detail at a smooth 120 Hz |
-   | **Quest 3 Wi-Fi Quality 120 Hz** | 120 %, 1000 Mbps | Wi-Fi 6/6E with a strong link |
+   | **Quest 3 Quality 120 Hz** | 2272 × 2432 (110 %), 1500 Mbps | Wired PCVR: the most detail at a smooth 120 Hz |
+   | **Quest 3 Godlike 90 Hz** | 3072 × 3216 (full size, no downsample), 2000 Mbps | Wired PCVR: the most detail, at 90 Hz; heavy scenes can fall below 90 |
+   | **Quest 3 Wi-Fi Quality 120 Hz** | 110 %, 1000 Mbps | Wi-Fi 6/6E with a strong link |
    | **Quest 3 Competitive 207 Hz** | 2080 × 2208, 1000 Mbps | Lowest latency; Horizon OS build 209 holds the headset at 120 Hz |
 
    Then set **Game render resolution** to 150 % or more. **Stream resolution** changes the
-   size on its own: 125 % is the largest that holds 120 Hz, and 135 % and 150 % are marked
-   "below 120 Hz". **Colour** chooses **Vivid (Quest)**, the headset's own wide gamut as Virtual
+   size on its own: 110 % is the largest that held 120 Hz in a heavy SteamVR Home scene, and
+   120 % and above are marked "below 120 Hz". **Colour** chooses **Vivid (Quest)**, the headset's own wide gamut as Virtual
    Desktop uses, or **Accurate (Rec. 709)**. The fresh install starts on a conservative
    400 Mbps / 72 Hz candidate.
 
