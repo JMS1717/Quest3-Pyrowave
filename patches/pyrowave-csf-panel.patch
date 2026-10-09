@@ -1,5 +1,5 @@
 diff --git a/pyrowave_encoder.cpp b/pyrowave_encoder.cpp
-index 0296575..4e38c6d 100644
+index 0296575..3c58018 100644
 --- a/pyrowave_encoder.cpp
 +++ b/pyrowave_encoder.cpp
 @@ -126,7 +126,12 @@ float Encoder::Impl::get_quant_rdo_distortion_scale(int level, int component, in
@@ -9,10 +9,32 @@ index 0296575..4e38c6d 100644
 -	const float cpd_nyquist = cpd_override > 0.0f ? cpd_override : 0.5f * float(height) / 99.0f;
 +	// A stream taller than the panel's 2208 rows is resampled down for display, which removes much
 +	// of its finest band before the eye sees it. Scaling the frequency by stream rows over panel
-+	// rows moves those bits to detail that survives: at 3216 rows (full size) it scores +0.6-0.7 dB
++	// rows moves those bits to detail that survives: at 3216 rows (full size) it scores +0.5 dB
 +	// PSNR-HVS-M at panel resolution, and is neutral at 2784 (docs/ENCODER-CSF.md).
 +	const float panel_scale = std::max(1.0f, float(height) / 2208.0f);
 +	const float cpd_nyquist = cpd_override > 0.0f ? cpd_override : 0.5f * float(height) / 99.0f * panel_scale;
  
  	float cpd = std::sqrt(horiz_midpoint * horiz_midpoint + vert_midpoint * vert_midpoint) *
  	                  cpd_nyquist * std::exp2(-float(level));
+@@ -141,15 +146,19 @@ float Encoder::Impl::get_quant_rdo_distortion_scale(int level, int component, in
+ 	// the amplitude weight. With the headset weighting this keeps smooth areas and blocking better
+ 	// than upstream while fine detail gains (docs/ENCODER-CSF.md).
+ 	// PYROWAVE_LF_BOOST=<level>,<factor> overrides it.
+-	struct LfBoost { int level = 3; float factor = 6.0f; };
++	struct LfBoost { int level = 3; float factor = 0.0f; };
+ 	static const LfBoost lf = [] {
+ 		LfBoost v;
+ 		if (const char *e = getenv("PYROWAVE_LF_BOOST"))
+ 			sscanf(e, "%d,%f", &v.level, &v.factor);
+ 		return v;
+ 	}();
++	// At full size (3216 rows) 6x leaves less blocking than upstream, and 6x / (rows / 2208), 4.1x,
++	// matches upstream's blocking for +0.5-0.7 dB PSNR-HVS-M at panel resolution. At 2784 rows 6x is
++	// already above upstream's blocking and the lower weight gains under 0.1 dB, so streams below
++	// 1.4x the panel's rows keep 6x (docs/ENCODER-CSF.md).
+ 	if (level >= lf.level)
+-		csf *= lf.factor;
++		csf *= lf.factor > 0.0f ? lf.factor : panel_scale >= 1.4f ? 6.0f / panel_scale : 6.0f;
+ 
+ 	// Upstream used 0.6 against the monitor model. Against the flatter headset weighting, 0.6
+ 	// lost about 1 dB of Cb/Cr PSNR (colour bleed); CHROMA_CSF_420 keeps chroma at least as
