@@ -33,7 +33,7 @@ Vulkan handles wavelet decoding; ALVR supplies SteamVR integration, tracking, co
 
 |  |  |
 | --- | --- |
-| **Latest release** | **beta.2 / `.135`**: a fresh install now streams **Quality 120 Hz**, the recommended profile. beta.1 added seven tested [streaming profiles](docs/PROFILES.md) with a guide, chosen and explained in the headset (hold both thumbsticks), full-size Godlike streams, 4:4:4 colour at 120 Hz, Quest colour by default, sharper PC downsampling, and no more drops to 10 FPS after a reconnect. [Release notes →](docs/RELEASE-beta.2.md) |
+| **Latest release** | **beta.2 / `.136`**: a fresh install now streams **Quality 120 Hz**, the recommended profile, and the dashboard no longer shows stream measurements as red errors. beta.1 added seven tested [streaming profiles](docs/PROFILES.md) with a guide, chosen and explained in the headset (hold both thumbsticks), full-size Godlike streams, 4:4:4 colour at 120 Hz, Quest colour by default, sharper PC downsampling, and no more drops to 10 FPS after a reconnect. [Release notes →](docs/RELEASE-beta.2.md) |
 | **Recommended** | **Quality 120 Hz over USB**: 2272 × 2432 per eye (110 %), CDF 5/3, 1500 Mbps, Lanczos downsample, maximum GPU clock. 111–120 fresh FPS of 120. [All profiles →](docs/PROFILES.md) |
 | **Most detail** | **Godlike 90 Hz**: the full 3072 × 3216 per eye with CDF 5/3 at 89–90 fresh FPS of 90. **Godlike 120 Hz** streams the same size with Haar at 116–118 fresh FPS of 120. |
 | **Over Wi-Fi** | **Wi-Fi Quality 120 Hz** at 1000 Mbps on Wi-Fi 6E (6 GHz, PC on Ethernet); 1250 Mbps is the practical ceiling on the test link. **Wi-Fi 90 Hz** at 700 Mbps for ordinary Wi-Fi 6. [Wi-Fi →](docs/WIRELESS.md) |
@@ -79,18 +79,19 @@ established a matched quality or latency advantage over those codecs or Virtual 
 
 ## 📦 Download
 
-The current release is **[v0.1.0-beta.1](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-beta.1)**.
+The current release is **[v0.1.0-beta.2](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-beta.2)**.
+The links below always fetch the latest release.
 
 | Download | Purpose |
 | --- | --- |
-| 🥽 [**Quest APK**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-beta.1/Quest3-Pyrowave-dev.apk) | Install on the Quest 3. |
-| 🖥️ [**Windows server ZIP**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-beta.1/Quest3-Pyrowave-Windows.zip) | Dashboard, SteamVR driver and required bundled files. |
-| 🔐 [**SHA-256 checksums**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-beta.1/SHA256SUMS.txt) | Verify the downloads. |
+| 🥽 [**Quest APK**](https://github.com/JMS1717/Quest3-Pyrowave/releases/latest/download/Quest3-Pyrowave-dev.apk) | Install on the Quest 3. |
+| 🖥️ [**Windows server ZIP**](https://github.com/JMS1717/Quest3-Pyrowave/releases/latest/download/Quest3-Pyrowave-Windows.zip) | Dashboard, SteamVR driver and required bundled files. |
+| 🔐 [**SHA-256 checksums**](https://github.com/JMS1717/Quest3-Pyrowave/releases/latest/download/SHA256SUMS.txt) | Verify the downloads. |
 
-Read the [beta.1 release notes](docs/RELEASE-beta.1.md) for what changed and the known issues. The
-previous preview, [alpha.9](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.9),
-stays available for rollback. The APK is signed with the same key as alpha.9, so it installs over
-it.
+Read the [beta.2 release notes](docs/RELEASE-beta.2.md) for what changed; [beta.1's](docs/RELEASE-beta.1.md)
+cover the profiles and the known issues. The previous release,
+[beta.1](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-beta.1), stays available for
+rollback. The APK is signed with the same key, so it installs over it.
 
 > [!WARNING]
 > **Never mix an APK and server from different releases or runs.** Pull-request APKs use temporary
@@ -123,12 +124,19 @@ Tests-only runs produce no installable pair.
 
 1. **Stop SteamVR** before changing server installations. Extract the Windows ZIP into a new
    folder so the previous installation stays available.
-2. Run **`ALVR Dashboard.exe`** from the extracted folder. Register this server with its driver
-   controls and enable the ALVR SteamVR add-on.
+2. Run **`ALVR Dashboard.exe`** from the extracted folder. In **Installation**, click
+   **Register ALVR driver**; remove other ALVR drivers listed there. Virtual Desktop can stay
+   registered.
 3. Install **`Quest3-Pyrowave-dev.apk`** with SideQuest or ADB. The app has its own package,
    `io.github.jms1717.quest3pyrowave`.
-4. On the Quest, open **Quest3 PyroWave** from **Unknown Sources**. On the PC, explicitly trust the
-   discovered headset in the dashboard, then start SteamVR.
+4. Start SteamVR. Then connect the headset:
+   - **USB:** plug in the cable and turn on **Devices → Wired Connection**. The dashboard downloads
+     ADB once and opens the app on the headset (accept the USB debugging prompt in the headset).
+   - **Wi-Fi:** open **Quest3 PyroWave** from **Unknown Sources** on the Quest, then click
+     **Trust** next to it under **Devices → New Wireless Devices**.
+
+   On the first connection SteamVR restarts once, about 10 s, to take the headset's display
+   settings. That is expected.
 5. The fresh install streams **Quality 120 Hz**, the recommended profile for USB. To change it,
    **hold both thumbsticks** in the headset for about 0.7 s, choose **Profile**, then **Apply**; or
    on the PC, **Settings → Presets → Streaming profile**. On Wi-Fi, pick **Wi-Fi Quality 120 Hz**

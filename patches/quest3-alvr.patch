@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bfff6893c6 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..7c26ce58cc9d7fae942cad38a7e7361b4ffcd901 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..c634a96653110ad45cebddee3a9f44bf
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..8b649c7051dde2c84076d3a6905f4032687359ef 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..f5aca6a3f5a2c4baa8038f71440fcc46d3d14dc9 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..8b649c7051dde2c84076d3a6905f4032
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.135"
++version = "20.13.0-quest3.pyro.136"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -9324,6 +9324,73 @@ index 0000000000000000000000000000000000000000..358b58d00e5683ff20e7a17d0195a072
 +        ThreadRole::ApplicationWorker => xr::sys::AndroidThreadTypeKHR::APPLICATION_WORKER,
 +    }
 +}
+diff --git a/alvr/dashboard/src/dashboard/components/notifications.rs b/alvr/dashboard/src/dashboard/components/notifications.rs
+index 46aed7795b47e6f71080214f891b0b4f6590c942..dc7824148d3b808e276d18661287f8b0f8e9af0c 100644
+--- a/alvr/dashboard/src/dashboard/components/notifications.rs
++++ b/alvr/dashboard/src/dashboard/components/notifications.rs
+@@ -16,6 +16,21 @@ use std::time::Instant;
+ 
+ const TIMEOUT: Duration = Duration::from_secs(5);
+ const NO_NOTIFICATIONS_MESSAGE: &str = "No new notifications";
++// Quest3-Pyrowave: measurements of a working stream, logged at error or warning level so they reach
++// crash_log.txt and vrserver.txt. The Logs tab keeps them; the notification bar does not.
++const DIAGNOSTIC_TAGS: &[&str] = &[
++    "[Q3PW_TRACKING_RX]",
++    "[Q3PW_POSE_EXTRAPOLATE]",
++    "[Q3PW_UDP_SEND]",
++    "[Q3PW_ENCODE_QUEUE]",
++    "[Q3PW_LATENCY_STAMP]",
++    "[VIEWS]",
++];
++
++fn is_diagnostic(message: &str) -> bool {
++    let message = message.trim_start();
++    DIAGNOSTIC_TAGS.iter().any(|tag| message.starts_with(tag))
++}
+ const NOTIFICATION_TIPS: &[&str] = &[
+     // The following tips are ordered roughtly in the order settings appear
+     r#"If you started having crashes after changing some settings, reset ALVR by re-running "Run setup wizard" from the "Installation" tab and clicking "Reset settings"."#,
+@@ -84,6 +99,9 @@ impl NotificationBar {
+     }
+ 
+     pub fn push_notification(&mut self, event: LogEntry, from_dashboard: bool) {
++        if is_diagnostic(&event.content) {
++            return;
++        }
+         let now = Instant::now();
+         let min_severity = if from_dashboard {
+             if cfg!(debug_assertions) {
+@@ -151,3 +169,30 @@ impl NotificationBar {
+         });
+     }
+ }
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn stream_diagnostics_do_not_notify() {
++        let mut bar = NotificationBar::new();
++        bar.update_settings(&alvr_session::SessionConfig::default().to_settings());
++        bar.push_notification(
++            LogEntry {
++                severity: LogSeverity::Error,
++                content: "[Q3PW_POSE_EXTRAPOLATE] vsyncs=600 extrapolated=0".into(),
++            },
++            false,
++        );
++        assert_eq!(bar.message, NO_NOTIFICATIONS_MESSAGE);
++        bar.push_notification(
++            LogEntry {
++                severity: LogSeverity::Error,
++                content: "Handshake error for client.wired: connection refused".into(),
++            },
++            false,
++        );
++        assert!(bar.message.starts_with("Handshake error"));
++    }
++}
 diff --git a/alvr/dashboard/src/dashboard/components/settings.rs b/alvr/dashboard/src/dashboard/components/settings.rs
 index 5cfc04873f78e19e4849ccecc9bd75e9193d04b5..1dcf4f3eb359f44b2a3c3bbf96c1a3ae60402a5f 100644
 --- a/alvr/dashboard/src/dashboard/components/settings.rs
@@ -13633,7 +13700,7 @@ index 81f2f8ed35f34432ee1a8fb75b428c43f1f1a7e2..38d35a685b272a6ac3d0f1aa73a9d0e6
              bitrate_directives,
          ))
 diff --git a/alvr/server_core/src/connection.rs b/alvr/server_core/src/connection.rs
-index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6e9e10d90 100644
+index fc176da39833633bc7fbac803ebe345c7832fbdb..7b74fc58251b4511cd861f43bd9dc89954a52c46 100644
 --- a/alvr/server_core/src/connection.rs
 +++ b/alvr/server_core/src/connection.rs
 @@ -43,6 +43,9 @@ use std::{
@@ -14150,7 +14217,21 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
      alvr_common::dbg_connection!("handshake_loop: End");
  }
  
-@@ -629,6 +965,26 @@ fn connection_pipeline(
+@@ -502,7 +838,12 @@ fn try_connect(
+                 client_hostname.clone(),
+                 client_ip,
+             ) {
+-                error!("Handshake error for {client_hostname}: {e}");
++                // A headset app still starting answers late; the server tries again.
++                if matches!(e, ConnectionError::TryAgain(_)) {
++                    info!("Handshake with {client_hostname} timed out; trying again");
++                } else {
++                    error!("Handshake error for {client_hostname}: {e}");
++                }
+             }
+ 
+             let mut clients_to_be_removed = ctx.clients_to_be_removed.lock();
+@@ -629,6 +970,26 @@ fn connection_pipeline(
          streaming_caps.default_view_resolution,
      );
  
@@ -14177,7 +14258,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
      let fps = {
          let mut best_match = 0_f32;
          let mut min_diff = f32::MAX;
-@@ -649,18 +1005,9 @@ fn connection_pipeline(
+@@ -649,18 +1010,9 @@ fn connection_pipeline(
          warn!("Chosen refresh rate not supported. Using {fps}Hz");
      }
  
@@ -14199,7 +14280,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
  
      let encoder_profile = if initial_settings.video.encoder_config.h264_profile == H264Profile::High
      {
-@@ -822,6 +1169,7 @@ fn connection_pipeline(
+@@ -822,6 +1174,7 @@ fn connection_pipeline(
  
          crate::notify_restart_driver();
      }
@@ -14207,7 +14288,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
  
      dbg_connection!("connection_pipeline: Send StartStream packet");
      control_sender
-@@ -846,6 +1194,29 @@ fn connection_pipeline(
+@@ -846,6 +1199,29 @@ fn connection_pipeline(
  
      *ctx.bitrate_manager.lock() =
          BitrateManager::new(initial_settings.video.bitrate.history_size, fps);
@@ -14237,7 +14318,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
  
      let stream_protocol = if wired {
          SocketProtocol::Tcp
-@@ -867,25 +1238,33 @@ fn connection_pipeline(
+@@ -867,25 +1243,33 @@ fn connection_pipeline(
  
      let mut video_sender = stream_socket.request_stream(VIDEO);
  
@@ -14286,7 +14367,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
      let game_audio_sender: alvr_sockets::StreamSender<()> = stream_socket.request_stream(AUDIO);
      let mut microphone_receiver: alvr_sockets::StreamReceiver<()> =
          stream_socket.subscribe_to_stream(AUDIO, MAX_UNREAD_PACKETS);
-@@ -911,6 +1290,20 @@ fn connection_pipeline(
+@@ -911,6 +1295,20 @@ fn connection_pipeline(
                          Err(RecvTimeoutError::Disconnected) => return,
                      };
  
@@ -14307,7 +14388,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
                  let mut buffer = video_sender.get_buffer(&header).unwrap();
                  // todo: make encoder write to socket buffers directly to avoid copy
                  buffer
-@@ -1081,18 +1474,40 @@ fn connection_pipeline(
+@@ -1081,18 +1479,40 @@ fn connection_pipeline(
          let ctx = Arc::clone(&ctx);
          let client_hostname = client_hostname.clone();
          move || {
@@ -14351,7 +14432,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
                      let decoder_latency = client_stats.video_decode;
                      let (network_latency, game_latency) = stats.report_statistics(client_stats);
  
-@@ -1102,7 +1517,10 @@ fn connection_pipeline(
+@@ -1102,7 +1522,10 @@ fn connection_pipeline(
  
                      let session_manager_lock = SESSION_MANAGER.read();
                      ctx.bitrate_manager.lock().report_frame_latencies(
@@ -14363,7 +14444,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
                          timestamp,
                          network_latency,
                          decoder_latency,
-@@ -1115,6 +1533,7 @@ fn connection_pipeline(
+@@ -1115,6 +1538,7 @@ fn connection_pipeline(
      let control_sender = Arc::new(Mutex::new(control_sender));
  
      let real_time_update_thread = thread::spawn({
@@ -14371,7 +14452,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
          move || {
-@@ -1131,6 +1550,14 @@ fn connection_pipeline(
+@@ -1131,6 +1555,14 @@ fn connection_pipeline(
                  if let Ok(config) = alvr_packets::encode_real_time_config(&config) {
                      control_sender.lock().send(&config).ok();
                  }
@@ -14386,7 +14467,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
  
                  thread::sleep(REAL_TIME_UPDATE_INTERVAL);
              }
-@@ -1184,9 +1611,35 @@ fn connection_pipeline(
+@@ -1184,9 +1616,35 @@ fn connection_pipeline(
          let disconnect_notif = Arc::clone(&disconnect_notif);
          let control_sender = Arc::clone(&control_sender);
          let client_hostname = client_hostname.clone();
@@ -14422,7 +14503,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
                  let packet = match control_receiver.recv(STREAMING_RECV_TIMEOUT) {
                      Ok(packet) => packet,
                      Err(ConnectionError::TryAgain(_)) => {
-@@ -1299,6 +1752,9 @@ fn connection_pipeline(
+@@ -1299,6 +1757,9 @@ fn connection_pipeline(
                      }
                      // Beta test report: forwarded untouched; the dashboard aggregates it
                      ClientControlPacket::HeadsetTelemetry(telemetry) => {
@@ -14432,7 +14513,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
                          alvr_events::send_event(EventType::HeadsetTelemetry(telemetry));
                      }
                      ClientControlPacket::Buttons(entries) => {
-@@ -1378,6 +1834,22 @@ fn connection_pipeline(
+@@ -1378,6 +1839,22 @@ fn connection_pipeline(
                              };
  
                          match reserved {
@@ -14455,7 +14536,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
                              ReservedClientControlPacket::CustomInteractionProfile {
                                  input_ids,
                                  ..
-@@ -1487,7 +1959,6 @@ fn connection_pipeline(
+@@ -1487,7 +1964,6 @@ fn connection_pipeline(
  
      // This requests shutdown from threads
      *ctx.video_channel_sender.lock() = None;
@@ -14463,7 +14544,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
      *ctx.haptics_sender.lock() = None;
  
      *ctx.video_recording_file.lock() = None;
-@@ -1552,8 +2023,8 @@ mod beta_tests {
+@@ -1552,8 +2028,8 @@ mod beta_tests {
          let session = SessionConfig::default();
          let config = openvr_config_with_env(&session, &|_| None);
          assert!(config.pyrowave_enabled);
@@ -14474,7 +14555,7 @@ index fc176da39833633bc7fbac803ebe345c7832fbdb..82027784f77953d21ceb88ff85920fc6
          assert_eq!(config.pyrowave_decode_path, 2, "compute");
      }
  
-@@ -1561,12 +2032,28 @@ mod beta_tests {
+@@ -1561,12 +2037,28 @@ mod beta_tests {
      fn openvr_config_applies_research_overrides() {
          let session = SessionConfig::default();
          let env = |key: &str| match key {
