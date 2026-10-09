@@ -14,6 +14,7 @@ Vulkan handles wavelet decoding; ALVR supplies SteamVR integration, tracking, co
 
 [**Download**](#-download) ·
 [**Quick start**](#-quick-start) ·
+[**Profiles**](docs/PROFILES.md) ·
 [**Settings**](#-settings-and-quality) ·
 [**Performance**](#-measured-performance) ·
 [**Troubleshooting**](#-troubleshooting) ·
@@ -22,23 +23,22 @@ Vulkan handles wavelet decoding; ALVR supplies SteamVR integration, tracking, co
 </div>
 
 > [!IMPORTANT]
-> **Research preview.** SteamVR video, audio and tracking work in tested setups. Short screens
-> reach about **195 fresh frames per second at 207 Hz** with full-resolution 2080 × 2208 per-eye
-> streams, over USB or Wi-Fi 6E. Sustained gameplay, optical motion-to-photon latency and an advantage over Virtual
-> Desktop are **not yet established**. A selected refresh rate or an FPS counter does not prove
-> that many distinct frames reach your eyes.
+> **Preview.** SteamVR video, audio and tracking work in tested setups over USB and Wi-Fi 6E.
+> Over USB the recommended **Quality 120 Hz** profile holds about 111–120 fresh frames per second
+> of 120 in short screens. Sustained gameplay, optical motion-to-photon latency and an advantage
+> over Virtual Desktop are **not yet established**. A selected refresh rate or an FPS counter does
+> not prove that many distinct frames reach your eyes.
 
 ## 📍 Current status
 
 |  |  |
 | --- | --- |
-| **Latest release** | **alpha.9 / `.63`**: a decoder about twice as fast, any refresh rate from 144 to 240 Hz with PC-driven panel switching over USB, Decoder V2 for smoother CDF 5/3 images, bitrate up to 4000 Mbps, two parallel wired video connections, and measured Wi-Fi streaming with connection fixes. [Release notes →](docs/RELEASE-alpha.9.md) |
-| **On main since alpha.9** | **`.64`** (not yet released): safer parallel wired video. Frames are numbered, so a repeated timestamp can no longer mix two frames, and a stalled connection times out after 1 s and video falls back to the stream socket. Packed frames that no shader can convert are skipped instead of shown in wrong colours, and the dashboard's Auto text is corrected. Checked over Wi-Fi 6E (190.6 and 193.9 fresh FPS at 207 Hz, correct colours); the USB path it changes is not yet hardware-tested. [Handoff →](docs/HANDOFF.md) |
-| **Best measured high-refresh setting** | **207 Hz · 2080 × 2208 per eye · Haar · 1000 Mbps · 4:2:0 · no foveation · maximum GPU clock over USB · direct eye copy**: 194–197 fresh FPS in 10–12 s screens with a 60°/s pan. [Frame trace →](docs/FRAME-TRACE.md) |
-| **Over Wi-Fi** | The same 207 Hz stream at 1000 Mbps on Wi-Fi 6E (6 GHz, PC on Ethernet): 189–195 fresh FPS and about 6 ms of network time, about 3.4 ms more than USB. 1250 Mbps is the practical ceiling on the test link; 1500 queued frames hundreds of milliseconds late. [Wi-Fi →](docs/WIRELESS.md) |
-| **Smoothest image** | CDF 5/3 (Decoder V2) removes Haar's block edges, for about 2 fresh FPS at 700 Mbps and more at higher bitrates. [Decoder V2 →](docs/DECODER-V2.md) |
-| **What limits 207 Hz** | Frames that finish too close to the display deadline, the eye copy's fill cost (about 0.8 ms), and a headset memory clock the app cannot control. [Details →](docs/FRAME-TRACE.md#what-limits-207-hz-now) |
-| **Fresh-install defaults** | A conservative 400 Mbps / 72 Hz candidate: Haar, 4:2:0, TCP, Quest 3 Auto → Compute. Pick a measured profile to go higher. |
+| **Latest release** | **beta.1 / `.134`**: seven tested [streaming profiles](docs/PROFILES.md) with a guide, chosen and explained in the headset (hold both thumbsticks), full-size Godlike streams, 4:4:4 colour at 120 Hz, Quest colour by default, sharper PC downsampling, and no more drops to 10 FPS after a reconnect. [Release notes →](docs/RELEASE-beta.1.md) |
+| **Recommended** | **Quality 120 Hz over USB**: 2272 × 2432 per eye (110 %), CDF 5/3, 1500 Mbps, Lanczos downsample, maximum GPU clock. 111–120 fresh FPS of 120. [All profiles →](docs/PROFILES.md) |
+| **Most detail** | **Godlike 90 Hz**: the full 3072 × 3216 per eye with CDF 5/3 at 89–90 fresh FPS of 90. **Godlike 120 Hz** streams the same size with Haar at 116–118 fresh FPS of 120. |
+| **Over Wi-Fi** | **Wi-Fi Quality 120 Hz** at 1000 Mbps on Wi-Fi 6E (6 GHz, PC on Ethernet); 1250 Mbps is the practical ceiling on the test link. **Wi-Fi 90 Hz** at 700 Mbps for ordinary Wi-Fi 6. [Wi-Fi →](docs/WIRELESS.md) |
+| **Above 120 Hz** | **Competitive 207 Hz** reached 194–197 fresh FPS before Horizon OS build 209 (v2.9, October 2026), which holds the headset at 120 Hz or less. Use Quality 120 on that build. [High refresh →](docs/HIGH-REFRESH.md) |
+| **Fresh-install defaults** | **Starter 72 Hz**: 400 Mbps, panel resolution, CDF 9/7, 4:2:0, UDP on Wi-Fi. It streams on any connection; pick a profile once it does. |
 
 ## ✨ Why PyroWave?
 
@@ -79,18 +79,18 @@ established a matched quality or latency advantage over those codecs or Virtual 
 
 ## 📦 Download
 
-The current preview is **[v0.1.0-alpha.9](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.9)**.
+The current release is **[v0.1.0-beta.1](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-beta.1)**.
 
 | Download | Purpose |
 | --- | --- |
-| 🥽 [**Quest APK**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.9/Quest3-Pyrowave-dev.apk) | Install on the Quest 3. |
-| 🖥️ [**Windows server ZIP**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.9/Quest3-Pyrowave-Windows.zip) | Dashboard, SteamVR driver and required bundled files. |
-| 🔐 [**SHA-256 checksums**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-alpha.9/SHA256SUMS.txt) | Verify the downloads. |
+| 🥽 [**Quest APK**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-beta.1/Quest3-Pyrowave-dev.apk) | Install on the Quest 3. |
+| 🖥️ [**Windows server ZIP**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-beta.1/Quest3-Pyrowave-Windows.zip) | Dashboard, SteamVR driver and required bundled files. |
+| 🔐 [**SHA-256 checksums**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-beta.1/SHA256SUMS.txt) | Verify the downloads. |
 
-Read the [alpha.9 release notes](docs/RELEASE-alpha.9.md) for what changed, what is still opt-in and
-the known issues. The previous preview,
-[alpha.8](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.8), stays available
-for rollback.
+Read the [beta.1 release notes](docs/RELEASE-beta.1.md) for what changed and the known issues. The
+previous preview, [alpha.9](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.9),
+stays available for rollback. The APK is signed with the same key as alpha.9, so it installs over
+it.
 
 > [!WARNING]
 > **Never mix an APK and server from different releases or runs.** Pull-request APKs use temporary
@@ -129,24 +129,27 @@ Tests-only runs produce no installable pair.
    `io.github.jms1717.quest3pyrowave`.
 4. On the Quest, open **Quest3 PyroWave** from **Unknown Sources**. On the PC, explicitly trust the
    discovered headset in the dashboard, then start SteamVR.
-5. In **Settings → Presets**, pick a **Streaming profile**. The first four are the product modes:
+5. The fresh install starts on **Starter 72 Hz**, which streams on any connection. Once you see
+   the stream, pick a profile: in the headset, **hold both thumbsticks** for about 0.7 s, choose
+   **Profile**, then **Apply**; or on the PC, **Settings → Presets → Streaming profile**.
 
-   | Profile | Per-eye stream | Best for |
+   | Profile | Per-eye stream | Pick it for |
    | --- | --- | --- |
-   | **Quest 3 Quality 120 Hz** | 2272 × 2432 (110 %), 1500 Mbps | Wired PCVR: the most detail at a smooth 120 Hz |
-   | **Quest 3 Godlike 80 Hz** | 3072 × 3216 (full size, no downsample), Haar, 1500 Mbps | Wired PCVR: the most detail, at a steady 80 Hz |
-   | **Quest 3 Wi-Fi Quality 120 Hz** | 110 %, 1000 Mbps | Wi-Fi 6/6E with a strong link |
-   | **Quest 3 Competitive 207 Hz** | 2080 × 2208, 1000 Mbps | Lowest latency; Horizon OS build 209 holds the headset at 120 Hz |
+   | **Quest 3 Quality 120 Hz** (recommended) | 2272 × 2432 (110 %), CDF 5/3, 1500 Mbps | USB: the best balance of detail, smoothness and latency |
+   | **Quest 3 Godlike 90 Hz** | 3072 × 3216 (full size), CDF 5/3, 1500 Mbps | USB: the cleanest full-size image; sims, racing, slow games |
+   | **Quest 3 Godlike 120 Hz** | 3072 × 3216, Haar, 1500 Mbps | USB: the most detail at 120 Hz, a few FPS short of 120; faint blocks in gradients |
+   | **Quest 3 Colour 4:4:4 120 Hz** | 110 %, Haar, full colour, 1500 Mbps | USB: crisp coloured text, menus and cockpits |
+   | **Quest 3 Wi-Fi Quality 120 Hz** | 110 %, 1000 Mbps | Wi-Fi 6E (6 GHz) with the PC on Ethernet |
+   | **Quest 3 Wi-Fi 90 Hz** | panel size, 700 Mbps | Ordinary Wi-Fi 6 (5 GHz) |
+   | **Quest 3 Competitive 207 Hz** | 2080 × 2208, 1000 Mbps | USB: lowest latency, where Horizon OS allows 207 Hz |
 
-   Then set **Game render resolution** to 150 % or more. **Stream resolution** changes the
-   size on its own: 110 % is the largest that held 120 Hz in a heavy SteamVR Home scene, and
-   120 % and above are marked "below 120 Hz". **Colour** chooses **Vivid (Quest)**, the headset's own wide gamut as Virtual
-   Desktop uses, or **Accurate (Rec. 709)**. The fresh install starts on a conservative
-   400 Mbps / 72 Hz candidate.
+   Then set **Game render resolution** to 150 % or more if your PC holds the frame rate. The
+   [profile guide](docs/PROFILES.md) explains what each profile and setting does and which is
+   better for what.
 
-These are starting candidates, not guaranteed performance levels. The full
-[installation and rollback guide](docs/BUILD.md#install-and-rollback) covers prerequisites,
-controller emulation and restoring another driver.
+These are tested starting points, not guaranteed performance levels: a heavy game or a weaker PC
+or link gives less. The full [installation and rollback guide](docs/BUILD.md#install-and-rollback)
+covers prerequisites, controller emulation and restoring another driver.
 
 ### Choose your connection
 
@@ -166,15 +169,15 @@ controller emulation and restoring another driver.
 | --- | --- |
 | **Bitrate** | **Settings → Presets.** The slider sets a fixed payload cap; with Auto it sets a maximum. PyroWave keeps a quality floor of 0.25 bits per stream pixel (about 500 Mbps at 207 Hz with 2080 × 2208 per eye) and raises lower settings to it. [Details](docs/BITRATE.md) |
 | **Auto bitrate** | Lowers the requested rate from network/encoder latency feedback. The quality floor raises its estimate, but the network-latency and maximum limits win, so on a congested link it goes lower instead of queuing frames. On Wi-Fi 6E it settled at about 550 Mbps with an 8 ms limit, which is conservative. It cannot guarantee FPS or remove a GPU bottleneck. |
-| **Profiles** | **Settings → Presets → Streaming profile.** The three "(measured)" profiles set refresh, stream size, wavelet, chroma, bitrate and GPU clock together and keep the game's render resolution. [Measurements](docs/HIGH-REFRESH.md) |
+| **Profiles** | **Settings → Presets → Streaming profile**, or **Profile** in the headset menu. Each sets refresh, stream size, wavelet, chroma, bitrate, filter, sharpening and GPU clock together and keeps the game's render resolution. The headset menu explains the selected profile in two lines. [Profile guide](docs/PROFILES.md) |
 | **Refresh** | 72–120 Hz, or any whole rate from 144 to 240 Hz with **Preferred FPS**. Over USB the PC switches the panel: 144–207 Hz natively, above 207 Hz in the scaled panel mode (1552 × 1664 per eye). [Capability detection](docs/REFRESH-RATES.md) |
-| **Wavelet** | **Haar** (default) is fastest. **CDF 5/3** uses Decoder V2 and gives smoother gradients without Haar's 8-pixel block edges, for a few fresh FPS; pair it with the maximum GPU clock. [Decoder V2](docs/DECODER-V2.md) · [decoder findings](docs/DECODE-PIPELINE.md) |
-| **GPU clock** | **Quest 3: maximum GPU clock** (690 MHz) helps whenever decoding limits the frame rate. The measured 207 and 240 Hz profiles turn it on. The PC applies it, and the panel switch, over USB adb only. [Details](docs/HIGH-REFRESH.md) |
-| **Wired video connections** | Two by default over USB: each frame is split across parallel adb-forwarded connections, which shortens network time at 1000 Mbps and above. **0** restores the single stream socket. [Details](docs/BITRATE.md) |
-| **Direct eye copy** | An opt-in developer property that draws decoded frames straight into the headset's eye images; the 207 Hz measurements on this page use it. With the headset on USB: `adb shell setprop debug.q3pw.direct_eye_copy 1`, then force-stop and reopen the app. Set it to `0` to return to ALVR's staging renderer, the default. [Frame trace](docs/FRAME-TRACE.md) |
-| **Chroma** | Keep **4:2:0** for the baseline; 4:4:4 increased decode cost in the recorded comparison. [Chroma comparison](docs/CHROMA.md) |
+| **Wavelet** | **CDF 5/3** (the product profiles) uses Decoder V2 and gives smooth gradients without Haar's 8-pixel block edges; pair it with the maximum GPU clock. **Haar** decodes fastest (the Colour profile uses it to fit 4:4:4). **CDF 9/7** (the fresh-install Starter) is smoothest and slowest. [Decoder V2](docs/DECODER-V2.md) · [decoder findings](docs/DECODE-PIPELINE.md) |
+| **GPU clock** | **Quest 3: maximum GPU clock** (690 MHz) helps whenever decoding limits the frame rate. Every USB profile turns it on. The PC applies it, and the panel switch, over USB adb only. [Details](docs/HIGH-REFRESH.md) |
+| **Wired video connections** | Four in the USB profiles (two by default): each frame is split across parallel adb-forwarded connections, which shortens network time at 1000 Mbps and above. **0** restores the single stream socket. [Details](docs/BITRATE.md) |
+| **Direct eye copy** | On by default since `.117`: decoded frames are drawn straight into the headset's eye images, which saves 3 ms of GPU time a frame against ALVR's staging renderer. `adb shell setprop debug.q3pw.direct_eye_copy 0`, then force-stop and reopen the app, restores staging for comparisons. [Frame trace](docs/FRAME-TRACE.md) |
+| **Chroma** | **4:2:0** in every profile but Colour. **4:4:4** keeps coloured text and thin coloured lines crisp; at 110 % and 120 Hz it holds 118–120 fresh FPS with Haar. [Chroma comparison](docs/CHROMA.md) |
 | **Foveation** | Off by default. [Light peripheral encoding](docs/LIGHT-FOVEATION.md) is optional development work; sustained and in-headset acceptance are pending. |
-| **Overlay** | On by default, in Compact mode. **Click both thumbsticks together** and release to cycle Compact → Full → Hidden. **Hold both** for about 0.7 s to open the headset settings menu. [Metrics and overrides](docs/OVERLAY.md) |
+| **Overlay** | On by default, in Compact mode. **Click both thumbsticks together** and release to cycle Compact → Full → Hidden. **Hold both** for about 0.7 s to open the headset settings menu: profile, refresh, bitrate, stream and render size, chroma and overlay, each with a short explanation. [Metrics and overrides](docs/OVERLAY.md) |
 | **Controllers** | **Settings → Headset → Controllers → Emulation mode → Quest 3 Touch Plus.** SteamVR restarts to apply it. |
 
 ### Settings that restart SteamVR
@@ -186,20 +189,19 @@ restarts when the driver needs it. The stream returns about 25 s after the edit,
 progress first**. Bitrate changes apply live without a reconnect. [Details](docs/SETTINGS-APPLY.md)
 
 <details>
-<summary><b>Bitrate budgets and experimental presets</b></summary>
+<summary><b>Bitrate budgets</b></summary>
 
 <br>
 
-The 600 / 800 / 1000 / 1500 / 2000 Mbps 120 Hz presets are experiments.
-
 | Refresh | Payload ceiling per stereo frame at 1000 Mbps |
 | --- | --- |
+| 90 Hz | about **1.39 MB** |
 | 120 Hz | about **1.04 MB** |
 | 207 Hz | about **0.60 MB** |
 
 These are payload ceilings, not guaranteed utilization or quality. More bitrate improves quality but
 costs decode time, most of all with CDF 5/3: at 207 Hz, 5/3 measured 185 fresh FPS at 700 Mbps, 179
-at 1000 and 164 at 1500. [Profile math and measured bitrate comparisons](docs/BITRATE.md)
+at 1000 and 164 at 1500. [Every profile's frame budget](docs/BITRATE.md)
 
 Refresh rates above 120 Hz are runtime-gated, and an accepted refresh does not imply an equal
 fresh-frame rate. Rates above 120 Hz rely on the panel switch the PC applies over USB (or
@@ -277,7 +279,8 @@ and a short frame hold shows both frames of a burst. Neither is a default.
 | **USB is plugged in, but video uses Wi-Fi** | Check the wired peer and ADB forwards with the [USB verification steps](docs/USB.md). |
 | **Video stops after unplugging or replugging USB** | Replugging with two wired video connections has not been checked yet. Stop SteamVR, reconnect the cable and confirm `adb devices` lists the headset before restarting. If it recurs, set **Wired video connections** to **0** and [report it](https://github.com/JMS1717/Quest3-Pyrowave/issues). |
 | **Game never appears in the headset** | Check SteamVR's active headset and the game's OpenXR runtime. [OpenXR setup and VD rollback](docs/OPENXR.md) |
-| **FPS is below the selected refresh** | Use a measured profile over USB with the maximum GPU clock. Compare fresh-frame delivery, GPU decode and completion timing; more bitrate or CDF 5/3 costs decode time. |
+| **Stream drops to about 10 FPS** a few seconds after connecting or applying a profile | Fixed in `.134`: a reconnect no longer tells SteamVR the headset was taken off. Update both the APK and the server. |
+| **FPS is below the selected refresh** | Use a USB profile (they turn on the maximum GPU clock); Godlike 120 runs a few FPS below 120 by design. Compare fresh-frame delivery, GPU decode and completion timing; more bitrate or CDF 5/3 costs decode time. |
 | **Overlay will not hide** | A benchmark's forced-visible override can take precedence over the controller chord. [Clear the override](docs/OVERLAY.md) |
 | **Wrong controller model** | Select Quest 3 Touch Plus. Older saved sessions or game-specific meshes can differ. |
 | **APK update fails** | Compare signing certificates; PR builds can use different keys. Follow the [signing guide](docs/BUILD.md#android-apk). |

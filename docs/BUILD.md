@@ -117,17 +117,19 @@ adb shell am start -n io.github.jms1717.quest3pyrowave/android.app.NativeActivit
 ```
 
 Allow the requested microphone permission if you use it. In the dashboard, explicitly trust
-your headset, register this driver with SteamVR, and select **Quest 3 PyroWave 400 Mbps / 72 Hz candidate**. Use
-only one active ALVR SteamVR driver. This fork has its own protocol version; stock and Galaxy XR
+your headset and register this driver with SteamVR. A fresh install starts on
+**Quest 3 Starter 72 Hz**, which streams on any connection. Use only one active ALVR SteamVR driver. This fork has its own protocol version; stock and Galaxy XR
 clients cannot pair with it. Driver registration and firewall rules are through the ALVR UI.
 Allow the streamer on your private LAN only. The dashboard API is local at port 8082; ALVR's control
 and stream connections use TCP 9943 and 9944, and the optional PyroWave UDP transport uses 9948.
 Over USB the server also forwards 9950-9953 for the parallel wired video connections
 ([USB guide](USB.md)).
 
-The selected preset is a conservative fresh-install default. The three **"(measured)"** streaming
-profiles (native 120 Hz, 207 Hz and 240 Hz scaled panel) are in **Settings → Presets → Streaming
-profile**; "measured" means 10-12 s screens, not sustained play.
+Once it streams, pick a profile in **Settings → Presets → Streaming profile**, or in the headset
+(hold both thumbsticks): **Quest 3 Quality 120 Hz** over USB, **Quest 3 Wi-Fi Quality 120 Hz** on
+Wi-Fi 6E. The [profile guide](PROFILES.md) explains each one. The three **"(measured)"** reference
+profiles (native 120 Hz, 207 Hz and 240 Hz scaled panel) reproduce 10-12 s screens, not sustained
+play.
 
 For standard Quest 3 controllers, choose **Settings → Headset → Controllers →
 Emulation mode → Quest 3 Touch Plus**, then restart SteamVR. New sessions default

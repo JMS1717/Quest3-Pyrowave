@@ -1,8 +1,34 @@
 # Engineering handoff: Quest3-Pyrowave
 
-Prepared October 4, 2026, with dated updates through October 8. Read [AGENTS.md](../AGENTS.md)
+Prepared October 4, 2026, with dated updates through October 9. Read [AGENTS.md](../AGENTS.md)
 first. Machine-specific state, raw captures, signing material and rollback snapshots stay outside
 this repo.
+
+## October 9: beta.1, `.131`-`.134`, merged to main
+
+**Released:** v0.1.0-beta.1, built from `.134` on main (PR #23 merged). Release notes:
+[RELEASE-beta.1.md](RELEASE-beta.1.md); profile guide: [PROFILES.md](PROFILES.md). The October 7
+state below is history.
+
+- **Profiles** (`.131`, `.132`): seven tested product profiles (Quality 120, Godlike 120,
+  Godlike 90, Colour 4:4:4 120, Wi-Fi Quality 120, Wi-Fi 90, Competitive 207) plus the fresh-install
+  Starter 72 Hz, defined in `alvr/session/src/beta.rs` and pinned by `beta_tests.rs`. The
+  dashboard lists them first, then three "(measured)" references and the H.264/HEVC/AV1
+  comparisons; the superseded 600-2000 Mbit/s and render-size experiments are gone.
+- **Headset menu** (`.131`): hold both thumbsticks for about 0.7 s. Row 1 picks a profile; every
+  row has two lines of help; USB-only profiles are refused on Wi-Fi.
+- **Godlike wavelets** (`.132`): Godlike 120 uses Haar (116-118 fresh FPS of 120, ALVR latency
+  estimate about 43 ms; CDF 5/3 measured 112 and 46 ms because frames queued for the decoder).
+  Godlike 90 uses CDF 5/3 (89-90 of 90, 48-54 ms).
+- **10 FPS drops** (`.131`-`.134`): `ClientDisconnected` for an old connection arrives after the
+  new connection's `ClientConnected` (the old pipeline joins its threads first), so the driver set
+  proximity false while the new stream ran and SteamVR idled the headset to 10 Hz about six seconds
+  later. The driver now counts connections (`InitializeStreaming`/`DeinitializeStreaming`), blocks
+  standby while one streams, and pulses proximity from the headset device's `EnterStandby` while
+  streaming. SteamVR never queried `ShouldBlockStandbyMode` or the provider's `EnterStandby` in
+  `.133`'s logs; only the device hook fires. Verified: four `.134` cells with no standby while
+  streaming, and one logged overlapping reconnect.
+- **Not checked:** sustained play, Wi-Fi Quality 120 and Wi-Fi 90 live, optical latency.
 
 ## Current goal and state (October 7)
 

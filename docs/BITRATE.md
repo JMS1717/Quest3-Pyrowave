@@ -86,40 +86,36 @@ measured. An earlier USB test with an 8 ms decoder limiter collapsed the bitrate
 that limiter for PyroWave (above) addresses the mechanism.
 The port also corrects the hardware decoder limiter's bytes/frame → bits/s units.
 
-The full-panel PyroWave profiles request 2064×2208 per eye, padded to **2080×2208**.
-The stereo frame contains **9,185,280 pixels**, or **13,777,920 bytes of raw 8-bit
-4:2:0**. With 4:4:4 the raw size doubles; a fixed bitrate cap remains the same.
+Each [streaming profile](PROFILES.md) has its own frame budget. ALVR pads each per-eye size up to
+a multiple of 32: the full panel's 2064×2208 becomes **2080×2208**, the 110 % stream's 2270×2429
+becomes 2272×2432, and the full 3072×3216 render becomes 3072×3232. Raw sizes below are 8-bit
+stereo frames; 4:4:4 doubles them, and a fixed bitrate cap stays the same.
 
-| Profile Mbps / Hz | Time budget ms | Payload bytes/frame ≤ | Raw/payload ratio | TCP Ethernet rate at cap ≥ Mbps |
-|---|---:|---:|---:|---:|
-| 400 / 72 candidate | 13.89 | 694,444 | 19.84:1 | 421 |
-| 600 / 90 candidate | 11.11 | 833,333 | 16.53:1 | 632 |
-| 600 / 120 experiment | 8.33 | 625,000 | 22.04:1 | 632 |
-| 800 / 120 experiment | 8.33 | 833,333 | 16.53:1 | 843 |
-| 1000 / 120 experiment | 8.33 | 1,041,666 | 13.23:1 | 1053 |
-| 1500 / 120 experiment | 8.33 | 1,562,500 | 8.82:1 | 1580 |
-| 2000 / 120 experiment | 8.33 | 2,083,333 | 6.61:1 | 2107 |
-| 1000 / 207 measured profile | 4.83 | 603,864 | 22.82:1 | 1053 |
+| Profile | Padded per eye | Mbps / Hz | Time budget ms | Payload bytes/frame ≤ | Raw/payload ratio | TCP Ethernet rate at cap ≥ Mbps | Bits per stream pixel |
+|---|---|---|---:|---:|---:|---:|---:|
+| Starter 72 Hz | 2080×2208 | 400 / 72 | 13.89 | 694,444 | 19.84:1 | 421 | 0.60 |
+| Wi-Fi 90 Hz | 2080×2208 | 700 / 90 | 11.11 | 972,222 | 14.17:1 | 737 | 0.85 |
+| Wi-Fi Quality 120 Hz | 2272×2432 | 1000 / 120 | 8.33 | 1,041,666 | 15.91:1 | 1053 | 0.75 |
+| Quality 120 Hz | 2272×2432 | 1500 / 120 | 8.33 | 1,562,500 | 10.61:1 | 1580 | 1.13 |
+| Colour 4:4:4 120 Hz | 2272×2432 | 1500 / 120 | 8.33 | 1,562,500 | 21.22:1 | 1580 | 1.13 |
+| Godlike 90 Hz | 3072×3232 | 1500 / 90 | 11.11 | 2,083,333 | 14.30:1 | 1580 | 0.84 |
+| Godlike 120 Hz | 3072×3232 | 1500 / 120 | 8.33 | 1,562,500 | 19.06:1 | 1580 | 0.63 |
+| Competitive 207 Hz | 2080×2208 | 1000 / 207 | 4.83 | 603,864 | 22.82:1 | 1053 | 0.53 |
 
-Two additional 120 Hz / 1000 Mbps experiments lower render size: 75% requests
-1548×1656 per eye (padded 1568×1664), while 60% requests 1238×1325
-(padded 1248×1344). Their raw/payload ratios are 7.51:1 and 4.83:1 respectively.
-The byte cap and network demand remain 1,041,666 bytes/frame and ≥1053 Mbps.
-These change pixel workload, not bandwidth. Short live observations are recorded in
-[results](../results/LIVE-2026-10-01.md); median 120 FPS at 60% is not sustained 120 FPS.
+Bits per stream pixel is the clearest single comparison of how hard each profile compresses:
+Quality 120 gives every pixel nearly twice the bits of Godlike 120, which is why Godlike 90 (more
+time per frame) is the cleaner full-size mode. The 600–2000 Mbps 120 Hz experiments and the 75 % /
+60 % render-size latency experiments that earlier versions listed were removed in `.131`; the
+product profiles above replace them. Their short live observations remain in
+[results](../results/LIVE-2026-10-01.md).
 
 Ethernet estimates assume full-size TCP segments (1460 bytes payload / 1538 bytes on
 the wire). They exclude ACKs, retransmissions and Wi-Fi airtime overhead. A 2.4 Gbps
-Wi-Fi PHY rate is not 2.4 Gbps payload capacity; 2000 Mbps is particularly aggressive.
-All byte budgets fit PWU2's 8192-fragment transport bound. Passing those mathematical
-bounds does not establish visual quality, thermal stability, or sustained frame rate.
-Older full-resolution decode measurements exceeded 120 Hz's 8.33 ms, which is why the
-120 Hz rows above are named experiments. The current decoder (`.62` and later) decodes
-2080×2208 Haar in about 2.7 ms GPU time (p50, 207 Hz, 690 MHz GPU clock). The three
-"(measured)" profiles run at 1000 Mbps: native 120 Hz, 207 Hz at 2080×2208 and 240 Hz scaled panel at 1440×1536
-(520,832 bytes/frame). See [HIGH-REFRESH.md](HIGH-REFRESH.md). Those are 10-12 s screens, not
-sustained play. Native panel size is also distinct from SteamVR's larger lens-corrected render
-recommendation.
+Wi-Fi PHY rate is not 2.4 Gbps payload capacity. Passing these mathematical bounds does not
+establish visual quality, thermal stability, or sustained frame rate. The three "(measured)"
+reference profiles run at 1000 Mbps: native 120 Hz, 207 Hz at 2080×2208 and 240 Hz scaled panel
+at 1440×1536 (520,832 bytes/frame). See [HIGH-REFRESH.md](HIGH-REFRESH.md). Native panel size is
+also distinct from SteamVR's larger lens-corrected render recommendation.
 
 Regenerate machine-readable budgets using `python -m tools.quest3.budget --out
 presets/frame-budgets.json`. The dashboard uses the same padding and integer cap math
@@ -153,7 +149,7 @@ See [complete sanitized distributions](../results/BITRATE-USB-LIVE-2026-10-02.js
 
 Dated record from `.44`. It predates the faster decoder: Haar GPU decode at 2080×2208 now
 measures about 2.7 ms p50 (207 Hz, 690 MHz GPU clock, `.62`), not 6 ms. "Default" below means the native 120 Hz profile's 1000 Mbps; a fresh
-install still starts on the 400 Mbps / 72 Hz candidate preset.
+install starts on the 400 Mbps / 72 Hz Starter profile.
 
 The reviewed `.44` pair passed all matching builds and production decoder tests;
 its native libraries are byte-identical to GPU-verified `.42`. One continuous

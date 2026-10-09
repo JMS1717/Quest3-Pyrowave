@@ -3,7 +3,7 @@
 ## Current pipeline (October 7, `.64`)
 
 This is the path a PyroWave stream takes. A fresh install starts from a conservative
-400 Mbit/s / 72 Hz preset. The "Quest 3 PyroWave 207 Hz (measured)" profile sets the stream
+400 Mbit/s / 72 Hz Starter profile ([profiles](PROFILES.md)). The "Quest 3 PyroWave 207 Hz (measured)" profile sets the stream
 below and also turns on the maximum GPU clock over USB. Numbers below are from the owner's
 settings: a 3072x3216 per-eye render, streamed at 2080x2208 per eye, 207 Hz, Haar, 1000 Mbit/s,
 4:2:0, no foveation, maximum GPU clock (690 MHz), USB. They come from 10-12 s screens
