@@ -79,18 +79,19 @@ established a matched quality or latency advantage over those codecs or Virtual 
 
 ## 📦 Download
 
-The current release is **[v0.1.0-beta.1](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-beta.1)**.
+The current release is **[v0.1.0-beta.2](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-beta.2)**.
+The links below always fetch the latest release.
 
 | Download | Purpose |
 | --- | --- |
-| 🥽 [**Quest APK**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-beta.1/Quest3-Pyrowave-dev.apk) | Install on the Quest 3. |
-| 🖥️ [**Windows server ZIP**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-beta.1/Quest3-Pyrowave-Windows.zip) | Dashboard, SteamVR driver and required bundled files. |
-| 🔐 [**SHA-256 checksums**](https://github.com/JMS1717/Quest3-Pyrowave/releases/download/v0.1.0-beta.1/SHA256SUMS.txt) | Verify the downloads. |
+| 🥽 [**Quest APK**](https://github.com/JMS1717/Quest3-Pyrowave/releases/latest/download/Quest3-Pyrowave-dev.apk) | Install on the Quest 3. |
+| 🖥️ [**Windows server ZIP**](https://github.com/JMS1717/Quest3-Pyrowave/releases/latest/download/Quest3-Pyrowave-Windows.zip) | Dashboard, SteamVR driver and required bundled files. |
+| 🔐 [**SHA-256 checksums**](https://github.com/JMS1717/Quest3-Pyrowave/releases/latest/download/SHA256SUMS.txt) | Verify the downloads. |
 
-Read the [beta.1 release notes](docs/RELEASE-beta.1.md) for what changed and the known issues. The
-previous preview, [alpha.9](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-alpha.9),
-stays available for rollback. The APK is signed with the same key as alpha.9, so it installs over
-it.
+Read the [beta.2 release notes](docs/RELEASE-beta.2.md) for what changed; [beta.1's](docs/RELEASE-beta.1.md)
+cover the profiles and the known issues. The previous release,
+[beta.1](https://github.com/JMS1717/Quest3-Pyrowave/releases/tag/v0.1.0-beta.1), stays available for
+rollback. The APK is signed with the same key, so it installs over it.
 
 > [!WARNING]
 > **Never mix an APK and server from different releases or runs.** Pull-request APKs use temporary
