@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b27030c630445 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..f9bd63da2cbd887ab53c1056cad27da89da4bd90 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..84c39dce7e82593d6c582c2a492b2703
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..6f0de824fecd98f3ef975705e7eb78d0a05431b2 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..fc7490122a2ca8bb9a10b97c70cb82b60e24991e 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..6f0de824fecd98f3ef975705e7eb78d0
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.112"
++version = "20.13.0-quest3.pyro.113"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -11064,7 +11064,7 @@ index 0000000000000000000000000000000000000000..832dd358be6291160358f115a54e5680
 +    }
 +}
 diff --git a/alvr/graphics/src/lib.rs b/alvr/graphics/src/lib.rs
-index 3485570d33c782f897d14b607b262ab659492cc8..080259b1f5ffbb62a28a5d51173b29e459ba191e 100644
+index 3485570d33c782f897d14b607b262ab659492cc8..5d21cf6a66d48c8a87da35a541d56f5f34c0c3f2 100644
 --- a/alvr/graphics/src/lib.rs
 +++ b/alvr/graphics/src/lib.rs
 @@ -1,9 +1,21 @@
@@ -11089,7 +11089,7 @@ index 3485570d33c782f897d14b607b262ab659492cc8..080259b1f5ffbb62a28a5d51173b29e4
  
  use alvr_common::{
      glam::{Mat4, UVec2, Vec4},
-@@ -18,6 +30,11 @@ use wgpu::{
+@@ -18,6 +30,52 @@ use wgpu::{
      TextureFormat, TextureUsages, TextureView,
  };
  
@@ -11098,10 +11098,62 @@ index 3485570d33c782f897d14b607b262ab659492cc8..080259b1f5ffbb62a28a5d51173b29e4
 +    direct_eye::import_diagnostic(4, message);
 +}
 +
++#[cfg(target_os = "android")]
++extern "C" {
++    fn __system_property_get(name: *const std::ffi::c_char, value: *mut std::ffi::c_char) -> i32;
++}
++
++const EGL_CONTEXT_PRIORITY_LEVEL_IMG: egl::Int = 0x3100;
++
++/// The shared context for `debug.q3pw.gl_priority`, or None (the default: one context, as upstream).
++/// HIGH lets the eye copy preempt a PyroWave decode on the same GPU without lowering the decode's
++/// own priority, which slows it. The driver may grant a different level; the log says which.
++#[cfg(not(windows))]
++fn gl_priority_context(egl_instance: &egl::DynamicInstance<egl::EGL1_4>, display: egl::Display,
++                       config: egl::Config, share: egl::Context) -> Option<egl::Context> {
++    #[cfg(target_os = "android")]
++    let requested = {
++        let mut value = [0u8; 92];
++        let len = unsafe { __system_property_get(c"debug.q3pw.gl_priority".as_ptr(), value.as_mut_ptr().cast()) };
++        match std::str::from_utf8(&value[..len.max(0) as usize]).unwrap_or("").trim() {
++            "high" => 0x3101,
++            "low" => 0x3103,
++            _ => return None,
++        }
++    };
++    #[cfg(not(target_os = "android"))]
++    let requested: egl::Int = { return None; };
++    let extensions = egl_instance.query_string(Some(display), egl::EXTENSIONS)
++        .map(|e| e.to_string_lossy().contains("EGL_IMG_context_priority")).unwrap_or(false);
++    let attributes = [egl::CONTEXT_CLIENT_VERSION, 3, EGL_CONTEXT_PRIORITY_LEVEL_IMG, requested, egl::NONE];
++    match egl_instance.create_context(display, config, Some(share), &attributes) {
++        Ok(context) => {
++            let granted = egl_instance.query_context(display, context, EGL_CONTEXT_PRIORITY_LEVEL_IMG).unwrap_or(0);
++            log_quest_experiment(format!("[Q3PW_GL_PRIORITY] requested=0x{requested:x} granted=0x{granted:x} extension={extensions}"));
++            Some(context)
++        }
++        Err(error) => {
++            log_quest_experiment(format!("[Q3PW_GL_PRIORITY] requested=0x{requested:x} extension={extensions} failed={error:?}; one context"));
++            None
++        }
++    }
++}
++
  pub const SDR_FORMAT: TextureFormat = TextureFormat::Rgba8Unorm;
  pub const SDR_FORMAT_GL: u32 = gl::RGBA8;
  pub const GL_TEXTURE_EXTERNAL_OES: u32 = 0x8D65;
-@@ -209,6 +226,19 @@ pub struct GraphicsContext {
+@@ -197,6 +255,10 @@ pub struct GraphicsContext {
+     pub egl_display: egl::Display,
+     pub egl_config: egl::Config,
+     pub egl_context: egl::Context,
++    /// `debug.q3pw.gl_priority=high|low`: a context sharing objects with `egl_context`, created at
++    /// that EGL_IMG_context_priority level. All of this crate's own GL work (eye copy, staging)
++    /// runs in it; wgpu and the OpenXR graphics binding keep `egl_context`.
++    gl_work_context: Option<egl::Context>,
+     pub gl_context: gl::Context,
+ 
+     #[cfg_attr(windows, expect(dead_code))]
+@@ -209,6 +271,19 @@ pub struct GraphicsContext {
  }
  
  impl GraphicsContext {
@@ -11121,6 +11173,48 @@ index 3485570d33c782f897d14b607b262ab659492cc8..080259b1f5ffbb62a28a5d51173b29e4
      #[cfg(not(windows))]
      pub fn new_gl() -> Self {
          use std::mem;
+@@ -256,6 +331,7 @@ impl GraphicsContext {
+ 
+         let (
+             egl_context,
++            gl_work_context,
+             gl_context,
+             dummy_surface,
+             create_image,
+@@ -297,6 +373,8 @@ impl GraphicsContext {
+                         .unwrap_or(ptr::null())
+                 };
+ 
++                let gl_work_context = gl_priority_context(egl_instance, egl_display, egl_config, egl_context);
++
+                 let create_image: CreateImageFn = mem::transmute(get_fn_ptr(CREATE_IMAGE_FN_STR));
+                 let destroy_image: DestroyImageFn =
+                     mem::transmute(get_fn_ptr(DESTROY_IMAGE_FN_STR));
+@@ -307,6 +385,7 @@ impl GraphicsContext {
+ 
+                 (
+                     egl_context,
++                    gl_work_context,
+                     gl_context,
+                     dummy_surface,
+                     create_image,
+@@ -325,6 +404,7 @@ impl GraphicsContext {
+             egl_display,
+             egl_config,
+             egl_context,
++            gl_work_context,
+             gl_context,
+             dummy_surface,
+             create_image,
+@@ -354,7 +434,7 @@ impl GraphicsContext {
+                         self.egl_display,
+                         Some(self.dummy_surface),
+                         Some(self.dummy_surface),
+-                        Some(self.egl_context),
++                        Some(self.gl_work_context.unwrap_or(self.egl_context)),
+                     )
+                     .unwrap();
+             })
 diff --git a/alvr/graphics/src/native_release.rs b/alvr/graphics/src/native_release.rs
 new file mode 100644
 index 0000000000000000000000000000000000000000..ce5922223ca7be1431987787d1b4c8af057a9399
