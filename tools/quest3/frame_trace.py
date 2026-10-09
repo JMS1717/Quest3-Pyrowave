@@ -17,6 +17,8 @@ The client logs `[Q3PW_TRACE] v1 dropped=N kind,t_us,id,a,b;...` (alvr/client_co
   W xrWaitFrame returned                          id=predictedDisplayTime  a=period ns  b=shouldRender
   B xrBeginFrame returned
   G stream render started                         id=display time passed to render
+  J eye swapchain acquire started
+  I both eye images acquired and waited           a=acquire+wait us
   H eye draw submitted                            id=frame shown (0 = repeat)  a=copy ready
   Y eye-copy GPU completion observed              a=us
   N xrEndFrame returned                           id=displayTime  a=ok  b=streaming
