@@ -1322,21 +1322,22 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
     char fuse_prop[PROP_VALUE_MAX] = {};
     __system_property_get("debug.q3pw.fuse_color", fuse_prop);
     {
-        // Multilevel Haar (docs/HAAR32.md), default mode 5 (docs/PRESENT-YCBCR.md), which steps down
-        // to mode 4 where it cannot apply; "0" to "6" selects a mode (6: paired chroma, docs/PRESENT-YCBCR.md). Fused colour
-        // and fused dequant replace passes it owns, so requesting either turns the default off.
+        // Multilevel Haar (docs/HAAR32.md), default mode 6 since .118 (paired chroma,
+        // docs/PRESENT-YCBCR.md), which steps down to mode 4 where it cannot apply; "0" to "6" selects
+        // a mode. Fused colour and fused dequant replace passes it owns, so requesting either turns
+        // the default off.
         char haar32_prop[PROP_VALUE_MAX] = {}, dequant_haar_prop[PROP_VALUE_MAX] = {};
         __system_property_get("debug.q3pw.dequant_haar", dequant_haar_prop);
         const bool explicit_mode = __system_property_get("debug.q3pw.haar32", haar32_prop) > 0 &&
                                    haar32_prop[0] >= '0' && haar32_prop[0] <= '6' && !haar32_prop[1];
         c->haar32_requested = explicit_mode ? haar32_prop[0] - '0'
-                              : !strcmp(fuse_prop, "1") || !strcmp(dequant_haar_prop, "1") ? 0 : 5;
-        // Decoder V2 for CDF 5/3 (docs/DECODER-V2.md), default mode 5 (the packed YCbCr output of
-        // haar32 mode 5); "0" to "7" selects a mode.
+                              : !strcmp(fuse_prop, "1") || !strcmp(dequant_haar_prop, "1") ? 0 : 6;
+        // Decoder V2 for CDF 5/3 (docs/DECODER-V2.md), default mode 6 since .118 (the paired-chroma
+        // output of haar32 mode 6; 4:4:4 asks for mode 7); "0" to "7" selects a mode.
         char v2_prop[PROP_VALUE_MAX] = {};
         const bool explicit_v2 = __system_property_get("debug.q3pw.cdf53v2", v2_prop) > 0 &&
                                  v2_prop[0] >= '0' && v2_prop[0] <= '7' && !v2_prop[1];
-        c->cdf53v2_requested = explicit_v2 ? v2_prop[0] - '0' : 5;
+        c->cdf53v2_requested = explicit_v2 ? v2_prop[0] - '0' : 6;
         // A/B only: debug.q3pw.packed_levels "2" keeps the quad-packed layout to levels 0-1 (default
         // levels 0-3) for haar32 mode 2-3 and Decoder V2 mode 3.
         char packed_prop[PROP_VALUE_MAX] = {};

@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532a91b3f1d 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..47e78d564ce1e4153359a398e4bb3e98df1c7bf4 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..d780cc301cc703f6b56ea36b00695532
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..add14c95d5355e2ee4f8e0834f58c10f6f4857ea 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..facc16346ba168c39552db770287de08bd32abad 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..add14c95d5355e2ee4f8e0834f58c10f
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.117"
++version = "20.13.0-quest3.pyro.118"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -9812,10 +9812,10 @@ index 0000000000000000000000000000000000000000..bc6bee02decfec1a7df24f18e8fd2991
 +}
 diff --git a/alvr/graphics/resources/present_ycbcr.glsl b/alvr/graphics/resources/present_ycbcr.glsl
 new file mode 100644
-index 0000000000000000000000000000000000000000..5c560bfb7fa766eed45f3de1ddea9def07229fad
+index 0000000000000000000000000000000000000000..d214471170a4656605f7a6e4b4801e3a82b0a737
 --- /dev/null
 +++ b/alvr/graphics/resources/present_ycbcr.glsl
-@@ -0,0 +1,140 @@
+@@ -0,0 +1,150 @@
 +// PyroWave Haar mode 5 (Quest3-Pyrowave docs/PRESENT-YCBCR.md): `tex` is a frame_size.x x
 +// frame_size.y/2 RGBA8 buffer. x < frame_size.x/2 holds luma as 2x2 pixel quads ((0,0), (1,0),
 +// (0,1), (1,1) in RGBA); x >= frame_size.x/2 holds the 4:2:0 chroma, one pixel per texel with Cb
@@ -9880,17 +9880,27 @@ index 0000000000000000000000000000000000000000..5c560bfb7fa766eed45f3de1ddea9def
 +    Y = mix(Y, below, f.y);
 +#endif
 +#elif defined(Q3PW_SCALED)
-+    // The swapchain is smaller than the decoded frame (debug.q3pw.eye_percent): filter luma
-+    // bilinearly, every tap inside the pixel's eye. Chroma is filtered below as always.
++    // The swapchain is smaller than the decoded frame (debug.q3pw.eye_percent): filter luma with a
++    // tent as wide as the downscale ratio (1 to 1.5 decoded pixels; 1 is bilinear). Its taps lie in
++    // the 4x4 pixels of the 2x2 luma quads around the footprint, so it takes the same four fetches
++    // as a bilinear tap. Quads stay inside the pixel's eye. Chroma is filtered below as always.
 +    highp vec2 p = pos - 0.5;
-+    highp vec2 base = floor(p);
-+    vec2 f = p - base;
-+    int eye_w = (last.x + 1) >> 1;
-+    int x0 = int(pos.x) >= eye_w ? eye_w : 0;
-+    highp ivec2 i0 = ivec2(clamp(int(base.x), x0, x0 + eye_w - 1), clamp(int(base.y), 0, last.y));
-+    highp ivec2 i1 = ivec2(clamp(int(base.x) + 1, x0, x0 + eye_w - 1), clamp(int(base.y) + 1, 0, last.y));
-+    float Y = mix(mix(q3pw_luma(i0), q3pw_luma(ivec2(i1.x, i0.y)), f.x),
-+                  mix(q3pw_luma(ivec2(i0.x, i1.y)), q3pw_luma(i1), f.x), f.y);
++    vec2 r = clamp(abs(vec2(dFdx(pos.x), dFdy(pos.y))), 1.0, 1.5);
++    highp ivec2 q0 = (ivec2(floor(p - r)) + 1) >> 1;
++    int eye_q = (last.x + 1) >> 2;
++    int qx0 = int(pos.x) >= 2 * eye_q ? eye_q : 0;
++    int qx = clamp(q0.x, qx0, qx0 + eye_q - 1), qx1 = clamp(q0.x + 1, qx0, qx0 + eye_q - 1);
++    int qy = clamp(q0.y, 0, last.y >> 1), qy1 = clamp(q0.y + 1, 0, last.y >> 1);
++    vec4 t00 = texture(tex, (vec2(qx, qy) + 0.5) / q3pw_tex_size);
++    vec4 t10 = texture(tex, (vec2(qx1, qy) + 0.5) / q3pw_tex_size);
++    vec4 t01 = texture(tex, (vec2(qx, qy1) + 0.5) / q3pw_tex_size);
++    vec4 t11 = texture(tex, (vec2(qx1, qy1) + 0.5) / q3pw_tex_size);
++    highp vec2 o = vec2(q0 * 2) - p;
++    vec4 wx = max(1.0 - abs(o.x + vec4(0.0, 1.0, 2.0, 3.0)) / r.x, 0.0);
++    vec4 wy = max(1.0 - abs(o.y + vec4(0.0, 1.0, 2.0, 3.0)) / r.y, 0.0);
++    vec4 rows = vec4(dot(vec4(t00.rg, t10.rg), wx), dot(vec4(t00.ba, t10.ba), wx),
++                     dot(vec4(t01.rg, t11.rg), wx), dot(vec4(t01.ba, t11.ba), wx));
++    float Y = dot(rows, wy) / (dot(wx, vec4(1.0)) * dot(wy, vec4(1.0)));
 +#elif defined(Q3PW_SHARPEN)
 +    // Sharpening of luma over a cross of neighbours. The pixel's own quad holds one horizontal and
 +    // one vertical neighbour, so this is two extra fetches. The neighbours stay inside the pixel's

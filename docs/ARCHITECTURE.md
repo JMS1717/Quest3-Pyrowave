@@ -44,12 +44,14 @@ settings: a 3072x3216 per-eye render, streamed at 2080x2208 per eye, 207 Hz, Haa
 2. pyroclient (`tools/pyroclient/`) decodes on the Adreno 740 with Vulkan compute. Quest 3 Auto
    selects Compute.
    - Haar uses the multilevel inverse Haar ([HAAR32.md](HAAR32.md)). CDF 5/3 uses Decoder V2
-     ([DECODER-V2.md](DECODER-V2.md)). Both default to mode 5.
+     ([DECODER-V2.md](DECODER-V2.md)). Both default to mode 6 since `.118` (mode 5 before).
    - Haar GPU decode is 2.67 ms p50 (3.50 ms p90) at 690 MHz.
 3. **Mode 5** ([PRESENT-YCBCR.md](PRESENT-YCBCR.md)): the last iDWT level writes packed YCbCr
    straight into the output slot, an RGBA8 AHardwareBuffer of width x height/2 (4160x1104). Luma is
    stored as 2x2 quads in the left half and Cb/Cr as one RG pixel per texel in the right half.
-   There is no separate YCbCr-to-RGBA pass. The client steps down to mode 4 (RGBA8 output through
+   There is no separate YCbCr-to-RGBA pass. Mode 6, the default, keeps this layout but stores two
+   chroma pixels per texel (Cb, Cr of the left pixel in RG, of the right in BA), so the chroma
+   half is half as wide and the decoder stores half as many chroma texels. The client steps down to mode 4 (RGBA8 output through
    a conversion pass) without storage-image support on the AHB, with limited range, or with
    Catmull-Rom chroma.
 4. The decoded slot is published with its GPU fence complete. The output ring has three slots
