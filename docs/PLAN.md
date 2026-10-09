@@ -265,8 +265,22 @@ whether audio on the stream socket stalls behind video.
   - A high-priority GL context for the eye draw (`debug.q3pw.gl_priority`, `.113`) is granted
     but doesn't remove the stale frames at 120 Hz.
   - Faster tracking polls (`debug.q3pw.input_polls_per_frame`, `.114`) don't help.
-- Next: the owner compares full size at 90 Hz against about 110 % at 120 Hz in the headset. Only
-  a decode that does less work can move this limit. Two candidates:
+- **October 9, `.117`: every run above used ALVR's staging renderer.** The direct eye copy
+  was opt-in and play sessions never set it. It is now the default:
+  - full size at 90 Hz: 89 fresh FPS instead of 80;
+  - full size at 120 Hz: 111-114 fresh at default decode priority, instead of 66-82;
+  - Quality 120: decode GPU time halves, and ALVR's latency estimate falls from 46-50 to 40 ms.
+
+  Full size at 120 Hz is now GPU-bound (load 0.94 at 690 MHz). Bitrate, async copy, the GL
+  priority context and `release_fd` don't raise fresh FPS. `release_fd` does keep every
+  display period.
+- Next:
+  - the owner compares full size at 90 Hz (now about 89) against full size at 120 Hz (about
+    112) in the headset;
+  - re-check other rules that were chosen on staging. Decode priority at Quality 120 was
+    re-checked on direct: LOW gave 120.0 fresh FPS against 119.3-119.9 at default, with fewer
+    stale frames, so the LOW rule at 120 Hz and below stays;
+  - only less GPU work per frame (decode cost, or the eye copy) lifts full size at 120 Hz. Two candidates:
   - entropy-skip empty blocks;
   - decode the finest level only where the lens resolves it.
 
