@@ -4,6 +4,15 @@ Prepared October 4, 2026, with dated updates through October 9. Read [AGENTS.md]
 first. Machine-specific state, raw captures, signing material and rollback snapshots stay outside
 this repo.
 
+## October 9: beta.2, `.135`
+
+A fresh install streams **Quality 120** (`session_settings_default` matches
+`beta::QUALITY_PROFILE`: 2270x2429 stream, 3096x3312 render, 120 Hz, 1500 Mbps, CDF 5/3, Compute,
+Lanczos, sharpening 30, maximum GPU clock). `RECOMMENDED_PROFILE` is now `QUALITY_PROFILE`;
+Starter 72 Hz stays as `STARTER_PROFILE`, a fallback. Sessions saved by older builds keep their
+values. No Wi-Fi bitrate ceiling: Wi-Fi users pick a Wi-Fi profile. Release notes:
+[RELEASE-beta.2.md](RELEASE-beta.2.md).
+
 ## October 9: beta.1, `.131`-`.134`, merged to main
 
 **Released:** v0.1.0-beta.1, built from `.134` on main (PR #23 merged). Release notes:
@@ -11,8 +20,8 @@ this repo.
 state below is history.
 
 - **Profiles** (`.131`, `.132`): seven tested product profiles (Quality 120, Godlike 120,
-  Godlike 90, Colour 4:4:4 120, Wi-Fi Quality 120, Wi-Fi 90, Competitive 207) plus the fresh-install
-  Starter 72 Hz, defined in `alvr/session/src/beta.rs` and pinned by `beta_tests.rs`. The
+  Godlike 90, Colour 4:4:4 120, Wi-Fi Quality 120, Wi-Fi 90, Competitive 207) plus the
+  Starter 72 Hz (the fresh-install settings until `.135`), defined in `alvr/session/src/beta.rs` and pinned by `beta_tests.rs`. The
   dashboard lists them first, then three "(measured)" references and the H.264/HEVC/AV1
   comparisons; the superseded 600-2000 Mbit/s and render-size experiments are gone.
 - **Headset menu** (`.131`): hold both thumbsticks for about 0.7 s. Row 1 picks a profile; every

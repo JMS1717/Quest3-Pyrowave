@@ -15,9 +15,9 @@ if you have a reason to. The same profiles are in the dashboard and in the heads
 | USB, fast shooters, lowest latency | **Competitive 207 Hz** | 207 Hz, if Horizon OS allows it (see below) |
 | **Wi-Fi 6E** (6 GHz, PC on Ethernet) | **Wi-Fi Quality 120 Hz** | 120 Hz at 1000 Mbps |
 | Ordinary Wi-Fi 6 (5 GHz) | **Wi-Fi 90 Hz** | 90 Hz at 700 Mbps, steadier on weaker links |
-| First start, or nothing else streams | **Starter 72 Hz** | The fresh-install settings; works on any connection |
+| Nothing else streams | **Starter 72 Hz** | A fallback that works on any connection |
 
-**Best overall:** Quality 120 Hz over USB. In every profile, set the dashboard's
+**Best overall:** Quality 120 Hz over USB. A fresh install streams it. In every profile, set the dashboard's
 **Game render resolution** to 150 % or more if your PC holds the frame rate: the game then renders
 more pixels than the stream carries, and the PC downsamples them with a sharp filter.
 
@@ -154,8 +154,8 @@ reach 207 Hz; use Quality 120 until Meta fixes it. [High refresh →](HIGH-REFRE
 | Codec | PyroWave CDF 9/7, 4:2:0, 400 Mbps |
 | Decode | Auto |
 
-The fresh-install settings. They ask little of the link and the PC, so they show whether the
-stream works at all. Move to Quality 120 (USB) or Wi-Fi Quality 120 once it streams.
+A fallback. It asks little of the link and the PC, so it shows whether the stream works at all.
+Move back to Quality 120 (USB) or Wi-Fi Quality 120 once it streams.
 
 ### Reference and comparison entries
 
