@@ -5,9 +5,10 @@ October 7, 2026. Settings for every run below:
 - 207 Hz panel, 2080x2208 per eye encoded from a 3072x3216 render, 4:2:0, no foveation.
 - Haar at 1000 Mbit/s unless noted, mode 5 (packed YCbCr in the AHB).
 - Maximum GPU clock on (690 MHz), two wired video connections.
-- Direct eye copy (`debug.q3pw.direct_eye_copy=1`). The eye-pass diagnostics, the eye GPU timer
-  and the raw sRGB write below exist only in that path (`alvr/graphics/src/direct_eye.rs`). Without
-  the property the client uses ALVR's staging renderer.
+- Direct eye copy (then `debug.q3pw.direct_eye_copy=1`; the default since `.117`). The eye-pass
+  diagnostics, the eye GPU timer and the raw sRGB write below exist only in that path
+  (`alvr/graphics/src/direct_eye.rs`). With `debug.q3pw.direct_eye_copy=0` the client uses ALVR's
+  staging renderer.
 - A 60 deg/s pan.
 - Measurement windows of 10-12 s after a 3-5 s settle.
 

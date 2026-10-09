@@ -71,8 +71,8 @@ or the frame trace's taken count, not VrApi FPS.
 ### Best configuration, USB
 
 Haar, 1000 Mbit/s, two wired video connections, maximum GPU clock (690 MHz), direct eye copy
-(`debug.q3pw.direct_eye_copy=1`) with its raw sRGB write. The direct eye copy is not the default;
-without it the client uses ALVR's staging renderer, and the eye-pass numbers below do not apply.
+(`debug.q3pw.direct_eye_copy=1`) with its raw sRGB write. The direct eye copy is the default since `.117`;
+with `debug.q3pw.direct_eye_copy=0` the client uses ALVR's staging renderer, and the eye-pass numbers below do not apply.
 Source: [FRAME-TRACE.md](FRAME-TRACE.md) and the afternoon table in
 [HANDOFF.md](HANDOFF.md#october-7-afternoon-207-hz-trace-and-scorecard).
 

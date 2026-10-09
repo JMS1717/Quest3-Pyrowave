@@ -225,6 +225,21 @@ State:
     time or tracking delivery moving by several ms, which 3 polls only rounded. Fresh FPS 75.6 /
     74.3 against 78.1 / 76.4, one 8-poll block with 7-12 stale a second: no gain shown, default
     stays 3. Release logcat drops info-level Rust lines, so `[Q3PW_INPUT_RATE]` is not visible.
+  - **`.117`: the direct eye copy is the default (`debug.q3pw.direct_eye_copy=0` restores
+    staging).** Play sessions never set the property, so every play test until now (and the
+    `.111`-`.115` blocks above) ran ALVR's staging renderer. Staging copies the decoded buffer
+    into staging textures, waits with glFinish, then draws them again with wgpu. The `.116` trace
+    markers (J/I around the swapchain acquire) put 3.2-3.4 ms p50 of the render loop in that
+    draw at 120 Hz. The acquire itself takes 0.01 ms. Staging also ignores headset sharpening;
+    the owner's sharpening runs on the PC, so the image doesn't change.
+    - Godlike 90 (Haar, 3072x3216 full size, 1500 Mbps, LOW priority), `.116`, same session:
+      direct 88.8 / 89.4 fresh of 90.1 against staging 79.7 (79.3-79.9 earlier tonight). ALVR
+      latency estimate 50.6-52.1 against 63.4 ms. VrApi stale 0-1 a second in both.
+    - Quality 120 (CDF 5/3, 110 %, 1500 Mbps): direct 117.3 against staging 118.7 / 119.3, with
+      decode GPU 3.2 against 6.3-7.0 ms, app GPU 4.0 against 5.3-5.6 ms, GPU load 0.61 against
+      0.83-0.88 and latency estimate 39.8 against 46-50 ms. VrApi stale 2-4 against 0-1 a
+      second. The first direct block caught only 4 s of trace at stream start (73 fresh) and is
+      discarded.
   - **The maximum GPU clock was not applied in these runs.** `quest3_max_gpu_clock=true`, but
     `debug.oculus.gpuLevel` read empty and VrApi showed level 4 (640 MHz). After the helper's
     `GPU_LEVEL_REVERTS` (2) reapplications it stops until the server restarts. Setting the

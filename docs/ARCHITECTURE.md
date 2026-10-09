@@ -61,11 +61,11 @@ settings: a 3072x3216 per-eye render, streamed at 2080x2208 per eye, 207 Hz, Haa
    resubmits the last released eye images.
 6. The GLES eye pass imports the AHB as an EGLImage and converts BT.709 YCbCr to RGB in its
    fragment shader (`present_ycbcr.glsl`).
-   - With `debug.q3pw.direct_eye_copy=1` it draws straight into the two OpenXR eye swapchains.
-     The 207 Hz measurements used this path. On an sRGB swapchain it writes the already
+   - By default since `.117` it draws straight into the two OpenXR eye swapchains (direct eye
+     copy; `debug.q3pw.direct_eye_copy=0` turns it off). The 207 Hz measurements used this path. On an sRGB swapchain it writes the already
      sRGB-coded values with sRGB encoding off (raw sRGB copy, default on in this path,
      `debug.q3pw.raw_srgb_copy=0` to disable): 1.05-1.10 ms GPU p50 per frame.
-   - Without that property the client uses ALVR's staging renderer, which draws into a staging
+   - With `debug.q3pw.direct_eye_copy=0` the client uses ALVR's staging renderer, which draws into a staging
      texture that ALVR's stream renderer then draws into the eyes. The staging path also has the
      YCbCr program. If its program fails to build, packed frames are skipped and the log names the
      workaround (`debug.q3pw.haar32=4`, or `debug.q3pw.cdf53v2=4` with CDF 5/3).
