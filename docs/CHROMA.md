@@ -8,7 +8,13 @@ mode 7. At 120 Hz wired it reaches 116 fresh FPS at 1500 Mbps and 109-113 at 200
 on the old path and 117-119 for 4:2:0; see
 [DECODER-V2.md](DECODER-V2.md#mode-7-444-packed-into-the-hardware-buffer-74-october-7). Offline at
 the same byte cap, 4:4:4 at 2000 Mbps keeps the luma detail of 4:2:0 at 1500 with mean ΔE 7.6
-instead of 11.5. Haar 4:4:4 still uses the old path.
+instead of 11.5.
+
+**`.124` (October 9): Haar 4:4:4 has the same packed path,** haar32 mode 7. Full size
+(6144x3232 decoded) at 1500 Mbps gives 86-88 fresh FPS at 90 Hz and 90-92 at 120 Hz, against
+83.5 and 77.5 for CDF 5/3 4:4:4 and 88-90 / 114-118 for Haar 4:2:0. At 120 Hz the GPU is full:
+decode plus an eye pass with three reads per pixel. See
+[HAAR32.md](HAAR32.md#mode-7-444-in-the-present-buffer-124-october-9).
 
 **Current (alpha.9 and `.64`).** 4:2:0 is the default and **Full chroma (4:4:4)** is opt-in.
 The latest check is the [October 7 run at 207 Hz](#october-7-check-at-207-hz): 68.1 fresh FPS

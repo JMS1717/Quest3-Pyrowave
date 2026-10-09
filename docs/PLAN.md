@@ -292,6 +292,10 @@ whether audio on the stream socket stalls behind video.
 - **Full size with 4:4:4 is decode-bound:** CDF 5/3 4:4:4 decode takes 8.2-8.9 ms per frame, so
   83.5 fresh at 90 Hz and 77.5 at 120 Hz (default priority; `.123` keeps LOW off above 1.5 G
   pixels a second for 4:4:4). Godlike plus full chroma needs a faster 4:4:4 decode.
+- **`.124`: Haar 4:4:4 mode 7** (packed present path): full size 86-88 fresh at 90 Hz, 90-92 at
+  120 Hz, GPU-bound (decode 7 ms live plus three eye reads per pixel). Next for full-size 4:4:4 at
+  120 Hz: about 2.5 ms of client GPU time per frame; measure the eye pass's third read and the
+  decode stages first.
 - Eye pass at full size: chroma reads are about 1.3 of its 2.7 ms (`.120` probes). Not the FPS
   limit at full size 120 Hz (frames superseded after decode are), but the largest piece of client
   GPU time left after decode. A cheaper chroma read is the next eye-pass candidate.
@@ -417,6 +421,8 @@ The largest loss decides what to build next.
   priority (109-116 at default), level with 4:2:0
   ([DECODE-PRIORITY.md](DECODE-PRIORITY.md#444-at-quality-120-october-9-121-122)).
   Full size 4:4:4: 83.5 fresh at 90 Hz, 77.5 at 120 Hz; decode 8.2-8.9 ms is the limit.
+- **`.124`:** Haar 4:4:4 mode 7 raises full size to 86-88 (90 Hz) and 90-92 (120 Hz)
+  ([HAAR32.md](HAAR32.md#mode-7-444-in-the-present-buffer-124-october-9)).
 
 **2.6 Rate control.**
 

@@ -324,6 +324,11 @@ State:
       full-size 4:4:4 at 90 Hz fell under LOW and lost (75.5 against 83.5 fresh at default).
       Full-size 4:4:4 decode (CDF 5/3) takes 8.2-8.9 ms: 83.5 fresh at 90 Hz and 77.5 at 120 Hz at
       best. Godlike with 4:4:4 needs about 80 Hz or a faster 4:4:4 decode.
+    - **`.124` (`local124-e3f8d31`): Haar 4:4:4 gets the packed present path** (haar32 mode 7,
+      `patches/pyrowave-haar444.patch`). Standalone full size 4.58 ms against 13-18 ms before (CDF
+      mode 7: 6.45). Live full size 1500 Mbps: 86-88 fresh at 90 Hz, 90-92 at 120 Hz (4:2:0 on the
+      same build 88-90 / 114-118). At 120 Hz the GPU is full (99 %); LOW priority still loses at
+      90 Hz. See [HAAR32.md](HAAR32.md#mode-7-444-in-the-present-buffer-124-october-9).
   - **Client phase lock and latency (`debug.q3pw.phase_lock=1`, native, 120 Hz, 1500 Mbps).**
     Two alternating rounds, medians of ALVR's estimate:
     - Fresh FPS: 118.9-119.9 with the lock, against 118.4-119.2 without it.

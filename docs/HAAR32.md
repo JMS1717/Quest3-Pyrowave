@@ -5,8 +5,9 @@ which steps down to mode 4 without storage on the output buffer, with limited ra
 chroma. `0` to `5` select a mode; requesting
 `debug.q3pw.fuse_color=1` or `debug.q3pw.dequant_haar=1` turns the default off, since those
 experiments replace passes this one owns. The client logs `[Q3PW_HAAR32] requested=N active=M
-packed_luma=0|1 dual_chroma=0|1` and steps down to the best mode the decoder accepts (CDF wavelets, 4:4:4, the
-fragment decode path and precisions other than 1 fall back to mode 0 or 1).
+packed_luma=0|1 dual_chroma=0|1` and steps down to the best mode the decoder accepts (CDF wavelets, the
+fragment decode path and precisions other than 1 fall back to mode 0 or 1). 4:4:4 asks for mode 7
+from `.124`; before that it took the default decoder.
 
 | mode | what changes |
 |---|---|
@@ -15,6 +16,39 @@ fragment decode path and precisions other than 1 fall back to mode 0 or 1).
 | 2 | 1 + levels 0-1 stored as RGBA16F 2x2 quads |
 | 3 | 2 + luma written as an RGBA8 plane of half size, one 2x2 pixel quad per texel |
 | 4 | 3 + Cb and Cr reconstructed by one dispatch into one RG8 plane |
+| 5 | 4 + luma and chroma written into the present buffer ([PRESENT-YCBCR.md](PRESENT-YCBCR.md)) |
+| 6 | 5 with two chroma pixels per texel |
+| 7 | 4:4:4 only: 3, with luma, Cb and Cr quads in one present buffer 3/2 as wide (`.124`) |
+
+## Mode 7: 4:4:4 in the present buffer (`.124`, October 9)
+
+Haar 4:4:4 used to take the default decoder (`can_haar32` required 4:2:0). Mode 7 gives it the
+layout of [Decoder V2 mode 7](DECODER-V2.md#mode-7-444-packed-into-the-hardware-buffer-74-october-7):
+the three components run the luma schedule, and each final pass stores 2x2 quads at x = 0,
+width/2 and width of one RGBA8 buffer. ALVR's eye shader already reads that layout. Source:
+[`patches/pyrowave-haar444.patch`](../patches/pyrowave-haar444.patch), applied after the other
+pyrowave patches. 4:4:4 accepts modes 1-3 and 7 (it has no dual or paired chroma); 4:2:0 refuses 7.
+
+- Exactness: `AB_CHROMA=444 AB_ALLOW_DIFF=1 decoder_ab haar32m7` passes at 512x320, 1000x600 and
+  4160x2208 (max diff 1, as for the other present arms).
+- Standalone, 6144x3232 4:4:4, 2.08 MB a frame (1500 Mbps at 90 Hz), 690 MHz: **4.58 ms** against
+  13-18 ms for the default decoder. Decoder V2 mode 7 takes 6.45 ms on the same frames.
+
+Live, wired, full size (3072x3216 per eye, 6144x3232 decoded), Haar, 1500 Mbps, GPU level 7 in
+every block, default decode priority (the `.123` rule). Fresh FPS per block:
+
+| Refresh | 4:4:4 mode 7 | 4:2:0 mode 5 | CDF 5/3 4:4:4, `.122`-`.123` |
+| --- | --- | --- | --- |
+| 120 Hz, ABAB | 90.2 / 91.8 / 91.9 / 89.8 | 117.5 / 114.2 / 116.8 / 115.9 | 77.5 |
+| 90 Hz | 86.2 / 87.6 | 90.1 / 88.1 | 83.5 |
+
+- At 120 Hz 4:4:4 is GPU-bound: the runtime reports GPU 99 % and a 9.1 ms app frame, and the
+  decoder completes about 90 frames a second; the other 28-30 are replaced before decode.
+  Live decode takes 7.0-7.1 ms (4:2:0: 3.3-4.1). The eye pass reads three quads per pixel
+  (luma, Cb, Cr) where 4:2:0 reads two.
+- At 90 Hz the loss is 2-4 frames a second superseded after decode. LOW decode priority loses
+  there on average, as it did for CDF 5/3: 83.1 / 82.6 / 83.4 against 85.7 / 87.7 / 82.8 at default
+  (interleaved; the last default block fell to the LOW level).
 
 ## Mode 4: both chroma planes in one RG8 plane
 
