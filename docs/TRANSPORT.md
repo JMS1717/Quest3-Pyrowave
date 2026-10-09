@@ -87,7 +87,10 @@ must be awake for these numbers; with the proximity hold expired, every Wi-Fi re
   1472 bytes (`PYROWAVE_UDP_DATAGRAM`). The client assembles them with the same code as the wired
   connections and hands complete frames to the same decoder. Nothing is retransmitted; a frame
   missing a datagram is skipped, and the next complete frame replaces it. Select it with
-  **PyroWave → Transport → UDP**. Live results are [below](#live-results-65).
+  **PyroWave → Transport → UDP**. Live results are [below](#live-results-65). The server's video
+  thread does the slicing (`UdpVideoSender`). The older path, where the encoder sent its own
+  fragments (`VideoSendUdp`) to a separate client decoder (`pyrowave_udp.rs`), was deleted in
+  `.93`.
 - **Later:** forward error correction could recover frames that lose a datagram, if a link turns
   out to lose them; this one did not. Windows UDP segmentation offload could cut the server's send
   cost.
@@ -154,3 +157,90 @@ The diagnostics stay in the build as error-level lines:
 - `[Q3PW_TRANSPORT]` on the client: frames complete, dropped and missing per transport.
 - `[Q3PW_UDP_SEND]` on the server: frames, repeated timestamps, datagrams and send time.
 - `[Q3PW_TRACKING_RX]` on the server: tracking arrival gaps.
+
+## Late tracking on Wi-Fi (`.67`, `.68`)
+
+The settings were:
+
+- 120 Hz, 2080x2208 per eye from a 3072x3216 render, CDF 5/3, constant 1250 Mbps.
+- Wi-Fi 6E only, with the harness scene panning at 60 deg/s and the headset static and unworn.
+- One 10 s block per run after the settle.
+
+**Repeated** is the share of server frames that carry the previous frame's tracking timestamp
+(`[Q3PW_UDP_SEND]`).
+
+### Stream protocol and DSCP (`.67`)
+
+| Stream socket / DSCP | Repeated | Fresh FPS | Network p99 | Tracking gap max |
+| --- | --- | --- | --- | --- |
+| TCP / EF | 3.7%, 4.7% | 112–116 | 27–32 ms | 37–42 ms |
+| UDP / EF | 2.8%, 2.9% | 112–116 | 23–35 ms | 26–30 ms |
+| UDP / CS7 | 4.8%, 3.8% | 112–116 | | up to 69 ms |
+| TCP / CS7 | 3.8% | 112–116 | | |
+
+- UDP for ALVR's stream socket (which carries tracking) repeats fewer poses than TCP.
+- CS7 maps to the same voice access category as EF on this router and doesn't help, so EF stays.
+- From `.68` both the stream socket and the PyroWave transport default to UDP. USB always uses
+  TCP whatever the setting: the client opens the UDP video socket only when the stream isn't wired.
+
+### Server-predicted head poses (`.68`)
+
+When no head sample reaches the PC between two vsyncs:
+
+1. The server extrapolates the newest head sample by its velocity to the time elapsed since it.
+2. It renders the next frame from that pose, under a timestamp marked as an extrapolation
+   (`alvr_packets::extrapolated_timestamp`: the base plus a multiple of 65.536 µs plus a marker).
+3. The client keeps the motion it sent for each timestamp. When a frame carries a marked
+   timestamp, it finds the base sample and applies the same extrapolation, so the reprojection
+   uses the pose the frame was rendered with.
+
+The client now sends head velocity, which it used to zero. A real sample older than the last
+extrapolated one is held back, so the head pose never moves backwards. The setting is
+**Headset → Predict late head poses on the PC** (`headset.extrapolate_late_head_poses`), on by
+default; it needs a SteamVR restart.
+
+UDP / EF, 120 Hz, 1250 Mbps, ABBA:
+
+| Run | Extrapolation | Repeated | Extrapolated vsyncs | Fresh FPS | Lost frames/s | Tracking gap max |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | on | 0.8% | 984 / 7808 | 112.6 | 20.9 | 214 ms |
+| 2 | off | 3.2% | | 114.4 | 9.9 | 33 ms |
+| 3 | off | 1.3% | | 117.8 | 4.7 | 25 ms |
+| 4 | on | 0.1% | 161 / 7808 | 118.8 | 4.9 | 48 ms |
+
+- The mean repeated share is 0.45% with extrapolation and 2.25% without, below the 2% target.
+- Run 1 caught a bad stretch of Wi-Fi (a 214 ms tracking gap), which accounts for its losses.
+- The client found every extrapolated pose: `[Q3PW_POSE_LOOKUP] missing=0` in every run.
+
+Over Wi-Fi at 207 Hz and 1000 Mbps (one run, which accidentally connected through the Wi-Fi
+entry), repeated poses were 0.2%, with 164 fresh FPS and no dropped frames.
+
+Wired (USB, TCP, 207 Hz, 1000 Mbps, ABBA) is unaffected: fresh FPS was 184.6 and 189.5 with
+extrapolation on, and 185.6 and 187.5 with it off.
+
+**Rechecked on `.92` (October 8),** extrapolation on, UDP/EF, 120 Hz, CDF 5/3, three 10 s blocks:
+
+| Bitrate | Repeated | Extrapolated vsyncs | Fresh FPS | Lost frames/s | Network p50 / p90 / p99 | Tracking gap max |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1000 Mbps | 0.6% (45 / 7806) | 166 / 7807 | 115.5 | 8.0 | 9.8 / 11.9 / 48.8 ms | 156 ms |
+| 1250 Mbps | 0.5% (39 / 7808) | 459 / 7809 | 111.7 | 12.7 | 11.0 / 22.0 / 56.2 ms | 81 ms |
+
+The client found every pose (`missing=0`).
+
+Still untested:
+
+- Whether head movement looks smoother in the headset.
+  - The harness headset is static, so its extrapolated poses barely differ from the held one.
+  - Fresh FPS counts distinct timestamps, so these runs show that the mechanism works: every
+    frame gets a new timestamp, and the client finds every pose.
+  - They don't show that the predicted motion is right.
+  - A unit test (`server_extrapolation_matches_the_client`) checks that the PC and the headset
+    compute the same pose. Whether it looks right in motion needs a worn test.
+- How it behaves under sustained play.
+
+New diagnostics, logged at error level every 5 s:
+
+- `[Q3PW_POSE_EXTRAPOLATE]` on the server: vsyncs, extrapolated frames, held-back samples, and
+  the mean and maximum extrapolation distance.
+- `[Q3PW_POSE_LOOKUP]` on the client: frames that found their sent pose, found an extrapolated
+  pose, or found neither.

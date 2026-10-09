@@ -16,8 +16,11 @@ Run with: python -m tools.quest3.quality_scene --out <dir> --seconds 60 [--pan-d
 Requires: pip install numpy opencv-python openvr glfw PyOpenGL
 """
 import argparse
+import ctypes
 import json
 import math
+import os
+import sys
 import time
 from pathlib import Path
 
@@ -251,19 +254,44 @@ def main():
         # Source pixels map 1:1 to world texels; the view starts at a fixed, content-rich spot.
         v0, v1 = (wh - height) / 2 / wh, (wh + height) / 2 / wh
         pan = args.pan_deg_s
+        # A minimum frame time stands in for a game that renders below the refresh rate, so the
+        # streamer presents fewer frames than the panel shows (Q3PW_SCENE_FRAME_MS, or the control
+        # file's "frame_ms").
+        frame_ms = float(os.environ.get('Q3PW_SCENE_FRAME_MS') or 0)
+        # Redraw each eye this many times: a GPU-bound game, which also delays SteamVR's compositor.
+        overdraw = max(1, int(os.environ.get('Q3PW_SCENE_OVERDRAW') or 1))
+        # Q3PW_SCENE_AUDIO=silence plays digital silence on the default output for the whole run:
+        # inaudible, but it keeps the PC's audio loopback capture, and so the streamed game audio,
+        # running, as a game's sound would.
+        if os.environ.get('Q3PW_SCENE_AUDIO') == 'silence' and sys.platform == 'win32':
+            import wave, winsound
+            silence = root / 'silence.wav'
+            with wave.open(str(silence), 'wb') as w:
+                w.setnchannels(2); w.setsampwidth(2); w.setframerate(48000)
+                w.writeframes(bytes(4 * 48000 * 2))
+            winsound.PlaySound(str(silence), winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_LOOP)
         frames = 0; offset_px = 0.0; start = time.monotonic(); last_control = start
         (root / 'ready.json').write_text(json.dumps({
             'source_eye_size': [width, height], 'px_per_deg': px_per_deg,
             'pan_deg_s': pan, 'world_size': [ww, wh], 'started_unix_ns': time.time_ns()}))
         log = (root / 'frames.csv').open('w')
         log.write('frame,unix_ns,offset_px,pan_deg_s\n')
+        # The compositor's per-frame timing as the application side sees it (what fpsVR reads):
+        # how often each frame was presented and whether it was reprojected.
+        timing_log = (root / 'timing.csv').open('w')
+        timing_log.write('frame_index,system_s,presents,mispresented,dropped,reprojection_flags,'
+                         'client_interval_ms\n')
+        timings = (openvr.Compositor_FrameTiming * 128)()
+        last_timing_index = 0; last_timing = start
         while time.monotonic() - start < args.seconds and not (args.stop_file and args.stop_file.exists()):
             compositor.waitGetPoses(poses, None)
             now = time.monotonic()
             if args.control_file and now - last_control > 1.0:
                 last_control = now
                 try:
-                    pan = float(json.loads(args.control_file.read_text())['pan_deg_s'])
+                    control = json.loads(args.control_file.read_text())
+                    pan = float(control['pan_deg_s'])
+                    frame_ms = float(control.get('frame_ms', frame_ms))
                 except (OSError, ValueError, KeyError):
                     pass
             for index, (eye, fbo, vr) in enumerate(eyes):
@@ -274,24 +302,43 @@ def main():
                 GL.glViewport(0, 0, width, height)
                 GL.glEnable(GL.GL_TEXTURE_2D)
                 GL.glBindTexture(GL.GL_TEXTURE_2D, world_tex)
-                GL.glBegin(GL.GL_QUADS)
-                GL.glTexCoord2f(u0, v1); GL.glVertex2f(-1, -1)
-                GL.glTexCoord2f(u1, v1); GL.glVertex2f(1, -1)
-                GL.glTexCoord2f(u1, v0); GL.glVertex2f(1, 1)
-                GL.glTexCoord2f(u0, v0); GL.glVertex2f(-1, 1)
-                GL.glEnd()
+                for _ in range(overdraw):
+                    GL.glBegin(GL.GL_QUADS)
+                    GL.glTexCoord2f(u0, v1); GL.glVertex2f(-1, -1)
+                    GL.glTexCoord2f(u1, v1); GL.glVertex2f(1, -1)
+                    GL.glTexCoord2f(u1, v0); GL.glVertex2f(1, 1)
+                    GL.glTexCoord2f(u0, v0); GL.glVertex2f(-1, 1)
+                    GL.glEnd()
             GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
             for eye, fbo, vr in eyes:
                 compositor.submit(eye, vr, bounds)
             GL.glFlush()
             log.write(f'{frames},{time.time_ns()},{offset_px:.3f},{pan}\n')
             frames += 1
+            if now - last_timing > 0.25:
+                last_timing = now
+                timings[0].m_nSize = ctypes.sizeof(openvr.Compositor_FrameTiming)
+                count, _ = compositor.getFrameTimings(timings)
+                for t in timings[:count]:
+                    if t.m_nFrameIndex > last_timing_index:
+                        last_timing_index = t.m_nFrameIndex
+                        timing_log.write(f'{t.m_nFrameIndex},{t.m_flSystemTimeInSeconds:.6f},'
+                                         f'{t.m_nNumFramePresents},{t.m_nNumMisPresented},'
+                                         f'{t.m_nNumDroppedFrames},{t.m_nReprojectionFlags},'
+                                         f'{t.m_flClientFrameIntervalMs:.3f}\n')
             # Advance by the frame period the compositor paces us at.
             offset_px = (offset_px + pan * px_per_deg / 207.0) % ww
+            if frame_ms:
+                while time.monotonic() - now < frame_ms / 1000:
+                    pass
         log.close()
+        timing_log.close()
         (root / 'scene.json').write_text(json.dumps({'frames_submitted': frames,
                                                      'seconds': time.monotonic() - start}, indent=2))
     finally:
+        if os.environ.get('Q3PW_SCENE_AUDIO') == 'silence' and sys.platform == 'win32':
+            import winsound
+            winsound.PlaySound(None, 0)
         openvr.shutdown()
         if window:
             glfw.destroy_window(window)

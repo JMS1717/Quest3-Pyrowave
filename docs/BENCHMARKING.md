@@ -62,7 +62,7 @@ The default experiment. Use it to reject candidates quickly.
 | Fresh FPS | `taken` in the client's `[Q3PW_FRESH]` line, logged each second with `debug.q3pw.fresh_probe=1`. Summarize with `python -m tools.quest3.freshness windows client.log --start <epoch> --end <epoch> --pid <client pid>`. The frame trace's taken count is the same measure |
 | Superseded and empty selections | `superseded` and `empty` in the same line, or the frame trace |
 | GPU decode and fence times | the decoder's `gpu decode ms:` and `submit->fence ms:` lines (every 3 s), or the frame trace's decode records |
-| Eye-pass time | `[Q3PW_EYE_GPU]` with `debug.q3pw.eye_gpu_probe=1`, summarized by `python -m tools.quest3.eye_gpu`; or the frame trace's eye-copy completions. The eye GPU timer exists only in the direct eye copy (`debug.q3pw.direct_eye_copy=1`), not in ALVR's staging renderer |
+| Eye-pass time | `[Q3PW_EYE_GPU]` with `debug.q3pw.eye_gpu_probe=1`, summarized by `python -m tools.quest3.eye_gpu`; or the frame trace's eye-copy completions. The eye GPU timer exists only in the direct eye copy (the default since `.117`), not in ALVR's staging renderer (`debug.q3pw.direct_eye_copy=0`) |
 | GPU and memory clocks | the VrApi logcat line: GPU level and MHz, and `Mem=` |
 | Effective display period | `[Q3PW_EFFECTIVE] ... period_ns=` (logged each second) and the frame trace's display periods per second |
 

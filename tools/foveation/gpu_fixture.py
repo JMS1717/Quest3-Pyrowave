@@ -6,7 +6,7 @@ from tools.quest3.foveation import axis, stereo_uv
 
 def write(path):
     eye = (2080, 2208)
-    x, y = [axis(v) for v in eye]
+    x, y = [axis(v, dim=dim) for dim, v in enumerate(eye)]
     values = [x['ratio'], y['ratio'], 1.5, 1.5, x['c2'], y['c2']]
     params = [x[k] if i % 2 == 0 else y[k] for i, k in enumerate(
         ('c1', 'c1', 'lo', 'lo', 'hi', 'hi', 'al', 'al',

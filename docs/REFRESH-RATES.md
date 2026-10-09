@@ -15,6 +15,91 @@ match `xrGetDisplayRefreshRateFB` and at least three consecutive `xrWaitFrame` p
 confirmed capabilities to ALVR. A request failure or timeout is a recorded result. Reopen the
 APK after changing the environment to run a fresh probe. Startup can briefly change lobby refresh.
 
+**`.85`-`.86` (October 8).** The probe runs only while the app is shown, and a full probe in which
+90 or 120 Hz fails to confirm is repeated up to twice. From `.86` a property value of 72 is not
+read as a pin. HorizonOS writes 72 itself when the shell takes over after a VR app exits, and
+clears it about a second after the next VR app starts (watched with the property, the resumed
+activity and the client pid polled every 0.3 s), so a starting client usually reads 72. If 72 really
+is pinned, the full probe shows it (every other rate fails) at the cost of about 15 s per round.
+
+**`.89`-`.90` (October 8): the server's display helper pinned 72 Hz itself.** With only the maximum
+GPU clock requested, the helper read the three properties, woke the headset (about 2 s), then
+wrote all three. The client it was about to restart had started in the meantime and cleared
+`refreshRate`, so the helper wrote the 72 it had read back: a change while awake, which holds the
+panel at 72 Hz. The restarted client then confirmed only 72 (every request "succeeded" without
+changing the rate), reported [72, 80], and the server refused the stream until the app was
+reopened. Whether the client's clear landed before the helper's read was a race, so it struck
+about half the time, in the owner's setup as well as on the harness:
+
+| Build | Server restarts | Stuck at 72 Hz |
+|---|---|---|
+| `.86`-`.87` | 7 | 3 |
+| `.88` (2.5 s pause before the restart) | 4 | 3 |
+| `.89`-`.90` (write only the values that change) | 8 | 0 |
+
+All at 120 Hz, 2000 Mbit/s, 4:4:4, with the server setting the GPU clock and the harness leaving
+the display properties alone. `.90` streamed at 110.2 and 109.3 fresh FPS. Two earlier theories
+were wrong and are reverted: that the restarted client started with the headset asleep (`.87` held
+proximity through the restart; its delayed release then blinked the unworn headset asleep, and the
+wake opened the Quick Actions menu over the client), and that the shell's write raced the restart
+(`.88` paused 2.5 s, which made it worse).
+
+**`.91`-`.92` (October 8): a restarted client with no activity.** In 2 of the 8 harness restarts on
+`.89`-`.90`, the restarted client came up as a process with no resumed activity, and the server
+looped on "Failed to find resumed state line" until the app was reopened. The restart was `am
+force-stop` followed at once by `am start`. Repeating that directly on a client that had been up
+for about 3 s lost the start in 2 of 16 trials; `am start -S -W` (the activity manager stops the
+app and waits for the new launch) started it in 12 of 12. `.91` starts a restarted client once
+more if it has no activity 10 s after the restart (seen to fire and recover in about 10 s). `.92`
+restarts with `am start -S -W`; 4 of 4 harness restarts at 120 Hz streamed with no retry. The
+`.91` retry stays as a fallback.
+
+**Next: the forced 207 Hz path churns.** With the owner's display setup at 207 Hz (1000 Mbit/s),
+the server restarts the client one to three times per run before the rate holds: the shell's 72
+write after the client exits and the clear about 1 s after the next start undo the forced 207,
+and the helper sees the difference and restarts again. Each run converges in about 10-15 s and
+then streams at 185-190 fresh FPS (`.90` and `.92` alike, so this is not new). Writing the rate
+after the shell's exit write, or not restarting for a cleared value, should remove the churn.
+
+One run's property timeline (polled every 0.5 s, `.92`, October 8), from the client's start:
+
+| Time | `refreshRate` | What happened |
+|---|---|---|
+| 0.0 s | 72 | Client starts (the shell's value from the last exit) |
+| 1.0 s | empty | HorizonOS clears it |
+| 2.9 s | 207 | Helper writes 207 and the GPU level, then restarts the client |
+| 4.9 s | 72 | The shell takes over and writes 72 over 207 |
+| 8.2 s | 207 | Helper writes 207 again (the new client's activity is not resumed yet) and restarts |
+| 10.2 s | empty | The next client starts; HorizonOS clears 207 |
+| 13.2 s | 207 | Helper writes 207 a third time and restarts |
+| 14.0 s | 207 | This client keeps 207 and streams |
+
+In the next run, one restart was enough: neither the 72 nor the clear happened. What decides
+whether HorizonOS writes 72 on exit or clears on start is not known.
+
+The forced rate is not needed to reach 207 Hz. With nothing forced, the client's probe confirmed
+144, 165, 180, 200 and 207 Hz on its own requests. On `.93` (October 8, 207 Hz, 1000 Mbit/s,
+CDF 5/3, 4:2:0, one AB run each), forced off gave 178.9 and 174.2 fresh FPS and forced on gave
+173.4 and 174.5. Both ran the panel at 207 Hz (`[Q3PW_EFFECTIVE] runtime_hz=207`). A `.92` run
+straight after gave 178.5 and 168.3, so the earlier 185-190 came from the conditions of those
+runs, not the build.
+
+**`.94` forced the panel only above 207 Hz (rejected, reverted).** It removed the rate writes as
+intended: the property watch showed `refreshRate` never written, with one client restart per
+block, for the GPU clock. But in one of two runs the first connection was refused ("requested
+207 Hz unsupported; client-confirmed rates [72, 80]"). The GPU-clock restart's wake opened Quick
+Actions over the client, and the shell's 72 stayed set: nothing cleared it, so the panel was
+pinned at 72. The harness got the stream only about a minute later, after the client was
+restarted again. With the rate forced, the helper rewrites 207 over that 72, so part of the
+"churn" is this recovery. None of the other 15 runs tonight was refused (`.92`/`.93`, forced and
+not), so a 72 left behind after a restart is the underlying fault. `.94` streamed at 183.2-184.1
+fresh FPS in both runs (network p50 3.3-3.8 ms), against 166.7-178.9 (7.4-9.2 ms) for the `.93`
+runs around it. That difference is not explained and not claimed.
+
+Next: when the server's rate check refuses a client whose only confirmed rates are 72 and 80 while
+`refreshRate` reads 72, have the helper clear the property while awake and restart the client
+once. That would serve both paths, forced and not. Only then stop forcing native rates.
+
 ## 240 Hz developer experiment
 
 **Current (`.60` and later, including `.64`).** The dashboard offers 72, 80, 90, 120, 144, 165,
@@ -82,6 +167,35 @@ Virtual Desktop, runs in the 240 Hz scaled mode.
   signal, and it is what the helper checks.
 - Once in the scaled mode, restoring the properties while asleep left the panel at 240 Hz through
   four sleep/wake cycles. Changing them again while awake returned it to 4128x2208 at 120 Hz.
+
+### Restart loop with Meta Quest Link running (October 8, `.100`)
+
+A 207 Hz harness cell on `.98` never streamed.
+
+- **What happened:** the helper restarted the client every 5-6 s for over 3 minutes.
+  - After each restart the properties had been reset: `refreshRate` was 72 or empty, and every other
+    time `gpuLevel` was empty as well.
+  - The client's probe saw only 72/80/90/120 Hz. Every request above 120 was rejected
+    (`ERROR_DISPLAY_REFRESH_RATE_UNSUPPORTED_FB`), so the server refused the stream each time.
+- **Likely cause: a Horizon OS update.** The headset had installed Horizon OS build 209
+  (`ro.vros.build.version=209`, built October 6, 2026) automatically. Virtual Desktop's developer
+  reports that this update broke refresh rates above 120 Hz. The same 207 Hz switch worked earlier
+  that day. `gpuLevel` being cleared is also new; before, HorizonOS rewrote only `refreshRate`.
+  Our first guess was Meta Quest Link's `OVRServer_x64`, which was running on the PC; it is not
+  ruled out, but the update explains the rejected rates better.
+- **Fix (`.100`):** at most four display-change restarts within 90 s.
+  - The fifth stops the helper forcing the panel for 5 minutes.
+  - It logs, and shows in the dashboard status: *"The headset resets its refresh rate after every
+    client restart… choose 120 Hz until Meta fixes it."* (`.101` names the Horizon OS update;
+    `.100` named Meta Quest Link.)
+  - The client then stays up, and the server's rate check reports the unsupported rate instead of
+    looping.
+- **Held back:** not forcing native rates (the `.94` idea on top of the `.95` pin clear). It relies
+  on the runtime granting 144-207 Hz by itself, which build 209 appears to stop.
+- **Not yet checked:** whether forcing `debug.oculus.refreshRate` over USB still reaches 144-207 Hz
+  on build 209. If it does, wired 207 Hz works where wireless apps cannot. Two
+  stale state files from interrupted runs (`.97`, `.98` runtime folders) also still record
+  `applied.gpuLevel=7`.
 
 ### Runtime and SteamVR acceptance
 

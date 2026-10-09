@@ -3,6 +3,21 @@
 Keep 4:2:0 as the default. 4:4:4 remains an optional quality mode: spare USB
 bandwidth did not make its GPU reconstruction cost free in the current decoder.
 
+**`.74` (October 7, late night):** 4:4:4 with CDF 5/3 now has a packed present path, Decoder V2
+mode 7. At 120 Hz wired it reaches 116 fresh FPS at 1500 Mbps and 109-113 at 2000, against 98-106
+on the old path and 117-119 for 4:2:0; see
+[DECODER-V2.md](DECODER-V2.md#mode-7-444-packed-into-the-hardware-buffer-74-october-7). Offline at
+the same byte cap, 4:4:4 at 2000 Mbps keeps the luma detail of 4:2:0 at 1500 with mean ΔE 7.6
+instead of 11.5.
+
+**`.124` (October 9): Haar 4:4:4 has the same packed path,** haar32 mode 7. Full size
+(6144x3232 decoded) at 1500 Mbps gives 86-88 fresh FPS at 90 Hz and 90-92 at 120 Hz, against
+83.5 and 77.5 for CDF 5/3 4:4:4 and 88-90 / 114-118 for Haar 4:2:0. At 120 Hz the GPU is full:
+decode plus an eye pass with three reads per pixel. See
+[HAAR32.md](HAAR32.md#mode-7-444-in-the-present-buffer-124-october-9). `.125` mode 8 reads both
+chroma components with one fetch: 91.0 against 90.6 fresh at 120 Hz, within noise
+([HAAR32.md](HAAR32.md#mode-8-444-chroma-pairs-125-october-9)).
+
 **Current (alpha.9 and `.64`).** 4:2:0 is the default and **Full chroma (4:4:4)** is opt-in.
 The latest check is the [October 7 run at 207 Hz](#october-7-check-at-207-hz): 68.1 fresh FPS
 with 4:4:4 against 189.3 with 4:2:0, because 4:4:4 decodes twice the chroma and has no packed
@@ -119,3 +134,61 @@ The levers that do reduce colour bleed are bits and wavelet: higher bitrate (see
 [BITRATE.md](BITRATE.md)) and 4:4:4 or CDF 5/3, both of which cost decode time. This is a deliberately dense synthetic scene;
 a natural game frame should be checked before the trade is decided. Scripts:
 `workspace/state/claude-oct6/chroma_study.py`, `guided_study.py` (private workspace).
+
+## Quality 120 Hz: 4:4:4 or a larger stream? (October 8)
+
+The Quality profile streams 2592x2784 in 4:2:0. The question was whether 4:4:4 would serve the
+same byte budget better. Offline, CDF 5/3, 120 Hz, 2 crops of `quality_scene`, every arm with the
+profile's PC prefilter (Lanczos-3 and a linear luma sharpen of 0.09 per neighbour). The headset
+decode (FP16) is shown with a bilinear display and scored against the ideal at 25 px/deg. The
+script is a variant of `tools/downsample/clarity_budget.py`.
+
+| Stream | Chroma | Mbps | PSNR-HVS-M | Y | Cb | Cr | ΔE |
+|---|---|---|---|---|---|---|---|
+| 2080x2208 | 4:2:0 | 1500 | 22.69 | 25.95 | 32.66 | 33.11 | 4.42 |
+| 2080x2208 | 4:4:4 | 1500 | 22.70 | 25.98 | 34.25 | 35.33 | 4.37 |
+| 2592x2784 | 4:2:0 | 1500 | **25.68** | **27.61** | 33.00 | 33.72 | **4.28** |
+| 2592x2784 | 4:4:4 | 1500 | 25.79 | 27.71 | 33.07 | 34.22 | 4.41 |
+| 2080x2208 | 4:2:0 | 2000 | 22.89 | 26.23 | 33.21 | 33.41 | 3.93 |
+| 2080x2208 | 4:4:4 | 2000 | 22.89 | 26.24 | 36.36 | 37.40 | 3.75 |
+| 2592x2784 | 4:2:0 | 2000 | **26.73** | **28.55** | 33.80 | 34.37 | 3.75 |
+| 2592x2784 | 4:4:4 | 2000 | 26.77 | 28.60 | 34.88 | 36.22 | 3.82 |
+
+- **The larger stream wins.** 2592 in 4:2:0 keeps 3.0-3.8 dB more luma detail than 2080 in 4:4:4,
+  and its overall colour error is the same or lower. 4:4:4 at 2080 gains 1.6-3.2 dB of Cb/Cr PSNR,
+  but the colour of fine detail also depends on luma, which the larger stream carries.
+- **4:4:4 costs no luma at the same byte cap**, at either size: the rate control finds the extra
+  chroma cheap. 2592 in 4:4:4 would be a free chroma gain at 2000 Mbps, but the headset cannot
+  decode it at 120 Hz. 2080 in 4:4:4 at 2000 is already decoder-bound
+  ([FRESHNESS.md](FRESHNESS.md#where-120-hz--2000--444-loses-frames-92-october-8)).
+- So the Quality profile stays at 125 % in 4:2:0. 4:4:4 there needs a faster decode (the Ultra
+  track), not a different trade-off.
+- Limits: one synthetic scene, static, no motion. The owner's in-headset view decides.
+
+## Colour against Virtual Desktop (October 8, `.103`-`.105`)
+
+Headset screenshots of the static quality scene, same framing. Virtual Desktop: H.264+ at 500 Mbps,
+144 Hz. PyroWave: 120 Hz, 2496x2656 per eye at 1000 Mbps. "Mean S" is the HSV saturation of the
+left eye (pixels brighter than 40); the patches are 24 px averages.
+
+| Capture | Mean S | Brightest (p99.9 R,G,B) | Grey panel | Gradient blue | Fresh FPS |
+|---|---:|---|---|---|---:|
+| Virtual Desktop | 125 | 242, 254, 255 | 125, 129, 143 | 0, 100, 162 | - |
+| `.99` | 87 | 236, 232, 255 | 123, 117, 125 | 30, 93, 138 | 119.5 |
+| `.103` full range | 101 | 255, 251, 255 | 124, 117, 125 | 19, 90, 140 | 119.2 |
+| `.104`, Rift CV1 gamut | 124 | 255, 255, 255 | 210, 208, 230 | 0, 164, 255 | 119.8 |
+| `.104`, P3 gamut | 114 | 255, 251, 255 | 125, 116, 125 | 0, 92, 144 | 119.8 |
+| `.105` default (Quest gamut) | 126 | 255, 253, 255 | 118, 118, 132 | 0, 89, 153 | 118.9 |
+
+- **A range bug (`.103`).** The headset's eye shaders squeezed every frame into 16-235. ALVR does
+  this to undo MediaCodec's YCbCr sampling, but PyroWave converts YCbCr itself at the encoded range,
+  so its blacks sat at about 17 and its whites at about 236. The direct eye copy and the staging
+  path now leave PyroWave frames at full range; H.264/HEVC/AV1 keep the old correction.
+- **Gamut (`.105`).** ALVR declares Rec. 709 to the compositor. Virtual Desktop's white point and
+  saturation match the Quest gamut (`XR_COLOR_SPACE_QUEST_FB`), which Horizon shows more saturated
+  and with a cooler white. New setting **Quest colour**, on by default, for every codec. Off restores
+  Rec. 709, the colour-accurate choice for PC content. `debug.q3pw.color_space`
+  (`cv1`, `rift_s`, `quest`, `p3`, `rec2020`, `unmanaged`) overrides it for tests.
+- Neither change costs frame rate. Screenshots are not an in-headset judgement; the owner's view
+  decides. Luma detail is unchanged: PyroWave's text is crisper than VD's, and its zone plate keeps
+  more detail but shows moiré.

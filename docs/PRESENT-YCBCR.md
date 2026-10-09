@@ -3,8 +3,9 @@
 Status: default from 2026-10-07 (`debug.q3pw.haar32` unset or `5`; `4` selects the previous
 default). Won all three live ABBA runs below. CDF 5/3 has the same output as V2 mode 5
 (`debug.q3pw.cdf53v2`, default 5); see [DECODER-V2.md](DECODER-V2.md#mode-5-packed-ycbcr-into-the-hardware-buffer-default-for-cdf-53).
-Mode 6 (paired chroma, opt-in) decodes faster but measured FPS-neutral live; see
-[below](#mode-6-two-chroma-pixels-per-texel-opt-in-october-7).
+Mode 6 (paired chroma) is the default for both decoders since `.118`: FPS-neutral at 207 Hz on the
+old staging renderer, but +4 fresh FPS at full size and 120 Hz on the direct eye copy; see
+[below](#mode-6-two-chroma-pixels-per-texel-opt-in-october-7). `5` selects mode 5.
 
 ## Why
 
@@ -139,5 +140,42 @@ Live, ABBA per wavelet (bf62efc + mode 6, 207 Hz, 2080x2208 per eye from 3072x32
 Decode falls by 0.25 ms, but fresh FPS and the fence do not move, and the app's GPU time rises by
 0.05-0.1 ms (the second chroma fetch and the manual filter in the eye shader). An earlier probe
 that only added the second fetch to mode 5 cost no FPS (188.7 / 188.7 against 192.0 / 189.3), so
-the saving is absorbed elsewhere in the GPU-bound frame. Mode 6 stays opt-in; mode 5 remains the
-default.
+the saving is absorbed elsewhere in the GPU-bound frame. Mode 6 stayed opt-in then.
+
+**October 9 (`.117`, direct eye copy, wired, 1000 Mbps), mode 6 became the default in `.118`:**
+
+| profile | mode 5 fresh FPS | mode 6 fresh FPS | GPU decode p50 |
+|---|---|---|---|
+| Haar 3072x3216 per eye, 120 Hz, ABBAAB | 111.4 / 112.0 / 110.4 | **115.0 / 115.3 / 116.4** | 4.5-4.6 ms against 3.4-4.1 ms |
+| CDF 5/3 2270x2429 per eye, 120 Hz, LOW priority | 119.0 / 118.5 / 119.6 | **120.0 / 120.1** (one block lost its trace) | varies with the clock |
+
+Stale frames per second also fell at full size (mostly 0-9 against 6-17). The decoded planes
+are identical, so the picture doesn't change. An earlier pair of runs that seemed to show the
+same gain did not apply mode 6 at all: the harness set only `debug.q3pw.cdf53v2`, which a Haar
+stream ignores, and identical configurations still differed by 3 FPS. Haar mode is
+`debug.q3pw.haar32`.
+
+## Eye pass cost at full size (October 9, `.119`-`.120`)
+
+Haar 3072x3216 per eye at 120 Hz, mode 6, direct eye copy, wired, LOW decode priority so decode
+can't inflate the eye timer. `debug.q3pw.eye_probe` changes what the eye shader reads (the picture
+is wrong while it is set). Compare only rows at the same GPU level: the clock dropped from level 7
+to 4 halfway through the `.120` sweep.
+
+| Probe | What the eye shader does | Eye GPU p50 | VrApi GPU load |
+| --- | --- | --- | --- |
+| none, level 7 | luma + two chroma fetches | 2.70, 2.72 ms | 0.89-0.92 |
+| 4, level 7 | the same fetches, almost grey output | 2.74 ms | 0.89-0.90 |
+| 3, level 7 | luma only | 1.47, 1.53 ms | 0.74-0.78 |
+| none, level 4 | luma + two chroma fetches | 2.88, 2.90 ms | 0.90 |
+| 4, level 4 | the same fetches, almost grey output | 2.89 ms | 0.91 |
+| 5, level 4 | one chroma fetch | 2.60 ms | 0.90-0.91 |
+| 3, level 4 (599 MHz) | luma only | 1.57, 1.61 ms | 0.85-0.86 |
+
+Reading chroma costs about 1.3 ms of the 2.7 ms eye pass: about 1 ms for the first fetch and
+0.3 ms for the second. Writing a grey picture instead of a colour one changes nothing, so swapchain
+write compression is not the cost. Removing the chroma reads didn't raise fresh FPS at full size
+120 Hz (luma only 118.7 / 117.6 against 117.5); there the remaining losses are frames superseded
+after decode, not GPU time. The cost matters for headroom: higher refresh rates or sizes, and
+heat. Probes 1 and 2 (no buffer reads) put decode at 7 ms and fresh FPS at 84 on this build, so
+their eye timings aren't comparable.

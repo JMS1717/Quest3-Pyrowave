@@ -86,40 +86,36 @@ measured. An earlier USB test with an 8 ms decoder limiter collapsed the bitrate
 that limiter for PyroWave (above) addresses the mechanism.
 The port also corrects the hardware decoder limiter's bytes/frame → bits/s units.
 
-The full-panel PyroWave profiles request 2064×2208 per eye, padded to **2080×2208**.
-The stereo frame contains **9,185,280 pixels**, or **13,777,920 bytes of raw 8-bit
-4:2:0**. With 4:4:4 the raw size doubles; a fixed bitrate cap remains the same.
+Each [streaming profile](PROFILES.md) has its own frame budget. ALVR pads each per-eye size up to
+a multiple of 32: the full panel's 2064×2208 becomes **2080×2208**, the 110 % stream's 2270×2429
+becomes 2272×2432, and the full 3072×3216 render becomes 3072×3232. Raw sizes below are 8-bit
+stereo frames; 4:4:4 doubles them, and a fixed bitrate cap stays the same.
 
-| Profile Mbps / Hz | Time budget ms | Payload bytes/frame ≤ | Raw/payload ratio | TCP Ethernet rate at cap ≥ Mbps |
-|---|---:|---:|---:|---:|
-| 400 / 72 candidate | 13.89 | 694,444 | 19.84:1 | 421 |
-| 600 / 90 candidate | 11.11 | 833,333 | 16.53:1 | 632 |
-| 600 / 120 experiment | 8.33 | 625,000 | 22.04:1 | 632 |
-| 800 / 120 experiment | 8.33 | 833,333 | 16.53:1 | 843 |
-| 1000 / 120 experiment | 8.33 | 1,041,666 | 13.23:1 | 1053 |
-| 1500 / 120 experiment | 8.33 | 1,562,500 | 8.82:1 | 1580 |
-| 2000 / 120 experiment | 8.33 | 2,083,333 | 6.61:1 | 2107 |
-| 1000 / 207 measured profile | 4.83 | 603,864 | 22.82:1 | 1053 |
+| Profile | Padded per eye | Mbps / Hz | Time budget ms | Payload bytes/frame ≤ | Raw/payload ratio | TCP Ethernet rate at cap ≥ Mbps | Bits per stream pixel |
+|---|---|---|---:|---:|---:|---:|---:|
+| Starter 72 Hz | 2080×2208 | 400 / 72 | 13.89 | 694,444 | 19.84:1 | 421 | 0.60 |
+| Wi-Fi 90 Hz | 2080×2208 | 700 / 90 | 11.11 | 972,222 | 14.17:1 | 737 | 0.85 |
+| Wi-Fi Quality 120 Hz | 2272×2432 | 1000 / 120 | 8.33 | 1,041,666 | 15.91:1 | 1053 | 0.75 |
+| Quality 120 Hz | 2272×2432 | 1500 / 120 | 8.33 | 1,562,500 | 10.61:1 | 1580 | 1.13 |
+| Colour 4:4:4 120 Hz | 2272×2432 | 1500 / 120 | 8.33 | 1,562,500 | 21.22:1 | 1580 | 1.13 |
+| Godlike 90 Hz | 3072×3232 | 1500 / 90 | 11.11 | 2,083,333 | 14.30:1 | 1580 | 0.84 |
+| Godlike 120 Hz | 3072×3232 | 1500 / 120 | 8.33 | 1,562,500 | 19.06:1 | 1580 | 0.63 |
+| Competitive 207 Hz | 2080×2208 | 1000 / 207 | 4.83 | 603,864 | 22.82:1 | 1053 | 0.53 |
 
-Two additional 120 Hz / 1000 Mbps experiments lower render size: 75% requests
-1548×1656 per eye (padded 1568×1664), while 60% requests 1238×1325
-(padded 1248×1344). Their raw/payload ratios are 7.51:1 and 4.83:1 respectively.
-The byte cap and network demand remain 1,041,666 bytes/frame and ≥1053 Mbps.
-These change pixel workload, not bandwidth. Short live observations are recorded in
-[results](../results/LIVE-2026-10-01.md); median 120 FPS at 60% is not sustained 120 FPS.
+Bits per stream pixel is the clearest single comparison of how hard each profile compresses:
+Quality 120 gives every pixel nearly twice the bits of Godlike 120, which is why Godlike 90 (more
+time per frame) is the cleaner full-size mode. The 600–2000 Mbps 120 Hz experiments and the 75 % /
+60 % render-size latency experiments that earlier versions listed were removed in `.131`; the
+product profiles above replace them. Their short live observations remain in
+[results](../results/LIVE-2026-10-01.md).
 
 Ethernet estimates assume full-size TCP segments (1460 bytes payload / 1538 bytes on
 the wire). They exclude ACKs, retransmissions and Wi-Fi airtime overhead. A 2.4 Gbps
-Wi-Fi PHY rate is not 2.4 Gbps payload capacity; 2000 Mbps is particularly aggressive.
-All byte budgets fit PWU2's 8192-fragment transport bound. Passing those mathematical
-bounds does not establish visual quality, thermal stability, or sustained frame rate.
-Older full-resolution decode measurements exceeded 120 Hz's 8.33 ms, which is why the
-120 Hz rows above are named experiments. The current decoder (`.62` and later) decodes
-2080×2208 Haar in about 2.7 ms GPU time (p50, 207 Hz, 690 MHz GPU clock). The three
-"(measured)" profiles run at 1000 Mbps: native 120 Hz, 207 Hz at 2080×2208 and 240 Hz scaled panel at 1440×1536
-(520,832 bytes/frame). See [HIGH-REFRESH.md](HIGH-REFRESH.md). Those are 10-12 s screens, not
-sustained play. Native panel size is also distinct from SteamVR's larger lens-corrected render
-recommendation.
+Wi-Fi PHY rate is not 2.4 Gbps payload capacity. Passing these mathematical bounds does not
+establish visual quality, thermal stability, or sustained frame rate. The three "(measured)"
+reference profiles run at 1000 Mbps: native 120 Hz, 207 Hz at 2080×2208 and 240 Hz scaled panel
+at 1440×1536 (520,832 bytes/frame). See [HIGH-REFRESH.md](HIGH-REFRESH.md). Native panel size is
+also distinct from SteamVR's larger lens-corrected render recommendation.
 
 Regenerate machine-readable budgets using `python -m tools.quest3.budget --out
 presets/frame-budgets.json`. The dashboard uses the same padding and integer cap math
@@ -153,7 +149,7 @@ See [complete sanitized distributions](../results/BITRATE-USB-LIVE-2026-10-02.js
 
 Dated record from `.44`. It predates the faster decoder: Haar GPU decode at 2080×2208 now
 measures about 2.7 ms p50 (207 Hz, 690 MHz GPU clock, `.62`), not 6 ms. "Default" below means the native 120 Hz profile's 1000 Mbps; a fresh
-install still starts on the 400 Mbps / 72 Hz candidate preset.
+install starts on the 400 Mbps / 72 Hz Starter profile.
 
 The reviewed `.44` pair passed all matching builds and production decoder tests;
 its native libraries are byte-identical to GPU-verified `.42`. One continuous
@@ -299,3 +295,158 @@ not motion-to-photon.
   fresh FPS and 2.71 ms network against 177.4 and 3.04 ms with the setting at 0 (1000 Mbit/s).
 - Not yet measured: unplugging the cable mid-stream; 3 or 4 connections; Haar, whose decode does not grow with bitrate and so may
   turn the shorter arrival into frames; sustained play.
+
+### Four wired connections (`.69`, default from `.70`), October 7
+
+Wired, CDF 5/3, ABBA, 2 against 4 video connections:
+
+| Setting | Connections | Fresh FPS | Network p50 | Network p99 |
+| --- | --- | --- | --- | --- |
+| 207 Hz, 2080x2208, 1000 Mbps | 2 | 186.7, 190.2 | 2.7, 2.7 ms | 7.9, 7.8 ms |
+| 207 Hz, 2080x2208, 1000 Mbps | 4 | 190.6, 186.4 | 2.8, 2.7 ms | 5.2, 5.1 ms |
+| 120 Hz, 2592x2784, 2000 Mbps | 2 | 110.2, 112.9 | 7.6, 7.4 ms | 18.2, 16.7 ms |
+| 120 Hz, 2592x2784, 2000 Mbps | 4 | 111.0, 110.8 | 7.0, 6.9 ms | 14.8, 14.9 ms |
+
+- With four connections the frame rate is the same, and the network tail is 2.6–2.7 ms shorter.
+  `.70` makes four the default.
+- At 2000 Mbps a 120 Hz frame is about 2.1 MB. It takes about 7 ms over the USB link, which
+  carries 2.3–2.6 Gbps in bursts ([TRANSPORT.md](TRANSPORT.md#usb)). That is most of the
+  8.3 ms frame, and fresh FPS falls from about 116 at 1500 Mbps to about 111.
+- So 2000 Mbps at 120 Hz is near the cable's limit whatever the connection count. Above it,
+  more bits per frame have to come from coding efficiency, not bitrate.
+
+### Frame budget from the present rate (`.66`, `.67`), October 7
+
+Before `.66`, constant bitrate was divided by the refresh rate. A game presenting 150–180 fps on
+a 207 Hz panel therefore got `bitrate / 207` per frame and used only 77–87% of the bitrate.
+
+`.66` turns **Adapt to framerate** on by default. It follows an exponential average of the
+present interval:
+
+- rising rates apply at once
+- falling rates apply at the 1 s update
+- the result is bounded
+
+Wired, CDF 5/3, 207 Hz, 1000 Mbps, fresh FPS, ABBA (adapt off is A, on is B):
+
+| Scene | A | B | B | A |
+| --- | --- | --- | --- | --- |
+| Harness scene | 188.3 | 190.2 | 191.6 | 193.0 |
+| Scene held to a 6 ms frame | 192.6 | 189.5 | 191.7 | 192.7 |
+| Scene held to a 6 ms frame (repeat) | 193.9 | 188.3 | 189.4 | 190.5 |
+
+Adapt made no difference, because the present rate never dropped. `.67` counts what the driver
+receives (`[Q3PW_PRESENT]`, one line per second):
+
+- With the scene held to 6 ms or made GPU-bound by overdraw, SteamVR still presented 192–208
+  frames per second.
+- Each present had new compositor textures, and at most 2 per second repeated a pose.
+- SteamVR's compositor reprojects the game's last frame into a new present at every vsync, so
+  the driver's present rate is the panel rate, not the game's.
+
+So the frame budget only helps when SteamVR itself presents below refresh. Giving a slower game
+the full bitrate needs the game's own frame rate. One way is the compositor's frame timing
+(reprojection flags). Another is to stream at the game rate and let the headset reproject.
+This is in [PLAN.md](PLAN.md) 2.1.
+
+Adapt stays on: it is neutral here and right when presents do drop.
+
+### Streaming only the game's frames (`.79`–`.83`), October 8
+
+The driver sees one present per vsync, so the game's own frame rate has to come from SteamVR's
+frame timing (`IVRServerDriverHost::GetFrameTimings`, `Compositor_FrameTiming`).
+
+**What the timing contains.** Every entry is a compositor frame, not a game frame. With the
+scene held to 8 ms (about 120 fps) on a 207 Hz panel, every entry had:
+
+- a frame index one higher than the previous entry
+- `m_nNumFramePresents` = 1
+- reprojection flags 0
+- no mispresented or dropped frames
+
+The driver's view (`.80`, `[Q3PW_FRAMETIMING]`) and the scene's own view
+(`IVRCompositor::GetFrameTimings`, logged to `timing.csv` by `tools/quest3/quality_scene.py`)
+were the same. So "same frame index as the last present" (`.79`) never fires.
+
+**The signal.** `m_flClientFrameIntervalMs` is non-zero only in compositor frames that received
+a new game frame, and 0 in frames where SteamVR re-showed the last one. In the scene's log:
+
+- 116 non-zero entries per second out of 200
+- 119–122 per second in each 1 s window, against the scene's 120–122
+- the non-zero values were 8.1–14 ms
+
+In the driver's 128-entry history, 74–76 non-zero entries per 0.62 s means 121 fps.
+
+**`.81`–`.83`:**
+
+- At each present, the driver checks the timing entries newer than the last present. If none
+  has a non-zero client interval, the present re-shows the game's previous frame.
+- With **Stream only the game's frames** on, that present is neither encoded nor reported to
+  the bitrate manager. The headset re-shows the previous frame, with its own rotation
+  correction.
+- **Adapt to framerate** then spreads the bitrate over the game's rate. It is bounded at 2x
+  the nominal frame size by `framerate_reset_threshold_multiplier`.
+- Safeguards:
+  - every frame is streamed while no game frame has arrived for 100 ms (SteamVR's own scene, a
+    loading or stalled game);
+  - at most 3 presents in a row are skipped.
+- `.81` without the first safeguard skipped every frame before the scene started, and the
+  stream never came up.
+
+Wired, CDF 5/3, 2080x2208, 207 Hz, 1000 Mbit/s, adapt on, pan 60 deg/s, scene held to 8 ms
+(about 121 fps). Median of the statistics events after warm-up:
+
+| | Off (`.81`) | On (`.82`) |
+| --- | --- | --- |
+| Fresh frames/s, A / B | 189.3 / 189.0 | 119.8 / 120.5 |
+| Game frames/s (scene) | 120–122 | 120–123 |
+| Frames streamed/s | 208 | 122 |
+| Bytes per frame | 604 KB | 1025 KB (1.70x) |
+| Link | 1000 Mbit/s | 993 Mbit/s |
+| Headset GPU decode p50 | 3.15 ms | 3.42 / 3.81 ms |
+| ALVR latency estimate | 34.8 ms | 32.9 ms |
+| Vsync queue | 10.8 ms | 15.8 ms |
+
+- **Detection:**
+  - with skipping on, new = scene frames in every 1 s window (121/121, 121/122, 123/123), with
+    85–87 skips per second;
+  - with skipping off, 31–42 presents per second found no new timing entry yet and were counted
+    as new (streamed), so detection errs towards streaming.
+- **Game at full rate**, on (`.82`, block A): 0–1 skips per second and 206–208 frames
+  streamed. It is unaffected.
+- **Not measured yet:**
+  - how 120 frames on a 207 Hz panel feel in the headset (judder, head-rotation smoothness)
+    against SteamVR's reprojection;
+  - real games and Wi-Fi;
+  - with SteamVR Motion Smoothing, whose synthesized frames are not streamed;
+  - the image quality gain from 1.7x the bytes per frame in the headset.
+- **Image quality, offline:** `tools/downsample/clarity_budget.py`, one run, 2080x2208,
+  CDF 5/3, PSNR-HVS-M at 25 px/deg, bilinear display. Before coding the score is 20.93 dB. A
+  121 fps game streamed alone gets the per-frame budget of 120 Hz / 1000:
+
+  | Per-frame budget | Bytes per eye | HVS-M | Coding loss | ΔE |
+  | --- | --- | --- | --- | --- |
+  | 207 Hz / 1000 (every compositor frame) | 302 KB | 19.11 | −1.82 dB | 6.26 |
+  | 120 Hz / 1000 (the game's frames only) | 521 KB | 20.29 | −0.64 dB | 5.24 |
+  | 120 Hz / 1500 (reference) | 781 KB | 20.70 | −0.23 dB | 4.67 |
+
+  - This recovers about two thirds of the quantization loss.
+  - The absolute levels differ from the October 7 table in
+    [CLARITY-BUDGET.md](CLARITY-BUDGET.md); compare within this run only.
+- **Static scene in the headset** (`.83`, pan 0, the same 8 ms scene): the screenshot's mean
+  absolute Laplacian was 6.77 / 6.77 off and 7.25 / 6.95 on. Fresh frames: 187 / 184 off;
+  120 / 151 on (the scene ran faster in the second block). This is a small, consistent rise; the
+  metric is coarse.
+- **Setting:** `video.pyrowave.game_frames_only`, off by default, restart SteamVR.
+  `ALVR_Q3PW_GAME_FRAMES_ONLY=0/1` overrides it for A/B runs. The harness cannot set the
+  setting itself: it runs SteamVR without the dashboard, so the derived `openvr_config` key
+  changes only after a restart that never happens. Harness runs use the environment variable.
+
+Already tried:
+
+| Idea | Result |
+| --- | --- |
+| Repeat = latest timing entry has the last present's frame index (`.79`) | Never repeats: one entry per compositor frame |
+| `m_nNumFramePresents`, `m_nReprojectionFlags`, mispresented/dropped counts | Always 1 / 0 / 0 / 0 for a slow game, from driver and app side |
+| Same compositor textures or same pose across presents (`.67`) | Each present has new textures and a new pose |
+| Skip repeats with no fallback (`.81`) | No stream before the game starts |

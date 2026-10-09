@@ -1,0 +1,143 @@
+diff --git a/pyrowave-shared.def b/pyrowave-shared.def
+index 95cd7c0..c343c2a 100644
+--- a/pyrowave-shared.def
++++ b/pyrowave-shared.def
+@@ -47,6 +47,7 @@ EXPORTS
+ 	pyrowave_decoder_decode_is_ready_with_sideband
+ 	pyrowave_decoder_set_fused_dequant_haar
+ 	pyrowave_decoder_set_haar32
++	pyrowave_decoder_get_block_stats
+ 	pyrowave_decoder_set_cdf53v2
+ 	pyrowave_decoder_decode_gpu_buffer
+ 	pyrowave_decoder_decode_cpu_buffer_synchronous
+diff --git a/pyrowave.h b/pyrowave.h
+index 0c9efcf..ce4550f 100644
+--- a/pyrowave.h
++++ b/pyrowave.h
+@@ -591,6 +591,13 @@ PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_fused_dequant_haar(pyro
+  * PYROWAVE_HAAR_PAIRS, fused dequant and a skipped final luma pass. Default 0. */
+ PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_set_haar32(pyrowave_decoder decoder, int enabled);
+ 
++/* Q3PW: block occupancy since the last call with reset != 0. Entry component * 5 + level (component
++ * 0-2, level 0 finest to 4 coarsest) counts the 32x32 blocks received, those with no coded 8x8
++ * sub-block, and the coded 8x8 sub-blocks (16 per block). Counted on the CPU as packets arrive. */
++PYROWAVE_PUBLIC_API pyrowave_result pyrowave_decoder_get_block_stats(pyrowave_decoder decoder, uint64_t blocks[15],
++                                                                     uint64_t empty_blocks[15],
++                                                                     uint64_t coded_subblocks[15], int reset);
++
+ /* Q3PW Decoder V2: register-only inverse CDF 5/3, one dispatch per level and component with no shared
+  * memory or workgroup barriers. Same lifting and FP16 rounding points as the default 5/3 path, so
+  * planes match it to within one code value. mode=2 additionally writes luma as an RGBA8_UNORM plane
+diff --git a/pyrowave_c.cpp b/pyrowave_c.cpp
+index 614f5c1..4d61615 100644
+--- a/pyrowave_c.cpp
++++ b/pyrowave_c.cpp
+@@ -1536,6 +1536,16 @@ pyrowave_result pyrowave_decoder_set_cdf53v2(pyrowave_decoder decoder, int mode)
+ 	return decoder->decoder.set_cdf53v2(mode) ? PYROWAVE_SUCCESS : PYROWAVE_ERROR_NOT_IMPLEMENTED;
+ }
+ 
++pyrowave_result pyrowave_decoder_get_block_stats(pyrowave_decoder decoder, uint64_t blocks[15],
++                                                 uint64_t empty_blocks[15], uint64_t coded_subblocks[15],
++                                                 int reset)
++{
++	if (!decoder || !blocks || !empty_blocks || !coded_subblocks)
++		return PYROWAVE_ERROR_INVALID_ARGUMENT;
++	decoder->decoder.get_block_stats(blocks, empty_blocks, coded_subblocks, reset != 0);
++	return PYROWAVE_SUCCESS;
++}
++
+ pyrowave_result pyrowave_decoder_set_haar32(pyrowave_decoder decoder, int enabled)
+ {
+ 	if (!decoder)
+diff --git a/pyrowave_decoder.cpp b/pyrowave_decoder.cpp
+index a749c84..1989c9d 100644
+--- a/pyrowave_decoder.cpp
++++ b/pyrowave_decoder.cpp
+@@ -7,6 +7,7 @@
+ #include "math.hpp"
+ #include "pyrowave_common.hpp"
+ #include <algorithm>
++#include <bitset>
+ #include <cstdlib>
+ #include <cstring>
+ #include <vector>
+@@ -69,6 +70,12 @@ struct Decoder::Impl final : public WaveletBuffers
+ 
+ 	std::vector<uint32_t> dequant_offset_buffer_cpu;
+ 	std::vector<uint32_t> payload_data_cpu;
++	// Q3PW: component * DecompositionLevels + level of each 32x32 block, and per class the blocks
++	// received, those with no coded 8x8 sub-block and the coded sub-blocks (16 per block).
++	std::vector<uint8_t> block_class;
++	uint64_t stat_blocks[3 * DecompositionLevels] = {};
++	uint64_t stat_empty_blocks[3 * DecompositionLevels] = {};
++	uint64_t stat_coded_subblocks[3 * DecompositionLevels] = {};
+ 	int decoded_blocks = 0;
+ 	int total_blocks_in_sequence = 0;
+ 	uint32_t last_seq = UINT32_MAX;
+@@ -246,6 +253,10 @@ bool Decoder::Impl::decode_packet(const BitstreamHeader *header)
+ 	{
+ 		decoded_blocks++;
+ 		offset = payload_data_cpu.size();
++		const int cls = block_class[header->block_index];
++		stat_blocks[cls]++;
++		stat_empty_blocks[cls] += header->ballot == 0;
++		stat_coded_subblocks[cls] += std::bitset<16>(header->ballot).count();
+ 	}
+ 	else
+ 	{
+@@ -395,6 +406,17 @@ void Decoder::Impl::init_block_meta()
+ {
+ 	WaveletBuffers::init_block_meta();
+ 
++	block_class.assign(block_count_32x32, 0);
++	for (int c = 0; c < 3; c++)
++		for (int level = 0; level < DecompositionLevels; level++)
++			for (int band = 0; band < 4; band++)
++			{
++				const auto &meta = block_meta[c][level][band];
++				for (int i = 0; i < meta.block_count_32x32; i++)
++					if (meta.block_offset_32x32 + i < block_count_32x32)
++						block_class[meta.block_offset_32x32 + i] = uint8_t(c * DecompositionLevels + level);
++			}
++
+ 	BufferCreateInfo info;
+ 	info.domain = BufferDomain::Device;
+ 	info.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+@@ -1657,6 +1679,22 @@ bool Decoder::Impl::allocate_packed()
+ 	return true;
+ }
+ 
++void Decoder::get_block_stats(uint64_t *blocks, uint64_t *empty_blocks, uint64_t *coded_subblocks, bool reset)
++{
++	for (int i = 0; i < 3 * DecompositionLevels; i++)
++	{
++		blocks[i] = impl->stat_blocks[i];
++		empty_blocks[i] = impl->stat_empty_blocks[i];
++		coded_subblocks[i] = impl->stat_coded_subblocks[i];
++	}
++	if (reset)
++	{
++		std::fill(std::begin(impl->stat_blocks), std::end(impl->stat_blocks), 0);
++		std::fill(std::begin(impl->stat_empty_blocks), std::end(impl->stat_empty_blocks), 0);
++		std::fill(std::begin(impl->stat_coded_subblocks), std::end(impl->stat_coded_subblocks), 0);
++	}
++}
++
+ bool Decoder::set_haar32(int mode)
+ {
+ 	// Mode 7 is mode 5 for 4:4:4 (Decoder V2's layout) and mode 8 is mode 6 for 4:4:4; 4:4:4 has no
+diff --git a/pyrowave_decoder.hpp b/pyrowave_decoder.hpp
+index b3bef50..9ba6797 100644
+--- a/pyrowave_decoder.hpp
++++ b/pyrowave_decoder.hpp
+@@ -65,6 +65,10 @@ public:
+ 	// Mode 2 also writes luma as an RGBA8 plane of half size (2x2 pixel quads); mode 3 additionally
+ 	// quad-packs levels 0-1 (needs precision 1). Mode 0 turns it off.
+ 	bool set_cdf53v2(int mode);
++	// Q3PW: per component (0-2) and level (0 finest), indexed component * 5 + level, the 32x32 blocks
++	// received since the last reset, those with no coded 8x8 sub-block and the coded 8x8 sub-blocks
++	// (16 per block). Each array holds 15 entries.
++	void get_block_stats(uint64_t *blocks, uint64_t *empty_blocks, uint64_t *coded_subblocks, bool reset);
+ 
+ 	// A more refined version of decode_is_ready() that allows a bit more control.
+ 	// The default is num_pristine_bands = 2 (the next-to-final LL band) and minimum_packet_ratio = 0.9.

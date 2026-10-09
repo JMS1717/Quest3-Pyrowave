@@ -75,11 +75,12 @@ def evidence(settings, telemetry=()):
     ffe = o.get('enable_foveated_encoding')
     light_requested = settings.get('light_foveated_encoding', False)
     profile = settings.get('foveation_profile', 'light')
-    CENTER, EDGE = profile_values(profile)
+    p = profile_values(profile)
+    (CX, CY), (SX, SY), EDGE = p['center'], p['shift'], p['edge']
     light_verified = (ffe is True and light_requested is True and
         all(type(o.get(key)) in (int, float) and math.isclose(o[key], value, abs_tol=1e-6, rel_tol=0) for key, value in (
-            ('foveation_center_size_x', CENTER), ('foveation_center_size_y', CENTER),
-            ('foveation_center_shift_x', 0), ('foveation_center_shift_y', 0),
+            ('foveation_center_size_x', CX), ('foveation_center_size_y', CY),
+            ('foveation_center_shift_x', SX), ('foveation_center_shift_y', SY),
             ('foveation_edge_ratio_x', EDGE), ('foveation_edge_ratio_y', EDGE))))
     if settings.get('codec') == 'PyroWave' and isinstance(ffe, bool) and light_requested != ffe:
         mismatches.append('light_foveation_pending_restart_or_negotiation')

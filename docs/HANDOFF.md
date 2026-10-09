@@ -1,8 +1,34 @@
 # Engineering handoff: Quest3-Pyrowave
 
-Prepared October 4, 2026, with dated updates through October 7. Read [AGENTS.md](../AGENTS.md)
+Prepared October 4, 2026, with dated updates through October 9. Read [AGENTS.md](../AGENTS.md)
 first. Machine-specific state, raw captures, signing material and rollback snapshots stay outside
 this repo.
+
+## October 9: beta.1, `.131`-`.134`, merged to main
+
+**Released:** v0.1.0-beta.1, built from `.134` on main (PR #23 merged). Release notes:
+[RELEASE-beta.1.md](RELEASE-beta.1.md); profile guide: [PROFILES.md](PROFILES.md). The October 7
+state below is history.
+
+- **Profiles** (`.131`, `.132`): seven tested product profiles (Quality 120, Godlike 120,
+  Godlike 90, Colour 4:4:4 120, Wi-Fi Quality 120, Wi-Fi 90, Competitive 207) plus the fresh-install
+  Starter 72 Hz, defined in `alvr/session/src/beta.rs` and pinned by `beta_tests.rs`. The
+  dashboard lists them first, then three "(measured)" references and the H.264/HEVC/AV1
+  comparisons; the superseded 600-2000 Mbit/s and render-size experiments are gone.
+- **Headset menu** (`.131`): hold both thumbsticks for about 0.7 s. Row 1 picks a profile; every
+  row has two lines of help; USB-only profiles are refused on Wi-Fi.
+- **Godlike wavelets** (`.132`): Godlike 120 uses Haar (116-118 fresh FPS of 120, ALVR latency
+  estimate about 43 ms; CDF 5/3 measured 112 and 46 ms because frames queued for the decoder).
+  Godlike 90 uses CDF 5/3 (89-90 of 90, 48-54 ms).
+- **10 FPS drops** (`.131`-`.134`): `ClientDisconnected` for an old connection arrives after the
+  new connection's `ClientConnected` (the old pipeline joins its threads first), so the driver set
+  proximity false while the new stream ran and SteamVR idled the headset to 10 Hz about six seconds
+  later. The driver now counts connections (`InitializeStreaming`/`DeinitializeStreaming`), blocks
+  standby while one streams, and pulses proximity from the headset device's `EnterStandby` while
+  streaming. SteamVR never queried `ShouldBlockStandbyMode` or the provider's `EnterStandby` in
+  `.133`'s logs; only the device hook fires. Verified: four `.134` cells with no standby while
+  streaming, and one logged overlapping reconnect.
+- **Not checked:** sustained play, Wi-Fi Quality 120 and Wi-Fi 90 live, optical latency.
 
 ## Current goal and state (October 7)
 
@@ -18,6 +44,401 @@ State:
 
 - **Released:** v0.1.0-alpha.9, built from `.63`. **On main:** `.65` (`.64` plus the opt-in
   Wi-Fi UDP transport), not released.
+- **On `claude/frame-budget`:** `.93` (`.92` without the dead encoder-side UDP path). It has:
+  - server-predicted head poses;
+  - UDP as the Wi-Fi default;
+  - Stream resolution up to 125 %;
+  - four wired connections;
+  - the Sharpening setting;
+  - a fast 4:4:4 path;
+  - a high-priority encode queue;
+  - the opt-in setting "Stream only the game's frames"
+    ([below](#october-7-late-night-66-74-on-claudeframe-budget));
+  - audio cut-out diagnostics;
+  - a refresh-rate probe that no longer runs while the headset sleeps;
+  - a fix for the server's display helper, which held the panel at 72 Hz after its client restart
+    (the stream was refused until the app was reopened);
+  - a client restart with `am start -S -W`, plus a retry if the restarted client has no activity
+    ([REFRESH-RATES.md](REFRESH-RATES.md)).
+- **October 8, later, `.95`-`.97` on the same branch:**
+  - `.95` clears a 72 Hz panel pin the headset left behind ([REFRESH-RATES.md](REFRESH-RATES.md)).
+  - `.96` keeps the binocular middle at full density in all three peripheral-encoding profiles
+    ([LIGHT-FOVEATION.md](LIGHT-FOVEATION.md#where-the-full-density-band-sits-96)).
+  - `.97` makes Meta fixed foveated rendering work for the eye draw (hidden setting, off by
+    default) and adds layout diagnostics.
+  - Result ([table](LIGHT-FOVEATION.md#above-125--through-foveation-october-8-96-97)): above 125 % is
+    not cheap at 120 Hz. Strong 148 % with FFR Medium gets 99.7 fresh FPS against about 109 for
+    uniform 125 %. At 90 Hz, 148 % holds 87 of 90.
+  - **Harness pitfall:** live A/B arms cannot change resolution or foveation (they need a SteamVR
+    restart), so such comparisons need one cell per configuration.
+  - Next, per the owner: a Virtual Desktop quality baseline, then cheap quality wins, then 207 Hz
+    scheduling.
+  - **VD baseline, started.** The same static quality scene (3072x3216 source) was streamed through
+    Virtual Desktop at the owner's own settings, which were left unchanged:
+
+    | VD setting | Value |
+    |---|---|
+    | Quality | Godlike, 106 % (SteamVR target 3072x3264) |
+    | Codec | H.264+ at 500 Mbps, automatic bitrate off |
+    | Refresh | 144 Hz, held 144/144 |
+    | Spacewarp | off |
+    | Link | PC on Ethernet, headset on Wi-Fi 6E |
+    | Reported latency | about 38 ms (VD's own figure, not motion-to-photon) |
+
+    Pyrowave was captured on the same scene and framing (`.99`, 120 Hz, 2496x2656 at 1000 Mbps):
+    its text is clearly crisper, its zone plate keeps more detail but shows moiré, and its colour was
+    weaker. That colour gap is fixed in `.103`-`.105` (next bullet). The private screenshots stay
+    outside the repo.
+- **October 8, late night, `.107`-`.108`: full 3072x3216 stream (no downsample).** The owner asked for
+  Virtual Desktop's Godlike resolution streamed at full size. Same 3072x3216 render, 2000 Mbps,
+  CDF 5/3 mode 5, 690 MHz GPU clock, SteamVR Home, wired:
+
+  | Panel | Configuration | Fresh FPS | Decode p50 (GPU) |
+  |---|---|---|---|
+  | 90 Hz | full eye swapchain | **90.1 of 90** | 5.4 ms |
+  | 120 Hz | full eye swapchain (`.107`, earlier, owner wearing) | 97.7 | 9.0 ms |
+  | 120 Hz | full eye swapchain (`.107` and `.108`, later) | 66-68 | 10.5-11 ms |
+  | 120 Hz | eye swapchain at 67 % (`.108`) | 71-77 | 8.3-9.2 ms |
+
+  - **Full resolution holds at 90 Hz, not at 120 Hz.** Decode alone takes about 5.1-5.4 ms when the
+    GPU is otherwise idle. At 120 Hz the 3072 eye draw (about 3 ms) and the compositor
+    (0.9-1.4 ms) preempt it every 8.3 ms, stretching it to 9-11 ms. To fit 120 Hz, decode must
+    drop to about 4 ms together with the smaller eye swapchain.
+  - `.107` adds an opt-in phase lock (`debug.q3pw.phase_lock=1`): publish decoded frames just
+    before the render loop wakes. It gives nothing once decode exceeds the frame period.
+    Decoder mode 6 (two chroma pixels per texel) is faster on the bench but slower live at
+    3072 (77.8 FPS).
+  - `.108` adds a hidden `debug.q3pw.eye_percent` (50-99, unfoveated only): the eye draw goes
+    into a smaller swapchain with a bilinear luma tap. Same `.107`/`.108` numbers in the same
+    conditions, so `.108` has no regression.
+  - `.108` also fixes two server faults:
+    - A missing configured audio device now falls back to the default output instead of
+      refusing the handshake.
+    - The forced GPU level stops after the headset clears it twice, until the server restarts.
+      The `display_override` unit test for this has not been run yet.
+  - **Tried for 120 Hz at full size, each in ABBA order (fresh FPS):**
+
+    | Change | Result | Notes |
+    |---|---|---|
+    | Haar instead of CDF 5/3 | 76.5-77 full eye, 79-82 at 67 % (CDF: 66-68 and 73-77) | Bench: 3.7-4.0 against 5.1 ms |
+    | Decode at default queue priority (67 % eye, CDF) | 83-87 fresh, but the app drops to 85-87 of 120 frames: judder | Low stays |
+    | Render-loop frame wait 0 instead of 4000 µs (Haar, 67 %) | 75-76 against 79-82 | The wait stays |
+
+    Live decode takes about twice the standalone time while the GPU reports 87-91 % busy.
+  - **`.109` decode gate, opt-in, rejected as a default.** `debug.q3pw.decode_gate_us=<start>[,<end>]`
+    holds each decode until `start` µs after the render loop's wake. A frame later than `end`
+    waits for the next period. Unit tested. Haar, 67 % eye, 120 Hz:
+
+    | Arm | Fresh FPS | App frames/s | Decode p50 |
+    |---|---|---|---|
+    | off | 80-84 | 120 | 7.1-7.5 ms |
+    | start 3000 | 80-84 | 120 | 7.1-7.4 ms |
+    | window 2500-4500 | 77-78 | 120 | 6.4-6.7 ms |
+    | window 2500-4500, default priority | 80-92 | 114-117 (judder) | 5.0-5.7 ms |
+
+    Even serialized, decode takes 5 ms live against 3.3-4 ms on the bench, so full size does not
+    fit 120 Hz on this GPU. For 120 Hz, the clarity work moves to the largest stream that fits
+    (125-135 %).
+  - **125 % in SteamVR Home is slower than the quality-scene numbers.** Fresh FPS at 120 Hz,
+    2000 Mbps, unworn headset:
+
+    | Arm | Fresh FPS |
+    |---|---|
+    | CDF 5/3, 2608x2752, `.109` | 88-91 (decode 7.3-7.8 ms) |
+    | Same, PC sharpening off | 91-92 |
+    | Same, Quest colour off | 89 (no effect) |
+    | Decoder mode 4 instead of 5 | 61-62 |
+    | `.97`'s own pair today | 92 |
+    | Haar, 135 % | 83 |
+
+    `.97` measured 108-109 at 125 % with 4.8 ms decode on the 60°/s quality-scene pan, so the gap
+    is content, not code. Real game content can decode much slower than the quality scene,
+    which matters for every "fits at 120 Hz" claim. Re-measure the profiles on real game content.
+  - **Largest stream that holds 120 Hz in SteamVR Home (`.109`, CDF 5/3 mode 5, wired, unworn).**
+    Each size had its own SteamVR start. Fresh FPS per 20 s block:
+
+    | Stream per eye | Bitrate | Fresh FPS | GPU decode p50 | ALVR decoder stage |
+    |---|---|---|---|---|
+    | 2080x2208 (native) | 1500 | 118.4-119.9 | 3.4-6.9 ms | 6.2-12.4 ms |
+    | 2304x2432 (111 %) | 1500 | 114.9-115.0 | 5.2-5.3 ms | 10.7-11.0 ms |
+    | 2560x2688 (123 %) | 2000 | 90.4-90.5 | 7.3-7.4 ms | 14.3-14.6 ms |
+    | 2816x2944 (135 %) | 2000 | 77.3-80.7 | 8.3-8.7 ms | 16.3-16.4 ms |
+
+    In this scene, 120 Hz holds up to about 110 %. Full 3072x3216 holds at 90 Hz. Virtual
+    Desktop decodes on the Quest's video hardware, but PyroWave decodes on the same GPU as the
+    eye draw and the compositor. That is why VD's Godlike preset runs at high refresh and ours
+    does not.
+  - **`.110` profiles from these sizes.** **Quality 120 Hz** and **Wi-Fi Quality 120 Hz** now
+    stream 110 % (2272x2432), the largest size that held 120 Hz; 120 % and 125 % are marked
+    "below 120 Hz". A new **Godlike 90 Hz** profile streams the full 3072x3216 with no downsample
+    (CDF 5/3, 2000 Mbps, PC sharpening 30, maximum GPU clock).
+  - **Full size at 90 Hz in heavy content (`.108`, SteamVR Home with the Library dashboard open,
+    wired, unworn).** The earlier 90.1 of 90 was lighter content. Fresh FPS of 90:
+
+    | Wavelet | Bitrate | Fresh FPS | GPU decode p50 |
+    |---|---|---|---|
+    | CDF 5/3 | 2000 | 64-66 (69 at 690 MHz) | |
+    | CDF 5/3 | 1500 | 69 | |
+    | CDF 5/3 | 1000 | 76-78 | |
+    | Haar | 2000 | 70-74 | 7.7 ms |
+    | Haar | 1500 | 78.5-81 | 6.8-7.3 ms |
+
+    Decode cost follows bytes per frame (bitrate / fps; 2000 Mbps at 90 Hz is 2.78 MB). With the
+    GPU otherwise idle (`decoder_ab wavelets 6144 3216 <bytes>`, 690 MHz), CDF 5/3 decodes in
+    4.53 / 4.96 / 5.43 / 5.75 ms at 0.6 / 1.39 / 2.08 / 2.78 MB and Haar in 3.56 / 3.83 / 4.01 /
+    4.17 ms. Dequant is 1.28-1.94 ms of that standalone but about 4.4 ms live at 2000 Mbps
+    (iDWT 3.1-3.5 standalone, 4.8 live): sharing the GPU with the 3072 eye draw inflates it
+    about 2.3x.
+  - **Neither content nor the eye draw explains that inflation.**
+    - Fixed foveated rendering (Static Medium, VrApi `Fov=2`) on the eye draw at 690 MHz:
+      CDF 5/3 2000 gave 65.8-66.1 and Haar 1500 gave 79.8-82.8, the same as without it.
+    - Bench sources: `decoder_ab` now takes `AB_SOURCE=<I420 file>`. At equal clocks, a stock
+      photo and a text-heavy dashboard image cost 15-25 % more dequant than the synthetic source,
+      at both 1.39 and 2.78 MB per frame. On the dashboard image, Haar and CDF 5/3 are within
+      1 dB in luma PSNR: 43.0 against 42.3 dB at 1.39 MB, and 52.5 against 53.3 dB at 2.78 MB. On the photo,
+      CDF 5/3 is 1.5-2.7 dB better.
+    - VrApi reports about 7 GPU preemptions per vsync in every configuration, at 90 Hz and at
+      120 Hz.
+  - **`.111`: Godlike runs at 80 Hz; Skip invisible detail.**
+    - Full size holds 80 Hz with Haar at 1500 Mbps in the heavy scene: 79.6-80.1 of 80 (`.108`)
+      and 78.5-80.0 of 80 (`.111`). CDF 5/3 at 1500 gave 74-78 of 80. The **Godlike** profile is
+      now 80 Hz, Haar, 1500 Mbps (renamed "Quest 3 Godlike 80 Hz").
+    - **Skip invisible detail** (`video.pyrowave.skip_invisible_detail`, on by default) adds a
+      quality ceiling to the encoder's rate control: every discard in a rate-control bucket
+      below 56 is applied even when the frame fits its budget. Buckets are about 1.5 dB apart
+      in weighted distortion per byte. The new `patches/pyrowave-quality-floor.patch` adds
+      `pyrowave_encoder_set_quality_floor()` plus the shader; `PYROWAVE_RDO_FLOOR=<bucket>`
+      overrides it for experiments. The bitstream is unchanged, so the client is unaffected.
+    - Calibration, `decoder_ab wavelets 6144 3216 2777778` with `AB_SOURCE`:
+
+      | Floor | Photo bytes (dB, Haar / CDF) | Dashboard bytes (dB) |
+      |---|---|---|
+      | off | 2.78 MB (59.5 / 62.2) | 2.78 MB (52.5 / 53.3) |
+      | 54 | 1.61 / 1.21 MB (56.0 / 56.6) | 2.78 MB (unchanged) |
+      | 56 | 0.83 / 0.66 MB (54.6 / 55.1) | 2.52 / 2.39 MB (51.6) |
+      | 58 | 0.62 / 0.54 MB (53.4 / 54.0) | 2.01 MB (48.8) |
+      | 62 | 0.48 / 0.46 MB (51.6 / 52.4) | 1.39-1.46 MB (43.0 / 42.8) |
+
+      The synthetic source was unchanged at 56. CDF decode of the photo fell from 5.76 to 4.11 ms.
+    - Live, in the heavy scene at 2.34 MB per frame, frames still fill the budget with the
+      floor at 56 (confirmed in `openvr_config`). That content needs more than the ceiling
+      allows, so the setting helps only easier content there.
+  - **Decode priority at full size (`.112`-`.115`).** At 90 Hz (Haar 1500, heavy scene, ABBA)
+    default priority beat LOW: 84.6 / 83.4 against 79.9 / 79.3 fresh, fence 6.7-7.1 against
+    10.7-11.0 ms. `.112` therefore chose default at ≤90 Hz. At 80 Hz (the Godlike profile) LOW won:
+    79.2 / 79.3 / 80.2 / 78.9 with no stale frames, against 78.6 / 78.0 / 78.3 with 0-10 stale a
+    second, and total latency was no lower. `.115` restores the original rule (LOW for 4:2:0 at
+    ≤120 Hz) ([DECODE-PRIORITY.md](DECODE-PRIORITY.md)).
+    - In those 90 Hz blocks all 90 frames a second arrive and decode. The 6 lost a second are
+      superseded: arrival gaps p10/p90 7.6-8.6 / 13.6-14.3 ms against an 11.1 ms period put two
+      frames in one display period. Frame ids (pose timestamps) jump by about ±3.7 ms because
+      the client polls tracking 3 times a frame and the server renders from the newest sample.
+  - **120 Hz keeps LOW (Quality 120, CDF 5/3, 110 %, 1500 Mbps, `.113`).** LOW: 118.6 / 116.1 /
+    117.2 fresh, fence 7.0-7.8 ms, VrApi stale 0-4 a second. Default: 118.3 / 113.8, fence
+    4.9-5.0 ms, but stale 11-17 a second (judder). ALVR's decoder stage fell from 8-10 to 6 ms
+    while its vsync queue rose from 15.3 to 17-21 ms.
+    - **`.113` opt-in `debug.q3pw.gl_priority=high|low`:** the client's own GL work (eye copy,
+      staging) runs in a second EGL context, shared with wgpu's and created at that
+      `EGL_IMG_context_priority` level. The driver grants HIGH (`[Q3PW_GL_PRIORITY]
+      requested=0x3101 granted=0x3101`). With default decode priority it gave 116.5 fresh and
+      stale 7-12 a second in the one valid block (the other came up pinned at 72 Hz). That is
+      not enough to drop LOW at 120 Hz; it stays opt-in.
+  - **`.114` opt-in `debug.q3pw.input_polls_per_frame=1..16`** (default 3, as upstream): the
+    client's tracking poll rate. Each sample is predicted for `now + offset`, so the server's
+    newest sample is up to one poll interval stale (3.7 ms at 90 Hz). Godlike 80, ABBA: 8 polls
+    did apply (frame id gaps fall on multiples of 1.56 ms instead of 4.17 ms), but their spread
+    grew to ±6 ms (6.25-18.75 ms against 8.25-16.75 ms). The jitter is the game's pose-fetch
+    time or tracking delivery moving by several ms, which 3 polls only rounded. Fresh FPS 75.6 /
+    74.3 against 78.1 / 76.4, one 8-poll block with 7-12 stale a second: no gain shown, default
+    stays 3. Release logcat drops info-level Rust lines, so `[Q3PW_INPUT_RATE]` is not visible.
+  - **`.117`: the direct eye copy is the default (`debug.q3pw.direct_eye_copy=0` restores
+    staging).** Play sessions never set the property, so every play test until now (and the
+    `.111`-`.115` blocks above) ran ALVR's staging renderer. Staging copies the decoded buffer
+    into staging textures, waits with glFinish, then draws them again with wgpu. The `.116` trace
+    markers (J/I around the swapchain acquire) put 3.2-3.4 ms p50 of the render loop in that
+    draw at 120 Hz. The acquire itself takes 0.01 ms. Staging also ignores headset sharpening;
+    the owner's sharpening runs on the PC, so the image doesn't change.
+    - Godlike 90 (Haar, 3072x3216 full size, 1500 Mbps, LOW priority), `.116`, same session:
+      direct 88.8 / 89.4 fresh of 90.1 against staging 79.7 (79.3-79.9 earlier tonight). ALVR
+      latency estimate 50.6-52.1 against 63.4 ms. VrApi stale 0-1 a second in both.
+    - Quality 120 (CDF 5/3, 110 %, 1500 Mbps): direct 117.3 against staging 118.7 / 119.3, with
+      decode GPU 3.2 against 6.3-7.0 ms, app GPU 4.0 against 5.3-5.6 ms, GPU load 0.61 against
+      0.83-0.88 and latency estimate 39.8 against 46-50 ms. VrApi stale 2-4 against 0-1 a
+      second. The first direct block caught only 4 s of trace at stream start (73 fresh) and is
+      discarded.
+    - `.117` with no properties set: Godlike 90 88.9 fresh of 90.1, so the default takes the
+      direct path.
+    - **Full size at 120 Hz on direct (Haar, 3072x3216, 2000 Mbps, `.117`):** LOW 102.2 fresh
+      (17.5 frames a second replaced before decode). Default decode priority 111.1 / 111.8 /
+      112.6 / 114.1, but the render loop sees only 115-116 of 120 display periods and VrApi
+      stale runs 1-22 a second: the synchronous glFinish after the eye draw waits 7.4-7.7 ms
+      behind decode. Staging reached 66-82 here on October 8.
+    - **Async eye copy at full size 120 Hz (`debug.q3pw.async_eye_copy=1`, default priority) is
+      rejected again:** 91.5 / 83.9 against 112.6 / 114.1 synchronous. Stale is 0, but the copy
+      completes 8.4-10.8 ms later behind decode and frames are deferred meanwhile.
+    - **A high-priority GL context does not shorten that wait** (`debug.q3pw.gl_priority=high`,
+      default decode priority, ABBA): 111.2 / 111.0 against 112.7 / 111.5, eye draw to
+      glFinish still 4.9-7.5 ms p50, stale 4-18 a second in both.
+    - **`debug.q3pw.release_fd=1` (flush and a fence handed to the decoder instead of glFinish)
+      at full size 120 Hz, ABBA:** fresh 112.7 / 112.2 against 112.4 / 112.0. The render loop
+      now sees 119.8-120.1 display periods instead of 116.4-116.7, and stale was 0-5 a second
+      in one block (4-14 without), 0-22 in the other. Same fresh FPS; it stays opt-in, but it
+      is the candidate for full size at 120 Hz once a worn test can judge smoothness.
+    - Full size at 120 Hz is now GPU-bound: GPU level 7 (690 MHz), GPU load 0.94, decode 4.8 ms
+      GPU and 7.3 ms to its fence. 1500 Mbps instead of 2000 gives the same 112.9 fresh
+      (decode 4.6 ms). Only less GPU work per frame moves it (decode cost, or the
+      eye copy, see [LIVE-SURFACE-VIDEO.md](LIVE-SURFACE-VIDEO.md)).
+    - Where the GPU time goes at full size 120 Hz (`.117`, 1000 Mbps, default priority):
+      decode stages iDWT 2.4-2.9 ms and Dequant 1.5-2.1 ms per frame; the eye copy's GL timer
+      (`debug.q3pw.eye_gpu_probe=1`) reads 2.5-2.7 ms p50, which includes time the GPU spends
+      on decode alongside it.
+    - **A smaller eye swapchain does not help full size at 120 Hz** (`debug.q3pw.eye_percent=67`,
+      ABBA): 113.2 / 113.7 fresh against 113.5 / 113.6, eye timer 2.4 against 2.55 ms. ALVR's
+      latency estimate in the same game-stage mode was 49 against 53-56 ms (decoder queue 0.2
+      against 4.2 ms); the other 67 % block was in the low game mode (38 ms) and doesn't count.
+      Not followed up. `.118` filters that path with a tent as wide as the downscale (same four
+      fetches as the old bilinear tap); untested live.
+    - **`.118`: decoder mode 6 (paired chroma) is the default** for Haar and Decoder V2. Full
+      size 120 Hz, ABBAAB on `.117`: 115.0 / 115.3 / 116.4 fresh against 111.4 / 112.0 / 110.4,
+      GPU decode 3.4-4.1 against 4.5-4.6 ms, fewer stale frames. Quality 120: 120.0 / 120.1
+      against 119.0 / 118.5 / 119.6. Same decoded planes. Details:
+      [PRESENT-YCBCR.md](PRESENT-YCBCR.md). Earlier runs that seemed to show this didn't apply
+      mode 6 (the harness set only `debug.q3pw.cdf53v2`), and identical arms still differed by
+      3 FPS, so check the applied mode in the log for every arm.
+    - Decode priority on direct, Quality 120: LOW 120.0 against default 119.3 / 119.9 with
+      fewer stale frames; the LOW rule at 120 Hz and below stays.
+    - **`.118` verified with no properties set (wired, 1000 Mbps, `local118-cea89c8`):**
+      - full size 120 Hz: LOW (the default rule) 115.4 / 117.1 fresh, default priority 118.3 /
+        115.7 / 118.3; `.117` LOW was 102.2. GPU load 0.88 against 0.94, VrApi app GPU 6.0 ms.
+        The LOW/default gap is inside the noise and LOW has fewer stale frames, so the rule stays;
+      - Godlike 90 full size: 89.5 / 90.1 of 90.1, stale 0-2 a second;
+      - Quality 120: 115.1 / 119.7. In the first block every frame decoded, but 5 a second were
+        superseded before display.
+    - **`.119` (`local119-32861bd`): automatic decode priority picks LOW only up to 2.0 G decoded
+      pixels a second**, so full size at 120 Hz (2.37 G) now gets default priority; Godlike 90,
+      full size at 80 Hz and Quality 120 keep LOW (unit-tested, not re-run live). ABBABA at full
+      size 120 Hz, GPU level 7 in every block: automatic 118.6 / 114.4 / 116.0 against forced LOW
+      117.4 / 115.5 / 117.7. That's noise, and LOW no longer replaced frames before decode (R 0-0.3
+      a second), so the change is kept only for the `.118` evidence. See
+      [DECODE-PRIORITY.md](DECODE-PRIORITY.md).
+    - **Check the GPU level per block.** VrApi's `CPU4/GPU=4/N,.../MHz` changed between blocks
+      on October 9: the mode 6 ABBAs ran at level 4 (640 MHz) throughout, but the `.118`
+      `release_fd` set mixed level 7 and level 4, and a Quality 120 set mixed 690, 640 and 545
+      MHz. Those comparisons are confounded. The private harness now prints the level per block.
+    - `release_fd` re-run on `.119` at full size 120 Hz, level 7 in all six blocks: on 118.0 /
+      115.2 / 118.9 fresh against off 116.3 / 117.5 / 116.8, a tie (the `.118` "loss" was the
+      clock). With it every display period is served (120.2 against 117.5-119.7 a second), and the
+      client compositor's 4.9 ms moves into the vsync queue (0.6 and 18-20 against 15.5 ms), so
+      ALVR's total is unchanged. Neutral; stays opt-in.
+  - **The maximum GPU clock was not applied in these runs.** `quest3_max_gpu_clock=true`, but
+    `debug.oculus.gpuLevel` read empty and VrApi showed level 4 (640 MHz). After the helper's
+    `GPU_LEVEL_REVERTS` (2) reapplications it stops until the server restarts. Setting the
+    property by hand held through every harness client restart. **Fixed in `.121`:** the
+    runtime applies the level live (cleared: level 4 within 3 s; 7: 690 MHz within 6 s), so the
+    helper now rewrites a cleared level without a wake or client restart, and counts reverts only
+    when a display change restarts the client.
+    - Eye pass at full size: chroma reads cost about 1.3 ms of its 2.7 ms (probes 3-5, `.120`),
+      not write compression; removing them didn't raise fresh FPS at full size 120 Hz. See
+      [PRESENT-YCBCR.md](PRESENT-YCBCR.md#eye-pass-cost-at-full-size-october-9-119-120).
+    - **`.122` (`local122-c09bca8`): LOW decode priority for 4:4:4 too.** Quality 120 4:4:4
+      (CDF 5/3, 1500 Mbps) at default priority gave 109-116 fresh FPS against 4:2:0's 119-120,
+      all of it frames superseded after decode. Forced LOW: 118.6 / 119.6 / 119.9 against 115.7 /
+      113.6 / 116.2 interleaved; on `.122` automatic 119.6 / 118.1 against forced default 110.9 /
+      108.8. Latency within noise. See
+      [DECODE-PRIORITY.md](DECODE-PRIORITY.md#444-at-quality-120-october-9-121-122).
+    - **`.123` (`local123-0f3c4d8`): 4:4:4 gets LOW only up to 1.5 G pixels a second.** On `.122`
+      full-size 4:4:4 at 90 Hz fell under LOW and lost (75.5 against 83.5 fresh at default).
+      Full-size 4:4:4 decode (CDF 5/3) takes 8.2-8.9 ms: 83.5 fresh at 90 Hz and 77.5 at 120 Hz at
+      best. Godlike with 4:4:4 needs about 80 Hz or a faster 4:4:4 decode.
+    - **`.124` (`local124-e3f8d31`): Haar 4:4:4 gets the packed present path** (haar32 mode 7,
+      `patches/pyrowave-haar444.patch`). Standalone full size 4.58 ms against 13-18 ms before (CDF
+      mode 7: 6.45). Live full size 1500 Mbps: 86-88 fresh at 90 Hz, 90-92 at 120 Hz (4:2:0 on the
+      same build 88-90 / 114-118). At 120 Hz the GPU is full (99 %); LOW priority still loses at
+      90 Hz. See [HAAR32.md](HAAR32.md#mode-7-444-in-the-present-buffer-124-october-9).
+    - **`.125`-`.126` (`local126-32260a4`): Haar 4:4:4 mode 8** (chroma pairs, one eye-pass fetch
+      for Cb and Cr) is the 4:4:4 default; `debug.q3pw.haar32` accepts `7` and `8` from `.126`
+      (before, the `m7` harness arm silently ran the default). Full size 120 Hz, interleaved and
+      verified per block: 91.0 against 90.6 fresh for mode 7, within noise; app time 0.15 ms
+      lower. The limit is memory traffic plus the 7 ms live decode, not fetch count. See
+      [HAAR32.md](HAAR32.md#mode-8-444-chroma-pairs-125-october-9).
+    - **`.127` (`local127-e9c06f5`): `[Q3PW_BLOCK_STATS]` with `debug.q3pw.decode_stages=1`**
+      (`patches/pyrowave-block-stats.patch`). At full size 4:2:0, 1500 Mbps, 120 Hz no 32x32 block
+      arrives empty; 45 % of the finest luma 8x8 sub-blocks are coded. Skipping empty blocks is
+      dropped. See [DECODE-STAGE-PROBE.md](DECODE-STAGE-PROBE.md#block-occupancy-127-october-9).
+    - **`.128` (`local128-5323ce6`): `debug.q3pw.dump_frames=N`** writes the next N (at most 16)
+      complete codec frames to the app's external files directory. With
+      `tools/entropy/pw2qcf.py`, the QR coder saves 15-17% on the real encoder's blocks, worth
+      +2.0 dB at 120/1500. See [ENTROPY.md](ENTROPY.md#the-real-encoders-blocks-october-9).
+    - **`.129` (`local129-87633bd`): encoder CSF scaled by stream rows / 2208**
+      (`patches/pyrowave-csf-panel.patch`, server side). At full size this is +0.5 dB
+      PSNR-HVS-M at panel resolution, and it is neutral at 125 %. Live full size 120 Hz: 116-118
+      fresh, unchanged. See
+      [ENCODER-CSF.md](ENCODER-CSF.md#4-supersampled-streams-scale-by-panel-rows-129-october-9).
+    - **`.130` (`local130-15a432f`): coarse-level weight 6x / (rows / 2208) for streams at least
+      1.4x the panel's rows** (4.1x at full size; server side, same patch). It matches upstream's
+      blocking at full size and scores +0.54 dB PSNR-HVS-M at 1500, +0.66 at 1000. 125 % keeps 6x.
+      Live full size 120 Hz: 116.1, 117.2, 114.4 fresh. See
+      [ENCODER-CSF.md](ENCODER-CSF.md#5-coarse-level-weight-for-supersampled-streams-130-october-9).
+  - **Client phase lock and latency (`debug.q3pw.phase_lock=1`, native, 120 Hz, 1500 Mbps).**
+    Two alternating rounds, medians of ALVR's estimate:
+    - Fresh FPS: 118.9-119.9 with the lock, against 118.4-119.2 without it.
+    - Decoder queue: 1.8 ms with the lock, against 1.6-2.6 ms without it.
+    - Total after the game stage: 35.5-38.6 ms with the lock, against 36.8-42.6 ms without it.
+    - The vsync queue is 14.5-14.8 ms in every block.
+    - The spread comes from the decoder stage (6-12 ms), not the lock. The lock stays opt-in.
+    Details are in [LATENCY.md](LATENCY.md#client-phase-lock-at-120-hz-october-8-109).
+  - **Harness traps:**
+    - A force-stopped client often comes back pinned at 72 Hz.
+    - Set `debug.oculus.refreshRate=120` while awake, before `am start`. That made 4 of 4 starts
+      clean.
+    - Re-assert proximity every 5 s while measuring, or the unworn headset sleeps after about
+      15 s and SteamVR drops to 10 frames a second.
+    - Sleep, clear `debug.oculus.refreshRate`, then wake helps but adds a compositor layer
+      (TW about 1.4 ms).
+    - The running server rewrites `session.json` on shutdown. Edit it only after SteamVR exits.
+- **October 8, night, `.106`: wired 120 Hz quality is the first choice in the dashboard.** The owner's
+  direction is maximum quality and lowest latency at a smooth 120 Hz over USB, set from the PC
+  as Virtual Desktop does.
+  - **Streaming profile** now lists **Quality 120 Hz** first (marked recommended for wired),
+    then Wi-Fi Quality and Competitive 207 Hz. The fresh install is still the 400 Mbps / 72 Hz
+    candidate.
+  - **Stream resolution** adds 135 % and 150 % (3096x3312, close to VD's 3072-wide Godlike), labelled "below
+    120 Hz": the headset decodes 125 % within the frame and larger sizes at about 90-105 FPS.
+  - New **Colour** row on Presets: Vivid (Quest gamut, default) or Accurate (Rec. 709).
+  - Dashboard and session tests only. Not run on the headset (the client is unchanged apart
+    from its version).
+- **October 8, night, `.103`-`.105`: colour now matches Virtual Desktop**
+  ([CHROMA.md](CHROMA.md#colour-against-virtual-desktop-october-8-103-105)).
+  - `.103` fixes a bug: the headset squeezed every PyroWave frame into 16-235 (a MediaCodec
+    work-around), lifting blacks and dulling whites and colour.
+  - `.105` adds **Quest colour** (on by default): the stream uses the headset's own gamut, as VD
+    does, instead of Rec. 709. Saturation and white point now match VD's screenshot.
+  - Frame rate unchanged (119 fresh FPS in the same static cell). Not yet seen by the owner.
+- **October 8, afternoon, `.98`-`.99`: sharpening moves to the PC**
+  ([SHARPENING.md](SHARPENING.md#in-the-streamer-98-option-99-setting)).
+  - New setting **Sharpening location**, PC by default: the streamer sharpens luma before
+    encoding, so the Quest does no extra work.
+  - On the headset at 120 Hz / 1500 / 2080 (static): PC k=0.15 looked crisper than headset 50 at
+    the same frame rate.
+  - Two new profiles, **Competitive 207 Hz** and **Quality 120 Hz**, fold in CDF 5/3, the better
+    downsample kernel and PC sharpening. Quality held about 117 FPS on the headset while panning;
+    Competitive has not been run.
+- **October 8, evening: Horizon OS build 209 blocks rates above 120 Hz.** The headset updated itself
+  (`ro.vros.build.version=209`, built October 6). Virtual Desktop's developer reports the update
+  broke high refresh rates. A 207 Hz cell on `.98` had already looped: the client was offered only
+  72/80/90/120 Hz.
+  - `.100` stops that loop after four display-change restarts in 90 s and pauses forcing for
+    5 minutes. `.101` points its message at the OS update instead of Meta Quest Link
+    ([REFRESH-RATES.md](REFRESH-RATES.md#restart-loop-with-meta-quest-link-running-october-8-100)).
+  - The 207 Hz work (Competitive profile, not forcing native rates) waits for a fixed OS, or for a
+    check that forcing over USB still works on build 209. Until then, work at 120 Hz.
+- **Headset client (October 8, late night):** `.108` is installed with its pair
+  `workspace/runtime-local108-play` (3072x3216 stream, 90 Hz, 2000 Mbps, game audio off).
+  `.107` is staged in `workspace/review/local107-27a064f` with `workspace/runtime-local107-play`.
+  Earlier: `.105` (pair `workspace/runtime-local105-e3891a0`) and `.106` (staged in
+  `workspace/review/local106-c39362c`). The owner's `.92`
+  play pair is still staged (`workspace/runtime-local92-play`). Reinstall its APK before playing
+  `.92`, or play the `.99` pair. Virtual Desktop's registration is untouched.
 - **Best short screens** (10-12 s, 207 Hz, 2080x2208, Haar, 1000 Mbit/s, 690 MHz GPU clock):
   194-197 fresh FPS over USB with the direct eye copy, 189-195 over Wi-Fi 6E.
 - **Not established:** sustained gameplay, optical motion-to-photon latency, image quality on par
@@ -48,6 +469,192 @@ The owner permits improving the workflow, test duration and architecture when
 supported by evidence. Preserve correctness, rollback and honest measurements;
 the previous agent's process is not mandatory. A handoff does not automatically
 resume paused hardware work or unattended workers.
+
+## October 7, late night: `.66`-`.74` on `claude/frame-budget`
+
+Builds from branch `claude/frame-budget`, local only:
+
+| Build | Commit | Change |
+| --- | --- | --- |
+| `.66` | `c9c38c5` | Frame budget from the present rate, on by default |
+| `.67` | `cec2857` | `[Q3PW_PRESENT]` counts the compositor presents the driver receives; the scene gains a frame-time cap |
+| `.68` | `864ef69` | Server-predicted head poses; UDP becomes the Wi-Fi default |
+| `.69` | `c01280a` | Stream resolution up to 125 % |
+| `.70` | `71e5ce2` | Four wired video connections by default |
+| `.71`-`.73` | `ae7b380`, `8d0fc77`, `e38216f` | Sharpening: debug property, then setting, then centre-only |
+| `.74` | `0f3c97a` | Decoder V2 mode 7: 4:4:4 packed into the present buffer |
+| `.75` | `a1cc167` | Sharpening uses a linear kernel instead of CAS |
+| `.76` | `11dc2e4`, `43daf79`, `375c3ee` | Encoder stage timing, `[Q3PW_ENCODE_TIMING]` and `[Q3PW_RENDER_GPU]` |
+| `.77` | `e7e6bec`, `937ba46` | GPU priority experiments (`ALVR_PYROWAVE_QUEUE`, D3D11 thread priority) |
+| `.78` | `90788e7` | PyroWave encodes on a high-priority compute queue by default |
+| `.79`-`.82` | `8a91b0d`, `6bc5632`, `f3a77db`, `b7cb64b` | The game's frame rate from SteamVR's frame timing (diagnostics, then detection) |
+| `.83` | `8137a94` | Setting: Stream only the game's frames (off by default) |
+| `.84` | `8b0b764` | Audio diagnostics: the client's `[Q3PW_AUDIO]` statistics; the scene can play silence |
+| `.85` | `df7f838` | The refresh-rate probe waits until the app is shown and re-probes an unreliable result (PLAN 1.6) |
+| `.86` | `036a648` | The probe no longer reads a refreshRate of 72 as a pin (HorizonOS writes it) |
+| `.87` | `cab68b3` | Proximity held through the server's client restart (rejected: not the cause) |
+| `.88` | `fe9e231` | 2.5 s pause in the server's client restart (rejected: 3 of 4 restarts stuck) |
+| `.89` | `6b20675` | The display helper writes only the values that change (fixes the 72 Hz hold) |
+| `.90` | `cab4918` | `.89` without the `.87` hold; 4 of 4 restarts streamed first time |
+| `.91` | `7d332d2` | A restarted client with no activity after 10 s is started once more |
+| `.92` | `4b760b5` | The client restart uses `am start -S -W` (12 of 12 direct starts, against 14 of 16) |
+| `.93` | `3ee2cdc` | The old encoder-side PyroWave UDP path is deleted (PLAN 1.3); no behaviour change |
+| `.94` | `b2d3685` | The panel rate is forced only above 207 Hz (rejected, reverted in `62e4abc`) |
+
+**Frame budget:**
+
+- On its own it is neutral in tests. SteamVR presents at the panel rate even when the game is
+  slower, because it reprojects into a new present every vsync
+  ([BITRATE.md](BITRATE.md#frame-budget-from-the-present-rate-66-67-october-7)).
+- `.83` (October 8) finds the game's new frames in SteamVR's frame timing: entries with a
+  non-zero client frame interval.
+- With the opt-in **Stream only the game's frames**, the driver streams only those frames. At
+  207 Hz / 1000 Mbit/s, a game at 121 fps got 1025 KB per frame instead of 604 KB (1.7x), with
+  the same 120 new frames a second.
+- A game at full rate is unaffected.
+- How it looks and feels in the headset is untested
+  ([BITRATE.md](BITRATE.md#streaming-only-the-games-frames-79-83-october-8)).
+
+**Audio (`.84`):** the harness found no cut-outs at 207/1000 or 120/1500 wired. Audio arrived at
+100 packets/s with gaps of at most 22 ms, and the headset buffer never ran dry while streaming.
+The owner's cut-outs need a real game on `.84`; the server log then shows `[Q3PW_AUDIO]`
+windows ([PLAN.md 1.5](PLAN.md)).
+
+**Wi-Fi tracking:**
+
+- On `.67`, UDP beat TCP for ALVR's stream socket: 2.85% against 4.2% repeated poses at 120 Hz
+  and 1250 Mbps.
+- CS7 didn't help, so EF stays.
+- On `.68`, the PC extrapolates the head pose when no sample arrives before a vsync, and the
+  headset repeats the same extrapolation to reproject. ABBA gave 0.45% repeated poses with it and
+  2.25% without.
+- Wired was unchanged: about 187 fresh FPS at 207 Hz, on or off.
+- The under-2% checkpoint is met in the harness. The owner's worn test for head-movement stutter
+  is still needed.
+- See [TRANSPORT.md](TRANSPORT.md#late-tracking-on-wi-fi-67-68).
+
+**Defaults in `.68`:**
+
+- The stream socket and PyroWave transport are UDP; USB always uses TCP.
+- `headset.extrapolate_late_head_poses` is on; changing it needs a SteamVR restart.
+
+**Harness notes:**
+
+- Session snapshots read every key the plan sets. A new setting therefore has to be added to
+  both runtimes' `session.json` before a cell can set it.
+- The Wi-Fi setup replaces the runtime's client entry with `q3pw-wifi.client`. Restore the wired
+  entry before a USB cell, or the "wired" cell streams over Wi-Fi.
+- October 8: three cells failed with "No stream after relaunch". In each, the panel stayed at
+  72 Hz, the client then confirmed only 72/80 Hz, and the server refused 207.
+  - One case came between arms, after the server's display helper restarted the client
+    ("Failed to find resumed state line").
+  - What fixed it, with the headset awake:
+    1. force-stop the app;
+    2. `setprop debug.oculus.refreshRate ''`, then `207`;
+    3. restore the previous value.
+  - This is PLAN #33, reliable refresh switching.
+  - **Cause** (harness only): the server's GPU-level change wakes the headset and then broadcasts
+    `automation_disable`. That also drops the harness's proximity hold, and the headset on the
+    desk sleeps.
+  - The harness then set `debug.oculus.refreshRate` to the value it already held. HorizonOS
+    ignores a set that doesn't change the value.
+  - **Fix:** `live56.py` now clears the property first whenever the panel is not at the rate.
+    The next cell passed both arms with no relaunch.
+  - For a worn headset the helper's release is correct.
+
+**Supersampled stream (`.69`):**
+
+- Stream resolution gains 110/120/125 %.
+- 125 % (2592x2784) holds 120 Hz wired: 115.5 fresh FPS with a 7.7 ms decode fence.
+- At 1500 Mbps, offline, it keeps 1.3 dB more detail than the panel-size stream.
+- See [RENDER-ENCODE-RESOLUTION.md](RENDER-ENCODE-RESOLUTION.md#supersampled-stream-at-120-hz-68-october-7).
+
+**Sharpening (`.71`-`.73`):**
+
+- The setting is Video > PyroWave > Sharpening (0-100, off by default).
+- It applies CAS to luma in the eye shader, in the centre 60 % of each eye.
+- At 50:
+  - no frame-rate cost at 120 Hz with stream 100 %;
+  - about 5 FPS at 207 Hz;
+  - about 8 FPS at 120 Hz with stream 125 %.
+- Headset screenshots measure about 40 % more detail.
+- See [SHARPENING.md](SHARPENING.md).
+
+**Fast 4:4:4 (`.74`):**
+
+- Full chroma (4:4:4) with CDF 5/3 now uses Decoder V2 mode 7. Luma, Cb and Cr are packed as
+  quads into one buffer, and the eye shader converts them, with no conversion pass.
+- Wired at 120 Hz: 116 fresh FPS at 1500 Mbps and 109-113 at 2000, against 98-106 on the old path.
+  4:2:0 gets 117-119. At 207 Hz/1000: 132 against 103.
+- Screenshot colour matches the old path.
+- See [DECODER-V2.md](DECODER-V2.md#mode-7-444-packed-into-the-hardware-buffer-74-october-7).
+
+**Clarity budget (PLAN 2.2, [CLARITY-BUDGET.md](CLARITY-BUDGET.md)):**
+
+- Offline, scored at the panel's 25 px/deg. At 120 Hz the largest loss is the compositor's bilinear
+  display resampling: 2.6 dB at 2080, against 0.7 dB for quantization at 1500 Mbps.
+- At 207 Hz / 1000, quantization dominates (3.1 dB). FP16 costs nothing.
+- Sharpening 50 recovers 1.2 of the 2.2 dB that is recoverable at 120 Hz / 2080. A bigger eye
+  swapchain recovers almost nothing.
+- So, at 120 Hz / 100 %, Sharpening 50 is the measured choice, pending the owner's look.
+- `.75` changes the kernel from CAS to linear: +1.69 instead of +1.23 dB offline at 120 Hz / 2080,
+  fewer overshooting pixels, and about 10 FPS cheaper than CAS at 207 Hz
+  ([SHARPENING.md](SHARPENING.md)).
+
+**Latency, server side (`.76`-`.78`, [LATENCY.md](LATENCY.md)):**
+
+- ALVR's "encoder" stage (3.0-3.6 ms at 120 Hz / 1500, 5.7-6.5 ms under a game-like GPU load) is
+  mostly waiting for the game's frame to finish on the GPU. PyroWave's own encode is about 0.3 ms.
+- `.78` encodes on a compute queue at high global priority: the encode's GPU wait falls from
+  0.63-0.72 to 0.37-0.39 ms (ABBA) and the stage to 2.0-2.8 ms. `ALVR_PYROWAVE_QUEUE=graphics`
+  restores the old queue.
+- Probes show the streamer's GPU work runs beside a game's, not behind it, so moving the frame
+  render from D3D11 to Vulkan would not help. D3D11 GPU thread priority changed nothing.
+- On `.78` the estimate is 39.8 ms. The large stages are the vsync queue (13.7 ms, the runtime's
+  lead), network (5.7) and decoder (5.4).
+
+**Next:**
+
+1. Owner tests:
+   - 4:4:4 (Full chroma), CDF 5/3, 120 Hz at 1500 and 2000 Mbps, on `.74`.
+   - `.68`+ over Wi-Fi with head movement.
+   - 120 Hz, 1500 Mbps, stream 125 % with game render 150 %, against stream 100 %.
+   - At 120 Hz, stream 100 %: Sharpening 50 against 0. Check whether the edge of the centre region
+     shows.
+2. Owner test of `.83` **Stream only the game's frames**:
+   - 207 Hz, 1000 Mbps, a real game that runs below 207 fps;
+   - on against off;
+   - look for sharper frames, and for judder or rougher head rotation.
+   - If clean, make it the default (PLAN 2.1).
+   - Play on `.84` or later, so a cut-out shows in the server log as `[Q3PW_AUDIO]` windows
+     with `silent_batches` above 0 (PLAN 1.5).
+   - Run `python -m tools.quest3.play_log record <dir outside the repo>` during play, then
+     `report <dir>` for a per-minute table of fresh FPS, poses, latency, drops and audio
+     (PLAN 1.7).
+3. (Done in `.70`: four wired connections by default. Network p99 is 2.6 ms shorter and the
+   frame rate is unchanged. See
+   [BITRATE.md](BITRATE.md#four-wired-connections-69-default-from-70-october-7).)
+4. Entropy coding (PLAN 2.4, [ENTROPY.md](ENTROPY.md)):
+   - A context coder would save about 25% of the bits, worth +2.0–3.5 dB.
+   - A cheap static per-group code saves only 8–10%.
+   - Prototyped October 8 (`tools/entropy/`):
+     - A per-block rANS coder codes a 120 Hz / 1500 frame 20.5% smaller.
+     - The Quest decodes it, exact, in 2.65 ms. That misses the 2 ms target, but it would fit at
+       120 Hz.
+     - Parked until the owner's 120 Hz tests. See
+       [ENTROPY.md](ENTROPY.md#a-real-coder-and-its-decode-on-the-quest-october-8) for what
+       building it needs.
+5. Engineering next, as of October 8 (`.93`):
+   - **The forced 207 Hz churn** (PLAN 1.6): the fix to try and how to measure it are in PLAN.md.
+     `.94` (stop forcing native rates) was rejected: a 72 left by the shell pinned the panel and
+     refused one stream. Keep the forced rate on at 207 Hz; its 10-15 s of restarts also
+     recover from that 72 ([REFRESH-RATES.md](REFRESH-RATES.md)).
+   - **4:4:4 decode at 120 Hz / 2000** (PLAN 2.5): the decoder takes 8.0-8.1 ms of the 8.3 ms
+     period. The iDWT is about 3 ms at any bitrate, and dequant grows with bitrate (2.1-2.3 ms at
+     2000, 1.5-1.6 at 1500). See
+     [FRESHNESS.md](FRESHNESS.md#where-120-hz--2000--444-loses-frames-92-october-8).
+   - **Latency** (PLAN 3): ALVR's estimate is 42-61 ms in the test scene. Read the game-stage
+     bimodality in [LATENCY.md](LATENCY.md) before comparing runs.
 
 ## October 7, night: `.65`, transport measured and Wi-Fi UDP video
 

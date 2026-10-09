@@ -66,6 +66,14 @@ git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-fused-dequant-haa
 git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-haar32.patch"
 # Optional Decoder V2 register-only inverse CDF 5/3 (debug.q3pw.cdf53v2), with its embedded shaders.
 git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-cdf53v2.patch"
+# Encoder rate-control quality ceiling (Skip invisible detail), with its embedded shader.
+git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-quality-floor.patch"
+# Haar decoder modes 7-8: 4:4:4 packed into one present buffer (debug.q3pw.haar32), with its embedded shaders.
+git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-haar444.patch"
+# Decoder block occupancy counters (pyrowave_decoder_get_block_stats, logged with debug.q3pw.decode_stages).
+git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-block-stats.patch"
+# Encoder CSF frequency scaled by stream rows over the panel's 2208 for supersampled streams.
+git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-csf-panel.patch"
 
 [ "$pyrowave_only" != 1 ] || { echo "pyrowave-only sources ready in $dest/pyrowave (${PYROWAVE_BASE%${PYROWAVE_BASE#???????}})"; exit 0; }
 echo "sources ready in $dest: ALVR ${ALVR_BASE%${ALVR_BASE#???????}}, pyrowave ${PYROWAVE_BASE%${PYROWAVE_BASE#???????}}, Granite ${GRANITE_COMMIT%${GRANITE_COMMIT#???????}}"

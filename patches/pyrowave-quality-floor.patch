@@ -1,0 +1,685 @@
+diff --git a/pyrowave_encoder.cpp b/pyrowave_encoder.cpp
+--- a/pyrowave_encoder.cpp
++++ b/pyrowave_encoder.cpp
+@@ -76,6 +76,7 @@
+ struct Encoder::Impl final : public WaveletBuffers
+ {
+ 	BufferHandle bucket_buffer, meta_buffer, block_stat_buffer, payload_data, quant_buffer;
++	uint32_t quality_floor_bucket = 0;
+ 
+ 	bool encode(CommandBuffer &cmd, const ViewBuffers &views, const BitstreamBuffers &buffers);
+ 	bool encode_pre_transformed(CommandBuffer &cmd, const BitstreamBuffers &buffers, float quant_scale);
+@@ -239,6 +240,11 @@
+ 	return resolution;
+ }
+ 
++void Encoder::set_quality_floor(uint32_t bucket)
++{
++	impl->quality_floor_bucket = bucket;
++}
++
+ void Encoder::Impl::init_block_meta()
+ {
+ 	WaveletBuffers::init_block_meta();
+@@ -386,10 +392,13 @@
+ 	{
+ 		uint32_t target_payload_size;
+ 		uint32_t num_blocks_per_subdivision;
++		uint32_t floor_bucket;
+ 	} push = {};
+ 
+ 	push.target_payload_size = target_payload_size / sizeof(uint32_t);
+ 	push.num_blocks_per_subdivision = compute_block_count_per_subdivision(block_count_32x32);
++	static const uint32_t floor_env = [] { const char *v = getenv("PYROWAVE_RDO_FLOOR"); return v ? uint32_t(atoi(v)) : 0u; }();
++	push.floor_bucket = quality_floor_bucket ? quality_floor_bucket : floor_env;
+ 	cmd.push_constants(&push, 0, sizeof(push));
+ 	cmd.set_storage_buffer(0, 0, *bucket_buffer);
+ 	cmd.set_storage_buffer(0, 1, *quant_buffer);
+diff --git a/pyrowave_encoder.hpp b/pyrowave_encoder.hpp
+--- a/pyrowave_encoder.hpp
++++ b/pyrowave_encoder.hpp
+@@ -36,6 +36,9 @@
+ 
+ 	bool init(Vulkan::Device *device, int width, int height, ChromaSubsampling chroma, bool legall53 = false, bool haar = false);
+ 	bool encode(Vulkan::CommandBuffer &cmd, const ViewBuffers &views, const BitstreamBuffers &buffers);
++	// Rate-control buckets below this one are always applied, even when the frame fits its budget
++	// (0: off). Buckets are 1.5 dB apart in weighted distortion per byte saved.
++	void set_quality_floor(uint32_t bucket);
+ 
+ 	// Debug hackery
+ 	const Vulkan::ImageView &get_wavelet_band(int component, int level);
+diff --git a/pyrowave.h b/pyrowave.h
+--- a/pyrowave.h
++++ b/pyrowave.h
+@@ -529,6 +529,12 @@
+ PYROWAVE_PUBLIC_API pyrowave_result
+ pyrowave_encoder_compute_block_active_words(pyrowave_encoder encoder,
+ 		int bands, uint32_t *words, size_t word_count);
++
++// Quality ceiling for rate control: discard every coefficient refinement whose weighted distortion
++// per byte saved falls in a rate-control bucket below `bucket`, even when the frame fits its byte
++// budget. 0 (default) fills the budget. Buckets are about 1.5 dB apart.
++PYROWAVE_PUBLIC_API pyrowave_result
++pyrowave_encoder_set_quality_floor(pyrowave_encoder encoder, uint32_t bucket);
+ 
+ // Implementation ensures GPU is idle before destroying objects.
+ PYROWAVE_PUBLIC_API void
+diff --git a/pyrowave_c.cpp b/pyrowave_c.cpp
+--- a/pyrowave_c.cpp
++++ b/pyrowave_c.cpp
+@@ -1354,6 +1354,15 @@
+ }
+ 
+ pyrowave_result
++pyrowave_encoder_set_quality_floor(pyrowave_encoder encoder, uint32_t bucket)
++{
++	if (bucket > 128)
++		return PYROWAVE_ERROR_INVALID_ARGUMENT;
++	encoder->encoder.set_quality_floor(bucket);
++	return PYROWAVE_SUCCESS;
++}
++
++pyrowave_result
+ pyrowave_encoder_compute_block_active_words(pyrowave_encoder encoder,
+ 		int bands, uint32_t *words, size_t word_count)
+ {
+diff --git a/pyrowave-shared.def b/pyrowave-shared.def
+--- a/pyrowave-shared.def
++++ b/pyrowave-shared.def
+@@ -37,6 +37,7 @@
+ 	pyrowave_encoder_get_mapped_raw_bitstream
+ 	pyrowave_encoder_get_num_active_blocks
+ 	pyrowave_encoder_compute_block_active_words
++	pyrowave_encoder_set_quality_floor
+ 	pyrowave_encoder_destroy
+ 	pyrowave_decoder_device_prefers_fragment_path
+ 	pyrowave_decoder_create
+diff --git a/shaders/resolve_rate_control.comp b/shaders/resolve_rate_control.comp
+--- a/shaders/resolve_rate_control.comp
++++ b/shaders/resolve_rate_control.comp
+@@ -33,11 +33,15 @@
+ {
+     uint target_payload_size;
+     uint num_blocks_per_subdivision;
++    // Quality ceiling: every operation in a bucket below this one is applied even when the
++    // payload already fits, so easy content stops at a fixed distortion-per-byte slope.
++    uint floor_bucket;
+ } registers;
+ 
+ void main()
+ {
+     int required_savings_per_bucket = int(buckets.consumed_payload) - int(registers.target_payload_size);
++    bool below_floor = gl_WorkGroupID.x / BLOCK_SPACE_SUBDIVISION < registers.floor_bucket;
+     if (gl_WorkGroupID.x != 0)
+     {
+         int prev_bucket_total = buckets.total_savings_per_bucket[gl_WorkGroupID.x - 1];
+@@ -55,7 +59,9 @@
+     }
+ 
+     // If all previous buckets can complete the job, skip.
+-    if (required_savings_per_bucket <= 0)
++    if (below_floor)
++        required_savings_per_bucket = 0x7fffffff;
++    else if (required_savings_per_bucket <= 0)
+         return;
+ 
+     uint total_saved = 0;
+diff --git a/shaders/slangmosh.hpp b/shaders/slangmosh.hpp
+--- a/shaders/slangmosh.hpp
++++ b/shaders/slangmosh.hpp
+@@ -7121,11 +7121,11 @@
+ 	0x0000004eu, 0x00050051u, 0x00000006u, 0x00000052u, 0x0000004fu, 0x00000003u, 0x0003003eu, 0x00000035u,
+ 	0x00000052u, 0x000200f9u, 0x0000003bu, 0x000200f8u, 0x0000003bu, 0x00050084u, 0x00000006u, 0x00000055u,
+ 	0x0000006au, 0x00000022u, 0x000200f9u, 0x00000038u, 0x000200f8u, 0x0000003au, 0x0003003eu, 0x00000015u,
+-	0x0000006bu, 0x000100fdu, 0x00010038u, 0x07230203u, 0x00010300u, 0x000d000bu, 0x000000cau, 0x00000000u,
++	0x0000006bu, 0x000100fdu, 0x00010038u, 0x07230203u, 0x00010300u, 0x000d000bu, 0x000000d9u, 0x00000000u,
+ 	0x00020011u, 0x00000001u, 0x00020011u, 0x0000003du, 0x00020011u, 0x0000003fu, 0x00020011u, 0x00000041u,
+ 	0x0006000bu, 0x00000001u, 0x4c534c47u, 0x6474732eu, 0x3035342eu, 0x00000000u, 0x0003000eu, 0x00000000u,
+-	0x00000001u, 0x0008000fu, 0x00000005u, 0x00000004u, 0x6e69616du, 0x00000000u, 0x0000001fu, 0x00000062u,
+-	0x000000a2u, 0x00060010u, 0x00000004u, 0x00000011u, 0x00000001u, 0x00000001u, 0x00000001u, 0x00040047u,
++	0x00000001u, 0x0008000fu, 0x00000005u, 0x00000004u, 0x6e69616du, 0x00000000u, 0x00000022u, 0x00000071u,
++	0x000000afu, 0x00060010u, 0x00000004u, 0x00000011u, 0x00000001u, 0x00000001u, 0x00000001u, 0x00040047u,
+ 	0x0000000bu, 0x00000006u, 0x00000004u, 0x00050048u, 0x0000000cu, 0x00000000u, 0x00000023u, 0x00000000u,
+ 	0x00050048u, 0x0000000cu, 0x00000001u, 0x00000023u, 0x00000004u, 0x00040047u, 0x0000000du, 0x00000006u,
+ 	0x00000008u, 0x00030047u, 0x0000000eu, 0x00000002u, 0x00040048u, 0x0000000eu, 0x00000000u, 0x00000018u,
+@@ -7134,87 +7134,94 @@
+ 	0x00000002u, 0x00000018u, 0x00050048u, 0x0000000eu, 0x00000002u, 0x00000023u, 0x00002040u, 0x00030047u,
+ 	0x00000010u, 0x00000018u, 0x00040047u, 0x00000010u, 0x00000021u, 0x00000000u, 0x00040047u, 0x00000010u,
+ 	0x00000022u, 0x00000000u, 0x00030047u, 0x00000015u, 0x00000002u, 0x00050048u, 0x00000015u, 0x00000000u,
+-	0x00000023u, 0x00000000u, 0x00050048u, 0x00000015u, 0x00000001u, 0x00000023u, 0x00000004u, 0x00040047u,
+-	0x0000001fu, 0x0000000bu, 0x0000001au, 0x00030047u, 0x00000062u, 0x00000000u, 0x00040047u, 0x00000062u,
+-	0x0000000bu, 0x00000029u, 0x00030047u, 0x00000063u, 0x00000000u, 0x00040047u, 0x00000098u, 0x00000006u,
+-	0x00000004u, 0x00030047u, 0x00000099u, 0x00000002u, 0x00050048u, 0x00000099u, 0x00000000u, 0x00000023u,
+-	0x00000000u, 0x00040047u, 0x0000009bu, 0x00000021u, 0x00000001u, 0x00040047u, 0x0000009bu, 0x00000022u,
+-	0x00000000u, 0x00030047u, 0x000000a2u, 0x00000000u, 0x00040047u, 0x000000a2u, 0x0000000bu, 0x00000024u,
+-	0x00030047u, 0x000000a3u, 0x00000000u, 0x00030047u, 0x000000a4u, 0x00000000u, 0x00040047u, 0x000000abu,
+-	0x00000001u, 0x00000000u, 0x00040047u, 0x000000acu, 0x0000000bu, 0x00000019u, 0x00020013u, 0x00000002u,
+-	0x00030021u, 0x00000003u, 0x00000002u, 0x00040015u, 0x00000006u, 0x00000020u, 0x00000001u, 0x00040015u,
+-	0x00000009u, 0x00000020u, 0x00000000u, 0x0004002bu, 0x00000009u, 0x0000000au, 0x00000800u, 0x0004001cu,
+-	0x0000000bu, 0x00000006u, 0x0000000au, 0x0004001eu, 0x0000000cu, 0x00000006u, 0x00000009u, 0x0003001du,
+-	0x0000000du, 0x0000000cu, 0x0005001eu, 0x0000000eu, 0x00000006u, 0x0000000bu, 0x0000000du, 0x00040020u,
+-	0x0000000fu, 0x0000000cu, 0x0000000eu, 0x0004003bu, 0x0000000fu, 0x00000010u, 0x0000000cu, 0x0004002bu,
+-	0x00000006u, 0x00000011u, 0x00000000u, 0x00040020u, 0x00000012u, 0x0000000cu, 0x00000006u, 0x0004001eu,
+-	0x00000015u, 0x00000009u, 0x00000009u, 0x00040020u, 0x00000016u, 0x00000009u, 0x00000015u, 0x0004003bu,
+-	0x00000016u, 0x00000017u, 0x00000009u, 0x00040020u, 0x00000018u, 0x00000009u, 0x00000009u, 0x00040017u,
+-	0x0000001du, 0x00000009u, 0x00000003u, 0x00040020u, 0x0000001eu, 0x00000001u, 0x0000001du, 0x0004003bu,
+-	0x0000001eu, 0x0000001fu, 0x00000001u, 0x0004002bu, 0x00000009u, 0x00000020u, 0x00000000u, 0x00040020u,
+-	0x00000021u, 0x00000001u, 0x00000009u, 0x00020014u, 0x00000024u, 0x0004002bu, 0x00000006u, 0x00000029u,
+-	0x00000001u, 0x0004002bu, 0x00000009u, 0x0000002cu, 0x00000001u, 0x0004003bu, 0x00000021u, 0x00000062u,
+-	0x00000001u, 0x0004002bu, 0x00000006u, 0x0000006au, 0x00000002u, 0x00040020u, 0x00000074u, 0x0000000cu,
+-	0x0000000cu, 0x0004002bu, 0x00000006u, 0x0000007eu, 0x00000010u, 0x0004002bu, 0x00000009u, 0x00000086u,
+-	0x00000003u, 0x0003001du, 0x00000098u, 0x00000006u, 0x0003001eu, 0x00000099u, 0x00000098u, 0x00040020u,
+-	0x0000009au, 0x0000000cu, 0x00000099u, 0x0004003bu, 0x0000009au, 0x0000009bu, 0x0000000cu, 0x0004003bu,
+-	0x00000021u, 0x000000a2u, 0x00000001u, 0x00040032u, 0x00000009u, 0x000000abu, 0x00000001u, 0x00060033u,
+-	0x0000001du, 0x000000acu, 0x000000abu, 0x0000002cu, 0x0000002cu, 0x00040020u, 0x000000c7u, 0x0000000cu,
+-	0x00000009u, 0x00050036u, 0x00000002u, 0x00000004u, 0x00000000u, 0x00000003u, 0x000200f8u, 0x00000005u,
+-	0x000300f7u, 0x000000adu, 0x00000000u, 0x000300fbu, 0x00000020u, 0x000000aeu, 0x000200f8u, 0x000000aeu,
+-	0x00050041u, 0x00000012u, 0x00000013u, 0x00000010u, 0x00000011u, 0x0004003du, 0x00000006u, 0x00000014u,
+-	0x00000013u, 0x00050041u, 0x00000018u, 0x00000019u, 0x00000017u, 0x00000011u, 0x0004003du, 0x00000009u,
+-	0x0000001au, 0x00000019u, 0x0004007cu, 0x00000006u, 0x0000001bu, 0x0000001au, 0x00050082u, 0x00000006u,
+-	0x0000001cu, 0x00000014u, 0x0000001bu, 0x00050041u, 0x00000021u, 0x00000022u, 0x0000001fu, 0x00000020u,
+-	0x0004003du, 0x00000009u, 0x00000023u, 0x00000022u, 0x000500abu, 0x00000024u, 0x00000025u, 0x00000023u,
+-	0x00000020u, 0x000300f7u, 0x00000027u, 0x00000000u, 0x000400fau, 0x00000025u, 0x00000026u, 0x0000003cu,
+-	0x000200f8u, 0x00000026u, 0x00050082u, 0x00000009u, 0x0000002du, 0x00000023u, 0x0000002cu, 0x00060041u,
+-	0x00000012u, 0x0000002eu, 0x00000010u, 0x00000029u, 0x0000002du, 0x0004003du, 0x00000006u, 0x0000002fu,
+-	0x0000002eu, 0x00060041u, 0x00000012u, 0x00000032u, 0x00000010u, 0x00000029u, 0x00000023u, 0x0004003du,
+-	0x00000006u, 0x00000033u, 0x00000032u, 0x000500aau, 0x00000024u, 0x00000035u, 0x00000033u, 0x0000002fu,
+-	0x000300f7u, 0x00000037u, 0x00000000u, 0x000400fau, 0x00000035u, 0x00000036u, 0x00000037u, 0x000200f8u,
+-	0x00000036u, 0x000200f9u, 0x000000adu, 0x000200f8u, 0x00000037u, 0x00050082u, 0x00000006u, 0x0000003bu,
+-	0x0000001cu, 0x0000002fu, 0x000200f9u, 0x00000027u, 0x000200f8u, 0x0000003cu, 0x00060041u, 0x00000012u,
+-	0x0000003fu, 0x00000010u, 0x00000029u, 0x00000023u, 0x0004003du, 0x00000006u, 0x00000040u, 0x0000003fu,
+-	0x000500aau, 0x00000024u, 0x00000041u, 0x00000040u, 0x00000011u, 0x000300f7u, 0x00000043u, 0x00000000u,
+-	0x000400fau, 0x00000041u, 0x00000042u, 0x00000043u, 0x000200f8u, 0x00000042u, 0x000200f9u, 0x000000adu,
+-	0x000200f8u, 0x00000043u, 0x000200f9u, 0x00000027u, 0x000200f8u, 0x00000027u, 0x000700f5u, 0x00000006u,
+-	0x000000b6u, 0x0000003bu, 0x00000037u, 0x0000001cu, 0x00000043u, 0x000500b3u, 0x00000024u, 0x00000046u,
+-	0x000000b6u, 0x00000011u, 0x000300f7u, 0x00000048u, 0x00000000u, 0x000400fau, 0x00000046u, 0x00000047u,
+-	0x00000048u, 0x000200f8u, 0x00000047u, 0x000200f9u, 0x000000adu, 0x000200f8u, 0x00000048u, 0x000200f9u,
+-	0x0000004du, 0x000200f8u, 0x0000004du, 0x000700f5u, 0x00000009u, 0x000000b8u, 0x00000020u, 0x00000048u,
+-	0x000000a7u, 0x00000050u, 0x000700f5u, 0x00000009u, 0x000000b7u, 0x00000020u, 0x00000048u, 0x000000aau,
+-	0x00000050u, 0x000400f6u, 0x0000004fu, 0x00000050u, 0x00000000u, 0x000200f9u, 0x00000051u, 0x000200f8u,
+-	0x00000051u, 0x00050041u, 0x00000018u, 0x00000053u, 0x00000017u, 0x00000029u, 0x0004003du, 0x00000009u,
+-	0x00000054u, 0x00000053u, 0x000500b0u, 0x00000024u, 0x00000055u, 0x000000b7u, 0x00000054u, 0x000300f7u,
+-	0x00000057u, 0x00000000u, 0x000400fau, 0x00000055u, 0x00000056u, 0x00000057u, 0x000200f8u, 0x00000056u,
+-	0x0004007cu, 0x00000009u, 0x0000005au, 0x000000b6u, 0x000500b0u, 0x00000024u, 0x0000005bu, 0x000000b8u,
+-	0x0000005au, 0x000200f9u, 0x00000057u, 0x000200f8u, 0x00000057u, 0x000700f5u, 0x00000024u, 0x0000005cu,
+-	0x00000055u, 0x00000051u, 0x0000005bu, 0x00000056u, 0x000400fau, 0x0000005cu, 0x0000004eu, 0x0000004fu,
+-	0x000200f8u, 0x0000004eu, 0x0004003du, 0x00000009u, 0x00000063u, 0x00000062u, 0x00050080u, 0x00000009u,
+-	0x00000064u, 0x000000b7u, 0x00000063u, 0x000500b0u, 0x00000024u, 0x00000067u, 0x00000064u, 0x00000054u,
+-	0x000300f7u, 0x00000069u, 0x00000000u, 0x000400fau, 0x00000067u, 0x00000068u, 0x00000069u, 0x000200f8u,
+-	0x00000068u, 0x00050084u, 0x00000009u, 0x0000006fu, 0x00000023u, 0x00000054u, 0x00050080u, 0x00000009u,
+-	0x00000071u, 0x0000006fu, 0x000000b7u, 0x00050080u, 0x00000009u, 0x00000073u, 0x00000071u, 0x00000063u,
+-	0x00060041u, 0x00000074u, 0x00000075u, 0x00000010u, 0x0000006au, 0x00000073u, 0x00050041u, 0x00000012u,
+-	0x000000c5u, 0x00000075u, 0x00000020u, 0x0004003du, 0x00000006u, 0x000000c6u, 0x000000c5u, 0x00050041u,
+-	0x000000c7u, 0x000000c8u, 0x00000075u, 0x0000002cu, 0x0004003du, 0x00000009u, 0x000000c9u, 0x000000c8u,
+-	0x000200f9u, 0x00000069u, 0x000200f8u, 0x00000069u, 0x000700f5u, 0x00000006u, 0x000000c0u, 0x00000011u,
+-	0x0000004eu, 0x000000c6u, 0x00000068u, 0x000700f5u, 0x00000009u, 0x000000bbu, 0x00000020u, 0x0000004eu,
+-	0x000000c9u, 0x00000068u, 0x000600cbu, 0x00000009u, 0x0000007fu, 0x000000bbu, 0x0000007eu, 0x0000007eu,
+-	0x000600cbu, 0x00000009u, 0x00000083u, 0x000000bbu, 0x00000011u, 0x0000007eu, 0x0006015du, 0x00000009u,
+-	0x00000087u, 0x00000086u, 0x00000001u, 0x0000007fu, 0x00050080u, 0x00000009u, 0x0000008cu, 0x000000b8u,
+-	0x00000087u, 0x00050082u, 0x00000009u, 0x0000008eu, 0x0000008cu, 0x0000007fu, 0x0004007cu, 0x00000009u,
+-	0x00000090u, 0x000000b6u, 0x000500b0u, 0x00000024u, 0x00000091u, 0x0000008eu, 0x00000090u, 0x000500abu,
+-	0x00000024u, 0x00000094u, 0x0000007fu, 0x00000020u, 0x000500a7u, 0x00000024u, 0x00000095u, 0x00000091u,
+-	0x00000094u, 0x000300f7u, 0x00000097u, 0x00000000u, 0x000400fau, 0x00000095u, 0x00000096u, 0x00000097u,
+-	0x000200f8u, 0x00000096u, 0x00060041u, 0x00000012u, 0x0000009du, 0x0000009bu, 0x00000011u, 0x00000083u,
+-	0x000700eeu, 0x00000006u, 0x000000a0u, 0x0000009du, 0x0000002cu, 0x00000020u, 0x000000c0u, 0x000200f9u,
+-	0x00000097u, 0x000200f8u, 0x00000097u, 0x0004003du, 0x00000009u, 0x000000a3u, 0x000000a2u, 0x00050082u,
+-	0x00000009u, 0x000000a4u, 0x000000a3u, 0x0000002cu, 0x00060159u, 0x00000009u, 0x000000a5u, 0x00000086u,
+-	0x00000087u, 0x000000a4u, 0x00050080u, 0x00000009u, 0x000000a7u, 0x000000b8u, 0x000000a5u, 0x000200f9u,
+-	0x00000050u, 0x000200f8u, 0x00000050u, 0x00050080u, 0x00000009u, 0x000000aau, 0x000000b7u, 0x000000a3u,
+-	0x000200f9u, 0x0000004du, 0x000200f8u, 0x0000004fu, 0x000200f9u, 0x000000adu, 0x000200f8u, 0x000000adu,
++	0x00000023u, 0x00000000u, 0x00050048u, 0x00000015u, 0x00000001u, 0x00000023u, 0x00000004u, 0x00050048u,
++	0x00000015u, 0x00000002u, 0x00000023u, 0x00000008u, 0x00040047u, 0x00000022u, 0x0000000bu, 0x0000001au,
++	0x00030047u, 0x00000071u, 0x00000000u, 0x00040047u, 0x00000071u, 0x0000000bu, 0x00000029u, 0x00030047u,
++	0x00000072u, 0x00000000u, 0x00040047u, 0x000000a5u, 0x00000006u, 0x00000004u, 0x00030047u, 0x000000a6u,
++	0x00000002u, 0x00050048u, 0x000000a6u, 0x00000000u, 0x00000023u, 0x00000000u, 0x00040047u, 0x000000a8u,
++	0x00000021u, 0x00000001u, 0x00040047u, 0x000000a8u, 0x00000022u, 0x00000000u, 0x00030047u, 0x000000afu,
++	0x00000000u, 0x00040047u, 0x000000afu, 0x0000000bu, 0x00000024u, 0x00030047u, 0x000000b0u, 0x00000000u,
++	0x00030047u, 0x000000b1u, 0x00000000u, 0x00040047u, 0x000000b8u, 0x00000001u, 0x00000000u, 0x00040047u,
++	0x000000b9u, 0x0000000bu, 0x00000019u, 0x00020013u, 0x00000002u, 0x00030021u, 0x00000003u, 0x00000002u,
++	0x00040015u, 0x00000006u, 0x00000020u, 0x00000001u, 0x00040015u, 0x00000009u, 0x00000020u, 0x00000000u,
++	0x0004002bu, 0x00000009u, 0x0000000au, 0x00000800u, 0x0004001cu, 0x0000000bu, 0x00000006u, 0x0000000au,
++	0x0004001eu, 0x0000000cu, 0x00000006u, 0x00000009u, 0x0003001du, 0x0000000du, 0x0000000cu, 0x0005001eu,
++	0x0000000eu, 0x00000006u, 0x0000000bu, 0x0000000du, 0x00040020u, 0x0000000fu, 0x0000000cu, 0x0000000eu,
++	0x0004003bu, 0x0000000fu, 0x00000010u, 0x0000000cu, 0x0004002bu, 0x00000006u, 0x00000011u, 0x00000000u,
++	0x00040020u, 0x00000012u, 0x0000000cu, 0x00000006u, 0x0005001eu, 0x00000015u, 0x00000009u, 0x00000009u,
++	0x00000009u, 0x00040020u, 0x00000016u, 0x00000009u, 0x00000015u, 0x0004003bu, 0x00000016u, 0x00000017u,
++	0x00000009u, 0x00040020u, 0x00000018u, 0x00000009u, 0x00000009u, 0x00020014u, 0x0000001du, 0x00040017u,
++	0x00000020u, 0x00000009u, 0x00000003u, 0x00040020u, 0x00000021u, 0x00000001u, 0x00000020u, 0x0004003bu,
++	0x00000021u, 0x00000022u, 0x00000001u, 0x0004002bu, 0x00000009u, 0x00000023u, 0x00000000u, 0x00040020u,
++	0x00000024u, 0x00000001u, 0x00000009u, 0x0004002bu, 0x00000009u, 0x00000027u, 0x00000010u, 0x0004002bu,
++	0x00000006u, 0x00000029u, 0x00000002u, 0x0004002bu, 0x00000006u, 0x00000033u, 0x00000001u, 0x0004002bu,
++	0x00000009u, 0x00000036u, 0x00000001u, 0x0004002bu, 0x00000006u, 0x00000052u, 0x7fffffffu, 0x0004003bu,
++	0x00000024u, 0x00000071u, 0x00000001u, 0x00040020u, 0x00000082u, 0x0000000cu, 0x0000000cu, 0x0004002bu,
++	0x00000006u, 0x0000008cu, 0x00000010u, 0x0004002bu, 0x00000009u, 0x00000094u, 0x00000003u, 0x0003001du,
++	0x000000a5u, 0x00000006u, 0x0003001eu, 0x000000a6u, 0x000000a5u, 0x00040020u, 0x000000a7u, 0x0000000cu,
++	0x000000a6u, 0x0004003bu, 0x000000a7u, 0x000000a8u, 0x0000000cu, 0x0004003bu, 0x00000024u, 0x000000afu,
++	0x00000001u, 0x00040032u, 0x00000009u, 0x000000b8u, 0x00000001u, 0x00060033u, 0x00000020u, 0x000000b9u,
++	0x000000b8u, 0x00000036u, 0x00000036u, 0x00040020u, 0x000000d5u, 0x0000000cu, 0x00000009u, 0x00050036u,
++	0x00000002u, 0x00000004u, 0x00000000u, 0x00000003u, 0x000200f8u, 0x00000005u, 0x000300f7u, 0x000000bau,
++	0x00000000u, 0x000300fbu, 0x00000023u, 0x000000bbu, 0x000200f8u, 0x000000bbu, 0x00050041u, 0x00000012u,
++	0x00000013u, 0x00000010u, 0x00000011u, 0x0004003du, 0x00000006u, 0x00000014u, 0x00000013u, 0x00050041u,
++	0x00000018u, 0x00000019u, 0x00000017u, 0x00000011u, 0x0004003du, 0x00000009u, 0x0000001au, 0x00000019u,
++	0x0004007cu, 0x00000006u, 0x0000001bu, 0x0000001au, 0x00050082u, 0x00000006u, 0x0000001cu, 0x00000014u,
++	0x0000001bu, 0x00050041u, 0x00000024u, 0x00000025u, 0x00000022u, 0x00000023u, 0x0004003du, 0x00000009u,
++	0x00000026u, 0x00000025u, 0x00050086u, 0x00000009u, 0x00000028u, 0x00000026u, 0x00000027u, 0x00050041u,
++	0x00000018u, 0x0000002au, 0x00000017u, 0x00000029u, 0x0004003du, 0x00000009u, 0x0000002bu, 0x0000002au,
++	0x000500b0u, 0x0000001du, 0x0000002cu, 0x00000028u, 0x0000002bu, 0x000500abu, 0x0000001du, 0x0000002fu,
++	0x00000026u, 0x00000023u, 0x000300f7u, 0x00000031u, 0x00000000u, 0x000400fau, 0x0000002fu, 0x00000030u,
++	0x00000046u, 0x000200f8u, 0x00000030u, 0x00050082u, 0x00000009u, 0x00000037u, 0x00000026u, 0x00000036u,
++	0x00060041u, 0x00000012u, 0x00000038u, 0x00000010u, 0x00000033u, 0x00000037u, 0x0004003du, 0x00000006u,
++	0x00000039u, 0x00000038u, 0x00060041u, 0x00000012u, 0x0000003cu, 0x00000010u, 0x00000033u, 0x00000026u,
++	0x0004003du, 0x00000006u, 0x0000003du, 0x0000003cu, 0x000500aau, 0x0000001du, 0x0000003fu, 0x0000003du,
++	0x00000039u, 0x000300f7u, 0x00000041u, 0x00000000u, 0x000400fau, 0x0000003fu, 0x00000040u, 0x00000041u,
++	0x000200f8u, 0x00000040u, 0x000200f9u, 0x000000bau, 0x000200f8u, 0x00000041u, 0x00050082u, 0x00000006u,
++	0x00000045u, 0x0000001cu, 0x00000039u, 0x000200f9u, 0x00000031u, 0x000200f8u, 0x00000046u, 0x00060041u,
++	0x00000012u, 0x00000049u, 0x00000010u, 0x00000033u, 0x00000026u, 0x0004003du, 0x00000006u, 0x0000004au,
++	0x00000049u, 0x000500aau, 0x0000001du, 0x0000004bu, 0x0000004au, 0x00000011u, 0x000300f7u, 0x0000004du,
++	0x00000000u, 0x000400fau, 0x0000004bu, 0x0000004cu, 0x0000004du, 0x000200f8u, 0x0000004cu, 0x000200f9u,
++	0x000000bau, 0x000200f8u, 0x0000004du, 0x000200f9u, 0x00000031u, 0x000200f8u, 0x00000031u, 0x000700f5u,
++	0x00000006u, 0x000000c3u, 0x00000045u, 0x00000041u, 0x0000001cu, 0x0000004du, 0x000300f7u, 0x00000051u,
++	0x00000000u, 0x000400fau, 0x0000002cu, 0x00000050u, 0x00000053u, 0x000200f8u, 0x00000050u, 0x000200f9u,
++	0x00000051u, 0x000200f8u, 0x00000053u, 0x000500b3u, 0x0000001du, 0x00000055u, 0x000000c3u, 0x00000011u,
++	0x000300f7u, 0x00000057u, 0x00000000u, 0x000400fau, 0x00000055u, 0x00000056u, 0x00000057u, 0x000200f8u,
++	0x00000056u, 0x000200f9u, 0x000000bau, 0x000200f8u, 0x00000057u, 0x000200f9u, 0x00000051u, 0x000200f8u,
++	0x00000051u, 0x000600a9u, 0x00000006u, 0x000000d8u, 0x0000002cu, 0x00000052u, 0x000000c3u, 0x000200f9u,
++	0x0000005cu, 0x000200f8u, 0x0000005cu, 0x000700f5u, 0x00000009u, 0x000000c5u, 0x00000023u, 0x00000051u,
++	0x000000b4u, 0x0000005fu, 0x000700f5u, 0x00000009u, 0x000000c4u, 0x00000023u, 0x00000051u, 0x000000b7u,
++	0x0000005fu, 0x000400f6u, 0x0000005eu, 0x0000005fu, 0x00000000u, 0x000200f9u, 0x00000060u, 0x000200f8u,
++	0x00000060u, 0x00050041u, 0x00000018u, 0x00000062u, 0x00000017u, 0x00000033u, 0x0004003du, 0x00000009u,
++	0x00000063u, 0x00000062u, 0x000500b0u, 0x0000001du, 0x00000064u, 0x000000c4u, 0x00000063u, 0x000300f7u,
++	0x00000066u, 0x00000000u, 0x000400fau, 0x00000064u, 0x00000065u, 0x00000066u, 0x000200f8u, 0x00000065u,
++	0x0004007cu, 0x00000009u, 0x00000069u, 0x000000d8u, 0x000500b0u, 0x0000001du, 0x0000006au, 0x000000c5u,
++	0x00000069u, 0x000200f9u, 0x00000066u, 0x000200f8u, 0x00000066u, 0x000700f5u, 0x0000001du, 0x0000006bu,
++	0x00000064u, 0x00000060u, 0x0000006au, 0x00000065u, 0x000400fau, 0x0000006bu, 0x0000005du, 0x0000005eu,
++	0x000200f8u, 0x0000005du, 0x0004003du, 0x00000009u, 0x00000072u, 0x00000071u, 0x00050080u, 0x00000009u,
++	0x00000073u, 0x000000c4u, 0x00000072u, 0x000500b0u, 0x0000001du, 0x00000076u, 0x00000073u, 0x00000063u,
++	0x000300f7u, 0x00000078u, 0x00000000u, 0x000400fau, 0x00000076u, 0x00000077u, 0x00000078u, 0x000200f8u,
++	0x00000077u, 0x00050084u, 0x00000009u, 0x0000007du, 0x00000026u, 0x00000063u, 0x00050080u, 0x00000009u,
++	0x0000007fu, 0x0000007du, 0x000000c4u, 0x00050080u, 0x00000009u, 0x00000081u, 0x0000007fu, 0x00000072u,
++	0x00060041u, 0x00000082u, 0x00000083u, 0x00000010u, 0x00000029u, 0x00000081u, 0x00050041u, 0x00000012u,
++	0x000000d3u, 0x00000083u, 0x00000023u, 0x0004003du, 0x00000006u, 0x000000d4u, 0x000000d3u, 0x00050041u,
++	0x000000d5u, 0x000000d6u, 0x00000083u, 0x00000036u, 0x0004003du, 0x00000009u, 0x000000d7u, 0x000000d6u,
++	0x000200f9u, 0x00000078u, 0x000200f8u, 0x00000078u, 0x000700f5u, 0x00000006u, 0x000000ceu, 0x00000011u,
++	0x0000005du, 0x000000d4u, 0x00000077u, 0x000700f5u, 0x00000009u, 0x000000c9u, 0x00000023u, 0x0000005du,
++	0x000000d7u, 0x00000077u, 0x000600cbu, 0x00000009u, 0x0000008du, 0x000000c9u, 0x0000008cu, 0x0000008cu,
++	0x000600cbu, 0x00000009u, 0x00000091u, 0x000000c9u, 0x00000011u, 0x0000008cu, 0x0006015du, 0x00000009u,
++	0x00000095u, 0x00000094u, 0x00000001u, 0x0000008du, 0x00050080u, 0x00000009u, 0x00000099u, 0x000000c5u,
++	0x00000095u, 0x00050082u, 0x00000009u, 0x0000009bu, 0x00000099u, 0x0000008du, 0x0004007cu, 0x00000009u,
++	0x0000009du, 0x000000d8u, 0x000500b0u, 0x0000001du, 0x0000009eu, 0x0000009bu, 0x0000009du, 0x000500abu,
++	0x0000001du, 0x000000a1u, 0x0000008du, 0x00000023u, 0x000500a7u, 0x0000001du, 0x000000a2u, 0x0000009eu,
++	0x000000a1u, 0x000300f7u, 0x000000a4u, 0x00000000u, 0x000400fau, 0x000000a2u, 0x000000a3u, 0x000000a4u,
++	0x000200f8u, 0x000000a3u, 0x00060041u, 0x00000012u, 0x000000aau, 0x000000a8u, 0x00000011u, 0x00000091u,
++	0x000700eeu, 0x00000006u, 0x000000adu, 0x000000aau, 0x00000036u, 0x00000023u, 0x000000ceu, 0x000200f9u,
++	0x000000a4u, 0x000200f8u, 0x000000a4u, 0x0004003du, 0x00000009u, 0x000000b0u, 0x000000afu, 0x00050082u,
++	0x00000009u, 0x000000b1u, 0x000000b0u, 0x00000036u, 0x00060159u, 0x00000009u, 0x000000b2u, 0x00000094u,
++	0x00000095u, 0x000000b1u, 0x00050080u, 0x00000009u, 0x000000b4u, 0x000000c5u, 0x000000b2u, 0x000200f9u,
++	0x0000005fu, 0x000200f8u, 0x0000005fu, 0x00050080u, 0x00000009u, 0x000000b7u, 0x000000c4u, 0x000000b0u,
++	0x000200f9u, 0x0000005cu, 0x000200f8u, 0x0000005eu, 0x000200f9u, 0x000000bau, 0x000200f8u, 0x000000bau,
+ 	0x000100fdu, 0x00010038u, 0x07230203u, 0x00010300u, 0x000d000bu, 0x0000086au, 0x00000000u, 0x00020011u,
+ 	0x00000001u, 0x00020011u, 0x00000009u, 0x00020011u, 0x00000016u, 0x00020011u, 0x0000003du, 0x00020011u,
+ 	0x00000041u, 0x00020011u, 0x00000042u, 0x00020011u, 0x00000043u, 0x00020011u, 0x00001151u, 0x00020011u,
+@@ -39793,7 +39800,7 @@
+ 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x00, 0x52, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x00, 0x52, 0x00,
+ 	0x41, 0x00, 0x07, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+ 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+@@ -40313,284 +40320,284 @@
+ 	layout.unserialize(reflection_bank + 5220, 348);
+ 	this->analyze_rate_control_finalize = device.request_program(spirv_bank + 56211, 1440, &layout);
+ 	layout.unserialize(reflection_bank + 5568, 348);
+-	this->resolve_rate_control = device.request_program(spirv_bank + 56571, 3004, &layout);
++	this->resolve_rate_control = device.request_program(spirv_bank + 56571, 3228, &layout);
+ 	layout.unserialize(reflection_bank + 5916, 348);
+-	this->wavelet_quant = device.request_program(spirv_bank + 57322, 13264, &layout);
++	this->wavelet_quant = device.request_program(spirv_bank + 57378, 13264, &layout);
+ 	layout.unserialize(reflection_bank + 6264, 348);
+-	this->wavelet_dequant[0] = device.request_program(spirv_bank + 60638, 14012, &layout);
++	this->wavelet_dequant[0] = device.request_program(spirv_bank + 60694, 14012, &layout);
+ 	layout.unserialize(reflection_bank + 6612, 348);
+-	this->wavelet_dequant[1] = device.request_program(spirv_bank + 64141, 14292, &layout);
++	this->wavelet_dequant[1] = device.request_program(spirv_bank + 64197, 14292, &layout);
+ 	layout.unserialize(reflection_bank + 6960, 348);
+-	this->wavelet_dequant[2] = device.request_program(spirv_bank + 67714, 15192, &layout);
++	this->wavelet_dequant[2] = device.request_program(spirv_bank + 67770, 15192, &layout);
+ 	if (resolver("idwt_haar_fused", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 7308, 348);
+-		this->idwt_haar_fused[0] = device.request_program(spirv_bank + 71512, 7016, &layout);
++		this->idwt_haar_fused[0] = device.request_program(spirv_bank + 71568, 7016, &layout);
+ 	}
+ 	if (resolver("idwt_haar_fused", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 7308, 348);
+-		this->idwt_haar_fused[1] = device.request_program(spirv_bank + 71512, 7016, &layout);
++		this->idwt_haar_fused[1] = device.request_program(spirv_bank + 71568, 7016, &layout);
+ 	}
+ 	if (resolver("idwt_haar_fused", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 7656, 348);
+-		this->idwt_haar_fused[2] = device.request_program(spirv_bank + 73266, 6296, &layout);
++		this->idwt_haar_fused[2] = device.request_program(spirv_bank + 73322, 6296, &layout);
+ 	}
+ 	if (resolver("idwt_haar_fused", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 8004, 348);
+-		this->idwt_haar_fused[0] = device.request_program(spirv_bank + 74840, 6540, &layout);
++		this->idwt_haar_fused[0] = device.request_program(spirv_bank + 74896, 6540, &layout);
+ 	}
+ 	if (resolver("idwt_haar_fused", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 8352, 348);
+-		this->idwt_haar_fused[1] = device.request_program(spirv_bank + 76475, 6572, &layout);
++		this->idwt_haar_fused[1] = device.request_program(spirv_bank + 76531, 6572, &layout);
+ 	}
+ 	if (resolver("idwt_haar_fused", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 7656, 348);
+-		this->idwt_haar_fused[2] = device.request_program(spirv_bank + 73266, 6296, &layout);
++		this->idwt_haar_fused[2] = device.request_program(spirv_bank + 73322, 6296, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 8700, 348);
+-		this->idwt_haar_pairs[0][0] = device.request_program(spirv_bank + 78118, 3836, &layout);
++		this->idwt_haar_pairs[0][0] = device.request_program(spirv_bank + 78174, 3836, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 8700, 348);
+-		this->idwt_haar_pairs[1][0] = device.request_program(spirv_bank + 78118, 3836, &layout);
++		this->idwt_haar_pairs[1][0] = device.request_program(spirv_bank + 78174, 3836, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 9048, 348);
+-		this->idwt_haar_pairs[2][0] = device.request_program(spirv_bank + 79077, 3116, &layout);
++		this->idwt_haar_pairs[2][0] = device.request_program(spirv_bank + 79133, 3116, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 9396, 348);
+-		this->idwt_haar_pairs[0][1] = device.request_program(spirv_bank + 79856, 3836, &layout);
++		this->idwt_haar_pairs[0][1] = device.request_program(spirv_bank + 79912, 3836, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 9396, 348);
+-		this->idwt_haar_pairs[1][1] = device.request_program(spirv_bank + 79856, 3836, &layout);
++		this->idwt_haar_pairs[1][1] = device.request_program(spirv_bank + 79912, 3836, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 9744, 348);
+-		this->idwt_haar_pairs[2][1] = device.request_program(spirv_bank + 80815, 3116, &layout);
++		this->idwt_haar_pairs[2][1] = device.request_program(spirv_bank + 80871, 3116, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 10092, 348);
+-		this->idwt_haar_pairs[0][2] = device.request_program(spirv_bank + 81594, 3836, &layout);
++		this->idwt_haar_pairs[0][2] = device.request_program(spirv_bank + 81650, 3836, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 10092, 348);
+-		this->idwt_haar_pairs[1][2] = device.request_program(spirv_bank + 81594, 3836, &layout);
++		this->idwt_haar_pairs[1][2] = device.request_program(spirv_bank + 81650, 3836, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 10440, 348);
+-		this->idwt_haar_pairs[2][2] = device.request_program(spirv_bank + 82553, 3116, &layout);
++		this->idwt_haar_pairs[2][2] = device.request_program(spirv_bank + 82609, 3116, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 10788, 348);
+-		this->idwt_haar_pairs[0][0] = device.request_program(spirv_bank + 83332, 3280, &layout);
++		this->idwt_haar_pairs[0][0] = device.request_program(spirv_bank + 83388, 3280, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 11136, 348);
+-		this->idwt_haar_pairs[1][0] = device.request_program(spirv_bank + 84152, 3392, &layout);
++		this->idwt_haar_pairs[1][0] = device.request_program(spirv_bank + 84208, 3392, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 9048, 348);
+-		this->idwt_haar_pairs[2][0] = device.request_program(spirv_bank + 79077, 3116, &layout);
++		this->idwt_haar_pairs[2][0] = device.request_program(spirv_bank + 79133, 3116, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 11484, 348);
+-		this->idwt_haar_pairs[0][1] = device.request_program(spirv_bank + 85000, 3280, &layout);
++		this->idwt_haar_pairs[0][1] = device.request_program(spirv_bank + 85056, 3280, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 11832, 348);
+-		this->idwt_haar_pairs[1][1] = device.request_program(spirv_bank + 85820, 3392, &layout);
++		this->idwt_haar_pairs[1][1] = device.request_program(spirv_bank + 85876, 3392, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 9744, 348);
+-		this->idwt_haar_pairs[2][1] = device.request_program(spirv_bank + 80815, 3116, &layout);
++		this->idwt_haar_pairs[2][1] = device.request_program(spirv_bank + 80871, 3116, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 12180, 348);
+-		this->idwt_haar_pairs[0][2] = device.request_program(spirv_bank + 86668, 3280, &layout);
++		this->idwt_haar_pairs[0][2] = device.request_program(spirv_bank + 86724, 3280, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 12528, 348);
+-		this->idwt_haar_pairs[1][2] = device.request_program(spirv_bank + 87488, 3392, &layout);
++		this->idwt_haar_pairs[1][2] = device.request_program(spirv_bank + 87544, 3392, &layout);
+ 	}
+ 	if (resolver("idwt_haar_pairs", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 10440, 348);
+-		this->idwt_haar_pairs[2][2] = device.request_program(spirv_bank + 82553, 3116, &layout);
++		this->idwt_haar_pairs[2][2] = device.request_program(spirv_bank + 82609, 3116, &layout);
+ 	}
+ 	if (resolver("wavelet_dequant_haar0", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 12876, 348);
+-		this->wavelet_dequant_haar0[0] = device.request_program(spirv_bank + 88336, 29164, &layout);
++		this->wavelet_dequant_haar0[0] = device.request_program(spirv_bank + 88392, 29164, &layout);
+ 	}
+ 	if (resolver("wavelet_dequant_haar0", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 13224, 348);
+-		this->wavelet_dequant_haar0[1] = device.request_program(spirv_bank + 95627, 30756, &layout);
++		this->wavelet_dequant_haar0[1] = device.request_program(spirv_bank + 95683, 30756, &layout);
+ 	}
+ 	if (resolver("wavelet_dequant_haar0", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 13572, 348);
+-		this->wavelet_dequant_haar0[2] = device.request_program(spirv_bank + 103316, 33304, &layout);
++		this->wavelet_dequant_haar0[2] = device.request_program(spirv_bank + 103372, 33304, &layout);
+ 	}
+ 	if (resolver("wavelet_dequant_haar0", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 13920, 348);
+-		this->wavelet_dequant_haar0[0] = device.request_program(spirv_bank + 111642, 28544, &layout);
++		this->wavelet_dequant_haar0[0] = device.request_program(spirv_bank + 111698, 28544, &layout);
+ 	}
+ 	if (resolver("wavelet_dequant_haar0", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 14268, 348);
+-		this->wavelet_dequant_haar0[1] = device.request_program(spirv_bank + 118778, 30144, &layout);
++		this->wavelet_dequant_haar0[1] = device.request_program(spirv_bank + 118834, 30144, &layout);
+ 	}
+ 	if (resolver("wavelet_dequant_haar0", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 14616, 348);
+-		this->wavelet_dequant_haar0[2] = device.request_program(spirv_bank + 126314, 32692, &layout);
++		this->wavelet_dequant_haar0[2] = device.request_program(spirv_bank + 126370, 32692, &layout);
+ 	}
+ 	if (resolver("idwt_haar32", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 14964, 348);
+-		this->idwt_haar32[0][0] = device.request_program(spirv_bank + 134487, 28200, &layout);
++		this->idwt_haar32[0][0] = device.request_program(spirv_bank + 134543, 28200, &layout);
+ 	}
+ 	if (resolver("idwt_haar32", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 14964, 348);
+-		this->idwt_haar32[1][0] = device.request_program(spirv_bank + 134487, 28200, &layout);
++		this->idwt_haar32[1][0] = device.request_program(spirv_bank + 134543, 28200, &layout);
+ 	}
+ 	if (resolver("idwt_haar32", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 15312, 348);
+-		this->idwt_haar32[2][0] = device.request_program(spirv_bank + 141537, 26072, &layout);
++		this->idwt_haar32[2][0] = device.request_program(spirv_bank + 141593, 26072, &layout);
+ 	}
+ 	if (resolver("idwt_haar32", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 15660, 348);
+-		this->idwt_haar32[0][1] = device.request_program(spirv_bank + 148055, 48488, &layout);
++		this->idwt_haar32[0][1] = device.request_program(spirv_bank + 148111, 48488, &layout);
+ 	}
+ 	if (resolver("idwt_haar32", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 15660, 348);
+-		this->idwt_haar32[1][1] = device.request_program(spirv_bank + 148055, 48488, &layout);
++		this->idwt_haar32[1][1] = device.request_program(spirv_bank + 148111, 48488, &layout);
+ 	}
+ 	if (resolver("idwt_haar32", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 16008, 348);
+-		this->idwt_haar32[2][1] = device.request_program(spirv_bank + 160177, 47336, &layout);
++		this->idwt_haar32[2][1] = device.request_program(spirv_bank + 160233, 47336, &layout);
+ 	}
+ 	if (resolver("idwt_haar32", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 16356, 348);
+-		this->idwt_haar32[0][0] = device.request_program(spirv_bank + 172011, 26748, &layout);
++		this->idwt_haar32[0][0] = device.request_program(spirv_bank + 172067, 26748, &layout);
+ 	}
+ 	if (resolver("idwt_haar32", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 15312, 348);
+-		this->idwt_haar32[1][0] = device.request_program(spirv_bank + 141537, 26072, &layout);
++		this->idwt_haar32[1][0] = device.request_program(spirv_bank + 141593, 26072, &layout);
+ 	}
+ 	if (resolver("idwt_haar32", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 15312, 348);
+-		this->idwt_haar32[2][0] = device.request_program(spirv_bank + 141537, 26072, &layout);
++		this->idwt_haar32[2][0] = device.request_program(spirv_bank + 141593, 26072, &layout);
+ 	}
+ 	if (resolver("idwt_haar32", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 16704, 348);
+-		this->idwt_haar32[0][1] = device.request_program(spirv_bank + 178698, 48524, &layout);
++		this->idwt_haar32[0][1] = device.request_program(spirv_bank + 178754, 48524, &layout);
+ 	}
+ 	if (resolver("idwt_haar32", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 16008, 348);
+-		this->idwt_haar32[1][1] = device.request_program(spirv_bank + 160177, 47336, &layout);
++		this->idwt_haar32[1][1] = device.request_program(spirv_bank + 160233, 47336, &layout);
+ 	}
+ 	if (resolver("idwt_haar32", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 16008, 348);
+-		this->idwt_haar32[2][1] = device.request_program(spirv_bank + 160177, 47336, &layout);
++		this->idwt_haar32[2][1] = device.request_program(spirv_bank + 160233, 47336, &layout);
+ 	}
+ 	if (resolver("idwt_cdf53v2", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 17052, 348);
+-		this->idwt_cdf53v2[0][0] = device.request_program(spirv_bank + 190829, 42588, &layout);
++		this->idwt_cdf53v2[0][0] = device.request_program(spirv_bank + 190885, 42588, &layout);
+ 	}
+ 	if (resolver("idwt_cdf53v2", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 17052, 348);
+-		this->idwt_cdf53v2[1][0] = device.request_program(spirv_bank + 190829, 42588, &layout);
++		this->idwt_cdf53v2[1][0] = device.request_program(spirv_bank + 190885, 42588, &layout);
+ 	}
+ 	if (resolver("idwt_cdf53v2", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 17400, 348);
+-		this->idwt_cdf53v2[2][0] = device.request_program(spirv_bank + 201476, 42308, &layout);
++		this->idwt_cdf53v2[2][0] = device.request_program(spirv_bank + 201532, 42308, &layout);
+ 	}
+ 	if (resolver("idwt_cdf53v2", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 17748, 348);
+-		this->idwt_cdf53v2[0][1] = device.request_program(spirv_bank + 212053, 82340, &layout);
++		this->idwt_cdf53v2[0][1] = device.request_program(spirv_bank + 212109, 82340, &layout);
+ 	}
+ 	if (resolver("idwt_cdf53v2", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 17748, 348);
+-		this->idwt_cdf53v2[1][1] = device.request_program(spirv_bank + 212053, 82340, &layout);
++		this->idwt_cdf53v2[1][1] = device.request_program(spirv_bank + 212109, 82340, &layout);
+ 	}
+ 	if (resolver("idwt_cdf53v2", "FP16") == 0)
+ 	{
+ 		layout.unserialize(reflection_bank + 18096, 348);
+-		this->idwt_cdf53v2[2][1] = device.request_program(spirv_bank + 232638, 81796, &layout);
++		this->idwt_cdf53v2[2][1] = device.request_program(spirv_bank + 232694, 81796, &layout);
+ 	}
+ 	if (resolver("idwt_cdf53v2", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 18444, 348);
+-		this->idwt_cdf53v2[0][0] = device.request_program(spirv_bank + 253087, 43944, &layout);
++		this->idwt_cdf53v2[0][0] = device.request_program(spirv_bank + 253143, 43944, &layout);
+ 	}
+ 	if (resolver("idwt_cdf53v2", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 18792, 348);
+-		this->idwt_cdf53v2[1][0] = device.request_program(spirv_bank + 264073, 42424, &layout);
++		this->idwt_cdf53v2[1][0] = device.request_program(spirv_bank + 264129, 42424, &layout);
+ 	}
+ 	if (resolver("idwt_cdf53v2", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 17400, 348);
+-		this->idwt_cdf53v2[2][0] = device.request_program(spirv_bank + 201476, 42308, &layout);
++		this->idwt_cdf53v2[2][0] = device.request_program(spirv_bank + 201532, 42308, &layout);
+ 	}
+ 	if (resolver("idwt_cdf53v2", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 19140, 348);
+-		this->idwt_cdf53v2[0][1] = device.request_program(spirv_bank + 274679, 85016, &layout);
++		this->idwt_cdf53v2[0][1] = device.request_program(spirv_bank + 274735, 85016, &layout);
+ 	}
+ 	if (resolver("idwt_cdf53v2", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 19488, 348);
+-		this->idwt_cdf53v2[1][1] = device.request_program(spirv_bank + 295933, 82008, &layout);
++		this->idwt_cdf53v2[1][1] = device.request_program(spirv_bank + 295989, 82008, &layout);
+ 	}
+ 	if (resolver("idwt_cdf53v2", "FP16") == 1)
+ 	{
+ 		layout.unserialize(reflection_bank + 18096, 348);
+-		this->idwt_cdf53v2[2][1] = device.request_program(spirv_bank + 232638, 81796, &layout);
++		this->idwt_cdf53v2[2][1] = device.request_program(spirv_bank + 232694, 81796, &layout);
+ 	}
+ }
+ }
+diff --git a/shaders/quest3-manifest.json b/shaders/quest3-manifest.json
+--- a/shaders/quest3-manifest.json
++++ b/shaders/quest3-manifest.json
+@@ -11,6 +11,7 @@
+   "shaders/dwt.comp": "f58c3f95d68a90f4621fc1999bcf9a95e1a263b80d20355b0ac20002828a90b1",
+   "shaders/dwt_common.h": "591f529143fce7efad00c0f5a5e6d9be0a714fb2d5098ac5e89242c0041ada26",
+   "shaders/dwt_swizzle.h": "0283e54d268f25375866274dd3728384c75d9783cab12787d8914588b80f0f30",
++  "shaders/resolve_rate_control.comp": "9edb945f7851e72247c39a411fa915e516e273043992e051c008477b10204f55",
+   "shaders/slangmosh.json": "99125928af517a473f8757e305e34fd0250c15c15efa5c838e64ea075f33a071",
+-  "shaders/slangmosh.hpp": "0bb8da19bb27460568d19a3b3ba3d702442249237aa1bf2ef9adf02a494a9b26"
++  "shaders/slangmosh.hpp": "dba3cca2c7de9c9fc284843b3f318aff86ee3867a27af58b6a8f6eadcf28b12d"
+ }

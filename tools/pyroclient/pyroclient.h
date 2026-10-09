@@ -98,6 +98,9 @@ uint64_t pyroclient_output_release_token(AHardwareBuffer *buffer);
 int pyroclient_attach_release_fd(AHardwareBuffer *buffer, uint64_t token, int fd);
 
 // Throw away whatever is queued (e.g. a frame whose deadline passed).
+/* The packed-YCbCr layout of the output buffers: 0 for RGBA, else the decoder mode that writes
+ * them (5 and 6 for 4:2:0; 7 for 4:4:4 quads; 8 for 4:4:4 (Cb, Cr) pixel pairs, Haar only). */
+int pyroclient_present_layout(pyroclient *c);
 void pyroclient_clear(pyroclient *c);
 
 // Default-OFF producer pre-record prototype. Explicit single-worker ALVR mode only.

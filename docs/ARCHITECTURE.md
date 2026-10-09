@@ -3,7 +3,7 @@
 ## Current pipeline (October 7, `.64`)
 
 This is the path a PyroWave stream takes. A fresh install starts from a conservative
-400 Mbit/s / 72 Hz preset. The "Quest 3 PyroWave 207 Hz (measured)" profile sets the stream
+400 Mbit/s / 72 Hz Starter profile ([profiles](PROFILES.md)). The "Quest 3 PyroWave 207 Hz (measured)" profile sets the stream
 below and also turns on the maximum GPU clock over USB. Numbers below are from the owner's
 settings: a 3072x3216 per-eye render, streamed at 2080x2208 per eye, 207 Hz, Haar, 1000 Mbit/s,
 4:2:0, no foveation, maximum GPU clock (690 MHz), USB. They come from 10-12 s screens
@@ -44,12 +44,14 @@ settings: a 3072x3216 per-eye render, streamed at 2080x2208 per eye, 207 Hz, Haa
 2. pyroclient (`tools/pyroclient/`) decodes on the Adreno 740 with Vulkan compute. Quest 3 Auto
    selects Compute.
    - Haar uses the multilevel inverse Haar ([HAAR32.md](HAAR32.md)). CDF 5/3 uses Decoder V2
-     ([DECODER-V2.md](DECODER-V2.md)). Both default to mode 5.
+     ([DECODER-V2.md](DECODER-V2.md)). Both default to mode 6 since `.118` (mode 5 before).
    - Haar GPU decode is 2.67 ms p50 (3.50 ms p90) at 690 MHz.
 3. **Mode 5** ([PRESENT-YCBCR.md](PRESENT-YCBCR.md)): the last iDWT level writes packed YCbCr
    straight into the output slot, an RGBA8 AHardwareBuffer of width x height/2 (4160x1104). Luma is
    stored as 2x2 quads in the left half and Cb/Cr as one RG pixel per texel in the right half.
-   There is no separate YCbCr-to-RGBA pass. The client steps down to mode 4 (RGBA8 output through
+   There is no separate YCbCr-to-RGBA pass. Mode 6, the default, keeps this layout but stores two
+   chroma pixels per texel (Cb, Cr of the left pixel in RG, of the right in BA), so the chroma
+   half is half as wide and the decoder stores half as many chroma texels. The client steps down to mode 4 (RGBA8 output through
    a conversion pass) without storage-image support on the AHB, with limited range, or with
    Catmull-Rom chroma.
 4. The decoded slot is published with its GPU fence complete. The output ring has three slots
@@ -61,11 +63,11 @@ settings: a 3072x3216 per-eye render, streamed at 2080x2208 per eye, 207 Hz, Haa
    resubmits the last released eye images.
 6. The GLES eye pass imports the AHB as an EGLImage and converts BT.709 YCbCr to RGB in its
    fragment shader (`present_ycbcr.glsl`).
-   - With `debug.q3pw.direct_eye_copy=1` it draws straight into the two OpenXR eye swapchains.
-     The 207 Hz measurements used this path. On an sRGB swapchain it writes the already
+   - By default since `.117` it draws straight into the two OpenXR eye swapchains (direct eye
+     copy; `debug.q3pw.direct_eye_copy=0` turns it off). The 207 Hz measurements used this path. On an sRGB swapchain it writes the already
      sRGB-coded values with sRGB encoding off (raw sRGB copy, default on in this path,
      `debug.q3pw.raw_srgb_copy=0` to disable): 1.05-1.10 ms GPU p50 per frame.
-   - Without that property the client uses ALVR's staging renderer, which draws into a staging
+   - With `debug.q3pw.direct_eye_copy=0` the client uses ALVR's staging renderer, which draws into a staging
      texture that ALVR's stream renderer then draws into the eyes. The staging path also has the
      YCbCr program. If its program fails to build, packed frames are skipped and the log names the
      workaround (`debug.q3pw.haar32=4`, or `debug.q3pw.cdf53v2=4` with CDF 5/3).

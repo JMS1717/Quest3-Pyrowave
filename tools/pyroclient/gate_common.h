@@ -154,11 +154,29 @@ void barrier(VkCommandBuffer cmd, VkImage image, VkImageLayout from, VkImageLayo
     vkCmdPipelineBarrier(cmd, src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &b);
 }
 
+// AB_CHROMA=444 encodes and decodes 4:4:4 instead of 4:2:0.
+inline bool ab_chroma444() {
+    const char *c = getenv("AB_CHROMA");
+    return c && !strcmp(c, "444");
+}
+
 // Deterministic, asymmetric content: gradients, a hard diagonal edge, fine stripes, colored
 // blocks and hashed noise, so orientation, eye-edge and rounding errors all show up.
+// AB_SOURCE=<file> loads a raw I420 frame of the same size instead (Y, then Cb, then Cr; I444
+// with AB_CHROMA=444).
 void make_source(uint32_t w, uint32_t h, std::vector<uint8_t> &y, std::vector<uint8_t> &cb,
                  std::vector<uint8_t> &cr) {
-    y.resize(size_t(w) * h); cb.resize(size_t(w / 2) * (h / 2)); cr.resize(cb.size());
+    const uint32_t cw = ab_chroma444() ? w : w / 2, ch = ab_chroma444() ? h : h / 2;
+    y.resize(size_t(w) * h); cb.resize(size_t(cw) * ch); cr.resize(cb.size());
+    if (const char *path = getenv("AB_SOURCE")) {
+        FILE *f = fopen(path, "rb");
+        if (!f) { fprintf(stderr, "AB_SOURCE: cannot open %s\n", path); exit(1); }
+        const bool ok = fread(y.data(), 1, y.size(), f) == y.size() && fread(cb.data(), 1, cb.size(), f) == cb.size() &&
+                        fread(cr.data(), 1, cr.size(), f) == cr.size();
+        fclose(f);
+        if (!ok) { fprintf(stderr, "AB_SOURCE: %s is smaller than a %ux%u I420 frame\n", path, w, h); exit(1); }
+        return;
+    }
     auto hash = [](uint32_t x) { x ^= x >> 16; x *= 0x7feb352du; x ^= x >> 15; x *= 0x846ca68bu; x ^= x >> 16; return x; };
     for (uint32_t j = 0; j < h; j++)
         for (uint32_t i = 0; i < w; i++) {
@@ -168,13 +186,15 @@ void make_source(uint32_t w, uint32_t h, std::vector<uint8_t> &y, std::vector<ui
             v += int(hash(j * w + i) % 9) - 4;
             y[size_t(j) * w + i] = uint8_t(v < 0 ? 0 : v > 255 ? 255 : v);
         }
-    for (uint32_t j = 0; j < h / 2; j++)
-        for (uint32_t i = 0; i < w / 2; i++) {
+    for (uint32_t j = 0; j < ch; j++)
+        for (uint32_t i = 0; i < cw; i++) {
             int u = 128 + int(100.0 * std::sin(i * 0.031) * ((j / 16) % 2 ? 1 : -1));
             int v = 128 + int(90.0 * std::cos(j * 0.023 + i * 0.002));
             if ((i / 24 + j / 24) % 5 == 0) { u = 40; v = 220; }
-            cb[size_t(j) * (w / 2) + i] = uint8_t(u < 0 ? 0 : u > 255 ? 255 : u);
-            cr[size_t(j) * (w / 2) + i] = uint8_t(v < 0 ? 0 : v > 255 ? 255 : v);
+            // 4:4:4: per-pixel detail that 4:2:0 could not carry.
+            if (cw == w && ((i ^ j) & 1)) u += 20;
+            cb[size_t(j) * cw + i] = uint8_t(u < 0 ? 0 : u > 255 ? 255 : u);
+            cr[size_t(j) * cw + i] = uint8_t(v < 0 ? 0 : v > 255 ? 255 : v);
         }
 }
 
@@ -194,16 +214,18 @@ std::vector<std::vector<uint8_t>> encode(uint32_t w, uint32_t h, size_t max_byte
     PW_CHECK(pyrowave_create_default_device(&dev));
     pyrowave_encoder_create_info ei = {};
     ei.device = dev; ei.width = int(w); ei.height = int(h);
-    ei.chroma = PYROWAVE_CHROMA_SUBSAMPLING_420; ei.wavelet = wavelet;
+    const bool full = ab_chroma444();
+    ei.chroma = full ? PYROWAVE_CHROMA_SUBSAMPLING_444 : PYROWAVE_CHROMA_SUBSAMPLING_420; ei.wavelet = wavelet;
     pyrowave_encoder enc = nullptr;
     PW_CHECK(pyrowave_encoder_create(&ei, &enc));
     pyrowave_cpu_buffer buf = {};
     buf.data[0] = const_cast<uint8_t *>(y.data());
     buf.data[1] = const_cast<uint8_t *>(cb.data());
     buf.data[2] = const_cast<uint8_t *>(cr.data());
-    buf.row_stride_in_bytes[0] = w; buf.row_stride_in_bytes[1] = buf.row_stride_in_bytes[2] = w / 2;
+    buf.row_stride_in_bytes[0] = w; buf.row_stride_in_bytes[1] = buf.row_stride_in_bytes[2] = full ? w : w / 2;
     buf.plane_size_in_bytes[0] = y.size(); buf.plane_size_in_bytes[1] = cb.size(); buf.plane_size_in_bytes[2] = cr.size();
-    buf.width = int(w); buf.height = int(h); buf.format = PYROWAVE_CPU_BUFFER_FORMAT_YUV420P;
+    buf.width = int(w); buf.height = int(h);
+    buf.format = full ? PYROWAVE_CPU_BUFFER_FORMAT_YUV444P : PYROWAVE_CPU_BUFFER_FORMAT_YUV420P;
     pyrowave_rate_control rc = { max_bytes };
     PW_CHECK(pyrowave_encoder_encode_cpu_synchronous(enc, &buf, &rc));
     const size_t boundary = 8192;

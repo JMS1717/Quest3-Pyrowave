@@ -292,3 +292,81 @@ This adds a PC GPU pass after downsampling, without increasing Quest decode
 resolution. It can accentuate compression or halos and is not recovered detail.
 Keep this setting identical across resolution comparisons; it remains disabled
 in the repository's baseline.
+
+## Supersampled stream at 120 Hz (`.68`, October 7)
+
+Until `.69` the stream stopped at the panel's 2064x2208. On `.55`, a 2560x2720 stream reached only
+89 fresh FPS at 120 Hz ([HIGH-REFRESH.md](HIGH-REFRESH.md#results)). The CDF 5/3 present path
+now decodes about twice as fast, so the larger stream was re-measured.
+
+**Frame rate.** The settings were:
+
+- `.68`, wired, 120 Hz, CDF 5/3, 1500 Mbps.
+- A 3072x3216 render.
+- The headset GPU at its maximum clock.
+
+| Stream per eye | Fresh FPS | GPU decode p50 | Decode fence p50 |
+| --- | --- | --- | --- |
+| 2080x2208 | 117.4, 114.4 | 3.8, 4.2 ms | 5.1, 5.4 ms |
+| 2560x2720 | 116.6, 117.9 | 6.5, 5.5 ms | 7.6, 7.5 ms |
+| 2592x2784 (125 %) | 115.5 | 6.6 ms | 7.7 ms |
+| 3072x3216 | 86.4 | 7.3 ms | 10.9 ms |
+
+The 2080 and 2560 rows were run ABBA. Up to 125 % the stream holds 120 Hz; 150 % doesn't.
+
+**Detail.** The offline study (`tools/downsample/codec_study.py --hz 120 --wavelet 53 --filters
+catmull`) renders at 3072x3216, filters to the stream size and codes at the live byte cap. It
+then scores against the render, using PSNR-HVS-M luma at the render's pixels per degree:
+
+| Stream per eye | Uncoded 4:2:0 | 1000 Mbps | 1500 Mbps | 2000 Mbps |
+| --- | --- | --- | --- | --- |
+| 2080x2208 | 16.28 | 15.36 | 15.92 | 16.12 dB |
+| 2560x2720 | 18.37 | 16.54 | 17.23 | 17.73 dB |
+
+- At the same bitrate the larger stream keeps more detail: about 1.2–1.6 dB.
+- 2560 at 1000 Mbps beats 2080 at 2000 Mbps.
+- Chroma PSNR is within 0.7 dB of 2080, either way.
+- The study scores against the render's pixel density (about 32 px/deg). The panel centre
+  shows less after the lens, so the visible gain is smaller than the table suggests. An
+  in-headset A/B is the test that counts.
+
+**125 % at 2000 Mbps (`.90`, October 8).** Wired, 120 Hz, CDF 5/3, the owner's display setup
+(maximum GPU clock), 3072x3216 render:
+
+| Stream per eye | Chroma | Fresh FPS | GPU decode p50 |
+| --- | --- | --- | --- |
+| 2080x2208 | 4:4:4 | 110.2, 109.3 | about 5.2 ms |
+| 2592x2784 (125 %) | 4:2:0 | 108.0, 108.1 | |
+| 2592x2784 (125 %) | 4:4:4 | 88-90 | 7.8 ms |
+
+- At 2000 Mbps the headset's decoder holds 2080 4:4:4 near 110 FPS: its wall time per frame is
+  about 8 ms of the 8.33 ms period, while USB moves the 2.08 MB frame in about 5 ms
+  ([FRESHNESS.md](FRESHNESS.md#where-120-hz--2000--444-loses-frames-92-october-8)).
+- 125 % 4:2:0 costs about 2 FPS against 2080 4:4:4. Offline it is about 3.0 dB PSNR-HVS-M better
+  than 2080 at 2000 Mbps ([CLARITY-BUDGET.md](CLARITY-BUDGET.md)). Which looks better in the
+  headset (more luma detail or full colour) is the owner's call.
+- 125 % 4:4:4 doesn't fit 120 Hz: the decode alone is 7.8 ms.
+
+**3072x3216 per eye, no downsample (October 8, owner request).** `.99`, wired, 120 Hz,
+1500 Mbps, CDF 5/3, 4:2:0, PC sharpening 30, maximum GPU clock, one 12 s panning cell:
+**94.1 fresh FPS**, 26.5 lost frames a second, GPU decode p50 8.8 ms (fence 9.9 ms), longer
+than the 8.33 ms period. The decoder sets the rate, as it did on older builds (65 FPS then).
+Offline at the same byte cap it also looks worse than 125 %: the same bytes spread over 37 % more
+pixels quantize harder.
+
+| Mbps (120 Hz) | 3072x3216 PSNR-HVS-M | 2592x2784 PSNR-HVS-M |
+|---|---|---|
+| 1000 | 21.51 | 23.72 |
+| 1500 | 23.28 | 25.68 |
+| 2000 | 24.13 | 26.73 |
+
+So 125 % stays the largest useful stream at 120 Hz: streaming the render 1:1 costs both frame
+rate and detail.
+
+At 1000 Mbps (Wi-Fi) the stream sizes compare as follows (same method): 2080 22.09, 110 % 22.94,
+120 % 23.53, 125 % 23.72 dB; at 800 Mbps 120 % is best (22.30 against 22.12 for 125 %). The
+`.102` Wi-Fi Quality profile uses 120 %.
+
+**`.69`** adds 110 %, 120 % and 125 % to **Stream resolution**. They are meant for 120 Hz or
+less, with the game render resolution at least as large (150 % recommended). At 207 Hz the
+decoder already sets the frame rate at 100 %, so a supersampled stream doesn't fit there.

@@ -208,3 +208,49 @@ p90 3.5 ms), not from the server's send rate: making that steady with `ALVR_PACI
 changed nothing ([HIGH-REFRESH.md](HIGH-REFRESH.md)). Neither did removing the render-thread
 wait (release fence) or preempting decode (LOW priority). Displaying every frame would need a
 one-frame queue, about 4.8 ms more latency against the 30 ms goal, so it is not pursued.
+
+**The frame hold at 120 Hz (October 8, `.90`).** The owner's setup (120 Hz, 2000 Mbit/s, 4:4:4,
+CDF 5/3, wired) runs 109-111 fresh FPS; per second about 108 frames are taken, 7.7 superseded and
+17.8 selections find nothing. The decoder, not the link, sets that pace (corrected after a frame
+trace on `.92`, [below](#where-120-hz--2000--444-loses-frames-92-october-8)).
+`debug.q3pw.frame_hold_us=10000`, ABBA, 12 s blocks: 110.8 against 110.7 fresh FPS. Superseded
+frames fell only from 7.7 to 7.1 a second, while ALVR's latency estimate rose by about 5 ms (its
+decoder queue by 0.5-1.3 ms). Rejected. At 1500 Mbit/s the same setup holds about 116.
+
+### Where 120 Hz / 2000 / 4:4:4 loses frames (`.92`, October 8)
+
+`debug.q3pw.frame_trace=1`, the owner's setup (wired, CDF 5/3, 4:4:4, 2080x2208, maximum GPU
+clock), two 12 s blocks per bitrate, p50 (p90) ms:
+
+| | 2000 Mbit/s | 1500 Mbit/s |
+|---|---|---|
+| Fresh FPS | 113.4, 109.4 | 111.4, 113.1 |
+| Frames arrived per second | 120.2, 117.8 | 120.0, 120.0 |
+| Frames decoded per second | 119.1, 114.5 | 119.5, 119.8 |
+| Display periods rendered per second | 117.0, 114.5 | 119.9, 119.4 |
+| First slice to complete frame | 4.6 (5.8), 5.4 (9.3) | 3.4 (4.7), 3.4 (5.6) |
+| Queued to decode start | 2.4 (6.2), 2.5 (6.1) | 0.0 (3.5), 0.0 (3.1) |
+| Decode start to fence | 8.0 (8.5), 8.1 (8.8) | 7.1 (7.9), 6.6 (8.0) |
+| GPU decode | 5.2, 5.7 | 4.9, 4.8 |
+| Arrival to taken by the render loop | 14.1, 14.2 | 9.1, 10.2 |
+
+- **The link keeps up:** frames arrive at 120 a second, and a 2.08 MB frame crosses USB in about
+  5 ms (about 3.5 Gbit/s). The earlier 7-8 ms figure was ALVR's network stage, which includes
+  more than the transfer.
+- **The decoder doesn't:** at 2000 its wall time per frame (8.0-8.1 ms) is the whole period, so
+  frames queue 2.4 ms for it, and 187 of 191 and 219 of 231 empty selections found a frame still
+  decoding. The headset GPU is full: the render loop also misses 3-6 display periods a second.
+- **Decode stages** (`[Q3PW_DECODE_STAGE]`, 4:4:4): the inverse wavelet transform takes 2.8-3.2 ms
+  per frame at either bitrate, and dequantization 2.1-2.3 ms at 2000 against 1.5-1.6 ms at 1500.
+  Dequantization scales with the bytes; the transform over three full-size planes is the larger
+  fixed cost. The entropy-coding prototype (2.65 ms for a 20 % smaller frame) would replace
+  dequantization, not shorten this decode.
+- **At 1500** the decoder keeps up and the render loop holds every period. The frames lost there
+  (about 7 a second) are publication phase: a frame finishing just after a selection.
+- **The cost of 2000 in latency** is about 5 ms on the client (arrival to taken). The frame age
+  at display differed by more (57.6 and 61.6 against 41.5 and 43.2 ms), but most of that was the
+  test scene's game stage, which flips between two modes from one connection to the next
+  ([LATENCY.md](LATENCY.md#the-game-stage-has-two-modes-in-the-test-scene-october-8)).
+- So at 120 Hz 4:4:4, more than 1500 Mbit/s buys detail (offline about +0.2 dB) at the cost of a
+  saturated headset GPU. A faster 4:4:4 decode, or fewer bytes per frame for the same detail
+  (entropy coding), are what would make 2000 pay.
