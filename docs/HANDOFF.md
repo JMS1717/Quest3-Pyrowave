@@ -339,6 +339,10 @@ State:
       (`patches/pyrowave-block-stats.patch`). At full size 4:2:0, 1500 Mbps, 120 Hz no 32x32 block
       arrives empty; 45 % of the finest luma 8x8 sub-blocks are coded. Skipping empty blocks is
       dropped. See [DECODE-STAGE-PROBE.md](DECODE-STAGE-PROBE.md#block-occupancy-127-october-9).
+    - **`.128` (`local128-5323ce6`): `debug.q3pw.dump_frames=N`** writes the next N (at most 16)
+      complete codec frames to the app's external files directory. With
+      `tools/entropy/pw2qcf.py`, the QR coder saves 15-17% on the real encoder's blocks, worth
+      +2.0 dB at 120/1500. See [ENTROPY.md](ENTROPY.md#the-real-encoders-blocks-october-9).
   - **Client phase lock and latency (`debug.q3pw.phase_lock=1`, native, 120 Hz, 1500 Mbps).**
     Two alternating rounds, medians of ALVR's estimate:
     - Fresh FPS: 118.9-119.9 with the lock, against 118.4-119.2 without it.

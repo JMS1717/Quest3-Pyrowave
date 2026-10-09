@@ -218,9 +218,10 @@ What limits it on Adreno:
 
 **What building it would still take:**
 
-- **PyroWave's own quantization.** The dump uses one step per frame, but the live encoder
+- ~~**PyroWave's own quantization.** The dump uses one step per frame, but the live encoder
   allocates by contrast sensitivity and block RDO. Dump the live encoder's quantized blocks to
-  confirm the 20%.
+  confirm the 20%.~~ Done on October 9: 15-17% on the real encoder's blocks, see
+  [below](#the-real-encoders-blocks-october-9).
 - **Game frames**, not only harness and corpus frames.
 - **Encoder:** QR encoding on PC compute. Encoding is per block and parallel, and the 7900 XTX
   decodes a frame in 0.5 ms.
@@ -234,3 +235,61 @@ What limits it on Adreno:
 **Decision:** keep the prototype. Building it into the stream is the largest remaining
 bitrate-for-clarity lever, especially for Wi-Fi at about 1000 Mbit/s. Do not start it before the
 owner's 120 Hz 4:4:4 and supersampling tests show where the clarity gap is.
+
+## The real encoder's blocks (October 9)
+
+The prototype's 20.5% came from one quantizer step per frame. This repeats it on the bitstream
+PyroWave's own encoder writes, with its contrast-sensitivity weights, per-8x8 quant scales and
+rate control.
+
+**Tools:**
+
+- `tools/entropy/pw2qcf.py` parses one complete PyroWave frame into QCF1 for `qrenc`. It
+  replicates `wavelet_dequant.comp`: ballot, control words, plane counts, bit-planes and the sign
+  order. On every frame it consumes each block exactly, with one sign bit per nonzero level.
+- **Frames:** the PC encoder tool (`pyrowave-encode`, `PYROWAVE_WAVELET=haar`) on the quality
+  corpus, at the stream's byte budget per frame. `.128` can also dump frames from the headset
+  (`debug.q3pw.dump_frames=N`, at most 16, into the app's external files directory).
+- **Side information:** a coefficient coder must still carry each 32x32 block's quant code and
+  each coded 8x8's quant scale. It is counted at its order-0 entropy, about 24 KB per 120 Hz /
+  1500 frame.
+- **Coder fix:** a context that only ever sees one symbol has frequency 4096, and the encoder's
+  32-bit renormalization bound overflowed to 0 (`qrcodec.hpp` now uses 64 bits). The synthetic
+  dump never hit it.
+
+**Bytes**, mean over each clip's frames, with no CPU decode mismatches:
+
+| Clip | Budget | Raw | QR + side information | Saving |
+| --- | --- | --- | --- | --- |
+| `static2` (4 frames) | 120 Hz, 1500 Mbit/s | 1,562,494 | 1,297,673 | 16.9% |
+| `static2` | 120 Hz, 1000 Mbit/s | 1,041,628 | 875,378 | 16.0% |
+| `static2` | 207 Hz, 1000 Mbit/s | 603,835 | 513,348 | 15.0% |
+| `pan120` (6 frames) | 120 Hz, 1500 Mbit/s | 1,562,449 | 1,313,203 | 16.0% |
+| `pan120` | 207 Hz, 1000 Mbit/s | 603,811 | 514,051 | 14.9% |
+| `pan60` (6 frames) | 120 Hz, 1500 Mbit/s | 1,562,443 | 1,310,143 | 16.1% |
+
+`static1` is nearly empty: the encoder writes 34 KB, and QR's fixed tables make it 54 KB. A
+coder in the stream needs a raw fallback per frame. The live headset frames dumped on October 9
+were similar (70 KB, 72 coded blocks), because the PC showed an idle scene.
+
+**What the saving buys:** the same encoder given budget / (1 - saving), decoded with
+`pyrowave-decode`, PSNR against the source (mean over frames):
+
+| Clip | Budget | Raw at budget | Raw at budget / (1 - saving) | Gain |
+| --- | --- | --- | --- | --- |
+| `static2` | 120 Hz, 1500 | Y 32.32, CbCr 39.55 dB | Y 34.31, CbCr 41.66 dB | +2.0 / +2.1 dB |
+| `pan120` | 120 Hz, 1500 | Y 31.90, CbCr 39.09 dB | Y 33.90, CbCr 40.78 dB | +2.0 / +1.7 dB |
+| `static2` | 207 Hz, 1000 | Y 24.59, CbCr 33.77 dB | Y 25.62, CbCr 34.52 dB | +1.0 / +0.8 dB |
+
+**Conclusions:**
+
+- The real encoder leaves less redundancy than the one-step model: 15-17%, not 20.5%. Its
+  per-8x8 scales and dropped planes already remove some of what the coder would find.
+- At 120 Hz / 1500 the gain is still about 2 dB, which is the size of a 1.2x bitrate step.
+- **Fixed costs** are about 2.3% of a 120 Hz / 1500 frame: 2 bytes per coded block for stream
+  offsets, plus 18.7 KB of frequency tables. Static tables trained offline would recover about
+  1.2%.
+- **Still open:**
+  - game frames;
+  - the GPU decode (`qrdec.comp`) on these streams, since only the CPU reference decoded them;
+  - the decision gate above, which is unchanged.

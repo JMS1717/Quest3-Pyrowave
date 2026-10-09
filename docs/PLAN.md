@@ -398,8 +398,12 @@ The largest loss decides what to build next.
     blocks first and branch-uniform steps. That misses the 2 ms target.
   - It would fit at 120 Hz, fused with dequantization, but not at 207 Hz.
   - **Parked** until the owner's 120 Hz tests show where the clarity gap is.
+- **Measured on the real encoder (October 9, [ENTROPY.md](ENTROPY.md#the-real-encoders-blocks-october-9)):**
+  - PyroWave's own Haar bitstream codes 15-17% smaller, including the quant side information
+    (corpus clips, 120/1500 to 207/1000). Spending the saved bytes gives +2.0 dB luma at 120/1500
+    and +1.0 dB at 207/1000.
+  - The coder needs a raw fallback for near-empty frames, where its fixed tables cost more.
   - Building it needs:
-    - the live encoder's quantized blocks, to confirm the saving;
     - a PC encoder;
     - rate control on coded bytes;
     - a decode fused with dequantization.

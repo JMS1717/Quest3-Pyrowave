@@ -174,7 +174,8 @@ inline void encode_block_rans(const std::vector<Sym>& syms, std::vector<uint16_t
             while (x >= xmax) { rev.push_back((uint16_t)x); x >>= 16; }
             x = (x << s.bits) | s.start;
         } else {
-            uint32_t xmax = ((kRansL >> kProbBits) << 16) * s.freq;
+            // 64-bit: a context that only ever saw one symbol gives freq = 4096 and a bound of 2^32
+            uint64_t xmax = ((uint64_t)(kRansL >> kProbBits) << 16) * s.freq;
             while (x >= xmax) { rev.push_back((uint16_t)x); x >>= 16; }
             x = ((x / s.freq) << kProbBits) + (x % s.freq) + s.start;
         }
