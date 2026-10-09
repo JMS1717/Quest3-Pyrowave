@@ -154,3 +154,50 @@ scene's soft blobs and colour ramps broke into visible 16-pixel blocks and wide 
 default, they are smoother than upstream's (upstream still shows faint vertical bands in the
 red-to-blue ramp), and the small text on the ramp's border is at least as sharp as with the
 headset CSF alone.
+
+## 4. Supersampled streams: scale by panel rows (`.129`, October 9)
+
+The headset CSF uses the stream's own frequency: the level-0 Nyquist is `0.5 * rows / 99`
+cycles/degree, 16.2 at full size (3216 rows). A stream taller than the panel's 2208 rows is
+resampled down for display, which removes much of its finest band before the eye sees it. The
+bits the encoder spends there are partly invisible.
+
+**Study:** `STUDY_FULL=1` (or `STUDY_STREAM=WxH`) in `tools/downsample/csf_study.py`.
+- **Encode:** the crop itself (3072x3216) or a Catmull-Rom downsample, Haar 4:2:0, at the
+  120 Hz cap per eye.
+- **Scoring (`d_` columns):** the source and the decode are both resampled with Catmull-Rom to
+  2080x2208, then scored with PSNR-HVS-M at 2208 / 99 pixels per degree.
+- **Crops:** two crops of the quality scene.
+
+| Stream | Mbps | level-0 cpd | Display PSNR-HVS-M | Display Y | Display Cb / Cr | Smooth Y / CbCr |
+| --- | --- | --- | --- | --- | --- | --- |
+| 3072x3216 | 1500 | 16.2 (old default) | 29.75 | 30.62 | 34.54 / 35.59 | 57.96 / 56.52 |
+| | | 19 | 30.02 | 30.73 | 34.78 / 35.81 | 58.31 / 56.66 |
+| | | 22 | 30.27 | 30.82 | 35.02 / 36.07 | 58.45 / 56.77 |
+| | | **23.6 (`.129` default)** | 30.28 | 30.75 | 35.26 / 36.29 | 58.67 / 56.96 |
+| | | 25 | **30.35** | 30.76 | 35.26 / 36.27 | 58.67 / 56.96 |
+| | | 32 | 28.53 | 29.62 | 36.08 / 36.84 | 59.04 / 57.30 |
+| | | 48 | 23.59 | 26.73 | 36.58 / 37.13 | 59.27 / 57.57 |
+| 3072x3216 | 1000 | 16.2 (old default) | 24.81 | 27.03 | 33.52 / 34.51 | 56.70 / 55.22 |
+| | | 22 | 25.24 | 27.33 | 33.76 / 34.85 | 57.30 / 55.65 |
+| | | **23.6 (`.129` default)** | 25.34 | 27.38 | 33.80 / 34.98 | 57.30 / 55.65 |
+| | | 25 | **25.51** | 27.46 | 33.98 / 35.15 | 57.30 / 55.65 |
+| 2592x2784 (125 %) | 1500 | 14.1 (old default) | 25.57 | 28.34 | 34.58 / 35.43 | 58.17 / 56.69 |
+| | | **17.7 (`.129` default)** | 25.56 | 28.36 | 34.68 / 35.49 | 58.20 / 56.73 |
+| | | 20 | 25.45 | 28.30 | 35.05 / 35.74 | 58.40 / 56.92 |
+
+- **The optimum is about 22-25 at full size, at both rates:**
+  - 1500 Mbps: +0.6 dB PSNR-HVS-M, +0.14 dB luma, +0.7 dB chroma;
+  - 1000 Mbps: +0.7 dB PSNR-HVS-M, +0.43 dB luma, +0.5-0.6 dB chroma;
+  - smooth areas improve as well.
+- **Past about 25, display luma falls fast:** too little is left for level 0.
+- **At 125 % the scaled value is neutral**, within 0.1 dB.
+- **Default from `.129`:** the level-0 frequency is multiplied by `max(1, rows / 2208)`. That is
+  23.6 at full size and 17.7 at 2784 rows. At full size it scores +0.5 dB PSNR-HVS-M at both
+  rates, +0.1-0.35 dB luma and +0.3-0.7 dB chroma. Streams at or below the panel's rows are
+  unchanged (`patches/pyrowave-csf-panel.patch`). `PYROWAVE_CPD_NYQUIST` still overrides it.
+- The full-size scores are not comparable with the 125 % ones. A full-size decode goes through
+  the reference's own resampling chain, but the 125 % stream adds a resample of its own.
+- **Live (`.129`, wired, full size, 120 Hz, 1500 Mbps, two blocks):**
+  - 116.3 and 117.9 fresh FPS, against 115-118 before.
+  - The encoder does the same work; only which bit planes it keeps changes.

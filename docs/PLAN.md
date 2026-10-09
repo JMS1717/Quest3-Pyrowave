@@ -438,7 +438,10 @@ The largest loss decides what to build next.
 **2.6 Rate control.**
 
 - Allow bounded borrowing between frames, so a complex frame can take more than its average.
-- Re-tune the CSF for 120 Hz and supersampled sizes.
+- Re-tune the CSF for 120 Hz and supersampled sizes. **Done for supersampled streams (`.129`,
+  [ENCODER-CSF.md](ENCODER-CSF.md#4-supersampled-streams-scale-by-panel-rows-129-october-9)):**
+  the CSF frequency scales by stream rows over the panel's 2208. At full size that is +0.5 dB
+  PSNR-HVS-M at panel resolution (1500 and 1000 Mbps); it is neutral at 125 %.
 - Revisit how hard coarse bands are quantized.
 
 **2.7 Adaptive sharpening on the headset.**

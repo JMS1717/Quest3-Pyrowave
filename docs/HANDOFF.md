@@ -343,6 +343,11 @@ State:
       complete codec frames to the app's external files directory. With
       `tools/entropy/pw2qcf.py`, the QR coder saves 15-17% on the real encoder's blocks, worth
       +2.0 dB at 120/1500. See [ENTROPY.md](ENTROPY.md#the-real-encoders-blocks-october-9).
+    - **`.129` (`local129-87633bd`): encoder CSF scaled by stream rows / 2208**
+      (`patches/pyrowave-csf-panel.patch`, server side). At full size this is +0.5 dB
+      PSNR-HVS-M at panel resolution, and it is neutral at 125 %. Live full size 120 Hz: 116-118
+      fresh, unchanged. See
+      [ENCODER-CSF.md](ENCODER-CSF.md#4-supersampled-streams-scale-by-panel-rows-129-october-9).
   - **Client phase lock and latency (`debug.q3pw.phase_lock=1`, native, 120 Hz, 1500 Mbps).**
     Two alternating rounds, medians of ALVR's estimate:
     - Fresh FPS: 118.9-119.9 with the lock, against 118.4-119.2 without it.
