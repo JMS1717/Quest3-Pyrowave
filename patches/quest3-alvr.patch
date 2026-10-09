@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc41921bd324f9 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..324fb8a6e8b4b8820d24e62f00b933911e5acbdb 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..273bd46968bca8ed57f5661caafc4192
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..d3b8670069300bcb56e021ffb3d58128e6348da7 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..161e9e42e85dee62f14c66dc25d92dbd59639cc7 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..d3b8670069300bcb56e021ffb3d58128
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.120"
++version = "20.13.0-quest3.pyro.121"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -274,10 +274,10 @@ index a5a446842d4799523d0e06fbfb7253bb13d6c7db..566cdde2b0f58ca90d722104983a4464
          .context("Failed to list ADB devices")?;
 diff --git a/alvr/adb/src/display_override.rs b/alvr/adb/src/display_override.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..0e98c6ba0643ea5329e0d83cb0d6217fedc02be7
+index 0000000000000000000000000000000000000000..e752c6c2f4423e580c01df4ddadd43236281cf68
 --- /dev/null
 +++ b/alvr/adb/src/display_override.rs
-@@ -0,0 +1,693 @@
+@@ -0,0 +1,731 @@
 +//! Opt-in Quest 3 display and GPU developer properties, managed by the PC over USB.
 +//!
 +//! Any whole refresh rate can be forced (measured October 6, 2026): 144-207 Hz with the full
@@ -317,9 +317,11 @@ index 0000000000000000000000000000000000000000..0e98c6ba0643ea5329e0d83cb0d6217f
 +pub const NATIVE_MAX_HZ: u32 = 207;
 +/// The highest rate the scaled panel mode runs.
 +pub const SCALED_MAX_HZ: u32 = 240;
-+/// Reapplications of a GPU level the headset cleared before this module stops forcing it. After a
-+/// headset reboot on October 8 HorizonOS cleared `debug.oculus.gpuLevel` after every client
-+/// restart; the helper rewrote it and restarted the client each time and the stream never started.
++/// Reapplications of a GPU level the headset cleared, as part of a display change that restarts the
++/// client, before this module stops forcing it. After a headset reboot on October 8 HorizonOS
++/// cleared `debug.oculus.gpuLevel` after every client restart; the helper rewrote it and restarted
++/// the client each time and the stream never started. Since `.121` a cleared level alone is
++/// rewritten live without a restart and is not counted.
 +pub const GPU_LEVEL_REVERTS: u32 = 2;
 +
 +#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -524,16 +526,7 @@ index 0000000000000000000000000000000000000000..0e98c6ba0643ea5329e0d83cb0d6217f
 +                (current.clone(), Some(applied))
 +            }
 +        };
-+        if request.gpu_level_7 && current[2] != "7"
-+            && applied.as_ref().is_some_and(|applied| applied[2].as_deref() == Some("7"))
-+        {
-+            self.gpu_reverts += 1;
-+            if self.gpu_reverts > GPU_LEVEL_REVERTS {
-+                alvr_common::warn!("[Q3PW_DISPLAY_OVERRIDE] The headset keeps clearing the GPU level; maximum GPU clock is off until the server restarts");
-+                request.gpu_level_7 = false;
-+            }
-+        }
-+        let want = targets(request, &original, &current, applied.as_ref());
++        let mut want = targets(request, &original, &current, applied.as_ref());
 +        // Verified earlier and the values still hold: skip the panel check. A headset reboot
 +        // clears the properties, which this comparison notices.
 +        if self.verified == Some(request) && current == want {
@@ -542,9 +535,31 @@ index 0000000000000000000000000000000000000000..0e98c6ba0643ea5329e0d83cb0d6217f
 +        let display_differs = current[..2] != want[..2];
 +        let needs_mode_check = request.rate_hz.is_some() || had_saved || display_differs;
 +        let mode_ok = !needs_mode_check || mode_satisfies(request, Self::panel_mode(shell)?);
-+        if !display_differs && current[2] == want[2] && mode_ok {
++        if !display_differs && mode_ok {
++            // At most the GPU level differs. The runtime applies it live (October 9: clearing it
++            // dropped VrApi to level 4 within 3 s and writing 7 brought back 690 MHz within 6 s),
++            // so it needs neither a wake nor a client restart. HorizonOS clears it whenever the
++            // client restarts; rewriting it here keeps the maximum clock through every restart.
++            if current[2] != want[2] {
++                Self::set(shell, GPU_LEVEL, &want[2])?;
++                let mut written = applied.unwrap_or_default();
++                written[2] = Some(want[2].clone());
++                self.save(serial, &original, &written)?;
++            }
 +            self.finish(request)?;
 +            return Ok(None);
++        }
++        // A client restart follows. A GPU level the headset clears on every client restart would
++        // restart it forever if it were part of that change (October 8, after a headset reboot).
++        if request.gpu_level_7 && current[2] != "7"
++            && applied.as_ref().is_some_and(|applied| applied[2].as_deref() == Some("7"))
++        {
++            self.gpu_reverts += 1;
++            if self.gpu_reverts > GPU_LEVEL_REVERTS {
++                alvr_common::warn!("[Q3PW_DISPLAY_OVERRIDE] The headset keeps clearing the GPU level; maximum GPU clock is off until the server restarts");
++                request.gpu_level_7 = false;
++                want = targets(request, &original, &current, applied.as_ref());
++            }
 +        }
 +
 +        // The wake enables proximity automation, so it runs inside the block whose end always
@@ -820,8 +835,9 @@ index 0000000000000000000000000000000000000000..0e98c6ba0643ea5329e0d83cb0d6217f
 +        let path = state_path("stale");
 +        let mut display = DisplayOverride::new(path.clone());
 +        let gpu_only = Request { rate_hz: None, gpu_level_7: true };
-+        assert!(display.ensure(&quest, "serial", gpu_only).unwrap().is_some());
-+        assert_eq!((quest.prop(RATE), quest.prop(GPU_LEVEL)), (String::new(), "7".into()));
++        // The GPU level alone needs no wake; the client clears the 72 itself when it starts.
++        assert_eq!(display.ensure(&quest, "serial", gpu_only).unwrap(), None);
++        assert_eq!((quest.prop(RATE), quest.prop(GPU_LEVEL)), ("72".into(), "7".into()));
 +        let log = quest.log.borrow().clone();
 +        assert!(!log.iter().any(|c| c.starts_with(&format!("setprop {RATE}"))), "{log:?}");
 +        assert!(!log.iter().any(|c| c.starts_with(&format!("setprop {SCALING}"))), "{log:?}");
@@ -862,21 +878,42 @@ index 0000000000000000000000000000000000000000..0e98c6ba0643ea5329e0d83cb0d6217f
 +    }
 +
 +    #[test]
-+    fn stops_forcing_a_gpu_level_the_headset_keeps_clearing() {
-+        let quest = FakeQuest::new(true);
++    fn a_cleared_gpu_level_is_rewritten_without_a_wake_or_restart() {
++        let quest = FakeQuest::new(false);
 +        let path = state_path("gpureverts");
 +        let mut display = DisplayOverride::new(path.clone());
 +        let gpu = Request { rate_hz: None, gpu_level_7: true };
-+        assert!(display.ensure(&quest, "serial", gpu).unwrap().is_some());
++        assert_eq!(display.ensure(&quest, "serial", gpu).unwrap(), None);
++        assert_eq!(quest.prop(GPU_LEVEL), "7");
++        for _ in 0..10 {
++            quest.props.borrow_mut().insert(GPU_LEVEL.into(), String::new());
++            assert_eq!(display.ensure(&quest, "serial", gpu).unwrap(), None);
++            assert_eq!(quest.prop(GPU_LEVEL), "7");
++        }
++        assert!(!quest.log.borrow().iter().any(|c| c.contains("KEYCODE_WAKEUP")));
++        // Withdrawing the request restores the original level, again without a restart.
++        assert_eq!(display.ensure(&quest, "serial", Request::default()).unwrap(), None);
++        assert_eq!(quest.prop(GPU_LEVEL), "");
++        assert!(!path.exists());
++    }
++
++    #[test]
++    fn stops_forcing_a_gpu_level_the_headset_clears_with_every_display_change() {
++        let quest = FakeQuest::new(true);
++        let path = state_path("gpureverts-display");
++        let mut display = DisplayOverride::new(path.clone());
++        assert!(display.ensure(&quest, "serial", ON).unwrap().is_some());
 +        let mut restarts = 0;
 +        for _ in 0..10 {
 +            quest.props.borrow_mut().insert(GPU_LEVEL.into(), String::new());
-+            if display.ensure(&quest, "serial", gpu).unwrap().is_some() {
++            quest.props.borrow_mut().insert(RATE.into(), String::new());
++            *quest.mode.borrow_mut() = (4128, 2208, 120);
++            if display.ensure(&quest, "serial", ON).unwrap().is_some() {
 +                restarts += 1;
 +            }
 +        }
-+        assert_eq!(restarts, GPU_LEVEL_REVERTS);
-+        assert_eq!(quest.prop(GPU_LEVEL), "");
++        assert_eq!(restarts, 10, "the display change still restarts the client");
++        assert_eq!(quest.prop(GPU_LEVEL), "", "but the GPU level is no longer forced");
 +        let _ = fs::remove_file(path);
 +    }
 +    #[test]
@@ -928,15 +965,16 @@ index 0000000000000000000000000000000000000000..0e98c6ba0643ea5329e0d83cb0d6217f
 +        let path = state_path("foreign");
 +        let mut display = DisplayOverride::new(path.clone());
 +        let gpu = Request { rate_hz: None, gpu_level_7: true };
-+        assert!(display.ensure(&quest, "serial", gpu).unwrap().is_some());
++        assert_eq!(display.ensure(&quest, "serial", gpu).unwrap(), None);
 +        assert_eq!(quest.prop(GPU_LEVEL), "7");
 +        quest.props.borrow_mut().insert(RATE.into(), "72".into());
 +        let mut display = DisplayOverride::new(path.clone());
 +        assert_eq!(display.ensure(&quest, "serial", gpu).unwrap(), None);
 +        assert_eq!(display.ensure(&quest, "serial", gpu).unwrap(), None);
 +        assert_eq!(quest.prop(RATE), "72");
-+        // Withdrawn: the GPU level this module wrote goes back; the OS's rate stays.
-+        assert!(display.ensure(&quest, "serial", Request::default()).unwrap().is_some());
++        // Withdrawn: the GPU level this module wrote goes back (live, no restart); the OS's rate
++        // stays.
++        assert_eq!(display.ensure(&quest, "serial", Request::default()).unwrap(), None);
 +        assert_eq!((quest.prop(RATE), quest.prop(GPU_LEVEL)), ("72".into(), String::new()));
 +        assert!(!path.exists());
 +        // A GPU level the user changed after this module wrote it is not taken back either.
