@@ -289,6 +289,9 @@ whether audio on the stream socket stalls behind video.
 - **`.122`: 4:4:4 at Quality 120 holds 118-120 fresh FPS** (LOW decode priority, which the
   automatic rule had withheld from 4:4:4: 109-116 before). 4:4:4 at 120 Hz now costs no FPS
   against 4:2:0 in this scene. Owner check: Quality 120 4:4:4 against 4:2:0 for colour.
+- **Full size with 4:4:4 is decode-bound:** CDF 5/3 4:4:4 decode takes 8.2-8.9 ms per frame, so
+  83.5 fresh at 90 Hz and 77.5 at 120 Hz (default priority; `.123` keeps LOW off above 1.5 G
+  pixels a second for 4:4:4). Godlike plus full chroma needs a faster 4:4:4 decode.
 - Eye pass at full size: chroma reads are about 1.3 of its 2.7 ms (`.120` probes). Not the FPS
   limit at full size 120 Hz (frames superseded after decode are), but the largest piece of client
   GPU time left after decode. A cheaper chroma read is the next eye-pass candidate.
@@ -413,6 +416,7 @@ The largest loss decides what to build next.
 - **`.122`:** Quality 120 4:4:4 at 1500 Mbps holds 118-120 fresh FPS once decode runs at LOW
   priority (109-116 at default), level with 4:2:0
   ([DECODE-PRIORITY.md](DECODE-PRIORITY.md#444-at-quality-120-october-9-121-122)).
+  Full size 4:4:4: 83.5 fresh at 90 Hz, 77.5 at 120 Hz; decode 8.2-8.9 ms is the limit.
 
 **2.6 Rate control.**
 

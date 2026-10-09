@@ -320,6 +320,10 @@ State:
       113.6 / 116.2 interleaved; on `.122` automatic 119.6 / 118.1 against forced default 110.9 /
       108.8. Latency within noise. See
       [DECODE-PRIORITY.md](DECODE-PRIORITY.md#444-at-quality-120-october-9-121-122).
+    - **`.123` (`local123-0f3c4d8`): 4:4:4 gets LOW only up to 1.5 G pixels a second.** On `.122`
+      full-size 4:4:4 at 90 Hz fell under LOW and lost (75.5 against 83.5 fresh at default).
+      Full-size 4:4:4 decode (CDF 5/3) takes 8.2-8.9 ms: 83.5 fresh at 90 Hz and 77.5 at 120 Hz at
+      best. Godlike with 4:4:4 needs about 80 Hz or a faster 4:4:4 decode.
   - **Client phase lock and latency (`debug.q3pw.phase_lock=1`, native, 120 Hz, 1500 Mbps).**
     Two alternating rounds, medians of ALVR's estimate:
     - Fresh FPS: 118.9-119.9 with the lock, against 118.4-119.2 without it.

@@ -49,7 +49,7 @@ this is not a latency claim.
 
 | Property | Read | Effect |
 | --- | --- | --- |
-| `debug.q3pw.decode_priority` | at decoder creation | unset/other: LOW only at ≤120 Hz and at most 2.0 G decoded pixels a second, 4:2:0 or 4:4:4 (`.122`; 4:2:0 only before; `.119` added the pixel limit; `.112`-`.114` used default at ≤90 Hz, reverted in `.115`); `low`: always LOW; `default`: never |
+| `debug.q3pw.decode_priority` | at decoder creation | unset/other: LOW only at ≤120 Hz and at most 2.0 G decoded pixels a second for 4:2:0, 1.5 G for 4:4:4 (`.123`; 4:4:4 never before `.122`; `.119` added the pixel limit; `.112`-`.114` used default at ≤90 Hz, reverted in `.115`); `low`: always LOW; `default`: never |
 
 logcat `[Q3PW_PRIORITY]` reports the policy decision (refresh rate, chroma,
 choice) and what the driver applied.
@@ -126,8 +126,22 @@ At default priority the eye copy waits behind the longer 4:4:4 decode and finish
 replaced before they are shown. Under LOW the decoder's GPU time rises from about 5 to 7 ms, but
 the vsync queue shortens by about as much, so latency is within noise. 4:4:4 itself adds
 about 3-6 ms against 4:2:0 at either priority (longer decode). `.122` drops the 4:2:0
-condition: 4:4:4 now gets LOW under the same ≤120 Hz and 2.0 G pixels a second limits. 4:4:4 at
-full size and 90 Hz (1.78 G) also falls under LOW and is not measured.
+condition: 4:4:4 gets LOW under the same ≤120 Hz and 2.0 G pixels a second limits.
+
+That was too generous at full size. Full 3072x3216 per eye, CDF 5/3 4:4:4, 1500 Mbps, `.122`,
+priority forced by property:
+
+| Refresh | Arm | Fresh FPS | GPU decode p50 | Note |
+| --- | --- | --- | --- | --- |
+| 90 Hz | LOW (`.122` automatic) | 75.6, 75.5 | 11.7-11.8 ms | every display period served |
+| 90 Hz | default | 83.6, 83.4 | 8.2-8.5 ms | render loop slows to 84 a second |
+| 120 Hz | LOW | 69.0, 71.7 | 10.6-12.1 ms | |
+| 120 Hz | default (automatic) | 77.3, 77.5 | 8.9 ms | render loop slows to 78 a second |
+
+Full-size 4:4:4 decode takes 8.2-8.9 ms per frame, so it is decode-bound above about 85 Hz at
+either priority, and LOW makes that worse. `.123` gives 4:4:4 its own limit, 1.5 G pixels a
+second, between Quality 120 (1.33 G, LOW wins) and full size at 90 Hz (1.79 G, default wins).
+Full-size 4:4:4 at 80 Hz (1.59 G) now gets default priority; not measured.
 
 ## Limits
 
