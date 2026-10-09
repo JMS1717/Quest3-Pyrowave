@@ -1222,6 +1222,20 @@ bool pyroclient::finish_pending(pyroclient_frame_info *info) {
                      (unsigned long long)client->stage_probe_completions, message);
             }
         }, this, true);
+        // Block occupancy over the same decodes, per component c and level L (0 finest): the share
+        // of 32x32 blocks with nothing coded and of 8x8 sub-blocks coded. Counted as packets arrive.
+        uint64_t blocks[15], empty[15], coded[15];
+        if (pyrowave_decoder_get_block_stats(decoder, blocks, empty, coded, 1) == PYROWAVE_SUCCESS) {
+            char line[512] = {};
+            size_t n = 0;
+            for (int i = 0; i < 15 && n < sizeof(line); i++)
+                if (blocks[i])
+                    n += snprintf(line + n, sizeof(line) - n, " c%dL%d=%.1f/%.1f", i / 5, i % 5,
+                                  100.0 * double(empty[i]) / double(blocks[i]),
+                                  100.0 * double(coded[i]) / (16.0 * double(blocks[i])));
+            LOGI("[Q3PW_BLOCK_STATS] complete=%llu empty%%/coded%%:%s",
+                 (unsigned long long)stage_probe_completions, line);
+        }
     }
     return true;
 }
