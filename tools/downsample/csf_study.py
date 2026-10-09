@@ -3,6 +3,11 @@ crops at the live per-eye cap with PYROWAVE_CPD_NYQUIST[:PYROWAVE_CHROMA_CSF] va
 the source size.
 
   python tools/downsample/csf_study.py <pc tools dir> <out dir> default,11:1.6 1000,1500 [crops]
+
+STUDY_FULL=1 encodes the full 3072x3216 crop (no downsample) at the 120 Hz cap, and
+STUDY_STREAM=WxH (e.g. 2592x2784) a supersampled stream at the 120 Hz cap. Both add
+display-referred scores ('d_' keys): source and decode both resampled with the live Catmull-Rom
+filter to 2080x2208, the panel's rows, and PSNR-HVS-M at its pixels per degree.
 """
 import json, os, sys
 from pathlib import Path
@@ -17,6 +22,11 @@ variants = sys.argv[3].split(',')  # cpd[:chroma[:aq_offset/aq_strength]], 'defa
 mbps_list = [float(x) for x in sys.argv[4].split(',')]
 crops = int(sys.argv[5]) if len(sys.argv) > 5 else 2
 sw, sh, tw, th, hz = 3072, 3216, 2080, 2208, 207
+full = os.environ.get('STUDY_FULL') == '1' or bool(os.environ.get('STUDY_STREAM'))
+dw, dh = tw, th  # display-referred size
+if full:
+    tw, th = (int(v) for v in os.environ.get('STUDY_STREAM', f'{sw}x{sh}').split('x'))
+    hz = 120
 world = build_world()[:, :, ::-1]
 wh, ww = world.shape[:2]
 tall = np.concatenate([np.concatenate([world, world], 1)] * 2, 0)
@@ -65,7 +75,14 @@ for mbps in mbps_list:
             yu, cbu, cru = upsample(y, sw, sh), upsample(cb, sw, sh), upsample(cr, sw, sh)
             m = masks[len(per)]
             smooth = lambda a, b: float(10 * np.log10(255 ** 2 / max(np.mean((a[m].astype(np.float64) - b[m]) ** 2), 1e-9)))
-            per.append({'hvs': psnr_hvs_m(y0, yu, ppd), 'y': psnr(y0, yu), 'cb': psnr(cb0, cbu), 'cr': psnr(cr0, cru),
+            d = {}
+            if full:
+                # The filter is linear, so resampling the Y/Cb/Cr planes equals resampling RGB.
+                to_d = lambda planes: [np.clip(np.rint(resample(q, dw, dh, 'catmull')), 0, 255).astype(np.uint8) for q in planes]
+                ref_d, dec_d = to_d((y0, cb0, cr0)), to_d((yu, cbu, cru))
+                d = {'d_hvs': psnr_hvs_m(ref_d[0], dec_d[0], dh / 99.0), 'd_y': psnr(ref_d[0], dec_d[0]),
+                     'd_cb': psnr(ref_d[1], dec_d[1]), 'd_cr': psnr(ref_d[2], dec_d[2])}
+            per.append({**d, 'hvs': psnr_hvs_m(y0, yu, ppd), 'y': psnr(y0, yu), 'cb': psnr(cb0, cbu), 'cr': psnr(cr0, cru),
                         'y_smooth': smooth(y0, yu), 'c_smooth': (smooth(cb0, cbu) + smooth(cr0, cru)) / 2,
                         'smooth_frac': float(m.mean())})
         row = {'mbps': mbps, 'filter': filt, 'variant': v, 'bytes': enc.stat().st_size, **{k: round(float(np.mean([p[k] for p in per])), 3) for k in per[0]}}

@@ -1,0 +1,18 @@
+diff --git a/pyrowave_encoder.cpp b/pyrowave_encoder.cpp
+index 0296575..4e38c6d 100644
+--- a/pyrowave_encoder.cpp
++++ b/pyrowave_encoder.cpp
+@@ -126,7 +126,12 @@ float Encoder::Impl::get_quant_rdo_distortion_scale(int level, int component, in
+ 	// monitor model discounted fine luma detail up to 10x in power and starved it of bits
+ 	// (docs/ENCODER-CSF.md). PYROWAVE_CPD_NYQUIST overrides the level-0 Nyquist frequency.
+ 	static const float cpd_override = [] { const char *v = getenv("PYROWAVE_CPD_NYQUIST"); return v ? float(atof(v)) : 0.0f; }();
+-	const float cpd_nyquist = cpd_override > 0.0f ? cpd_override : 0.5f * float(height) / 99.0f;
++	// A stream taller than the panel's 2208 rows is resampled down for display, which removes much
++	// of its finest band before the eye sees it. Scaling the frequency by stream rows over panel
++	// rows moves those bits to detail that survives: at 3216 rows (full size) it scores +0.6-0.7 dB
++	// PSNR-HVS-M at panel resolution, and is neutral at 2784 (docs/ENCODER-CSF.md).
++	const float panel_scale = std::max(1.0f, float(height) / 2208.0f);
++	const float cpd_nyquist = cpd_override > 0.0f ? cpd_override : 0.5f * float(height) / 99.0f * panel_scale;
+ 
+ 	float cpd = std::sqrt(horiz_midpoint * horiz_midpoint + vert_midpoint * vert_midpoint) *
+ 	                  cpd_nyquist * std::exp2(-float(level));
