@@ -197,6 +197,29 @@ State:
     - Live, in the heavy scene at 2.34 MB per frame, frames still fill the budget with the
       floor at 56 (confirmed in `openvr_config`). That content needs more than the ceiling
       allows, so the setting helps only easier content there.
+  - **`.112`: decode at default priority at 90 Hz and below.** Full size, Haar 1500, 90 Hz,
+    heavy scene, ABBA: default 84.6 / 83.4 fresh (decode p50 5.06 / 4.88 ms, fence 7.06 /
+    6.67 ms) against LOW 79.9 / 79.3 (6.94 / 7.10 ms, fence 10.74 / 10.98 ms). The compositor's
+    stale count stayed at 0-4 a second either way. The automatic policy now picks LOW only for
+    4:2:0 above 90 Hz up to 120 Hz, so Godlike 80 Hz decodes at default priority
+    ([DECODE-PRIORITY.md](DECODE-PRIORITY.md)).
+    - In those 90 Hz blocks all 90 frames a second arrive and decode. The 6 lost a second are
+      superseded: arrival gaps p10/p90 7.6-8.6 / 13.6-14.3 ms against an 11.1 ms period put two
+      frames in one display period. Frame ids (pose timestamps) jump by about ±3.7 ms because
+      the client polls tracking 3 times a frame and the server renders from the newest sample.
+  - **120 Hz keeps LOW (Quality 120, CDF 5/3, 110 %, 1500 Mbps, `.113`).** LOW: 118.6 / 116.1 /
+    117.2 fresh, fence 7.0-7.8 ms, VrApi stale 0-4 a second. Default: 118.3 / 113.8, fence
+    4.9-5.0 ms, but stale 11-17 a second (judder). ALVR's decoder stage fell from 8-10 to 6 ms
+    while its vsync queue rose from 15.3 to 17-21 ms.
+    - **`.113` opt-in `debug.q3pw.gl_priority=high|low`:** the client's own GL work (eye copy,
+      staging) runs in a second EGL context, shared with wgpu's and created at that
+      `EGL_IMG_context_priority` level. The driver grants HIGH (`[Q3PW_GL_PRIORITY]
+      requested=0x3101 granted=0x3101`). With default decode priority it gave 116.5 fresh and
+      stale 7-12 a second in the one valid block (the other came up pinned at 72 Hz). That is
+      not enough to drop LOW at 120 Hz; it stays opt-in.
+  - **`.114` opt-in `debug.q3pw.input_polls_per_frame=1..16`** (default 3, as upstream): the
+    client's tracking poll rate. Each sample is predicted for `now + offset`, so the server's
+    newest sample is up to one poll interval stale (3.7 ms at 90 Hz).
   - **The maximum GPU clock was not applied in these runs.** `quest3_max_gpu_clock=true`, but
     `debug.oculus.gpuLevel` read empty and VrApi showed level 4 (640 MHz). After the helper's
     `GPU_LEVEL_REVERTS` (2) reapplications it stops until the server restarts. Setting the
