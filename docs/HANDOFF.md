@@ -268,8 +268,9 @@ State:
       on decode alongside it.
     - **A smaller eye swapchain does not help full size at 120 Hz** (`debug.q3pw.eye_percent=67`,
       ABBA): 113.2 / 113.7 fresh against 113.5 / 113.6, eye timer 2.4 against 2.55 ms. ALVR's
-      latency estimate was lower (38-49 against 53-56 ms, decode queue 0.1 against 4.2 ms); not
-      followed up. `.118` filters that path with a tent as wide as the downscale (same four
+      latency estimate in the same game-stage mode was 49 against 53-56 ms (decoder queue 0.2
+      against 4.2 ms); the other 67 % block was in the low game mode (38 ms) and doesn't count.
+      Not followed up. `.118` filters that path with a tent as wide as the downscale (same four
       fetches as the old bilinear tap); untested live.
     - **`.118`: decoder mode 6 (paired chroma) is the default** for Haar and Decoder V2. Full
       size 120 Hz, ABBAAB on `.117`: 115.0 / 115.3 / 116.4 fresh against 111.4 / 112.0 / 110.4,
