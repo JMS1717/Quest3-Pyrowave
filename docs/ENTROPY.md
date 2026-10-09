@@ -289,7 +289,17 @@ were similar (70 KB, 72 coded blocks), because the PC showed an idle scene.
 - **Fixed costs** are about 2.3% of a 120 Hz / 1500 frame: 2 bytes per coded block for stream
   offsets, plus 18.7 KB of frequency tables. Static tables trained offline would recover about
   1.2%.
+- **GPU decode on the Quest:** `qrbench` decodes the real encoder's `static2` frame exactly
+  (`QR_FLAGS=8 QR_ORDER=1`, local size 128, p50 of 60 runs, alternated twice). It ran with the
+  client streaming an idle scene, so both times are above the uncontended 2.65 ms:
+
+  | Frame | Run 1 | Run 2 |
+  | --- | --- | --- |
+  | October 8 synthetic dump | 3.34 ms | 3.33 ms |
+  | Real encoder | 3.72 ms | 3.58 ms |
+
+  The real frame is 8-12% slower. It has fewer coded blocks (7,933 against 9,583), but longer
+  streams per block, and each block decodes serially.
 - **Still open:**
   - game frames;
-  - the GPU decode (`qrdec.comp`) on these streams, since only the CPU reference decoded them;
   - the decision gate above, which is unchanged.
