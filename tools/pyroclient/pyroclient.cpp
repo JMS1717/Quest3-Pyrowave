@@ -1326,13 +1326,13 @@ extern "C" pyroclient *pyroclient_create_prioritized(uint32_t width, uint32_t he
     __system_property_get("debug.q3pw.fuse_color", fuse_prop);
     {
         // Multilevel Haar (docs/HAAR32.md), default mode 6 since .118 (paired chroma,
-        // docs/PRESENT-YCBCR.md), which steps down to mode 4 where it cannot apply; "0" to "6" selects
-        // a mode. Fused colour and fused dequant replace passes it owns, so requesting either turns
+        // docs/PRESENT-YCBCR.md), which steps down to mode 4 where it cannot apply; "0" to "8" selects
+        // a mode (7 and 8 are the 4:4:4 layouts, which 6 maps to). Fused colour and fused dequant replace passes it owns, so requesting either turns
         // the default off.
         char haar32_prop[PROP_VALUE_MAX] = {}, dequant_haar_prop[PROP_VALUE_MAX] = {};
         __system_property_get("debug.q3pw.dequant_haar", dequant_haar_prop);
         const bool explicit_mode = __system_property_get("debug.q3pw.haar32", haar32_prop) > 0 &&
-                                   haar32_prop[0] >= '0' && haar32_prop[0] <= '6' && !haar32_prop[1];
+                                   haar32_prop[0] >= '0' && haar32_prop[0] <= '8' && !haar32_prop[1];
         c->haar32_requested = explicit_mode ? haar32_prop[0] - '0'
                               : !strcmp(fuse_prop, "1") || !strcmp(dequant_haar_prop, "1") ? 0 : 6;
         // Decoder V2 for CDF 5/3 (docs/DECODER-V2.md), default mode 6 since .118 (the paired-chroma
