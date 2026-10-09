@@ -262,6 +262,24 @@ State:
       GPU and 7.3 ms to its fence. 1500 Mbps instead of 2000 gives the same 112.9 fresh
       (decode 4.6 ms). Only less GPU work per frame moves it (decode cost, or the
       eye copy, see [LIVE-SURFACE-VIDEO.md](LIVE-SURFACE-VIDEO.md)).
+    - Where the GPU time goes at full size 120 Hz (`.117`, 1000 Mbps, default priority):
+      decode stages iDWT 2.4-2.9 ms and Dequant 1.5-2.1 ms per frame; the eye copy's GL timer
+      (`debug.q3pw.eye_gpu_probe=1`) reads 2.5-2.7 ms p50, which includes time the GPU spends
+      on decode alongside it.
+    - **A smaller eye swapchain does not help full size at 120 Hz** (`debug.q3pw.eye_percent=67`,
+      ABBA): 113.2 / 113.7 fresh against 113.5 / 113.6, eye timer 2.4 against 2.55 ms. ALVR's
+      latency estimate was lower (38-49 against 53-56 ms, decode queue 0.1 against 4.2 ms); not
+      followed up. `.118` filters that path with a tent as wide as the downscale (same four
+      fetches as the old bilinear tap); untested live.
+    - **`.118`: decoder mode 6 (paired chroma) is the default** for Haar and Decoder V2. Full
+      size 120 Hz, ABBAAB on `.117`: 115.0 / 115.3 / 116.4 fresh against 111.4 / 112.0 / 110.4,
+      GPU decode 3.4-4.1 against 4.5-4.6 ms, fewer stale frames. Quality 120: 120.0 / 120.1
+      against 119.0 / 118.5 / 119.6. Same decoded planes. Details:
+      [PRESENT-YCBCR.md](PRESENT-YCBCR.md). Earlier runs that seemed to show this didn't apply
+      mode 6 (the harness set only `debug.q3pw.cdf53v2`), and identical arms still differed by
+      3 FPS, so check the applied mode in the log for every arm.
+    - Decode priority on direct, Quality 120: LOW 120.0 against default 119.3 / 119.9 with
+      fewer stale frames; the LOW rule at 120 Hz and below stays.
   - **The maximum GPU clock was not applied in these runs.** `quest3_max_gpu_clock=true`, but
     `debug.oculus.gpuLevel` read empty and VrApi showed level 4 (640 MHz). After the helper's
     `GPU_LEVEL_REVERTS` (2) reapplications it stops until the server restarts. Setting the
