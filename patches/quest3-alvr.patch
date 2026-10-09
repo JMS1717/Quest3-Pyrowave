@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9aef40a81 100644
+index 7cead7bff9afdf2ee385956230c1985b543822b6..ed42267642048828f55eeede3cbfb6271c9762d4 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -182,19 +182,20 @@ dependencies = [
@@ -7,7 +7,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_adb"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -21,7 +21,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_audio"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -30,7 +30,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_client_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_audio",
   "alvr_common",
@@ -39,7 +39,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_client_mock"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -48,7 +48,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_client_openxr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_client_core",
   "alvr_common",
@@ -57,7 +57,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "anyhow",
   "backtrace",
@@ -66,7 +66,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_dashboard"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -75,7 +75,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_events"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_common",
   "alvr_packets",
@@ -84,7 +84,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_filesystem"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "dirs",
   "once_cell",
@@ -93,7 +93,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_graphics"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -102,7 +102,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_gui_common"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_common",
   "egui",
@@ -111,7 +111,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_launcher"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_adb",
   "alvr_common",
@@ -120,7 +120,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_packets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -129,7 +129,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_server_core"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_adb",
   "alvr_audio",
@@ -146,7 +146,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_server_io"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_common",
   "alvr_events",
@@ -155,7 +155,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_server_openvr"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -164,7 +164,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_session"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -173,7 +173,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_sockets"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_common",
   "alvr_session",
@@ -182,7 +182,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_system_info"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_common",
   "jni",
@@ -191,7 +191,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_vrcompositor_wrapper"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -200,7 +200,7 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_vulkan_layer"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_common",
   "alvr_filesystem",
@@ -209,12 +209,12 @@ index 7cead7bff9afdf2ee385956230c1985b543822b6..11a186962d38896c0f722feffa4363a9
  [[package]]
  name = "alvr_xtask"
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  dependencies = [
   "alvr_filesystem",
   "pico-args",
 diff --git a/Cargo.toml b/Cargo.toml
-index ae00ce80d28ecae501881110b3d9e7441ae25e79..ed50065593b41feb9a7c8880ed7b0c7d34d737d6 100644
+index ae00ce80d28ecae501881110b3d9e7441ae25e79..72e386ca0b52173f0b4728a1858d2b0af3d545f6 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -4,7 +4,7 @@ members = ["alvr/*"]
@@ -222,7 +222,7 @@ index ae00ce80d28ecae501881110b3d9e7441ae25e79..ed50065593b41feb9a7c8880ed7b0c7d
  [workspace.package]
  # Pre-release tag: a different protocol ID, so stock ALVR 20.x clients and servers are refused
 -version = "20.13.0-pyro.1"
-+version = "20.13.0-quest3.pyro.124"
++version = "20.13.0-quest3.pyro.125"
  edition = "2021"
  rust-version = "1.82"
  authors = ["alvr-org"]
@@ -4608,7 +4608,7 @@ index 4d2e6991e8bb90bfbb062de71adbd4a7bb324639..ede26d5c01b2bb815de16606c06bbf17
 +    }
  }
 diff --git a/alvr/client_core/src/video_decoder/pyrowave.rs b/alvr/client_core/src/video_decoder/pyrowave.rs
-index 2e22601497aaca790db25fa1b37423948fdfaa86..a164d81c99757dbd1ba52e914de649fb3ac3636a 100644
+index 2e22601497aaca790db25fa1b37423948fdfaa86..dcf73cb5dfe9ce8ffbc482ce8c931e622b104e82 100644
 --- a/alvr/client_core/src/video_decoder/pyrowave.rs
 +++ b/alvr/client_core/src/video_decoder/pyrowave.rs
 @@ -2,9 +2,9 @@
@@ -4659,7 +4659,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..a164d81c99757dbd1ba52e914de649fb
  #[repr(C)]
  struct PyroClient {
      _private: [u8; 0],
-@@ -33,36 +51,78 @@ struct FrameInfo {
+@@ -33,36 +51,79 @@ struct FrameInfo {
      convert_ms: f64,
      total_ms: f64,
      complete: i32,
@@ -4682,6 +4682,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..a164d81c99757dbd1ba52e914de649fb
      fn pyroclient_push_packet(c: *mut PyroClient, data: *const u8, size: usize) -> i32;
 -    fn pyroclient_decode(
 +    fn pyroclient_clear(c: *mut PyroClient);
++    fn pyroclient_present_layout(c: *mut PyroClient) -> i32;
 +    fn pyroclient_decode_guarded(
          c: *mut PyroClient,
          out: *mut *mut c_void,
@@ -4743,7 +4744,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..a164d81c99757dbd1ba52e914de649fb
          self.pending.ready.notify_one();
          Ok(true)
      }
-@@ -71,13 +131,39 @@ impl VideoDecoderSink {
+@@ -71,13 +132,39 @@ impl VideoDecoderSink {
  pub struct VideoDecoderSource {
      running: Arc<AtomicBool>,
      pending: Arc<Pending>,
@@ -4785,7 +4786,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..a164d81c99757dbd1ba52e914de649fb
      }
  }
  
-@@ -85,7 +171,7 @@ impl Drop for VideoDecoderSource {
+@@ -85,7 +172,7 @@ impl Drop for VideoDecoderSource {
      fn drop(&mut self) {
          self.running.store(false, Ordering::Relaxed);
          self.pending.ready.notify_all();
@@ -4794,7 +4795,7 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..a164d81c99757dbd1ba52e914de649fb
              t.join().ok();
          }
      }
-@@ -99,25 +185,106 @@ pub fn video_decoder_split(
+@@ -99,25 +186,106 @@ pub fn video_decoder_split(
      let pending = Arc::new(Pending {
          frame: Mutex::new(None),
          ready: Condvar::new(),
@@ -4905,10 +4906,12 @@ index 2e22601497aaca790db25fa1b37423948fdfaa86..a164d81c99757dbd1ba52e914de649fb
                  )
              };
              if client.is_null() {
-@@ -128,64 +295,271 @@ pub fn video_decoder_split(
+@@ -128,64 +296,273 @@ pub fn video_decoder_split(
                  )));
                  return;
              }
++            // Haar mode 8 (4:4:4 chroma pairs) shares mode 7's buffer size; tell the eye shader.
++            alvr_graphics::set_present_444_pairs(unsafe { pyroclient_present_layout(client) } == 8);
 +            let _native_owner = super::producer_prerecord::NativeOwner::new(|| {
 +                decoded.clear_in_flight();
 +                unsafe { pyroclient_destroy(client) };
@@ -9879,21 +9882,24 @@ index 0000000000000000000000000000000000000000..bc6bee02decfec1a7df24f18e8fd2991
 +}
 diff --git a/alvr/graphics/resources/present_ycbcr.glsl b/alvr/graphics/resources/present_ycbcr.glsl
 new file mode 100644
-index 0000000000000000000000000000000000000000..2e87f0900d83fcdc3928a98a2b4564a11e20c74f
+index 0000000000000000000000000000000000000000..c0a04d8a1ee2a028abd4419b7be1dccea4ea241b
 --- /dev/null
 +++ b/alvr/graphics/resources/present_ycbcr.glsl
-@@ -0,0 +1,159 @@
+@@ -0,0 +1,168 @@
 +// PyroWave Haar mode 5 (Quest3-Pyrowave docs/PRESENT-YCBCR.md): `tex` is a frame_size.x x
 +// frame_size.y/2 RGBA8 buffer. x < frame_size.x/2 holds luma as 2x2 pixel quads ((0,0), (1,0),
 +// (0,1), (1,1) in RGBA); x >= frame_size.x/2 holds the 4:2:0 chroma, one pixel per texel with Cb
 +// in R and Cr in G. Mode 6 is the same buffer 3/4 as wide: each chroma texel holds two horizontally
 +// adjacent pixels, (Cb, Cr) of the left one in RG and of the right one in BA. Decoder V2 mode 7
 +// (4:4:4) is 3/2 as wide: Cb and Cr quads like the luma ones, from frame_size.x/2 and frame_size.x,
-+// read at the nearest decoded pixel. Full-range BT.709 with
++// read at the nearest decoded pixel. Haar mode 8 (q3pw_444_pairs) is the same size with mode 6's
++// chroma texels at full resolution: pixel row y in texel row y/2, the even rows from frame_size.x/2
++// and the odd ones from frame_size.x, one fetch for both components. Full-range BT.709 with
 +// bilinear chroma, the conversion pyroclient's convert.frag does in the other modes. The external
 +// sampler must filter linearly.
 +precision highp float;
 +uniform highp vec2 q3pw_frame_size;
++uniform bool q3pw_444_pairs;
 +highp vec2 q3pw_tex_size;
 +
 +float q3pw_luma(highp ivec2 p) {
@@ -10009,7 +10015,13 @@ index 0000000000000000000000000000000000000000..2e87f0900d83fcdc3928a98a2b4564a1
 +        chroma = vec2(0.0);
 +    } else
 +#endif
-+    if (q3pw_tex_size.x > q3pw_frame_size.x) {
++    if (q3pw_tex_size.x > q3pw_frame_size.x && q3pw_444_pairs) {
++        // Mode 8: (Cb, Cr) of the pixel pair in RG (left pixel) and BA (right pixel).
++        highp ivec2 p = clamp(ivec2(pos), ivec2(0), last);
++        highp vec2 t = vec2(float(p.x >> 1) + (1.0 + float(p.y & 1)) * half_size.x, float(p.y >> 1)) + 0.5;
++        vec4 pair = texture(tex, t / q3pw_tex_size);
++        chroma = ((p.x & 1) == 1 ? pair.ba : pair.rg) - 0.5;
++    } else if (q3pw_tex_size.x > q3pw_frame_size.x) {
 +        // Mode 7: full-resolution Cb and Cr, the same quad texel and channel as the luma pixel.
 +        highp ivec2 p = clamp(ivec2(pos), ivec2(0), last);
 +        highp vec2 t = vec2(p >> 1) + 0.5;
@@ -10063,10 +10075,10 @@ index 7bfba12ca0479598b4060b84664695a82c96411d..7236535dfbd7196f77a29c1e5f9dbc27
  #endif
 diff --git a/alvr/graphics/src/direct_eye.rs b/alvr/graphics/src/direct_eye.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..d52f463e225b79ff43a55deffddb72db789d3d8d
+index 0000000000000000000000000000000000000000..8758d7da57125fdf303d716deaa4421660685e27
 --- /dev/null
 +++ b/alvr/graphics/src/direct_eye.rs
-@@ -0,0 +1,822 @@
+@@ -0,0 +1,834 @@
 +//! Opt-in SDR, unwarped PyroWave AHB -> acquired OpenXR eye-image copy.
 +//! Vulkan decoding retains its consumer lease until BOTH eyes finish sampling.
 +//! An opt-in GL fence allows CPU overlap; the default remains synchronous.
@@ -10108,6 +10120,14 @@ index 0000000000000000000000000000000000000000..d52f463e225b79ff43a55deffddb72db
 +    }
 +    #[cfg(not(target_os = "android"))]
 +    { let _ = (buffer, eye); false }
++}
++
++/// PyroWave Haar mode 8 writes 4:4:4 into a buffer of mode 7's size, but as (Cb, Cr) of two
++/// horizontally adjacent pixels per texel instead of Cb and Cr quads. The decoder thread records
++/// the layout of the decoder it created; the eye shader reads it as the `q3pw_444_pairs` uniform.
++static PRESENT_444_PAIRS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
++pub(super) fn set_present_444_pairs(pairs: bool) {
++    PRESENT_444_PAIRS.store(pairs, std::sync::atomic::Ordering::Relaxed);
 +}
 +
 +/// Fragment source with the packed-YCbCr sampling compiled in (`present`) or not.
@@ -10270,9 +10290,9 @@ index 0000000000000000000000000000000000000000..d52f463e225b79ff43a55deffddb72db
 +    layout_logged: Cell<bool>,
 +    view_idx: gl::UniformLocation,
 +    flip_y: gl::UniformLocation,
-+    // The same copy for PyroWave Haar mode 5 buffers: (program, view_idx, flip_y) for each luma
-+    // filter (bit 0 along x, bit 1 along y; only filter 0 without light foveation) ...
-+    present: Option<Vec<(gl::Program, gl::UniformLocation, gl::UniformLocation)>>,
++    // The same copy for PyroWave Haar mode 5 buffers: (program, view_idx, flip_y, q3pw_444_pairs)
++    // for each luma filter (bit 0 along x, bit 1 along y; only filter 0 without light foveation) ...
++    present: Option<Vec<(gl::Program, gl::UniformLocation, gl::UniformLocation, Option<gl::UniformLocation>)>>,
 +    // ... drawn per eye as these scissored regions of the eye image.
 +    regions: [Vec<(usize, [i32; 4])>; 2],
 +    flip: bool,
@@ -10469,7 +10489,8 @@ index 0000000000000000000000000000000000000000..d52f463e225b79ff43a55deffddb72db
 +            };
 +            let present = present_programs.and_then(|programs| {
 +                let ready = programs.iter().map(|&present| init_program(present, true)
-+                    .map(|(view_idx, flip_y)| (present, view_idx, flip_y))).collect::<Result<Vec<_>, _>>();
++                    .map(|(view_idx, flip_y)| (present, view_idx, flip_y, gl.get_uniform_location(present, "q3pw_444_pairs"))))
++                    .collect::<Result<Vec<_>, _>>();
 +                ready.map_err(|error| {
 +                    import_diagnostic(5, format!("[Q3PW_PRESENT_YCBCR] direct program setup failed: {error}"));
 +                    for &present in &programs { gl.delete_program(present); }
@@ -10522,7 +10543,7 @@ index 0000000000000000000000000000000000000000..d52f463e225b79ff43a55deffddb72db
 +                    for framebuffer in framebuffers.into_iter().flatten() { gl.delete_framebuffer(framebuffer); }
 +                    gl.delete_vertex_array(vertex_array);
 +                    gl.delete_texture(source_texture);
-+                    for (present, _, _) in present.into_iter().flatten() { gl.delete_program(present); }
++                    for (present, _, _, _) in present.into_iter().flatten() { gl.delete_program(present); }
 +                    gl.delete_program(program);
 +                    Err(e)
 +                }
@@ -10744,10 +10765,13 @@ index 0000000000000000000000000000000000000000..d52f463e225b79ff43a55deffddb72db
 +                    continue;
 +                };
 +                for &(filter, [x, y, width, height]) in &self.regions[eye] {
-+                    let (program, view_idx, flip_y) = &programs[filter];
++                    let (program, view_idx, flip_y, pairs) = &programs[filter];
 +                    gl.use_program(Some(*program));
 +                    gl.uniform_1_i32(Some(flip_y), self.flip as i32);
 +                    gl.uniform_1_i32(Some(view_idx), eye as i32);
++                    if let Some(pairs) = pairs {
++                        gl.uniform_1_i32(Some(pairs), PRESENT_444_PAIRS.load(std::sync::atomic::Ordering::Relaxed) as i32);
++                    }
 +                    if self.ablate > 1 {
 +                        let top = (self.resolution.y as i32 / self.ablate).min(y + height);
 +                        if top <= y { continue; }
@@ -10826,7 +10850,7 @@ index 0000000000000000000000000000000000000000..d52f463e225b79ff43a55deffddb72db
 +            for framebuffer in self.framebuffers.iter().flatten() { gl.delete_framebuffer(*framebuffer); }
 +            gl.delete_vertex_array(self.vertex_array);
 +            gl.delete_texture(self.source_texture);
-+            for (present, _, _) in self.present.iter().flatten() { gl.delete_program(*present); }
++            for (present, _, _, _) in self.present.iter().flatten() { gl.delete_program(*present); }
 +            gl.delete_program(self.program);
 +        }
 +    }
@@ -11188,7 +11212,7 @@ index 0000000000000000000000000000000000000000..832dd358be6291160358f115a54e5680
 +    }
 +}
 diff --git a/alvr/graphics/src/lib.rs b/alvr/graphics/src/lib.rs
-index 3485570d33c782f897d14b607b262ab659492cc8..5d21cf6a66d48c8a87da35a541d56f5f34c0c3f2 100644
+index 3485570d33c782f897d14b607b262ab659492cc8..374ff45f6f36ac82abefcb4bc55dbb63f99d65b5 100644
 --- a/alvr/graphics/src/lib.rs
 +++ b/alvr/graphics/src/lib.rs
 @@ -1,9 +1,21 @@
@@ -11213,13 +11237,19 @@ index 3485570d33c782f897d14b607b262ab659492cc8..5d21cf6a66d48c8a87da35a541d56f5f
  
  use alvr_common::{
      glam::{Mat4, UVec2, Vec4},
-@@ -18,6 +30,52 @@ use wgpu::{
+@@ -18,6 +30,58 @@ use wgpu::{
      TextureFormat, TextureUsages, TextureView,
  };
  
 +/// Low-frequency experimental setup/timing diagnostics, independent of log mirroring.
 +pub fn log_quest_experiment(message: String) {
 +    direct_eye::import_diagnostic(4, message);
++}
++
++/// Whether PyroWave's 4:4:4 present buffers hold (Cb, Cr) pixel pairs (Haar mode 8) rather than
++/// Cb and Cr quads (mode 7); set by the decoder thread when it creates its decoder.
++pub fn set_present_444_pairs(pairs: bool) {
++    direct_eye::set_present_444_pairs(pairs);
 +}
 +
 +#[cfg(target_os = "android")]
@@ -11266,7 +11296,7 @@ index 3485570d33c782f897d14b607b262ab659492cc8..5d21cf6a66d48c8a87da35a541d56f5f
  pub const SDR_FORMAT: TextureFormat = TextureFormat::Rgba8Unorm;
  pub const SDR_FORMAT_GL: u32 = gl::RGBA8;
  pub const GL_TEXTURE_EXTERNAL_OES: u32 = 0x8D65;
-@@ -197,6 +255,10 @@ pub struct GraphicsContext {
+@@ -197,6 +261,10 @@ pub struct GraphicsContext {
      pub egl_display: egl::Display,
      pub egl_config: egl::Config,
      pub egl_context: egl::Context,
@@ -11277,7 +11307,7 @@ index 3485570d33c782f897d14b607b262ab659492cc8..5d21cf6a66d48c8a87da35a541d56f5f
      pub gl_context: gl::Context,
  
      #[cfg_attr(windows, expect(dead_code))]
-@@ -209,6 +271,19 @@ pub struct GraphicsContext {
+@@ -209,6 +277,19 @@ pub struct GraphicsContext {
  }
  
  impl GraphicsContext {
@@ -11297,7 +11327,7 @@ index 3485570d33c782f897d14b607b262ab659492cc8..5d21cf6a66d48c8a87da35a541d56f5f
      #[cfg(not(windows))]
      pub fn new_gl() -> Self {
          use std::mem;
-@@ -256,6 +331,7 @@ impl GraphicsContext {
+@@ -256,6 +337,7 @@ impl GraphicsContext {
  
          let (
              egl_context,
@@ -11305,7 +11335,7 @@ index 3485570d33c782f897d14b607b262ab659492cc8..5d21cf6a66d48c8a87da35a541d56f5f
              gl_context,
              dummy_surface,
              create_image,
-@@ -297,6 +373,8 @@ impl GraphicsContext {
+@@ -297,6 +379,8 @@ impl GraphicsContext {
                          .unwrap_or(ptr::null())
                  };
  
@@ -11314,7 +11344,7 @@ index 3485570d33c782f897d14b607b262ab659492cc8..5d21cf6a66d48c8a87da35a541d56f5f
                  let create_image: CreateImageFn = mem::transmute(get_fn_ptr(CREATE_IMAGE_FN_STR));
                  let destroy_image: DestroyImageFn =
                      mem::transmute(get_fn_ptr(DESTROY_IMAGE_FN_STR));
-@@ -307,6 +385,7 @@ impl GraphicsContext {
+@@ -307,6 +391,7 @@ impl GraphicsContext {
  
                  (
                      egl_context,
@@ -11322,7 +11352,7 @@ index 3485570d33c782f897d14b607b262ab659492cc8..5d21cf6a66d48c8a87da35a541d56f5f
                      gl_context,
                      dummy_surface,
                      create_image,
-@@ -325,6 +404,7 @@ impl GraphicsContext {
+@@ -325,6 +410,7 @@ impl GraphicsContext {
              egl_display,
              egl_config,
              egl_context,
@@ -11330,7 +11360,7 @@ index 3485570d33c782f897d14b607b262ab659492cc8..5d21cf6a66d48c8a87da35a541d56f5f
              gl_context,
              dummy_surface,
              create_image,
-@@ -354,7 +434,7 @@ impl GraphicsContext {
+@@ -354,7 +440,7 @@ impl GraphicsContext {
                          self.egl_display,
                          Some(self.dummy_surface),
                          Some(self.dummy_surface),

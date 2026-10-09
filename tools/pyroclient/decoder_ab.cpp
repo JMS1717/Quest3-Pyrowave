@@ -38,6 +38,7 @@ struct Arm {
     // With present: two chroma pixels per texel, the image 3/4 w wide (mode 6).
     bool pairs = false;
     // With present: 4:4:4, luma, Cb and Cr quads in one image 3/2 w wide (mode 7; AB_CHROMA=444).
+    // With pairs too (mode 8): (Cb, Cr) of horizontal pixel pairs, even rows from w/2, odd from w.
     bool full = false;
 };
 
@@ -51,6 +52,7 @@ const Arm ARMS[] = {
     { "haar32qp", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 5); }, nullptr, nullptr, true, true, true },
     { "haar32m6", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 6); }, nullptr, nullptr, true, true, true, true },
     { "haar32m7", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 7); }, nullptr, nullptr, true, false, true, false, true },
+    { "haar32m8", [](pyrowave_decoder d) { return pyrowave_decoder_set_haar32(d, 8); }, nullptr, nullptr, true, true, true, true, true },
     // Decoder V2 register-only inverse CDF 5/3; run with AB_WAVELET=53 so the base decodes 5/3 too.
     { "cdf53v2", [](pyrowave_decoder d) { return pyrowave_decoder_set_cdf53v2(d, 1); } },
     { "cdf53v2q", [](pyrowave_decoder d) { return pyrowave_decoder_set_cdf53v2(d, 2); }, nullptr, nullptr, true },
@@ -219,13 +221,15 @@ double decode(const Gpu &g, Session &s, const std::vector<std::vector<uint8_t>> 
             const uint8_t *base = static_cast<uint8_t *>(mapped) + offsets[i];
             const size_t tw = s.planes[i].width, th = s.planes[i].height;
             if (i == 0 && s.full) {
-                // Mode 7: luma, Cb and Cr quads at texel x = 0, w/2 and w.
+                // Mode 7: luma, Cb and Cr quads at texel x = 0, w/2 and w. Mode 8: luma quads, then
+                // (Cb, Cr) pixel pairs of the even rows from w/2 and of the odd rows from w.
                 const size_t fw = tw / 3 * 2, third = tw / 3;
                 for (int p = 0; p < 3; p++) {
                     (*readback)[p].resize(fw * th * 2);
                     for (size_t y = 0; y < th * 2; y++)
                         for (size_t x = 0; x < fw; x++)
-                            (*readback)[p][y * fw + x] =
+                            (*readback)[p][y * fw + x] = p && s.pairs ?
+                                base[((y / 2) * tw + (1 + (y & 1)) * third + x / 2) * 4 + 2 * (x & 1) + p - 1] :
                                 base[((y / 2) * tw + p * third + x / 2) * 4 + (x & 1) + 2 * (y & 1)];
                 }
             } else if (i == 0 && s.present) {

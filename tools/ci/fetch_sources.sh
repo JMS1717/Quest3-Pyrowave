@@ -68,7 +68,7 @@ git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-haar32.patch"
 git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-cdf53v2.patch"
 # Encoder rate-control quality ceiling (Skip invisible detail), with its embedded shader.
 git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-quality-floor.patch"
-# Haar decoder mode 7: 4:4:4 packed into one present buffer, as Decoder V2 mode 7 (debug.q3pw.haar32).
+# Haar decoder modes 7-8: 4:4:4 packed into one present buffer (debug.q3pw.haar32), with its embedded shaders.
 git -C "$dest/pyrowave" apply --binary "$repo/patches/pyrowave-haar444.patch"
 
 [ "$pyrowave_only" != 1 ] || { echo "pyrowave-only sources ready in $dest/pyrowave (${PYROWAVE_BASE%${PYROWAVE_BASE#???????}})"; exit 0; }
