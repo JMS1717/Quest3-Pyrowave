@@ -18,7 +18,7 @@ def main():
     path = args.root / "shaders/quest3-manifest.json"
     actual = manifest(args.root)
     if args.write:
-        path.write_text(json.dumps(actual, indent=2) + "\n", encoding="utf-8")
+        path.write_text(json.dumps(actual, indent=2) + "\n", encoding="utf-8", newline="\n")
     else:
         expected = json.loads(path.read_text(encoding="utf-8"))
         if expected != actual:

@@ -674,37 +674,12 @@ diff --git a/shaders/slangmosh.hpp b/shaders/slangmosh.hpp
 diff --git a/shaders/quest3-manifest.json b/shaders/quest3-manifest.json
 --- a/shaders/quest3-manifest.json
 +++ b/shaders/quest3-manifest.json
-@@ -1,16 +1,17 @@
--{
--  "shaders/wavelet_dequant.comp": "df3293c50464cd663ca6521172cdf494c7f7061a4f8ebfde018e5c8133f9dddb",
--  "shaders/dwt_quant_scale.h": "4a5e60c22785075341afa29211275857a4f3922999e0f5799131c5f4acf2c4be",
--  "shaders/constants.h": "3bc9555f8399bad2bd6960536125588fd7dbc7936a7147755fc497241f04e062",
--  "shaders/idwt.comp": "e3bb1b44e1e0cb0c2137c44dc50c42f0de4b625f8505f26e96b89ea210c2c3af",
--  "shaders/idwt_haar_fused.comp": "a85ffbeb0966e22855d8c76690a7283fb6a2a5967ae5028feac81663c99be629",
--  "shaders/idwt_haar_pairs.comp": "4365bdf446adf9b81912b5dbcf6dc764e66e238043b47553e9a505a7797a2a9c",
--  "shaders/wavelet_dequant_haar0.comp": "eb2ad835d196d899de4e64f000f6b65b46dbfd4c22d66c50116911b74fa412f9",
--  "shaders/idwt_haar32.comp": "86b062aff42772fdb7ff0a19b5eb86f7f5924c67488dd7167d48850b29ce26dd",
--  "shaders/idwt_cdf53v2.comp": "4bca023d3ee0313b8c263cc25c5b775f7f86c252688ccd2d3ab90f7afb9d6cce",
--  "shaders/dwt.comp": "f58c3f95d68a90f4621fc1999bcf9a95e1a263b80d20355b0ac20002828a90b1",
--  "shaders/dwt_common.h": "591f529143fce7efad00c0f5a5e6d9be0a714fb2d5098ac5e89242c0041ada26",
--  "shaders/dwt_swizzle.h": "0283e54d268f25375866274dd3728384c75d9783cab12787d8914588b80f0f30",
--  "shaders/slangmosh.json": "99125928af517a473f8757e305e34fd0250c15c15efa5c838e64ea075f33a071",
--  "shaders/slangmosh.hpp": "0bb8da19bb27460568d19a3b3ba3d702442249237aa1bf2ef9adf02a494a9b26"
--}
-+{
-+  "shaders/wavelet_dequant.comp": "df3293c50464cd663ca6521172cdf494c7f7061a4f8ebfde018e5c8133f9dddb",
-+  "shaders/dwt_quant_scale.h": "4a5e60c22785075341afa29211275857a4f3922999e0f5799131c5f4acf2c4be",
-+  "shaders/constants.h": "3bc9555f8399bad2bd6960536125588fd7dbc7936a7147755fc497241f04e062",
-+  "shaders/idwt.comp": "e3bb1b44e1e0cb0c2137c44dc50c42f0de4b625f8505f26e96b89ea210c2c3af",
-+  "shaders/idwt_haar_fused.comp": "a85ffbeb0966e22855d8c76690a7283fb6a2a5967ae5028feac81663c99be629",
-+  "shaders/idwt_haar_pairs.comp": "4365bdf446adf9b81912b5dbcf6dc764e66e238043b47553e9a505a7797a2a9c",
-+  "shaders/wavelet_dequant_haar0.comp": "eb2ad835d196d899de4e64f000f6b65b46dbfd4c22d66c50116911b74fa412f9",
-+  "shaders/idwt_haar32.comp": "86b062aff42772fdb7ff0a19b5eb86f7f5924c67488dd7167d48850b29ce26dd",
-+  "shaders/idwt_cdf53v2.comp": "4bca023d3ee0313b8c263cc25c5b775f7f86c252688ccd2d3ab90f7afb9d6cce",
-+  "shaders/dwt.comp": "f58c3f95d68a90f4621fc1999bcf9a95e1a263b80d20355b0ac20002828a90b1",
-+  "shaders/dwt_common.h": "591f529143fce7efad00c0f5a5e6d9be0a714fb2d5098ac5e89242c0041ada26",
-+  "shaders/dwt_swizzle.h": "0283e54d268f25375866274dd3728384c75d9783cab12787d8914588b80f0f30",
+@@ -11,6 +11,7 @@
+   "shaders/dwt.comp": "f58c3f95d68a90f4621fc1999bcf9a95e1a263b80d20355b0ac20002828a90b1",
+   "shaders/dwt_common.h": "591f529143fce7efad00c0f5a5e6d9be0a714fb2d5098ac5e89242c0041ada26",
+   "shaders/dwt_swizzle.h": "0283e54d268f25375866274dd3728384c75d9783cab12787d8914588b80f0f30",
 +  "shaders/resolve_rate_control.comp": "9edb945f7851e72247c39a411fa915e516e273043992e051c008477b10204f55",
-+  "shaders/slangmosh.json": "99125928af517a473f8757e305e34fd0250c15c15efa5c838e64ea075f33a071",
+   "shaders/slangmosh.json": "99125928af517a473f8757e305e34fd0250c15c15efa5c838e64ea075f33a071",
+-  "shaders/slangmosh.hpp": "0bb8da19bb27460568d19a3b3ba3d702442249237aa1bf2ef9adf02a494a9b26"
 +  "shaders/slangmosh.hpp": "dba3cca2c7de9c9fc284843b3f318aff86ee3867a27af58b6a8f6eadcf28b12d"
-+}
+ }
