@@ -197,12 +197,12 @@ State:
     - Live, in the heavy scene at 2.34 MB per frame, frames still fill the budget with the
       floor at 56 (confirmed in `openvr_config`). That content needs more than the ceiling
       allows, so the setting helps only easier content there.
-  - **`.112`: decode at default priority at 90 Hz and below.** Full size, Haar 1500, 90 Hz,
-    heavy scene, ABBA: default 84.6 / 83.4 fresh (decode p50 5.06 / 4.88 ms, fence 7.06 /
-    6.67 ms) against LOW 79.9 / 79.3 (6.94 / 7.10 ms, fence 10.74 / 10.98 ms). The compositor's
-    stale count stayed at 0-4 a second either way. The automatic policy now picks LOW only for
-    4:2:0 above 90 Hz up to 120 Hz, so Godlike 80 Hz decodes at default priority
-    ([DECODE-PRIORITY.md](DECODE-PRIORITY.md)).
+  - **Decode priority at full size (`.112`-`.115`).** At 90 Hz (Haar 1500, heavy scene, ABBA)
+    default priority beat LOW: 84.6 / 83.4 against 79.9 / 79.3 fresh, fence 6.7-7.1 against
+    10.7-11.0 ms. `.112` therefore chose default at ≤90 Hz. At 80 Hz (the Godlike profile) LOW won:
+    79.2 / 79.3 / 80.2 / 78.9 with no stale frames, against 78.6 / 78.0 / 78.3 with 0-10 stale a
+    second, and total latency was no lower. `.115` restores the original rule (LOW for 4:2:0 at
+    ≤120 Hz) ([DECODE-PRIORITY.md](DECODE-PRIORITY.md)).
     - In those 90 Hz blocks all 90 frames a second arrive and decode. The 6 lost a second are
       superseded: arrival gaps p10/p90 7.6-8.6 / 13.6-14.3 ms against an 11.1 ms period put two
       frames in one display period. Frame ids (pose timestamps) jump by about ±3.7 ms because
@@ -219,7 +219,12 @@ State:
       not enough to drop LOW at 120 Hz; it stays opt-in.
   - **`.114` opt-in `debug.q3pw.input_polls_per_frame=1..16`** (default 3, as upstream): the
     client's tracking poll rate. Each sample is predicted for `now + offset`, so the server's
-    newest sample is up to one poll interval stale (3.7 ms at 90 Hz).
+    newest sample is up to one poll interval stale (3.7 ms at 90 Hz). Godlike 80, ABBA: 8 polls
+    did apply (frame id gaps fall on multiples of 1.56 ms instead of 4.17 ms), but their spread
+    grew to ±6 ms (6.25-18.75 ms against 8.25-16.75 ms). The jitter is the game's pose-fetch
+    time or tracking delivery moving by several ms, which 3 polls only rounded. Fresh FPS 75.6 /
+    74.3 against 78.1 / 76.4, one 8-poll block with 7-12 stale a second: no gain shown, default
+    stays 3. Release logcat drops info-level Rust lines, so `[Q3PW_INPUT_RATE]` is not visible.
   - **The maximum GPU clock was not applied in these runs.** `quest3_max_gpu_clock=true`, but
     `debug.oculus.gpuLevel` read empty and VrApi showed level 4 (640 MHz). After the helper's
     `GPU_LEVEL_REVERTS` (2) reapplications it stops until the server restarts. Setting the

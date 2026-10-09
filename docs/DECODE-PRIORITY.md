@@ -49,7 +49,7 @@ this is not a latency claim.
 
 | Property | Read | Effect |
 | --- | --- | --- |
-| `debug.q3pw.decode_priority` | at decoder creation | unset/other: LOW only for 4:2:0 above 90 Hz up to 120 Hz (`.112`; ≤120 Hz before); `low`: always LOW; `default`: never |
+| `debug.q3pw.decode_priority` | at decoder creation | unset/other: LOW only for 4:2:0 at ≤120 Hz (`.112`-`.114` used default at ≤90 Hz; reverted in `.115`); `low`: always LOW; `default`: never |
 
 logcat `[Q3PW_PRIORITY]` reports the policy decision (refresh rate, chroma,
 choice) and what the driver applied.
@@ -70,22 +70,24 @@ The closing default block was interrupted (the PC ran short of memory and the ru
 the same build's default measured 195.4-196.5 FPS in the four mode 5 blocks run just before.
 Preempting decode at 207 Hz costs about 30 fresh FPS: keep the automatic policy.
 
-## 90 Hz and below: default priority (October 9, `.112`)
+## Full size at 80 and 90 Hz (October 9, `.111`-`.114`)
 
-Full 3072x3216 per eye, Haar, 1500 Mbps, 90 Hz, SteamVR Home with the Library dashboard open,
-wired, unworn, GPU level 7, 20 s blocks in ABBA order (`.111`, priority forced by property):
+Full 3072x3216 per eye, Haar, 1500 Mbps, SteamVR Home with the Library dashboard open, wired,
+unworn, GPU level 7, 20 s blocks, priority forced by property.
 
-| Arm | Fresh FPS | GPU decode p50 | Fence p50 | VrApi app FPS |
-| --- | --- | --- | --- | --- |
-| default | 84.6 | 5.06 ms | 7.06 ms | 89/90 |
-| LOW | 79.9 | 6.94 ms | 10.74 ms | 91/90 |
-| LOW | 79.3 | 7.10 ms | 10.98 ms | 90/90 |
-| default | 83.4 | 4.88 ms | 6.67 ms | 90/90 |
+| Refresh | Arm | Fresh FPS | GPU decode p50 | Fence p50 | VrApi stale/s |
+| --- | --- | --- | --- | --- | --- |
+| 90 Hz | default | 84.6, 83.4 | 4.9-5.1 ms | 6.7-7.1 ms | 0-4 |
+| 90 Hz | LOW | 79.9, 79.3 | 6.9-7.1 ms | 10.7-11.0 ms | 0 |
+| 80 Hz | LOW | 79.2, 79.3, 80.2, 78.9 | 6.7-10.4 ms | 9.6-11.7 ms | 0 |
+| 80 Hz | default | 78.6, 78.0, 78.3 | 4.0-5.7 ms | 5.9-6.7 ms | 0-10 |
 
-At 11.1 ms per frame the eye copy still makes its deadline behind an unpreempted decode, so LOW
-only slows the decode: about 2 ms more GPU decode and 4 ms more fence. `.112` therefore picks
-default priority at 90 Hz and below (Godlike 80 Hz included). At 120 Hz full size, default priority
-raised fresh FPS but the app dropped to 85-87 of 120 frames (judder), so LOW stays above 90 Hz.
+At 90 Hz LOW cannot keep up and default wins by about 4.5 FPS. At 80 Hz LOW keeps up, and
+default only moves time around: ALVR's decoder stage falls from 12-18 to 7-8 ms, but its decoder
+queue (1-7 against 2-3 ms) and client compositor (5-8 against 4.5 ms) grow, and total latency is no
+lower (63-73 against 64-71 ms). `.112` switched the automatic policy to default at ≤90 Hz; `.115`
+reverts that because the shipped Godlike profile runs at 80 Hz. For full size at 90 Hz, set
+`decode_priority=default` by hand.
 
 ## Limits
 
