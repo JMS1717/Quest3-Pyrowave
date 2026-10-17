@@ -6,6 +6,14 @@ wavelet video on the headset's Adreno 740 GPU with Vulkan compute. The owner is 
 Read [docs/HANDOFF.md](docs/HANDOFF.md) for the current state, scorecard and next steps. Where an
 older handoff disagrees with the owner's latest direct instructions, follow the owner.
 
+## Current target (owner, October 17)
+
+The current work targets **Steam Frame**, with eye-tracked foveated streaming and a **Windows
+gaming PC server**. The owner asked to replace Quest-specific product defaults with Frame
+defaults and tune for Frame where evidence permits. Frame hardware exists but is not available
+for the current session. See [docs/STEAM-FRAME.md](docs/STEAM-FRAME.md). The Quest goals and
+measurements below remain historical references; they are not Frame performance claims.
+
 ## Goal
 
 The owner's target is:

@@ -45,14 +45,6 @@ int main(int argc, char **argv) {
     GLint success = 0; glGetProgramiv(program, GL_LINK_STATUS, &success);
     if (!success) return 1;
     glUseProgram(program);
-    GLfloat values[24];
-    for (auto &v : values) if (!(fixture >> v)) return 2;
-    for (unsigned i = 0; i < 3; i++) {
-        const char *names[] = {"ffe_view_ratio", "ffe_edge_ratio", "ffe_c2"};
-        glUniform2fv(glGetUniformLocation(program, names[i]), 1, values + i * 2);
-    }
-    glUniform4fv(glGetUniformLocation(program, "ffe_p[0]"), 4, values + 6);
-    glUniform2fv(glGetUniformLocation(program, "ffe_half_texel"), 1, values + 22);
     GLuint target, fbo, array;
     glGenTextures(1, &target); glBindTexture(GL_TEXTURE_2D, target);
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, 1, 1);
@@ -62,22 +54,36 @@ int main(int argc, char **argv) {
     glGenVertexArrays(1, &array); glBindVertexArray(array); glViewport(0, 0, 1, 1);
     int eye; double u, v, expected_x, expected_y, worst = 0;
     unsigned cases = 0;
-    while (fixture >> eye >> u >> v >> expected_x >> expected_y) {
-        glUniform1i(glGetUniformLocation(program, "view_idx"), eye);
-        glUniform2f(glGetUniformLocation(program, "test_uv"), GLfloat(u), GLfloat(v));
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        GLfloat actual[4] = {};
-        glReadPixels(0, 0, 1, 1, GL_RGBA, GL_FLOAT, actual);
-        if (glGetError() != GL_NO_ERROR || !std::isfinite(actual[0]) || !std::isfinite(actual[1])) return 1;
-        worst = std::max({worst, std::abs(actual[0] - expected_x), std::abs(actual[1] - expected_y)});
-        if (worst > 0.000005 || actual[0] <= eye * .5 || actual[0] >= (eye + 1) * .5) {
-            std::cerr << "Wrong mapping/eye at " << eye << ',' << u << ',' << v << " error=" << worst << '\n';
-            return 1;
+    unsigned states = 0;
+    while (fixture.peek() != std::char_traits<char>::eof()) {
+        GLfloat values[24];
+        for (auto &v : values) if (!(fixture >> v)) return 2;
+        for (unsigned i = 0; i < 3; i++) {
+            const char *names[] = {"ffe_view_ratio", "ffe_edge_ratio", "ffe_c2"};
+            glUniform2fv(glGetUniformLocation(program, names[i]), 1, values + i * 2);
         }
-        cases++;
+        glUniform4fv(glGetUniformLocation(program, "ffe_p[0]"), 4, values + 6);
+        glUniform2fv(glGetUniformLocation(program, "ffe_half_texel"), 1, values + 22);
+        for (unsigned row = 0; row < 490; row++) {
+            if (!(fixture >> eye >> u >> v >> expected_x >> expected_y)) return 2;
+            glUniform1i(glGetUniformLocation(program, "view_idx"), eye);
+            glUniform2f(glGetUniformLocation(program, "test_uv"), GLfloat(u), GLfloat(v));
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            GLfloat actual[4] = {};
+            glReadPixels(0, 0, 1, 1, GL_RGBA, GL_FLOAT, actual);
+            if (glGetError() != GL_NO_ERROR || !std::isfinite(actual[0]) || !std::isfinite(actual[1])) return 1;
+            worst = std::max({worst, std::abs(actual[0] - expected_x), std::abs(actual[1] - expected_y)});
+            if (worst > 0.000005 || actual[0] <= eye * .5 || actual[0] >= (eye + 1) * .5) {
+                std::cerr << "Wrong mapping/eye at " << eye << ',' << u << ',' << v << " error=" << worst << '\n';
+                return 1;
+            }
+            cases++;
+        }
+        states++;
+        fixture >> std::ws;
     }
     glDeleteVertexArrays(1, &array); glDeleteFramebuffers(1, &fbo); glDeleteTextures(1, &target);
     glDeleteProgram(program); glDeleteShader(vertex); glDeleteShader(fragment);
-    if (cases != 490) return 1;
-    std::cout << "Light inverse GLES mapping: " << cases << " cases, worst UV error " << worst << '\n';
+    if (cases != 490 * states || states == 0) return 1;
+    std::cout << "Streaming inverse GLES mapping: " << cases << " cases, worst UV error " << worst << '\n';
 }

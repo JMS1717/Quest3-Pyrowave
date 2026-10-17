@@ -34,7 +34,11 @@ def axis(size, profile='light', dim=0):
     if type(size) is not int or not 32 <= size <= 8192:
         raise ValueError('Expanded axis must be an integer from 32 to 8192')
     p = profile_values(profile)
-    CENTER, SHIFT, EDGE = p['center'][dim], p['shift'][dim], p['edge']
+    return configured_axis(size, p['center'][dim], p['shift'][dim], p['edge'])
+
+
+def configured_axis(size, CENTER, SHIFT, EDGE):
+    """Reference ALVR geometry for a fixed size and a frame-specific centre."""
     edge_px = math.ceil((size - CENTER * size) / (EDGE * 2)) * (EDGE * 2)
     center = 1 - edge_px / size
     shift = math.ceil(SHIFT * edge_px / (EDGE * 2)) * (EDGE * 2) / edge_px

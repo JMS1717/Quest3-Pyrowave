@@ -56,7 +56,7 @@ CARGO_TOOLS = (["cargo-ndk@4.1.2", "cbindgen@0.29.4"],
 # Public certificate digest of the repository's stable signing key (CI's APK-CERTIFICATE.txt).
 STABLE_CERT_SHA256 = "2f2c5b3bb99cd69edc58cc53fbac30325426e410b3fecafc76fe447549886779"
 # The Windows test set of CI's streamer job, in its order.
-WINDOWS_TESTS = [["alvr_adb", "--lib"], ["alvr_client_core", "--lib"], ["alvr_graphics", "--lib"], ["alvr_session", "--lib"],
+WINDOWS_TESTS = [["alvr_adb", "--lib"], ["alvr_system_info", "--lib"], ["alvr_client_core", "--lib"], ["alvr_graphics", "--lib"], ["alvr_session", "--lib"],
                  ["alvr_packets", "--lib"], ["alvr_server_core", "--lib"],
                  ["alvr_server_io", "--lib", "initialization_tests"],
                  ["alvr_dashboard", "--bin", "alvr_dashboard"]]
@@ -474,6 +474,10 @@ def run_tests(root, env, log, timer):
     for spec in WINDOWS_TESTS:
         timer.run(f"cargo test {spec[0]}", lambda spec=spec: run(
             ["cargo", "test", "--release", "-p", *spec], env, log, cwd=alvr))
+    clock_test = root / "frame-clock-test.exe"
+    timer.run("Frame estimated clock", lambda: (
+        run(["rustc", "--edition=2021", "--test", "alvr/client_openxr/src/frame_clock.rs", "-o", str(clock_test)], env, log, cwd=alvr),
+        run([str(clock_test)], env, log, cwd=alvr)))
     timer.run("python suite", lambda: run([sys.executable, "-m", "unittest", "discover", "-s", "tests"], env, log))
 
 

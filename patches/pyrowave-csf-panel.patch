@@ -1,22 +1,28 @@
 diff --git a/pyrowave_encoder.cpp b/pyrowave_encoder.cpp
-index 0296575..3c58018 100644
+index 02965754311d56aaaa2346e48c496f067d816790..4fbbfae21b972782d7a74a3dbf7f95862772bdcd 100644
 --- a/pyrowave_encoder.cpp
 +++ b/pyrowave_encoder.cpp
-@@ -126,7 +126,12 @@ float Encoder::Impl::get_quant_rdo_distortion_scale(int level, int component, in
+@@ -126,7 +126,18 @@ float Encoder::Impl::get_quant_rdo_distortion_scale(int level, int component, in
  	// monitor model discounted fine luma detail up to 10x in power and starved it of bits
  	// (docs/ENCODER-CSF.md). PYROWAVE_CPD_NYQUIST overrides the level-0 Nyquist frequency.
  	static const float cpd_override = [] { const char *v = getenv("PYROWAVE_CPD_NYQUIST"); return v ? float(atof(v)) : 0.0f; }();
 -	const float cpd_nyquist = cpd_override > 0.0f ? cpd_override : 0.5f * float(height) / 99.0f;
-+	// A stream taller than the panel's 2208 rows is resampled down for display, which removes much
++	// Frame's physical panel has 2160 rows. Keep the reference configurable for other headsets.
++	// A taller stream is resampled down for display, which removes much
 +	// of its finest band before the eye sees it. Scaling the frequency by stream rows over panel
 +	// rows moves those bits to detail that survives: at 3216 rows (full size) it scores +0.5 dB
 +	// PSNR-HVS-M at panel resolution, and is neutral at 2784 (docs/ENCODER-CSF.md).
-+	const float panel_scale = std::max(1.0f, float(height) / 2208.0f);
++	static const float panel_rows = [] {
++		const char *v = getenv("PYROWAVE_CSF_PANEL_ROWS");
++		const float rows = v ? float(atof(v)) : 2160.0f;
++		return std::isfinite(rows) && rows >= 512.0f && rows <= 8192.0f ? rows : 2160.0f;
++	}();
++	const float panel_scale = std::max(1.0f, float(height) / panel_rows);
 +	const float cpd_nyquist = cpd_override > 0.0f ? cpd_override : 0.5f * float(height) / 99.0f * panel_scale;
  
  	float cpd = std::sqrt(horiz_midpoint * horiz_midpoint + vert_midpoint * vert_midpoint) *
  	                  cpd_nyquist * std::exp2(-float(level));
-@@ -141,15 +146,19 @@ float Encoder::Impl::get_quant_rdo_distortion_scale(int level, int component, in
+@@ -141,15 +152,19 @@ float Encoder::Impl::get_quant_rdo_distortion_scale(int level, int component, in
  	// the amplitude weight. With the headset weighting this keeps smooth areas and blocking better
  	// than upstream while fine detail gains (docs/ENCODER-CSF.md).
  	// PYROWAVE_LF_BOOST=<level>,<factor> overrides it.

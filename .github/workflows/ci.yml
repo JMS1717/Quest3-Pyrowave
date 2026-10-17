@@ -51,6 +51,8 @@ jobs:
         run: |
           python3 -m pip install --disable-pip-version-check -r tools/requirements-test.txt
           python3 -m tools.quest3.scene_pattern_test -v
+      - name: Coherent binocular gaze publication (CPU only)
+        run: g++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread tools/foveation/center_state_test.cpp -o /tmp/gaze-center-test && /tmp/gaze-center-test
       - name: Bounded producer reservation and cancellation (CPU only)
         run: g++ -std=c++17 -Wall -Wextra -Werror tools/pyroclient/prerecord_state_test.cpp -o /tmp/prerecord-state && /tmp/prerecord-state
       - name: Release-fence ownership and generation regression
@@ -77,6 +79,8 @@ jobs:
           python3 -m tools.foveation.gpu_fixture /tmp/light-foveation-reference.txt
           g++ -std=c++17 -O2 -Wall -Wextra -Werror tools/pyroclient/gpu_readback_gles.cpp tools/foveation/gpu_test.cpp -lEGL -lGLESv2 -o /tmp/light-foveation-test
           /tmp/light-foveation-test tools/foveation/light.glsl /tmp/light-foveation-reference.txt
+          python3 -m tools.foveation.gpu_fixture /tmp/frame-foveation-reference.txt --dynamic
+          /tmp/light-foveation-test tools/foveation/light.glsl /tmp/frame-foveation-reference.txt
   fuse_color_exact:
     # Default-off debug.q3pw.fuse_color must reproduce the shipped iDWT + convert bytes exactly.
     # Software Vulkan proves shader logic, formats, edges and wiring; not Adreno rounding or speed.
@@ -341,6 +345,12 @@ jobs:
           cargo test --release -p alvr_session --lib
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --release -p alvr_packets --lib
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --release -p alvr_system_info --lib
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          rustc --edition=2021 --test alvr/client_openxr/src/frame_clock.rs -o frame-clock-test.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./frame-clock-test.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --release -p alvr_server_core --lib
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

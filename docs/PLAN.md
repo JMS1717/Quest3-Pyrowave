@@ -1,3 +1,18 @@
+# Current work: Steam Frame port
+
+October 17 owner direction supersedes the Quest-only plan below: port to Steam Frame, add
+OpenXR eye-tracked streaming, replace Quest product defaults, and retain a Windows gaming PC
+server. Hardware is available later. See [STEAM-FRAME.md](STEAM-FRAME.md) for the source port,
+offline evidence and first device procedure.
+
+Next: build the Windows native server package, check launch/decode/import on Frame, compare
+uniform and eye-tracked streams at the same bitrate, then tune refresh, resolution, colour and
+queue/decode options with measured fresh frames and worn quality. Exact runtime timing and
+optical latency remain separate validation work. Do not publish a Frame release before the
+matching committed build passes in-headset checks.
+
+---
+
 # Plan: finish the network stack, then sharpness and clarity
 
 Prepared October 7, 2026, evening, after the owner played `.65`. It replaces the next steps in

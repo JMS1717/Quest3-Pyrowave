@@ -4,6 +4,63 @@ Prepared October 4, 2026, with dated updates through October 9. Read [AGENTS.md]
 first. Machine-specific state, raw captures, signing material and rollback snapshots stay outside
 this repo.
 
+## October 17: experimental Steam Frame source port
+
+Owner direction: port to Steam Frame, add eye-tracked foveated streaming, replace Quest product
+defaults, and retain a **Windows gaming PC server**. Frame hardware is available later, not in
+this session. The implementation is `20.13.0-frame.pyro.1`, on
+`feat/steam-frame-eye-tracked-streaming`. The complete setup and validation procedure is
+[STEAM-FRAME.md](STEAM-FRAME.md). Earlier Quest results below remain historical.
+
+Changed:
+
+- Android ARM64/OpenXR through Lepton, with explicit Valve/Lepton and Steam Frame identity.
+  Frame controllers use the runtime's documented Touch compatibility path.
+- Fresh install: prefer 72 Hz, runtime-recommended stream size, 3240x3240 PC render, 500 Mbps,
+  CDF 5/3/Compute/4:2:0, UDP, Lanczos, sharpening off, Rec. 709 and no Quest clock/panel
+  overrides. Frame may use the closest runtime-advertised refresh rate; Quest retains strict
+  exact-rate negotiation. Panel-relative controls use 2160x2160, and refresh presets no longer
+  switch on the Quest USB panel helper. Saved sessions keep their values.
+- Separate opt-in eye-tracked Frame profile. Capability negotiation requires a successfully
+  bound OpenXR gaze source. Gaze projects into each actual eye frustum, bounded at +/-0.9.
+  Both eyes publish coherently. Invalid or >50 ms old gaze recentres; the driver's 5 ms idle
+  timeout handles a stopped tracking uplink. Direction histories/logging were removed.
+- The direct GLES inverse and its filter rectangles now use each selected frame's own per-eye
+  layout, like staging. Repeats keep their layout. Timestamp lookup precedes runtime clamping.
+  Unchanged layouts skip repeated uniform uploads. The fixed Quest profiles remain available.
+- Optional clock conversion is no longer requested unconditionally. Without it, tracking uses
+  an explicitly estimated session clock anchored from `xrWaitFrame`; Frame submits at the
+  runtime display timestamp. The initial prediction offset is unmeasured, so this does not prove
+  latency. A runtime without refresh control advertises its observed lobby cadence.
+- Encoder CSF panel reference is 2160 rows, configurable through `PYROWAVE_CSF_PANEL_ROWS`
+  (2208 restores the Quest reference). The angular model still needs Frame measurements.
+
+Offline evidence (Rust 1.97.1, NDK 27.2.12479018):
+
+- Android ARM64 release APK, PyroWave library and decoder bridge build. APK uses development
+  signing; no stable signing material was available here. Package ID remains compatible.
+- Windows GNU target Rust check passes for server core and OpenXR client. This is not a native
+  Windows C++/D3D11 server package. The Linux full-driver test stopped at the required separate
+  FFmpeg development bundle; the native Windows server build is still outstanding.
+- Rust client core/server core/graphics/packets/session/system-info: **165 passed**. Dashboard:
+  **12 passed, 1 existing ignored preview**. Estimated-clock test: **1 passed**.
+- Python: **189 passed, 107 subtests**. Coherent-center C++ concurrency/invalid-input test passes.
+- Software GLES: 490 fixed and **7,840 moving-layout** mappings pass. Worst moving UV error
+  1.11e-7. Moving-region Rust tests cover independent eye scissors and fixed encoded allocation.
+- The cumulative patches reconstruct all **686 recipe files** byte-for-byte against the build
+  source tree. No patch paths from the earlier Quest patch were dropped.
+
+Performance decision: at 2176x2176 expanded per eye, eye-tracked geometry encodes 1632x1632,
+**43.75% fewer pixels**. This is arithmetic, not measured Frame speed or quality. Eye-tracked
+encoding remains opt-in. No GPU clock, precision or queue experiments were promoted based on
+Quest results. No Frame runtime acceptance, live stream, fresh FPS, sustained game, perceptual
+quality, thermal or optical-latency result exists, and no Frame release was published.
+
+Next: build a matching native Windows server, then launch/decode/import on Frame. Compare
+uniform/eye/eye/uniform at matched bitrate and actual display period, inspect both-eye alignment
+and saccades, then tune refresh/resolution/colour from measurements. Check exact runtime clock
+support before making latency claims. Keep device captures, keys and raw logs outside the repo.
+
 ## October 9: beta.2, `.135`-`.136`
 
 `.136`: the dashboard's notification bar skips the periodic diagnostics (`[Q3PW_TRACKING_RX]`,
